@@ -405,6 +405,8 @@ void Editor::mouse_event(const MouseType t, QMouseEvent *e)
     e->ignore();
     return;
   }
+  if (level_idx >= static_cast<int>(map.levels.size()))
+    return;
   // dispatch to individual mouse handler functions to save indenting...
   switch (tool_id) {
     case SELECT:       mouse_select(t, e, p); break;

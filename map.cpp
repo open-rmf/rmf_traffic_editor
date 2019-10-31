@@ -72,6 +72,8 @@ bool Map::save_yaml(const std::string &filename)
 
 void Map::add_vertex(int level_index, double x, double y)
 {
+  if (level_index >= static_cast<int>(levels.size()))
+    return;
   levels[level_index].vertices.push_back(Vertex(x, y));
   changed = true;
 }
@@ -102,6 +104,9 @@ int Map::nearest_item_index_if_within_distance(
       const double distance_threshold,
       const ItemType item_type)
 {
+  if (level_index >= static_cast<int>(levels.size()))
+    return -1;
+
   double min_dist = 1e100;
   int min_index = -1;
   if (item_type == VERTEX) {
@@ -139,6 +144,9 @@ void Map::add_edge(
       const int end_vertex_index,
       const Edge::Type edge_type)
 {
+  if (level_index >= static_cast<int>(levels.size()))
+    return;
+
   printf("Map::add_edge(%d, %d, %d, %d)\n",
       level_index, start_vertex_index, end_vertex_index,
       static_cast<int>(edge_type));
@@ -149,6 +157,9 @@ void Map::add_edge(
 
 void Map::delete_keypress(const int level_index)
 {
+  if (level_index >= static_cast<int>(levels.size()))
+    return;
+
   printf("Map::delete_keypress()\n");
   levels[level_index].delete_keypress();
   changed = true;
@@ -161,6 +172,9 @@ void Map::add_model(
     const double yaw,
     const std::string &model_name)
 {
+  if (level_idx >= static_cast<int>(levels.size()))
+    return;
+
   printf("Map::add_model(%d, %.1f, %.1f, %.2f, %s)\n",
       level_idx, x, y, yaw, model_name.c_str());
   levels[level_idx].models.push_back(
@@ -174,6 +188,9 @@ void Map::rotate_model(
     const double release_x,
     const double release_y)
 {
+  if (level_idx >= static_cast<int>(levels.size()))
+    return;
+
   Model &model = levels[level_idx].models[model_idx];
   const double dx = release_x - model.x;
   const double dy = -(release_y - model.y);  // vertical axis is flipped
