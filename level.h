@@ -26,6 +26,7 @@
 #include "model.h"
 #include "polygon.h"
 
+#include <QPixmap>
 class QGraphicsScene;
 
 
@@ -45,6 +46,7 @@ public:
   std::vector<Edge> edges;
   std::vector<Model> models;
   std::vector<Polygon> polygons;
+  QPixmap pixmap;
 
   // temporary, just for debugging polygon edge projection...
   double polygon_edge_proj_x, polygon_edge_proj_y;

@@ -28,7 +28,6 @@
 #include <QGraphicsPolygonItem>
 #include <QGraphicsScene>
 #include <QMainWindow>
-#include <QPixmap>
 
 
 class MapView;
@@ -90,6 +89,9 @@ private slots:
   void about();
 
 private:
+  void level_add();
+  void update_level_buttons();
+
   void zoom_normal();
   void zoom_in();
   void zoom_out();
@@ -108,9 +110,6 @@ private:
   int level_idx;  // level that we are currently editing
   int clicked_idx;  // point most recently clicked
   int polygon_idx;  // currently selected polygon
-
-  std::map<std::string, QPixmap> level_images;
-
 
   QButtonGroup *level_button_group;
   QHBoxLayout *level_button_hbox_layout;

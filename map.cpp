@@ -58,8 +58,8 @@ bool Map::save_yaml(const std::string &filename)
 {
   printf("Map::save_yaml(%s)\n", filename.c_str());
   YAML::Node levels_node(YAML::NodeType::Map);
-  for (const auto &f : levels) {
-    levels_node[f.name] = f.to_yaml();
+  for (const auto &level : levels) {
+    levels_node[level.name] = level.to_yaml();
   }
   YAML::Node y_top;
   y_top["building_name"] = building_name;
@@ -225,4 +225,19 @@ void Map::clear()
   changed = true;
   building_name = "";
   levels.clear();
+}
+
+void Map::add_level(const std::string &level_name)
+{
+  changed = true;
+  // make sure we don't have this level already
+  for (const auto &level : levels)
+    if (level.name == level_name)
+      return;
+  Level level;
+  level.name = level_name;
+  level.drawing_meters_per_pixel = 0.05;
+  level.drawing_width = 100.0 / level.drawing_meters_per_pixel;
+  level.drawing_height = 100.0 / level.drawing_meters_per_pixel;
+  levels.push_back(level);
 }

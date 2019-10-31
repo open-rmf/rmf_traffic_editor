@@ -18,6 +18,8 @@
 #include <algorithm>
 
 #include <QGraphicsScene>
+#include <QImage>
+#include <QImageReader>
 
 #include "level.h"
 using std::string;
@@ -27,7 +29,7 @@ using std::vector;
 Level::Level()
 : drawing_width(0),
   drawing_height(0),
-  drawing_meters_per_pixel(1.0),
+  drawing_meters_per_pixel(0.05),
   elevation(0.0),
   polygon_edge_proj_x(0.0),
   polygon_edge_proj_y(0.0)
@@ -54,7 +56,29 @@ bool Level::from_yaml(const std::string &_name, const YAML::Node &_data)
     printf("  level %s drawing: %s\n",
         name.c_str(),
         drawing_filename.c_str());
+
+    QString qfilename = QString::fromStdString(drawing_filename);
+
+    QImageReader image_reader(qfilename);
+    image_reader.setAutoTransform(true);
+    QImage image = image_reader.read();
+    if (image.isNull()) {
+      qWarning("unable to read %s: %s",
+          qUtf8Printable(qfilename),
+          qUtf8Printable(image_reader.errorString()));
+      return false;
+    }
+    image = image.convertToFormat(QImage::Format_Grayscale8);
+    pixmap = QPixmap::fromImage(image);
+    drawing_width = pixmap.width();
+    drawing_height = pixmap.height();
   }
+  else {
+    drawing_meters_per_pixel = 0.05;
+    drawing_width = 100.0 / drawing_meters_per_pixel;
+    drawing_height = 100.0 / drawing_meters_per_pixel;
+  }
+
   if (_data["vertices"] && _data["vertices"].IsSequence()) {
     const YAML::Node &pts = _data["vertices"];
     for (YAML::const_iterator it = pts.begin(); it != pts.end(); ++it) {

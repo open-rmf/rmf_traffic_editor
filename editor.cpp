@@ -21,7 +21,7 @@
 
 #include <QtWidgets>
 
-#include <QImage>
+#include <QInputDialog>
 #include <QLabel>
 #include <QListWidget>
 #include <QToolBar>
@@ -117,8 +117,9 @@ Editor::Editor(QWidget *parent)
   QAction *exit_action = file_menu->addAction("E&xit", this, &QWidget::close);
   exit_action->setShortcut(tr("Ctrl+Q"));
 
-  // EDIT MENU
-  menuBar()->addMenu("&Edit");
+  // LEVEL MENU
+  QMenu *level_menu = menuBar()->addMenu("&Level");
+  level_menu->addAction("&Add...", this, &Editor::level_add);
 
   // VIEW MENU
   QMenu *view_menu = menuBar()->addMenu("&View");
@@ -262,40 +263,8 @@ bool Editor::load_project(const QString &filename)
     return false;
   }
 
-  // load level images
-  for (auto it = map.levels.begin(); it != map.levels.end(); ++it) {
-    if (it->drawing_filename.size() == 0)
-      continue;  // this level doesn't have a drawing; skip it
-    QString image_filename = QString::fromStdString(it->drawing_filename);
-
-    qInfo("reading %s...", qUtf8Printable(image_filename));
-    QImageReader image_reader(image_filename);
-    image_reader.setAutoTransform(true);
-    QImage image = image_reader.read();
-    if (image.isNull()) {
-      qWarning("unable to read %s: %s",
-          qUtf8Printable(image_filename),
-          qUtf8Printable(image_reader.errorString()));
-      return false;
-    }
-    image = image.convertToFormat(QImage::Format_Grayscale8);
-    level_images[it->drawing_filename] = QPixmap::fromImage(image);
-    it->drawing_width = level_images[it->drawing_filename].width(); 
-    it->drawing_height = level_images[it->drawing_filename].height(); 
-  }
-
-  // todo: remove all existing level selection buttons!
-
-  // add level selection buttons for all the levels in the new map
-  for (size_t i = 0; i < map.levels.size(); i++) {
-    QPushButton *button = new QPushButton(
-        QString::fromStdString(map.levels[i].name));
-    button->setCheckable(true);
-    level_button_group->addButton(button, i);
-    level_button_hbox_layout->addWidget(button);
-  }
-
   level_idx = 0;
+  update_level_buttons();
 
   if (!map.levels.empty()) {
     level_button_group->button(level_idx)->setChecked(true);
@@ -309,6 +278,24 @@ bool Editor::load_project(const QString &filename)
   map_view->zoom_fit(map, level_idx);
 
   return true;
+}
+
+void Editor::update_level_buttons()
+{
+  // todo: remove all existing level selection buttons!
+  QList<QAbstractButton *> buttons = level_button_group->buttons();
+  for (auto button : buttons) {
+    level_button_group->removeButton(button);
+  }
+
+  // add level selection buttons for all the levels in the new map
+  for (size_t i = 0; i < map.levels.size(); i++) {
+    QPushButton *button = new QPushButton(
+        QString::fromStdString(map.levels[i].name));
+    button->setCheckable(true);
+    level_button_group->addButton(button, i);
+    level_button_hbox_layout->addWidget(button);
+  }
 }
 
 void Editor::new_map()
@@ -330,6 +317,7 @@ void Editor::new_map()
   QDir::setCurrent(dir_path);
 
   map.clear();
+  update_level_buttons();
   save();
 }
 
@@ -375,6 +363,23 @@ void Editor::save()
 void Editor::about()
 {
   QMessageBox::about(this, "about", "hello world");
+}
+
+void Editor::level_add()
+{
+  bool ok = false;
+  QString level_name = QInputDialog::getText(
+      this,
+      "Add Level",
+      "Level name:",
+      QLineEdit::Normal,
+      QString(),
+      &ok);
+  if (!ok || level_name.isEmpty())
+    return;
+  map.add_level(level_name.toStdString());
+  update_level_buttons();
+  level_button_group->button(map.levels.size()-1)->click();
 }
 
 void Editor::zoom_normal()
@@ -798,12 +803,26 @@ bool Editor::create_scene()
   mouse_motion_ellipse = nullptr;
   mouse_motion_polygon = nullptr;
 
-  if (map.levels.empty())
+  if (map.levels.empty()) {
+    printf("nothing to draw!\n");
     return false;
+  }
 
   const Level *level = &map.levels[level_idx];
-  if (level->drawing_filename.size())
-    scene->addPixmap(level_images[level->drawing_filename]);
+  scene->setSceneRect(
+      QRectF(0, 0, level->drawing_width, level->drawing_height));
+  printf("setSceneRect(0, 0, %d, %d)\n", level->drawing_width, level->drawing_height);
+
+  if (level->drawing_filename.size()) {
+    scene->addPixmap(level->pixmap);
+  }
+  else {
+    scene->addRect(
+        0, 0,
+        level->drawing_width, level->drawing_height,
+        QPen(),
+        Qt::white);
+  }
 
   for (const auto &polygon : level->polygons) {
     // now draw the polygons

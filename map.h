@@ -38,6 +38,8 @@ public:
   std::vector<Level> levels;
   bool changed;  // true if map changed since last save/open
 
+  void add_level(const std::string &level_name);
+
   void add_vertex(int level_index, double x, double y);
   int find_nearest_vertex_index(
       int level_index, double x, double y, double &distance);
