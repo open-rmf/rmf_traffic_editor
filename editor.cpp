@@ -111,7 +111,6 @@ Editor::Editor(QWidget *parent)
   save_action =
       file_menu->addAction("&Save Project", this, &Editor::save);
   save_action->setShortcut(tr("Ctrl+S"));
-  save_action->setEnabled(false);
 
   file_menu->addSeparator();
 
@@ -307,7 +306,6 @@ bool Editor::load_project(const QString &filename)
 
   create_scene();
   project_filename = filename;
-  save_action->setEnabled(true);
   map_view->zoom_fit(map, level_idx);
 
   return true;
@@ -349,11 +347,26 @@ void Editor::open()
 void Editor::save()
 {
   if (project_filename.isEmpty()) {
-    QMessageBox::critical(
-        this,
-        "Nothing to save",
-        "Cannot save project, because there is no project loaded");
-    return;
+    QFileDialog dialog(this, "Save Project");
+    dialog.setNameFilter("*.yaml");
+    dialog.setDefaultSuffix(".yaml");
+    dialog.setAcceptMode(QFileDialog::AcceptMode::AcceptSave);
+    dialog.setConfirmOverwrite(true);
+
+    if (dialog.exec() != QDialog::Accepted) {
+      QMessageBox::critical(
+          this,
+          "Project not saved",
+          "Filename not supplied. Project not saved!");
+      return;
+    }
+
+    QFileInfo file_info(dialog.selectedFiles().first());
+    std::string fn = file_info.fileName().toStdString();
+
+    project_filename = file_info.fileName();
+    QString dir_path = file_info.dir().path();
+    QDir::setCurrent(dir_path);
   }
   const std::string filename_std_string = project_filename.toStdString();
   map.save_yaml(filename_std_string);
