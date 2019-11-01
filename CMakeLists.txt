@@ -23,6 +23,7 @@ add_executable(traffic-editor
   editor.cpp
   editor_model.cpp
   level.cpp
+  level_dialog.cpp
   main.cpp
   map.cpp
   map_view.cpp

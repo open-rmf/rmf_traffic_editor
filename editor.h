@@ -90,6 +90,7 @@ private slots:
 
 private:
   void level_add();
+  void level_edit();
   void update_level_buttons();
 
   void zoom_normal();

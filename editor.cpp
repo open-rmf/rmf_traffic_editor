@@ -29,6 +29,7 @@
 #include <yaml-cpp/yaml.h>
 
 #include "editor.h"
+#include "level_dialog.h"
 #include "map_view.h"
 
 
@@ -120,6 +121,8 @@ Editor::Editor(QWidget *parent)
   // LEVEL MENU
   QMenu *level_menu = menuBar()->addMenu("&Level");
   level_menu->addAction("&Add...", this, &Editor::level_add);
+  level_menu->addSeparator();
+  level_menu->addAction("&Edit...", this, &Editor::level_edit);
 
   // VIEW MENU
   QMenu *view_menu = menuBar()->addMenu("&View");
@@ -363,6 +366,12 @@ void Editor::save()
 void Editor::about()
 {
   QMessageBox::about(this, "about", "hello world");
+}
+
+void Editor::level_edit()
+{
+  LevelDialog level_dialog(this);
+  level_dialog.exec();
 }
 
 void Editor::level_add()
