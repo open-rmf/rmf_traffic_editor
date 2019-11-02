@@ -289,6 +289,8 @@ void Editor::update_level_buttons()
   QList<QAbstractButton *> buttons = level_button_group->buttons();
   for (auto button : buttons) {
     level_button_group->removeButton(button);
+    printf("removing button [%s]\n", button->text().toStdString().c_str());
+    delete button;
   }
 
   // add level selection buttons for all the levels in the new map
@@ -326,13 +328,22 @@ void Editor::new_map()
 
 void Editor::open()
 {
-  QFileDialog dialog(this, "Open Project");
-  dialog.setNameFilter("*.yaml");
+  QFileDialog file_dialog(this, "Open Project");
+  file_dialog.setFileMode(QFileDialog::ExistingFile);
+  file_dialog.setNameFilter("*.yaml");
 
-  if (dialog.exec() != QDialog::Accepted)
+  if (file_dialog.exec() != QDialog::Accepted)
     return;
   
-  load_project(dialog.selectedFiles().first());
+  QFileInfo file_info(file_dialog.selectedFiles().first());
+  if (!file_info.exists()) {
+    QMessageBox::critical(
+        this,
+        "File does not exist",
+        "File does not exist. Cannot open file.");
+    return;
+  }
+  load_project(file_info.filePath());
 }
 
 void Editor::save()
@@ -370,25 +381,34 @@ void Editor::about()
 
 void Editor::level_edit()
 {
-  LevelDialog level_dialog(this);
+  if (level_idx >= static_cast<int>(map.levels.size())) {
+    QMessageBox::critical(
+        this,
+        "No levels to edit",
+        "Please use Level->Add... first to add a level");
+    return;
+  }
+
+  LevelDialog level_dialog(this, map.levels[level_idx]);
   level_dialog.exec();
 }
 
 void Editor::level_add()
 {
-  bool ok = false;
-  QString level_name = QInputDialog::getText(
-      this,
-      "Add Level",
-      "Level name:",
-      QLineEdit::Normal,
-      QString(),
-      &ok);
-  if (!ok || level_name.isEmpty())
+  if (project_filename.isEmpty()) {
+    QMessageBox::critical(
+        this,
+        "Please save the project file",
+        "Please save the project file before adding a level");
     return;
-  map.add_level(level_name.toStdString());
-  update_level_buttons();
-  level_button_group->button(map.levels.size()-1)->click();
+  }
+  Level level;
+  LevelDialog level_dialog(this, level);
+  if (level_dialog.exec() == QDialog::Accepted) {
+    map.add_level(level);
+    update_level_buttons();
+    level_button_group->button(map.levels.size()-1)->click();
+  }
 }
 
 void Editor::zoom_normal()
@@ -419,8 +439,23 @@ void Editor::mouse_event(const MouseType t, QMouseEvent *e)
     e->ignore();
     return;
   }
-  if (level_idx >= static_cast<int>(map.levels.size()))
+  if (level_idx >= static_cast<int>(map.levels.size())) {
+    if (t == RELEASE) {
+      if (project_filename.isEmpty()) {
+        QMessageBox::critical(
+            this,
+            "No project",
+            "Please try File->New... or File->Open...");
+      }
+      else if (map.levels.empty()) {
+        QMessageBox::critical(
+            this,
+            "No levels defined",
+            "No levels defined. Use Level->Add...");
+      }
+    }
     return;
+  }
   // dispatch to individual mouse handler functions to save indenting...
   switch (tool_id) {
     case SELECT:       mouse_select(t, e, p); break;
@@ -828,7 +863,8 @@ bool Editor::create_scene()
   else {
     scene->addRect(
         0, 0,
-        level->drawing_width, level->drawing_height,
+        level->x_meters / level->drawing_meters_per_pixel,
+        level->y_meters / level->drawing_meters_per_pixel,
         QPen(),
         Qt::white);
   }

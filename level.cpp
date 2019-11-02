@@ -31,6 +31,8 @@ Level::Level()
   drawing_height(0),
   drawing_meters_per_pixel(0.05),
   elevation(0.0),
+  x_meters(10.0),  // sane default
+  y_meters(10.0),  // sane default
   polygon_edge_proj_x(0.0),
   polygon_edge_proj_y(0.0)
 {
@@ -73,10 +75,19 @@ bool Level::from_yaml(const std::string &_name, const YAML::Node &_data)
     drawing_width = pixmap.width();
     drawing_height = pixmap.height();
   }
+  else if (_data["x_meters"] && _data["y_meters"]) {
+    x_meters = _data["width"].as<double>();
+    y_meters = _data["height"].as<double>();
+    drawing_meters_per_pixel = 0.05;  // something reasonable
+    drawing_width = x_meters / drawing_meters_per_pixel;
+    drawing_height = y_meters / drawing_meters_per_pixel;
+  }
   else {
+    x_meters = 100.0;
+    y_meters = 100.0;
     drawing_meters_per_pixel = 0.05;
-    drawing_width = 100.0 / drawing_meters_per_pixel;
-    drawing_height = 100.0 / drawing_meters_per_pixel;
+    drawing_width = x_meters / drawing_meters_per_pixel;
+    drawing_height = y_meters / drawing_meters_per_pixel;
   }
 
   if (_data["vertices"] && _data["vertices"].IsSequence()) {
@@ -216,12 +227,19 @@ void Level::calculate_scale()
     }
   }
 
-  if (scale_count == 0)
-    return;  // nothing sensible to do.
+  if (scale_count > 0) {
+    drawing_meters_per_pixel = scale_sum / static_cast<double>(scale_count);
+    printf("used %d measurements to estimate meters/pixel as %.5f\n",
+        scale_count, drawing_meters_per_pixel);
+  }
+  else {
+    drawing_meters_per_pixel = 0.05;  // default to something reasonable
+  }
 
-  drawing_meters_per_pixel = scale_sum / static_cast<double>(scale_count);
-  printf("used %d measurements to estimate meters/pixel as %.5f\n",
-      scale_count, drawing_meters_per_pixel);
+  if (drawing_width && drawing_height && drawing_meters_per_pixel > 0.0) {
+    x_meters = drawing_width * drawing_meters_per_pixel;
+    y_meters = drawing_height * drawing_meters_per_pixel;
+  }
 }
 
 void Level::remove_polygon_vertex(

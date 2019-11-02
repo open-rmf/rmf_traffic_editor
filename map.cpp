@@ -227,17 +227,12 @@ void Map::clear()
   levels.clear();
 }
 
-void Map::add_level(const std::string &level_name)
+void Map::add_level(const Level &new_level)
 {
-  changed = true;
   // make sure we don't have this level already
   for (const auto &level : levels)
-    if (level.name == level_name)
+    if (level.name == new_level.name)
       return;
-  Level level;
-  level.name = level_name;
-  level.drawing_meters_per_pixel = 0.05;
-  level.drawing_width = 100.0 / level.drawing_meters_per_pixel;
-  level.drawing_height = 100.0 / level.drawing_meters_per_pixel;
-  levels.push_back(level);
+  changed = true;
+  levels.push_back(new_level);
 }

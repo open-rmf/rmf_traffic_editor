@@ -42,6 +42,8 @@ public:
   double drawing_meters_per_pixel;
   double elevation;
 
+  double x_meters, y_meters;  // manually specified if no drawing supplied
+
   std::vector<Vertex> vertices;
   std::vector<Edge> edges;
   std::vector<Model> models;

@@ -19,12 +19,30 @@
 #define LEVEL_DIALOG_H
 
 #include <QDialog>
+#include "level.h"
+class QLineEdit;
+
 
 class LevelDialog : public QDialog
 {
 public:
-  LevelDialog(QWidget *parent);
+  LevelDialog(QWidget *parent, Level &_level);
   ~LevelDialog();
+ 
+private:
+  Level &level;
+
+  QLineEdit *name_line_edit, *drawing_filename_line_edit;
+  QLineEdit *x_line_edit, *y_line_edit;
+  QPushButton *drawing_filename_button;
+  QPushButton *ok_button, *cancel_button;
+
+  void enable_dimensions(const bool enable);
+
+private slots:
+  void drawing_filename_button_clicked();
+  void ok_button_clicked();
+  void drawing_filename_line_edited(const QString &text);
 };
 
 #endif
