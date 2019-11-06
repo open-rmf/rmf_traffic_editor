@@ -68,6 +68,7 @@ public:
 
   void draw_edges(QGraphicsScene *scene) const;
   void draw_vertices(QGraphicsScene *scene) const;
+  void draw_polygons(QGraphicsScene *scene) const;
 
 private:
   double point_to_line_segment_distance(

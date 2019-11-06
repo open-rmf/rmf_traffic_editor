@@ -155,7 +155,6 @@ private:
   QGraphicsPolygonItem *mouse_motion_polygon;
   std::vector<int> mouse_motion_polygon_vertices;
   int mouse_motion_polygon_vertex_idx;
-  QBrush polygon_brush, selected_polygon_brush;
 
   int tool_id;
 

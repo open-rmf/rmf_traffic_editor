@@ -45,8 +45,6 @@ Editor::Editor(QWidget *parent)
   mouse_motion_model(nullptr),
   mouse_motion_polygon(nullptr),
   mouse_motion_polygon_vertex_idx(-1),
-  polygon_brush(QColor::fromRgbF(1.0, 1.0, 0.5, 0.5)),
-  selected_polygon_brush(QColor::fromRgbF(1.0, 0.0, 0.0, 0.5)),
   tool_id(SELECT)
 {
   instance = this;
@@ -852,40 +850,25 @@ bool Editor::create_scene()
     return false;
   }
 
-  const Level *level = &map.levels[level_idx];
-  scene->setSceneRect(
-      QRectF(0, 0, level->drawing_width, level->drawing_height));
-  printf("setSceneRect(0, 0, %d, %d)\n", level->drawing_width, level->drawing_height);
+  const Level &level = map.levels[level_idx];
 
-  if (level->drawing_filename.size()) {
-    scene->addPixmap(level->pixmap);
+  if (level.drawing_filename.size()) {
+    scene->setSceneRect(
+        QRectF(0, 0, level.drawing_width, level.drawing_height));
+    scene->addPixmap(level.pixmap);
   }
   else {
-    scene->addRect(
-        0, 0,
-        level->x_meters / level->drawing_meters_per_pixel,
-        level->y_meters / level->drawing_meters_per_pixel,
-        QPen(),
-        Qt::white);
+    const double w = level.x_meters / level.drawing_meters_per_pixel;
+    const double h = level.y_meters / level.drawing_meters_per_pixel;
+    scene->setSceneRect(QRectF(0, 0, w, h));
+    scene->addRect(0, 0, w, h, QPen(), Qt::white);
   }
 
-  for (const auto &polygon : level->polygons) {
-    // now draw the polygons
-    QVector<QPointF> polygon_vertices;
-    for (const auto &vertex_idx: polygon.vertices) {
-      const Vertex &v = level->vertices[vertex_idx];
-      polygon_vertices.append(QPointF(v.x, v.y));
-    }
-    scene->addPolygon(
-        QPolygonF(polygon_vertices),
-        QPen(Qt::black),
-        polygon.selected ? selected_polygon_brush : polygon_brush);
-  }
-
-  level->draw_edges(scene);
+  level.draw_polygons(scene);
+  level.draw_edges(scene);
 
   // now draw all the models
-  for (const auto &nav_model : level->models) {
+  for (const auto &nav_model : level.models) {
     // find the pixmap we need for this model
     QPixmap pixmap;
     double model_meters_per_pixel = 1.0;  // will get overridden
@@ -901,12 +884,12 @@ bool Editor::create_scene()
 
     QGraphicsPixmapItem *item = scene->addPixmap(pixmap);
     item->setOffset(-pixmap.width()/2, -pixmap.height()/2);
-    item->setScale(model_meters_per_pixel / level->drawing_meters_per_pixel);
+    item->setScale(model_meters_per_pixel / level.drawing_meters_per_pixel);
     item->setPos(nav_model.x, nav_model.y);
     item->setRotation(-nav_model.yaw * 180.0 / M_PI);
   }
 
-  level->draw_vertices(scene);
+  level.draw_vertices(scene);
 
 #if 0
   // ahhhhh only for debugging...
@@ -1353,7 +1336,9 @@ void Editor::mouse_add_polygon(
         polygon_vertices.append(QPointF(v.x, v.y));
         QPolygonF polygon(polygon_vertices);
         mouse_motion_polygon = scene->addPolygon(
-            polygon, QPen(Qt::black), selected_polygon_brush);
+            polygon,
+            QPen(Qt::black),
+            QBrush(QColor::fromRgbF(1.0, 0.0, 0.0, 0.5)));
         mouse_motion_polygon_vertices.clear();
       }
     
@@ -1402,7 +1387,9 @@ void Editor::mouse_add_polygon(
     // insert the updated polygon into the scene
     QPolygonF polygon(polygon_vertices);
     mouse_motion_polygon = scene->addPolygon(
-        polygon, QPen(Qt::black), selected_polygon_brush);
+        polygon,
+        QPen(Qt::black),
+        QBrush(QColor::fromRgbF(1.0, 0.0, 0.0, 0.5)));
   }
 }
 
@@ -1466,9 +1453,9 @@ void Editor::mouse_edit_polygon(
       QPolygonF drag_polygon(polygon_vertices);
     
       mouse_motion_polygon = scene->addPolygon(
-          drag_polygon, QPen(Qt::black), polygon_brush);
-    
-      //create_scene();
+          drag_polygon,
+          QPen(Qt::black),
+          QBrush(QColor::fromRgbF(1.0, 1.0, 0.5, 0.5)));
     }
   }
   else if (t == RELEASE) {

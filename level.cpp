@@ -523,3 +523,22 @@ void Level::draw_vertices(QGraphicsScene *scene) const
   for (const auto &v : vertices)
     v.draw(scene, drawing_meters_per_pixel);
 }
+
+void Level::draw_polygons(QGraphicsScene *scene) const
+{
+  QBrush polygon_brush(QColor::fromRgbF(1.0, 1.0, 0.5, 0.5));
+  QBrush selected_polygon_brush(QColor::fromRgbF(1.0, 0.0, 0.0, 0.5));
+
+  for (const auto &polygon : polygons) {
+    // now draw the polygons
+    QVector<QPointF> polygon_vertices;
+    for (const auto &vertex_idx: polygon.vertices) {
+      const Vertex &v = vertices[vertex_idx];
+      polygon_vertices.append(QPointF(v.x, v.y));
+    }
+    scene->addPolygon(
+        QPolygonF(polygon_vertices),
+        QPen(Qt::black),
+        polygon.selected ? selected_polygon_brush : polygon_brush);
+  }
+}
