@@ -10,8 +10,8 @@ sudo apt install git cmake libyaml-cpp-dev qt5-default
 git clone https://github.com/osrf/traffic-editor
 cd traffic-editor
 mkdir build
-ln -s ../thumbnails .
 cd build
+ln -s ../thumbnails .
 cmake ..
 make
 ```
