@@ -49,6 +49,7 @@ bool Level::from_yaml(const std::string &_name, const YAML::Node &_data)
 
   if (!_data.IsMap())
     throw std::runtime_error("level " + name + " YAML invalid");
+
   if (_data["drawing"] && _data["drawing"].IsMap()) {
     const YAML::Node &drawing_data = _data["drawing"];
     if (!drawing_data["filename"])
@@ -76,8 +77,8 @@ bool Level::from_yaml(const std::string &_name, const YAML::Node &_data)
     drawing_height = pixmap.height();
   }
   else if (_data["x_meters"] && _data["y_meters"]) {
-    x_meters = _data["width"].as<double>();
-    y_meters = _data["height"].as<double>();
+    x_meters = _data["x_meters"].as<double>();
+    y_meters = _data["y_meters"].as<double>();
     drawing_meters_per_pixel = 0.05;  // something reasonable
     drawing_width = x_meters / drawing_meters_per_pixel;
     drawing_height = y_meters / drawing_meters_per_pixel;
@@ -151,6 +152,10 @@ YAML::Node Level::to_yaml() const
     YAML::Node drawing_node;
     drawing_node["filename"] = drawing_filename;
     y["drawing"] = drawing_node;
+  }
+  else {
+    y["x_meters"] = x_meters;
+    y["y_meters"] = y_meters;
   }
 
   for (const auto &v : vertices)
