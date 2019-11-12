@@ -388,7 +388,11 @@ void Editor::level_edit()
   }
 
   LevelDialog level_dialog(this, map.levels[level_idx]);
-  level_dialog.exec();
+  if (level_dialog.exec() == QDialog::Accepted) {
+    QMessageBox::about(
+        this,
+        "work in progress", "TODO: use this data...sorry.");
+  }
 }
 
 void Editor::level_add()
