@@ -1,4 +1,4 @@
-name: C/C++ CI
+name: ci
 
 on: [push]
 
@@ -9,6 +9,9 @@ jobs:
     
     steps:
     - uses: actions/checkout@v1
+    - name: deps
+      run: |
+        apt install libyaml-cpp-dev
     - name: cmake
       run: |
         mkdir build
