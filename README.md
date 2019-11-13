@@ -3,6 +3,11 @@ A graphical editor for robot traffic flows. The intent is to make it easy
 to annotate building floorplans with the desired robot traffic lanes and
 generate simulation models to test and evaluate different traffic schemes.
 
+## system requirements
+
+This program is developed and tested on Ubuntu 18.04 LTS, using Qt 5 and
+`yaml-cpp`.
+
 ## compiling instructions
 ```
 sudo apt update
