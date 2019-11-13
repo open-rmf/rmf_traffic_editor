@@ -1,0 +1,20 @@
+name: C/C++ CI
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-18.04
+    
+    steps:
+    - uses: actions/checkout@v1
+    - name: cmake
+      run: |
+        mkdir build
+        cd build
+        cmake ..
+    - name: make
+      run: |
+        cd build
+        make
