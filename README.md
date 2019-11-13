@@ -7,8 +7,10 @@ generate simulation models to test and evaluate different traffic schemes.
 
 ## system requirements
 
-This program is developed and tested on Ubuntu 18.04 LTS, using Qt 5 and
-`yaml-cpp`.
+This program is developed and tested on
+[Ubuntu 18.04 LTS](http://releases.ubuntu.com/18.04/), using
+[Qt 5](https://doc.qt.io/qt-5/qt5-intro.html) and
+[`yaml-cpp`](https://github.com/jbeder/yaml-cpp).
 
 ## compiling instructions
 ```
