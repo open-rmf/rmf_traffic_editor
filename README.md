@@ -1,3 +1,5 @@
+![](https://github.com/osrf/traffic-editor/workflows/ci/badge.svg)
+
 # traffic-editor
 A graphical editor for robot traffic flows. The intent is to make it easy
 to annotate building floorplans with the desired robot traffic lanes and

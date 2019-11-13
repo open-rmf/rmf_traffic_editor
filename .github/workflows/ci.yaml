@@ -11,7 +11,7 @@ jobs:
     - uses: actions/checkout@v1
     - name: deps
       run: |
-        sudo apt install libyaml-cpp-dev
+        sudo apt install cmake libyaml-cpp-dev qt5-default
     - name: cmake
       run: |
         mkdir build
