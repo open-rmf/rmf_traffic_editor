@@ -19,18 +19,18 @@ endif()
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 
 add_executable(traffic-editor
-  edge.cpp
-  editor.cpp
-  editor_model.cpp
-  level.cpp
-  level_dialog.cpp
-  main.cpp
-  map.cpp
-  map_view.cpp
-  model.cpp
-  param.cpp
-  polygon.cpp
-  vertex.cpp
+  gui/edge.cpp
+  gui/editor.cpp
+  gui/editor_model.cpp
+  gui/level.cpp
+  gui/level_dialog.cpp
+  gui/main.cpp
+  gui/map.cpp
+  gui/map_view.cpp
+  gui/model.cpp
+  gui/param.cpp
+  gui/polygon.cpp
+  gui/vertex.cpp
 )
 
 target_link_libraries(traffic-editor
