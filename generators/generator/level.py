@@ -14,7 +14,11 @@ from .vertex import Vertex
 class Level:
     def __init__(self, yaml_node, name):
         self.name = name
-        self.drawing_name = yaml_node['drawing']['filename']
+        if 'drawing' in yaml_node:
+          self.drawing_name = yaml_node['drawing']['filename']
+        else:
+          self.drawing_name = None
+
         self.wall_height = 2.5  # meters
         self.wall_thickness = 0.1  # meters
         self.cap_thickness = 0.11  # meters
@@ -24,7 +28,10 @@ class Level:
         for vertex_yaml in yaml_node['vertices']:
             self.vertices.append(Vertex(vertex_yaml))
 
-        self.meas = self.parse_edge_sequence(yaml_node['measurements'])
+        if 'measurements' in yaml_node:
+            self.meas = self.parse_edge_sequence(yaml_node['measurements'])
+        else:
+            self.meas = []
 
         # use the measurements to estimate scale for this level
         scale_cnt = 0
@@ -32,8 +39,13 @@ class Level:
         for m in self.meas:
             scale_cnt += 1
             scale_sum += m.params['distance'].value / m.length
-        self.scale = scale_sum / float(scale_cnt)
-        print(f'level {self.name} scale estimated as {self.scale}')
+        if scale_cnt > 0:
+            self.scale = scale_sum / float(scale_cnt)
+            print(f'level {self.name} scale estimated as {self.scale}')
+        else:
+            self.scale = 1.0
+            print('WARNING! No measurements defined. Scale is indetermined.')
+            print('         Nav graph generated in pixel units, not meters!')
 
         # scale the vertex list
         for p in self.vertices:
@@ -52,8 +64,9 @@ class Level:
                 self.models.append(Model(model_yaml, self.scale))
 
         self.floors = []
-        for floor_yaml in yaml_node['floors']:
-            self.floors.append(Floor(floor_yaml, self.vertices))
+        if 'floors' in yaml_node:
+            for floor_yaml in yaml_node['floors']:
+                self.floors.append(Floor(floor_yaml, self.vertices))
 
     def parse_edge_sequence(self, sequence_yaml):
         edges = []
