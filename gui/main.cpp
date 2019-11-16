@@ -18,12 +18,15 @@
 #include "editor.h"
 #include <QtWidgets>
 #include <string>
+#include <QSettings>
 
 int main(int argc, char *argv[])
 {
   QApplication app(argc, argv);
-
-  QGuiApplication::setApplicationDisplayName("Traffic Editor");
+  app.setOrganizationName("open-robotics");
+  app.setOrganizationDomain("openrobotics.org");
+  app.setApplicationName("traffic-editor");
+  app.setApplicationDisplayName("Traffic Editor");
 
   QCommandLineParser parser;
   parser.addHelpOption();
@@ -32,10 +35,10 @@ int main(int argc, char *argv[])
 
   Editor editor;
   QString filename;
-  if (!parser.positionalArguments().isEmpty()) {
-    filename = parser.positionalArguments().front();
-    editor.load_project(filename);
-  }
+  if (!parser.positionalArguments().isEmpty())
+    editor.load_project(parser.positionalArguments().front());
+  else
+    editor.load_previous_project();
 
   editor.show();
 

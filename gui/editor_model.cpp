@@ -17,8 +17,10 @@
 
 #include <algorithm>
 
+#include <QDir>
 #include <QImage>
 #include <QImageReader>
+#include <QSettings>
 
 #include "editor_model.h"
 
@@ -48,8 +50,16 @@ QPixmap EditorModel::get_pixmap()
     return pixmap;
 
   // if we get here, we have to load the image from disk and generate pixmap
+
+  const QString THUMBNAIL_PATH_KEY("editor/thumbnail_path");
+  QSettings settings;
+  QString thumbnail_path(settings.value(THUMBNAIL_PATH_KEY).toString());
+
   string filename =
-      string("thumbnails/images/cropped/") + name + string(".png");
+      thumbnail_path.toStdString() +
+      "/images/cropped/" +
+      name +
+      string(".png");
   qInfo("loading: [%s]", filename.c_str());
   QImageReader image_reader(QString::fromStdString(filename));
   image_reader.setAutoTransform(true);  // not sure what this does
