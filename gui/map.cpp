@@ -20,6 +20,9 @@
 #include <iostream>
 #include <fstream>
 
+#include <QFileInfo>
+#include <QDir>
+
 using std::string;
 using std::cout;
 using std::endl;
@@ -35,18 +38,33 @@ Map::~Map()
 {
 }
 
+/// Load a YAML file description of a traffic-editor map
+///
+/// This function replaces the contents of this object with what is
+/// in the YAML file.
 void Map::load_yaml(const string &filename)
 {
   // This function may throw exceptions. Caller should be ready for them!
   YAML::Node y = YAML::LoadFile(filename.c_str());
+
+  // change directory to the path of the file, so that we can correctly open
+  // relative paths recorded in the file
+  QString dir(QFileInfo(QString::fromStdString(filename)).absolutePath());
+  qDebug("changing directory to [%s]", qUtf8Printable(dir));
+  if (!QDir::setCurrent(dir))
+    throw std::runtime_error("couldn't change directory");
+
   if (y["building_name"])
     building_name = y["building_name"].as<string>();
 
   if (!y["levels"] || !y["levels"].IsMap())
     throw std::runtime_error("expected top-level dictionary named 'levels'");
-  const YAML::Node yl = y["levels"];
 
-  for (YAML::const_iterator it = yl.begin(); it != yl.end(); ++it) {
+  const YAML::Node yl = y["levels"];
+  levels.clear();
+
+  for (YAML::const_iterator it = yl.begin(); it != yl.end(); ++it)
+  {
     Level l;
     l.from_yaml(it->first.as<string>(), it->second);
     levels.push_back(l);
