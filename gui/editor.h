@@ -96,6 +96,8 @@ private slots:
   void about();
 
 private:
+  void edit_preferences();
+
   void level_add();
   void level_edit();
   void update_level_buttons();

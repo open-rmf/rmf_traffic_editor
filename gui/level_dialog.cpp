@@ -91,7 +91,6 @@ LevelDialog::~LevelDialog()
 
 void LevelDialog::drawing_filename_button_clicked()
 {
-  printf("filename button clicked\n");
   QFileDialog file_dialog(this, "Find Drawing");
   file_dialog.setFileMode(QFileDialog::ExistingFile);
   file_dialog.setNameFilter("*.png");

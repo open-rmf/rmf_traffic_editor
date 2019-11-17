@@ -30,6 +30,7 @@
 
 #include "editor.h"
 #include "level_dialog.h"
+#include "preferences_dialog.h"
 #include "map_view.h"
 
 
@@ -118,6 +119,10 @@ Editor::Editor(QWidget *parent)
 
   QAction *exit_action = file_menu->addAction("E&xit", this, &QWidget::close);
   exit_action->setShortcut(tr("Ctrl+Q"));
+
+  // EDIT MENU
+  QMenu *edit_menu = menuBar()->addMenu("&Edit");
+  edit_menu->addAction("&Preferences...", this, &Editor::edit_preferences);
 
   // LEVEL MENU
   QMenu *level_menu = menuBar()->addMenu("&Level");
@@ -248,6 +253,7 @@ void Editor::populate_model_name_list_widget()
 
   const double model_meters_per_pixel = y["meters_per_pixel"].as<double>();
   const YAML::Node ym = y["models"];
+  model_name_list_widget->clear();
   for (YAML::const_iterator it = ym.begin(); it != ym.end(); ++it) {
     std::string model_name = it->as<std::string>();
     model_name_list_widget->addItem(model_name.c_str());
@@ -420,6 +426,14 @@ void Editor::level_edit()
         this,
         "work in progress", "TODO: use this data...sorry.");
   }
+}
+
+void Editor::edit_preferences()
+{
+  PreferencesDialog preferences_dialog(this);
+
+  if (preferences_dialog.exec() == QDialog::Accepted)
+    populate_model_name_list_widget();
 }
 
 void Editor::level_add()

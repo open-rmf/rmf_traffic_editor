@@ -30,6 +30,7 @@ add_executable(traffic-editor
   gui/model.cpp
   gui/param.cpp
   gui/polygon.cpp
+  gui/preferences_dialog.cpp
   gui/vertex.cpp
 )
 
