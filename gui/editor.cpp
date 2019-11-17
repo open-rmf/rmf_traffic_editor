@@ -30,6 +30,7 @@
 
 #include "editor.h"
 #include "level_dialog.h"
+#include "preferences_dialog.h"
 #include "map_view.h"
 
 
@@ -48,6 +49,9 @@ Editor::Editor(QWidget *parent)
   tool_id(SELECT)
 {
   instance = this;
+
+  QSettings settings;
+  qDebug("settings filename: [%s]", qUtf8Printable(settings.fileName()));
 
   scene = new QGraphicsScene(this);
 
@@ -115,6 +119,10 @@ Editor::Editor(QWidget *parent)
 
   QAction *exit_action = file_menu->addAction("E&xit", this, &QWidget::close);
   exit_action->setShortcut(tr("Ctrl+Q"));
+
+  // EDIT MENU
+  QMenu *edit_menu = menuBar()->addMenu("&Edit");
+  edit_menu->addAction("&Preferences...", this, &Editor::edit_preferences);
 
   // LEVEL MENU
   QMenu *level_menu = menuBar()->addMenu("&Level");
@@ -214,8 +222,26 @@ Editor::Editor(QWidget *parent)
 void Editor::populate_model_name_list_widget()
 {
   // This function may throw exceptions. Caller should be ready for them!
+
+  QSettings settings;
+  const QString THUMBNAIL_PATH_KEY("editor/thumbnail_path");
+  QString thumbnail_path(settings.value(THUMBNAIL_PATH_KEY).toString());
+  if (thumbnail_path.isEmpty())
+  {
+    // Currently not sure how to do this the "right" way. For now assume
+    // everybody is building from source, I guess (?).
+    // todo: figure out something better in the future for binary installs
+    thumbnail_path =
+        QDir::cleanPath(
+            QDir(QApplication::applicationDirPath()).filePath("../thumbnails")
+        );
+    settings.setValue(THUMBNAIL_PATH_KEY, thumbnail_path);
+  }
+
+  QString model_list_path = QDir(thumbnail_path).filePath("model_list.yaml");
+
   YAML::Node y;
-  std::string filename("thumbnails/model_list.yaml");
+  std::string filename(model_list_path.toStdString());
   try {
     y = YAML::LoadFile(filename);
   }
@@ -227,6 +253,7 @@ void Editor::populate_model_name_list_widget()
 
   const double model_meters_per_pixel = y["meters_per_pixel"].as<double>();
   const YAML::Node ym = y["models"];
+  model_name_list_widget->clear();
   for (YAML::const_iterator it = ym.begin(); it != ym.end(); ++it) {
     std::string model_name = it->as<std::string>();
     model_name_list_widget->addItem(model_name.c_str());
@@ -279,6 +306,12 @@ bool Editor::load_project(const QString &filename)
   map_view->zoom_fit(map, level_idx);
 
   return true;
+}
+
+bool Editor::load_previous_project()
+{
+  // todo...
+  return false;
 }
 
 void Editor::update_level_buttons()
@@ -393,6 +426,14 @@ void Editor::level_edit()
         this,
         "work in progress", "TODO: use this data...sorry.");
   }
+}
+
+void Editor::edit_preferences()
+{
+  PreferencesDialog preferences_dialog(this);
+
+  if (preferences_dialog.exec() == QDialog::Accepted)
+    populate_model_name_list_widget();
 }
 
 void Editor::level_add()

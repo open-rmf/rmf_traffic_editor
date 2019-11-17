@@ -28,6 +28,7 @@
 #include <QGraphicsPolygonItem>
 #include <QGraphicsScene>
 #include <QMainWindow>
+#include <QSettings>
 
 
 class MapView;
@@ -59,7 +60,13 @@ public:
   Editor(QWidget *parent = nullptr);
   static Editor *get_instance();
 
+  /// Load a project, replacing the current Map with a Map inflated from
+  /// the YAML filename provided to this function.
   bool load_project(const QString &filename);
+
+  /// Attempt to load the most recently saved project, just for convenience
+  /// when starting the application since often we want to 'resume' editing.
+  bool load_previous_project();
 
   enum {
     SELECT = 1,
@@ -89,6 +96,8 @@ private slots:
   void about();
 
 private:
+  void edit_preferences();
+
   void level_add();
   void level_edit();
   void update_level_buttons();
