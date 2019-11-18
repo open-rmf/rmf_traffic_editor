@@ -16,6 +16,7 @@
 */
 
 #include "preferences_dialog.h"
+#include "preferences_keys.h"
 #include <QtWidgets>
 
 
@@ -29,7 +30,7 @@ PreferencesDialog::PreferencesDialog(QWidget *parent)
 
   QHBoxLayout *thumbnail_path_layout = new QHBoxLayout;
   thumbnail_path_line_edit = new QLineEdit(
-      settings.value("editor/thumbnail_path").toString(), this);
+      settings.value(preferences_keys::thumbnail_path).toString(), this);
   thumbnail_path_button = new QPushButton("Find...", this);
   thumbnail_path_layout->addWidget(new QLabel("thumbnail path:"));
   thumbnail_path_layout->addWidget(thumbnail_path_line_edit);
@@ -49,6 +50,12 @@ PreferencesDialog::PreferencesDialog(QWidget *parent)
       this, &QDialog::reject);
 
   QVBoxLayout *vbox_layout = new QVBoxLayout;
+  open_previous_file_checkbox = new QCheckBox(
+      "Open previous file at startup", this);
+  open_previous_file_checkbox->setChecked(
+      settings.value(preferences_keys::open_previous_file).toBool());
+
+  vbox_layout->addWidget(open_previous_file_checkbox);
   vbox_layout->addLayout(thumbnail_path_layout);
   // todo: some sort of separator (?)
   vbox_layout->addLayout(bottom_buttons_layout);
@@ -95,7 +102,14 @@ void PreferencesDialog::ok_button_clicked()
   }
 
   QSettings settings;
-  settings.setValue("editor/thumbnail_path", thumbnail_path_line_edit->text());
+
+  settings.setValue(
+      preferences_keys::thumbnail_path,
+      thumbnail_path_line_edit->text());
+
+  settings.setValue(
+      preferences_keys::open_previous_file,
+      open_previous_file_checkbox->isChecked());
 
   accept();
 }

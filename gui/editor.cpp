@@ -31,6 +31,7 @@
 #include "editor.h"
 #include "level_dialog.h"
 #include "preferences_dialog.h"
+#include "preferences_keys.h"
 #include "map_view.h"
 
 
@@ -224,8 +225,8 @@ void Editor::populate_model_name_list_widget()
   // This function may throw exceptions. Caller should be ready for them!
 
   QSettings settings;
-  const QString THUMBNAIL_PATH_KEY("editor/thumbnail_path");
-  QString thumbnail_path(settings.value(THUMBNAIL_PATH_KEY).toString());
+  QString thumbnail_path(
+      settings.value(preferences_keys::thumbnail_path).toString());
   if (thumbnail_path.isEmpty())
   {
     // Currently not sure how to do this the "right" way. For now assume
@@ -235,7 +236,7 @@ void Editor::populate_model_name_list_widget()
         QDir::cleanPath(
             QDir(QApplication::applicationDirPath()).filePath("../thumbnails")
         );
-    settings.setValue(THUMBNAIL_PATH_KEY, thumbnail_path);
+    settings.setValue(preferences_keys::thumbnail_path, thumbnail_path);
   }
 
   QString model_list_path = QDir(thumbnail_path).filePath("model_list.yaml");
@@ -305,13 +306,18 @@ bool Editor::load_project(const QString &filename)
   project_filename = filename;
   map_view->zoom_fit(map, level_idx);
 
+  QSettings settings;
+  settings.setValue(preferences_keys::previous_project_path, filename);
+
   return true;
 }
 
 bool Editor::load_previous_project()
 {
-  // todo...
-  return false;
+  QSettings settings;
+  const QString filename(
+      settings.value(preferences_keys::previous_project_path).toString());
+  return load_project(filename);
 }
 
 void Editor::update_level_buttons()
@@ -355,6 +361,11 @@ void Editor::new_map()
   map.clear();
   update_level_buttons();
   save();
+
+  QSettings settings;
+  settings.setValue(
+      preferences_keys::previous_project_path,
+      project_filename);
 }
 
 void Editor::open()

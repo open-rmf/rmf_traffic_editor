@@ -20,6 +20,7 @@
 
 #include <QDialog>
 class QLineEdit;
+class QCheckBox;
 
 
 class PreferencesDialog : public QDialog
@@ -31,6 +32,7 @@ public:
 private:
   QLineEdit *thumbnail_path_line_edit;
   QPushButton *thumbnail_path_button;
+  QCheckBox *open_previous_file_checkbox;
   QPushButton *ok_button, *cancel_button;
 
 private slots:
