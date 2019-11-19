@@ -317,7 +317,9 @@ bool Editor::load_previous_project()
   QSettings settings;
   const QString filename(
       settings.value(preferences_keys::previous_project_path).toString());
-  return load_project(filename);
+  if (!filename.isEmpty())
+    return load_project(filename);
+  return true;
 }
 
 void Editor::update_level_buttons()
