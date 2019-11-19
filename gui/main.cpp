@@ -16,6 +16,7 @@
 */
 
 #include "editor.h"
+#include "preferences_keys.h"
 #include <QtWidgets>
 #include <string>
 #include <QSettings>
@@ -35,9 +36,14 @@ int main(int argc, char *argv[])
 
   Editor editor;
   QString filename;
+  QSettings settings;
+
+  const bool load_previous = settings.value(
+      preferences_keys::open_previous_file, QVariant(true)).toBool();
+
   if (!parser.positionalArguments().isEmpty())
     editor.load_project(parser.positionalArguments().front());
-  else
+  else if (load_previous)
     editor.load_previous_project();
 
   editor.show();
