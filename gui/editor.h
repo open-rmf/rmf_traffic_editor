@@ -75,6 +75,7 @@ public:
     ADD_LANE,
     ADD_WALL,
     ADD_MEAS,
+    ADD_DOOR,
     ADD_MODEL,
     ROTATE_MODEL,
     MOVE_MODEL,
@@ -213,6 +214,7 @@ private:
   void mouse_add_lane(const MouseType t, QMouseEvent *e, const QPointF &p);
   void mouse_add_wall(const MouseType t, QMouseEvent *e, const QPointF &p);
   void mouse_add_meas(const MouseType t, QMouseEvent *e, const QPointF &p);
+  void mouse_add_door(const MouseType t, QMouseEvent *e, const QPointF &p);
   void mouse_add_model(const MouseType t, QMouseEvent *e, const QPointF &p);
   void mouse_rotate_model(const MouseType t, QMouseEvent *e, const QPointF &p);
   void mouse_move_model(const MouseType t, QMouseEvent *e, const QPointF &p);

@@ -99,30 +99,12 @@ bool Level::from_yaml(const std::string &_name, const YAML::Node &_data)
       vertices.push_back(v);
     }
   }
-  if (_data["lanes"] && _data["lanes"].IsSequence()) {
-    const YAML::Node &yl = _data["lanes"];
-    for (YAML::const_iterator it = yl.begin(); it != yl.end(); ++it) {
-      Edge e;
-      e.from_yaml(*it, Edge::LANE);
-      edges.push_back(e);
-    }
-  }
-  if (_data["walls"] && _data["walls"].IsSequence()) {
-    const YAML::Node &yw = _data["walls"];
-    for (YAML::const_iterator it = yw.begin(); it != yw.end(); ++it) {
-      Edge e;
-      e.from_yaml(*it, Edge::WALL);
-      edges.push_back(e);
-    }
-  }
-  if (_data["measurements"] && _data["measurements"].IsSequence()) {
-    const YAML::Node &ym = _data["measurements"];
-    for (YAML::const_iterator it = ym.begin(); it != ym.end(); ++it) {
-      Edge e;
-      e.from_yaml(*it, Edge::MEAS);
-      edges.push_back(e);
-    }
-  }
+
+  load_yaml_edge_sequence(_data, "lanes", Edge::LANE);
+  load_yaml_edge_sequence(_data, "walls", Edge::WALL);
+  load_yaml_edge_sequence(_data, "measurements", Edge::MEAS);
+  load_yaml_edge_sequence(_data, "doors", Edge::DOOR);
+
   if (_data["models"] && _data["models"].IsSequence()) {
     const YAML::Node &ys = _data["models"];
     for (YAML::const_iterator it = ys.begin(); it != ys.end(); ++it) {
@@ -143,6 +125,22 @@ bool Level::from_yaml(const std::string &_name, const YAML::Node &_data)
     elevation = _data["elevation"].as<double>();
   calculate_scale();
   return true;
+}
+
+void Level::load_yaml_edge_sequence(
+    const YAML::Node &data,
+    const char *sequence_name,
+    const Edge::Type type)
+{
+  if (!data[sequence_name] || !data[sequence_name].IsSequence())
+    return;
+
+  const YAML::Node &yl = data[sequence_name];
+  for (YAML::const_iterator it = yl.begin(); it != yl.end(); ++it) {
+    Edge e;
+    e.from_yaml(*it, type);
+    edges.push_back(e);
+  }
 }
 
 YAML::Node Level::to_yaml() const
@@ -174,6 +172,9 @@ YAML::Node Level::to_yaml() const
         break;
       case Edge::MEAS:
         dict_name = "measurements";
+        break;
+      case Edge::DOOR:
+        dict_name = "doors";
         break;
       default:
         printf("tried to save unknown edge type: %d\n",
@@ -511,6 +512,130 @@ void Level::draw_meas(QGraphicsScene *scene, const Edge &edge) const
         Qt::SolidLine, Qt::RoundCap));
 }
 
+void Level::draw_door(QGraphicsScene *scene, const Edge &edge) const
+{
+  const auto &v_start = vertices[edge.start_idx];
+  const auto &v_end = vertices[edge.end_idx];
+  const double g = edge.selected ? 1.0 : 0.0;
+  const double door_thickness = 0.2;  // meters
+  const double door_motion_thickness = 0.05;  // meters
+
+  scene->addLine(
+      v_start.x, v_start.y,
+      v_end.x, v_end.y,
+      QPen(
+        QBrush(QColor::fromRgbF(1.0, g, 0.0, 0.5)),
+        door_thickness / drawing_meters_per_pixel,
+        Qt::SolidLine, Qt::RoundCap));
+
+  auto door_axis_it = edge.params.find("motion_axis");
+  std::string door_axis("start");
+  if (door_axis_it != edge.params.end())
+    door_axis = door_axis_it->second.value_string;
+
+  double door_axis_x = 0;
+  double door_axis_y = 0;
+  if (door_axis == "start")
+  {
+    door_axis_x = v_start.x;
+    door_axis_y = v_start.y;
+  }
+  else if (door_axis == "end")
+  {
+    door_axis_x = v_end.x;
+    door_axis_y = v_end.y;
+  }
+  else
+  {
+    printf("unknown door axis: [%s]\n", door_axis.c_str());
+  }
+
+  double motion_range = 1.57;
+  auto motion_range_it = edge.params.find("motion_range");
+  if (motion_range_it != edge.params.end())
+    motion_range = motion_range_it->second.value_double;
+
+  int motion_dir = 1;
+  auto motion_dir_it = edge.params.find("motion_direction");
+  if (motion_dir_it != edge.params.end())
+    motion_dir = motion_dir_it->second.value_int;
+
+  QPainterPath door_motion_path;
+
+  const double door_dx = v_end.x - v_start.x;
+  const double door_dy = v_end.y - v_start.y;
+  const double door_length = sqrt(door_dx * door_dx + door_dy * door_dy);
+  const double door_angle = atan2(door_dy, door_dx);
+
+  auto door_type_it = edge.params.find("type");
+  if (door_type_it != edge.params.end())
+  {
+    const std::string &door_type = door_type_it->second.value_string;
+    if (door_type == "swing")
+    {
+      // todo: draw arc
+    }
+    else if (door_type == "double_swing")
+    {
+      // each door section is half as long as door_length
+      add_door_swing_path(
+          door_motion_path,
+          v_start.x,
+          v_start.y,
+          door_length / 2,
+          door_angle,
+          door_angle + motion_dir * motion_range);
+
+      add_door_swing_path(
+          door_motion_path,
+          v_end.x,
+          v_end.y,
+          door_length / 2,
+          door_angle + 3.14159,
+          door_angle + 3.14159 - motion_dir * motion_range);
+    }
+    else if (door_type == "slide")
+    {
+      // todo: draw arrows in slide direction
+    }
+    else if (door_type == "double_slide")
+    {
+      // todo: draw sets of arrows for each half
+    }
+  }
+  scene->addPath(
+      door_motion_path,
+      QPen(Qt::black, door_motion_thickness / drawing_meters_per_pixel));
+}
+
+void Level::add_door_swing_path(
+    QPainterPath &path,
+    double hinge_x,
+    double hinge_y,
+    double door_length,
+    double start_angle,
+    double end_angle) const
+{
+  path.moveTo(hinge_x, hinge_y);
+  path.lineTo(
+      hinge_x + door_length * cos(start_angle),
+      hinge_y + door_length * sin(start_angle));
+
+  const int NUM_MOTION_STEPS = 10;
+  const double angle_inc = (end_angle - start_angle) / (NUM_MOTION_STEPS-1);
+  for (int i = 0; i < NUM_MOTION_STEPS; i++)
+  {
+    // compute door opening angle at this motion step
+    const double a = start_angle + i * angle_inc;
+
+    path.lineTo(
+        hinge_x + door_length * cos(a),
+        hinge_y + door_length * sin(a));
+  }
+
+  path.lineTo(hinge_x, hinge_y);
+}
+
 void Level::draw_edges(QGraphicsScene *scene) const
 {
   for (const auto &edge : edges) {
@@ -518,7 +643,11 @@ void Level::draw_edges(QGraphicsScene *scene) const
       case Edge::LANE: draw_lane(scene, edge); break;
       case Edge::WALL: draw_wall(scene, edge); break;
       case Edge::MEAS: draw_meas(scene, edge); break;
-      default: break;
+      case Edge::DOOR: draw_door(scene, edge); break;
+      default:
+        printf("tried to draw unknown edge type: %d\n",
+            static_cast<int>(edge.type));
+        break;
     }
   }
 }
