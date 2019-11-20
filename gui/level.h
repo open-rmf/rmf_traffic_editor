@@ -99,6 +99,13 @@ private:
       double door_length,
       double start_angle,
       double end_angle) const;
+
+  void add_door_slide_path(
+      QPainterPath &path,
+      double hinge_x,
+      double hinge_y,
+      double door_length,
+      double motion_length) const;
 };
 
 #endif

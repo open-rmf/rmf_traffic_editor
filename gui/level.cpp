@@ -550,10 +550,10 @@ void Level::draw_door(QGraphicsScene *scene, const Edge &edge) const
     printf("unknown door axis: [%s]\n", door_axis.c_str());
   }
 
-  double motion_range = 1.57;
-  auto motion_range_it = edge.params.find("motion_range");
-  if (motion_range_it != edge.params.end())
-    motion_range = motion_range_it->second.value_double;
+  double motion_degrees = 90;
+  auto motion_degrees_it = edge.params.find("motion_degrees");
+  if (motion_degrees_it != edge.params.end())
+    motion_degrees = motion_degrees_it->second.value_double;
 
   int motion_dir = 1;
   auto motion_dir_it = edge.params.find("motion_direction");
@@ -570,12 +570,27 @@ void Level::draw_door(QGraphicsScene *scene, const Edge &edge) const
   auto door_type_it = edge.params.find("type");
   if (door_type_it != edge.params.end())
   {
+    const double DEG2RAD = M_PI / 180.0;
+
     const std::string &door_type = door_type_it->second.value_string;
-    if (door_type == "swing")
+    if (door_type == "hinged")
     {
-      // todo: draw arc
+      const double hinge_x = door_axis == "start" ? v_start.x : v_end.x;
+      const double hinge_y = door_axis == "start" ? v_start.y : v_end.y;
+      const double angle_offset = door_axis == "start" ? 0.0 : M_PI;
+      
+      printf("drawing hinged door at (%.1f, %.1f) len %.1f motion_deg %.1f\n",
+          hinge_x, hinge_y, door_length, motion_degrees);
+
+      add_door_swing_path(
+          door_motion_path,
+          hinge_x,
+          hinge_y,
+          door_length,
+          door_angle + angle_offset,
+          door_angle + angle_offset + DEG2RAD * motion_dir * motion_degrees);
     }
-    else if (door_type == "double_swing")
+    else if (door_type == "double_hinged")
     {
       // each door section is half as long as door_length
       add_door_swing_path(
@@ -584,7 +599,7 @@ void Level::draw_door(QGraphicsScene *scene, const Edge &edge) const
           v_start.y,
           door_length / 2,
           door_angle,
-          door_angle + motion_dir * motion_range);
+          door_angle + DEG2RAD * motion_dir * motion_degrees);
 
       add_door_swing_path(
           door_motion_path,
@@ -592,15 +607,19 @@ void Level::draw_door(QGraphicsScene *scene, const Edge &edge) const
           v_end.y,
           door_length / 2,
           door_angle + 3.14159,
-          door_angle + 3.14159 - motion_dir * motion_range);
+          door_angle + 3.14159 - DEG2RAD * motion_dir * motion_degrees);
     }
-    else if (door_type == "slide")
+    else if (door_type == "sliding")
     {
       // todo: draw arrows in slide direction
     }
-    else if (door_type == "double_slide")
+    else if (door_type == "double_sliding")
     {
       // todo: draw sets of arrows for each half
+    }
+    else
+    {
+      printf("tried to draw unknown door type: [%s]\n", door_type.c_str());
     }
   }
   scene->addPath(

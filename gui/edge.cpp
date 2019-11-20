@@ -120,10 +120,11 @@ void Edge::create_required_parameters()
   }
   else if (type == DOOR) {
     create_param_if_needed("name", Param::STRING, std::string());
-    create_param_if_needed("type", Param::STRING, std::string("swing"));
+    create_param_if_needed("type", Param::STRING, std::string("hinged"));
     create_param_if_needed("motion_axis", Param::STRING, std::string("start"));
     create_param_if_needed("motion_direction", Param::INT, 1);
-    create_param_if_needed("motion_range", Param::DOUBLE, 1.57);
+    create_param_if_needed("motion_degrees", Param::DOUBLE, 90.0);  // hinged
+    create_param_if_needed("motion_meters", Param::DOUBLE, 0.0);  // sliding
   }
 }
 
