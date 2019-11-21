@@ -24,6 +24,7 @@
 #include <yaml-cpp/yaml.h>
 
 #include "param.h"
+#include <QString>
 
 
 class Edge
@@ -63,6 +64,7 @@ public:
       const T &param_value);
 
   std::string type_to_string() const;
+  QString type_to_qstring() const;
   void set_graph_idx(const int idx);
   int get_graph_idx() const;
 };

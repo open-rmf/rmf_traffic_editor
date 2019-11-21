@@ -144,6 +144,22 @@ private:
   void clear_property_editor();
   QTableWidgetItem *create_table_item(const QString &str, bool editable=false);
   void property_editor_cell_changed(int row, int column);
+  void property_editor_set_row(
+      const int row_idx,
+      const QString &label,
+      const QString &value,
+      const bool editable = false);
+  void property_editor_set_row(
+      const int row_idx,
+      const QString &label,
+      const int &value,
+      const bool editable = false);
+  void property_editor_set_row(
+      const int row_idx,
+      const QString &label,
+      const double &value,
+      const int max_decimal_places = 3,
+      const bool editable = false);
 
   std::vector<EditorModel> models;
   void model_name_line_edited(const QString &text);
