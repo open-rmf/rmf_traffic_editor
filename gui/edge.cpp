@@ -131,6 +131,11 @@ std::string Edge::type_to_string() const
   return string("undefined");
 }
 
+QString Edge::type_to_qstring() const
+{
+  return QString::fromStdString(type_to_string());
+}
+
 void Edge::set_graph_idx(const int idx)
 {
   if (type != LANE)

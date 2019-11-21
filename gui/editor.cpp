@@ -758,30 +758,83 @@ QTableWidgetItem *Editor::create_table_item(
   return item;
 }
 
+void Editor::property_editor_set_row(
+    const int row_idx,
+    const QString &label,
+    const QString &value,
+    const bool editable)
+{
+  QTableWidgetItem *label_item = new QTableWidgetItem(label);
+  label_item->setFlags(Qt::NoItemFlags);
+
+  QTableWidgetItem *value_item = new QTableWidgetItem(value);
+  if (!editable)
+    value_item->setFlags(Qt::NoItemFlags);
+  else
+    value_item->setBackground(QBrush(Qt::white));
+
+  property_editor->setItem(row_idx, 0, label_item);
+  property_editor->setItem(row_idx, 1, value_item);
+}
+
+void Editor::property_editor_set_row(
+    const int row_idx,
+    const QString &label,
+    const int &value,
+    const bool editable)
+{
+  property_editor_set_row(row_idx, label, QString::number(value), editable);
+}
+
+void Editor::property_editor_set_row(
+    const int row_idx,
+    const QString &label,
+    const double &value,
+    const int num_decimal_places,
+    const bool editable)
+{
+  property_editor_set_row(
+      row_idx,
+      label,
+      QString::number(value, 'g', num_decimal_places + 1),
+      editable);
+}
+
 void Editor::populate_property_editor(const Edge &edge)
 {
+  const Level &level = map.levels[level_idx];
+  const double scale = level.drawing_meters_per_pixel;
+  const Vertex &sv = level.vertices[edge.start_idx];
+  const Vertex &ev = level.vertices[edge.end_idx];
+
+  const double sx = sv.x * scale;
+  const double sy = sv.y * scale;
+  const double ex = ev.x * scale;
+  const double ey = ev.y * scale;
+
+  const double dx = ex - sx;
+  const double dy = ey - sy;
+  const double len = sqrt(dx*dx + dy*dy);
+
   property_editor->blockSignals(true);  // otherwise we get tons of callbacks
+  property_editor->setRowCount(8 + edge.params.size());
 
-  property_editor->setRowCount(3 + edge.params.size());
+  property_editor_set_row(0, "edge_type", edge.type_to_qstring());
+  property_editor_set_row(1, "start_idx", edge.start_idx);
+  property_editor_set_row(2, "end_idx", edge.end_idx);
+  property_editor_set_row(3, "start x (m)", sx);
+  property_editor_set_row(4, "start y (m)", sy);
+  property_editor_set_row(5, "end x (m)", ex);
+  property_editor_set_row(6, "end y (m)", ey);
+  property_editor_set_row(7, "length (m)", len);
 
-  property_editor->setItem(0, 0, create_table_item("edge_type"));
-  property_editor->setItem(0, 1, create_table_item(
-      QString::fromStdString(edge.type_to_string())));
-
-  property_editor->setItem(1, 0, create_table_item("start_idx"));
-  property_editor->setItem(1, 1, create_table_item(
-      QString::number(edge.start_idx)));
-
-  property_editor->setItem(2, 0, create_table_item("end_idx"));
-  property_editor->setItem(2, 1, create_table_item(
-      QString::number(edge.end_idx)));
-
-  int row = 3;
+  int row = 8;
   for (const auto &param : edge.params) {
-    property_editor->setItem(row, 0, create_table_item(
-        QString::fromStdString(param.first)));
-    property_editor->setItem(row, 1, create_table_item(
-        param.second.to_qstring(), true));
+    property_editor_set_row(
+        row,
+        QString::fromStdString(param.first),
+        param.second.to_qstring(),
+        true);
     row++;
   }
 
@@ -790,20 +843,21 @@ void Editor::populate_property_editor(const Edge &edge)
 
 void Editor::populate_property_editor(const Vertex &vertex)
 {
+  const Level &level = map.levels[level_idx];
+  const double scale = level.drawing_meters_per_pixel;
+ 
   property_editor->blockSignals(true);  // otherwise we get tons of callbacks
-  property_editor->setRowCount(3);
+  property_editor->setRowCount(5);
 
-  property_editor->setItem(0, 0, create_table_item("x"));
-  property_editor->setItem(0, 1, create_table_item(
-      QString::number(vertex.x)));
-
-  property_editor->setItem(1, 0, create_table_item("y"));
-  property_editor->setItem(1, 1, create_table_item(
-      QString::number(vertex.y)));
-
-  property_editor->setItem(2, 0, create_table_item("name"));
-  property_editor->setItem(2, 1, create_table_item(
-      QString::fromStdString(vertex.name), true));
+  property_editor_set_row(0, "x (pixels)", vertex.x);
+  property_editor_set_row(1, "y (pixels)", vertex.y);
+  property_editor_set_row(2, "x (m)", vertex.x * scale);
+  property_editor_set_row(3, "x (m)", vertex.y * scale);
+  property_editor_set_row(
+      4,
+      "name",
+      QString::fromStdString(vertex.name),
+      true);
 
   property_editor->blockSignals(false);  // re-enable callbacks
 }
@@ -814,14 +868,17 @@ void Editor::populate_property_editor(const Model &model)
   property_editor->blockSignals(true);  // otherwise we get tons of callbacks
 
   property_editor->setRowCount(2);
-  property_editor->setItem(0, 0, create_table_item("name"));
-  property_editor->setItem(0, 1, create_table_item(
-      QString::fromStdString(model.instance_name)));
 
-  property_editor->setItem(1, 0, create_table_item("model_name"));
-  property_editor->setItem(1, 1, create_table_item(
-      QString::fromStdString(model.model_name)));
+  property_editor_set_row(
+      0,
+      "name",
+      QString::fromStdString(model.instance_name));
 
+  property_editor_set_row(
+      2,
+      "model_name",
+      QString::fromStdString(model.model_name));
+      
   property_editor->blockSignals(false);  // re-enable callbacks
 }
 
