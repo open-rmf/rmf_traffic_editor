@@ -105,7 +105,7 @@ private:
       double hinge_x,
       double hinge_y,
       double door_length,
-      double motion_length) const;
+      double door_angle) const;
 };
 
 #endif

@@ -579,9 +579,6 @@ void Level::draw_door(QGraphicsScene *scene, const Edge &edge) const
       const double hinge_y = door_axis == "start" ? v_start.y : v_end.y;
       const double angle_offset = door_axis == "start" ? 0.0 : M_PI;
       
-      printf("drawing hinged door at (%.1f, %.1f) len %.1f motion_deg %.1f\n",
-          hinge_x, hinge_y, door_length, motion_degrees);
-
       add_door_swing_path(
           door_motion_path,
           hinge_x,
@@ -606,16 +603,33 @@ void Level::draw_door(QGraphicsScene *scene, const Edge &edge) const
           v_end.x,
           v_end.y,
           door_length / 2,
-          door_angle + 3.14159,
-          door_angle + 3.14159 - DEG2RAD * motion_dir * motion_degrees);
+          door_angle + M_PI,
+          door_angle + M_PI - DEG2RAD * motion_dir * motion_degrees);
     }
     else if (door_type == "sliding")
     {
-      // todo: draw arrows in slide direction
+      add_door_slide_path(
+          door_motion_path,
+          v_start.x,
+          v_start.y,
+          door_length,
+          door_angle);
     }
     else if (door_type == "double_sliding")
     {
-      // todo: draw sets of arrows for each half
+      // each door section is half as long as door_length
+      add_door_slide_path(
+          door_motion_path,
+          v_start.x,
+          v_start.y,
+          door_length / 2,
+          door_angle);
+      add_door_slide_path(
+          door_motion_path,
+          v_end.x,
+          v_end.y,
+          door_length / 2,
+          door_angle + M_PI);
     }
     else
     {
@@ -625,6 +639,48 @@ void Level::draw_door(QGraphicsScene *scene, const Edge &edge) const
   scene->addPath(
       door_motion_path,
       QPen(Qt::black, door_motion_thickness / drawing_meters_per_pixel));
+}
+
+void Level::add_door_slide_path(
+    QPainterPath &path,
+    double hinge_x,
+    double hinge_y,
+    double door_length,
+    double door_angle) const
+{
+  // first draw the door as a thin line
+  path.moveTo(hinge_x, hinge_y);
+  path.lineTo(
+      hinge_x + door_length * cos(door_angle),
+      hinge_y + door_length * sin(door_angle));
+
+  // now draw a box around where it slides (in the wall, usually)
+  const double th = door_angle;  // makes expressions below single-line...
+  const double pi_2 = M_PI / 2.0;
+  const double s = 0.15 / drawing_meters_per_pixel;  // sliding panel thickness
+
+  const QPointF p1(
+      hinge_x - s * cos(th + pi_2),
+      hinge_y - s * sin(th + pi_2));
+
+  const QPointF p2(
+      hinge_x - s * cos(th + pi_2) - door_length * cos(th),
+      hinge_y - s * sin(th + pi_2) - door_length * sin(th));
+
+  const QPointF p3(
+      hinge_x + s * cos(th + pi_2) - door_length * cos(th),
+      hinge_y + s * sin(th + pi_2) - door_length * sin(th));
+
+  const QPointF p4(
+      hinge_x + s * cos(th + pi_2),
+      hinge_y + s * sin(th + pi_2));
+
+
+  path.moveTo(p1);
+  path.lineTo(p2);
+  path.lineTo(p3);
+  path.lineTo(p4);
+  path.lineTo(p1);
 }
 
 void Level::add_door_swing_path(

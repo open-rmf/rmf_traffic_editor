@@ -124,7 +124,6 @@ void Edge::create_required_parameters()
     create_param_if_needed("motion_axis", Param::STRING, std::string("start"));
     create_param_if_needed("motion_direction", Param::INT, 1);
     create_param_if_needed("motion_degrees", Param::DOUBLE, 90.0);  // hinged
-    create_param_if_needed("motion_meters", Param::DOUBLE, 0.0);  // sliding
   }
 }
 
