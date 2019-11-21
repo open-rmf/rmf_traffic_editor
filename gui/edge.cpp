@@ -118,6 +118,13 @@ void Edge::create_required_parameters()
     create_param_if_needed("orientation", Param::STRING, std::string());
     create_param_if_needed("graph_idx", Param::INT, 0);
   }
+  else if (type == DOOR) {
+    create_param_if_needed("name", Param::STRING, std::string());
+    create_param_if_needed("type", Param::STRING, std::string("hinged"));
+    create_param_if_needed("motion_axis", Param::STRING, std::string("start"));
+    create_param_if_needed("motion_direction", Param::INT, 1);
+    create_param_if_needed("motion_degrees", Param::DOUBLE, 90.0);  // hinged
+  }
 }
 
 std::string Edge::type_to_string() const
@@ -128,6 +135,8 @@ std::string Edge::type_to_string() const
     return string("wall");
   else if (type == MEAS)
     return string("measurement");
+  else if (type == DOOR)
+    return string("door");
   return string("undefined");
 }
 

@@ -73,7 +73,7 @@ Editor::Editor(QWidget *parent)
 
   property_editor = new QTableWidget();
   property_editor->setStyleSheet("QTableWidget { background-color: #e0e0e0; color: black; gridline-color: #606060; } QLineEdit { background:white; }");
-  property_editor->setMinimumSize(300, 200);
+  property_editor->setMinimumSize(400, 200);
   //property_editor->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Ignored);
   property_editor->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::MinimumExpanding);
   property_editor->setColumnCount(2);
@@ -167,14 +167,19 @@ Editor::Editor(QWidget *parent)
   tool_button_group->setExclusive(true);
 
   create_tool_button(SELECT);
+
   create_tool_button(MOVE_VERTEX);
   create_tool_button(ADD_VERTEX);
+
   create_tool_button(ADD_LANE);
   create_tool_button(ADD_WALL);
   create_tool_button(ADD_MEAS);
+  create_tool_button(ADD_DOOR);
+
   create_tool_button(ADD_MODEL);
   create_tool_button(MOVE_MODEL);
   create_tool_button(ROTATE_MODEL);
+
   create_tool_button(ADD_FLOOR);
   create_tool_button(EDIT_POLYGON);
   create_tool_button(ADD_ZONE);
@@ -520,6 +525,7 @@ void Editor::mouse_event(const MouseType t, QMouseEvent *e)
     case ADD_LANE:     mouse_add_lane(t, e, p); break;
     case ADD_WALL:     mouse_add_wall(t, e, p); break;
     case ADD_MEAS:     mouse_add_meas(t, e, p); break;
+    case ADD_DOOR:     mouse_add_door(t, e, p); break;
     case ADD_MODEL:    mouse_add_model(t, e, p); break;
     case ROTATE_MODEL: mouse_rotate_model(t, e, p); break;
     case MOVE_MODEL:   mouse_move_model(t, e, p); break;
@@ -656,6 +662,7 @@ const QString Editor::tool_id_to_string(const int id)
     case ADD_LANE: return "add &lane";
     case ADD_WALL: return "add &wall";
     case ADD_MEAS: return "add measuremen&t";
+    case ADD_DOOR: return "add door";
     case ADD_MODEL: return "add m&odel";
     case MOVE_MODEL: return "move mo&del";
     case ROTATE_MODEL: return "&rotate model";
@@ -1294,6 +1301,12 @@ void Editor::mouse_add_meas(
     const MouseType t, QMouseEvent *e, const QPointF &p)
 {
   mouse_add_edge(t, e, p, Edge::MEAS);
+}
+
+void Editor::mouse_add_door(
+    const MouseType t, QMouseEvent *e, const QPointF &p)
+{
+  mouse_add_edge(t, e, p, Edge::DOOR);
 }
 
 void Editor::mouse_add_model(

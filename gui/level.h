@@ -27,6 +27,7 @@
 #include "polygon.h"
 
 #include <QPixmap>
+#include <QPainterPath>
 class QGraphicsScene;
 
 
@@ -84,6 +85,27 @@ private:
   void draw_lane(QGraphicsScene *scene, const Edge &edge) const;
   void draw_wall(QGraphicsScene *scene, const Edge &edge) const;
   void draw_meas(QGraphicsScene *scene, const Edge &edge) const;
+  void draw_door(QGraphicsScene *scene, const Edge &edge) const;
+
+  void load_yaml_edge_sequence(
+      const YAML::Node &data,
+      const char *sequence_name,
+      const Edge::Type type);
+
+  void add_door_swing_path(
+      QPainterPath &path,
+      double hinge_x,
+      double hinge_y,
+      double door_length,
+      double start_angle,
+      double end_angle) const;
+
+  void add_door_slide_path(
+      QPainterPath &path,
+      double hinge_x,
+      double hinge_y,
+      double door_length,
+      double door_angle) const;
 };
 
 #endif

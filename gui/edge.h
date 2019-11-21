@@ -36,7 +36,8 @@ public:
     UNDEFINED = 0,
     LANE,
     WALL,
-    MEAS
+    MEAS,
+    DOOR
   } type;
 
   bool selected;  // only for visualization, not saved to YAML
