@@ -297,7 +297,10 @@ class Level:
         nav_data['vertices'] = []
         for i in range(0, next_idx):
             v = self.vertices[mapped_idx_to_vidx[i]]
-            nav_data['vertices'].append([v.x, v.y, v.name])
+            p = {}
+            for param_name, param_value in v.params.items():
+                p[param_name] = param_value.value
+            nav_data['vertices'].append([v.x, v.y, v.name, p])
 
         nav_data['lanes'] = []
         for l in self.lanes:
