@@ -18,8 +18,12 @@
 #ifndef VERTEX_H
 #define VERTEX_H
 
+#include <map>
 #include <string>
+#include <vector>
 #include <yaml-cpp/yaml.h>
+
+#include "param.h"
 
 class QGraphicsScene;
 
@@ -33,13 +37,20 @@ public:
 
   bool selected;
 
+  std::map<std::string, Param> params;
+
   Vertex();
   Vertex(double _x, double _y, const std::string &_name = std::string());
 
   void from_yaml(const YAML::Node &data);
   YAML::Node to_yaml() const;
 
+  void set_param(const std::string &name, const std::string &value);
+
   void draw(QGraphicsScene *, const double meters_per_pixel) const;
+
+  ////////////////////////////////////////////////////////////
+  static const std::vector<std::string> allowed_params;
 };
 
 #endif

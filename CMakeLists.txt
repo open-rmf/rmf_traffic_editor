@@ -19,6 +19,7 @@ endif()
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 
 add_executable(traffic-editor
+  gui/add_param_dialog.cpp
   gui/edge.cpp
   gui/editor.cpp
   gui/editor_model.cpp

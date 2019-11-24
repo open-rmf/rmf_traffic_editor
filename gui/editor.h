@@ -49,6 +49,7 @@ class QLineEdit;
 class QListWidget;
 class QMouseEvent;
 class QHBoxLayout;
+class QPushButton;
 QT_END_NAMESPACE
 
 
@@ -160,6 +161,9 @@ private:
       const double &value,
       const int max_decimal_places = 3,
       const bool editable = false);
+  QPushButton *add_param_button, *delete_param_button;
+  void add_param_button_clicked();
+  void delete_param_button_clicked();
 
   std::vector<EditorModel> models;
   void model_name_line_edited(const QString &text);
