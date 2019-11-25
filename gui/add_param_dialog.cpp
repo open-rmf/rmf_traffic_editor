@@ -21,8 +21,9 @@
 
 AddParamDialog::AddParamDialog(
     QWidget *parent,
-    const std::vector<std::string> &param_names)
-: QDialog(parent)
+    const std::vector<std::pair<std::string, Param::Type> >& _param_names)
+: QDialog(parent),
+  param_names(_param_names)
 {
   ok_button = new QPushButton("OK", this);  // first button = [enter] button
   cancel_button = new QPushButton("Cancel", this);
@@ -31,7 +32,7 @@ AddParamDialog::AddParamDialog(
   name_hbox_layout->addWidget(new QLabel("name:"));
   name_combo_box = new QComboBox;
   for (const auto & param_name : param_names)
-    name_combo_box->addItem(QString::fromStdString(param_name));
+    name_combo_box->addItem(QString::fromStdString(param_name.first));
   name_hbox_layout->addWidget(name_combo_box);
 
   QHBoxLayout *bottom_buttons_layout = new QHBoxLayout;
@@ -65,4 +66,17 @@ void AddParamDialog::ok_button_clicked()
 std::string AddParamDialog::get_param_name() const
 {
   return name_combo_box->currentText().toStdString();
+}
+
+Param::Type AddParamDialog::get_param_type() const
+{
+  // loop through the allowed_params to find the name that is selected
+  // then return the type
+  for (const auto& param_name : param_names)
+  {
+    if (name_combo_box->currentText().toStdString() != param_name.first)
+      continue;
+    return param_name.second;
+  }
+  return Param::Type::UNDEFINED;
 }

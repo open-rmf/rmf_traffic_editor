@@ -45,12 +45,12 @@ public:
   void from_yaml(const YAML::Node &data);
   YAML::Node to_yaml() const;
 
-  void set_param(const std::string &name, const std::string &value);
+  void set_param(const std::string& name, const std::string& value);
 
   void draw(QGraphicsScene *, const double meters_per_pixel) const;
 
   ////////////////////////////////////////////////////////////
-  static const std::vector<std::string> allowed_params;
+  static const std::vector<std::pair<std::string, Param::Type> > allowed_params;
 };
 
 #endif

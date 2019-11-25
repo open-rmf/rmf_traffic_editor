@@ -849,7 +849,7 @@ void Editor::add_param_button_clicked()
     {
       if (v.selected)
       {
-        v.params[dialog.get_param_name()] = Param(string());
+        v.params[dialog.get_param_name()] = Param(dialog.get_param_type());
         populate_property_editor(v);
         return;  // stop after finding the first one
       }

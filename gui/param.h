@@ -27,16 +27,6 @@
 class Param
 {
 public:
-  Param();
-  ~Param();
-  Param(const std::string &s);
-  Param(const int &i);
-  Param(const double &d);
-  Param(const bool &b);
-
-  void from_yaml(const YAML::Node &data);
-  YAML::Node to_yaml() const;
-
   enum Type {
     UNDEFINED = 0,
     STRING,
@@ -45,12 +35,23 @@ public:
     BOOL
   } type;
 
+  Param();
+  ~Param();
+  Param(const std::string &s);
+  Param(const int &i);
+  Param(const double &d);
+  Param(const bool &b);
+  Param(const Type& t);
+
+  void from_yaml(const YAML::Node &data);
+  YAML::Node to_yaml() const;
+
   int value_int;
   double value_double;
   std::string value_string;
   bool value_bool;
 
-  void set(const std::string &value);
+  void set(const std::string& value);
 
   QString to_qstring() const;
 };

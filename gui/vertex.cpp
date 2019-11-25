@@ -21,8 +21,13 @@
 #include "vertex.h"
 using std::string;
 using std::vector;
+using std::pair;
 
-const vector<string> Vertex::allowed_params { "workcell_name" };
+const vector<pair<string, Param::Type> > Vertex::allowed_params
+{
+  { "is_parking_spot", Param::Type::BOOL },
+  { "workcell_name", Param::Type::STRING }
+};
 
 
 Vertex::Vertex()
@@ -109,7 +114,7 @@ void Vertex::draw(
   }
 }
 
-void Vertex::set_param(const std::string &param_name, const std::string &value)
+void Vertex::set_param(const std::string &param_name, const std::string& value)
 {
   auto it = params.find(param_name);
   if (it == params.end()) {

@@ -24,6 +24,11 @@ Param::Param()
 {
 }
 
+Param::Param(const Type& t)
+: type(t), value_int(0), value_double(0.0), value_bool(false)
+{
+}
+
 Param::Param(const std::string &s)
 : type(STRING),
   value_int(0),
