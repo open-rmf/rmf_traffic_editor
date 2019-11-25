@@ -41,8 +41,17 @@ class Generator:
         building = self.parse_editor_yaml(input_filename)
 
         nav_graphs = building.generate_nav_graphs()
+
+        class CustomDumper(yaml.Dumper):
+            def ignore_aliases(self, _):
+                return True
+
         for graph_name, graph_data in nav_graphs.items():
             output_filename = f'{output_prefix}_{graph_name}.yaml'
             print(f'writing {output_filename}')
             with open(output_filename, 'w') as f:
-                yaml.dump(graph_data, f, default_flow_style=None)
+                yaml.dump(
+                    graph_data,
+                    f,
+                    default_flow_style=None,
+                    Dumper=CustomDumper)
