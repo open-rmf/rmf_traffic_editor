@@ -1,3 +1,4 @@
+import copy
 import math
 import os
 import shutil
@@ -53,10 +54,13 @@ class Level:
             p.y *= self.scale
 
         if 'lanes' in yaml_node:
-          self.lanes = self.parse_edge_sequence(yaml_node['lanes'])
+            self.lanes = self.parse_edge_sequence(yaml_node['lanes'])
 
         if 'walls' in yaml_node:
-          self.walls = self.parse_edge_sequence(yaml_node['walls'])
+            self.walls = self.parse_edge_sequence(yaml_node['walls'])
+
+        if 'doors' in yaml_node:
+            self.doors = self.parse_edge_sequence(yaml_node['doors'])
 
         self.models = []
         if 'models' in yaml_node:
@@ -272,6 +276,33 @@ class Level:
         indent_etree(config_ele)
         config_tree.write(path, encoding='utf-8', xml_declaration=True)
 
+    def segments_intersect(self, v1, v2, v3, v4):
+        x1 = v1.x
+        y1 = v1.y
+        x2 = v2.x
+        y2 = v2.y
+        x3 = v3.x
+        y3 = v3.y
+        x4 = v4.x
+        y4 = v4.y
+        # line segments are (x1,y1),(x2,y2) and (x3,y3),(x4,y4)
+        det = (x1-x2)*(y3-y4) - (y1-y2)*(x3-x4)
+        if abs(det) < 0.01:
+            # print('  determinant is {}. precision is no bueno.'.format(det))
+            # print('    ({},{}),({},{}) and ({},{}),({},{})'.format(
+            #     x1, y1, x2, y2, x3, y3, x4, y4))
+            return False
+        t =  ((x1-x3)*(y3-y4)-(y1-y3)*(x3-x4)) / det
+        u = -((x1-x2)*(y1-y3)-(y1-y2)*(x1-x3)) / det
+        #print('  t = {}  u = {}'.format(round(t,3), round(u,3)))
+        if u < 0 or t < 0 or u > 1 or t > 1:
+            return False
+        print('hooray, we found an intersection: t={}, u={}'.format(
+            round(t,3), round(u,3)))
+        print('  ({},{}),({},{}) and ({},{}),({},{})'.format(
+            x1, y1, x2, y2, x3, y3, x4, y4))
+        return True
+
     def generate_nav_graph(self, graph_idx):
         """ Generate a graph without unnecessary (non-lane) vertices """
         # first remap the vertices. Store both directions; we'll need them
@@ -297,20 +328,40 @@ class Level:
         nav_data['vertices'] = []
         for i in range(0, next_idx):
             v = self.vertices[mapped_idx_to_vidx[i]]
-            p = {}
+            p = {'name': v.name}
             for param_name, param_value in v.params.items():
                 p[param_name] = param_value.value
-            nav_data['vertices'].append([v.x, v.y, v.name, p])
+            nav_data['vertices'].append([v.x, v.y, p])
 
         nav_data['lanes'] = []
         for l in self.lanes:
             if l.params['graph_idx'].value != graph_idx:
                 continue
+            v1 = self.vertices[l.start_idx]
+            v2 = self.vertices[l.end_idx]
+
             start_idx = vidx_to_mapped_idx[l.start_idx]
             end_idx = vidx_to_mapped_idx[l.end_idx]
-            nav_data['lanes'].append(
-                [start_idx, end_idx, l.orientation()])
+
+            p = {}  # params
+
+            # todo: calculate if this lane segment goes through
+            # any doors, and add the name of the door if so
+            for door in self.doors:
+                door_v1 = self.vertices[door.start_idx]
+                door_v2 = self.vertices[door.end_idx]
+                door_name = door.params['name'].value
+                if self.segments_intersect(v1, v2, door_v1, door_v2):
+                    print(f'found intersection with door {door_name}!')
+                    p['door_name'] = door_name
+
+            if l.orientation():
+                p['orientation_constraint'] = l.orientation()
+            nav_data['lanes'].append([start_idx, end_idx, p])
+
             if l.is_bidirectional():
-                nav_data['lanes'].append(
-                    [end_idx, start_idx, l.reverse_orientation()])
+                p = copy.deepcopy(p)
+                if l.orientation():
+                    p['orientation_constraint'] = l.reverse_orientation()
+                nav_data['lanes'].append([end_idx, start_idx, p])
         return nav_data
