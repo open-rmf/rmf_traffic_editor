@@ -28,11 +28,13 @@
 
 #include <yaml-cpp/yaml.h>
 
+#include "add_param_dialog.h"
 #include "editor.h"
 #include "level_dialog.h"
 #include "preferences_dialog.h"
 #include "preferences_keys.h"
 #include "map_view.h"
+using std::string;
 
 
 Editor *Editor::instance = nullptr;
@@ -90,9 +92,30 @@ Editor::Editor(QWidget *parent)
       property_editor, &QTableWidget::cellChanged,
       this, &Editor::property_editor_cell_changed);
 
+  QHBoxLayout *param_button_layout = new QHBoxLayout;
+
+  add_param_button = new QPushButton("Add...");
+  add_param_button->setEnabled(false);
+  connect(
+      add_param_button, &QAbstractButton::clicked,
+      this, &Editor::add_param_button_clicked);
+
+  delete_param_button = new QPushButton("Delete");
+  delete_param_button->setEnabled(false);
+  connect(
+      delete_param_button, &QAbstractButton::clicked,
+      this, &Editor::delete_param_button_clicked);
+
+  param_button_layout->addWidget(add_param_button);
+  param_button_layout->addWidget(delete_param_button);
+
+  QVBoxLayout *property_layout = new QVBoxLayout;
+  property_layout->addWidget(property_editor);
+  property_layout->addLayout(param_button_layout);
+
   QHBoxLayout *hbox_layout = new QHBoxLayout;
   hbox_layout->addLayout(map_layout, 1);
-  hbox_layout->addWidget(property_editor);
+  hbox_layout->addLayout(property_layout);
 
   QWidget *w = new QWidget();
   w->setMouseTracking(true);
@@ -719,6 +742,9 @@ void Editor::tool_toggled(int id, bool checked)
 
 void Editor::update_property_editor()
 {
+  add_param_button->setEnabled(false);
+  delete_param_button->setEnabled(false);
+
   if (map.levels.empty())
     return;
 
@@ -807,6 +833,38 @@ void Editor::property_editor_set_row(
       editable);
 }
 
+void Editor::add_param_button_clicked()
+{
+  const string object_type =
+      add_param_button->property("object_type").toString().toStdString();
+  printf("add param object type: %s\n", object_type.c_str());
+
+  if (object_type == "vertex")
+  {
+    AddParamDialog dialog(this, Vertex::allowed_params);
+    if (dialog.exec() != QDialog::Accepted)
+      return;
+
+    for (auto &v : map.levels[level_idx].vertices)
+    {
+      if (v.selected)
+      {
+        v.params[dialog.get_param_name()] = Param(string());
+        populate_property_editor(v);
+        return;  // stop after finding the first one
+      }
+    }
+  }
+}
+
+void Editor::delete_param_button_clicked()
+{
+  QMessageBox::about(
+      this,
+      "work in progress",
+      "TODO: something...sorry.");
+}
+
 void Editor::populate_property_editor(const Edge &edge)
 {
   const Level &level = map.levels[level_idx];
@@ -854,7 +912,7 @@ void Editor::populate_property_editor(const Vertex &vertex)
   const double scale = level.drawing_meters_per_pixel;
  
   property_editor->blockSignals(true);  // otherwise we get tons of callbacks
-  property_editor->setRowCount(5);
+  property_editor->setRowCount(5 + vertex.params.size());
 
   property_editor_set_row(0, "x (pixels)", vertex.x);
   property_editor_set_row(1, "y (pixels)", vertex.y);
@@ -865,6 +923,19 @@ void Editor::populate_property_editor(const Vertex &vertex)
       "name",
       QString::fromStdString(vertex.name),
       true);
+
+  int row = 5;
+  for (const auto &param : vertex.params) {
+    property_editor_set_row(
+        row,
+        QString::fromStdString(param.first),
+        param.second.to_qstring(),
+        true);
+    row++;
+  }
+
+  add_param_button->setEnabled(true);
+  add_param_button->setProperty("object_type", QVariant("vertex"));
 
   property_editor->blockSignals(false);  // re-enable callbacks
 }
@@ -892,6 +963,8 @@ void Editor::populate_property_editor(const Model &model)
 void Editor::clear_property_editor()
 {
   property_editor->setRowCount(0);
+  add_param_button->setEnabled(false);
+  delete_param_button->setEnabled(false);
 }
 
 void Editor::property_editor_cell_changed(int row, int column)
@@ -904,9 +977,10 @@ void Editor::property_editor_cell_changed(int row, int column)
   for (auto &v : map.levels[level_idx].vertices) {
     if (!v.selected)
       continue;
-    if (name == "name") {
+    if (name == "name")
       v.name = value;
-    }
+    else
+      v.set_param(name, value);
     create_scene();
     return;  // stop after finding the first one
   }

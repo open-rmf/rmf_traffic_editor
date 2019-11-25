@@ -19,6 +19,10 @@
 #include <QGraphicsSimpleTextItem>
 
 #include "vertex.h"
+using std::string;
+using std::vector;
+
+const vector<string> Vertex::allowed_params { "workcell_name" };
 
 
 Vertex::Vertex()
@@ -26,7 +30,7 @@ Vertex::Vertex()
 {
 }
 
-Vertex::Vertex(double _x, double _y, const std::string &_name)
+Vertex::Vertex(double _x, double _y, const string &_name)
 : x(_x), y(_y), name(_name), selected(false)
 {
 }
@@ -40,7 +44,18 @@ void Vertex::from_yaml(const YAML::Node &data)
   if (data.size() < 4)
     return;  // todo: remove... intended only during format transition
   // skip the z-offset in data[2] for now
-  name = data[3].as<std::string>();
+  name = data[3].as<string>();
+
+  // load the parameters, all of which (including the params map) are
+  // optional at the moment.
+  if (data.size() >= 4) {
+    for (YAML::const_iterator it = data[4].begin(); it != data[4].end(); ++it)
+    {
+      Param p;
+      p.from_yaml(it->second);
+      params[it->first.as<string>()] = p;
+    }
+  }
 }
 
 YAML::Node Vertex::to_yaml() const
@@ -53,6 +68,15 @@ YAML::Node Vertex::to_yaml() const
   vertex_node.push_back(round(y * 1000.0) / 1000.0);
   vertex_node.push_back(0.0);  // placeholder for Z offsets in the future
   vertex_node.push_back(name);
+
+  if (!params.empty())
+  {
+    YAML::Node params_node(YAML::NodeType::Map);
+    for (const auto &param : params)
+      params_node[param.first] = param.second.to_yaml();
+    vertex_node.push_back(params_node);
+  }
+
   vertex_node.SetStyle(YAML::EmitterStyle::Flow);
   return vertex_node;
 }
@@ -83,4 +107,14 @@ void Vertex::draw(
     item->setBrush(QColor(255, 0, 0, 255));
     item->setPos(x, y + radius);
   }
+}
+
+void Vertex::set_param(const std::string &param_name, const std::string &value)
+{
+  auto it = params.find(param_name);
+  if (it == params.end()) {
+    printf("tried to set unknown parameter [%s]\n", param_name.c_str());
+    return;  // unknown parameter
+  }
+  it->second.set(value);
 }

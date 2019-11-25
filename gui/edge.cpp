@@ -67,10 +67,8 @@ YAML::Node Edge::to_yaml() const
   y.push_back(end_idx);
 
   YAML::Node params_node(YAML::NodeType::Map);
-  for (const auto &param : params) {
-    YAML::Node param_node = param.second.to_yaml();
-    params_node[param.first] = param_node;
-  }
+  for (const auto &param : params)
+    params_node[param.first] = param.second.to_yaml();
   y.push_back(params_node);
 
   return y;
