@@ -70,22 +70,21 @@ PreferencesDialog::~PreferencesDialog()
 void PreferencesDialog::thumbnail_path_button_clicked()
 {
   QFileDialog file_dialog(this, "Find Thumbnail Path");
-  file_dialog.setFileMode(QFileDialog::ExistingFile);
-  file_dialog.setNameFilter("model_list.yaml");
+  file_dialog.setFileMode(QFileDialog::Directory);
+  file_dialog.setOption(QFileDialog::ShowDirsOnly);
   if (file_dialog.exec() != QDialog::Accepted)
     return;  // user clicked 'cancel'
 
-  const QString model_list_path = file_dialog.selectedFiles().first();
-  if (!QFileInfo(model_list_path).exists())
+  const QString path = file_dialog.selectedFiles().first();
+  if (!QFileInfo(path).exists())
   {
     QMessageBox::critical(
         this,
-        "model_list.yaml file does not exist",
-        "File does not exist.");
+        "path does not exist",
+        "path does not exist");
     return;
   }
-  thumbnail_path_line_edit->setText(
-      QFileInfo(model_list_path).dir().absolutePath());
+  thumbnail_path_line_edit->setText(path);
 }
 
 void PreferencesDialog::ok_button_clicked()
