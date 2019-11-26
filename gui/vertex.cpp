@@ -26,6 +26,7 @@ using std::pair;
 const vector<pair<string, Param::Type> > Vertex::allowed_params
 {
   { "is_parking_spot", Param::Type::BOOL },
+  { "is_charger", Param::Type::BOOL},
   { "workcell_name", Param::Type::STRING }
 };
 
