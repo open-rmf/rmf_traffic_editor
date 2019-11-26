@@ -1,13 +1,12 @@
-#!/usr/bin/env python3
 import sys
-import generator
+import building_map
 
 
-if __name__ == '__main__':
+def main():
     if len(sys.argv) != 3:
-        print('usage: gazebo_generator INPUT.yaml OUTPUT.world')
+        print('usage: building_map_gazebo INPUT.yaml OUTPUT.world')
         sys.exit(1)
     input_filename = sys.argv[1]
     output_filename = sys.argv[2]
-    g = generator.Generator()
+    g = building_map.Generator()
     g.generate_sdf(input_filename, output_filename)

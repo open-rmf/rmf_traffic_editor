@@ -14,10 +14,11 @@ jobs:
         sudo apt install cmake libyaml-cpp-dev qt5-default
     - name: cmake
       run: |
+        cd traffic_editor
         mkdir build
         cd build
         cmake ..
     - name: make
       run: |
-        cd build
+        cd traffic_editor/build
         make
