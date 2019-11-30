@@ -2,7 +2,7 @@ import math
 import os
 import shutil
 
-import tripy.tripy
+from tripy import tripy
 from xml.etree.ElementTree import SubElement
 
 
@@ -82,7 +82,7 @@ class Floor:
 
         self.generate_geometry(collision_ele)
 
-        triangles = tripy.tripy.earclip(self.vertices)
+        triangles = tripy.earclip(self.vertices)
 
         if not os.path.exists(meshes_path):
             os.makedirs(meshes_path)
@@ -145,6 +145,7 @@ class Floor:
 
         # todo: read texture parameter somehow from YAML
         # for now, just use blue linoleum
+        # todo: use ament_resource_index somehow to calculate this path
         texture_path_source = 'textures/blue_linoleum_high_contrast.png'
         texture_path_dest = f'{model_path}/meshes/floor_{floor_cnt}.png'
         shutil.copyfile(texture_path_source, texture_path_dest)

@@ -5,12 +5,13 @@ package_name = 'building_map_tools'
 setup(
     name=package_name,
     version='0.0.0',
-    packages=['building_map', 'building_map_server', 'building_map_generators'],
+    packages=['building_map', 'building_map_server', 'building_map_generators', 'tripy'],
     py_modules=[],
     data_files=[
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
+        ('share/' + package_name + '/textures', ['building_map_generators/textures/blue_linoleum_high_contrast.png']),
     ],
     install_requires=['setuptools'],
     author='Morgan Quigley',
