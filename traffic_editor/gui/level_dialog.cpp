@@ -123,8 +123,8 @@ void LevelDialog::ok_button_clicked()
           this,
           "If supplied, drawing filename must exist",
           "If supplied, drawing filename must exist");
+      return;
     }
-    return;
   }
   /*
   // todo: figure out how to test for valid numeric values;
