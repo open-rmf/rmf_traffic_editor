@@ -1,3 +1,5 @@
+![](https://github.com/osrf/traffic_editor/workflows/build/badge.svg)
+
 # traffic\_editor
 
 Welcome!
