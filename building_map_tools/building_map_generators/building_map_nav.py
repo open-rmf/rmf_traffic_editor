@@ -1,13 +1,12 @@
-#!/usr/bin/env python3
 import sys
-import generator
+import building_map
 
 
-if __name__ == '__main__':
+def main():
     if len(sys.argv) != 3:
-        print('usage: nav_generator INPUT.yaml OUTPUT_PREFIX')
+        print('usage: building_map_nav INPUT.yaml OUTPUT_PREFIX')
         sys.exit(1)
     input_filename = sys.argv[1]
     output_prefix = sys.argv[2]
-    g = generator.Generator()
+    g = building_map.Generator()
     g.generate_nav(input_filename, output_prefix)

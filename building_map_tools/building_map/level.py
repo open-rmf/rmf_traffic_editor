@@ -6,6 +6,7 @@ import shutil
 from xml.etree.ElementTree import ElementTree, Element, SubElement
 from .etree_utils import indent_etree
 
+from ament_index_python.packages import get_package_share_directory
 from .edge import Edge
 from .floor import Floor
 from .model import Model
@@ -201,7 +202,9 @@ class Level:
             f.write(f'map_Kd wall.png\n')
 
         print(f'  copying wall textures into {meshes_path}')
-        texture_path_source = 'textures/wall.png'
+        texture_path_source = os.path.join(
+            get_package_share_directory('building_map_tools'),
+            'textures/wall.png')
         texture_path_dest = f'{meshes_path}/wall.png'
         shutil.copyfile(texture_path_source, texture_path_dest)
 
