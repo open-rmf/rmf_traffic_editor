@@ -4,6 +4,7 @@ import shutil
 
 from tripy import tripy
 from xml.etree.ElementTree import SubElement
+from ament_index_python.packages import get_package_share_directory
 
 
 class Floor:
@@ -146,7 +147,9 @@ class Floor:
         # todo: read texture parameter somehow from YAML
         # for now, just use blue linoleum
         # todo: use ament_resource_index somehow to calculate this path
-        texture_path_source = 'textures/blue_linoleum_high_contrast.png'
+        texture_path_source = os.path.join(
+            get_package_share_directory('building_map_tools'),
+            'textures/blue_linoleum_high_contrast.png')
         texture_path_dest = f'{model_path}/meshes/floor_{floor_cnt}.png'
         shutil.copyfile(texture_path_source, texture_path_dest)
         print(f'  wrote {texture_path_dest}')
