@@ -1,4 +1,4 @@
-![](https://github.com/osrf/traffic_editor/workflows/ci/badge.svg)
+![](https://github.com/osrf/traffic_editor/workflows/build/badge.svg)
 
 # Traffic Editor
 A graphical editor for robot traffic flows. The intent is to make it easy
