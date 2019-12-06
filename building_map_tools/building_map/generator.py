@@ -18,15 +18,14 @@ class Generator:
             y = yaml.safe_load(f)
             return Building(y)
 
-    def generate_sdf(self, input_filename, output_filename):
+    def generate_sdf(self, input_filename, output_filename, output_models_dir):
         print('generating {} from {}'.format(output_filename, input_filename))
-        # todo take path for output models directory as a parameter?
 
         building = self.parse_editor_yaml(input_filename)
 
-        if not os.path.exists('models'):
-            os.makedirs('models')
-        building.generate_sdf_models('models')
+        if not os.path.exists(output_models_dir):
+            os.makedirs(output_models_dir)
+        building.generate_sdf_models(output_models_dir)
         
         # generate a top-level SDF for convenience
         sdf = building.generate_sdf_world()

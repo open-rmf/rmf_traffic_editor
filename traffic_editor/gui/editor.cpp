@@ -384,12 +384,13 @@ void Editor::new_map()
   QFileInfo file_info(dialog.selectedFiles().first());
   std::string fn = file_info.fileName().toStdString();
 
-  project_filename = file_info.fileName();
+  project_filename = file_info.absoluteFilePath();
   QString dir_path = file_info.dir().path();
   QDir::setCurrent(dir_path);
 
   map.clear();
   update_level_buttons();
+  create_scene();
   save();
 
   QSettings settings;
