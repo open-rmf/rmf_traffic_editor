@@ -39,3 +39,9 @@ add_executable(traffic-editor
 target_link_libraries(traffic-editor
   Qt5::Widgets
   yaml-cpp)
+
+install(
+  TARGETS traffic-editor
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
