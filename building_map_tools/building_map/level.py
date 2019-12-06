@@ -223,6 +223,28 @@ class Level:
             model_cnt += 1
             model.generate(world_ele, model_cnt)
 
+        # sniff around in our vertices and spawn robots if requested
+        for vertex in self.vertices:
+            if 'spawn_robot_type' in vertex.params:
+                self.generate_robot_at_vertex(vertex, world_ele)
+
+    def generate_robot_at_vertex(self, vertex, world_ele):
+        robot_type = vertex.params['spawn_robot_type'].value
+        robot_name = vertex.params['spawn_robot_name'].value
+        print(f'spawning robot name {robot_name} of type {robot_type}')
+
+        # todo: calculate yaw from the one (and hopefully only) lane
+        # emerging from this vertex and its requested orientation
+        yaw = 0
+
+        include_ele = SubElement(world_ele, 'include')
+        name_ele = SubElement(include_ele, 'name')
+        name_ele.text = robot_name
+        uri_ele = SubElement(include_ele, 'uri')
+        uri_ele.text = f'model://{robot_type}'
+        pose_ele = SubElement(include_ele, 'pose')
+        pose_ele.text = f'{vertex.x} {vertex.y} {vertex.z} 0 0 {yaw}'
+
     def generate_floors(self, world_ele, model_name, model_path):
         floor_cnt = 0
         for floor in self.floors:
