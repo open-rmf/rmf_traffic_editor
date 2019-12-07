@@ -25,6 +25,7 @@ class Generator:
 
         if not os.path.exists(output_models_dir):
             os.makedirs(output_models_dir)
+
         building.generate_sdf_models(output_models_dir)
         
         # generate a top-level SDF for convenience
@@ -36,17 +37,19 @@ class Generator:
             f.write(sdf_str)
         print(f'{len(sdf_str)} bytes written to {output_filename}')
 
-    def generate_nav(self, input_filename, output_prefix):
+    def generate_nav(self, input_filename, output_dir):
         building = self.parse_editor_yaml(input_filename)
-
         nav_graphs = building.generate_nav_graphs()
 
         class CustomDumper(yaml.Dumper):
             def ignore_aliases(self, _):
                 return True
 
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+
         for graph_name, graph_data in nav_graphs.items():
-            output_filename = f'{output_prefix}_{graph_name}.yaml'
+            output_filename = os.path.join(output_dir, f'{graph_name}.yaml')
             print(f'writing {output_filename}')
             with open(output_filename, 'w') as f:
                 yaml.dump(
