@@ -224,18 +224,25 @@ class Level:
             model.generate(world_ele, model_cnt)
 
         # sniff around in our vertices and spawn robots if requested
-        for vertex in self.vertices:
+        for vertex_idx, vertex in enumerate(self.vertices):
             if 'spawn_robot_type' in vertex.params:
-                self.generate_robot_at_vertex(vertex, world_ele)
+                self.generate_robot_at_vertex_idx(vertex_idx, world_ele)
 
-    def generate_robot_at_vertex(self, vertex, world_ele):
+    def generate_robot_at_vertex_idx(self, vertex_idx, world_ele):
+        vertex = self.vertices[vertex_idx]
         robot_type = vertex.params['spawn_robot_type'].value
         robot_name = vertex.params['spawn_robot_name'].value
         print(f'spawning robot name {robot_name} of type {robot_type}')
 
-        # todo: calculate yaw from the one (and hopefully only) lane
-        # emerging from this vertex and its requested orientation
         yaw = 0
+        # find the first vertex connected by a lane to this vertex
+        for lane in self.lanes:
+            if vertex_idx == lane.start_idx or vertex_idx == lane.end_idx:
+                yaw = self.edge_heading(lane)
+                print(f'generating robot {robot_name} vertex_idx {vertex_idx} on lane ({lane.start_idx}->{lane.end_idx}) orientation {lane.orientation()} lane_yaw {yaw}')
+                if lane.orientation() == 'backward':
+                    yaw += math.pi
+                break
 
         include_ele = SubElement(world_ele, 'include')
         name_ele = SubElement(include_ele, 'name')
@@ -390,3 +397,10 @@ class Level:
                     p['orientation_constraint'] = l.reverse_orientation()
                 nav_data['lanes'].append([end_idx, start_idx, p])
         return nav_data
+
+    def edge_heading(self, edge):
+        v_start = self.vertices[edge.start_idx]
+        v_end = self.vertices[edge.end_idx]
+        dx = v_end.x - v_start.x
+        dy = v_end.y - v_start.y
+        return math.atan2(dy, dx)
