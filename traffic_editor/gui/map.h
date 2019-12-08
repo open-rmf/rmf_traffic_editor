@@ -68,11 +68,10 @@ public:
 
   void delete_keypress(const int level_index);
 
-  void rotate_model(
+  void set_model_yaw(
       const int level_idx,
       const int model_idx,
-      const double release_x,
-      const double release_y);
+      const double yaw);
 
   void remove_polygon_vertex(
       const int level_idx,
