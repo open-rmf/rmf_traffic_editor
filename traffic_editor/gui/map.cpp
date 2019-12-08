@@ -200,19 +200,15 @@ void Map::add_model(
   changed = true;
 }
 
-void Map::rotate_model(
+void Map::set_model_yaw(
     const int level_idx,
     const int model_idx,
-    const double release_x,
-    const double release_y)
+    const double yaw)
 {
   if (level_idx >= static_cast<int>(levels.size()))
     return;
 
-  Model &model = levels[level_idx].models[model_idx];
-  const double dx = release_x - model.x;
-  const double dy = -(release_y - model.y);  // vertical axis is flipped
-  model.yaw = atan2(dy, dx);
+  levels[level_idx].models[model_idx].yaw = yaw;
   changed = true;
 }
 

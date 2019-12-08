@@ -228,6 +228,9 @@ private:
       const QPointF &p,
       const Polygon::Type &polygon_type);
 
+  QGraphicsPixmapItem *get_closest_pixmap_item(const QPointF &p);
+  double discretize_angle(const double &angle);
+
   void mouse_select(const MouseType t, QMouseEvent *e, const QPointF &p);
   void mouse_add_vertex(const MouseType t, QMouseEvent *e, const QPointF &p);
   void mouse_move_vertex(const MouseType t, QMouseEvent *e, const QPointF &p);

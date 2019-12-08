@@ -1411,8 +1411,14 @@ void Editor::mouse_add_model(
   }
 }
 
+double Editor::discretize_angle(const double &angle)
+{
+  const double discretization = 45.0 * M_PI / 180.0;
+  return discretization * round(angle / discretization);
+}
+
 void Editor::mouse_rotate_model(
-    const MouseType t, QMouseEvent *, const QPointF &p)
+    const MouseType t, QMouseEvent *mouse_event, const QPointF &p)
 {
   if (t == PRESS) {
     clicked_idx = map.nearest_item_index_if_within_distance(
@@ -1424,12 +1430,9 @@ void Editor::mouse_rotate_model(
     if (clicked_idx < 0)
       return; // nothing to do. click wasn't on a model.
 
-    // find the model in the scene graph and remove it, and replace with the
-    // mouse_motion_model item and mouse_motion_line
     const Model &model = map.levels[level_idx].models[clicked_idx];
-    // TODO find previous QPixmapItem for this model and rotate it?
-    // For now, we'll just rotate the heading indicator line.
-    // Not as awesome, but it works.
+    mouse_motion_model = get_closest_pixmap_item(
+        QPointF(model.x, model.y));
   
     QPen pen(Qt::red);
     pen.setWidth(4);
@@ -1444,14 +1447,20 @@ void Editor::mouse_rotate_model(
         model.x,
         model.y,
         model.x + r * cos(model.yaw),
-        model.y + r * sin(model.yaw),
+        model.y - r * sin(model.yaw),
         pen);
   }
   else if (t == RELEASE) {
-    remove_mouse_motion_item();
+    //remove_mouse_motion_item();
     if (clicked_idx < 0)
       return;
-    map.rotate_model(level_idx, clicked_idx, p.x(), p.y());
+    const Model &model = map.levels[level_idx].models[clicked_idx];
+    const double dx = p.x() - model.x;
+    const double dy = -(p.y() - model.y);  // vertical axis is flipped
+    double mouse_yaw = atan2(dy, dx);
+    if (mouse_event->modifiers() & Qt::ShiftModifier)
+      mouse_yaw = discretize_angle(mouse_yaw);
+    map.set_model_yaw(level_idx, clicked_idx, mouse_yaw);
     clicked_idx = -1;  // we're done rotating it now
     // now re-render the whole map (could optimize in the future...)
     create_scene();
@@ -1464,14 +1473,38 @@ void Editor::mouse_rotate_model(
     const Model &model = map.levels[level_idx].models[clicked_idx];
     const double dx = p.x() - model.x;
     const double dy = -(p.y() - model.y);  // vertical axis is flipped
-    const double mouse_yaw = atan2(dy, dx);
+    double mouse_yaw = atan2(dy, dx);
+    if (mouse_event->modifiers() & Qt::ShiftModifier)
+      mouse_yaw = discretize_angle(mouse_yaw);
     const double r = static_cast<double>(ROTATION_INDICATOR_RADIUS);
     mouse_motion_line->setLine(
         model.x,
         model.y,
         model.x + r * cos(mouse_yaw),
         model.y - r * sin(mouse_yaw));
+
+    if (mouse_motion_model)
+      mouse_motion_model->setRotation(-mouse_yaw * 180.0 / M_PI);
   }
+}
+
+QGraphicsPixmapItem *Editor::get_closest_pixmap_item(const QPointF &p)
+{
+  // todo: use fancier calls if the scene graph gets so big that a linear
+  // search becomes intolerably slow
+  const QList <QGraphicsItem *> items = scene->items();
+  QGraphicsPixmapItem *pixmap_item = nullptr;
+  double min_dist = 1.0e9;
+  for (const auto item : items) {
+    if (item->type() != QGraphicsPixmapItem::Type)
+      continue;  // ignore anything other than the pixmaps (models)
+    const double model_click_distance = QLineF(p, item->pos()).length();
+    if (model_click_distance < min_dist) {
+      min_dist = model_click_distance;
+      pixmap_item = qgraphicsitem_cast<QGraphicsPixmapItem *>(item);
+    }
+  }
+  return pixmap_item;
 }
 
 void Editor::mouse_move_model(
@@ -1484,23 +1517,10 @@ void Editor::mouse_move_model(
     if (clicked_idx < 0)
       return;  // didn't click close to an existing model
     // Now we need to find the pixmap item for this model.
-    // todo: use fancier calls if the scene graph gets so big that a linear
-    // search becomes intolerably slow
-    const QList <QGraphicsItem *> items = scene->items();
-    mouse_motion_model = nullptr;
-    double min_dist = 1.0e9;
-    QPointF mp(
-        map.levels[level_idx].models[clicked_idx].x,
-        map.levels[level_idx].models[clicked_idx].y);
-    for (const auto item : items) {
-      if (item->type() != QGraphicsPixmapItem::Type)
-        continue;  // ignore anything other than the pixmaps (models)
-      const double model_click_distance = QLineF(mp, item->pos()).length();
-      if (model_click_distance < min_dist) {
-        min_dist = model_click_distance;
-        mouse_motion_model = qgraphicsitem_cast<QGraphicsPixmapItem *>(item);
-      }
-    }
+    mouse_motion_model = get_closest_pixmap_item(
+        QPointF(
+            map.levels[level_idx].models[clicked_idx].x,
+            map.levels[level_idx].models[clicked_idx].y));
   }
   else if (t == RELEASE) {
     clicked_idx = -1;
