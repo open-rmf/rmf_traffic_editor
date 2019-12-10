@@ -5,7 +5,12 @@ package_name = 'building_map_tools'
 setup(
     name=package_name,
     version='0.0.0',
-    packages=['building_map', 'building_map_server', 'building_map_generators', 'tripy'],
+    packages=[
+        'building_map',
+        'building_map.doors',
+        'building_map_server',
+        'building_map_generators',
+        'tripy'],
     py_modules=[],
     data_files=[
         ('share/ament_index/resource_index/packages',

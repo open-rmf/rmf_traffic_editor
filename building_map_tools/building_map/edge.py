@@ -14,16 +14,16 @@ class Edge:
         self.calc_statistics(vertices)
 
     def calc_statistics(self, vertices):
-        x1 = vertices[self.start_idx].x
-        y1 = vertices[self.start_idx].y
-        x2 = vertices[self.end_idx].x
-        y2 = vertices[self.end_idx].y
-        dx = x1 - x2
-        dy = y1 - y2
-        self.length = math.sqrt(dx*dx + dy*dy)
-        self.x = (x1 + x2) / 2.0
-        self.y = (y1 + y2) / 2.0
-        self.yaw = math.atan2(dy, dx)
+        self.x1 = vertices[self.start_idx].x
+        self.y1 = vertices[self.start_idx].y
+        self.x2 = vertices[self.end_idx].x
+        self.y2 = vertices[self.end_idx].y
+        self.dx = self.x1 - self.x2
+        self.dy = self.y1 - self.y2
+        self.length = math.sqrt(self.dx*self.dx + self.dy*self.dy)
+        self.x = (self.x1 + self.x2) / 2.0
+        self.y = (self.y1 + self.y2) / 2.0
+        self.yaw = math.atan2(self.dy, self.dx)
 
     def is_bidirectional(self):
         if 'bidirectional' not in self.params:

@@ -53,7 +53,7 @@ class Building:
         user_camera.set('name', 'user_camera')
 
         user_camera_pose = SubElement(user_camera, 'pose')
-        user_camera_pose.text = '20 -20 10 0 0.6 -2.33'
+        user_camera_pose.text = '20 -30 10 0 0.6 -2.33'
 
         scene = SubElement(world, 'scene')
         ambient = SubElement(scene, 'ambient')
@@ -64,7 +64,8 @@ class Building:
         sun_uri.text = 'model://sun'
 
         for level_name, level in self.levels.items():
-            level.generate_sdf_models(world)
+            level.generate_sdf_models(world)  # todo: a better name
+            level.generate_doors(world)
 
             level_include_ele = SubElement(world, 'include')
             level_model_name = f'{self.name}_{level_name}'
