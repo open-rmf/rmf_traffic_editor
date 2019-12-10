@@ -1,4 +1,3 @@
-import math
 import os
 import yaml
 from xml.etree.ElementTree import tostring as ElementToString
@@ -27,7 +26,7 @@ class Generator:
             os.makedirs(output_models_dir)
 
         building.generate_sdf_models(output_models_dir)
-        
+
         # generate a top-level SDF for convenience
         sdf = building.generate_sdf_world()
 

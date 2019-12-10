@@ -117,14 +117,14 @@ class Floor:
 
                 f.write('f')
                 for tri_vertex in triangle:
-                   v_idx = self.find_vertex_idx(tri_vertex[0], tri_vertex[1])
-                   f.write(f' {v_idx+1}/{v_idx+1}/1')
+                    v_idx = self.find_vertex_idx(tri_vertex[0], tri_vertex[1])
+                    f.write(f' {v_idx+1}/{v_idx+1}/1')
                 f.write('\n')
 
                 f.write('f')
                 for tri_vertex in reversed(triangle):
-                   v_idx = self.find_vertex_idx(tri_vertex[0], tri_vertex[1])
-                   f.write(f' {v_idx+1}/{v_idx+1}/1')
+                    v_idx = self.find_vertex_idx(tri_vertex[0], tri_vertex[1])
+                    f.write(f' {v_idx+1}/{v_idx+1}/1')
                 f.write('\n')
 
         print(f'  wrote {obj_path}')

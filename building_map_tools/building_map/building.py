@@ -1,5 +1,5 @@
 import os
-from xml.etree.ElementTree import ElementTree, Element, SubElement
+from xml.etree.ElementTree import Element, SubElement
 
 from .level import Level
 

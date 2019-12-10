@@ -24,6 +24,6 @@ class Model:
           'Sesto',
           'MiR100'
         ]
-        if not self.name in non_static_model_names:
+        if self.name not in non_static_model_names:
             static_ele = SubElement(include_ele, 'static')
             static_ele.text = 'true'
