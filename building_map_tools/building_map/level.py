@@ -230,8 +230,9 @@ class Level:
                 self.generate_robot_at_vertex_idx(vertex_idx, world_ele)
 
     def generate_doors(self, world_ele):
-        for door in self.doors:
-            self.generate_door(door, world_ele)
+        pass
+        # for door in self.doors:
+        #    self.generate_door(door, world_ele)
 
     def generate_door(self, door_edge, world_ele):
         door_name = door_edge.params['name'].value
@@ -409,17 +410,43 @@ class Level:
             if l.orientation():
                 p['orientation_constraint'] = l.orientation()
 
-            if always_unidirectional:
-                if l.is_bidirectional():
-                    p = copy.deepcopy(p)
-                    if l.orientation():
-                        p['orientation_constraint'] = l.reverse_orientation()
-                    nav_data['lanes'].append([end_idx, start_idx, p])
+            dock_name = None
+            dock_at_end = True
+            if 'dock_name' in v2.params:  # lane segment will end at dock
+                dock_name = v2.params['dock_name'].value
+            elif 'dock_name' in v1.params:
+                dock_name = v1.params['dock_name'].value
+                dock_at_end = False
+
+            if always_unidirectional and l.is_bidirectional():
+                # now flip things around and make the second link
+                forward_params = copy.deepcopy(p)
+                backward_params = copy.deepcopy(p)
+
+                # we need to create two unidirectional lane segments
+                # todo: clean up this logic, it's overly spaghetti
+                if dock_name:
+                    if dock_at_end:
+                        forward_params['dock_name'] = dock_name
+                    else:
+                        forward_params['undock_name'] = dock_name
+                nav_data['lanes'].append([start_idx, end_idx, forward_params])
+
+                if dock_name:
+                    if dock_at_end:
+                        backward_params['undock_name'] = dock_name
+                    else:
+                        backward_params['dock_name'] = dock_name
+ 
+                if l.orientation():
+                    p['orientation_constraint'] = l.reverse_orientation()
+                nav_data['lanes'].append([end_idx, start_idx, backward_params])
             else:
                 # ensure the directionality parameter is set
                 p['is_bidirectional'] = l.is_bidirectional()
-            
-            nav_data['lanes'].append([start_idx, end_idx, p])
+                if dock_name:
+                    p['dock_name'] = dock_name
+                nav_data['lanes'].append([start_idx, end_idx, p])
                 
         return nav_data
 

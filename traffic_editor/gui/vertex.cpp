@@ -27,6 +27,7 @@ const vector<pair<string, Param::Type> > Vertex::allowed_params
 {
   { "is_parking_spot", Param::Type::BOOL },
   { "is_charger", Param::Type::BOOL},
+  { "dock_name", Param::Type::STRING},
   { "workcell_name", Param::Type::STRING },
   { "spawn_robot_type", Param::Type::STRING },
   { "spawn_robot_name", Param::Type::STRING }
