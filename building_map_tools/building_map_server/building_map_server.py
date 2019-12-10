@@ -7,8 +7,10 @@ import yaml
 from numpy import inf
 
 import rclpy
-from rclpy.qos import qos_profile_default
+from rclpy.qos import QoSProfile
+from rclpy.qos import QoSHistoryPolicy
 from rclpy.qos import QoSDurabilityPolicy
+from rclpy.qos import QoSReliabilityPolicy
 from rclpy.node import Node
 
 from building_map_msgs.srv import GetBuildingMap
@@ -43,12 +45,14 @@ class BuildingMapServer(Node):
         self.get_building_map_srv = self.create_service(
             GetBuildingMap, 'get_building_map', self.get_building_map)
 
-        qos_profile = qos_profile_default
-        qos_profile.durability = \
-            QoSDurabilityPolicy.RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL
+        qos = QoSProfile(
+            history=QoSHistoryPolicy.RMW_QOS_POLICY_HISTORY_KEEP_LAST,
+            depth=1,
+            reliability=QoSReliabilityPolicy.RMW_QOS_POLICY_RELIABILITY_RELIABLE,
+            durability=QoSDurabilityPolicy.RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL)
 
         self.building_map_pub = self.create_publisher(
-            BuildingMap, 'map', qos_profile=qos_profile)
+            BuildingMap, 'map', qos_profile=qos)
 
         self.get_logger().info('publishing map...')
         self.building_map_pub.publish(self.map_msg)
@@ -87,6 +91,29 @@ class BuildingMapServer(Node):
                 len(image.data), image_filename))
             msg.images.append(image)
 
+            # for now, nav graphs are just single-digit numbers
+            for i in range(0, 9):
+                g = level.generate_nav_graph(i, always_unidirectional=False)
+                if not g['lanes']:
+                    continue  # empty graph :(
+                graph_msg = Graph()
+                graph_msg.name = str(i)  # todo: someday, string names...
+                for v in g['vertices']:
+                    gn = GraphNode()
+                    gn.x = v[0]
+                    gn.y = v[1]
+                    gn.name = v[2]['name']
+                    graph_msg.vertices.append(gn)
+                for l in g['lanes']:
+                    ge = GraphEdge()
+                    ge.v1_idx = l[0]
+                    ge.v2_idx = l[1]
+                    if l[2]['is_bidirectional']:
+                        ge.edge_type = GraphEdge.EDGE_TYPE_BIDIRECTIONAL
+                    else:
+                        ge.edge_type = GraphEdge.EDGE_TYPE_UNIDIRECTIONAL
+                    graph_msg.edges.append(ge)
+                msg.nav_graphs.append(graph_msg)
         return msg
 
     def get_building_map(self, request, response):

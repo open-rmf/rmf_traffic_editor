@@ -11,6 +11,7 @@ from .edge import Edge
 from .floor import Floor
 from .model import Model
 from .vertex import Vertex
+from .doors.double_sliding_door import DoubleSlidingDoor
 
 
 class Level:
@@ -228,6 +229,24 @@ class Level:
             if 'spawn_robot_type' in vertex.params:
                 self.generate_robot_at_vertex_idx(vertex_idx, world_ele)
 
+    def generate_doors(self, world_ele):
+        for door in self.doors:
+            self.generate_door(door, world_ele)
+
+    def generate_door(self, door_edge, world_ele):
+        door_name = door_edge.params['name'].value
+        door_type = door_edge.params['type'].value
+        print(f'generate door name={door_name} type={door_type}')
+
+        door = None
+        if door_type == 'double_sliding':
+            door = DoubleSlidingDoor(door_edge)
+        else:
+            print(f'door type {door_type} not yet implemented')
+
+        if door:
+            door.generate(world_ele)
+
     def generate_robot_at_vertex_idx(self, vertex_idx, world_ele):
         vertex = self.vertices[vertex_idx]
         robot_type = vertex.params['spawn_robot_type'].value
@@ -335,7 +354,7 @@ class Level:
             x1, y1, x2, y2, x3, y3, x4, y4))
         return True
 
-    def generate_nav_graph(self, graph_idx):
+    def generate_nav_graph(self, graph_idx, always_unidirectional=True):
         """ Generate a graph without unnecessary (non-lane) vertices """
         # first remap the vertices. Store both directions; we'll need them
         next_idx = 0
@@ -389,13 +408,19 @@ class Level:
 
             if l.orientation():
                 p['orientation_constraint'] = l.orientation()
-            nav_data['lanes'].append([start_idx, end_idx, p])
 
-            if l.is_bidirectional():
-                p = copy.deepcopy(p)
-                if l.orientation():
-                    p['orientation_constraint'] = l.reverse_orientation()
-                nav_data['lanes'].append([end_idx, start_idx, p])
+            if always_unidirectional:
+                if l.is_bidirectional():
+                    p = copy.deepcopy(p)
+                    if l.orientation():
+                        p['orientation_constraint'] = l.reverse_orientation()
+                    nav_data['lanes'].append([end_idx, start_idx, p])
+            else:
+                # ensure the directionality parameter is set
+                p['is_bidirectional'] = l.is_bidirectional()
+            
+            nav_data['lanes'].append([start_idx, end_idx, p])
+                
         return nav_data
 
     def edge_heading(self, edge):
