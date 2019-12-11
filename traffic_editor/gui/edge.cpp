@@ -115,6 +115,7 @@ void Edge::create_required_parameters()
     create_param_if_needed("bidirectional", Param::BOOL, false);
     create_param_if_needed("orientation", Param::STRING, std::string());
     create_param_if_needed("graph_idx", Param::INT, 0);
+    create_param_if_needed("demo_mock_floor_name", Param::STRING, std::string());
   }
   else if (type == DOOR) {
     create_param_if_needed("name", Param::STRING, std::string());

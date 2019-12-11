@@ -1,5 +1,5 @@
 import sys
-import building_map
+from building_map.generator import Generator
 
 
 def main():
@@ -8,5 +8,5 @@ def main():
         sys.exit(1)
     input_filename = sys.argv[1]
     output_dir = sys.argv[2]
-    g = building_map.Generator()
+    g = Generator()
     g.generate_nav(input_filename, output_dir)

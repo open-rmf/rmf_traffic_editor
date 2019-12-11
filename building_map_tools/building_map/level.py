@@ -12,15 +12,16 @@ from .floor import Floor
 from .model import Model
 from .vertex import Vertex
 from .doors.double_sliding_door import DoubleSlidingDoor
+from .doors.double_swing_door import DoubleSwingDoor
 
 
 class Level:
     def __init__(self, yaml_node, name):
         self.name = name
         if 'drawing' in yaml_node:
-          self.drawing_name = yaml_node['drawing']['filename']
+            self.drawing_name = yaml_node['drawing']['filename']
         else:
-          self.drawing_name = None
+            self.drawing_name = None
 
         self.wall_height = 2.5  # meters
         self.wall_thickness = 0.1  # meters
@@ -150,12 +151,12 @@ class Level:
             f.write(f'mtllib wall.mtl\n')
             f.write(f'o walls\n')
 
+            '''
             # calculate faces for all the wall segments
-            faces = []
             wall_cnt = 0
             for wall in self.walls:
                 wall_cnt += 1
-                #self.generate_wall(wall, link_ele, wall_cnt)
+                # self.generate_wall(wall, link_ele, wall_cnt)
 
                 wx1 = self.vertices[wall.start_idx].x
                 wy1 = self.vertices[wall.start_idx].y
@@ -171,6 +172,7 @@ class Level:
                 box_thickness = self.wall_thickness
                 box_height = self.wall_height
                 cz = self.wall_height / 2.0
+            '''
 
             '''
             # this assumes that the vertices are in "correct" (OBJ) winding
@@ -185,8 +187,6 @@ class Level:
             for v in self.vertices:
                 f.write(f'vt {v[0]} {v[1]} 0\n')
             '''
-
-
 
         mtl_path = f'{meshes_path}/wall.mtl'
         print(f'  generating {mtl_path}')
@@ -230,9 +230,8 @@ class Level:
                 self.generate_robot_at_vertex_idx(vertex_idx, world_ele)
 
     def generate_doors(self, world_ele):
-        pass
-        # for door in self.doors:
-        #    self.generate_door(door, world_ele)
+        for door in self.doors:
+            self.generate_door(door, world_ele)
 
     def generate_door(self, door_edge, world_ele):
         door_name = door_edge.params['name'].value
@@ -242,6 +241,8 @@ class Level:
         door = None
         if door_type == 'double_sliding':
             door = DoubleSlidingDoor(door_edge)
+        elif door_type == 'double_hinged':
+            door = DoubleSwingDoor(door_edge)
         else:
             print(f'door type {door_type} not yet implemented')
 
@@ -259,7 +260,6 @@ class Level:
         for lane in self.lanes:
             if vertex_idx == lane.start_idx or vertex_idx == lane.end_idx:
                 yaw = self.edge_heading(lane)
-                print(f'generating robot {robot_name} vertex_idx {vertex_idx} on lane ({lane.start_idx}->{lane.end_idx}) orientation {lane.orientation()} lane_yaw {yaw}')
                 if lane.orientation() == 'backward':
                     yaw += math.pi
                 break
@@ -277,10 +277,10 @@ class Level:
         for floor in self.floors:
             floor_cnt += 1
             floor.generate(world_ele, floor_cnt, model_name, model_path)
- 
+
     def write_sdf(self, model_name, model_path):
         sdf_ele = Element('sdf', {'version': '1.6'})
-        
+
         model_ele = SubElement(sdf_ele, 'model', {'name': model_name})
 
         static_ele = SubElement(model_ele, 'static')
@@ -344,13 +344,13 @@ class Level:
             # print('    ({},{}),({},{}) and ({},{}),({},{})'.format(
             #     x1, y1, x2, y2, x3, y3, x4, y4))
             return False
-        t =  ((x1-x3)*(y3-y4)-(y1-y3)*(x3-x4)) / det
+        t = ((x1-x3)*(y3-y4)-(y1-y3)*(x3-x4)) / det
         u = -((x1-x2)*(y1-y3)-(y1-y2)*(x1-x3)) / det
-        #print('  t = {}  u = {}'.format(round(t,3), round(u,3)))
+        # print('  t = {}  u = {}'.format(round(t,3), round(u,3)))
         if u < 0 or t < 0 or u > 1 or t > 1:
             return False
         print('hooray, we found an intersection: t={}, u={}'.format(
-            round(t,3), round(u,3)))
+            round(t, 3), round(u, 3)))
         print('  ({},{}),({},{}) and ({},{}),({},{})'.format(
             x1, y1, x2, y2, x3, y3, x4, y4))
         return True
@@ -410,6 +410,11 @@ class Level:
             if l.orientation():
                 p['orientation_constraint'] = l.orientation()
 
+            # ABOMINATION
+            if l.params['demo_mock_floor_name'].value:
+                p['demo_mock_floor_name'] = \
+                    l.params['demo_mock_floor_name'].value
+
             dock_name = None
             dock_at_end = True
             if 'dock_name' in v2.params:  # lane segment will end at dock
@@ -437,7 +442,7 @@ class Level:
                         backward_params['undock_name'] = dock_name
                     else:
                         backward_params['dock_name'] = dock_name
- 
+
                 if l.orientation():
                     p['orientation_constraint'] = l.reverse_orientation()
                 nav_data['lanes'].append([end_idx, start_idx, backward_params])
@@ -447,7 +452,7 @@ class Level:
                 if dock_name:
                     p['dock_name'] = dock_name
                 nav_data['lanes'].append([start_idx, end_idx, p])
-                
+
         return nav_data
 
     def edge_heading(self, edge):
