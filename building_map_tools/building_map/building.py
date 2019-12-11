@@ -56,8 +56,10 @@ class Building:
         user_camera_pose.text = '20 -10 10 0 0.6 -1.33'
 
         scene = SubElement(world, 'scene')
-        ambient = SubElement(scene, 'ambient')
-        ambient.text = '0.8 0.8 0.8 1.0'
+        ambient_ele = SubElement(scene, 'ambient')
+        ambient_ele.text = '0.8 0.8 0.8 1.0'
+        background_ele = SubElement(scene, 'background')
+        background_ele.text = '0 0 0'
 
         include_sun = SubElement(world, 'include')
         sun_uri = SubElement(include_sun, 'uri')

@@ -16,6 +16,7 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
+        ('share/' + package_name + '/textures', ['building_map_generators/textures/blue_linoleum.png']),
         ('share/' + package_name + '/textures', ['building_map_generators/textures/blue_linoleum_high_contrast.png']),
         ('share/' + package_name + '/textures', ['building_map_generators/textures/wall.png']),
     ],

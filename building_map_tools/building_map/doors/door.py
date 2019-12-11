@@ -4,11 +4,12 @@ from xml.etree.ElementTree import Element, SubElement
 class Door:
     def __init__(self, door_edge):
         self.name = door_edge.params['name'].value
+        self.type = door_edge.params['type'].value
         self.length = door_edge.length
         self.cx = door_edge.x
         self.cy = door_edge.y
         self.yaw = door_edge.yaw
-        self.height = 2.5  # parameterize someday?
+        self.height = 2.2  # parameterize someday?
         self.thickness = 0.03  # parameterize someday?
         print(f'Door({self.name})')
 
@@ -17,7 +18,7 @@ class Door:
         pose_ele = SubElement(self.model_ele, 'pose')
         pose_ele.text = f'{self.cx} {self.cy} 0 0 0 {self.yaw}'
 
-    def generate_sliding_section(self, name, width, x_offset, bounds):
+    def generate_section(self, name, width, x_offset):
         link_ele = SubElement(self.model_ele, 'link')
         link_ele.set('name', name)
         pose_ele = SubElement(link_ele, 'pose')
@@ -37,6 +38,11 @@ class Door:
         collision_geometry_ele.append(
             self.box(width, self.thickness, self.height))
 
+        return link_ele
+
+    def generate_sliding_section(self, name, width, x_offset, bounds):
+        self.generate_section(name, width, x_offset)
+
         # now, the joint for this link
         joint_ele = SubElement(self.model_ele, 'joint')
         joint_ele.set('name', f'{name}_joint')
@@ -49,13 +55,52 @@ class Door:
         child_ele.text = name
 
         axis_ele = SubElement(joint_ele, 'axis')
-        axis_ele.text = '1 0 0'
+
+        xyz_ele = SubElement(axis_ele, 'xyz')
+        xyz_ele.text = '1 0 0'
 
         limit_ele = SubElement(axis_ele, 'limit')
         lower_ele = SubElement(limit_ele, 'lower')
         lower_ele.text = str(bounds[0])
         upper_ele = SubElement(limit_ele, 'upper')
         upper_ele.text = str(bounds[1])
+
+    '''Generate a single swing section/panel of a door.
+
+    name = name of the door section
+    width = width of the door section
+    x_offset = offset of the center of the door section from the center
+               of the entire door (this will be non-zero for double doors)
+    bounds = bounds for the range of motion of this section, in radians
+    axis = pose of the joint axis, in the door *section* frame
+    '''
+    def generate_swing_section(self, name, width, x_offset, bounds, axis):
+        self.generate_section(name, width, x_offset)
+
+        # now, the joint for this link
+        joint_ele = SubElement(self.model_ele, 'joint')
+        joint_ele.set('name', f'{name}_joint')
+        joint_ele.set('type', 'revolute')
+
+        parent_ele = SubElement(joint_ele, 'parent')
+        parent_ele.text = 'world'
+
+        child_ele = SubElement(joint_ele, 'child')
+        child_ele.text = name
+
+        axis_ele = SubElement(joint_ele, 'axis')
+
+        xyz_ele = SubElement(axis_ele, 'xyz')
+        xyz_ele.text = '0 0 1'
+
+        limit_ele = SubElement(axis_ele, 'limit')
+        lower_ele = SubElement(limit_ele, 'lower')
+        lower_ele.text = str(bounds[0])
+        upper_ele = SubElement(limit_ele, 'upper')
+        upper_ele.text = str(bounds[1])
+
+        pose_ele = SubElement(joint_ele, 'pose')
+        pose_ele.text = f'{axis[0]} {axis[1]} {axis[2]} 0 0 0'
 
     def collide_bitmask(self):
         surface_ele = Element('surface')
@@ -74,7 +119,7 @@ class Door:
         material_ele = Element('material')
         # blue-green glass as a default, so it's easy to see
         ambient_ele = SubElement(material_ele, 'ambient')
-        ambient_ele.text = '{} {} {} {}'.format(128, 192, 210, 0.6)
+        ambient_ele.text = '{} {} {} {}'.format(120, 60, 0, 0.6)
         diffuse_ele = SubElement(material_ele, 'diffuse')
-        diffuse_ele.text = '{} {} {} {}'.format(128, 192, 210, 0.6)
+        diffuse_ele.text = '{} {} {} {}'.format(120, 60, 0, 0.6)
         return material_ele

@@ -12,6 +12,7 @@ from .floor import Floor
 from .model import Model
 from .vertex import Vertex
 from .doors.double_sliding_door import DoubleSlidingDoor
+from .doors.double_swing_door import DoubleSwingDoor
 
 
 class Level:
@@ -240,6 +241,8 @@ class Level:
         door = None
         if door_type == 'double_sliding':
             door = DoubleSlidingDoor(door_edge)
+        elif door_type == 'double_hinged':
+            door = DoubleSwingDoor(door_edge)
         else:
             print(f'door type {door_type} not yet implemented')
 
@@ -406,6 +409,11 @@ class Level:
 
             if l.orientation():
                 p['orientation_constraint'] = l.orientation()
+
+            # ABOMINATION
+            if l.params['demo_mock_floor_name'].value:
+                p['demo_mock_floor_name'] = \
+                    l.params['demo_mock_floor_name'].value
 
             dock_name = None
             dock_at_end = True

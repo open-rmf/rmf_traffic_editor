@@ -27,10 +27,10 @@ class Floor:
 
         geometry_ele = SubElement(parent_ele, 'geometry')
 
-        #polyline_ele = SubElement(geometry_ele, 'polyline')
+        polyline_ele = SubElement(geometry_ele, 'polyline')
 
-        #height_ele = SubElement(polyline_ele, 'height')
-        #height_ele.text = f'{self.thickness}'
+        height_ele = SubElement(polyline_ele, 'height')
+        height_ele.text = f'{self.thickness}'
 
         x_bounds = [1e9, -1e9]
         y_bounds = [1e9, -1e9]
@@ -45,8 +45,8 @@ class Floor:
             if vertex[1] > y_bounds[1]:
                 y_bounds[1] = vertex[1]
 
-            #point_ele = SubElement(polyline_ele, 'point')
-            #point_ele.text = f'{vertex[0]} {vertex[1]}'
+            point_ele = SubElement(polyline_ele, 'point')
+            point_ele.text = f'{vertex[0]} {vertex[1]}'
 
         cx = (x_bounds[0] + x_bounds[1]) / 2.0
         cy = (y_bounds[0] + y_bounds[1]) / 2.0
@@ -166,7 +166,7 @@ class Floor:
         # todo: use ament_resource_index somehow to calculate this path
         texture_path_source = os.path.join(
             get_package_share_directory('building_map_tools'),
-            'textures/blue_linoleum_high_contrast.png')
+            'textures/blue_linoleum.png')
         texture_path_dest = f'{model_path}/meshes/floor_{floor_cnt}.png'
         shutil.copyfile(texture_path_source, texture_path_dest)
         print(f'  wrote {texture_path_dest}')
