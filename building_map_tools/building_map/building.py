@@ -53,7 +53,7 @@ class Building:
         user_camera.set('name', 'user_camera')
 
         user_camera_pose = SubElement(user_camera, 'pose')
-        user_camera_pose.text = '20 -30 10 0 0.6 -2.33'
+        user_camera_pose.text = '20 -10 10 0 0.6 -1.33'
 
         scene = SubElement(world, 'scene')
         ambient = SubElement(scene, 'ambient')

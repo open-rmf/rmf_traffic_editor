@@ -7,6 +7,19 @@ class DoubleSlidingDoor(Door):
 
     def generate(self, world_ele):
         print('DoubleSliding.generate()')
-        # self.generate_sliding_section(
-        #     world_ele, self.name + '_left', self.width/2,
-        #     -self.width/4, (-self.width/2, 0))
+
+        self.generate_sliding_section(
+            self.name + '_left',
+            self.length/2,
+            -self.length/6 - 0.01,
+            (-self.length/2, 0.01))
+
+        '''
+        self.generate_sliding_section(
+            self.name + '_right',
+            self.length/2,
+            self.length/4 + 0.01,
+            (0.01, self.length/2))
+        '''
+
+        world_ele.append(self.model_ele)

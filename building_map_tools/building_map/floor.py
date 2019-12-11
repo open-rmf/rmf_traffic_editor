@@ -27,14 +27,31 @@ class Floor:
 
         geometry_ele = SubElement(parent_ele, 'geometry')
 
-        polyline_ele = SubElement(geometry_ele, 'polyline')
+        #polyline_ele = SubElement(geometry_ele, 'polyline')
 
-        height_ele = SubElement(polyline_ele, 'height')
-        height_ele.text = f'{self.thickness}'
+        #height_ele = SubElement(polyline_ele, 'height')
+        #height_ele.text = f'{self.thickness}'
 
+        x_bounds = [1e9, -1e9]
+        y_bounds = [1e9, -1e9]
         for vertex in self.vertices:
-            point_ele = SubElement(polyline_ele, 'point')
-            point_ele.text = f'{vertex[0]} {vertex[1]}'
+            if vertex[0] < x_bounds[0]:
+                x_bounds[0] = vertex[0]
+            if vertex[0] > x_bounds[1]:
+                x_bounds[1] = vertex[0]
+
+            if vertex[1] < y_bounds[0]:
+                y_bounds[0] = vertex[1]
+            if vertex[1] > y_bounds[1]:
+                y_bounds[1] = vertex[1]
+
+            #point_ele = SubElement(polyline_ele, 'point')
+            #point_ele.text = f'{vertex[0]} {vertex[1]}'
+
+        cx = (x_bounds[0] + x_bounds[1]) / 2.0
+        cy = (y_bounds[0] + y_bounds[1]) / 2.0
+        dx = x_bounds[1] - x_bounds[0]
+        dy = y_bounds[1] - y_bounds[0]
 
     def find_vertex_idx(self, x, y):
         for v_idx, v in enumerate(self.vertices):

@@ -1,5 +1,5 @@
 import sys
-import building_map
+from building_map.generator import Generator
 
 
 def main():
@@ -9,5 +9,5 @@ def main():
     input_filename = sys.argv[1]
     output_filename = sys.argv[2]
     output_model_dir = sys.argv[3]
-    g = building_map.Generator()
+    g = Generator()
     g.generate_sdf(input_filename, output_filename, output_model_dir)
