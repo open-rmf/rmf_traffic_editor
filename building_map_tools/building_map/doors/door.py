@@ -38,6 +38,15 @@ class Door:
         collision_geometry_ele.append(
             self.box(width, self.thickness, self.height))
 
+        mass = 50.0
+        inertial_ele = SubElement(link_ele, 'inertial')
+        mass_ele = SubElement(inertial_ele, 'mass')
+        mass_ele.text = str(mass)
+        inertia_ele = SubElement(inertial_ele, 'inertia')
+        SubElement(inertia_ele, 'ixx').text = str(mass/12.0*(self.thickness**2 + self.height**2))
+        SubElement(inertia_ele, 'iyy').text = str(mass/12.0*(width**2 + self.height**2))
+        SubElement(inertia_ele, 'izz').text = str(mass/12.0*(self.thickness**2 + width**2))
+
         return link_ele
 
     def generate_sliding_section(self, name, width, x_offset, bounds):
