@@ -13,13 +13,13 @@ class DoubleSlidingDoor(Door):
             'left',
             self.length/2 - 0.01,
             -self.length/4,
-            (-self.length/2, 0.01))
+            (-self.length/2, 0.0))
 
         self.generate_sliding_section(
             'right',
             self.length/2 - 0.01,
             self.length/4,
-            (0.01, self.length/2))
+            (0.0, self.length/2))
 
         plugin_ele = SubElement(self.model_ele, 'plugin')
         plugin_ele.set('name', f'plugin_{self.name}')
