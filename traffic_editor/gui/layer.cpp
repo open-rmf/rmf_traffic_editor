@@ -27,7 +27,7 @@ Layer::~Layer()
 {
 }
 
-bool Layer::from_yaml(const std::string &name, const YAML::Node &data)
+bool Layer::from_yaml(const std::string &_name, const YAML::Node &_data)
 {
   return true;
 }

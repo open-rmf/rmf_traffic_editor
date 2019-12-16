@@ -15,34 +15,32 @@
  *
 */
 
-#ifndef LAYER_H
-#define LAYER_H
+#ifndef LAYER_DIALOG_H
+#define LAYER_DIALOG_H
 
-#include <string>
-
-#include <QPixmap>
-
-#include <yaml-cpp/yaml.h>
+#include <QDialog>
+#include "layer.h"
+class QLineEdit;
 
 
-class Layer
+class LayerDialog : public QDialog
 {
 public:
-  Layer();
-  ~Layer();
+  LayerDialog(QWidget *parent, Layer &_layer);
+  ~LayerDialog();
+ 
+private:
+  Layer &layer;
 
-  std::string name;
-  std::string filename;
+  QLineEdit *name_line_edit, *filename_line_edit;
+  QLineEdit *scale_line_edit;
+  QPushButton *filename_button;
+  QPushButton *ok_button, *cancel_button;
 
-  double meters_per_pixel = 0.05;  // relative to the parent floorplan scale
-  double translation_x = 0.0;
-  double translation_y = 0.0;
-  double rotation = 0.0;
-
-  QPixmap pixmap;
-
-  bool from_yaml(const std::string &name, const YAML::Node &data);
-  YAML::Node to_yaml() const;
+private slots:
+  void filename_button_clicked();
+  void ok_button_clicked();
+  void filename_line_edited(const QString &text);
 };
 
 #endif

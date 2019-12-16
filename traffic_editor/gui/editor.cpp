@@ -31,6 +31,7 @@
 #include "add_param_dialog.h"
 #include "editor.h"
 #include "level_dialog.h"
+#include "layer_dialog.h"
 #include "preferences_dialog.h"
 #include "preferences_keys.h"
 #include "map_view.h"
@@ -52,6 +53,12 @@ Editor::Editor(QWidget *parent)
   tool_id(SELECT)
 {
   instance = this;
+  
+  /*
+  setStyleSheet(
+    "QLabel { color: white; }"
+  );
+  */
 
   QSettings settings;
   qDebug("settings filename: [%s]", qUtf8Printable(settings.fileName()));
@@ -74,18 +81,24 @@ Editor::Editor(QWidget *parent)
   map_layout->addWidget(map_view);
 
   QVBoxLayout *layers_layout = new QVBoxLayout;
-  layers_layout->addWidget(new QLabel("Rendering layers"));
+
+  QLabel *layers_label = new QLabel("Rendering layers");
+  layers_label->setStyleSheet("QLabel { color: white; }");
+  layers_layout->addWidget(layers_label);
+
   layers_table = new QTableWidget();
-  layers_table->setStyleSheet("QTableWidget { background-color: #e0e0e0; color: black; gridline-color: #606060; } QLineEdit { background:white; }");
+  layers_table->setStyleSheet("QTableWidget { background-color: #e0e0e0; color: black; } QLineEdit { background:white; } QCheckBox { padding-left: 5px; background:white; } QPushButton { margin: 5px; background-color: #c0c0c0; border: 1px solid black; } QPushButton:pressed { background-color: #808080; }");
   layers_table->setColumnCount(2);
   layers_table->setMinimumSize(400, 200);
-  layers_table->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::MinimumExpanding);
+  layers_table->setSizePolicy(
+      QSizePolicy::Fixed,
+      QSizePolicy::MinimumExpanding);
   layers_table->horizontalHeader()->setVisible(false);
   layers_table->verticalHeader()->setVisible(false);
   layers_table->horizontalHeader()->setSectionResizeMode(
-      0, QHeaderView::ResizeToContents);
+      0, QHeaderView::Stretch);
   layers_table->horizontalHeader()->setSectionResizeMode(
-      1, QHeaderView::Stretch);
+      1, QHeaderView::ResizeToContents);
   layers_table->verticalHeader()->setSectionResizeMode(
       QHeaderView::ResizeToContents);
   layers_table->setAutoFillBackground(true);
@@ -134,7 +147,10 @@ Editor::Editor(QWidget *parent)
 
   QVBoxLayout *right_column_layout = new QVBoxLayout;
   right_column_layout->addLayout(layers_layout);
-  right_column_layout->addWidget(new QLabel("Parameters"));
+
+  QLabel *properties_label = new QLabel("Properties");
+  properties_label->setStyleSheet("QLabel { color: white; }");
+  right_column_layout->addWidget(properties_label);
   right_column_layout->addWidget(property_editor);
   right_column_layout->addLayout(param_button_layout);
 
@@ -358,6 +374,7 @@ bool Editor::load_project(const QString &filename)
   create_scene();
   project_filename = filename;
   map_view->zoom_fit(map, level_idx);
+  populate_layers_table();
 
   QSettings settings;
   settings.setValue(preferences_keys::previous_project_path, filename);
@@ -895,11 +912,80 @@ void Editor::populate_layers_table()
 {
   const Level &level = map.levels[level_idx];
   layers_table->blockSignals(true);  // otherwise we get tons of callbacks
-  layers_table->setRowCount(1 + level.layers.size());
+  layers_table->setRowCount(2 + level.layers.size());
 
   layers_table->blockSignals(true);  // otherwise we get tons of callbacks
+  layers_table_set_row(0, "floorplan", true);
+
+  for (size_t i = 0; i < static_cast<int>(level.layers.size()); i++)
+  {
+    layers_table_set_row(
+        i + 1,
+        QString::fromStdString(level.layers[i].name),
+        true);
+  }
+
+  const int last_row_idx = static_cast<int>(level.layers.size()) + 1;
+  // we'll use the last row for the "Add" button
+  layers_table->setCellWidget(last_row_idx, 0, nullptr);
+  QPushButton *add_button = new QPushButton("Add...", this);
+  layers_table->setCellWidget(last_row_idx, 1, add_button);
+  connect(
+      add_button, &QAbstractButton::clicked,
+      [=]() { this->layer_add_button_clicked(); });
 
   layers_table->blockSignals(false);  // re-enable callbacks
+}
+
+void Editor::layers_table_set_row(
+    const int row_idx,
+    const QString &label,
+    const bool checked)
+{
+  QCheckBox *checkbox = new QCheckBox(label);
+  layers_table->setCellWidget(row_idx, 0, checkbox);
+  QPushButton *button = new QPushButton("Edit...", this);
+  layers_table->setCellWidget(row_idx, 1, button);
+  connect(
+      button, &QAbstractButton::clicked,
+      [=]() { this->layer_edit_button_clicked(label.toStdString()); });
+}
+
+void Editor::layer_edit_button_clicked(const std::string &label)
+{
+  printf("clicked: [%s]\n", label.c_str());
+  if (map.levels.empty())
+    return;
+  // find the index of this layer in the current level
+  Level &level = map.levels[level_idx];
+  for (size_t i = 0; i < level.layers.size(); i++)
+  {
+    Layer& layer = level.layers[i];
+    if (label != layer.name)
+      continue;
+    LayerDialog *dialog = new LayerDialog(this, layer);
+    // todo: connect some signal/slot for "things have changed"
+    // so we can dynamically update the transformation
+    // and bling features like color, transparency, etc.
+    dialog->show();
+    dialog->raise();
+    dialog->activateWindow();
+    return;  // only create a dialog for the first name match
+  }
+}
+
+void Editor::layer_add_button_clicked()
+{
+  if (level_idx >= static_cast<int>(map.levels.size()))
+    return;  // let's not crash (yet)
+  Level& level = map.levels[level_idx];
+  Layer layer;
+  LayerDialog layer_dialog(this, layer);
+  if (layer_dialog.exec() != QDialog::Accepted)
+    return;
+  printf("added a layer: [%s]\n", layer.name.c_str());
+  level.layers.push_back(layer);
+  populate_layers_table();
 }
 
 void Editor::populate_property_editor(const Edge &edge)
