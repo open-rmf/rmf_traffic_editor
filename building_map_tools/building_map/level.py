@@ -444,7 +444,7 @@ class Level:
                         backward_params['dock_name'] = dock_name
 
                 if l.orientation():
-                    backward_param['orientation_constraint'] =
+                    backward_params['orientation_constraint'] = \
                         l.reverse_orientation()
                 nav_data['lanes'].append([end_idx, start_idx, backward_params])
             else:
