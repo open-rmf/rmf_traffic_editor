@@ -21,10 +21,11 @@
 #include <yaml-cpp/yaml.h>
 #include <string>
 
-#include "vertex.h"
 #include "edge.h"
+#include "layer.h"
 #include "model.h"
 #include "polygon.h"
+#include "vertex.h"
 
 #include <QPixmap>
 #include <QPainterPath>
@@ -49,7 +50,9 @@ public:
   std::vector<Edge> edges;
   std::vector<Model> models;
   std::vector<Polygon> polygons;
-  QPixmap pixmap;
+
+  QPixmap floorplan_pixmap;
+  std::vector<Layer> layers;
 
   // temporary, just for debugging polygon edge projection...
   double polygon_edge_proj_x, polygon_edge_proj_y;

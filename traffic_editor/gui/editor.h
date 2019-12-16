@@ -137,6 +137,9 @@ private:
   const QString tool_id_to_string(const int id);
   QButtonGroup *tool_button_group;
 
+  QTableWidget *layers_table;
+  void populate_layers_table();
+
   QTableWidget *property_editor;
   void update_property_editor();
   void populate_property_editor(const Edge &edge);

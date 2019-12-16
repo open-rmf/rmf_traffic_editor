@@ -72,9 +72,9 @@ bool Level::from_yaml(const std::string &_name, const YAML::Node &_data)
       return false;
     }
     image = image.convertToFormat(QImage::Format_Grayscale8);
-    pixmap = QPixmap::fromImage(image);
-    drawing_width = pixmap.width();
-    drawing_height = pixmap.height();
+    floorplan_pixmap = QPixmap::fromImage(image);
+    drawing_width = floorplan_pixmap.width();
+    drawing_height = floorplan_pixmap.height();
   }
   else if (_data["x_meters"] && _data["y_meters"]) {
     x_meters = _data["x_meters"].as<double>();
@@ -155,6 +155,7 @@ YAML::Node Level::to_yaml() const
     y["x_meters"] = x_meters;
     y["y_meters"] = y_meters;
   }
+  y["elevation"] = elevation;
 
   for (const auto &v : vertices)
     y["vertices"].push_back(v.to_yaml());
@@ -199,7 +200,8 @@ YAML::Node Level::to_yaml() const
     }
   }
 
-  y["elevation"] = elevation;
+  for (const auto &layer : layers)
+    y["layers"].push_back(layer.to_yaml());
 
   return y;
 }

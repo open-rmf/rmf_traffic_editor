@@ -73,6 +73,29 @@ Editor::Editor(QWidget *parent)
   map_layout->addLayout(level_button_hbox_layout);
   map_layout->addWidget(map_view);
 
+  QVBoxLayout *layers_layout = new QVBoxLayout;
+  layers_layout->addWidget(new QLabel("Rendering layers"));
+  layers_table = new QTableWidget();
+  layers_table->setStyleSheet("QTableWidget { background-color: #e0e0e0; color: black; gridline-color: #606060; } QLineEdit { background:white; }");
+  layers_table->setColumnCount(2);
+  layers_table->setMinimumSize(400, 200);
+  layers_table->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::MinimumExpanding);
+  layers_table->horizontalHeader()->setVisible(false);
+  layers_table->verticalHeader()->setVisible(false);
+  layers_table->horizontalHeader()->setSectionResizeMode(
+      0, QHeaderView::ResizeToContents);
+  layers_table->horizontalHeader()->setSectionResizeMode(
+      1, QHeaderView::Stretch);
+  layers_table->verticalHeader()->setSectionResizeMode(
+      QHeaderView::ResizeToContents);
+  layers_table->setAutoFillBackground(true);
+  layers_layout->addWidget(layers_table);
+
+  QFrame *separation_line = new QFrame;
+  separation_line->setFrameShape(QFrame::HLine);
+  separation_line->setFrameShadow(QFrame::Sunken);
+  layers_layout->addWidget(separation_line);
+
   property_editor = new QTableWidget();
   property_editor->setStyleSheet("QTableWidget { background-color: #e0e0e0; color: black; gridline-color: #606060; } QLineEdit { background:white; }");
   property_editor->setMinimumSize(400, 200);
@@ -109,13 +132,15 @@ Editor::Editor(QWidget *parent)
   param_button_layout->addWidget(add_param_button);
   param_button_layout->addWidget(delete_param_button);
 
-  QVBoxLayout *property_layout = new QVBoxLayout;
-  property_layout->addWidget(property_editor);
-  property_layout->addLayout(param_button_layout);
+  QVBoxLayout *right_column_layout = new QVBoxLayout;
+  right_column_layout->addLayout(layers_layout);
+  right_column_layout->addWidget(new QLabel("Parameters"));
+  right_column_layout->addWidget(property_editor);
+  right_column_layout->addLayout(param_button_layout);
 
   QHBoxLayout *hbox_layout = new QHBoxLayout;
   hbox_layout->addLayout(map_layout, 1);
-  hbox_layout->addLayout(property_layout);
+  hbox_layout->addLayout(right_column_layout);
 
   QWidget *w = new QWidget();
   w->setMouseTracking(true);
@@ -866,6 +891,17 @@ void Editor::delete_param_button_clicked()
       "TODO: something...sorry.");
 }
 
+void Editor::populate_layers_table()
+{
+  const Level &level = map.levels[level_idx];
+  layers_table->blockSignals(true);  // otherwise we get tons of callbacks
+  layers_table->setRowCount(1 + level.layers.size());
+
+  layers_table->blockSignals(true);  // otherwise we get tons of callbacks
+
+  layers_table->blockSignals(false);  // re-enable callbacks
+}
+
 void Editor::populate_property_editor(const Edge &edge)
 {
   const Level &level = map.levels[level_idx];
@@ -1052,7 +1088,7 @@ bool Editor::create_scene()
   if (level.drawing_filename.size()) {
     scene->setSceneRect(
         QRectF(0, 0, level.drawing_width, level.drawing_height));
-    scene->addPixmap(level.pixmap);
+    scene->addPixmap(level.floorplan_pixmap);
   }
   else {
     const double w = level.x_meters / level.drawing_meters_per_pixel;
