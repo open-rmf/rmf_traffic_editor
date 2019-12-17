@@ -166,7 +166,7 @@ void LayerDialog::ok_button_clicked()
   accept();
 }
 
-void LayerDialog::filename_line_edited(const QString &text)
+void LayerDialog::filename_line_edited(const QString &/*text*/)
 {
   // todo: render on parent if file exists?
 }

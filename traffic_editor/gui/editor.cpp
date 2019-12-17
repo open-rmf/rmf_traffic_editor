@@ -1164,35 +1164,46 @@ bool Editor::create_scene()
   mouse_motion_ellipse = nullptr;
   mouse_motion_polygon = nullptr;
 
-  if (map.levels.empty()) {
+  if (map.levels.empty())
+  {
     printf("nothing to draw!\n");
     return false;
   }
 
   const Level &level = map.levels[level_idx];
 
-  if (level.drawing_filename.size()) {
+  if (level.drawing_filename.size())
+  {
     scene->setSceneRect(
         QRectF(0, 0, level.drawing_width, level.drawing_height));
     scene->addPixmap(level.floorplan_pixmap);
   }
-  else {
+  else
+  {
     const double w = level.x_meters / level.drawing_meters_per_pixel;
     const double h = level.y_meters / level.drawing_meters_per_pixel;
     scene->setSceneRect(QRectF(0, 0, w, h));
     scene->addRect(0, 0, w, h, QPen(), Qt::white);
   }
 
+  for (const auto& layer : level.layers)
+  {
+    scene->addPixmap(layer.pixmap);
+  }
+
   level.draw_polygons(scene);
   level.draw_edges(scene);
 
   // now draw all the models
-  for (const auto &nav_model : level.models) {
+  for (const auto &nav_model : level.models)
+  {
     // find the pixmap we need for this model
     QPixmap pixmap;
     double model_meters_per_pixel = 1.0;  // will get overridden
-    for (auto &model : models) {
-      if (model.name == nav_model.model_name) {
+    for (auto &model : models)
+    {
+      if (model.name == nav_model.model_name)
+      {
         pixmap = model.get_pixmap();
         model_meters_per_pixel = model.meters_per_pixel;
         break;

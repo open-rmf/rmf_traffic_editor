@@ -51,6 +51,7 @@ bool Layer::from_yaml(const std::string &_name, const YAML::Node &y)
   }
   image = image.convertToFormat(QImage::Format_Grayscale8);
   pixmap = QPixmap::fromImage(image);
+  printf("successfully opened %s\n", filename.c_str());
 
   return true;
 }

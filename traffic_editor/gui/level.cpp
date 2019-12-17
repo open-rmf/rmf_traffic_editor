@@ -549,23 +549,6 @@ void Level::draw_door(QGraphicsScene *scene, const Edge &edge) const
   if (door_axis_it != edge.params.end())
     door_axis = door_axis_it->second.value_string;
 
-  double door_axis_x = 0;
-  double door_axis_y = 0;
-  if (door_axis == "start")
-  {
-    door_axis_x = v_start.x;
-    door_axis_y = v_start.y;
-  }
-  else if (door_axis == "end")
-  {
-    door_axis_x = v_end.x;
-    door_axis_y = v_end.y;
-  }
-  else
-  {
-    printf("unknown door axis: [%s]\n", door_axis.c_str());
-  }
-
   double motion_degrees = 90;
   auto motion_degrees_it = edge.params.find("motion_degrees");
   if (motion_degrees_it != edge.params.end())
