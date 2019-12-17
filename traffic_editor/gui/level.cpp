@@ -163,7 +163,6 @@ YAML::Node Level::to_yaml() const
   for (const auto &edge : edges) {
     YAML::Node n(edge.to_yaml());
     std::string dict_name = "unknown";
-    n.SetStyle(YAML::EmitterStyle::Flow);
     switch (edge.type) {
       case Edge::LANE:
         dict_name = "lanes";

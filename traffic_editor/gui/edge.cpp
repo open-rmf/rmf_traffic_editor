@@ -70,7 +70,7 @@ YAML::Node Edge::to_yaml() const
   for (const auto &param : params)
     params_node[param.first] = param.second.to_yaml();
   y.push_back(params_node);
-
+  y.SetStyle(YAML::EmitterStyle::Flow);
   return y;
 }
 

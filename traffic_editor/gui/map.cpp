@@ -15,10 +15,11 @@
  *
 */
 
-#include <yaml-cpp/yaml.h>
+#include <algorithm>
 #include "./map.h"
 #include <iostream>
 #include <fstream>
+#include <yaml-cpp/yaml.h>
 
 #include <QFileInfo>
 #include <QDir>
@@ -82,8 +83,12 @@ bool Map::save_yaml(const std::string &filename)
   YAML::Node y_top;
   y_top["building_name"] = building_name;
   y_top["levels"] = levels_node;
+
+  YAML::Emitter emitter;
+  write_yaml_node(y_top, emitter);
   std::ofstream fout(filename);
-  fout << y_top << "\n";  // not sure why but std::endl doesn't work here
+  fout << emitter.c_str() << std::endl;
+
   changed = false;
   return true;
 }
@@ -249,4 +254,53 @@ void Map::add_level(const Level &new_level)
       return;
   changed = true;
   levels.push_back(new_level);
+}
+
+// Recursive function to write YAML ordered maps. Credit: Dave Hershberger
+// posted to this GitHub issue: https://github.com/jbeder/yaml-cpp/issues/169
+void Map::write_yaml_node(const YAML::Node& node, YAML::Emitter& emitter)
+{
+  switch (node.Style())
+  {
+    case YAML::EmitterStyle::Block:
+      emitter << YAML::Block;
+      break;
+    case YAML::EmitterStyle::Flow:
+      emitter << YAML::Flow;
+      break;
+    default:
+      break;
+  }
+
+  switch (node.Type())
+  {
+    case YAML::NodeType::Sequence:
+    {
+      emitter << YAML::BeginSeq;
+      for (size_t i = 0; i < node.size(); i++)
+        write_yaml_node(node[i], emitter);
+      emitter << YAML::EndSeq;
+      break;
+    }
+    case YAML::NodeType::Map:
+    {
+      emitter << YAML::BeginMap;
+      // the keys are stored in random order, so we need to collect and sort
+      std::vector<string> keys;
+      keys.reserve(node.size());
+      for (YAML::const_iterator it = node.begin(); it != node.end(); ++it)
+        keys.push_back(it->first.as<string>());
+      std::sort(keys.begin(), keys.end());
+      for (size_t i = 0; i < keys.size(); i++)
+      {
+        emitter << YAML::Key << keys[i] << YAML::Value;
+        write_yaml_node(node[keys[i]], emitter);
+      }
+      emitter << YAML::EndMap;
+      break;
+    }
+    default:
+      emitter << node;
+      break;
+  }
 }

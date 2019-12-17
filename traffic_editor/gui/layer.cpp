@@ -27,13 +27,27 @@ Layer::~Layer()
 {
 }
 
-bool Layer::from_yaml(const std::string &_name, const YAML::Node &_data)
+bool Layer::from_yaml(const std::string &_name, const YAML::Node &y)
 {
+  if (!y.IsMap())
+    throw std::runtime_error("Layer::from_yaml() expected a map");
+  name = _name;
+  filename = y["filename"].as<string>();
+  meters_per_pixel = y["meters_per_pixel"].as<double>();
+  translation_x = y["translation_x"].as<double>();
+  translation_y = y["translation_y"].as<double>();
+  rotation = y["rotation"].as<double>();
   return true;
 }
 
 YAML::Node Layer::to_yaml() const
 {
   YAML::Node y;
+  y["name"] = name;
+  y["filename"] = filename;
+  y["meters_per_pixel"] = meters_per_pixel;
+  y["translation_x"] = translation_x;
+  y["translation_y"] = translation_y;
+  y["rotation"] = rotation;
   return y;
 }

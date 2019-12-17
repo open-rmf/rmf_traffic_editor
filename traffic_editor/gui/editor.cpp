@@ -917,7 +917,7 @@ void Editor::populate_layers_table()
   layers_table->blockSignals(true);  // otherwise we get tons of callbacks
   layers_table_set_row(0, "floorplan", true);
 
-  for (size_t i = 0; i < static_cast<int>(level.layers.size()); i++)
+  for (size_t i = 0; i < level.layers.size(); i++)
   {
     layers_table_set_row(
         i + 1,
@@ -940,7 +940,7 @@ void Editor::populate_layers_table()
 void Editor::layers_table_set_row(
     const int row_idx,
     const QString &label,
-    const bool checked)
+    const bool /*checked*/)
 {
   QCheckBox *checkbox = new QCheckBox(label);
   layers_table->setCellWidget(row_idx, 0, checkbox);
@@ -1040,7 +1040,7 @@ void Editor::populate_property_editor(const Vertex &vertex)
   property_editor_set_row(0, "x (pixels)", vertex.x);
   property_editor_set_row(1, "y (pixels)", vertex.y);
   property_editor_set_row(2, "x (m)", vertex.x * scale);
-  property_editor_set_row(3, "x (m)", vertex.y * scale);
+  property_editor_set_row(3, "y (m)", -1.0 * vertex.y * scale);
   property_editor_set_row(
       4,
       "name",
