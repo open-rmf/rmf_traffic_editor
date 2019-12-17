@@ -113,6 +113,7 @@ bool Level::from_yaml(const std::string &_name, const YAML::Node &_data)
       models.push_back(m);
     }
   }
+
   if (_data["floors"] && _data["floors"].IsSequence()) {
     const YAML::Node &yf = _data["floors"];
     for (YAML::const_iterator it = yf.begin(); it != yf.end(); ++it) {
@@ -121,8 +122,21 @@ bool Level::from_yaml(const std::string &_name, const YAML::Node &_data)
       polygons.push_back(p);
     }
   }
+
   if (_data["elevation"])
     elevation = _data["elevation"].as<double>();
+
+  if (_data["layers"] && _data["layers"].IsMap())
+  {
+    const YAML::Node& yl = _data["layers"];
+    for (YAML::const_iterator it = yl.begin(); it != yl.end(); ++it)
+    {
+      Layer layer;
+      layer.from_yaml(it->first.as<string>(), it->second);
+      layers.push_back(layer);
+    }
+  }
+
   calculate_scale();
   return true;
 }
@@ -199,8 +213,9 @@ YAML::Node Level::to_yaml() const
     }
   }
 
+  y["layers"] = YAML::Node(YAML::NodeType::Map);
   for (const auto &layer : layers)
-    y["layers"].push_back(layer.to_yaml());
+    y["layers"][layer.name] = layer.to_yaml();
 
   return y;
 }

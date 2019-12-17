@@ -15,6 +15,7 @@
  *
 */
 
+#include <QImageReader>
 #include "layer.h"
 using std::string;
 using std::vector;
@@ -37,13 +38,27 @@ bool Layer::from_yaml(const std::string &_name, const YAML::Node &y)
   translation_x = y["translation_x"].as<double>();
   translation_y = y["translation_y"].as<double>();
   rotation = y["rotation"].as<double>();
+
+  // now try to load the image
+  QImageReader image_reader(QString::fromStdString(filename));
+  image_reader.setAutoTransform(true);
+  QImage image = image_reader.read();
+  if (image.isNull()) {
+    qWarning("unable to read %s: %s",
+        qUtf8Printable(QString::fromStdString(filename)),
+        qUtf8Printable(image_reader.errorString()));
+    return false;
+  }
+  image = image.convertToFormat(QImage::Format_Grayscale8);
+  pixmap = QPixmap::fromImage(image);
+
   return true;
 }
 
 YAML::Node Layer::to_yaml() const
 {
   YAML::Node y;
-  y["name"] = name;
+  y.SetStyle(YAML::EmitterStyle::Flow);
   y["filename"] = filename;
   y["meters_per_pixel"] = meters_per_pixel;
   y["translation_x"] = translation_x;

@@ -19,12 +19,27 @@
 #include <QtWidgets>
 
 
-LayerDialog::LayerDialog(QWidget *parent, Layer &_layer)
+LayerDialog::LayerDialog(QWidget *parent, Layer &_layer, bool edit_mode)
 : QDialog(parent),
   layer(_layer)
 {
+  QHBoxLayout *bottom_buttons_layout = new QHBoxLayout;
   ok_button = new QPushButton("OK", this);  // first button = [enter] button
-  cancel_button = new QPushButton("Cancel", this);
+  bottom_buttons_layout->addWidget(ok_button);
+  connect(
+      ok_button, &QAbstractButton::clicked,
+      this, &LayerDialog::ok_button_clicked);
+
+  // When using this dialog in "edit mode," it is modeless and instantly
+  // updating, so there is no "cancel" function.
+  if (!edit_mode)
+  {
+    cancel_button = new QPushButton("Cancel", this);
+    bottom_buttons_layout->addWidget(cancel_button);
+    connect(
+      cancel_button, &QAbstractButton::clicked,
+      this, &QDialog::reject);
+  }
 
   QHBoxLayout *name_hbox_layout = new QHBoxLayout;
   name_line_edit = new QLineEdit(QString::fromStdString(layer.name), this);
@@ -54,20 +69,34 @@ LayerDialog::LayerDialog(QWidget *parent, Layer &_layer)
       this);
   scale_hbox_layout->addWidget(scale_line_edit);
 
-  QHBoxLayout *bottom_buttons_layout = new QHBoxLayout;
-  bottom_buttons_layout->addWidget(cancel_button);
-  bottom_buttons_layout->addWidget(ok_button);
-  connect(
-      ok_button, &QAbstractButton::clicked,
-      this, &LayerDialog::ok_button_clicked);
-  connect(
-      cancel_button, &QAbstractButton::clicked,
-      this, &QDialog::reject);
+  QHBoxLayout *translation_x_hbox_layout = new QHBoxLayout;
+  translation_x_hbox_layout->addWidget(new QLabel("X translation (meters):"));
+  translation_x_line_edit = new QLineEdit(
+      QString::number(layer.translation_x),
+      this);
+  translation_x_hbox_layout->addWidget(translation_x_line_edit);
+
+  QHBoxLayout *translation_y_hbox_layout = new QHBoxLayout;
+  translation_y_hbox_layout->addWidget(new QLabel("Y translation (meters):"));
+  translation_y_line_edit = new QLineEdit(
+      QString::number(layer.translation_y),
+      this);
+  translation_y_hbox_layout->addWidget(translation_y_line_edit);
+
+  QHBoxLayout *rotation_hbox_layout = new QHBoxLayout;
+  rotation_hbox_layout->addWidget(new QLabel("Rotation (radians):"));
+  rotation_line_edit = new QLineEdit(
+      QString::number(layer.rotation),
+      this);
+  rotation_hbox_layout->addWidget(rotation_line_edit);
 
   QVBoxLayout *vbox_layout = new QVBoxLayout;
   vbox_layout->addLayout(name_hbox_layout);
   vbox_layout->addLayout(filename_layout);
   vbox_layout->addLayout(scale_hbox_layout);
+  vbox_layout->addLayout(translation_x_hbox_layout);
+  vbox_layout->addLayout(translation_y_hbox_layout);
+  vbox_layout->addLayout(rotation_hbox_layout);
   // todo: some sort of separator (?)
   vbox_layout->addLayout(bottom_buttons_layout);
 
@@ -130,6 +159,10 @@ void LayerDialog::ok_button_clicked()
   }
   layer.name = name_line_edit->text().toStdString();
   layer.filename = filename_line_edit->text().toStdString();
+  layer.rotation = rotation_line_edit->text().toDouble();
+  layer.translation_x = translation_x_line_edit->text().toDouble();
+  layer.translation_y = translation_y_line_edit->text().toDouble();
+  layer.meters_per_pixel = scale_line_edit->text().toDouble();
   accept();
 }
 

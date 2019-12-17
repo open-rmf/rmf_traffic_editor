@@ -26,14 +26,19 @@ class QLineEdit;
 class LayerDialog : public QDialog
 {
 public:
-  LayerDialog(QWidget *parent, Layer &_layer);
+  LayerDialog(QWidget *parent, Layer &_layer, bool edit_mode=true);
   ~LayerDialog();
  
 private:
   Layer &layer;
 
-  QLineEdit *name_line_edit, *filename_line_edit;
+  QLineEdit *name_line_edit;
+  QLineEdit *filename_line_edit;
   QLineEdit *scale_line_edit;
+  QLineEdit *translation_x_line_edit;
+  QLineEdit *translation_y_line_edit;
+  QLineEdit *rotation_line_edit;
+
   QPushButton *filename_button;
   QPushButton *ok_button, *cancel_button;
 
