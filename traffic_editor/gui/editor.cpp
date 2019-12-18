@@ -943,12 +943,23 @@ void Editor::layers_table_set_row(
     const bool checked)
 {
   QCheckBox *checkbox = new QCheckBox(label);
+  checkbox->setChecked(checked);
   layers_table->setCellWidget(row_idx, 0, checkbox);
+
   QPushButton *button = new QPushButton("Edit...", this);
   layers_table->setCellWidget(row_idx, 1, button);
+
   connect(
       button, &QAbstractButton::clicked,
       [=]() { this->layer_edit_button_clicked(label.toStdString()); });
+  connect(
+      checkbox, &QAbstractButton::clicked,
+      [=](bool box_checked)
+      {
+        if (row_idx > 0)
+          map.levels[level_idx].layers[row_idx-1].visible = box_checked;
+        create_scene();
+      });
 }
 
 void Editor::layer_edit_button_clicked(const std::string &label)
@@ -1202,9 +1213,8 @@ bool Editor::create_scene()
     // set the origin of the pixmap frame to the lower-left corner
     item->setOffset(0, -layer.pixmap.height());
     item->setPos(
-        layer.translation_x / level.drawing_meters_per_pixel,
-        level.floorplan_pixmap.height() +
-        layer.translation_y / level.drawing_meters_per_pixel); // * level.drawing_meters_per_pixel);
+        -layer.translation_x / level.drawing_meters_per_pixel,
+        layer.translation_y / level.drawing_meters_per_pixel);
     item->setScale(layer.meters_per_pixel / level.drawing_meters_per_pixel);
     //item->setScale(layer.meters_per_pixel / level.drawing_meters_per_pixel);
     item->setRotation(-1.0 * layer.rotation * 180.0 / M_PI);
