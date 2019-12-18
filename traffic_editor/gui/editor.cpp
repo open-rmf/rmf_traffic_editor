@@ -1198,7 +1198,7 @@ bool Editor::create_scene()
   {
     const double w = level.x_meters / level.drawing_meters_per_pixel;
     const double h = level.y_meters / level.drawing_meters_per_pixel;
-    scene->setSceneRect(QRectF(0, 0, w, h+500));  // hack...
+    scene->setSceneRect(QRectF(0, 0, w, h));
     scene->addRect(0, 0, w, h, QPen(), Qt::white);
   }
 
@@ -1216,7 +1216,6 @@ bool Editor::create_scene()
         -layer.translation_x / level.drawing_meters_per_pixel,
         layer.translation_y / level.drawing_meters_per_pixel);
     item->setScale(layer.meters_per_pixel / level.drawing_meters_per_pixel);
-    //item->setScale(layer.meters_per_pixel / level.drawing_meters_per_pixel);
     item->setRotation(-1.0 * layer.rotation * 180.0 / M_PI);
     QGraphicsOpacityEffect *opacity_effect = new QGraphicsOpacityEffect;
     opacity_effect->setOpacity(0.5);
