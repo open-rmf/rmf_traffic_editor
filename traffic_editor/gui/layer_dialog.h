@@ -19,18 +19,22 @@
 #define LAYER_DIALOG_H
 
 #include <QDialog>
+#include <QObject>
 #include "layer.h"
 class QLineEdit;
 
 
 class LayerDialog : public QDialog
 {
+  Q_OBJECT
+
 public:
   LayerDialog(QWidget *parent, Layer &_layer, bool edit_mode=true);
   ~LayerDialog();
  
 private:
   Layer &layer;
+  bool _edit_mode = true;
 
   QLineEdit *name_line_edit;
   QLineEdit *filename_line_edit;
@@ -42,10 +46,15 @@ private:
   QPushButton *filename_button;
   QPushButton *ok_button, *cancel_button;
 
+  void update_layer();
+
 private slots:
   void filename_button_clicked();
   void ok_button_clicked();
   void filename_line_edited(const QString &text);
+
+signals:
+  void redraw_request();
 };
 
 #endif

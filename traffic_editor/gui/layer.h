@@ -33,6 +33,7 @@ public:
 
   std::string name;
   std::string filename;
+  bool visible = true;
 
   double meters_per_pixel = 0.05;  // relative to the parent floorplan scale
   double translation_x = 0.0;

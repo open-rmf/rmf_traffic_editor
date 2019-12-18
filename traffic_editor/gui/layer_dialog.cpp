@@ -21,7 +21,8 @@
 
 LayerDialog::LayerDialog(QWidget *parent, Layer &_layer, bool edit_mode)
 : QDialog(parent),
-  layer(_layer)
+  layer(_layer),
+  _edit_mode(edit_mode)
 {
   QHBoxLayout *bottom_buttons_layout = new QHBoxLayout;
   ok_button = new QPushButton("OK", this);  // first button = [enter] button
@@ -100,6 +101,36 @@ LayerDialog::LayerDialog(QWidget *parent, Layer &_layer, bool edit_mode)
   // todo: some sort of separator (?)
   vbox_layout->addLayout(bottom_buttons_layout);
 
+  connect(
+      filename_line_edit,
+      &QLineEdit::textEdited,
+      this,
+      &LayerDialog::update_layer);
+
+  connect(
+      scale_line_edit,
+      &QLineEdit::textEdited,
+      this,
+      &LayerDialog::update_layer);
+
+  connect(
+      translation_x_line_edit,
+      &QLineEdit::textEdited,
+      this,
+      &LayerDialog::update_layer);
+
+  connect(
+      translation_y_line_edit,
+      &QLineEdit::textEdited,
+      this,
+      &LayerDialog::update_layer);
+
+  connect(
+      rotation_line_edit,
+      &QLineEdit::textEdited,
+      this,
+      &LayerDialog::update_layer);
+
   setLayout(vbox_layout);
 }
 
@@ -157,16 +188,23 @@ void LayerDialog::ok_button_clicked()
         "Name must not be empty");
     return;
   }
-  layer.name = name_line_edit->text().toStdString();
-  layer.filename = filename_line_edit->text().toStdString();
-  layer.rotation = rotation_line_edit->text().toDouble();
-  layer.translation_x = translation_x_line_edit->text().toDouble();
-  layer.translation_y = translation_y_line_edit->text().toDouble();
-  layer.meters_per_pixel = scale_line_edit->text().toDouble();
+  update_layer();
+
   accept();
 }
 
 void LayerDialog::filename_line_edited(const QString &/*text*/)
 {
   // todo: render on parent if file exists?
+}
+
+void LayerDialog::update_layer()
+{
+  layer.name = name_line_edit->text().toStdString();
+  layer.filename = filename_line_edit->text().toStdString();
+  layer.rotation = rotation_line_edit->text().toDouble();
+  layer.translation_x = translation_x_line_edit->text().toDouble();
+  layer.translation_y = translation_y_line_edit->text().toDouble();
+  layer.meters_per_pixel = scale_line_edit->text().toDouble();
+  emit redraw_request();
 }

@@ -38,6 +38,7 @@ bool Layer::from_yaml(const std::string &_name, const YAML::Node &y)
   translation_x = y["translation_x"].as<double>();
   translation_y = y["translation_y"].as<double>();
   rotation = y["rotation"].as<double>();
+  visible = y["visible"].as<bool>();
 
   // now try to load the image
   QImageReader image_reader(QString::fromStdString(filename));
@@ -65,5 +66,6 @@ YAML::Node Layer::to_yaml() const
   y["translation_x"] = translation_x;
   y["translation_y"] = translation_y;
   y["rotation"] = rotation;
+  y["visible"] = visible;
   return y;
 }

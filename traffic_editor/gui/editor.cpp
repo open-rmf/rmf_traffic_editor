@@ -922,7 +922,7 @@ void Editor::populate_layers_table()
     layers_table_set_row(
         i + 1,
         QString::fromStdString(level.layers[i].name),
-        true);
+        level.layers[i].visible);
   }
 
   const int last_row_idx = static_cast<int>(level.layers.size()) + 1;
@@ -940,7 +940,7 @@ void Editor::populate_layers_table()
 void Editor::layers_table_set_row(
     const int row_idx,
     const QString &label,
-    const bool /*checked*/)
+    const bool checked)
 {
   QCheckBox *checkbox = new QCheckBox(label);
   layers_table->setCellWidget(row_idx, 0, checkbox);
@@ -949,6 +949,8 @@ void Editor::layers_table_set_row(
   connect(
       button, &QAbstractButton::clicked,
       [=]() { this->layer_edit_button_clicked(label.toStdString()); });
+  connect(
+      checkbox, &Q
 }
 
 void Editor::layer_edit_button_clicked(const std::string &label)
@@ -963,13 +965,18 @@ void Editor::layer_edit_button_clicked(const std::string &label)
     Layer& layer = level.layers[i];
     if (label != layer.name)
       continue;
-    LayerDialog *dialog = new LayerDialog(this, layer);
+    LayerDialog *dialog = new LayerDialog(this, layer, true);
     // todo: connect some signal/slot for "things have changed"
     // so we can dynamically update the transformation
     // and bling features like color, transparency, etc.
     dialog->show();
     dialog->raise();
     dialog->activateWindow();
+    connect(
+        dialog,
+        &LayerDialog::redraw_request,
+        this,
+        &Editor::create_scene);
     return;  // only create a dialog for the first name match
   }
 }
@@ -1182,13 +1189,30 @@ bool Editor::create_scene()
   {
     const double w = level.x_meters / level.drawing_meters_per_pixel;
     const double h = level.y_meters / level.drawing_meters_per_pixel;
-    scene->setSceneRect(QRectF(0, 0, w, h));
+    scene->setSceneRect(QRectF(0, 0, w, h+500));  // hack...
     scene->addRect(0, 0, w, h, QPen(), Qt::white);
   }
 
   for (const auto& layer : level.layers)
   {
-    scene->addPixmap(layer.pixmap);
+    if (!layer.visible)
+      continue;
+
+    printf("floorplan height: %d\n", level.floorplan_pixmap.height());
+    printf("layer pixmap height: %d\n", layer.pixmap.height());
+    QGraphicsPixmapItem *item = scene->addPixmap(layer.pixmap);
+    // set the origin of the pixmap frame to the lower-left corner
+    item->setOffset(0, -layer.pixmap.height());
+    item->setPos(
+        layer.translation_x / level.drawing_meters_per_pixel,
+        level.floorplan_pixmap.height() +
+        layer.translation_y / level.drawing_meters_per_pixel); // * level.drawing_meters_per_pixel);
+    item->setScale(layer.meters_per_pixel / level.drawing_meters_per_pixel);
+    //item->setScale(layer.meters_per_pixel / level.drawing_meters_per_pixel);
+    item->setRotation(-1.0 * layer.rotation * 180.0 / M_PI);
+    QGraphicsOpacityEffect *opacity_effect = new QGraphicsOpacityEffect;
+    opacity_effect->setOpacity(0.5);
+    item->setGraphicsEffect(opacity_effect);
   }
 
   level.draw_polygons(scene);
