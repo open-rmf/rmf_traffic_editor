@@ -949,8 +949,6 @@ void Editor::layers_table_set_row(
   connect(
       button, &QAbstractButton::clicked,
       [=]() { this->layer_edit_button_clicked(label.toStdString()); });
-  connect(
-      checkbox, &Q
 }
 
 void Editor::layer_edit_button_clicked(const std::string &label)
