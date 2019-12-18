@@ -73,6 +73,7 @@ YAML::Node Vertex::to_yaml() const
   // with more than 1/1000 precision inside a single pixel.
 
   YAML::Node vertex_node;
+  vertex_node.SetStyle(YAML::EmitterStyle::Flow);
   vertex_node.push_back(round(x * 1000.0) / 1000.0);
   vertex_node.push_back(round(y * 1000.0) / 1000.0);
   vertex_node.push_back(0.0);  // placeholder for Z offsets in the future
@@ -85,8 +86,6 @@ YAML::Node Vertex::to_yaml() const
       params_node[param.first] = param.second.to_yaml();
     vertex_node.push_back(params_node);
   }
-
-  vertex_node.SetStyle(YAML::EmitterStyle::Flow);
   return vertex_node;
 }
 

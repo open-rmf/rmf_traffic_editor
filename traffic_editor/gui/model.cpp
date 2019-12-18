@@ -54,6 +54,7 @@ YAML::Node Model::to_yaml() const
   // with more than 1/1000 precision inside a single pixel.
 
   YAML::Node n;
+  n.SetStyle(YAML::EmitterStyle::Flow);
   n["x"] = round(x * 1000.0) / 1000.0;
   n["y"] = round(y * 1000.0) / 1000.0;
   // let's give yaw another decimal place because, I don't know, reasons (?)

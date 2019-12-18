@@ -72,9 +72,9 @@ bool Level::from_yaml(const std::string &_name, const YAML::Node &_data)
       return false;
     }
     image = image.convertToFormat(QImage::Format_Grayscale8);
-    pixmap = QPixmap::fromImage(image);
-    drawing_width = pixmap.width();
-    drawing_height = pixmap.height();
+    floorplan_pixmap = QPixmap::fromImage(image);
+    drawing_width = floorplan_pixmap.width();
+    drawing_height = floorplan_pixmap.height();
   }
   else if (_data["x_meters"] && _data["y_meters"]) {
     x_meters = _data["x_meters"].as<double>();
@@ -113,6 +113,7 @@ bool Level::from_yaml(const std::string &_name, const YAML::Node &_data)
       models.push_back(m);
     }
   }
+
   if (_data["floors"] && _data["floors"].IsSequence()) {
     const YAML::Node &yf = _data["floors"];
     for (YAML::const_iterator it = yf.begin(); it != yf.end(); ++it) {
@@ -121,8 +122,21 @@ bool Level::from_yaml(const std::string &_name, const YAML::Node &_data)
       polygons.push_back(p);
     }
   }
+
   if (_data["elevation"])
     elevation = _data["elevation"].as<double>();
+
+  if (_data["layers"] && _data["layers"].IsMap())
+  {
+    const YAML::Node& yl = _data["layers"];
+    for (YAML::const_iterator it = yl.begin(); it != yl.end(); ++it)
+    {
+      Layer layer;
+      layer.from_yaml(it->first.as<string>(), it->second);
+      layers.push_back(layer);
+    }
+  }
+
   calculate_scale();
   return true;
 }
@@ -155,6 +169,7 @@ YAML::Node Level::to_yaml() const
     y["x_meters"] = x_meters;
     y["y_meters"] = y_meters;
   }
+  y["elevation"] = elevation;
 
   for (const auto &v : vertices)
     y["vertices"].push_back(v.to_yaml());
@@ -162,7 +177,6 @@ YAML::Node Level::to_yaml() const
   for (const auto &edge : edges) {
     YAML::Node n(edge.to_yaml());
     std::string dict_name = "unknown";
-    n.SetStyle(YAML::EmitterStyle::Flow);
     switch (edge.type) {
       case Edge::LANE:
         dict_name = "lanes";
@@ -199,7 +213,9 @@ YAML::Node Level::to_yaml() const
     }
   }
 
-  y["elevation"] = elevation;
+  y["layers"] = YAML::Node(YAML::NodeType::Map);
+  for (const auto &layer : layers)
+    y["layers"][layer.name] = layer.to_yaml();
 
   return y;
 }
@@ -532,23 +548,6 @@ void Level::draw_door(QGraphicsScene *scene, const Edge &edge) const
   std::string door_axis("start");
   if (door_axis_it != edge.params.end())
     door_axis = door_axis_it->second.value_string;
-
-  double door_axis_x = 0;
-  double door_axis_y = 0;
-  if (door_axis == "start")
-  {
-    door_axis_x = v_start.x;
-    door_axis_y = v_start.y;
-  }
-  else if (door_axis == "end")
-  {
-    door_axis_x = v_end.x;
-    door_axis_y = v_end.y;
-  }
-  else
-  {
-    printf("unknown door axis: [%s]\n", door_axis.c_str());
-  }
 
   double motion_degrees = 90;
   auto motion_degrees_it = edge.params.find("motion_degrees");

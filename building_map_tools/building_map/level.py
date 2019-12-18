@@ -414,6 +414,10 @@ class Level:
             if l.params['demo_mock_floor_name'].value:
                 p['demo_mock_floor_name'] = \
                     l.params['demo_mock_floor_name'].value
+            # ANOTHER ABOMINATION
+            if l.params['demo_mock_lift_name'].value:
+                p['demo_mock_lift_name'] = \
+                    l.params['demo_mock_lift_name'].value
 
             dock_name = None
             dock_at_end = True

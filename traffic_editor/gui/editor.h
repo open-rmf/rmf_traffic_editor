@@ -137,6 +137,15 @@ private:
   const QString tool_id_to_string(const int id);
   QButtonGroup *tool_button_group;
 
+  QTableWidget *layers_table;
+  void populate_layers_table();
+  void layers_table_set_row(
+      const int row_idx,
+      const QString &label,
+      const bool checked);
+  void layer_edit_button_clicked(const std::string &label);
+  void layer_add_button_clicked();
+
   QTableWidget *property_editor;
   void update_property_editor();
   void populate_property_editor(const Edge &edge);

@@ -31,6 +31,7 @@
 #include "add_param_dialog.h"
 #include "editor.h"
 #include "level_dialog.h"
+#include "layer_dialog.h"
 #include "preferences_dialog.h"
 #include "preferences_keys.h"
 #include "map_view.h"
@@ -52,6 +53,12 @@ Editor::Editor(QWidget *parent)
   tool_id(SELECT)
 {
   instance = this;
+  
+  /*
+  setStyleSheet(
+    "QLabel { color: white; }"
+  );
+  */
 
   QSettings settings;
   qDebug("settings filename: [%s]", qUtf8Printable(settings.fileName()));
@@ -72,6 +79,35 @@ Editor::Editor(QWidget *parent)
   QVBoxLayout *map_layout = new QVBoxLayout;
   map_layout->addLayout(level_button_hbox_layout);
   map_layout->addWidget(map_view);
+
+  QVBoxLayout *layers_layout = new QVBoxLayout;
+
+  QLabel *layers_label = new QLabel("Rendering layers");
+  layers_label->setStyleSheet("QLabel { color: white; }");
+  layers_layout->addWidget(layers_label);
+
+  layers_table = new QTableWidget();
+  layers_table->setStyleSheet("QTableWidget { background-color: #e0e0e0; color: black; } QLineEdit { background:white; } QCheckBox { padding-left: 5px; background:white; } QPushButton { margin: 5px; background-color: #c0c0c0; border: 1px solid black; } QPushButton:pressed { background-color: #808080; }");
+  layers_table->setColumnCount(2);
+  layers_table->setMinimumSize(400, 200);
+  layers_table->setSizePolicy(
+      QSizePolicy::Fixed,
+      QSizePolicy::MinimumExpanding);
+  layers_table->horizontalHeader()->setVisible(false);
+  layers_table->verticalHeader()->setVisible(false);
+  layers_table->horizontalHeader()->setSectionResizeMode(
+      0, QHeaderView::Stretch);
+  layers_table->horizontalHeader()->setSectionResizeMode(
+      1, QHeaderView::ResizeToContents);
+  layers_table->verticalHeader()->setSectionResizeMode(
+      QHeaderView::ResizeToContents);
+  layers_table->setAutoFillBackground(true);
+  layers_layout->addWidget(layers_table);
+
+  QFrame *separation_line = new QFrame;
+  separation_line->setFrameShape(QFrame::HLine);
+  separation_line->setFrameShadow(QFrame::Sunken);
+  layers_layout->addWidget(separation_line);
 
   property_editor = new QTableWidget();
   property_editor->setStyleSheet("QTableWidget { background-color: #e0e0e0; color: black; gridline-color: #606060; } QLineEdit { background:white; }");
@@ -109,13 +145,18 @@ Editor::Editor(QWidget *parent)
   param_button_layout->addWidget(add_param_button);
   param_button_layout->addWidget(delete_param_button);
 
-  QVBoxLayout *property_layout = new QVBoxLayout;
-  property_layout->addWidget(property_editor);
-  property_layout->addLayout(param_button_layout);
+  QVBoxLayout *right_column_layout = new QVBoxLayout;
+  right_column_layout->addLayout(layers_layout);
+
+  QLabel *properties_label = new QLabel("Properties");
+  properties_label->setStyleSheet("QLabel { color: white; }");
+  right_column_layout->addWidget(properties_label);
+  right_column_layout->addWidget(property_editor);
+  right_column_layout->addLayout(param_button_layout);
 
   QHBoxLayout *hbox_layout = new QHBoxLayout;
   hbox_layout->addLayout(map_layout, 1);
-  hbox_layout->addLayout(property_layout);
+  hbox_layout->addLayout(right_column_layout);
 
   QWidget *w = new QWidget();
   w->setMouseTracking(true);
@@ -333,6 +374,7 @@ bool Editor::load_project(const QString &filename)
   create_scene();
   project_filename = filename;
   map_view->zoom_fit(map, level_idx);
+  populate_layers_table();
 
   QSettings settings;
   settings.setValue(preferences_keys::previous_project_path, filename);
@@ -866,6 +908,91 @@ void Editor::delete_param_button_clicked()
       "TODO: something...sorry.");
 }
 
+void Editor::populate_layers_table()
+{
+  const Level &level = map.levels[level_idx];
+  layers_table->blockSignals(true);  // otherwise we get tons of callbacks
+  layers_table->setRowCount(2 + level.layers.size());
+
+  layers_table->blockSignals(true);  // otherwise we get tons of callbacks
+  layers_table_set_row(0, "floorplan", true);
+
+  for (size_t i = 0; i < level.layers.size(); i++)
+  {
+    layers_table_set_row(
+        i + 1,
+        QString::fromStdString(level.layers[i].name),
+        level.layers[i].visible);
+  }
+
+  const int last_row_idx = static_cast<int>(level.layers.size()) + 1;
+  // we'll use the last row for the "Add" button
+  layers_table->setCellWidget(last_row_idx, 0, nullptr);
+  QPushButton *add_button = new QPushButton("Add...", this);
+  layers_table->setCellWidget(last_row_idx, 1, add_button);
+  connect(
+      add_button, &QAbstractButton::clicked,
+      [=]() { this->layer_add_button_clicked(); });
+
+  layers_table->blockSignals(false);  // re-enable callbacks
+}
+
+void Editor::layers_table_set_row(
+    const int row_idx,
+    const QString &label,
+    const bool checked)
+{
+  QCheckBox *checkbox = new QCheckBox(label);
+  layers_table->setCellWidget(row_idx, 0, checkbox);
+  QPushButton *button = new QPushButton("Edit...", this);
+  layers_table->setCellWidget(row_idx, 1, button);
+  connect(
+      button, &QAbstractButton::clicked,
+      [=]() { this->layer_edit_button_clicked(label.toStdString()); });
+}
+
+void Editor::layer_edit_button_clicked(const std::string &label)
+{
+  printf("clicked: [%s]\n", label.c_str());
+  if (map.levels.empty())
+    return;
+  // find the index of this layer in the current level
+  Level &level = map.levels[level_idx];
+  for (size_t i = 0; i < level.layers.size(); i++)
+  {
+    Layer& layer = level.layers[i];
+    if (label != layer.name)
+      continue;
+    LayerDialog *dialog = new LayerDialog(this, layer, true);
+    // todo: connect some signal/slot for "things have changed"
+    // so we can dynamically update the transformation
+    // and bling features like color, transparency, etc.
+    dialog->show();
+    dialog->raise();
+    dialog->activateWindow();
+    connect(
+        dialog,
+        &LayerDialog::redraw_request,
+        this,
+        &Editor::create_scene);
+    return;  // only create a dialog for the first name match
+  }
+}
+
+void Editor::layer_add_button_clicked()
+{
+  if (level_idx >= static_cast<int>(map.levels.size()))
+    return;  // let's not crash (yet)
+  Level& level = map.levels[level_idx];
+  Layer layer;
+  LayerDialog layer_dialog(this, layer);
+  if (layer_dialog.exec() != QDialog::Accepted)
+    return;
+  printf("added a layer: [%s]\n", layer.name.c_str());
+  level.layers.push_back(layer);
+  populate_layers_table();
+}
+
 void Editor::populate_property_editor(const Edge &edge)
 {
   const Level &level = map.levels[level_idx];
@@ -918,7 +1045,7 @@ void Editor::populate_property_editor(const Vertex &vertex)
   property_editor_set_row(0, "x (pixels)", vertex.x);
   property_editor_set_row(1, "y (pixels)", vertex.y);
   property_editor_set_row(2, "x (m)", vertex.x * scale);
-  property_editor_set_row(3, "x (m)", vertex.y * scale);
+  property_editor_set_row(3, "y (m)", -1.0 * vertex.y * scale);
   property_editor_set_row(
       4,
       "name",
@@ -1042,35 +1169,63 @@ bool Editor::create_scene()
   mouse_motion_ellipse = nullptr;
   mouse_motion_polygon = nullptr;
 
-  if (map.levels.empty()) {
+  if (map.levels.empty())
+  {
     printf("nothing to draw!\n");
     return false;
   }
 
   const Level &level = map.levels[level_idx];
 
-  if (level.drawing_filename.size()) {
+  if (level.drawing_filename.size())
+  {
     scene->setSceneRect(
         QRectF(0, 0, level.drawing_width, level.drawing_height));
-    scene->addPixmap(level.pixmap);
+    scene->addPixmap(level.floorplan_pixmap);
   }
-  else {
+  else
+  {
     const double w = level.x_meters / level.drawing_meters_per_pixel;
     const double h = level.y_meters / level.drawing_meters_per_pixel;
-    scene->setSceneRect(QRectF(0, 0, w, h));
+    scene->setSceneRect(QRectF(0, 0, w, h+500));  // hack...
     scene->addRect(0, 0, w, h, QPen(), Qt::white);
+  }
+
+  for (const auto& layer : level.layers)
+  {
+    if (!layer.visible)
+      continue;
+
+    printf("floorplan height: %d\n", level.floorplan_pixmap.height());
+    printf("layer pixmap height: %d\n", layer.pixmap.height());
+    QGraphicsPixmapItem *item = scene->addPixmap(layer.pixmap);
+    // set the origin of the pixmap frame to the lower-left corner
+    item->setOffset(0, -layer.pixmap.height());
+    item->setPos(
+        layer.translation_x / level.drawing_meters_per_pixel,
+        level.floorplan_pixmap.height() +
+        layer.translation_y / level.drawing_meters_per_pixel); // * level.drawing_meters_per_pixel);
+    item->setScale(layer.meters_per_pixel / level.drawing_meters_per_pixel);
+    //item->setScale(layer.meters_per_pixel / level.drawing_meters_per_pixel);
+    item->setRotation(-1.0 * layer.rotation * 180.0 / M_PI);
+    QGraphicsOpacityEffect *opacity_effect = new QGraphicsOpacityEffect;
+    opacity_effect->setOpacity(0.5);
+    item->setGraphicsEffect(opacity_effect);
   }
 
   level.draw_polygons(scene);
   level.draw_edges(scene);
 
   // now draw all the models
-  for (const auto &nav_model : level.models) {
+  for (const auto &nav_model : level.models)
+  {
     // find the pixmap we need for this model
     QPixmap pixmap;
     double model_meters_per_pixel = 1.0;  // will get overridden
-    for (auto &model : models) {
-      if (model.name == nav_model.model_name) {
+    for (auto &model : models)
+    {
+      if (model.name == nav_model.model_name)
+      {
         pixmap = model.get_pixmap();
         model_meters_per_pixel = model.meters_per_pixel;
         break;

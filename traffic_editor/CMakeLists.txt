@@ -23,6 +23,8 @@ add_executable(traffic-editor
   gui/edge.cpp
   gui/editor.cpp
   gui/editor_model.cpp
+  gui/layer.cpp
+  gui/layer_dialog.cpp
   gui/level.cpp
   gui/level_dialog.cpp
   gui/main.cpp

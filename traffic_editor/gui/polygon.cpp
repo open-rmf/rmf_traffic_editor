@@ -42,5 +42,6 @@ YAML::Node Polygon::to_yaml() const
   YAML::Node y;
   for (const auto &vertex_idx : vertices)
     y["vertices"].push_back(vertex_idx);
+  y["vertices"].SetStyle(YAML::EmitterStyle::Flow);
   return y;
 }

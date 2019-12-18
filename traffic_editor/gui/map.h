@@ -20,6 +20,7 @@
 
 #include <string>
 #include <vector>
+#include <yaml-cpp/yaml.h>
 
 #include "level.h"
 
@@ -83,6 +84,10 @@ public:
       const int polygon_idx,
       const double x,
       const double y);
+
+private:
+  // Recursive function to write YAML ordered maps. Credit: Dave Hershberger
+  void write_yaml_node(const YAML::Node& node, YAML::Emitter& emitter);
 };
 
 #endif
