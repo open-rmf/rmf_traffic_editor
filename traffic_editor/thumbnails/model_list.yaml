@@ -84,6 +84,7 @@ models:
 - StackedBuckets
 - StorageRack
 - StorageRackCovered
+- StorageRackCoverOpen
 - Swisslog
 - SwisslogChargerBox
 - SwisslogChargerFence
