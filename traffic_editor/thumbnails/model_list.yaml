@@ -16,7 +16,6 @@ models:
 - BumperSmall
 - BumperWallBig
 - BumperWallSmall
-- casual_male
 - CGMVanguard
 - Chair
 - Cleanfix
@@ -32,9 +31,6 @@ models:
 - door
 - ElderLadyPatient
 - ElderMalePatient
-- elegant_female
-- elegant_female2
-- elegant_male
 - Enterprise8000
 - Extinguisher
 - FemalePatient
@@ -54,6 +50,8 @@ models:
 - LoadingBay2
 - LockerBig
 - LockerSmall
+- MetalCabinet
+- MetalCabinetYellow
 - MalePatientBed
 - Microwave
 - Milo
@@ -69,6 +67,7 @@ models:
 - Nurse
 - NurseDesk
 - OfficeChair
+- OpScrubs
 - PatientWheelchair
 - PharmaTrolley
 - Pitti
@@ -85,6 +84,7 @@ models:
 - StackedBuckets
 - StorageRack
 - StorageRackCovered
+- StorageRackCoverOpen
 - Swisslog
 - SwisslogChargerBox
 - SwisslogChargerFence
@@ -111,3 +111,15 @@ models:
 - WheelchairUnfolded
 - WheelchairUnfoldedMast
 - ZebraPaints
+- MaleVisitorSit
+- PotatoChipChair
+- PatientFSit
+- FemaleVisitor
+- FemaleVisitorSit
+- WhiteChipChair
+- VisitorKidSit
+- MaleVisitorOnPhone
+- MiRCart
+- NurseTable
+- TrolleyBed
+- TrolleyBedPatient
