@@ -121,3 +121,5 @@ models:
 - MaleVisitorOnPhone
 - MiRCart
 - NurseTable
+- TrolleyBed
+- TrolleyBedPatient
