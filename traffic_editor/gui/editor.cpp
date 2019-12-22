@@ -32,6 +32,7 @@
 #include "editor.h"
 #include "level_dialog.h"
 #include "layer_dialog.h"
+#include "model_dialog.h"
 #include "preferences_dialog.h"
 #include "preferences_keys.h"
 #include "map_view.h"
@@ -327,7 +328,7 @@ void Editor::populate_model_name_list_widget()
   for (YAML::const_iterator it = ym.begin(); it != ym.end(); ++it) {
     std::string model_name = it->as<std::string>();
     model_name_list_widget->addItem(model_name.c_str());
-    models.push_back(EditorModel(model_name, model_meters_per_pixel));
+    editor_models.push_back(EditorModel(model_name, model_meters_per_pixel));
   }
 }
 
@@ -721,7 +722,8 @@ void Editor::keyPressEvent(QKeyEvent *e)
 
 const QString Editor::tool_id_to_string(const int id)
 {
-  switch (id) {
+  switch (id)
+  {
     case SELECT: return "&select";
     case ADD_VERTEX: return "add &vertex";
     case MOVE_VERTEX: return "&move vertex";
@@ -751,12 +753,13 @@ void Editor::tool_toggled(int id, bool checked)
 
   // set the cursor
   Qt::CursorShape cursor = Qt::ArrowCursor;
-  if (tool_id == ADD_VERTEX || tool_id == ADD_MODEL)
+  if (tool_id == ADD_VERTEX)
     cursor = Qt::CrossCursor;
   map_view->setCursor(cursor);
 
   // set the status bar
-  switch (id) {
+  switch (id)
+  {
     case SELECT:
       statusBar()->showMessage("Click an item to select it.");
       break;
@@ -780,6 +783,17 @@ void Editor::tool_toggled(int id, bool checked)
     default:
       statusBar()->clearMessage();
       break;
+  }
+
+  // execute dialogs as needed
+  if (id == ADD_MODEL)
+  {
+    Model model;
+    ModelDialog dialog(this, model, editor_models);
+    if (dialog.exec() == QDialog::Accepted)
+    {
+      printf("model dialog ok\n");
+    }
   }
 }
 
@@ -1092,7 +1106,7 @@ void Editor::populate_property_editor(const Model &model)
       QString::fromStdString(model.instance_name));
 
   property_editor_set_row(
-      2,
+      1,
       "model_name",
       QString::fromStdString(model.model_name));
       
@@ -1146,8 +1160,8 @@ void Editor::model_name_line_edited(const QString &text)
   std::string user_text_lower(text.toLower().toStdString());
   // could become super fancy but for now let's just do linear search...
   size_t closest_idx = 0;
-  for (size_t i = 0; i < models.size(); i++) {
-    if (user_text_lower < models[i].name_lowercase) {
+  for (size_t i = 0; i < editor_models.size(); i++) {
+    if (user_text_lower < editor_models[i].name_lowercase) {
       closest_idx = i;
       break;
     }
@@ -1162,7 +1176,7 @@ void Editor::model_name_line_edited(const QString &text)
 void Editor::model_name_list_widget_changed(int row)
 {
   qDebug("model_name_list_widget_changed(%d)", row);
-  const QPixmap &model_pixmap = models[row].get_pixmap();
+  const QPixmap &model_pixmap = editor_models[row].get_pixmap();
   if (model_pixmap.isNull())
     return;  // we don't have a pixmap to draw :(
   // scale the pixmap so it fits within the currently allotted space
@@ -1231,7 +1245,7 @@ bool Editor::create_scene()
     // find the pixmap we need for this model
     QPixmap pixmap;
     double model_meters_per_pixel = 1.0;  // will get overridden
-    for (auto &model : models)
+    for (auto &model : editor_models)
     {
       if (model.name == nav_model.model_name)
       {
@@ -1555,14 +1569,14 @@ void Editor::mouse_add_model(
     const int model_row = model_name_list_widget->currentRow();
     if (model_row < 0)
       return;  // nothing currently selected. nothing to do.
-    map.add_model(level_idx, p.x(), p.y(), 0.0, models[model_row].name);
+    map.add_model(level_idx, p.x(), p.y(), 0.0, editor_models[model_row].name);
     create_scene();
   }
   else if (t == MOVE) {
     const int model_row = model_name_list_widget->currentRow();
     if (model_row < 0)
       return;  // nothing currently selected. nothing to do.
-    EditorModel &model = models[model_row];
+    EditorModel &model = editor_models[model_row];
     if (mouse_motion_model == nullptr) {
       const QPixmap pixmap(model.get_pixmap());
       mouse_motion_model = scene->addPixmap(pixmap);

@@ -174,7 +174,7 @@ private:
   void add_param_button_clicked();
   void delete_param_button_clicked();
 
-  std::vector<EditorModel> models;
+  std::vector<EditorModel> editor_models;
   void model_name_line_edited(const QString &text);
   QLineEdit *model_name_line_edit;
   QListWidget *model_name_list_widget;

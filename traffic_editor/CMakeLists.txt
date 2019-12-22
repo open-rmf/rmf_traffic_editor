@@ -31,6 +31,7 @@ add_executable(traffic-editor
   gui/map.cpp
   gui/map_view.cpp
   gui/model.cpp
+  gui/model_dialog.cpp
   gui/param.cpp
   gui/polygon.cpp
   gui/preferences_dialog.cpp
