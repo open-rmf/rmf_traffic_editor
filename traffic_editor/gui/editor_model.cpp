@@ -60,7 +60,7 @@ QPixmap EditorModel::get_pixmap()
       "/images/cropped/" +
       name +
       string(".png");
-  qInfo("loading: [%s]", filename.c_str());
+  // qInfo("loading: [%s]", filename.c_str());
   QImageReader image_reader(QString::fromStdString(filename));
   image_reader.setAutoTransform(true);  // not sure what this does
   QImage image = image_reader.read();

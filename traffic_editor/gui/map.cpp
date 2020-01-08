@@ -178,14 +178,17 @@ void Map::add_edge(
   changed = true;
 }
 
-void Map::delete_keypress(const int level_index)
+bool Map::delete_selected(const int level_index)
 {
   if (level_index >= static_cast<int>(levels.size()))
-    return;
+    return false;
 
   printf("Map::delete_keypress()\n");
-  levels[level_index].delete_keypress();
+  if (!levels[level_index].delete_selected())
+    return false;
+
   changed = true;
+  return true;
 }
 
 void Map::add_model(
