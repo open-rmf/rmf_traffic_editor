@@ -67,7 +67,7 @@ public:
       const double yaw,
       const std::string &model_name);
 
-  void delete_keypress(const int level_index);
+  bool delete_selected(const int level_index);
 
   void set_model_yaw(
       const int level_idx,

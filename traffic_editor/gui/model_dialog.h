@@ -38,20 +38,21 @@ public:
       Model& model,
       const std::vector<EditorModel>& editor_models);
   ~ModelDialog();
- 
+
 private:
   Model& _model;
   std::vector<EditorModel> _editor_models;
 
-  QLineEdit *model_name_line_edit;
-  QListWidget *model_name_list_widget;
-  QLabel *model_preview_label;
+  QLineEdit *_model_name_line_edit;
+  QListWidget *_model_name_list_widget;
+  QLabel *_model_preview_label;
 
-  QPushButton *ok_button, *cancel_button;
+  QPushButton *_ok_button, *_cancel_button;
 
 private slots:
   void ok_button_clicked();
   void model_name_line_edited(const QString &text);
+  void model_name_list_widget_changed(int row);
 };
 
 #endif

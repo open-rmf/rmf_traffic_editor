@@ -88,7 +88,12 @@ Editor::Editor(QWidget *parent)
   layers_layout->addWidget(layers_label);
 
   layers_table = new QTableWidget();
-  layers_table->setStyleSheet("QTableWidget { background-color: #e0e0e0; color: black; } QLineEdit { background:white; } QCheckBox { padding-left: 5px; background:white; } QPushButton { margin: 5px; background-color: #c0c0c0; border: 1px solid black; } QPushButton:pressed { background-color: #808080; }");
+  layers_table->setStyleSheet(
+      "QTableWidget { background-color: #e0e0e0; color: black; } "
+      "QLineEdit { background:white; } "
+      "QCheckBox { padding-left: 5px; background:white; } "
+      "QPushButton { margin: 5px; background-color: #c0c0c0; border: 1px solid black; } "
+      "QPushButton:pressed { background-color: #808080; }");
   layers_table->setColumnCount(2);
   layers_table->setMinimumSize(400, 200);
   layers_table->setSizePolicy(
@@ -249,31 +254,6 @@ Editor::Editor(QWidget *parent)
   create_tool_button(EDIT_POLYGON);
   create_tool_button(ADD_ZONE);
 
-  toolbar->addSeparator();
-  model_name_line_edit = new QLineEdit("", this);
-  toolbar->addWidget(model_name_line_edit);
-  connect(
-      model_name_line_edit,
-      &QLineEdit::textEdited,
-      this,
-      &Editor::model_name_line_edited);
-
-  model_name_list_widget = new QListWidget;
-  populate_model_name_list_widget();
-  toolbar->addWidget(model_name_list_widget);
-  connect(
-      model_name_list_widget,
-      &QListWidget::currentRowChanged,
-      this,
-      &Editor::model_name_list_widget_changed);
-
-  model_preview_label = new QLabel("preview");
-  model_preview_label->setSizePolicy(
-      QSizePolicy::Expanding,
-      QSizePolicy::MinimumExpanding);
-  //model_preview_label->setScaledContents(true);
-  toolbar->addWidget(model_preview_label);
-
   connect(
       tool_button_group,
       QOverload<int, bool>::of(&QButtonGroup::buttonToggled),
@@ -288,9 +268,11 @@ Editor::Editor(QWidget *parent)
 
   // default tool is the "select" tool
   tool_button_group->button(SELECT)->click();
+
+  load_model_names();
 }
 
-void Editor::populate_model_name_list_widget()
+void Editor::load_model_names()
 {
   // This function may throw exceptions. Caller should be ready for them!
 
@@ -324,12 +306,9 @@ void Editor::populate_model_name_list_widget()
 
   const double model_meters_per_pixel = y["meters_per_pixel"].as<double>();
   const YAML::Node ym = y["models"];
-  model_name_list_widget->clear();
-  for (YAML::const_iterator it = ym.begin(); it != ym.end(); ++it) {
-    std::string model_name = it->as<std::string>();
-    model_name_list_widget->addItem(model_name.c_str());
-    editor_models.push_back(EditorModel(model_name, model_meters_per_pixel));
-  }
+  for (YAML::const_iterator it = ym.begin(); it != ym.end(); ++it)
+    editor_models.push_back(
+        EditorModel(it->as<std::string>(), model_meters_per_pixel));
 }
 
 QToolButton *Editor::create_tool_button(const int id)
@@ -370,6 +349,7 @@ bool Editor::load_project(const QString &filename)
     const Level &level = map.levels[level_idx];
     scene->setSceneRect(
         QRectF(0, 0, level.drawing_width, level.drawing_height));
+    previous_mouse_point = QPointF(level.drawing_width, level.drawing_height);
   }
 
   create_scene();
@@ -518,7 +498,7 @@ void Editor::edit_preferences()
   PreferencesDialog preferences_dialog(this);
 
   if (preferences_dialog.exec() == QDialog::Accepted)
-    populate_model_name_list_widget();
+    load_model_names();
 }
 
 void Editor::level_add()
@@ -601,6 +581,7 @@ void Editor::mouse_event(const MouseType t, QMouseEvent *e)
     case ADD_ZONE:     mouse_add_zone(t, e, p); break;
     default: break;
   }
+  previous_mouse_point = p;
 }
 
 void Editor::mousePressEvent(QMouseEvent *e)
@@ -651,7 +632,17 @@ void Editor::keyPressEvent(QKeyEvent *e)
 {
   switch (e->key()) {
     case Qt::Key_Delete:
-      map.delete_keypress(level_idx);
+      if (map.delete_selected(level_idx))
+        clear_property_editor();
+      else
+      {
+        QMessageBox::critical(
+            this,
+            "Could not delete item",
+            "If deleting a vertex, it must not be in any edges or polygons.");
+
+        clear_selection();
+      }
       create_scene();
       break;
     case Qt::Key_S:
@@ -678,7 +669,6 @@ void Editor::keyPressEvent(QKeyEvent *e)
       break;
     case Qt::Key_O:
       tool_button_group->button(ADD_MODEL)->click();
-      model_name_line_edit->setFocus(Qt::OtherFocusReason);
       break;
     case Qt::Key_R:
       tool_button_group->button(ROTATE_MODEL)->click();
@@ -792,8 +782,26 @@ void Editor::tool_toggled(int id, bool checked)
     ModelDialog dialog(this, model, editor_models);
     if (dialog.exec() == QDialog::Accepted)
     {
-      printf("model dialog ok\n");
+      // find the EditorModel with the requested name
+      for (auto& em : editor_models)
+        if (em.name == model.model_name)
+        {
+          mouse_motion_editor_model = &em;
+          const QPixmap pixmap(mouse_motion_editor_model->get_pixmap());
+          mouse_motion_model = scene->addPixmap(pixmap);
+          mouse_motion_model->setOffset(-pixmap.width()/2, -pixmap.height()/2);
+          mouse_motion_model->setScale(
+              mouse_motion_editor_model->meters_per_pixel /
+              map.levels[level_idx].drawing_meters_per_pixel);
+          mouse_motion_model->setPos(
+              previous_mouse_point.x(),
+              previous_mouse_point.y());
+          statusBar()->showMessage("Left-click to instantiate this model.");
+          break;
+        }
     }
+    else
+      tool_button_group->button(SELECT)->click();  // back to select mode
   }
 }
 
@@ -814,21 +822,18 @@ void Editor::update_property_editor()
   }
   for (const auto &e : map.levels[level_idx].edges) {
     if (e.selected) {
-      printf("found a selected edge\n");
       populate_property_editor(e);
       return;  // stop after finding the first one
     }
   }
   for (const auto &m : map.levels[level_idx].models) {
     if (m.selected) {
-      printf("found a selected model\n");
       populate_property_editor(m);
       return;  // stop after finding the first one
     }
   }
   for (const auto &v : map.levels[level_idx].vertices) {
     if (v.selected) {
-      printf("found a selected vertex\n");
       populate_property_editor(v);
       return;  // stop after finding the first one
     }
@@ -1147,45 +1152,6 @@ void Editor::property_editor_cell_changed(int row, int column)
   }
 }
 
-void Editor::model_name_line_edited(const QString &text)
-{
-  //qDebug("model_name_line_edited(%s)", qUtf8Printable(text));
-  if (model_name_list_widget->count() == 0) {
-    qWarning("model name list widget is empty :(");
-    return;  // nothing to do; there is no available model list
-  }
-
-  // see if we can auto-complete with anything in the list box
-  // scroll the list box to the first thing
-  std::string user_text_lower(text.toLower().toStdString());
-  // could become super fancy but for now let's just do linear search...
-  size_t closest_idx = 0;
-  for (size_t i = 0; i < editor_models.size(); i++) {
-    if (user_text_lower < editor_models[i].name_lowercase) {
-      closest_idx = i;
-      break;
-    }
-  }
-  QListWidgetItem *item = model_name_list_widget->item(closest_idx);
-  model_name_list_widget->setCurrentItem(item);
-  model_name_list_widget->scrollToItem(
-      item,
-      QAbstractItemView::PositionAtTop);
-}
-
-void Editor::model_name_list_widget_changed(int row)
-{
-  qDebug("model_name_list_widget_changed(%d)", row);
-  const QPixmap &model_pixmap = editor_models[row].get_pixmap();
-  if (model_pixmap.isNull())
-    return;  // we don't have a pixmap to draw :(
-  // scale the pixmap so it fits within the currently allotted space
-  const int w = model_preview_label->width();
-  const int h = model_preview_label->height();
-  model_preview_label->setPixmap(
-      model_pixmap.scaled(w, h, Qt::KeepAspectRatio));
-}
-
 bool Editor::create_scene()
 {
   scene->clear();  // destroys the mouse_motion_* items if they are there
@@ -1221,8 +1187,8 @@ bool Editor::create_scene()
     if (!layer.visible)
       continue;
 
-    printf("floorplan height: %d\n", level.floorplan_pixmap.height());
-    printf("layer pixmap height: %d\n", layer.pixmap.height());
+    //printf("floorplan height: %d\n", level.floorplan_pixmap.height());
+    //printf("layer pixmap height: %d\n", layer.pixmap.height());
     QGraphicsPixmapItem *item = scene->addPixmap(layer.pixmap);
     // set the origin of the pixmap frame to the lower-left corner
     item->setOffset(0, -layer.pixmap.height());
@@ -1240,17 +1206,17 @@ bool Editor::create_scene()
   level.draw_edges(scene);
 
   // now draw all the models
-  for (const auto &nav_model : level.models)
+  for (const auto &model : level.models)
   {
     // find the pixmap we need for this model
     QPixmap pixmap;
     double model_meters_per_pixel = 1.0;  // will get overridden
-    for (auto &model : editor_models)
+    for (auto &editor_model : editor_models)
     {
-      if (model.name == nav_model.model_name)
+      if (editor_model.name == model.model_name)
       {
-        pixmap = model.get_pixmap();
-        model_meters_per_pixel = model.meters_per_pixel;
+        pixmap = editor_model.get_pixmap();
+        model_meters_per_pixel = editor_model.meters_per_pixel;
         break;
       }
     }
@@ -1260,27 +1226,20 @@ bool Editor::create_scene()
     QGraphicsPixmapItem *item = scene->addPixmap(pixmap);
     item->setOffset(-pixmap.width()/2, -pixmap.height()/2);
     item->setScale(model_meters_per_pixel / level.drawing_meters_per_pixel);
-    item->setPos(nav_model.x, nav_model.y);
-    item->setRotation(-nav_model.yaw * 180.0 / M_PI);
+    item->setPos(model.x, model.y);
+    item->setRotation(-model.yaw * 180.0 / M_PI);
+
+    // make the model "glow" if it is selected
+    if (model.selected)
+    {
+      QGraphicsColorizeEffect *colorize = new QGraphicsColorizeEffect;
+      colorize->setColor(QColor::fromRgbF(1.0, 0.2, 0.0, 1.0));
+      colorize->setStrength(1.0);
+      item->setGraphicsEffect(colorize);
+    }
   }
 
   level.draw_vertices(scene);
-
-#if 0
-  // ahhhhh only for debugging...
-  // plot the nearest projection point to a polygon, if it's set
-  // to something nonzero
-  if (level->polygon_edge_proj_x != 0) {
-    const double r = 5.0;
-    addEllipse(
-        level->polygon_edge_proj_x - r,
-        level->polygon_edge_proj_y - r,
-        2 * r,
-        2 * r,
-        QPen(Qt::black),
-        QBrush(Qt::blue));
-  }
-#endif
 
   return true;
 }
@@ -1352,6 +1311,7 @@ void Editor::remove_mouse_motion_item()
     delete mouse_motion_polygon;
     mouse_motion_polygon = nullptr;
   }
+  mouse_motion_editor_model = nullptr;
 }
 
 void Editor::set_selected_line_item(QGraphicsLineItem *line_item)
@@ -1566,23 +1526,32 @@ void Editor::mouse_add_model(
     const MouseType t, QMouseEvent *, const QPointF &p)
 {
   if (t == PRESS) {
+    if (mouse_motion_editor_model == nullptr)
+      return;
+    map.add_model(
+        level_idx,
+        p.x(),
+        p.y(),
+        0.0,
+        mouse_motion_editor_model->name);
+    /*
     const int model_row = model_name_list_widget->currentRow();
     if (model_row < 0)
       return;  // nothing currently selected. nothing to do.
     map.add_model(level_idx, p.x(), p.y(), 0.0, editor_models[model_row].name);
+    */
     create_scene();
   }
   else if (t == MOVE) {
-    const int model_row = model_name_list_widget->currentRow();
-    if (model_row < 0)
+    if (mouse_motion_editor_model == nullptr)
       return;  // nothing currently selected. nothing to do.
-    EditorModel &model = editor_models[model_row];
-    if (mouse_motion_model == nullptr) {
-      const QPixmap pixmap(model.get_pixmap());
+    if (mouse_motion_model == nullptr)
+    {
+      const QPixmap pixmap(mouse_motion_editor_model->get_pixmap());
       mouse_motion_model = scene->addPixmap(pixmap);
       mouse_motion_model->setOffset(-pixmap.width()/2, -pixmap.height()/2);
       mouse_motion_model->setScale(
-          model.meters_per_pixel /
+          mouse_motion_editor_model->meters_per_pixel /
           map.levels[level_idx].drawing_meters_per_pixel);
     }
     mouse_motion_model->setPos(p.x(), p.y());

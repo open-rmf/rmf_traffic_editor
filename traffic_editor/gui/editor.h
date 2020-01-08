@@ -175,12 +175,8 @@ private:
   void delete_param_button_clicked();
 
   std::vector<EditorModel> editor_models;
-  void model_name_line_edited(const QString &text);
-  QLineEdit *model_name_line_edit;
-  QListWidget *model_name_list_widget;
-  void populate_model_name_list_widget();
-  QLabel *model_preview_label;
-  void model_name_list_widget_changed(int row);
+  EditorModel *mouse_motion_editor_model = nullptr;
+  void load_model_names();
 
   int get_polygon_idx(const double x, const double y);
 
@@ -253,6 +249,8 @@ private:
   void mouse_add_floor(const MouseType t, QMouseEvent *e, const QPointF &p);
   void mouse_edit_polygon(const MouseType t, QMouseEvent *e, const QPointF &p);
   void mouse_add_zone(const MouseType t, QMouseEvent *e, const QPointF &p);
+
+  QPointF previous_mouse_point;
 };
 
 #endif

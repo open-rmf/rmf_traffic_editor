@@ -50,7 +50,8 @@ bool Level::from_yaml(const std::string &_name, const YAML::Node &_data)
   if (!_data.IsMap())
     throw std::runtime_error("level " + name + " YAML invalid");
 
-  if (_data["drawing"] && _data["drawing"].IsMap()) {
+  if (_data["drawing"] && _data["drawing"].IsMap())
+  {
     const YAML::Node &drawing_data = _data["drawing"];
     if (!drawing_data["filename"])
       throw std::runtime_error("level " + name + " drawing invalid");
@@ -65,7 +66,8 @@ bool Level::from_yaml(const std::string &_name, const YAML::Node &_data)
     QImageReader image_reader(qfilename);
     image_reader.setAutoTransform(true);
     QImage image = image_reader.read();
-    if (image.isNull()) {
+    if (image.isNull())
+    {
       qWarning("unable to read %s: %s",
           qUtf8Printable(qfilename),
           qUtf8Printable(image_reader.errorString()));
@@ -76,14 +78,16 @@ bool Level::from_yaml(const std::string &_name, const YAML::Node &_data)
     drawing_width = floorplan_pixmap.width();
     drawing_height = floorplan_pixmap.height();
   }
-  else if (_data["x_meters"] && _data["y_meters"]) {
+  else if (_data["x_meters"] && _data["y_meters"])
+  {
     x_meters = _data["x_meters"].as<double>();
     y_meters = _data["y_meters"].as<double>();
     drawing_meters_per_pixel = 0.05;  // something reasonable
     drawing_width = x_meters / drawing_meters_per_pixel;
     drawing_height = y_meters / drawing_meters_per_pixel;
   }
-  else {
+  else
+  {
     x_meters = 100.0;
     y_meters = 100.0;
     drawing_meters_per_pixel = 0.05;
@@ -91,9 +95,11 @@ bool Level::from_yaml(const std::string &_name, const YAML::Node &_data)
     drawing_height = y_meters / drawing_meters_per_pixel;
   }
 
-  if (_data["vertices"] && _data["vertices"].IsSequence()) {
+  if (_data["vertices"] && _data["vertices"].IsSequence())
+  {
     const YAML::Node &pts = _data["vertices"];
-    for (YAML::const_iterator it = pts.begin(); it != pts.end(); ++it) {
+    for (YAML::const_iterator it = pts.begin(); it != pts.end(); ++it)
+    {
       Vertex v;
       v.from_yaml(*it);
       vertices.push_back(v);
@@ -105,18 +111,22 @@ bool Level::from_yaml(const std::string &_name, const YAML::Node &_data)
   load_yaml_edge_sequence(_data, "measurements", Edge::MEAS);
   load_yaml_edge_sequence(_data, "doors", Edge::DOOR);
 
-  if (_data["models"] && _data["models"].IsSequence()) {
+  if (_data["models"] && _data["models"].IsSequence())
+  {
     const YAML::Node &ys = _data["models"];
-    for (YAML::const_iterator it = ys.begin(); it != ys.end(); ++it) {
+    for (YAML::const_iterator it = ys.begin(); it != ys.end(); ++it)
+    {
       Model m;
       m.from_yaml(*it);
       models.push_back(m);
     }
   }
 
-  if (_data["floors"] && _data["floors"].IsSequence()) {
+  if (_data["floors"] && _data["floors"].IsSequence())
+  {
     const YAML::Node &yf = _data["floors"];
-    for (YAML::const_iterator it = yf.begin(); it != yf.end(); ++it) {
+    for (YAML::const_iterator it = yf.begin(); it != yf.end(); ++it)
+    {
       Polygon p;
       p.from_yaml(*it, Polygon::FLOOR);
       polygons.push_back(p);
@@ -160,12 +170,14 @@ void Level::load_yaml_edge_sequence(
 YAML::Node Level::to_yaml() const
 {
   YAML::Node y;
-  if (!drawing_filename.empty()) {
+  if (!drawing_filename.empty())
+  {
     YAML::Node drawing_node;
     drawing_node["filename"] = drawing_filename;
     y["drawing"] = drawing_node;
   }
-  else {
+  else
+  {
     y["x_meters"] = x_meters;
     y["y_meters"] = y_meters;
   }
@@ -174,10 +186,12 @@ YAML::Node Level::to_yaml() const
   for (const auto &v : vertices)
     y["vertices"].push_back(v.to_yaml());
 
-  for (const auto &edge : edges) {
+  for (const auto &edge : edges)
+  {
     YAML::Node n(edge.to_yaml());
     std::string dict_name = "unknown";
-    switch (edge.type) {
+    switch (edge.type)
+    {
       case Edge::LANE:
         dict_name = "lanes";
         break;
@@ -198,11 +212,13 @@ YAML::Node Level::to_yaml() const
     y[dict_name].push_back(n);
   }
 
-  for (const auto &model : models)
+  for (const auto& model : models)
     y["models"].push_back(model.to_yaml());
 
-  for (const auto &polygon : polygons) {
-    switch(polygon.type) {
+  for (const auto& polygon : polygons)
+  {
+    switch(polygon.type)
+    {
       case Polygon::FLOOR:
         y["floors"].push_back(polygon.to_yaml());
         break;
@@ -214,13 +230,13 @@ YAML::Node Level::to_yaml() const
   }
 
   y["layers"] = YAML::Node(YAML::NodeType::Map);
-  for (const auto &layer : layers)
+  for (const auto& layer : layers)
     y["layers"][layer.name] = layer.to_yaml();
 
   return y;
 }
 
-void Level::delete_keypress()
+bool Level::delete_selected()
 {
   edges.erase(
       std::remove_if(
@@ -228,6 +244,58 @@ void Level::delete_keypress()
           edges.end(),
           [](Edge edge) { return edge.selected; }),
       edges.end());
+  models.erase(
+      std::remove_if(
+          models.begin(),
+          models.end(),
+          [](Model model) { return model.selected; }),
+      models.end());
+  // Vertices take a lot more care, because we have to check if a vertex
+  // is used in an edge or a polygon before deleting it, and update all
+  // higher-index vertex indices in the edges and polygon vertex lists.
+  // Since this is a potentially expensive operation, first we'll spin
+  // through the vertex list and see if any vertices are selected, and
+  // only then make a copy of the vertex list.
+  int selected_vertex_idx = -1;
+  for (int i = 0; i < static_cast<int>(vertices.size()); i++)
+    if (vertices[i].selected)
+    {
+      selected_vertex_idx = i;
+      break;  // just grab the index of the first selected vertex
+    }
+  if (selected_vertex_idx >= 0)
+  {
+    // See if this vertex is used in any edges/polygons.
+    bool vertex_used = false;
+    for (const auto& edge : edges)
+      if (edge.start_idx == selected_vertex_idx ||
+          edge.end_idx == selected_vertex_idx)
+        vertex_used = true;
+    for (const auto& polygon : polygons)
+      for (const int& vertex_idx : polygon.vertices)
+        if (vertex_idx == selected_vertex_idx)
+          vertex_used = true;
+    if (vertex_used)
+      return false;  // don't try to delete a vertex used in a shape
+
+    // the vertex is not currently being used, so let's erase it
+    vertices.erase(vertices.begin() + selected_vertex_idx);
+
+    // now go through all edges and polygons to decrement any larger indices
+    for (Edge& edge : edges)
+    {
+      if (edge.start_idx > selected_vertex_idx)
+        edge.start_idx--;
+      if (edge.end_idx > selected_vertex_idx)
+        edge.end_idx--;
+    }
+
+    for (Polygon& polygon : polygons)
+      for (int i = 0; i < static_cast<int>(polygon.vertices.size()); i++)
+        if (polygon.vertices[i] > selected_vertex_idx)
+          polygon.vertices[i]--;
+  }
+  return true;
 }
 
 void Level::calculate_scale()
@@ -236,8 +304,10 @@ void Level::calculate_scale()
   double scale_sum = 0.0;
   int scale_count = 0;
 
-  for (auto &edge : edges) {
-    if (edge.type == Edge::MEAS) {
+  for (auto &edge : edges)
+  {
+    if (edge.type == Edge::MEAS)
+    {
       scale_count++;
       const double dx = vertices[edge.start_idx].x - vertices[edge.end_idx].x;
       const double dy = vertices[edge.start_idx].y - vertices[edge.end_idx].y;
@@ -249,16 +319,17 @@ void Level::calculate_scale()
     }
   }
 
-  if (scale_count > 0) {
+  if (scale_count > 0)
+  {
     drawing_meters_per_pixel = scale_sum / static_cast<double>(scale_count);
     printf("used %d measurements to estimate meters/pixel as %.5f\n",
         scale_count, drawing_meters_per_pixel);
   }
-  else {
+  else
     drawing_meters_per_pixel = 0.05;  // default to something reasonable
-  }
 
-  if (drawing_width && drawing_height && drawing_meters_per_pixel > 0.0) {
+  if (drawing_width && drawing_height && drawing_meters_per_pixel > 0.0)
+  {
     x_meters = drawing_width * drawing_meters_per_pixel;
     y_meters = drawing_height * drawing_meters_per_pixel;
   }
@@ -337,7 +408,8 @@ int Level::polygon_edge_drag_press(
   size_t min_idx = 0;
   double min_dist = 1.0e9;
 
-  for (size_t v0_idx = 0; v0_idx < polygon.vertices.size(); v0_idx++) {
+  for (size_t v0_idx = 0; v0_idx < polygon.vertices.size(); v0_idx++)
+  {
     const size_t v1_idx =
         v0_idx < polygon.vertices.size() - 1 ? v0_idx + 1 : 0;
     const size_t v0 = polygon.vertices[v0_idx];
@@ -352,7 +424,8 @@ int Level::polygon_edge_drag_press(
     const double dist = point_to_line_segment_distance(
         x, y, x0, y0, x1, y1, x_proj, y_proj);
 
-    if (dist < min_dist) {
+    if (dist < min_dist)
+    {
       min_idx = v0;
       min_dist = dist;
 
@@ -386,7 +459,8 @@ void Level::draw_lane(QGraphicsScene *scene, const Edge &edge) const
   const double norm_x = dx / len;
   const double norm_y = dy / len;
 
-  for (double d = 0.0; d < len; d += arrow_spacing) {
+  for (double d = 0.0; d < len; d += arrow_spacing)
+  {
     // first calculate the center vertex of this arrowhead
     const double cx = v_start.x + d * norm_x;
     const double cy = v_start.y + d * norm_y;
@@ -403,7 +477,8 @@ void Level::draw_lane(QGraphicsScene *scene, const Edge &edge) const
     scene->addLine(e1x, e1y, tx, ty, arrow_pen);
     scene->addLine(e2x, e2y, tx, ty, arrow_pen);
 
-    if (d > 0.0 && edge.is_bidirectional()) {
+    if (d > 0.0 && edge.is_bidirectional())
+    {
       const double back_tx = cx - arrow_l * norm_x;
       const double back_ty = cy - arrow_l * norm_y;
       scene->addLine(e1x, e1y, back_tx, back_ty, arrow_pen);
@@ -412,7 +487,8 @@ void Level::draw_lane(QGraphicsScene *scene, const Edge &edge) const
   }
 
   QColor color;
-  switch (edge.get_graph_idx()) {
+  switch (edge.get_graph_idx())
+  {
     case 0: color.setRgbF(0.0, 0.5, 0.0); break;
     case 1: color.setRgbF(0.0, 0.0, 0.5); break;
     case 2: color.setRgbF(0.0, 0.5, 0.5); break;
@@ -481,13 +557,15 @@ void Level::draw_lane(QGraphicsScene *scene, const Edge &edge) const
     pp.moveTo(QPointF(mx, my));
 
     QPen orientation_pen(Qt::white, 5.0);
-    if (orientation_it->second.value_string == "forward") {
+    if (orientation_it->second.value_string == "forward")
+    {
       const double hix = mx + 1.0 * cos(yaw) / drawing_meters_per_pixel;
       const double hiy = my + 1.0 * sin(yaw) / drawing_meters_per_pixel;
       pp.lineTo(QPointF(hix, hiy));
       scene->addPath(pp, orientation_pen);
     }
-    else if (orientation_it->second.value_string == "backward") {
+    else if (orientation_it->second.value_string == "backward")
+    {
       const double hix = mx - 1.0 * cos(yaw) / drawing_meters_per_pixel;
       const double hiy = my - 1.0 * sin(yaw) / drawing_meters_per_pixel;
       pp.lineTo(QPointF(hix, hiy));
@@ -712,8 +790,10 @@ void Level::add_door_swing_path(
 
 void Level::draw_edges(QGraphicsScene *scene) const
 {
-  for (const auto &edge : edges) {
-    switch (edge.type) {
+  for (const auto &edge : edges)
+  {
+    switch (edge.type)
+    {
       case Edge::LANE: draw_lane(scene, edge); break;
       case Edge::WALL: draw_wall(scene, edge); break;
       case Edge::MEAS: draw_meas(scene, edge); break;
@@ -734,13 +814,15 @@ void Level::draw_vertices(QGraphicsScene *scene) const
 
 void Level::draw_polygons(QGraphicsScene *scene) const
 {
-  QBrush polygon_brush(QColor::fromRgbF(1.0, 1.0, 0.5, 0.5));
+  QBrush polygon_brush(QColor::fromRgbF(0.8, 0.8, 0.8, 0.5));
   QBrush selected_polygon_brush(QColor::fromRgbF(1.0, 0.0, 0.0, 0.5));
 
-  for (const auto &polygon : polygons) {
+  for (const auto &polygon : polygons)
+  {
     // now draw the polygons
     QVector<QPointF> polygon_vertices;
-    for (const auto &vertex_idx: polygon.vertices) {
+    for (const auto &vertex_idx: polygon.vertices)
+    {
       const Vertex &v = vertices[vertex_idx];
       polygon_vertices.append(QPointF(v.x, v.y));
     }
@@ -749,4 +831,19 @@ void Level::draw_polygons(QGraphicsScene *scene) const
         QPen(Qt::black),
         polygon.selected ? selected_polygon_brush : polygon_brush);
   }
+#if 0
+  // ahhhhh only for debugging...
+  // plot the nearest projection point to a polygon, if it's set
+  // to something nonzero
+  if (level->polygon_edge_proj_x != 0) {
+    const double r = 5.0;
+    addEllipse(
+        polygon_edge_proj_x - r,
+        polygon_edge_proj_y - r,
+        2 * r,
+        2 * r,
+        QPen(Qt::black),
+        QBrush(Qt::blue));
+  }
+#endif
 }

@@ -60,7 +60,7 @@ public:
   bool from_yaml(const std::string &name, const YAML::Node &data);
   YAML::Node to_yaml() const;
 
-  void delete_keypress();
+  bool delete_selected();
   void calculate_scale();
 
   void remove_polygon_vertex(const int polygon_idx, const int vertex_idx);
