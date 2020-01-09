@@ -69,31 +69,18 @@ Editor::Editor(QWidget *parent)
   map_view = new MapView(this);
   map_view->setScene(scene);
 
-  level_button_group = new QButtonGroup(this);
-  connect(
-      level_button_group,
-      QOverload<int, bool>::of(&QButtonGroup::buttonToggled),
-      this, &Editor::level_button_toggled);
-
-  level_button_hbox_layout = new QHBoxLayout;
-
   QVBoxLayout *map_layout = new QVBoxLayout;
-  map_layout->addLayout(level_button_hbox_layout);
   map_layout->addWidget(map_view);
 
-  QVBoxLayout *layers_layout = new QVBoxLayout;
-
-  QLabel *layers_label = new QLabel("Rendering layers");
-  layers_label->setStyleSheet("QLabel { color: white; }");
-  layers_layout->addWidget(layers_label);
-
-  layers_table = new QTableWidget();
-  layers_table->setStyleSheet(
+  const char *table_tab_style_sheet =
       "QTableWidget { background-color: #e0e0e0; color: black; } "
       "QLineEdit { background:white; } "
       "QCheckBox { padding-left: 5px; background:white; } "
       "QPushButton { margin: 5px; background-color: #c0c0c0; border: 1px solid black; } "
-      "QPushButton:pressed { background-color: #808080; }");
+      "QPushButton:pressed { background-color: #808080; }";
+
+  layers_table = new QTableWidget;
+  layers_table->setStyleSheet(table_tab_style_sheet);
   layers_table->setColumnCount(2);
   layers_table->setMinimumSize(400, 200);
   layers_table->setSizePolicy(
@@ -108,14 +95,40 @@ Editor::Editor(QWidget *parent)
   layers_table->verticalHeader()->setSectionResizeMode(
       QHeaderView::ResizeToContents);
   layers_table->setAutoFillBackground(true);
-  layers_layout->addWidget(layers_table);
 
-  QFrame *separation_line = new QFrame;
-  separation_line->setFrameShape(QFrame::HLine);
-  separation_line->setFrameShadow(QFrame::Sunken);
-  layers_layout->addWidget(separation_line);
+  // todo: refactor to avoid copy/paste tab-table init
+  levels_table = new QTableWidget;
+  levels_table->setStyleSheet(table_tab_style_sheet);
+  levels_table->setColumnCount(2);
+  levels_table->setMinimumSize(400, 200);
+  levels_table->setSizePolicy(
+      QSizePolicy::Fixed,
+      QSizePolicy::MinimumExpanding);
+  levels_table->horizontalHeader()->setVisible(false);
+  levels_table->verticalHeader()->setVisible(false);
+  levels_table->horizontalHeader()->setSectionResizeMode(
+      0, QHeaderView::Stretch);
+  levels_table->horizontalHeader()->setSectionResizeMode(
+      1, QHeaderView::ResizeToContents);
+  levels_table->verticalHeader()->setSectionResizeMode(
+      QHeaderView::ResizeToContents);
+  levels_table->setAutoFillBackground(true);
+  connect(
+      levels_table, &QTableWidget::cellClicked,
+      [=](int row, int /*col*/) {
+        if (row < static_cast<int>(map.levels.size()))
+        {
+          level_idx = row;
+          create_scene();
+        }
+      });
 
-  property_editor = new QTableWidget();
+  right_tab_widget = new QTabWidget;
+  right_tab_widget->setStyleSheet("QTabBar::tab { color: white; }");
+  right_tab_widget->addTab(levels_table, "levels");
+  right_tab_widget->addTab(layers_table, "layers");
+
+  property_editor = new QTableWidget;
   property_editor->setStyleSheet("QTableWidget { background-color: #e0e0e0; color: black; gridline-color: #606060; } QLineEdit { background:white; }");
   property_editor->setMinimumSize(400, 200);
   //property_editor->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Ignored);
@@ -152,7 +165,7 @@ Editor::Editor(QWidget *parent)
   param_button_layout->addWidget(delete_param_button);
 
   QVBoxLayout *right_column_layout = new QVBoxLayout;
-  right_column_layout->addLayout(layers_layout);
+  right_column_layout->addWidget(right_tab_widget);
 
   QLabel *properties_label = new QLabel("Properties");
   properties_label->setStyleSheet("QLabel { color: white; }");
@@ -195,35 +208,12 @@ Editor::Editor(QWidget *parent)
   QMenu *edit_menu = menuBar()->addMenu("&Edit");
   edit_menu->addAction("&Preferences...", this, &Editor::edit_preferences);
 
-  // LEVEL MENU
-  QMenu *level_menu = menuBar()->addMenu("&Level");
-  level_menu->addAction("&Add...", this, &Editor::level_add);
-  level_menu->addSeparator();
-  level_menu->addAction("&Edit...", this, &Editor::level_edit);
-
   // VIEW MENU
   QMenu *view_menu = menuBar()->addMenu("&View");
-
-  zoom_in_action = view_menu->addAction("Zoom &In", this, &Editor::zoom_in);
-  zoom_in_action->setShortcut(QKeySequence::ZoomIn);
-  //zoom_in_action->setEnabled(false);
-
-  zoom_out_action =
-      view_menu->addAction("Zoom &Out", this, &Editor::zoom_out);
-  zoom_out_action->setShortcut(QKeySequence::ZoomOut);
-  //zoom_out_action->setEnabled(false);
-
-  zoom_normal_action =
-      view_menu->addAction("&Normal Size", this, &Editor::zoom_normal);
-  //zoom_normal_action->setEnabled(false);
-
-  view_menu->addSeparator();
 
   zoom_fit_action =
       view_menu->addAction("&Fit to Window", this, &Editor::zoom_fit);
   zoom_fit_action->setEnabled(false);
-  zoom_fit_action->setCheckable(true);
-  zoom_fit_action->setShortcut(tr("Ctrl+F"));
 
   // HELP MENU
   QMenu *help_menu = menuBar()->addMenu("&Help");
@@ -342,10 +332,8 @@ bool Editor::load_project(const QString &filename)
   }
 
   level_idx = 0;
-  update_level_buttons();
 
   if (!map.levels.empty()) {
-    level_button_group->button(level_idx)->setChecked(true);
     const Level &level = map.levels[level_idx];
     scene->setSceneRect(
         QRectF(0, 0, level.drawing_width, level.drawing_height));
@@ -356,6 +344,7 @@ bool Editor::load_project(const QString &filename)
   project_filename = filename;
   map_view->zoom_fit(map, level_idx);
   populate_layers_table();
+  populate_levels_table();
 
   QSettings settings;
   settings.setValue(preferences_keys::previous_project_path, filename);
@@ -371,26 +360,6 @@ bool Editor::load_previous_project()
   if (!filename.isEmpty())
     return load_project(filename);
   return true;
-}
-
-void Editor::update_level_buttons()
-{
-  // todo: remove all existing level selection buttons!
-  QList<QAbstractButton *> buttons = level_button_group->buttons();
-  for (auto button : buttons) {
-    level_button_group->removeButton(button);
-    printf("removing button [%s]\n", button->text().toStdString().c_str());
-    delete button;
-  }
-
-  // add level selection buttons for all the levels in the new map
-  for (size_t i = 0; i < map.levels.size(); i++) {
-    QPushButton *button = new QPushButton(
-        QString::fromStdString(map.levels[i].name));
-    button->setCheckable(true);
-    level_button_group->addButton(button, i);
-    level_button_hbox_layout->addWidget(button);
-  }
 }
 
 void Editor::new_map()
@@ -412,7 +381,6 @@ void Editor::new_map()
   QDir::setCurrent(dir_path);
 
   map.clear();
-  update_level_buttons();
   create_scene();
   save();
 
@@ -475,24 +443,6 @@ void Editor::about()
   QMessageBox::about(this, "about", "hello world");
 }
 
-void Editor::level_edit()
-{
-  if (level_idx >= static_cast<int>(map.levels.size())) {
-    QMessageBox::critical(
-        this,
-        "No levels to edit",
-        "Please use Level->Add... first to add a level");
-    return;
-  }
-
-  LevelDialog level_dialog(this, map.levels[level_idx]);
-  if (level_dialog.exec() == QDialog::Accepted) {
-    QMessageBox::about(
-        this,
-        "work in progress", "TODO: use this data...sorry.");
-  }
-}
-
 void Editor::edit_preferences()
 {
   PreferencesDialog preferences_dialog(this);
@@ -514,30 +464,14 @@ void Editor::level_add()
   LevelDialog level_dialog(this, level);
   if (level_dialog.exec() == QDialog::Accepted) {
     map.add_level(level);
-    update_level_buttons();
-    level_button_group->button(map.levels.size()-1)->click();
   }
-}
-
-void Editor::zoom_normal()
-{
-  //map_view->set_absolute_scale(1.0);
-  map_view->resetMatrix();
-}
-
-void Editor::zoom_in()
-{
-  map_view->scale(1.25, 1.25);
-}
-
-void Editor::zoom_out()
-{
-  map_view->scale(0.8, 0.8);
 }
 
 void Editor::zoom_fit()
 {
-  zoom_normal();
+  // todo: implement this for real
+  //map_view->set_absolute_scale(1.0);
+  map_view->resetMatrix();
 }
 
 void Editor::mouse_event(const MouseType t, QMouseEvent *e)
@@ -925,6 +859,48 @@ void Editor::delete_param_button_clicked()
       this,
       "work in progress",
       "TODO: something...sorry.");
+}
+
+void Editor::populate_levels_table()
+{
+  levels_table->blockSignals(true);  // avoid tons of callbacks
+  levels_table->setRowCount(1 + map.levels.size());
+  for (size_t i = 0; i < map.levels.size(); i++)
+  {
+    const QString level_name(QString::fromStdString(map.levels[i].name));
+
+    QTableWidgetItem *item = new QTableWidgetItem(level_name);
+    levels_table->setItem(i, 0, item);
+
+    QPushButton *edit_button = new QPushButton("Edit...", this);
+    levels_table->setCellWidget(i, 1, edit_button);
+    edit_button->setStyleSheet("QTableWidgetItem { background-color: red; }");
+
+    connect(
+        edit_button, &QAbstractButton::clicked,
+        [=]() {
+          LevelDialog level_dialog(this, map.levels[i]);
+          if (level_dialog.exec() == QDialog::Accepted)
+          {
+            QMessageBox::about(
+                this,
+                "work in progress", "TODO: use this data...sorry.");
+          }
+        });
+  }
+
+  const int last_row_idx = static_cast<int>(map.levels.size());
+  // we'll use the last row for the "Add" button
+  levels_table->setCellWidget(last_row_idx, 0, nullptr);
+  QPushButton *add_button = new QPushButton("Add...", this);
+  levels_table->setCellWidget(last_row_idx, 1, add_button);
+  connect(
+      add_button, &QAbstractButton::clicked,
+      [=]() { this->level_add(); });
+
+  levels_table->setCurrentCell(level_idx, 0);
+
+  levels_table->blockSignals(false);
 }
 
 void Editor::populate_layers_table()
@@ -1869,15 +1845,6 @@ void Editor::mouse_edit_polygon(
       mouse_motion_polygon->setPolygon(polygon);
     }
   }
-}
-
-void Editor::level_button_toggled(int button_idx, bool checked)
-{
-  qInfo("level button toggled: %d, %d", button_idx, checked ? 1 : 0);
-  if (!checked)
-    return;
-  level_idx = button_idx;
-  create_scene();
 }
 
 void Editor::number_key_pressed(const int n)

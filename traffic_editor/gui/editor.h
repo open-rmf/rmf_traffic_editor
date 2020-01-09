@@ -50,6 +50,7 @@ class QListWidget;
 class QMouseEvent;
 class QHBoxLayout;
 class QPushButton;
+class QTabWidget;
 QT_END_NAMESPACE
 
 
@@ -104,9 +105,6 @@ private:
   void level_edit();
   void update_level_buttons();
 
-  void zoom_normal();
-  void zoom_in();
-  void zoom_out();
   void zoom_fit();
 
   bool is_mouse_event_in_map(QMouseEvent *e, QPointF &p_scene);
@@ -137,6 +135,8 @@ private:
   const QString tool_id_to_string(const int id);
   QButtonGroup *tool_button_group;
 
+  QTabWidget *right_tab_widget;
+
   QTableWidget *layers_table;
   void populate_layers_table();
   void layers_table_set_row(
@@ -145,6 +145,9 @@ private:
       const bool checked);
   void layer_edit_button_clicked(const std::string &label);
   void layer_add_button_clicked();
+
+  QTableWidget *levels_table;
+  void populate_levels_table();
 
   QTableWidget *property_editor;
   void update_property_editor();
@@ -204,8 +207,6 @@ private:
       const Vertex &v1,
       const Vertex &v2,
       const double max_dist);
-
-  void level_button_toggled(int button_idx, bool checked);
 
   void number_key_pressed(const int n);
 
