@@ -90,14 +90,16 @@ protected:
   void mouseReleaseEvent(QMouseEvent *e);
   void mouseMoveEvent(QMouseEvent *e);
   void keyPressEvent(QKeyEvent *event);
+  void closeEvent(QCloseEvent *event);
 
 private slots:
   void new_map();
   void open();
-  void save();
+  bool save();
   void about();
 
 private:
+  bool maybe_save();
   void edit_preferences();
 
   void level_add();

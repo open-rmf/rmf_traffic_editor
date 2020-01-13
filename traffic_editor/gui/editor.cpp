@@ -60,6 +60,7 @@ Editor::Editor(QWidget *parent)
     "QLabel { color: white; }"
   );
   */
+  setWindowTitle("Traffic Editor[*]");
 
   QSettings settings;
   qDebug("settings filename: [%s]", qUtf8Printable(settings.fileName()));
@@ -302,7 +303,7 @@ QToolButton *Editor::create_tool_button(const int id)
   QToolButton *b = new QToolButton(toolbar);
   b->setText(tool_id_to_string(id));
   b->setCheckable(true);
-  b->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum);
+  //b->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum);
   toolbar->addWidget(b);
   tool_button_group->addButton(b, id);
   return b;
@@ -344,6 +345,8 @@ bool Editor::load_project(const QString &filename)
 
   QSettings settings;
   settings.setValue(preferences_keys::previous_project_path, filename);
+
+  setWindowModified(false);
 
   return true;
 }
@@ -406,7 +409,7 @@ void Editor::open()
   load_project(file_info.filePath());
 }
 
-void Editor::save()
+bool Editor::save()
 {
   if (project_filename.isEmpty()) {
     QFileDialog dialog(this, "Save Project");
@@ -420,7 +423,7 @@ void Editor::save()
           this,
           "Project not saved",
           "Filename not supplied. Project not saved!");
-      return;
+      return false;
     }
 
     QFileInfo file_info(dialog.selectedFiles().first());
@@ -432,6 +435,8 @@ void Editor::save()
   }
   const std::string filename_std_string = project_filename.toStdString();
   map.save_yaml(filename_std_string);
+  setWindowModified(false);
+  return true;
 }
 
 void Editor::about()
@@ -461,6 +466,7 @@ void Editor::level_add()
   if (level_dialog.exec() == QDialog::Accepted) {
     map.add_level(level);
   }
+  setWindowModified(true);
 }
 
 void Editor::zoom_fit()
@@ -561,7 +567,10 @@ void Editor::keyPressEvent(QKeyEvent *e)
   switch (e->key()) {
     case Qt::Key_Delete:
       if (map.delete_selected(level_idx))
+      {
         clear_property_editor();
+        setWindowModified(true);
+      }
       else
       {
         QMessageBox::critical(
@@ -832,6 +841,7 @@ void Editor::add_param_button_clicked()
       {
         v.params[dialog.get_param_name()] = Param(dialog.get_param_type());
         populate_property_editor(v);
+        setWindowModified(true);
         return;  // stop after finding the first one
       }
     }
@@ -843,7 +853,7 @@ void Editor::delete_param_button_clicked()
   QMessageBox::about(
       this,
       "work in progress",
-      "TODO: something...sorry.");
+      "TODO: something...sorry. For now, hand-edit the YAML.");
 }
 
 void Editor::populate_levels_table()
@@ -982,6 +992,7 @@ void Editor::layer_add_button_clicked()
   printf("added a layer: [%s]\n", layer.name.c_str());
   level.layers.push_back(layer);
   populate_layers_table();
+  setWindowModified(true);
 }
 
 void Editor::populate_property_editor(const Edge &edge)
@@ -1101,6 +1112,7 @@ void Editor::property_editor_cell_changed(int row, int column)
     else
       v.set_param(name, value);
     create_scene();
+    setWindowModified(true);
     return;  // stop after finding the first one
   }
 
@@ -1109,6 +1121,7 @@ void Editor::property_editor_cell_changed(int row, int column)
       continue;
     e.set_param(name, value);
     create_scene();
+    setWindowModified(true);
     return;  // stop after finding the first one
   }
 }
@@ -1403,6 +1416,7 @@ void Editor::mouse_add_vertex(
 {
   if (t == MOUSE_PRESS) {
     map.add_vertex(level_idx, p.x(), p.y());
+    setWindowModified(true);
     create_scene();
   }
 }
@@ -1433,6 +1447,7 @@ void Editor::mouse_move(
   else if (t == MOUSE_RELEASE)
   {
     clicked_idx = -1;
+    setWindowModified(true);
     create_scene();
   }
   else if (t == MOUSE_MOVE)
@@ -1483,6 +1498,7 @@ void Editor::mouse_add_edge(
     }
     map.add_edge(level_idx, clicked_idx, release_idx, edge_type);
     clicked_idx = -1;
+    setWindowModified(true);
     create_scene();
   }
   else if (t == MOUSE_MOVE) {
@@ -1534,6 +1550,7 @@ void Editor::mouse_add_model(
       return;  // nothing currently selected. nothing to do.
     map.add_model(level_idx, p.x(), p.y(), 0.0, editor_models[model_row].name);
     */
+    setWindowModified(true);
     create_scene();
   }
   else if (t == MOUSE_MOVE) {
@@ -1603,6 +1620,7 @@ void Editor::mouse_rotate(
       mouse_yaw = discretize_angle(mouse_yaw);
     map.set_model_yaw(level_idx, clicked_idx, mouse_yaw);
     clicked_idx = -1;  // we're done rotating it now
+    setWindowModified(true);
     // now re-render the whole map (could optimize in the future...)
     create_scene();
   }
@@ -1697,6 +1715,7 @@ void Editor::mouse_add_polygon(
       delete mouse_motion_polygon;
       mouse_motion_polygon = nullptr;
 
+      setWindowModified(true);
       clear_selection();
       create_scene();
     }
@@ -1745,6 +1764,7 @@ void Editor::mouse_edit_polygon(
         return;  // Nothing to do. Click wasn't near a vertex.
       // first mark the vertex as no longer selected
       map.remove_polygon_vertex(level_idx, polygon_idx, vertex_idx);
+      setWindowModified(true);
       create_scene();
     }
     else if (e->buttons() & Qt::LeftButton) {
@@ -1813,6 +1833,7 @@ void Editor::mouse_edit_polygon(
         existing.vertices.begin() + mouse_motion_polygon_vertex_idx,
         release_vertex_idx);
   
+    setWindowModified(true);
     create_scene();
   }
   else if (t == MOUSE_MOVE) {
@@ -1836,4 +1857,34 @@ void Editor::number_key_pressed(const int n)
   }
   create_scene();
   update_property_editor();
+}
+
+bool Editor::maybe_save()
+{
+  if (!isWindowModified())
+    return true;  // no need to ask to save the document
+  const QMessageBox::StandardButton button_clicked =
+      QMessageBox::warning(
+          this,
+          "Document not saved!",
+          "Do you want to save your changes?",
+          QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+  switch (button_clicked)
+  {
+    case QMessageBox::Save:
+      return save();
+    case QMessageBox::Cancel:
+      return false;
+    default:
+      break;
+  }
+  return true;
+}
+
+void Editor::closeEvent(QCloseEvent *event)
+{
+  if (maybe_save())
+    event->accept();
+  else
+    event->ignore();
 }
