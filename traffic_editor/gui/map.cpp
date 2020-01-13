@@ -61,31 +61,46 @@ void Map::load_yaml(const string &filename)
   if (!y["levels"] || !y["levels"].IsMap())
     throw std::runtime_error("expected top-level dictionary named 'levels'");
 
-  const YAML::Node yl = y["levels"];
   levels.clear();
-
+  const YAML::Node yl = y["levels"];
   for (YAML::const_iterator it = yl.begin(); it != yl.end(); ++it)
   {
     Level l;
     l.from_yaml(it->first.as<string>(), it->second);
     levels.push_back(l);
   }
+
+  if (y["lifts"] && y["lifts"].IsMap())
+  {
+    const YAML::Node& y_lifts = y["lifts"];
+    for (YAML::const_iterator it = y_lifts.begin(); it != y_lifts.end(); ++it)
+    {
+      Lift lift;
+      lift.from_yaml(it->first.as<string>(), it->second);
+      lifts.push_back(lift);
+    }
+  }
+
   changed = false;
 }
 
 bool Map::save_yaml(const std::string &filename)
 {
   printf("Map::save_yaml(%s)\n", filename.c_str());
-  YAML::Node levels_node(YAML::NodeType::Map);
-  for (const auto &level : levels) {
-    levels_node[level.name] = level.to_yaml();
-  }
-  YAML::Node y_top;
-  y_top["building_name"] = building_name;
-  y_top["levels"] = levels_node;
+
+  YAML::Node y;
+  y["building_name"] = building_name;
+
+  y["levels"] = YAML::Node(YAML::NodeType::Map);
+  for (const auto &level : levels)
+    y["levels"][level.name] = level.to_yaml();
+
+  y["lifts"] = YAML::Node(YAML::NodeType::Map);
+  for (const auto& lift : lifts)
+    y["lifts"][lift.name] = lift.to_yaml();
 
   YAML::Emitter emitter;
-  write_yaml_node(y_top, emitter);
+  write_yaml_node(y, emitter);
   std::ofstream fout(filename);
   fout << emitter.c_str() << std::endl;
 

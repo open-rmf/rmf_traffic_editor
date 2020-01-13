@@ -35,6 +35,7 @@ class MapView;
 class Level;
 #include "./map.h"
 #include "editor_model.h"
+#include "lift_table.h"
 
 QT_BEGIN_NAMESPACE
 class QAction;
@@ -141,6 +142,8 @@ private:
 
   QTabWidget *right_tab_widget;
 
+  QTableWidget *create_tabbed_table();
+
   QTableWidget *layers_table;
   void populate_layers_table();
   void layers_table_set_row(
@@ -152,6 +155,8 @@ private:
 
   QTableWidget *levels_table;
   void populate_levels_table();
+
+  LiftTable *lift_table;
 
   QTableWidget *property_editor;
   void update_property_editor();

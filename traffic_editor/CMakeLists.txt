@@ -27,6 +27,9 @@ add_executable(traffic-editor
   gui/layer_dialog.cpp
   gui/level.cpp
   gui/level_dialog.cpp
+  gui/lift.cpp
+  gui/lift_table.cpp
+  gui/lift_dialog.cpp
   gui/main.cpp
   gui/map.cpp
   gui/map_view.cpp
@@ -36,6 +39,7 @@ add_executable(traffic-editor
   gui/polygon.cpp
   gui/preferences_dialog.cpp
   gui/preferences_keys.cpp
+  gui/table_list.cpp
   gui/vertex.cpp
   resources/resource.qrc
 )

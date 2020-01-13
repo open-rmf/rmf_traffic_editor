@@ -23,6 +23,7 @@
 #include <yaml-cpp/yaml.h>
 
 #include "level.h"
+#include "lift.h"
 
 
 class Map
@@ -37,6 +38,7 @@ public:
 
   std::string building_name;
   std::vector<Level> levels;
+  std::vector<Lift> lifts;
   bool changed;  // true if map changed since last save/open
 
   void add_level(const Level &level);

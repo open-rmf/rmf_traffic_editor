@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Open Source Robotics Foundation
+ * Copyright (C) 2019-2020 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@
 #include "editor.h"
 #include "level_dialog.h"
 #include "layer_dialog.h"
+#include "lift_table.h"
 #include "model_dialog.h"
 #include "preferences_dialog.h"
 #include "preferences_keys.h"
@@ -73,46 +74,9 @@ Editor::Editor(QWidget *parent)
   QVBoxLayout *map_layout = new QVBoxLayout;
   map_layout->addWidget(map_view);
 
-  const char *table_tab_style_sheet =
-      "QTableWidget { background-color: #e0e0e0; color: black; } "
-      "QLineEdit { background:white; } "
-      "QCheckBox { padding-left: 5px; background:white; } "
-      "QPushButton { margin: 5px; background-color: #c0c0c0; border: 1px solid black; } "
-      "QPushButton:pressed { background-color: #808080; }";
+  layers_table = new TableList;  // todo: replace with specific subclass?
 
-  layers_table = new QTableWidget;
-  layers_table->setStyleSheet(table_tab_style_sheet);
-  layers_table->setColumnCount(2);
-  layers_table->setMinimumSize(400, 200);
-  layers_table->setSizePolicy(
-      QSizePolicy::Fixed,
-      QSizePolicy::MinimumExpanding);
-  layers_table->horizontalHeader()->setVisible(false);
-  layers_table->verticalHeader()->setVisible(false);
-  layers_table->horizontalHeader()->setSectionResizeMode(
-      0, QHeaderView::Stretch);
-  layers_table->horizontalHeader()->setSectionResizeMode(
-      1, QHeaderView::ResizeToContents);
-  layers_table->verticalHeader()->setSectionResizeMode(
-      QHeaderView::ResizeToContents);
-  layers_table->setAutoFillBackground(true);
-
-  // todo: refactor to avoid copy/paste tab-table init
-  levels_table = new QTableWidget;
-  levels_table->setStyleSheet(table_tab_style_sheet);
-  levels_table->setColumnCount(2);
-  levels_table->setMinimumSize(400, 200);
-  levels_table->setSizePolicy(
-      QSizePolicy::Fixed,
-      QSizePolicy::MinimumExpanding);
-  levels_table->horizontalHeader()->setVisible(false);
-  levels_table->verticalHeader()->setVisible(false);
-  levels_table->horizontalHeader()->setSectionResizeMode(
-      0, QHeaderView::Stretch);
-  levels_table->horizontalHeader()->setSectionResizeMode(
-      1, QHeaderView::ResizeToContents);
-  levels_table->verticalHeader()->setSectionResizeMode(
-      QHeaderView::ResizeToContents);
+  levels_table = new TableList;  // todo: replace with specific subclass?
   levels_table->setAutoFillBackground(true);
   connect(
       levels_table, &QTableWidget::cellClicked,
@@ -124,10 +88,19 @@ Editor::Editor(QWidget *parent)
         }
       });
 
+  lift_table = new LiftTable;
+  connect(
+      lift_table, &TableList::redraw,
+      [this]()
+      {
+        this->create_scene();
+      });
+
   right_tab_widget = new QTabWidget;
   right_tab_widget->setStyleSheet("QTabBar::tab { color: white; }");
   right_tab_widget->addTab(levels_table, "levels");
   right_tab_widget->addTab(layers_table, "layers");
+  right_tab_widget->addTab(lift_table, "lifts");
 
   property_editor = new QTableWidget;
   property_editor->setStyleSheet("QTableWidget { background-color: #e0e0e0; color: black; gridline-color: #606060; } QLineEdit { background:white; }");
@@ -228,7 +201,6 @@ Editor::Editor(QWidget *parent)
   tool_button_group->setExclusive(true);
 
   create_tool_button(TOOL_SELECT, ":icons/select.svg", "Select (Esc)");
-
   create_tool_button(TOOL_MOVE, ":icons/move.svg", "Move (M)");
   create_tool_button(TOOL_ROTATE, ":icons/rotate.svg", "Rotate (R)");
 
@@ -355,6 +327,7 @@ bool Editor::load_project(const QString &filename)
   map_view->zoom_fit(map, level_idx);
   populate_layers_table();
   populate_levels_table();
+  lift_table->update(map);
 
   QSettings settings;
   settings.setValue(preferences_keys::previous_project_path, filename);
