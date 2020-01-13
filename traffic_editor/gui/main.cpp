@@ -27,7 +27,6 @@ int main(int argc, char *argv[])
   app.setOrganizationName("open-robotics");
   app.setOrganizationDomain("openrobotics.org");
   app.setApplicationName("traffic-editor");
-  app.setApplicationDisplayName("Traffic Editor");
 
   QCommandLineParser parser;
   parser.addHelpOption();
