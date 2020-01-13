@@ -111,7 +111,10 @@ private:
   bool is_mouse_event_in_map(QMouseEvent *e, QPointF &p_scene);
 
   QToolBar *toolbar;
-  QToolButton *create_tool_button(const int id);
+  QToolButton *create_tool_button(
+      const int id,
+      const QString& icon_filename,
+      const QString &tooltip);
   void tool_toggled(int id, bool checked);
 
 /////////////////////////////

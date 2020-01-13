@@ -227,19 +227,19 @@ Editor::Editor(QWidget *parent)
   tool_button_group = new QButtonGroup(this);
   tool_button_group->setExclusive(true);
 
-  create_tool_button(TOOL_SELECT);
+  create_tool_button(TOOL_SELECT, ":icons/select.svg", "Select (Esc)");
 
-  create_tool_button(TOOL_MOVE);
-  create_tool_button(TOOL_ROTATE);
+  create_tool_button(TOOL_MOVE, ":icons/move.svg", "Move (M)");
+  create_tool_button(TOOL_ROTATE, ":icons/rotate.svg", "Rotate (R)");
 
-  create_tool_button(TOOL_ADD_VERTEX);
-  create_tool_button(TOOL_ADD_LANE);
-  create_tool_button(TOOL_ADD_WALL);
-  create_tool_button(TOOL_ADD_MEAS);
-  create_tool_button(TOOL_ADD_DOOR);
-  create_tool_button(TOOL_ADD_MODEL);
-  create_tool_button(TOOL_ADD_FLOOR);
-  create_tool_button(TOOL_EDIT_POLYGON);
+  create_tool_button(TOOL_ADD_VERTEX, ":icons/add_vertex.svg", "Add Vertex (V)");
+  create_tool_button(TOOL_ADD_LANE, "", "");
+  create_tool_button(TOOL_ADD_WALL, "", "");
+  create_tool_button(TOOL_ADD_MEAS, "", "");
+  create_tool_button(TOOL_ADD_DOOR, "", "");
+  create_tool_button(TOOL_ADD_MODEL, "", "");
+  create_tool_button(TOOL_ADD_FLOOR, "", "");
+  create_tool_button(TOOL_EDIT_POLYGON, "", "");
 
   connect(
       tool_button_group,
@@ -298,12 +298,25 @@ void Editor::load_model_names()
         EditorModel(it->as<std::string>(), model_meters_per_pixel));
 }
 
-QToolButton *Editor::create_tool_button(const int id)
+QToolButton *Editor::create_tool_button(
+    const int id,
+    const QString& icon_filename,
+    const QString & tooltip)
 {
   QToolButton *b = new QToolButton(toolbar);
-  b->setText(tool_id_to_string(id));
   b->setCheckable(true);
-  //b->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum);
+
+  if (!icon_filename.isEmpty())
+  {
+    QIcon icon(icon_filename);
+    b->setIcon(icon);
+    b->setToolTip(tooltip);
+  }
+  else
+  {
+    b->setText(tool_id_to_string(id));
+    //b->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum);
+  }
   toolbar->addWidget(b);
   tool_button_group->addButton(b, id);
   return b;
