@@ -51,7 +51,7 @@ Editor::Editor(QWidget *parent)
   mouse_motion_model(nullptr),
   mouse_motion_polygon(nullptr),
   mouse_motion_polygon_vertex_idx(-1),
-  tool_id(SELECT)
+  tool_id(TOOL_SELECT)
 {
   instance = this;
   
@@ -226,23 +226,19 @@ Editor::Editor(QWidget *parent)
   tool_button_group = new QButtonGroup(this);
   tool_button_group->setExclusive(true);
 
-  create_tool_button(SELECT);
+  create_tool_button(TOOL_SELECT);
 
-  create_tool_button(MOVE_VERTEX);
-  create_tool_button(ADD_VERTEX);
+  create_tool_button(TOOL_MOVE);
+  create_tool_button(TOOL_ROTATE);
 
-  create_tool_button(ADD_LANE);
-  create_tool_button(ADD_WALL);
-  create_tool_button(ADD_MEAS);
-  create_tool_button(ADD_DOOR);
-
-  create_tool_button(ADD_MODEL);
-  create_tool_button(MOVE_MODEL);
-  create_tool_button(ROTATE_MODEL);
-
-  create_tool_button(ADD_FLOOR);
-  create_tool_button(EDIT_POLYGON);
-  create_tool_button(ADD_ZONE);
+  create_tool_button(TOOL_ADD_VERTEX);
+  create_tool_button(TOOL_ADD_LANE);
+  create_tool_button(TOOL_ADD_WALL);
+  create_tool_button(TOOL_ADD_MEAS);
+  create_tool_button(TOOL_ADD_DOOR);
+  create_tool_button(TOOL_ADD_MODEL);
+  create_tool_button(TOOL_ADD_FLOOR);
+  create_tool_button(TOOL_EDIT_POLYGON);
 
   connect(
       tool_button_group,
@@ -250,14 +246,14 @@ Editor::Editor(QWidget *parent)
       this, &Editor::tool_toggled);
 
   toolbar->setStyleSheet("QToolBar {background-color: #404040; border: none; spacing: 5px} QToolButton {background-color: #c0c0c0; color: blue; border: 1px solid black;} QToolButton:checked {background-color: #808080; color: red; border: 1px solid black;}");
-  addToolBar(Qt::LeftToolBarArea, toolbar);
+  addToolBar(Qt::TopToolBarArea, toolbar);
 
   // SET SIZE
   resize(QGuiApplication::primaryScreen()->availableSize() / 2);
   map_view->adjustSize();
 
   // default tool is the "select" tool
-  tool_button_group->button(SELECT)->click();
+  tool_button_group->button(TOOL_SELECT)->click();
 
   load_model_names();
 }
@@ -482,7 +478,7 @@ void Editor::mouse_event(const MouseType t, QMouseEvent *e)
     return;
   }
   if (level_idx >= static_cast<int>(map.levels.size())) {
-    if (t == RELEASE) {
+    if (t == MOUSE_RELEASE) {
       if (project_filename.isEmpty()) {
         QMessageBox::critical(
             this,
@@ -500,19 +496,17 @@ void Editor::mouse_event(const MouseType t, QMouseEvent *e)
   }
   // dispatch to individual mouse handler functions to save indenting...
   switch (tool_id) {
-    case SELECT:       mouse_select(t, e, p); break;
-    case ADD_VERTEX:   mouse_add_vertex(t, e, p); break;
-    case MOVE_VERTEX:  mouse_move_vertex(t, e, p); break;
-    case ADD_LANE:     mouse_add_lane(t, e, p); break;
-    case ADD_WALL:     mouse_add_wall(t, e, p); break;
-    case ADD_MEAS:     mouse_add_meas(t, e, p); break;
-    case ADD_DOOR:     mouse_add_door(t, e, p); break;
-    case ADD_MODEL:    mouse_add_model(t, e, p); break;
-    case ROTATE_MODEL: mouse_rotate_model(t, e, p); break;
-    case MOVE_MODEL:   mouse_move_model(t, e, p); break;
-    case ADD_FLOOR:    mouse_add_floor(t, e, p); break;
-    case EDIT_POLYGON: mouse_edit_polygon(t, e, p); break;
-    case ADD_ZONE:     mouse_add_zone(t, e, p); break;
+    case TOOL_SELECT:       mouse_select(t, e, p); break;
+    case TOOL_ADD_VERTEX:   mouse_add_vertex(t, e, p); break;
+    case TOOL_MOVE:         mouse_move(t, e, p); break;
+    case TOOL_ADD_LANE:     mouse_add_lane(t, e, p); break;
+    case TOOL_ADD_WALL:     mouse_add_wall(t, e, p); break;
+    case TOOL_ADD_MEAS:     mouse_add_meas(t, e, p); break;
+    case TOOL_ADD_DOOR:     mouse_add_door(t, e, p); break;
+    case TOOL_ADD_MODEL:    mouse_add_model(t, e, p); break;
+    case TOOL_ROTATE:       mouse_rotate(t, e, p); break;
+    case TOOL_ADD_FLOOR:    mouse_add_floor(t, e, p); break;
+    case TOOL_EDIT_POLYGON: mouse_edit_polygon(t, e, p); break;
     default: break;
   }
   previous_mouse_point = p;
@@ -520,17 +514,17 @@ void Editor::mouse_event(const MouseType t, QMouseEvent *e)
 
 void Editor::mousePressEvent(QMouseEvent *e)
 {
-  mouse_event(PRESS, e);
+  mouse_event(MOUSE_PRESS, e);
 }
 
 void Editor::mouseReleaseEvent(QMouseEvent *e)
 {
-  mouse_event(RELEASE, e);
+  mouse_event(MOUSE_RELEASE, e);
 }
 
 void Editor::mouseMoveEvent(QMouseEvent *e)
 {
-  mouse_event(MOVE, e);
+  mouse_event(MOUSE_MOVE, e);
 }
 
 int Editor::get_polygon_idx(const double x, const double y)
@@ -581,43 +575,37 @@ void Editor::keyPressEvent(QKeyEvent *e)
       break;
     case Qt::Key_S:
     case Qt::Key_Escape:
-      tool_button_group->button(SELECT)->click();
+      tool_button_group->button(TOOL_SELECT)->click();
       clear_selection();
       update_property_editor();
       create_scene();
       break;
     case Qt::Key_V:
-      tool_button_group->button(ADD_VERTEX)->click();
+      tool_button_group->button(TOOL_ADD_VERTEX)->click();
       break;
     case Qt::Key_M:
-      tool_button_group->button(MOVE_VERTEX)->click();
+      tool_button_group->button(TOOL_MOVE)->click();
       break;
     case Qt::Key_L:
-      tool_button_group->button(ADD_LANE)->click();
+      tool_button_group->button(TOOL_ADD_LANE)->click();
       break;
     case Qt::Key_W:
-      tool_button_group->button(ADD_WALL)->click();
+      tool_button_group->button(TOOL_ADD_WALL)->click();
       break;
     case Qt::Key_T:
-      tool_button_group->button(ADD_MEAS)->click();
+      tool_button_group->button(TOOL_ADD_MEAS)->click();
       break;
     case Qt::Key_O:
-      tool_button_group->button(ADD_MODEL)->click();
+      tool_button_group->button(TOOL_ADD_MODEL)->click();
       break;
     case Qt::Key_R:
-      tool_button_group->button(ROTATE_MODEL)->click();
+      tool_button_group->button(TOOL_ROTATE)->click();
       break;
     case Qt::Key_F:
-      tool_button_group->button(ADD_FLOOR)->click();
+      tool_button_group->button(TOOL_ADD_FLOOR)->click();
       break;
     case Qt::Key_E:
-      tool_button_group->button(EDIT_POLYGON)->click();
-      break;
-    case Qt::Key_D:
-      tool_button_group->button(MOVE_MODEL)->click();
-      break;
-    case Qt::Key_Z:
-      tool_button_group->button(ADD_ZONE)->click();
+      tool_button_group->button(TOOL_EDIT_POLYGON)->click();
       break;
     case Qt::Key_B:
       for (auto &edge : map.levels[level_idx].edges) {
@@ -648,19 +636,17 @@ const QString Editor::tool_id_to_string(const int id)
 {
   switch (id)
   {
-    case SELECT: return "&select";
-    case ADD_VERTEX: return "add &vertex";
-    case MOVE_VERTEX: return "&move vertex";
-    case ADD_LANE: return "add &lane";
-    case ADD_WALL: return "add &wall";
-    case ADD_MEAS: return "add measuremen&t";
-    case ADD_DOOR: return "add door";
-    case ADD_MODEL: return "add m&odel";
-    case MOVE_MODEL: return "move mo&del";
-    case ROTATE_MODEL: return "&rotate model";
-    case ADD_FLOOR: return "add &floor";
-    case EDIT_POLYGON: return "&edit polygon";
-    case ADD_ZONE: return "add &zone";
+    case TOOL_SELECT: return "&select";
+    case TOOL_MOVE: return "&move";
+    case TOOL_ROTATE: return "&rotate";
+    case TOOL_ADD_VERTEX: return "add &vertex";
+    case TOOL_ADD_LANE: return "add &lane";
+    case TOOL_ADD_WALL: return "add &wall";
+    case TOOL_ADD_MEAS: return "add measuremen&t";
+    case TOOL_ADD_DOOR: return "add door";
+    case TOOL_ADD_MODEL: return "add m&odel";
+    case TOOL_ADD_FLOOR: return "add &floor";
+    case TOOL_EDIT_POLYGON: return "&edit polygon";
     default: return "unknown tool ID";
   }
 }
@@ -677,29 +663,28 @@ void Editor::tool_toggled(int id, bool checked)
 
   // set the cursor
   Qt::CursorShape cursor = Qt::ArrowCursor;
-  if (tool_id == ADD_VERTEX)
+  if (tool_id == TOOL_ADD_VERTEX)
     cursor = Qt::CrossCursor;
   map_view->setCursor(cursor);
 
   // set the status bar
   switch (id)
   {
-    case SELECT:
+    case TOOL_SELECT:
       statusBar()->showMessage("Click an item to select it.");
       break;
-    case ADD_LANE:
-    case ADD_WALL:
-    case ADD_MEAS:
+    case TOOL_ADD_LANE:
+    case TOOL_ADD_WALL:
+    case TOOL_ADD_MEAS:
       statusBar()->showMessage(
           "Click and drag from a vertex to another vertex to add an edge.");
       break;
-    case ADD_FLOOR:
-    case ADD_ZONE:
+    case TOOL_ADD_FLOOR:
       statusBar()->showMessage(
           "Left-click to add polygon vertices. "
           "Right-click to close polygon.");
       break;
-    case EDIT_POLYGON:
+    case TOOL_EDIT_POLYGON:
       statusBar()->showMessage(
           "Left-click drag an edge to introduce a new vertex. "
           "Right-click a polygon vertex to remove it from the polygon.");
@@ -710,7 +695,7 @@ void Editor::tool_toggled(int id, bool checked)
   }
 
   // execute dialogs as needed
-  if (id == ADD_MODEL)
+  if (id == TOOL_ADD_MODEL)
   {
     Model model;
     ModelDialog dialog(this, model, editor_models);
@@ -735,7 +720,7 @@ void Editor::tool_toggled(int id, bool checked)
         }
     }
     else
-      tool_button_group->button(SELECT)->click();  // back to select mode
+      tool_button_group->button(TOOL_SELECT)->click();  // back to select mode
   }
 }
 
@@ -1241,15 +1226,15 @@ void Editor::draw_mouse_motion_line_item(
   double pen_width = 1;
   QColor color;
   switch (tool_id) {
-    case ADD_LANE:
+    case TOOL_ADD_LANE:
       pen_width = 20;
       color = QColor::fromRgbF(0, 0, 1, 0.5); 
       break;
-    case ADD_WALL:
+    case TOOL_ADD_WALL:
       pen_width = 5;
       color = QColor::fromRgbF(0, 0, 1, 0.5); 
       break;
-    case ADD_MEAS:
+    case TOOL_ADD_MEAS:
       pen_width = 5;
       color = QColor::fromRgbF(1, 0, 1, 0.5); 
       break;
@@ -1378,7 +1363,7 @@ bool Editor::line_vertices_match(
 void Editor::mouse_select(
     const MouseType type, QMouseEvent *e, const QPointF &p)
 {
-  if (type != PRESS)
+  if (type != MOUSE_PRESS)
     return;
   clear_selection();
   const QPoint p_global = mapToGlobal(e->pos());
@@ -1416,29 +1401,62 @@ void Editor::mouse_select(
 void Editor::mouse_add_vertex(
     const MouseType t, QMouseEvent *, const QPointF &p)
 {
-  if (t == PRESS) {
+  if (t == MOUSE_PRESS) {
     map.add_vertex(level_idx, p.x(), p.y());
     create_scene();
   }
 }
 
-void Editor::mouse_move_vertex(
-    const MouseType t, QMouseEvent *, const QPointF &p)
+void Editor::mouse_move(
+    const MouseType t, QMouseEvent *e, const QPointF &p)
 {
-  if (t == PRESS) {
+  if (t == MOUSE_PRESS)
+  {
+    // first see if there is a model close to where we clicked
     clicked_idx = map.nearest_item_index_if_within_distance(
-        level_idx, p.x(), p.y(), 10.0, Map::VERTEX);
+        level_idx, p.x(), p.y(), 50.0, Map::MODEL);
+    if (clicked_idx >= 0)
+    {
+      // Now we need to find the pixmap item for this model.
+      mouse_motion_model = get_closest_pixmap_item(
+          QPointF(
+              map.levels[level_idx].models[clicked_idx].x,
+              map.levels[level_idx].models[clicked_idx].y));
+    }
+    else
+    {
+      // there wasn't a model there, but maybe a vertex is there?
+      clicked_idx = map.nearest_item_index_if_within_distance(
+          level_idx, p.x(), p.y(), 10.0, Map::VERTEX);
+    }
   }
-  else if (t == RELEASE) {
+  else if (t == MOUSE_RELEASE)
+  {
     clicked_idx = -1;
+    create_scene();
   }
-  else if (t == MOVE) {
+  else if (t == MOUSE_MOVE)
+  {
+    if (!(e->buttons() & Qt::LeftButton))
+      return;  // we only care about mouse-dragging, not just motion
     if (clicked_idx < 0)
       return;
-    Vertex *pt = &map.levels[level_idx].vertices[clicked_idx];
-    pt->x = p.x();
-    pt->y = p.y();
-    create_scene();
+    if (mouse_motion_model != nullptr)
+    {
+      // we're dragging a model
+      // update both the nav_model data and the pixmap in the scene
+      map.levels[level_idx].models[clicked_idx].x = p.x();
+      map.levels[level_idx].models[clicked_idx].y = p.y();
+      mouse_motion_model->setPos(p);
+    }
+    else
+    {
+      // we're dragging a vertex
+      Vertex *pt = &map.levels[level_idx].vertices[clicked_idx];
+      pt->x = p.x();
+      pt->y = p.y();
+      create_scene();
+    }
   }
 }
 
@@ -1448,11 +1466,11 @@ void Editor::mouse_add_edge(
     const QPointF &p,
     const Edge::Type &edge_type)
 {
-  if (t == PRESS) {
+  if (t == MOUSE_PRESS) {
     clicked_idx = map.nearest_item_index_if_within_distance(
         level_idx, p.x(), p.y(), 10.0, Map::VERTEX);
   }
-  else if (t == RELEASE) {
+  else if (t == MOUSE_RELEASE) {
     if (clicked_idx < 0)
       return;
     remove_mouse_motion_item();
@@ -1467,7 +1485,7 @@ void Editor::mouse_add_edge(
     clicked_idx = -1;
     create_scene();
   }
-  else if (t == MOVE) {
+  else if (t == MOUSE_MOVE) {
     if (clicked_idx < 0)
       return;
     draw_mouse_motion_line_item(p.x(), p.y());
@@ -1501,7 +1519,7 @@ void Editor::mouse_add_door(
 void Editor::mouse_add_model(
     const MouseType t, QMouseEvent *, const QPointF &p)
 {
-  if (t == PRESS) {
+  if (t == MOUSE_PRESS) {
     if (mouse_motion_editor_model == nullptr)
       return;
     map.add_model(
@@ -1518,7 +1536,7 @@ void Editor::mouse_add_model(
     */
     create_scene();
   }
-  else if (t == MOVE) {
+  else if (t == MOUSE_MOVE) {
     if (mouse_motion_editor_model == nullptr)
       return;  // nothing currently selected. nothing to do.
     if (mouse_motion_model == nullptr)
@@ -1540,10 +1558,10 @@ double Editor::discretize_angle(const double &angle)
   return discretization * round(angle / discretization);
 }
 
-void Editor::mouse_rotate_model(
+void Editor::mouse_rotate(
     const MouseType t, QMouseEvent *mouse_event, const QPointF &p)
 {
-  if (t == PRESS) {
+  if (t == MOUSE_PRESS) {
     clicked_idx = map.nearest_item_index_if_within_distance(
         level_idx,
         p.x(),
@@ -1573,7 +1591,7 @@ void Editor::mouse_rotate_model(
         model.y - r * sin(model.yaw),
         pen);
   }
-  else if (t == RELEASE) {
+  else if (t == MOUSE_RELEASE) {
     //remove_mouse_motion_item();
     if (clicked_idx < 0)
       return;
@@ -1588,7 +1606,7 @@ void Editor::mouse_rotate_model(
     // now re-render the whole map (could optimize in the future...)
     create_scene();
   }
-  else if (t == MOVE) {
+  else if (t == MOUSE_MOVE) {
     if (clicked_idx < 0)
       return;  // nothing currently selected. nothing to do.
 
@@ -1630,44 +1648,13 @@ QGraphicsPixmapItem *Editor::get_closest_pixmap_item(const QPointF &p)
   return pixmap_item;
 }
 
-void Editor::mouse_move_model(
-    const MouseType t, QMouseEvent *e, const QPointF &p)
-{
-  if (t == PRESS) {
-    const double click_distance = 50.0;
-    clicked_idx = map.nearest_item_index_if_within_distance(
-        level_idx, p.x(), p.y(), click_distance, Map::MODEL);
-    if (clicked_idx < 0)
-      return;  // didn't click close to an existing model
-    // Now we need to find the pixmap item for this model.
-    mouse_motion_model = get_closest_pixmap_item(
-        QPointF(
-            map.levels[level_idx].models[clicked_idx].x,
-            map.levels[level_idx].models[clicked_idx].y));
-  }
-  else if (t == RELEASE) {
-    clicked_idx = -1;
-    create_scene();
-  }
-  else if (t == MOVE) {
-    if (!(e->buttons() & Qt::LeftButton))
-      return;  // we only care about mouse-dragging, not just motion
-    if (clicked_idx < 0 || mouse_motion_model == nullptr)
-      return;  // nothing was clicked before the drag started
-    // update both the nav_model data and the pixmap in the scene
-    map.levels[level_idx].models[clicked_idx].x = p.x();
-    map.levels[level_idx].models[clicked_idx].y = p.y();
-    mouse_motion_model->setPos(p);
-  }
-}
-
 void Editor::mouse_add_polygon(
     const MouseType t,
     QMouseEvent *e,
     const QPointF &p,
     const Polygon::Type &polygon_type)
 {
-  if (t == PRESS) {
+  if (t == MOUSE_PRESS) {
     if (e->buttons() & Qt::LeftButton) {
       clicked_idx = map.nearest_item_index_if_within_distance(
           level_idx, p.x(), p.y(), 10.0, Map::VERTEX);
@@ -1714,7 +1701,7 @@ void Editor::mouse_add_polygon(
       create_scene();
     }
   }
-  else if (t == MOVE) {
+  else if (t == MOUSE_MOVE) {
     if (mouse_motion_polygon == nullptr)
       return;  // not sure how we got here
 
@@ -1745,16 +1732,10 @@ void Editor::mouse_add_floor(
   mouse_add_polygon(t, e, p, Polygon::FLOOR);
 }
 
-void Editor::mouse_add_zone(
-    const MouseType t, QMouseEvent *e, const QPointF &p)
-{
-  mouse_add_polygon(t, e, p, Polygon::ZONE);
-}
-
 void Editor::mouse_edit_polygon(
     const MouseType t, QMouseEvent *e, const QPointF &p)
 {
-  if (t == PRESS) {
+  if (t == MOUSE_PRESS) {
     if (e->buttons() & Qt::RightButton) {
       if (polygon_idx < 0)
         return;  // no polygon is selected, nothing to do
@@ -1804,7 +1785,7 @@ void Editor::mouse_edit_polygon(
           QBrush(QColor::fromRgbF(1.0, 1.0, 0.5, 0.5)));
     }
   }
-  else if (t == RELEASE) {
+  else if (t == MOUSE_RELEASE) {
     // todo by drag mode (left/right button?)
     if (mouse_motion_polygon == nullptr) {
       qInfo("woah! edit_polygon_release() with null mouse_motion_polygon!");
@@ -1834,7 +1815,7 @@ void Editor::mouse_edit_polygon(
   
     create_scene();
   }
-  else if (t == MOVE) {
+  else if (t == MOUSE_MOVE) {
     if (e->buttons() & Qt::LeftButton) {
       if (mouse_motion_polygon == nullptr) {
         qInfo("woah! edit_polygon_release() with null mouse_motion_polygon!");

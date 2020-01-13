@@ -71,19 +71,18 @@ public:
   bool load_previous_project();
 
   enum {
-    SELECT = 1,
-    ADD_VERTEX,
-    MOVE_VERTEX,
-    ADD_LANE,
-    ADD_WALL,
-    ADD_MEAS,
-    ADD_DOOR,
-    ADD_MODEL,
-    ROTATE_MODEL,
-    MOVE_MODEL,
-    ADD_FLOOR,
-    EDIT_POLYGON,
-    ADD_ZONE
+    TOOL_SELECT = 1,
+    TOOL_ADD_VERTEX,
+    TOOL_MOVE,
+    TOOL_ADD_LANE,
+    TOOL_ADD_WALL,
+    TOOL_ADD_MEAS,
+    TOOL_ADD_DOOR,
+    TOOL_ADD_MODEL,
+    TOOL_ROTATE,
+    TOOL_ADD_FLOOR,
+    TOOL_EDIT_POLYGON,
+    TOOL_ADD_ZONE
   };
 
 protected:
@@ -212,10 +211,10 @@ private:
 
   // mouse handlers for various tools
   enum MouseType {
-    UNDEFINED = 0,
-    PRESS = 1,
-    RELEASE = 2,
-    MOVE = 3
+    MOUSE_UNDEFINED = 0,
+    MOUSE_PRESS = 1,
+    MOUSE_RELEASE = 2,
+    MOUSE_MOVE = 3
   };
 
   void mouse_event(const MouseType t, QMouseEvent *e);
@@ -238,18 +237,17 @@ private:
   double discretize_angle(const double &angle);
 
   void mouse_select(const MouseType t, QMouseEvent *e, const QPointF &p);
+  void mouse_move(const MouseType t, QMouseEvent *e, const QPointF &p);
+  void mouse_rotate(const MouseType t, QMouseEvent *e, const QPointF &p);
+
   void mouse_add_vertex(const MouseType t, QMouseEvent *e, const QPointF &p);
-  void mouse_move_vertex(const MouseType t, QMouseEvent *e, const QPointF &p);
   void mouse_add_lane(const MouseType t, QMouseEvent *e, const QPointF &p);
   void mouse_add_wall(const MouseType t, QMouseEvent *e, const QPointF &p);
   void mouse_add_meas(const MouseType t, QMouseEvent *e, const QPointF &p);
   void mouse_add_door(const MouseType t, QMouseEvent *e, const QPointF &p);
   void mouse_add_model(const MouseType t, QMouseEvent *e, const QPointF &p);
-  void mouse_rotate_model(const MouseType t, QMouseEvent *e, const QPointF &p);
-  void mouse_move_model(const MouseType t, QMouseEvent *e, const QPointF &p);
   void mouse_add_floor(const MouseType t, QMouseEvent *e, const QPointF &p);
   void mouse_edit_polygon(const MouseType t, QMouseEvent *e, const QPointF &p);
-  void mouse_add_zone(const MouseType t, QMouseEvent *e, const QPointF &p);
 
   QPointF previous_mouse_point;
 };
