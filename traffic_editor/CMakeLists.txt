@@ -37,6 +37,7 @@ add_executable(traffic-editor
   gui/preferences_dialog.cpp
   gui/preferences_keys.cpp
   gui/vertex.cpp
+  resources/resource.qrc
 )
 
 target_link_libraries(traffic-editor
