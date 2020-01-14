@@ -18,13 +18,19 @@
 #ifndef LIFT_DIALOG_H
 #define LIFT_DIALOG_H
 
+#include <vector>
+
 #include <QDialog>
 #include <QObject>
+
 #include "lift.h"
-#include "editor_model.h"
-#include <vector>
+#include "lift_preview_widget.h"
+#include "map.h"
+
 class QLineEdit;
 class QLabel;
+class QTableWidget;
+class QComboBox;
 
 
 class LiftDialog : public QDialog
@@ -32,15 +38,33 @@ class LiftDialog : public QDialog
   Q_OBJECT
 
 public:
-  LiftDialog(QWidget* parent, Lift& lift);
+  LiftDialog(Lift& lift, const Map& map);
   ~LiftDialog();
 
 private:
   Lift& _lift;
 
+  std::vector<QString> _level_names;
+
   QLineEdit *_name_line_edit;
+  QComboBox *_reference_floor_combo_box;
+  QLineEdit *_x_line_edit;
+  QLineEdit *_y_line_edit;
+  QLineEdit *_yaw_line_edit;
+  QLineEdit *_width_line_edit;
+  QLineEdit *_depth_line_edit;
+
+  QTableWidget *_door_table;
+  QTableWidget *_level_table;
+
+  LiftPreviewWidget *lift_preview_widget;
 
   QPushButton *_ok_button, *_cancel_button;
+
+  void update_door_table();
+  void set_door_cell(const int row, const int col, const QString &text);
+
+  void update_level_table();
 
 private slots:
   void ok_button_clicked();

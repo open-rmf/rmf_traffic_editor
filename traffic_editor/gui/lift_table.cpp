@@ -46,7 +46,7 @@ void LiftTable::update(Map& map)
     connect(
         edit_button, &QAbstractButton::clicked,
         [this, &map, i]() {
-          LiftDialog lift_dialog(this, map.lifts[i]);
+          LiftDialog lift_dialog(map.lifts[i], map);
           lift_dialog.exec();
           update(map);
           emit redraw();
@@ -62,7 +62,7 @@ void LiftTable::update(Map& map)
       add_button, &QAbstractButton::clicked,
       [this, &map]() {
         Lift lift;
-        LiftDialog lift_dialog(this, lift);
+        LiftDialog lift_dialog(lift, map);
         if (lift_dialog.exec() == QDialog::Accepted)
         {
           map.lifts.push_back(lift);

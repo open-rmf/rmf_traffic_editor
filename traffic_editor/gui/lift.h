@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Open Source Robotics Foundation
+ * Copyright (C) 2019-2020 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,27 +24,37 @@
  */
 
 #include <string>
+#include <vector>
 #include <yaml-cpp/yaml.h>
+#include "lift_door.h"
 
 
 class Lift
 {
 public:
-  // (x, y, yaw) are defined on reference_floor_name
+  std::string name;
+  std::string reference_floor_name;
+
+  // (x, y, yaw) of the cabin center, relative to reference_floor_name origin
   double x = 0.0;
   double y = 0.0;
   double yaw = 0.0;
-  std::string name;
-  std::string reference_floor_name;
-  bool selected = false;  // only for visualization, not saved to YAML
+
+  // for now, we will model all lift cabins as rectangles
+  double width = 1.0;  // meters
+  double depth = 1.0;  // meters
+
+  std::vector<LiftDoor> doors;
+
+  // Many lifts have multiple sets of doors which open depending on the
+  // level the lift is visiting. This is captured in the level_door map.
+  // If a level is not in this map, that means that this lift does not
+  // stop at that level.
+  std::map<std::string, std::string> level_door;
+
+  ////////////////////////////////////////////////////////////////////////
 
   Lift();
-  Lift(
-      const double _x,
-      const double _y,
-      const double _yaw,
-      const std::string &_name,
-      const std::string &_reference_floor_name);
 
   YAML::Node to_yaml() const;
   void from_yaml(const std::string& _name, const YAML::Node &data);
