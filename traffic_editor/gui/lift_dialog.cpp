@@ -165,8 +165,9 @@ LiftDialog::LiftDialog(Lift& lift, const Map& map)
   update_door_table();
   update_level_table();
 
-  // todo: listen to door_table QTableWidget::cellChanged signal
-  // and update the combo box item names in the level->door map
+  connect(
+      _door_table, &QTableWidget::cellChanged,
+      this, &LiftDialog::door_table_cell_changed);
 
   adjustSize();
 }
@@ -190,7 +191,6 @@ void LiftDialog::ok_button_clicked()
 
 void LiftDialog::update_door_table()
 {
-  blockSignals(true);
   _door_table->setRowCount(1 + _lift.doors.size());
   for (size_t i = 0; i < _lift.doors.size(); i++)
   {
@@ -235,10 +235,6 @@ void LiftDialog::update_door_table()
         _lift.doors.push_back(door);
         update_door_table();
       });
-
-  update_level_table();
-
-  blockSignals(false);
 }
 
 void LiftDialog::set_door_cell(
@@ -251,7 +247,8 @@ void LiftDialog::set_door_cell(
 
 void LiftDialog::update_level_table()
 {
-  blockSignals(true);
+  //blockSignals(true);
+  printf("level_names size: %d\n", (int)_level_names.size());
   _level_table->setRowCount(_level_names.size());
   for (size_t i = 0; i < _level_names.size(); i++)
   {
@@ -265,5 +262,38 @@ void LiftDialog::update_level_table()
       door_name_box->addItem(QString::fromStdString(door.name));
     _level_table->setCellWidget(i, 1, door_name_box);
   }
-  blockSignals(false);
+  //blockSignals(false);
+}
+
+void LiftDialog::door_table_cell_changed(int row, int col)
+{
+  printf("door_table_cell_changed(%d, %d)\n", row, col);
+
+  // If a door name was changed, we need to update the options shown in all
+  // the level_table combo boxes
+  if (col == 0)
+  {
+    _lift.doors[row].name = _door_table->item(row, col)->text().toStdString();
+    update_level_table();
+  }
+  else if (col == 1)
+  {
+    // todo: door type
+  }
+  else if (col == 2)
+  {
+    // x
+  }
+  else if (col == 3)
+  {
+    // y
+  }
+  else if (col == 4)
+  {
+    // orientation
+  }
+  else if (col == 5)
+  {
+    // width
+  }
 }

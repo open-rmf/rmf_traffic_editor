@@ -63,6 +63,7 @@ private:
 
   void update_door_table();
   void set_door_cell(const int row, const int col, const QString &text);
+  void door_table_cell_changed(int row, int col);
 
   void update_level_table();
 
