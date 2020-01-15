@@ -59,30 +59,70 @@ LiftDialog::LiftDialog(Lift& lift, const Map& map)
   x_hbox->addWidget(new QLabel("X:"));
   _x_line_edit =
       new QLineEdit(QString::number(_lift.x), this);
+  connect(
+    _x_line_edit,
+    &QLineEdit::textEdited,
+    [this](const QString& text)
+    {
+      _lift.x = text.toDouble();
+      emit redraw();
+    });
   x_hbox->addWidget(_x_line_edit);
 
   QHBoxLayout *y_hbox = new QHBoxLayout;
   y_hbox->addWidget(new QLabel("Y:"));
   _y_line_edit =
       new QLineEdit(QString::number(_lift.y), this);
+  connect(
+    _y_line_edit,
+    &QLineEdit::textEdited,
+    [this](const QString& text)
+    {
+      _lift.y = text.toDouble();
+      emit redraw();
+    });
   y_hbox->addWidget(_y_line_edit);
 
   QHBoxLayout *yaw_hbox = new QHBoxLayout;
   yaw_hbox->addWidget(new QLabel("Yaw:"));
   _yaw_line_edit =
       new QLineEdit(QString::number(_lift.yaw), this);
+  connect(
+    _yaw_line_edit,
+    &QLineEdit::textEdited,
+    [this](const QString& text)
+    {
+      _lift.yaw = text.toDouble();
+      emit redraw();
+    });
   yaw_hbox->addWidget(_yaw_line_edit);
 
   QHBoxLayout *width_hbox = new QHBoxLayout;
   width_hbox->addWidget(new QLabel("Cabin width:"));
   _width_line_edit = 
       new QLineEdit(QString::number(_lift.width), this);
+  connect(
+    _width_line_edit,
+    &QLineEdit::textEdited,
+    [this](const QString& text)
+    {
+      _lift.width = text.toDouble();
+      emit redraw();
+    });
   width_hbox->addWidget(_width_line_edit);
 
   QHBoxLayout *depth_hbox = new QHBoxLayout;
   depth_hbox->addWidget(new QLabel("Cabin depth:"));
   _depth_line_edit = 
       new QLineEdit(QString::number(_lift.depth), this);
+  connect(
+    _depth_line_edit,
+    &QLineEdit::textEdited,
+    [this](const QString& text)
+    {
+      _lift.depth = text.toDouble();
+      emit redraw();
+    });
   depth_hbox->addWidget(_depth_line_edit);
 
   _level_table = new QTableWidget;
@@ -143,9 +183,12 @@ LiftDialog::LiftDialog(Lift& lift, const Map& map)
 
   QVBoxLayout *right_vbox = new QVBoxLayout;
 
-  lift_preview_widget = new LiftPreviewWidget(_lift);
-  lift_preview_widget->setMinimumSize(400, 400);
-  right_vbox->addWidget(lift_preview_widget, 1);
+  _lift_scene = new QGraphicsScene;
+
+  _lift_view = new QGraphicsView;
+  _lift_view->setScene(_lift_scene);
+  _lift_view->setMinimumSize(400, 400);
+  right_vbox->addWidget(_lift_view, 1);
 
   right_vbox->addWidget(_door_table);
 
@@ -169,6 +212,7 @@ LiftDialog::LiftDialog(Lift& lift, const Map& map)
       _door_table, &QTableWidget::cellChanged,
       this, &LiftDialog::door_table_cell_changed);
 
+  update_lift_view();
   adjustSize();
 }
 
@@ -231,7 +275,8 @@ void LiftDialog::update_door_table()
   QPushButton *add_button = new QPushButton("Add...", this);
   _door_table->setCellWidget(last_row_idx, 5, add_button);
   connect(
-      add_button, &QAbstractButton::clicked,
+      add_button,
+      &QAbstractButton::clicked,
       [this]()
       {
         LiftDoor door;
@@ -301,4 +346,10 @@ void LiftDialog::door_table_cell_changed(int row, int col)
   {
     // width
   }
+}
+
+void LiftDialog::update_lift_view()
+{
+  _lift_scene->clear();
+  _lift.draw(_lift_scene, 0.01, std::string());
 }

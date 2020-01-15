@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Open Source Robotics Foundation
+ * Copyright (C) 2019-2020 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,10 @@
  * limitations under the License.
  *
 */
+
+#include <QGraphicsScene>
+#include <QGraphicsSimpleTextItem>
+
 
 #include "lift.h"
 using std::string;
@@ -77,4 +81,33 @@ YAML::Node Lift::to_yaml() const
   for (it = level_door.begin(); it != level_door.end(); ++it)
     n["level_door"][it->first] = it->second;
   return n;
+}
+
+void Lift::draw(
+    QGraphicsScene *scene,
+    const double meters_per_pixel,
+    const string& level_name) const
+{
+  // todo: something more fancy than this...
+
+  QPen pen(Qt::black);
+  pen.setWidth(0.05 / meters_per_pixel);
+  const double w = width / meters_per_pixel;
+  const double d = depth / meters_per_pixel;
+  const QColor color = QColor::fromRgbF(1.0, 1.0, 0.0, 0.5);
+
+  scene->addRect(
+      x - w,
+      y - d,
+      2 * w,
+      2 * d,
+      pen,
+      QBrush(color));
+
+  if (!name.empty()) {
+    QGraphicsSimpleTextItem *item = scene->addSimpleText(
+        QString::fromStdString(name));
+    item->setBrush(QColor(255, 0, 0, 255));
+    item->setPos(x + w, y + d);
+  }
 }

@@ -18,6 +18,9 @@
 #ifndef LIFT_H
 #define LIFT_H
 
+class QGraphicsScene;
+class QGraphicsView;
+
 /*
  * This class represents a lift, including the shape of the lift cabin,
  * the location and names of its doors, and the floors at which it can stop.
@@ -58,6 +61,11 @@ public:
 
   YAML::Node to_yaml() const;
   void from_yaml(const std::string& _name, const YAML::Node &data);
+
+  void draw(
+      QGraphicsScene *scene,
+      const double meters_per_pixel,
+      const std::string& level_name) const;
 };
 
 #endif

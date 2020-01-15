@@ -322,3 +322,10 @@ void Map::write_yaml_node(const YAML::Node& node, YAML::Emitter& emitter)
       break;
   }
 }
+
+void Map::draw_lifts(QGraphicsScene *scene, const int level_idx) const
+{
+  const Level& level = levels[level_idx];
+  for (const auto &lift : lifts)
+    lift.draw(scene, level.drawing_meters_per_pixel, level.name);
+}

@@ -951,15 +951,12 @@ void Editor::layer_edit_button_clicked(const std::string &label)
     if (label != layer.name)
       continue;
     LayerDialog *dialog = new LayerDialog(this, layer, true);
-    // todo: connect some signal/slot for "things have changed"
-    // so we can dynamically update the transformation
-    // and bling features like color, transparency, etc.
     dialog->show();
     dialog->raise();
     dialog->activateWindow();
     connect(
         dialog,
-        &LayerDialog::redraw_request,
+        &LayerDialog::redraw,
         this,
         &Editor::create_scene);
     return;  // only create a dialog for the first name match
@@ -1163,6 +1160,7 @@ bool Editor::create_scene()
   }
 
   level.draw_polygons(scene);
+  map.draw_lifts(scene, level_idx);
   level.draw_edges(scene);
 
   // now draw all the models

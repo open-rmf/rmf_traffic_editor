@@ -57,7 +57,8 @@ private:
   QTableWidget *_door_table;
   QTableWidget *_level_table;
 
-  LiftPreviewWidget *lift_preview_widget;
+  QGraphicsView *_lift_view;
+  QGraphicsScene *_lift_scene;
 
   QPushButton *_ok_button, *_cancel_button;
 
@@ -66,9 +67,13 @@ private:
   void door_table_cell_changed(int row, int col);
 
   void update_level_table();
+  void update_lift_view();
 
 private slots:
   void ok_button_clicked();
+
+signals:
+  void redraw();
 };
 
 #endif

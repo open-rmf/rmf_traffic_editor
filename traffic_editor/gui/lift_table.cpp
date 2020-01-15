@@ -44,12 +44,23 @@ void LiftTable::update(Map& map)
     setCellWidget(i, 1, edit_button);
 
     connect(
-        edit_button, &QAbstractButton::clicked,
+        edit_button,
+        &QAbstractButton::clicked,
         [this, &map, i]() {
+          /*
           LiftDialog lift_dialog(map.lifts[i], map);
           lift_dialog.exec();
           update(map);
           emit redraw();
+          */
+          LiftDialog *dialog = new LiftDialog(map.lifts[i], map);
+          dialog->show();
+          dialog->raise();
+          dialog->activateWindow();
+          connect(
+              dialog,
+              &LiftDialog::redraw,
+              [this]() { emit redraw(); });
         });
   }
 

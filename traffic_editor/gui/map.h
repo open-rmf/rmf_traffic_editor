@@ -18,6 +18,9 @@
 #ifndef NAV_MAP_H
 #define NAV_MAP_H
 
+
+class QGraphicsScene;
+
 #include <string>
 #include <vector>
 #include <yaml-cpp/yaml.h>
@@ -86,6 +89,8 @@ public:
       const int polygon_idx,
       const double x,
       const double y);
+
+  void draw_lifts(QGraphicsScene *scene, const int level_idx) const;
 
 private:
   // Recursive function to write YAML ordered maps. Credit: Dave Hershberger

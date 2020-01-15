@@ -206,5 +206,5 @@ void LayerDialog::update_layer()
   layer.translation_x = translation_x_line_edit->text().toDouble();
   layer.translation_y = translation_y_line_edit->text().toDouble();
   layer.meters_per_pixel = scale_line_edit->text().toDouble();
-  emit redraw_request();
+  emit redraw();
 }
