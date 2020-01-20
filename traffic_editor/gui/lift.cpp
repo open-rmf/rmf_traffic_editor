@@ -85,11 +85,11 @@ YAML::Node Lift::to_yaml() const
 
 /// The level_name parameter is required in order to know how to draw the
 /// doors, since many lifts have more than one set of doors, which open on
-/// some but not all floors.
+/// some but not all floors. It's not being used (yet).
 void Lift::draw(
     QGraphicsScene *scene,
     const double meters_per_pixel,
-    const string& level_name,
+    const string& /*level_name*/,
     const bool apply_transformation) const
 {
   const double cabin_w = width / meters_per_pixel;
@@ -98,10 +98,10 @@ void Lift::draw(
   cabin_pen.setWidth(0.05 / meters_per_pixel);
 
   QGraphicsRectItem *cabin_rect = new QGraphicsRectItem(
-      -cabin_w,
-      -cabin_d,
-      2 * cabin_w,
-      2 * cabin_d);
+      -cabin_w / 2.0,
+      -cabin_d / 2.0,
+      cabin_w,
+      cabin_d);
   cabin_rect->setPen(cabin_pen);
   cabin_rect->setBrush(QBrush(QColor::fromRgbF(1.0, 1.0, 0.0, 0.5)));
   scene->addItem(cabin_rect);
@@ -109,15 +109,42 @@ void Lift::draw(
   QList<QGraphicsItem *> items;
   items.append(cabin_rect);
 
-  QGraphicsItemGroup *group = scene->createItemGroup(items);
-
   if (!name.empty()) {
+    QFont font("Helvetica");
+    font.setPointSize(0.2 / meters_per_pixel);
     QGraphicsSimpleTextItem *text_item = scene->addSimpleText(
-        QString::fromStdString(name));
+        QString::fromStdString(name), font);
     text_item->setBrush(QColor(255, 0, 0, 255));
-    text_item->setPos(cabin_w, cabin_d);
+    text_item->setPos(-cabin_w / 3.0, 0.0);
+
+    // todo: set font size to something reasonable
+    // todo: center-align text?
     items.append(text_item);
   }
+
+  for (const LiftDoor& door : doors)
+  {
+    printf("rendering door %s\n", door.name.c_str());
+    const double door_x = door.x / meters_per_pixel;
+    const double door_y = -door.y / meters_per_pixel;
+    const double door_w = door.width / meters_per_pixel;
+    const double door_thickness = 0.2 / meters_per_pixel;
+    QGraphicsRectItem *door_item = new QGraphicsRectItem(
+        door_x - door_w / 2.0,
+        door_y - door_thickness / 2.0,
+        door_w,
+        door_thickness);
+    door_item->setRotation(-180.0 / 3.1415926 * door.motion_axis_orientation);
+
+    QPen door_pen(Qt::red);
+    door_pen.setWidth(0.05 / meters_per_pixel);
+    door_item->setPen(door_pen);
+    door_item->setBrush(QBrush(QColor::fromRgbF(1.0, 0.0, 0.0, 0.5)));
+
+    items.append(door_item);
+  }
+
+  QGraphicsItemGroup *group = scene->createItemGroup(items);
 
   if (apply_transformation)
   {

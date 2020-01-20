@@ -24,7 +24,6 @@
 #include <QObject>
 
 #include "lift.h"
-#include "lift_preview_widget.h"
 #include "map.h"
 
 class QLineEdit;

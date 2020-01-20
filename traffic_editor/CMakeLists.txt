@@ -30,7 +30,6 @@ add_executable(traffic-editor
   gui/lift.cpp
   gui/lift_dialog.cpp
   gui/lift_door.cpp
-  gui/lift_preview_widget.cpp
   gui/lift_table.cpp
   gui/main.cpp
   gui/map.cpp

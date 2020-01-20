@@ -23,7 +23,7 @@ void LiftDoor::from_yaml(const std::string& _name, const YAML::Node &data)
   x = data["x"].as<double>();
   y = data["y"].as<double>();
   width = data["width"].as<double>();
-  door_type = static_cast<DoorType>(data["width"].as<int>());
+  door_type = static_cast<DoorType>(data["door_type"].as<int>());
   motion_axis_orientation = data["motion_axis_orientation"].as<double>();
   name = _name;
 }

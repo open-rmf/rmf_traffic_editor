@@ -339,10 +339,15 @@ void LiftDialog::update_level_table()
 void LiftDialog::door_table_cell_changed(int row, int col)
 {
   printf("door_table_cell_changed(%d, %d)\n", row, col);
+  if (row >= static_cast<int>(_lift.doors.size()))
+  {
+    printf("invalud door row: %d\n", row);
+    return;  // let's not crash
+  }
 
   // If a door name was changed, we need to update the options shown in all
   // the level_table combo boxes
-  if (col == 0)
+  if (col == 0)  // name
   {
     _lift.doors[row].name = _door_table->item(row, col)->text().toStdString();
     update_level_table();
@@ -351,26 +356,22 @@ void LiftDialog::door_table_cell_changed(int row, int col)
   {
     // todo: door type
   }
-  else if (col == 2)
-  {
-    // x
-  }
-  else if (col == 3)
-  {
-    // y
-  }
-  else if (col == 4)
-  {
-    // orientation
-  }
-  else if (col == 5)
-  {
-    // width
-  }
+  else if (col == 2)  // x
+    _lift.doors[row].x = _door_table->item(row, col)->text().toDouble();
+  else if (col == 3)  // y
+    _lift.doors[row].y = _door_table->item(row, col)->text().toDouble();
+  else if (col == 4)  // orientation
+    _lift.doors[row].motion_axis_orientation =
+        _door_table->item(row, col)->text().toDouble();
+  else if (col == 5)  // width
+    _lift.doors[row].width = _door_table->item(row, col)->text().toDouble();
+
+  update_lift_view();
+  emit redraw();
 }
 
 void LiftDialog::update_lift_view()
 {
   _lift_scene->clear();
-  _lift.draw(_lift_scene, 0.01, std::string(), false);
+  _lift.draw(_lift_scene, 0.005, std::string(), false);
 }
