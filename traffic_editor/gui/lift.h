@@ -50,10 +50,17 @@ public:
   std::vector<LiftDoor> doors;
 
   // Many lifts have multiple sets of doors which open depending on the
-  // level the lift is visiting. This is captured in the level_door map.
-  // If a level is not in this map, that means that this lift does not
-  // stop at that level.
-  std::map<std::string, std::string> level_door;
+  // level the lift is visiting. In the most complex case, multiple
+  // sets of doors can open on a level, so unfortunately, the data
+  // structure needs to cater for this, even though it is not common.
+  // If a (level name, door name) combination is not in this data structure,
+  // that means that the door does not open on this level.
+  // It is possible (and expected) that some lifts do not go to all levels,
+  // and that some lifts skip some levels, so this data structure is
+  // expected to be "sparse"
+  typedef std::list<std::string> DoorNameList;
+  typedef std::map<std::string, DoorNameList> LevelDoorMap;
+  LevelDoorMap level_doors;
 
   ////////////////////////////////////////////////////////////////////////
 
@@ -67,6 +74,10 @@ public:
       const double meters_per_pixel,
       const std::string& level_name,
       const bool apply_transformation = true) const;
+
+  bool level_door_opens(
+      const std::string& level_name,
+      const std::string& door_name) const;
 };
 
 #endif

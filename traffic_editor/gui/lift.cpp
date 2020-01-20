@@ -15,9 +15,10 @@
  *
 */
 
+#include <algorithm>
+
 #include <QGraphicsScene>
 #include <QGraphicsSimpleTextItem>
-
 
 #include "lift.h"
 using std::string;
@@ -50,11 +51,23 @@ void Lift::from_yaml(const std::string& _name, const YAML::Node &data)
     }
   }
 
+  // for every level, load if every door can open
   if (data["level_door"] && data["level_door"].IsMap())
   {
     const YAML::Node ym = data["level_door"];
     for (YAML::const_iterator it = ym.begin(); it != ym.end(); ++it)
-      level_door[it->first.as<string>()] = it->second.as<string>();
+    {
+      const std::string level_name = it->first.as<string>();
+      const YAML::Node& ds = it->second;  // doors sequence node
+      if (ds.IsSequence())
+      {
+        for (YAML::const_iterator dit = ds.begin(); dit != ds.end(); ++dit)
+        {
+          const std::string door_name = (*it).as<string>();
+          level_doors[level_name].push_back(door_name);
+        }
+      }
+    }
   }
 }
 
@@ -76,10 +89,19 @@ YAML::Node Lift::to_yaml() const
   for (const auto& door : doors)
     n["doors"][door.name] = door.to_yaml();
 
-  n["level_door"] = YAML::Node(YAML::NodeType::Map);
-  std::map<string, string>::const_iterator it;
-  for (it = level_door.begin(); it != level_door.end(); ++it)
-    n["level_door"][it->first] = it->second;
+  n["level_doors"] = YAML::Node(YAML::NodeType::Map);
+  for (LevelDoorMap::const_iterator level_it = level_doors.begin();
+       level_it != level_doors.end();
+       ++level_it)
+  {
+    const DoorNameList& dlist = level_it->second;
+    for (DoorNameList::const_iterator door_it = dlist.begin();
+         door_it != dlist.end();
+         ++door_it)
+    {
+      n["level_doors"][level_it->first].push_back(*door_it);
+    }
+  }
   return n;
 }
 
@@ -124,7 +146,6 @@ void Lift::draw(
 
   for (const LiftDoor& door : doors)
   {
-    printf("rendering door %s\n", door.name.c_str());
     const double door_x = door.x / meters_per_pixel;
     const double door_y = -door.y / meters_per_pixel;
     const double door_w = door.width / meters_per_pixel;
@@ -151,4 +172,17 @@ void Lift::draw(
     group->setRotation(-180.0 / 3.1415926 * yaw);
     group->setPos(x, y);
   }
+}
+
+bool Lift::level_door_opens(
+      const std::string& level_name,
+      const std::string& door_name) const
+{
+  LevelDoorMap::const_iterator level_it = level_doors.find(level_name);
+  if (level_it == level_doors.end())
+    return false;
+  const DoorNameList& names = level_it->second;
+  if (std::find(names.begin(), names.end(), door_name) == names.end())
+    return false;
+  return true;
 }

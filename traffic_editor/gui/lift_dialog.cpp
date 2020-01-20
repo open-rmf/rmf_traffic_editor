@@ -148,7 +148,6 @@ LiftDialog::LiftDialog(Lift& lift, const Map& map)
   _level_table = new QTableWidget;
   _level_table->setMinimumSize(200, 200);
   _level_table->verticalHeader()->setVisible(false);
-  _level_table->setColumnCount(2);
   _level_table->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
 
   _level_table->setHorizontalHeaderItem(0, new QTableWidgetItem("Level name"));
@@ -156,7 +155,6 @@ LiftDialog::LiftDialog(Lift& lift, const Map& map)
   _level_table->horizontalHeader()->setSectionResizeMode(
       0, QHeaderView::Stretch);
   */
-  _level_table->setHorizontalHeaderItem(1, new QTableWidgetItem("Door name"));
 
   _door_table = new QTableWidget;
   _door_table->setMinimumSize(400, 200);
@@ -318,20 +316,35 @@ void LiftDialog::set_door_cell(
 
 void LiftDialog::update_level_table()
 {
+  _level_table->setColumnCount(1 + static_cast<int>(_lift.doors.size()));
+  _level_table->setHorizontalHeaderItem(0, new QTableWidgetItem("Level"));
+  for (size_t door_idx = 0; door_idx < _lift.doors.size(); door_idx++)
+  {
+    _level_table->setHorizontalHeaderItem(
+        door_idx + 1,
+        new QTableWidgetItem(
+            QString::fromStdString(_lift.doors[door_idx].name)));
+  }
   //blockSignals(true);
   printf("level_names size: %d\n", (int)_level_names.size());
   _level_table->setRowCount(_level_names.size());
-  for (size_t i = 0; i < _level_names.size(); i++)
+  for (size_t level_idx = 0; level_idx < _level_names.size(); level_idx++)
   {
-    QTableWidgetItem *name_item = new QTableWidgetItem(_level_names[i]);
+    const QString& level_name = _level_names[level_idx];
+    QTableWidgetItem *name_item = new QTableWidgetItem(level_name);
     name_item->setFlags(name_item->flags() & ~Qt::ItemIsEditable);
-    _level_table->setItem(i, 0, name_item);
+    _level_table->setItem(level_idx, 0, name_item);
 
-    QComboBox *door_name_box = new QComboBox;
-    door_name_box->addItem(QString());  // empty string = lift doesn't stop
-    for (const LiftDoor& door : _lift.doors)
-      door_name_box->addItem(QString::fromStdString(door.name));
-    _level_table->setCellWidget(i, 1, door_name_box);
+    for (size_t door_idx = 0; door_idx < _lift.doors.size(); door_idx++)
+    {
+      QCheckBox *checkbox = new QCheckBox;
+      checkbox->setStyleSheet("margin-left: 50%; margin-right: 50%");
+      if (_lift.level_door_opens(
+            level_name.toStdString(),
+            _lift.doors[door_idx].name))
+        checkbox->setChecked(true);
+      _level_table->setCellWidget(level_idx, door_idx + 1, checkbox);
+    }
   }
   //blockSignals(false);
 }
