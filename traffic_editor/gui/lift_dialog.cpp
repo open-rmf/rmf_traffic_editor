@@ -44,6 +44,15 @@ LiftDialog::LiftDialog(Lift& lift, const Map& map)
   name_hbox->addWidget(new QLabel("Name:"));
   _name_line_edit =
       new QLineEdit(QString::fromStdString(_lift.name), this);
+  connect(
+    _name_line_edit,
+    &QLineEdit::textEdited,
+    [this](const QString& text)
+    {
+      _lift.name = text.toStdString();
+      update_lift_view();
+      emit redraw();
+    });
   name_hbox->addWidget(_name_line_edit);
 
   QHBoxLayout *ref_name_hbox = new QHBoxLayout;
@@ -53,6 +62,14 @@ LiftDialog::LiftDialog(Lift& lift, const Map& map)
     _reference_floor_combo_box->addItem(level_name);
   _reference_floor_combo_box->setCurrentText(
       QString::fromStdString(_lift.reference_floor_name));
+  connect(
+    _reference_floor_combo_box,
+    &QComboBox::currentTextChanged,
+    [this](const QString& text)
+    {
+      _lift.reference_floor_name = text.toStdString();
+      emit redraw();
+    });
   ref_name_hbox->addWidget(_reference_floor_combo_box);
 
   QHBoxLayout *x_hbox = new QHBoxLayout;
@@ -107,6 +124,7 @@ LiftDialog::LiftDialog(Lift& lift, const Map& map)
     [this](const QString& text)
     {
       _lift.width = text.toDouble();
+      update_lift_view();
       emit redraw();
     });
   width_hbox->addWidget(_width_line_edit);
@@ -121,6 +139,7 @@ LiftDialog::LiftDialog(Lift& lift, const Map& map)
     [this](const QString& text)
     {
       _lift.depth = text.toDouble();
+      update_lift_view();
       emit redraw();
     });
   depth_hbox->addWidget(_depth_line_edit);
@@ -284,6 +303,7 @@ void LiftDialog::update_door_table()
         door.door_type = LiftDoor::DOUBLE_SLIDING;
         _lift.doors.push_back(door);
         update_door_table();
+        update_lift_view();
       });
 }
 
