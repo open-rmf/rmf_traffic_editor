@@ -83,31 +83,45 @@ YAML::Node Lift::to_yaml() const
   return n;
 }
 
+/// The level_name parameter is required in order to know how to draw the
+/// doors, since many lifts have more than one set of doors, which open on
+/// some but not all floors.
 void Lift::draw(
     QGraphicsScene *scene,
     const double meters_per_pixel,
-    const string& level_name) const
+    const string& level_name,
+    const bool apply_transformation) const
 {
-  // todo: something more fancy than this...
+  const double cabin_w = width / meters_per_pixel;
+  const double cabin_d = depth / meters_per_pixel;
+  QPen cabin_pen(Qt::black);
+  cabin_pen.setWidth(0.05 / meters_per_pixel);
 
-  QPen pen(Qt::black);
-  pen.setWidth(0.05 / meters_per_pixel);
-  const double w = width / meters_per_pixel;
-  const double d = depth / meters_per_pixel;
-  const QColor color = QColor::fromRgbF(1.0, 1.0, 0.0, 0.5);
+  QGraphicsRectItem *cabin_rect = new QGraphicsRectItem(
+      -cabin_w,
+      -cabin_d,
+      2 * cabin_w,
+      2 * cabin_d);
+  cabin_rect->setPen(cabin_pen);
+  cabin_rect->setBrush(QBrush(QColor::fromRgbF(1.0, 1.0, 0.0, 0.5)));
+  scene->addItem(cabin_rect);
 
-  scene->addRect(
-      x - w,
-      y - d,
-      2 * w,
-      2 * d,
-      pen,
-      QBrush(color));
+  QList<QGraphicsItem *> items;
+  items.append(cabin_rect);
+
+  QGraphicsItemGroup *group = scene->createItemGroup(items);
 
   if (!name.empty()) {
-    QGraphicsSimpleTextItem *item = scene->addSimpleText(
+    QGraphicsSimpleTextItem *text_item = scene->addSimpleText(
         QString::fromStdString(name));
-    item->setBrush(QColor(255, 0, 0, 255));
-    item->setPos(x + w, y + d);
+    text_item->setBrush(QColor(255, 0, 0, 255));
+    text_item->setPos(cabin_w, cabin_d);
+    items.append(text_item);
+  }
+
+  if (apply_transformation)
+  {
+    group->setRotation(-180.0 / 3.1415926 * yaw);
+    group->setPos(x, y);
   }
 }

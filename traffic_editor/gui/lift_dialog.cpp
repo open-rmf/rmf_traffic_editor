@@ -110,6 +110,7 @@ LiftDialog::LiftDialog(Lift& lift, const Map& map)
     [this](const QString& text)
     {
       _lift.yaw = text.toDouble();
+      update_lift_view();
       emit redraw();
     });
   yaw_hbox->addWidget(_yaw_line_edit);
@@ -371,5 +372,5 @@ void LiftDialog::door_table_cell_changed(int row, int col)
 void LiftDialog::update_lift_view()
 {
   _lift_scene->clear();
-  _lift.draw(_lift_scene, 0.01, std::string());
+  _lift.draw(_lift_scene, 0.01, std::string(), false);
 }

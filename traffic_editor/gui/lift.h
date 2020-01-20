@@ -65,7 +65,8 @@ public:
   void draw(
       QGraphicsScene *scene,
       const double meters_per_pixel,
-      const std::string& level_name) const;
+      const std::string& level_name,
+      const bool apply_transformation = true) const;
 };
 
 #endif
