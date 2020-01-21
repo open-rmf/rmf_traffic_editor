@@ -253,6 +253,37 @@ void LiftDialog::ok_button_clicked()
   _lift.width = _width_line_edit->text().toDouble();
   _lift.depth = _depth_line_edit->text().toDouble();
 
+  // grab all the level-door checkbox matrix states and save them
+  for (int level_row = 0; level_row < _level_table->rowCount(); level_row++)
+  {
+    const std::string level_name =
+        _level_table->item(level_row, 0)->text().toStdString();
+    _lift.level_doors[level_name].clear();
+    for (int door_col = 1; door_col < _level_table->columnCount(); door_col++)
+    {
+      const std::string door_name =
+          _level_table->horizontalHeaderItem(door_col)->text().toStdString();
+      const QWidget *widget = _level_table->cellWidget(level_row, door_col);
+      const QCheckBox *checkbox = qobject_cast<const QCheckBox *>(widget);
+      if (checkbox)
+      {
+        const bool checked = checkbox->isChecked();
+        printf("level %s door %s: %d\n",
+            level_name.c_str(),
+            door_name.c_str(),
+            checked ? 1 : 0);
+        if (checked)
+          _lift.level_doors[level_name].push_back(door_name);
+      }
+      else
+      {
+        printf("level %s door %s: indeterminate state!\n",
+            level_name.c_str(),
+            door_name.c_str());
+      }
+    }
+  }
+
   accept();
 }
 
@@ -326,7 +357,6 @@ void LiftDialog::update_level_table()
             QString::fromStdString(_lift.doors[door_idx].name)));
   }
   //blockSignals(true);
-  printf("level_names size: %d\n", (int)_level_names.size());
   _level_table->setRowCount(_level_names.size());
   for (size_t level_idx = 0; level_idx < _level_names.size(); level_idx++)
   {
@@ -351,10 +381,10 @@ void LiftDialog::update_level_table()
 
 void LiftDialog::door_table_cell_changed(int row, int col)
 {
-  printf("door_table_cell_changed(%d, %d)\n", row, col);
+  // printf("door_table_cell_changed(%d, %d)\n", row, col);
   if (row >= static_cast<int>(_lift.doors.size()))
   {
-    printf("invalud door row: %d\n", row);
+    printf("invalid door row: %d\n", row);
     return;  // let's not crash
   }
 
