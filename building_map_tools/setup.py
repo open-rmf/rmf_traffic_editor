@@ -11,6 +11,7 @@ setup(
         'building_map.doors',
         'building_map_server',
         'building_map_generators'],
+    package_data={'building_map' : ['templates/*']},
     py_modules=[],
     data_files=[
         ('share/ament_index/resource_index/packages',
