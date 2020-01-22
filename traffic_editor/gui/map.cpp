@@ -116,6 +116,13 @@ void Map::add_vertex(int level_index, double x, double y)
   changed = true;
 }
 
+void Map::add_fiducial(int level_index, double x, double y)
+{
+  if (level_index >= static_cast<int>(levels.size()))
+    return;
+  levels[level_index].fiducials.push_back(Fiducial(x, y));
+}
+
 int Map::find_nearest_vertex_index(
     int level_index, double x, double y, double &distance)
 {
@@ -135,6 +142,58 @@ int Map::find_nearest_vertex_index(
   return min_index;  // will be -1 if vertices vector is empty
 }
 
+Map::NearestItem Map::nearest_items(
+      const int level_index,
+      const double x,
+      const double y)
+{
+  NearestItem ni;
+  if (level_index >= static_cast<int>(levels.size()))
+    return ni;
+  const Level& level = levels[level_index];
+
+  for (size_t i = 0; i < level.vertices.size(); i++)
+  {
+    const Vertex& p = level.vertices[i];
+    const double dx = x - p.x;
+    const double dy = y - p.y;
+    const double dist = sqrt(dx*dx + dy*dy);
+    if (dist < ni.vertex_dist)
+    {
+      ni.vertex_dist = dist;
+      ni.vertex_idx = i;
+    }
+  }
+
+  for (size_t i = 0; i < level.fiducials.size(); i++)
+  {
+    const Fiducial& f = level.fiducials[i];
+    const double dx = x - f.x;
+    const double dy = y - f.y;
+    const double dist = sqrt(dx*dx + dy*dy);
+    if (dist < ni.fiducial_dist)
+    {
+      ni.fiducial_dist = dist;
+      ni.fiducial_idx = i;
+    }
+  }
+
+  for (size_t i = 0; i < level.models.size(); i++)
+  {
+    const Model& m = level.models[i];
+    const double dx = x - m.x;
+    const double dy = y - m.y;
+    const double dist = sqrt(dx*dx + dy*dy);  // no need for sqrt each time
+    if (dist < ni.model_dist)
+    {
+      ni.model_dist = dist;
+      ni.model_idx = i;
+    }
+  }
+
+  return ni;
+}
+
 int Map::nearest_item_index_if_within_distance(
       const int level_index,
       const double x,
@@ -147,25 +206,46 @@ int Map::nearest_item_index_if_within_distance(
 
   double min_dist = 1e100;
   int min_index = -1;
-  if (item_type == VERTEX) {
-    for (size_t i = 0; i < levels[level_index].vertices.size(); i++) {
-      const Vertex &p = levels[level_index].vertices[i];
+  if (item_type == VERTEX)
+  {
+    for (size_t i = 0; i < levels[level_index].vertices.size(); i++)
+    {
+      const Vertex& p = levels[level_index].vertices[i];
       const double dx = x - p.x;
       const double dy = y - p.y;
       const double dist2 = dx*dx + dy*dy;  // no need for sqrt each time
-      if (dist2 < min_dist) {
+      if (dist2 < min_dist)
+      {
         min_dist = dist2;
         min_index = i;
       }
     }
   }
-  else if (item_type == MODEL) {
-    for (size_t i = 0; i < levels[level_index].models.size(); i++) {
-      const Model &m = levels[level_index].models[i];
+  else if (item_type == FIDUCIAL)
+  {
+    for (size_t i = 0; i < levels[level_index].fiducials.size(); i++)
+    {
+      const Fiducial& f = levels[level_index].fiducials[i];
+      const double dx = x - f.x;
+      const double dy = y - f.y;
+      const double dist2 = dx*dx + dy*dy;
+      if (dist2 < min_dist)
+      {
+        min_dist = dist2;
+        min_index = i;
+      }
+    }
+  }
+  else if (item_type == MODEL)
+  {
+    for (size_t i = 0; i < levels[level_index].models.size(); i++)
+    {
+      const Model& m = levels[level_index].models[i];
       const double dx = x - m.x;
       const double dy = y - m.y;
       const double dist2 = dx*dx + dy*dy;  // no need for sqrt each time
-      if (dist2 < min_dist) {
+      if (dist2 < min_dist)
+      {
         min_dist = dist2;
         min_index = i;
       }

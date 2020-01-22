@@ -47,10 +47,28 @@ public:
   void add_level(const Level &level);
 
   void add_vertex(int level_index, double x, double y);
+  void add_fiducial(int level_index, double x, double y);
+
   int find_nearest_vertex_index(
       int level_index, double x, double y, double &distance);
 
-  enum ItemType { VERTEX=1, MODEL };
+  enum ItemType { VERTEX=1, MODEL, FIDUCIAL };
+  struct NearestItem
+  {
+    double model_dist = 1e100;
+    int model_idx = -1;
+
+    double vertex_dist = 1e100;
+    int vertex_idx = -1;
+
+    double fiducial_dist = 1e100;
+    int fiducial_idx = -1;
+  };
+
+  NearestItem nearest_items(
+      const int level_index,
+      const double x,
+      const double y);
 
   int nearest_item_index_if_within_distance(
       const int level_index,

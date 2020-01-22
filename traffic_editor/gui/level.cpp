@@ -106,6 +106,17 @@ bool Level::from_yaml(const std::string &_name, const YAML::Node &_data)
     }
   }
 
+  if (_data["fiducials"] && _data["fiducials"].IsSequence())
+  {
+    const YAML::Node &fy = _data["fiducials"];
+    for (YAML::const_iterator it = fy.begin(); it != fy.end(); ++it)
+    {
+      Fiducial f;
+      f.from_yaml(*it);
+      fiducials.push_back(f);
+    }
+  }
+
   load_yaml_edge_sequence(_data, "lanes", Edge::LANE);
   load_yaml_edge_sequence(_data, "walls", Edge::WALL);
   load_yaml_edge_sequence(_data, "measurements", Edge::MEAS);
@@ -186,6 +197,9 @@ YAML::Node Level::to_yaml() const
   for (const auto &v : vertices)
     y["vertices"].push_back(v.to_yaml());
 
+  for (const auto &f : fiducials)
+    y["fiducials"].push_back(f.to_yaml());
+
   for (const auto &edge : edges)
   {
     YAML::Node n(edge.to_yaml());
@@ -244,12 +258,21 @@ bool Level::delete_selected()
           edges.end(),
           [](Edge edge) { return edge.selected; }),
       edges.end());
+
   models.erase(
       std::remove_if(
           models.begin(),
           models.end(),
           [](Model model) { return model.selected; }),
       models.end());
+
+  fiducials.erase(
+      std::remove_if(
+          fiducials.begin(),
+          fiducials.end(),
+          [](Fiducial fiducial) { return fiducial.selected; }),
+      fiducials.end());
+
   // Vertices take a lot more care, because we have to check if a vertex
   // is used in an edge or a polygon before deleting it, and update all
   // higher-index vertex indices in the edges and polygon vertex lists.
@@ -812,6 +835,12 @@ void Level::draw_vertices(QGraphicsScene *scene) const
     v.draw(scene, drawing_meters_per_pixel);
 }
 
+void Level::draw_fiducials(QGraphicsScene *scene) const
+{
+  for (const auto &f : fiducials)
+    f.draw(scene, drawing_meters_per_pixel);
+}
+
 void Level::draw_polygons(QGraphicsScene *scene) const
 {
   QBrush polygon_brush(QColor::fromRgbF(0.8, 0.8, 0.8, 0.5));
@@ -846,4 +875,22 @@ void Level::draw_polygons(QGraphicsScene *scene) const
         QBrush(Qt::blue));
   }
 #endif
+}
+
+void Level::clear_selection()
+{
+  for (auto& vertex : vertices)
+    vertex.selected = false;
+
+  for (auto& edge : edges)
+    edge.selected = false;
+
+  for (auto& model : models)
+    model.selected = false;
+
+  for (auto& polygon : polygons)
+    polygon.selected = false;
+
+  for (auto& fiducial : fiducials)
+    fiducial.selected = false;
 }

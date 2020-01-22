@@ -22,6 +22,7 @@
 #include <string>
 
 #include "edge.h"
+#include "fiducial.h"
 #include "layer.h"
 #include "model.h"
 #include "polygon.h"
@@ -50,6 +51,7 @@ public:
   std::vector<Edge> edges;
   std::vector<Model> models;
   std::vector<Polygon> polygons;
+  std::vector<Fiducial> fiducials;
 
   QPixmap floorplan_pixmap;
   std::vector<Layer> layers;
@@ -73,6 +75,9 @@ public:
   void draw_edges(QGraphicsScene *scene) const;
   void draw_vertices(QGraphicsScene *scene) const;
   void draw_polygons(QGraphicsScene *scene) const;
+  void draw_fiducials(QGraphicsScene *scene) const;
+
+  void clear_selection();
 
 private:
   double point_to_line_segment_distance(
