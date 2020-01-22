@@ -52,9 +52,9 @@ void Lift::from_yaml(const std::string& _name, const YAML::Node &data)
   }
 
   // for every level, load if every door can open
-  if (data["level_door"] && data["level_door"].IsMap())
+  if (data["level_doors"] && data["level_doors"].IsMap())
   {
-    const YAML::Node ym = data["level_door"];
+    const YAML::Node ym = data["level_doors"];
     for (YAML::const_iterator it = ym.begin(); it != ym.end(); ++it)
     {
       const std::string level_name = it->first.as<string>();
@@ -63,7 +63,7 @@ void Lift::from_yaml(const std::string& _name, const YAML::Node &data)
       {
         for (YAML::const_iterator dit = ds.begin(); dit != ds.end(); ++dit)
         {
-          const std::string door_name = (*it).as<string>();
+          const std::string door_name = (*dit).as<string>();
           level_doors[level_name].push_back(door_name);
         }
       }
@@ -100,6 +100,7 @@ YAML::Node Lift::to_yaml() const
          ++door_it)
     {
       n["level_doors"][level_it->first].push_back(*door_it);
+      n["level_doors"][level_it->first].SetStyle(YAML::EmitterStyle::Flow);
     }
   }
   return n;
@@ -151,11 +152,12 @@ void Lift::draw(
     const double door_w = door.width / meters_per_pixel;
     const double door_thickness = 0.2 / meters_per_pixel;
     QGraphicsRectItem *door_item = new QGraphicsRectItem(
-        door_x - door_w / 2.0,
-        door_y - door_thickness / 2.0,
+        -door_w / 2.0,
+        -door_thickness / 2.0,
         door_w,
         door_thickness);
     door_item->setRotation(-180.0 / 3.1415926 * door.motion_axis_orientation);
+    door_item->setPos(door_x, door_y);
 
     QPen door_pen(Qt::red);
     door_pen.setWidth(0.05 / meters_per_pixel);
