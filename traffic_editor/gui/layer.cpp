@@ -28,7 +28,7 @@ Layer::~Layer()
 {
 }
 
-bool Layer::from_yaml(const std::string &_name, const YAML::Node &y)
+bool Layer::from_yaml(const std::string& _name, const YAML::Node &y)
 {
   if (!y.IsMap())
     throw std::runtime_error("Layer::from_yaml() expected a map");

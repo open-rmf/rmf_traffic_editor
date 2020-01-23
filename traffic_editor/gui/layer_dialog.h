@@ -54,7 +54,7 @@ private slots:
   void filename_line_edited(const QString &text);
 
 signals:
-  void redraw_request();
+  void redraw();
 };
 
 #endif

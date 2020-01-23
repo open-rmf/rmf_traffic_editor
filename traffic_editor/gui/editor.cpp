@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Open Source Robotics Foundation
+ * Copyright (C) 2019-2020 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@
 #include "editor.h"
 #include "level_dialog.h"
 #include "layer_dialog.h"
+#include "lift_table.h"
 #include "model_dialog.h"
 #include "preferences_dialog.h"
 #include "preferences_keys.h"
@@ -46,11 +47,6 @@ Editor::Editor(QWidget *parent)
   level_idx(0),
   clicked_idx(-1),
   polygon_idx(-1),
-  mouse_motion_line(nullptr),
-  mouse_motion_ellipse(nullptr),
-  mouse_motion_model(nullptr),
-  mouse_motion_polygon(nullptr),
-  mouse_motion_polygon_vertex_idx(-1),
   tool_id(TOOL_SELECT)
 {
   instance = this;
@@ -73,46 +69,9 @@ Editor::Editor(QWidget *parent)
   QVBoxLayout *map_layout = new QVBoxLayout;
   map_layout->addWidget(map_view);
 
-  const char *table_tab_style_sheet =
-      "QTableWidget { background-color: #e0e0e0; color: black; } "
-      "QLineEdit { background:white; } "
-      "QCheckBox { padding-left: 5px; background:white; } "
-      "QPushButton { margin: 5px; background-color: #c0c0c0; border: 1px solid black; } "
-      "QPushButton:pressed { background-color: #808080; }";
+  layers_table = new TableList;  // todo: replace with specific subclass?
 
-  layers_table = new QTableWidget;
-  layers_table->setStyleSheet(table_tab_style_sheet);
-  layers_table->setColumnCount(2);
-  layers_table->setMinimumSize(400, 200);
-  layers_table->setSizePolicy(
-      QSizePolicy::Fixed,
-      QSizePolicy::MinimumExpanding);
-  layers_table->horizontalHeader()->setVisible(false);
-  layers_table->verticalHeader()->setVisible(false);
-  layers_table->horizontalHeader()->setSectionResizeMode(
-      0, QHeaderView::Stretch);
-  layers_table->horizontalHeader()->setSectionResizeMode(
-      1, QHeaderView::ResizeToContents);
-  layers_table->verticalHeader()->setSectionResizeMode(
-      QHeaderView::ResizeToContents);
-  layers_table->setAutoFillBackground(true);
-
-  // todo: refactor to avoid copy/paste tab-table init
-  levels_table = new QTableWidget;
-  levels_table->setStyleSheet(table_tab_style_sheet);
-  levels_table->setColumnCount(2);
-  levels_table->setMinimumSize(400, 200);
-  levels_table->setSizePolicy(
-      QSizePolicy::Fixed,
-      QSizePolicy::MinimumExpanding);
-  levels_table->horizontalHeader()->setVisible(false);
-  levels_table->verticalHeader()->setVisible(false);
-  levels_table->horizontalHeader()->setSectionResizeMode(
-      0, QHeaderView::Stretch);
-  levels_table->horizontalHeader()->setSectionResizeMode(
-      1, QHeaderView::ResizeToContents);
-  levels_table->verticalHeader()->setSectionResizeMode(
-      QHeaderView::ResizeToContents);
+  levels_table = new TableList;  // todo: replace with specific subclass?
   levels_table->setAutoFillBackground(true);
   connect(
       levels_table, &QTableWidget::cellClicked,
@@ -124,10 +83,19 @@ Editor::Editor(QWidget *parent)
         }
       });
 
+  lift_table = new LiftTable;
+  connect(
+      lift_table, &TableList::redraw,
+      [this]()
+      {
+        this->create_scene();
+      });
+
   right_tab_widget = new QTabWidget;
   right_tab_widget->setStyleSheet("QTabBar::tab { color: white; }");
   right_tab_widget->addTab(levels_table, "levels");
   right_tab_widget->addTab(layers_table, "layers");
+  right_tab_widget->addTab(lift_table, "lifts");
 
   property_editor = new QTableWidget;
   property_editor->setStyleSheet("QTableWidget { background-color: #e0e0e0; color: black; gridline-color: #606060; } QLineEdit { background:white; }");
@@ -228,11 +196,11 @@ Editor::Editor(QWidget *parent)
   tool_button_group->setExclusive(true);
 
   create_tool_button(TOOL_SELECT, ":icons/select.svg", "Select (Esc)");
-
   create_tool_button(TOOL_MOVE, ":icons/move.svg", "Move (M)");
   create_tool_button(TOOL_ROTATE, ":icons/rotate.svg", "Rotate (R)");
 
   create_tool_button(TOOL_ADD_VERTEX, ":icons/add_vertex.svg", "Add Vertex (V)");
+  create_tool_button(TOOL_ADD_FIDUCIAL, ":icons/fiducial.svg", "Add Fiducial");
   create_tool_button(TOOL_ADD_LANE, "", "");
   create_tool_button(TOOL_ADD_WALL, "", "");
   create_tool_button(TOOL_ADD_MEAS, "", "");
@@ -355,6 +323,7 @@ bool Editor::load_project(const QString &filename)
   map_view->zoom_fit(map, level_idx);
   populate_layers_table();
   populate_levels_table();
+  lift_table->update(map);
 
   QSettings settings;
   settings.setValue(preferences_keys::previous_project_path, filename);
@@ -526,6 +495,7 @@ void Editor::mouse_event(const MouseType t, QMouseEvent *e)
     case TOOL_ROTATE:       mouse_rotate(t, e, p); break;
     case TOOL_ADD_FLOOR:    mouse_add_floor(t, e, p); break;
     case TOOL_EDIT_POLYGON: mouse_edit_polygon(t, e, p); break;
+    case TOOL_ADD_FIDUCIAL: mouse_add_fiducial(t, e, p); break;
     default: break;
   }
   previous_mouse_point = p;
@@ -754,31 +724,42 @@ void Editor::update_property_editor()
   if (map.levels.empty())
     return;
 
-  for (const auto &p : map.levels[level_idx].polygons) {
-    if (p.selected) {
+  for (const auto& p : map.levels[level_idx].polygons)
+    if (p.selected)
+    {
       printf("found a selected polygon\n");
       // todo: populate property editor
       return;
     }
-  }
-  for (const auto &e : map.levels[level_idx].edges) {
-    if (e.selected) {
+
+  for (const auto& e : map.levels[level_idx].edges)
+    if (e.selected)
+    {
       populate_property_editor(e);
       return;  // stop after finding the first one
     }
-  }
-  for (const auto &m : map.levels[level_idx].models) {
-    if (m.selected) {
+
+  for (const auto& m : map.levels[level_idx].models)
+    if (m.selected)
+    {
       populate_property_editor(m);
       return;  // stop after finding the first one
     }
-  }
-  for (const auto &v : map.levels[level_idx].vertices) {
-    if (v.selected) {
+
+  for (const auto& v : map.levels[level_idx].vertices)
+    if (v.selected)
+    {
       populate_property_editor(v);
       return;  // stop after finding the first one
     }
-  }
+
+  for (const auto& f : map.levels[level_idx].fiducials)
+    if (f.selected)
+    {
+      populate_property_editor(f);
+      return;  // stop after finding the first one
+    }
+
   // if we get here, we never found anything :(
   clear_property_editor();
 }
@@ -978,15 +959,12 @@ void Editor::layer_edit_button_clicked(const std::string &label)
     if (label != layer.name)
       continue;
     LayerDialog *dialog = new LayerDialog(this, layer, true);
-    // todo: connect some signal/slot for "things have changed"
-    // so we can dynamically update the transformation
-    // and bling features like color, transparency, etc.
     dialog->show();
     dialog->raise();
     dialog->activateWindow();
     connect(
         dialog,
-        &LayerDialog::redraw_request,
+        &LayerDialog::redraw,
         this,
         &Editor::create_scene);
     return;  // only create a dialog for the first name match
@@ -1008,7 +986,7 @@ void Editor::layer_add_button_clicked()
   setWindowModified(true);
 }
 
-void Editor::populate_property_editor(const Edge &edge)
+void Editor::populate_property_editor(const Edge& edge)
 {
   const Level &level = map.levels[level_idx];
   const double scale = level.drawing_meters_per_pixel;
@@ -1049,7 +1027,7 @@ void Editor::populate_property_editor(const Edge &edge)
   property_editor->blockSignals(false);  // re-enable callbacks
 }
 
-void Editor::populate_property_editor(const Vertex &vertex)
+void Editor::populate_property_editor(const Vertex& vertex)
 {
   const Level &level = map.levels[level_idx];
   const double scale = level.drawing_meters_per_pixel;
@@ -1083,7 +1061,21 @@ void Editor::populate_property_editor(const Vertex &vertex)
   property_editor->blockSignals(false);  // re-enable callbacks
 }
 
-void Editor::populate_property_editor(const Model &model)
+void Editor::populate_property_editor(const Fiducial& fiducial)
+{
+  property_editor->blockSignals(true);
+
+  property_editor->setRowCount(1);
+  property_editor_set_row(
+      0,
+      "name",
+      QString::fromStdString(fiducial.name),
+      true);  // true means that this cell value is editable
+
+  property_editor->blockSignals(false);
+}
+
+void Editor::populate_property_editor(const Model& model)
 {
   printf("populate_property_editor(model)\n");
   property_editor->blockSignals(true);  // otherwise we get tons of callbacks
@@ -1117,7 +1109,8 @@ void Editor::property_editor_cell_changed(int row, int column)
   printf("property_editor_cell_changed(%d, %d) = param %s\n",
       row, column, name.c_str());
 
-  for (auto &v : map.levels[level_idx].vertices) {
+  for (auto& v : map.levels[level_idx].vertices)
+  {
     if (!v.selected)
       continue;
     if (name == "name")
@@ -1129,10 +1122,22 @@ void Editor::property_editor_cell_changed(int row, int column)
     return;  // stop after finding the first one
   }
 
-  for (auto &e : map.levels[level_idx].edges) {
+  for (auto& e : map.levels[level_idx].edges)
+  {
     if (!e.selected)
       continue;
     e.set_param(name, value);
+    create_scene();
+    setWindowModified(true);
+    return;  // stop after finding the first one
+  }
+
+  for (auto& f : map.levels[level_idx].fiducials)
+  {
+    if (!f.selected)
+      continue;
+    if (name == "name")
+      f.name = value;
     create_scene();
     setWindowModified(true);
     return;  // stop after finding the first one
@@ -1190,6 +1195,7 @@ bool Editor::create_scene()
   }
 
   level.draw_polygons(scene);
+  map.draw_lifts(scene, level_idx);
   level.draw_edges(scene);
 
   // now draw all the models
@@ -1227,6 +1233,7 @@ bool Editor::create_scene()
   }
 
   level.draw_vertices(scene);
+  level.draw_fiducials(scene);
 
   return true;
 }
@@ -1235,14 +1242,7 @@ void Editor::clear_selection()
 {
   if (map.levels.empty())
     return;
-  for (auto &vertex: map.levels[level_idx].vertices)
-    vertex.selected = false;
-  for (auto &edge: map.levels[level_idx].edges)
-    edge.selected = false;
-  for (auto &model: map.levels[level_idx].models)
-    model.selected = false;
-  for (auto &polygon: map.levels[level_idx].polygons)
-    polygon.selected = false;
+  map.levels[level_idx].clear_selection();
 }
 
 void Editor::draw_mouse_motion_line_item(
@@ -1299,6 +1299,9 @@ void Editor::remove_mouse_motion_item()
     mouse_motion_polygon = nullptr;
   }
   mouse_motion_editor_model = nullptr;
+
+  mouse_vertex_idx = -1;
+  mouse_fiducial_idx = -1;
 }
 
 void Editor::set_selected_line_item(QGraphicsLineItem *line_item)
@@ -1315,43 +1318,6 @@ void Editor::set_selected_line_item(QGraphicsLineItem *line_item)
     if (line_vertices_match(line_item, v_start, v_end, 10.0)) {
       edge.selected = true;
       return;  // stop after first one is found, don't select multiple
-    }
-  }
-}
-
-void Editor::set_selected_pixmap_item(QGraphicsPixmapItem *item)
-{
-  clear_selection();
-  if (item == nullptr)
-    return;
-  // find which model matches the vertex
-  for (auto &model : map.levels[level_idx].models) {
-    const double dx = item->pos().x() - model.x;
-    const double dy = item->pos().y() - model.y;
-    const double dist = sqrt(dx*dx + dy*dy);
-    // should be exactly the same vertex, but give some room for
-    // floating-point roundoff and stuff.
-    if (dist < 1.0) {
-      model.selected = true;
-      return;
-    }
-  }
-}
-
-void Editor::set_selected_ellipse_item(QGraphicsEllipseItem *item)
-{
-  clear_selection();
-  if (item == nullptr)
-    return;
-  for (auto &vertex : map.levels[level_idx].vertices) {
-    const double dx = item->rect().center().x() - vertex.x;
-    const double dy = item->rect().center().y() - vertex.y;
-    const double dist = sqrt(dx*dx + dy*dy);
-    // should be exactly the same vertex, but give some room for
-    // floating-point roundoff and stuff.
-    if (dist < 1.0) {
-      vertex.selected = true;
-      return;
     }
   }
 }
@@ -1387,28 +1353,40 @@ bool Editor::line_vertices_match(
 ///////////////////////////////////////////////////////////////////////
 
 void Editor::mouse_select(
-    const MouseType type, QMouseEvent *e, const QPointF &p)
+    const MouseType type, QMouseEvent *, const QPointF &p)
 {
   if (type != MOUSE_PRESS)
     return;
   clear_selection();
-  const QPoint p_global = mapToGlobal(e->pos());
-  const QPoint p_map = map_view->mapFromGlobal(p_global);
-  QGraphicsItem *item = map_view->itemAt(p_map.x(), p_map.y());
-  if (item) {
-    if (item->type() == QGraphicsLineItem::Type) {
+
+  Map::NearestItem ni = map.nearest_items(level_idx, p.x(), p.y());
+
+  if (ni.model_idx >= 0 && ni.model_dist < 50.0)
+  {
+    printf("selected model %d\n", ni.model_idx);
+    map.levels[level_idx].models[ni.model_idx].selected = true;
+  }
+  else if (ni.vertex_idx >= 0 && ni.vertex_dist < 10.0)
+  {
+    printf("selected vertex %d\n", ni.vertex_idx);
+    map.levels[level_idx].vertices[ni.vertex_idx].selected = true;
+  }
+  else if (ni.fiducial_idx >= 0 && ni.fiducial_dist < 10.0)
+  {
+    printf("selected fiducial %d\n", ni.fiducial_idx);
+    map.levels[level_idx].fiducials[ni.fiducial_idx].selected = true;
+  }
+  else
+  {
+    // use the QGraphics stuff to see if it's an edge segment or polygon
+    QGraphicsItem *item = map_view->itemAt(p.x(), p.y());
+    if (item && item->type() == QGraphicsLineItem::Type)
+    {
       set_selected_line_item(
           qgraphicsitem_cast<QGraphicsLineItem *>(item));
     }
-    else if (item->type() == QGraphicsEllipseItem::Type) {
-      set_selected_ellipse_item(
-          qgraphicsitem_cast<QGraphicsEllipseItem *>(item));
-    }
-    else if (item->type() == QGraphicsPixmapItem::Type) {
-      set_selected_pixmap_item(
-          qgraphicsitem_cast<QGraphicsPixmapItem *>(item));
-    }
-    else if (item->type() == QGraphicsPolygonItem::Type) {
+    else if (item && item->type() == QGraphicsPolygonItem::Type)
+    {
       polygon_idx = get_polygon_idx(p.x(), p.y());
       if (polygon_idx < 0)
         return;  // didn't click on a polygon
@@ -1434,55 +1412,83 @@ void Editor::mouse_add_vertex(
   }
 }
 
+void Editor::mouse_add_fiducial(
+    const MouseType t, QMouseEvent *, const QPointF &p)
+{
+  if (t == MOUSE_PRESS)
+  {
+    map.add_fiducial(level_idx, p.x(), p.y());
+    setWindowModified(true);
+    create_scene();
+  }
+}
+
 void Editor::mouse_move(
     const MouseType t, QMouseEvent *e, const QPointF &p)
 {
   if (t == MOUSE_PRESS)
   {
-    // first see if there is a model close to where we clicked
-    clicked_idx = map.nearest_item_index_if_within_distance(
-        level_idx, p.x(), p.y(), 50.0, Map::MODEL);
-    if (clicked_idx >= 0)
+    Map::NearestItem ni = map.nearest_items(level_idx, p.x(), p.y());
+
+    if (ni.model_idx >= 0 && ni.model_dist < 50.0)
     {
       // Now we need to find the pixmap item for this model.
       mouse_motion_model = get_closest_pixmap_item(
           QPointF(
               map.levels[level_idx].models[clicked_idx].x,
               map.levels[level_idx].models[clicked_idx].y));
+      mouse_model_idx = ni.model_idx;
     }
-    else
+    else if (ni.vertex_idx >= 0 && ni.vertex_dist < 10.0)
     {
-      // there wasn't a model there, but maybe a vertex is there?
-      clicked_idx = map.nearest_item_index_if_within_distance(
-          level_idx, p.x(), p.y(), 10.0, Map::VERTEX);
+      mouse_vertex_idx = ni.vertex_idx;
+      // todo: save the QGrahpicsEllipse or group, to avoid full repaints?
+    }
+    else if (ni.fiducial_idx >= 0 && ni.fiducial_dist < 10.0)
+    {
+      mouse_fiducial_idx = ni.fiducial_idx;
+      // todo: save the QGrahpicsEllipse or group, to avoid full repaints?
     }
   }
   else if (t == MOUSE_RELEASE)
   {
-    clicked_idx = -1;
+    mouse_vertex_idx = -1;
+    mouse_fiducial_idx = -1;
+    create_scene();  // this will free mouse_motion_model
     setWindowModified(true);
-    create_scene();
   }
   else if (t == MOUSE_MOVE)
   {
     if (!(e->buttons() & Qt::LeftButton))
       return;  // we only care about mouse-dragging, not just motion
-    if (clicked_idx < 0)
-      return;
+    printf("mouse move, vertex_idx = %d, fiducial_idx = %d\n",
+        mouse_vertex_idx,
+        mouse_fiducial_idx);
     if (mouse_motion_model != nullptr)
     {
       // we're dragging a model
       // update both the nav_model data and the pixmap in the scene
-      map.levels[level_idx].models[clicked_idx].x = p.x();
-      map.levels[level_idx].models[clicked_idx].y = p.y();
+      map.levels[level_idx].models[mouse_model_idx].x = p.x();
+      map.levels[level_idx].models[mouse_model_idx].y = p.y();
       mouse_motion_model->setPos(p);
     }
-    else
+    else if (mouse_vertex_idx >= 0)
     {
       // we're dragging a vertex
-      Vertex *pt = &map.levels[level_idx].vertices[clicked_idx];
-      pt->x = p.x();
-      pt->y = p.y();
+      Vertex& pt = map.levels[level_idx].vertices[mouse_vertex_idx];
+      pt.x = p.x();
+      pt.y = p.y();
+      create_scene();
+    }
+    else if (mouse_fiducial_idx >= 0)
+    {
+      Fiducial& f = map.levels[level_idx].fiducials[mouse_fiducial_idx];
+      f.x = p.x();
+      f.y = p.y();
+      printf("moved fiducial %d to (%.1f, %.1f)\n",
+          mouse_fiducial_idx,
+          f.x,
+          f.y);
       create_scene();
     }
   }

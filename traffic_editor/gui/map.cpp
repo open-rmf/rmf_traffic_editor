@@ -61,31 +61,46 @@ void Map::load_yaml(const string &filename)
   if (!y["levels"] || !y["levels"].IsMap())
     throw std::runtime_error("expected top-level dictionary named 'levels'");
 
-  const YAML::Node yl = y["levels"];
   levels.clear();
-
+  const YAML::Node yl = y["levels"];
   for (YAML::const_iterator it = yl.begin(); it != yl.end(); ++it)
   {
     Level l;
     l.from_yaml(it->first.as<string>(), it->second);
     levels.push_back(l);
   }
+
+  if (y["lifts"] && y["lifts"].IsMap())
+  {
+    const YAML::Node& y_lifts = y["lifts"];
+    for (YAML::const_iterator it = y_lifts.begin(); it != y_lifts.end(); ++it)
+    {
+      Lift lift;
+      lift.from_yaml(it->first.as<string>(), it->second);
+      lifts.push_back(lift);
+    }
+  }
+
   changed = false;
 }
 
 bool Map::save_yaml(const std::string &filename)
 {
   printf("Map::save_yaml(%s)\n", filename.c_str());
-  YAML::Node levels_node(YAML::NodeType::Map);
-  for (const auto &level : levels) {
-    levels_node[level.name] = level.to_yaml();
-  }
-  YAML::Node y_top;
-  y_top["building_name"] = building_name;
-  y_top["levels"] = levels_node;
+
+  YAML::Node y;
+  y["building_name"] = building_name;
+
+  y["levels"] = YAML::Node(YAML::NodeType::Map);
+  for (const auto &level : levels)
+    y["levels"][level.name] = level.to_yaml();
+
+  y["lifts"] = YAML::Node(YAML::NodeType::Map);
+  for (const auto& lift : lifts)
+    y["lifts"][lift.name] = lift.to_yaml();
 
   YAML::Emitter emitter;
-  write_yaml_node(y_top, emitter);
+  write_yaml_node(y, emitter);
   std::ofstream fout(filename);
   fout << emitter.c_str() << std::endl;
 
@@ -99,6 +114,13 @@ void Map::add_vertex(int level_index, double x, double y)
     return;
   levels[level_index].vertices.push_back(Vertex(x, y));
   changed = true;
+}
+
+void Map::add_fiducial(int level_index, double x, double y)
+{
+  if (level_index >= static_cast<int>(levels.size()))
+    return;
+  levels[level_index].fiducials.push_back(Fiducial(x, y));
 }
 
 int Map::find_nearest_vertex_index(
@@ -120,6 +142,58 @@ int Map::find_nearest_vertex_index(
   return min_index;  // will be -1 if vertices vector is empty
 }
 
+Map::NearestItem Map::nearest_items(
+      const int level_index,
+      const double x,
+      const double y)
+{
+  NearestItem ni;
+  if (level_index >= static_cast<int>(levels.size()))
+    return ni;
+  const Level& level = levels[level_index];
+
+  for (size_t i = 0; i < level.vertices.size(); i++)
+  {
+    const Vertex& p = level.vertices[i];
+    const double dx = x - p.x;
+    const double dy = y - p.y;
+    const double dist = sqrt(dx*dx + dy*dy);
+    if (dist < ni.vertex_dist)
+    {
+      ni.vertex_dist = dist;
+      ni.vertex_idx = i;
+    }
+  }
+
+  for (size_t i = 0; i < level.fiducials.size(); i++)
+  {
+    const Fiducial& f = level.fiducials[i];
+    const double dx = x - f.x;
+    const double dy = y - f.y;
+    const double dist = sqrt(dx*dx + dy*dy);
+    if (dist < ni.fiducial_dist)
+    {
+      ni.fiducial_dist = dist;
+      ni.fiducial_idx = i;
+    }
+  }
+
+  for (size_t i = 0; i < level.models.size(); i++)
+  {
+    const Model& m = level.models[i];
+    const double dx = x - m.x;
+    const double dy = y - m.y;
+    const double dist = sqrt(dx*dx + dy*dy);  // no need for sqrt each time
+    if (dist < ni.model_dist)
+    {
+      ni.model_dist = dist;
+      ni.model_idx = i;
+    }
+  }
+
+  return ni;
+}
+
 int Map::nearest_item_index_if_within_distance(
       const int level_index,
       const double x,
@@ -132,25 +206,46 @@ int Map::nearest_item_index_if_within_distance(
 
   double min_dist = 1e100;
   int min_index = -1;
-  if (item_type == VERTEX) {
-    for (size_t i = 0; i < levels[level_index].vertices.size(); i++) {
-      const Vertex &p = levels[level_index].vertices[i];
+  if (item_type == VERTEX)
+  {
+    for (size_t i = 0; i < levels[level_index].vertices.size(); i++)
+    {
+      const Vertex& p = levels[level_index].vertices[i];
       const double dx = x - p.x;
       const double dy = y - p.y;
       const double dist2 = dx*dx + dy*dy;  // no need for sqrt each time
-      if (dist2 < min_dist) {
+      if (dist2 < min_dist)
+      {
         min_dist = dist2;
         min_index = i;
       }
     }
   }
-  else if (item_type == MODEL) {
-    for (size_t i = 0; i < levels[level_index].models.size(); i++) {
-      const Model &m = levels[level_index].models[i];
+  else if (item_type == FIDUCIAL)
+  {
+    for (size_t i = 0; i < levels[level_index].fiducials.size(); i++)
+    {
+      const Fiducial& f = levels[level_index].fiducials[i];
+      const double dx = x - f.x;
+      const double dy = y - f.y;
+      const double dist2 = dx*dx + dy*dy;
+      if (dist2 < min_dist)
+      {
+        min_dist = dist2;
+        min_index = i;
+      }
+    }
+  }
+  else if (item_type == MODEL)
+  {
+    for (size_t i = 0; i < levels[level_index].models.size(); i++)
+    {
+      const Model& m = levels[level_index].models[i];
       const double dx = x - m.x;
       const double dy = y - m.y;
       const double dist2 = dx*dx + dy*dy;  // no need for sqrt each time
-      if (dist2 < min_dist) {
+      if (dist2 < min_dist)
+      {
         min_dist = dist2;
         min_index = i;
       }
@@ -306,4 +401,11 @@ void Map::write_yaml_node(const YAML::Node& node, YAML::Emitter& emitter)
       emitter << node;
       break;
   }
+}
+
+void Map::draw_lifts(QGraphicsScene *scene, const int level_idx) const
+{
+  const Level& level = levels[level_idx];
+  for (const auto &lift : lifts)
+    lift.draw(scene, level.drawing_meters_per_pixel, level.name);
 }
