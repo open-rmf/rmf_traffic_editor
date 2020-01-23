@@ -60,7 +60,7 @@ void Fiducial::draw(
   const QColor selected_color = QColor::fromRgbF(1.0, 0.0, 0.0, a);
 
   QPen pen(selected ? selected_color : color);
-  pen.setWidth(0.05 / meters_per_pixel);
+  pen.setWidth(0.2 / meters_per_pixel);
   const double radius = 0.5 / meters_per_pixel;
 
   scene->addEllipse(
