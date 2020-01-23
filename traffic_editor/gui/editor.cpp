@@ -1380,8 +1380,14 @@ void Editor::mouse_select(
   {
     // use the QGraphics stuff to see if it's an edge segment or polygon
     QGraphicsItem *item = map_view->itemAt(p.x(), p.y());
+    if (item)
+    {
+      printf("clicked something: type = %d\n", static_cast<int>(item->type()));
+    }
+
     if (item && item->type() == QGraphicsLineItem::Type)
     {
+      printf("clicked line\n");
       set_selected_line_item(
           qgraphicsitem_cast<QGraphicsLineItem *>(item));
     }

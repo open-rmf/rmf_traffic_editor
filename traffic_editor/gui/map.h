@@ -25,6 +25,8 @@ class QGraphicsScene;
 #include <vector>
 #include <yaml-cpp/yaml.h>
 
+#include <QPointF>
+
 #include "level.h"
 #include "lift.h"
 
@@ -108,11 +110,53 @@ public:
       const double x,
       const double y);
 
-  void draw_lifts(QGraphicsScene *scene, const int level_idx) const;
+  void draw_lifts(QGraphicsScene *scene, const int level_idx);
+
+  bool transform_between_levels(
+      const std::string& from_level_name,
+      const QPointF& from_point,
+      const std::string& to_level_name,
+      QPointF& to_point);
+
+  bool transform_between_levels(
+      const int from_level_idx,
+      const QPointF& from_point,
+      const int to_level_idx,
+      QPointF& to_point);
+
+  void clear_transform_cache();
+
+  struct LevelPair
+  {
+    int from_idx = -1;
+    int to_idx = -1;
+
+    bool operator<(const LevelPair& rhs) const
+    {
+      return std::tie(from_idx, to_idx) < std::tie(rhs.from_idx, rhs.to_idx);
+    }
+  };
+
+  struct Transform
+  {
+    double dx = 0;
+    double dy = 0;
+  };
+  typedef std::map<LevelPair, Transform> TransformMap;
+  TransformMap transforms;
+
+  Transform compute_transform(
+      const int from_level_idx,
+      const int to_level_idx);
+
+  Transform get_transform(
+      const int from_level_idx,
+      const int to_level_idx);
 
 private:
   // Recursive function to write YAML ordered maps. Credit: Dave Hershberger
   void write_yaml_node(const YAML::Node& node, YAML::Emitter& emitter);
+
 };
 
 #endif

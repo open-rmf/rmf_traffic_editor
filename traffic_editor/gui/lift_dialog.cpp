@@ -247,9 +247,13 @@ void LiftDialog::ok_button_clicked()
   }
 
   _lift.name = _name_line_edit->text().toStdString();
+  _lift.reference_floor_name =
+      _reference_floor_combo_box->currentText().toStdString();
+
   _lift.x = _x_line_edit->text().toDouble();
   _lift.y = _y_line_edit->text().toDouble();
   _lift.yaw = _yaw_line_edit->text().toDouble();
+
   _lift.width = _width_line_edit->text().toDouble();
   _lift.depth = _depth_line_edit->text().toDouble();
 
