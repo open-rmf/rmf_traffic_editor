@@ -25,7 +25,7 @@ class DoubleSwingDoor(Door):
             (self.length / 4, 0, 0))
 
         plugin_ele = SubElement(self.model_ele, 'plugin')
-        plugin_ele.set('name', 'rmf_gazebo_plugins::door')
+        plugin_ele.set('name', 'door')
         plugin_ele.set('filename', 'libdoor.so')
         plugin_params = {
           'v_max_door': '0.5',
