@@ -74,6 +74,7 @@ public:
       const double meters_per_pixel,
       const std::string& level_name,
       const bool apply_transformation = true,
+      const double scale = 1.0,
       const double translate_x = 0.0,
       const double translate_y = 0.0) const;
 

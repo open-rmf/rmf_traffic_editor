@@ -26,6 +26,7 @@
 
 using std::string;
 using std::vector;
+using std::make_pair;
 
 
 Map::Map()
@@ -418,25 +419,14 @@ void Map::draw_lifts(QGraphicsScene *scene, const int level_idx)
 
     Transform t;
     if (reference_floor_idx >= 0)
-    {
       t = get_transform(reference_floor_idx, level_idx);
-      double level_scale = level.drawing_meters_per_pixel;
-      double ref_scale = levels[reference_floor_idx].drawing_meters_per_pixel;
-      printf("scale: %.3f   ref_scale: %.3f    t = (%.1f, %.1f)\n",
-          level_scale,
-          ref_scale,
-          t.dx,
-          t.dy);
-
-      //double scale_diff =
-      //    level.meters_per_pixel / 
-    }
 
     lift.draw(
         scene,
         level.drawing_meters_per_pixel,
         level.name,
         true,
+        t.scale,
         t.dx,
         t.dy);
   }
@@ -487,8 +477,8 @@ bool Map::transform_between_levels(
 
   const Transform t = get_transform(from_level_idx, to_level_idx);
 
-  to_point.rx() = from_point.x() + t.dx;
-  to_point.ry() = from_point.y() + t.dy;
+  to_point.rx() = t.scale * from_point.x() + t.dx;
+  to_point.ry() = t.scale * from_point.y() + t.dy;
   return true;
 }
 
@@ -501,97 +491,60 @@ Map::Transform Map::compute_transform(
     const int from_level_idx,
     const int to_level_idx)
 {
+  printf("\n\ncomputing transform from level %d to level %d\n",
+      from_level_idx,
+      to_level_idx);
   // this internal function assumes that bounds checking has already happened
   const Level& from_level = levels[from_level_idx];
   const Level& to_level = levels[to_level_idx];
 
-  printf("  scales: from %.3f  to: %.3f\n",
-      from_level.drawing_meters_per_pixel, 
-      to_level.drawing_meters_per_pixel);
-
   // assemble a vector of fudicials in common to these levels
-  vector< std::pair<Fiducial, Fiducial> > fiducial_pairs;
+  vector< std::pair<Fiducial, Fiducial> > fiducials;
   for (const Fiducial& f0 : from_level.fiducials)
     for (const Fiducial& f1 : to_level.fiducials)
-    {
       if (f0.name == f1.name)
       {
-        fiducial_pairs.push_back(make_pair(f0, f1));
-        break;
-      }
-    }
-  printf("%d fiducials in common\n", static_cast<int>(fiducial_pairs.size()));
-
-  // for now, we assume that the maps are already rotated identically
-  // and we only need to compute the 2d translation between them
-  // first we will gather all the dx and dy estimates
-  std::vector<double> dx_est, dy_est;
-
-  // we also assume that the maps have already been scaled correctly (!)
-
-  // look up all fiducials in common between these levels
-  for (const Fiducial& f_from : from_level.fiducials)
-    for (const Fiducial& f_to : to_level.fiducials)
-      if (f_from.name == f_to.name)
-      {
-        const double from_x_meters =
-            f_from.x * from_level.drawing_meters_per_pixel;
-        const double from_y_meters =
-            f_from.y * from_level.drawing_meters_per_pixel;
-
-        const double to_x_meters =
-            f_to.x * from_level.drawing_meters_per_pixel;
-        const double to_y_meters =
-            f_to.y * from_level.drawing_meters_per_pixel;
-
-        dx_est.push_back(to_x_meters - from_x_meters);
-        dy_est.push_back(to_y_meters - from_y_meters);
-        printf("  %s: (%.1f, %.1f)   from: (%.1f, %.1f)   to: (%.1f, %.1f)\n",
-            f_from.name.c_str(),
-            dx_est.back(),
-            dy_est.back(),
-            from_x_meters,
-            from_y_meters,
-            to_x_meters,
-            to_y_meters);
+        fiducials.push_back(make_pair(f0, f1));
         break;
       }
 
-  printf("matched %d fiducials between level indices %d and %d\n",
-      static_cast<int>(dx_est.size()), from_level_idx, to_level_idx);
+  // calculate the distances between each fiducial on their levels
+  vector< std::pair <double, double > > distances;
+  for (size_t f0_idx = 0; f0_idx < fiducials.size(); f0_idx++)
+    for (size_t f1_idx = f0_idx + 1; f1_idx < fiducials.size(); f1_idx++)
+      distances.push_back(
+          make_pair(
+              fiducials[f0_idx].first.distance(fiducials[f1_idx].first),
+              fiducials[f0_idx].second.distance(fiducials[f1_idx].second)));
 
-  // for now just do arithmetic mean. we can get more sophisticated later.
-  double x_mean = 0;
-  double y_mean = 0;
+  // for now, we'll just compute the mean of the relative scale estimates.
+  // we can do fancier statistics later, if needed.
+  double relative_scale_sum = 0;
+  for (size_t i = 0; i < distances.size(); i++)
+    relative_scale_sum += distances[i].second / distances[i].first;
+  const double scale = relative_scale_sum / distances.size();
 
-  for (size_t i = 0; i < dx_est.size(); i++)
+  // scale the fiducials and estimate the "optimal" translation.
+  // for now, we'll just use the mean of the translation estimates.
+  double trans_x_sum = 0;
+  double trans_y_sum = 0;
+  for (const auto& fiducial : fiducials)
   {
-    x_mean += dx_est[i];
-    y_mean += dy_est[i];
+    trans_x_sum += fiducial.second.x - fiducial.first.x * scale;
+    trans_y_sum += fiducial.second.y - fiducial.first.y * scale;
   }
-  x_mean /= static_cast<int>(dx_est.size());
-  y_mean /= static_cast<int>(dy_est.size());
-
-  // compute standard deviation as sanity-check
-  double x_std_dev = 0;
-  double y_std_dev = 0;
-  for (size_t i = 0; i < dx_est.size(); i++)
-  {
-    x_std_dev += (dx_est[i] - x_mean) * (dx_est[i] - x_mean);
-    y_std_dev += (dy_est[i] - y_mean) * (dy_est[i] - y_mean);
-  }
-  x_std_dev /= static_cast<int>(dx_est.size());
-  y_std_dev /= static_cast<int>(dy_est.size());
-
-  printf("  mean: (%.1f, %.1f)  std dev: (%.1f, %.1f)\n",
-      x_mean,
-      y_mean,
-      x_std_dev,
-      y_std_dev);
+  const double trans_x = trans_x_sum / fiducials.size();
+  const double trans_y = trans_y_sum / fiducials.size();
 
   Map::Transform t;
-  t.dx = x_mean;
-  t.dy = y_mean;
+  t.scale = scale;
+  t.dx = trans_x;
+  t.dy = trans_y;
+
+  printf("transform estimate: scale = %.5f   translation = (%.2f, %.2f)\n",
+      t.scale,
+      t.dx,
+      t.dy);
 
   return t;
 }

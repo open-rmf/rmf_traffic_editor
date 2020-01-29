@@ -114,6 +114,7 @@ void Lift::draw(
     const double meters_per_pixel,
     const string& /*level_name*/,
     const bool apply_transformation,
+    const double scale,
     const double translate_x,
     const double translate_y) const
 {
@@ -174,7 +175,7 @@ void Lift::draw(
   if (apply_transformation)
   {
     group->setRotation(-180.0 / 3.1415926 * yaw);
-    group->setPos(x + translate_x, y + translate_y);
+    group->setPos(x * scale + translate_x, y * scale + translate_y);
   }
 }
 

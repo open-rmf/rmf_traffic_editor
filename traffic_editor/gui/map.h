@@ -137,10 +137,12 @@ public:
     }
   };
 
+  // to apply transform: first scale, then translate
   struct Transform
   {
-    double dx = 0;
-    double dy = 0;
+    double scale = 1.0;
+    double dx = 0.0;
+    double dy = 0.0;
   };
   typedef std::map<LevelPair, Transform> TransformMap;
   TransformMap transforms;
@@ -156,7 +158,6 @@ public:
 private:
   // Recursive function to write YAML ordered maps. Credit: Dave Hershberger
   void write_yaml_node(const YAML::Node& node, YAML::Emitter& emitter);
-
 };
 
 #endif
