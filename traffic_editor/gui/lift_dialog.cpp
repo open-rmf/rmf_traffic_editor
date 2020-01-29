@@ -420,5 +420,5 @@ void LiftDialog::door_table_cell_changed(int row, int col)
 void LiftDialog::update_lift_view()
 {
   _lift_scene->clear();
-  _lift.draw(_lift_scene, 0.005, std::string(), false);
+  _lift.draw(_lift_scene, 0.01, std::string(), false);
 }

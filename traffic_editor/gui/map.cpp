@@ -25,8 +25,7 @@
 #include <QDir>
 
 using std::string;
-using std::cout;
-using std::endl;
+using std::vector;
 
 
 Map::Map()
@@ -509,6 +508,19 @@ Map::Transform Map::compute_transform(
   printf("  scales: from %.3f  to: %.3f\n",
       from_level.drawing_meters_per_pixel, 
       to_level.drawing_meters_per_pixel);
+
+  // assemble a vector of fudicials in common to these levels
+  vector< std::pair<Fiducial, Fiducial> > fiducial_pairs;
+  for (const Fiducial& f0 : from_level.fiducials)
+    for (const Fiducial& f1 : to_level.fiducials)
+    {
+      if (f0.name == f1.name)
+      {
+        fiducial_pairs.push_back(make_pair(f0, f1));
+        break;
+      }
+    }
+  printf("%d fiducials in common\n", static_cast<int>(fiducial_pairs.size()));
 
   // for now, we assume that the maps are already rotated identically
   // and we only need to compute the 2d translation between them
