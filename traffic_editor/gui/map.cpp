@@ -573,3 +573,11 @@ Map::Transform Map::get_transform(
 
   return t;
 }
+
+void Map::calculate_all_transforms()
+{
+  clear_transform_cache();
+  for (size_t i = 0; i < levels.size(); i++)
+    for (size_t j = 0; j < levels.size(); j++)
+      get_transform(i, j);
+}

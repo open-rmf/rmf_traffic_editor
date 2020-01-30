@@ -35,6 +35,7 @@ add_executable(traffic-editor
   gui/lift_table.cpp
   gui/main.cpp
   gui/map.cpp
+  gui/map_dialog.cpp
   gui/map_view.cpp
   gui/model.cpp
   gui/model_dialog.cpp

@@ -33,6 +33,7 @@
 #include "level_dialog.h"
 #include "layer_dialog.h"
 #include "lift_table.h"
+#include "map_dialog.h"
 #include "model_dialog.h"
 #include "preferences_dialog.h"
 #include "preferences_keys.h"
@@ -201,6 +202,11 @@ Editor::Editor(QWidget *parent)
 
   // EDIT MENU
   QMenu *edit_menu = menuBar()->addMenu("&Edit");
+  edit_menu->addAction(
+      "&Map properties...",
+      this,
+      &Editor::edit_map_properties);
+  edit_menu->addSeparator();
   edit_menu->addAction("&Preferences...", this, &Editor::edit_preferences);
 
   // VIEW MENU
@@ -459,6 +465,13 @@ void Editor::edit_preferences()
 
   if (preferences_dialog.exec() == QDialog::Accepted)
     load_model_names();
+}
+
+void Editor::edit_map_properties()
+{
+  MapDialog map_dialog(map);
+  if (map_dialog.exec() == QDialog::Accepted)
+    setWindowModified(true);
 }
 
 void Editor::zoom_fit()

@@ -104,6 +104,7 @@ private slots:
 private:
   bool maybe_save();
   void edit_preferences();
+  void edit_map_properties();
 
   void level_add();
   void level_edit();
