@@ -19,9 +19,8 @@
 #include <QtWidgets>
 
 
-LevelDialog::LevelDialog(QWidget *parent, Level &_level)
-: QDialog(parent),
-  level(_level)
+LevelDialog::LevelDialog(Level &_level)
+: level(_level)
 {
   ok_button = new QPushButton("OK", this);  // first button = [enter] button
   cancel_button = new QPushButton("Cancel", this);

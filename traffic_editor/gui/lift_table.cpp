@@ -22,6 +22,8 @@
 LiftTable::LiftTable()
 : TableList()
 {
+  const QStringList labels = { "Name", "" };
+  setHorizontalHeaderLabels(labels);
 }
 
 LiftTable::~LiftTable()

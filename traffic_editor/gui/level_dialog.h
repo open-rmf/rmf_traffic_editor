@@ -26,7 +26,7 @@ class QLineEdit;
 class LevelDialog : public QDialog
 {
 public:
-  LevelDialog(QWidget *parent, Level &_level);
+  LevelDialog(Level &_level);
   ~LevelDialog();
  
 private:

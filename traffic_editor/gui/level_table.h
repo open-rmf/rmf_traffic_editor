@@ -15,21 +15,21 @@
  *
 */
 
-#ifndef TABLE_LIST_H
-#define TABLE_LIST_H
+#ifndef LEVEL_TABLE_H
+#define LEVEL_TABLE_H
 
 #include <QTableWidget>
 
-class TableList : public QTableWidget
+#include "table_list.h"
+#include "map.h"
+
+class LevelTable : public TableList
 {
-  Q_OBJECT
-
 public:
-  TableList(const int num_cols = 2);
-  ~TableList();
+  LevelTable();
+  ~LevelTable();
 
-signals:
-  void redraw();
+  void update(Map& map);
 };
 
 #endif

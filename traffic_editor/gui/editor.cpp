@@ -71,10 +71,9 @@ Editor::Editor(QWidget *parent)
 
   layers_table = new TableList;  // todo: replace with specific subclass?
 
-  levels_table = new TableList;  // todo: replace with specific subclass?
-  levels_table->setAutoFillBackground(true);
+  level_table = new LevelTable;
   connect(
-      levels_table, &QTableWidget::cellClicked,
+      level_table, &QTableWidget::cellClicked,
       [=](int row, int /*col*/) {
         if (row < static_cast<int>(map.levels.size()))
         {
@@ -92,9 +91,6 @@ Editor::Editor(QWidget *parent)
               p_center_scene,
               row,
               p_transformed);
-          // printf("p_transformed: (%.1f, %.1f)\n",
-          //     p_transformed.x(),
-          //     p_transformed.y());
           
           // maintain the view scale
           const double prev_scale = map_view->transform().m11();
@@ -123,7 +119,7 @@ Editor::Editor(QWidget *parent)
 
   right_tab_widget = new QTabWidget;
   right_tab_widget->setStyleSheet("QTabBar::tab { color: white; }");
-  right_tab_widget->addTab(levels_table, "levels");
+  right_tab_widget->addTab(level_table, "levels");
   right_tab_widget->addTab(layers_table, "layers");
   right_tab_widget->addTab(lift_table, "lifts");
 
@@ -255,6 +251,7 @@ Editor::Editor(QWidget *parent)
   tool_button_group->button(TOOL_SELECT)->click();
 
   load_model_names();
+  level_table->setCurrentCell(level_idx, 0);
 }
 
 void Editor::load_model_names()
@@ -352,7 +349,7 @@ bool Editor::load_project(const QString &filename)
   project_filename = filename;
   map_view->zoom_fit(map, level_idx);
   populate_layers_table();
-  populate_levels_table();
+  level_table->update(map);
   lift_table->update(map);
 
   QSettings settings;
@@ -462,23 +459,6 @@ void Editor::edit_preferences()
 
   if (preferences_dialog.exec() == QDialog::Accepted)
     load_model_names();
-}
-
-void Editor::level_add()
-{
-  if (project_filename.isEmpty()) {
-    QMessageBox::critical(
-        this,
-        "Please save the project file",
-        "Please save the project file before adding a level");
-    return;
-  }
-  Level level;
-  LevelDialog level_dialog(this, level);
-  if (level_dialog.exec() == QDialog::Accepted) {
-    map.add_level(level);
-  }
-  setWindowModified(true);
 }
 
 void Editor::zoom_fit()
@@ -878,48 +858,6 @@ void Editor::delete_param_button_clicked()
       this,
       "work in progress",
       "TODO: something...sorry. For now, hand-edit the YAML.");
-}
-
-void Editor::populate_levels_table()
-{
-  levels_table->blockSignals(true);  // avoid tons of callbacks
-  levels_table->setRowCount(1 + map.levels.size());
-  for (size_t i = 0; i < map.levels.size(); i++)
-  {
-    const QString level_name(QString::fromStdString(map.levels[i].name));
-
-    QTableWidgetItem *item = new QTableWidgetItem(level_name);
-    levels_table->setItem(i, 0, item);
-
-    QPushButton *edit_button = new QPushButton("Edit...", this);
-    levels_table->setCellWidget(i, 1, edit_button);
-    edit_button->setStyleSheet("QTableWidgetItem { background-color: red; }");
-
-    connect(
-        edit_button, &QAbstractButton::clicked,
-        [=]() {
-          LevelDialog level_dialog(this, map.levels[i]);
-          if (level_dialog.exec() == QDialog::Accepted)
-          {
-            QMessageBox::about(
-                this,
-                "work in progress", "TODO: use this data...sorry.");
-          }
-        });
-  }
-
-  const int last_row_idx = static_cast<int>(map.levels.size());
-  // we'll use the last row for the "Add" button
-  levels_table->setCellWidget(last_row_idx, 0, nullptr);
-  QPushButton *add_button = new QPushButton("Add...", this);
-  levels_table->setCellWidget(last_row_idx, 1, add_button);
-  connect(
-      add_button, &QAbstractButton::clicked,
-      [=]() { this->level_add(); });
-
-  levels_table->setCurrentCell(level_idx, 0);
-
-  levels_table->blockSignals(false);
 }
 
 void Editor::populate_layers_table()
