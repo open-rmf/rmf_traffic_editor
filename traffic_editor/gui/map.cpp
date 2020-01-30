@@ -25,8 +25,8 @@
 #include <QDir>
 
 using std::string;
-using std::cout;
-using std::endl;
+using std::vector;
+using std::make_pair;
 
 
 Map::Map()
@@ -403,9 +403,173 @@ void Map::write_yaml_node(const YAML::Node& node, YAML::Emitter& emitter)
   }
 }
 
-void Map::draw_lifts(QGraphicsScene *scene, const int level_idx) const
+void Map::draw_lifts(QGraphicsScene *scene, const int level_idx)
 {
   const Level& level = levels[level_idx];
   for (const auto &lift : lifts)
-    lift.draw(scene, level.drawing_meters_per_pixel, level.name);
+  {
+    // find the level index referenced by the lift
+    int reference_floor_idx = -1;
+    for (size_t i = 0; i < levels.size(); i++)
+      if (levels[i].name == lift.reference_floor_name)
+      {
+        reference_floor_idx = static_cast<int>(i);
+        break;
+      }
+
+    Transform t;
+    if (reference_floor_idx >= 0)
+      t = get_transform(reference_floor_idx, level_idx);
+
+    lift.draw(
+        scene,
+        level.drawing_meters_per_pixel,
+        level.name,
+        true,
+        t.scale,
+        t.dx,
+        t.dy);
+  }
+}
+
+bool Map::transform_between_levels(
+    const std::string& from_level_name,
+    const QPointF& from_point,
+    const std::string& to_level_name,
+    QPointF& to_point)
+{
+  int from_level_idx = -1;
+  int to_level_idx = -1;
+  for (size_t i = 0; i < levels.size(); i++)
+  {
+    if (levels[i].name == from_level_name)
+      from_level_idx = i;
+    if (levels[i].name == to_level_name)
+      to_level_idx = i;
+  }
+  if (from_level_idx < 0 || to_level_idx < 0)
+  {
+    to_point = from_point;
+    return false;
+  }
+  return transform_between_levels(
+      from_level_idx,
+      from_point,
+      to_level_idx,
+      to_point);
+}
+
+bool Map::transform_between_levels(
+    const int from_level_idx,
+    const QPointF& from_point,
+    const int to_level_idx,
+    QPointF& to_point)
+{
+
+  if (from_level_idx < 0 ||
+      from_level_idx >= static_cast<int>(levels.size()) ||
+      to_level_idx < 0 ||
+      to_level_idx >= static_cast<int>(levels.size()))
+  {
+    to_point = from_point;
+    return false;
+  }
+
+  const Transform t = get_transform(from_level_idx, to_level_idx);
+
+  to_point.rx() = t.scale * from_point.x() + t.dx;
+  to_point.ry() = t.scale * from_point.y() + t.dy;
+  return true;
+}
+
+void Map::clear_transform_cache()
+{
+  transforms.clear();
+}
+
+Map::Transform Map::compute_transform(
+    const int from_level_idx,
+    const int to_level_idx)
+{
+  printf("\n\ncomputing transform from level %d to level %d\n",
+      from_level_idx,
+      to_level_idx);
+  // this internal function assumes that bounds checking has already happened
+  const Level& from_level = levels[from_level_idx];
+  const Level& to_level = levels[to_level_idx];
+
+  // assemble a vector of fudicials in common to these levels
+  vector< std::pair<Fiducial, Fiducial> > fiducials;
+  for (const Fiducial& f0 : from_level.fiducials)
+    for (const Fiducial& f1 : to_level.fiducials)
+      if (f0.name == f1.name)
+      {
+        fiducials.push_back(make_pair(f0, f1));
+        break;
+      }
+
+  // calculate the distances between each fiducial on their levels
+  vector< std::pair <double, double > > distances;
+  for (size_t f0_idx = 0; f0_idx < fiducials.size(); f0_idx++)
+    for (size_t f1_idx = f0_idx + 1; f1_idx < fiducials.size(); f1_idx++)
+      distances.push_back(
+          make_pair(
+              fiducials[f0_idx].first.distance(fiducials[f1_idx].first),
+              fiducials[f0_idx].second.distance(fiducials[f1_idx].second)));
+
+  // for now, we'll just compute the mean of the relative scale estimates.
+  // we can do fancier statistics later, if needed.
+  double relative_scale_sum = 0;
+  for (size_t i = 0; i < distances.size(); i++)
+    relative_scale_sum += distances[i].second / distances[i].first;
+  const double scale = relative_scale_sum / distances.size();
+
+  // scale the fiducials and estimate the "optimal" translation.
+  // for now, we'll just use the mean of the translation estimates.
+  double trans_x_sum = 0;
+  double trans_y_sum = 0;
+  for (const auto& fiducial : fiducials)
+  {
+    trans_x_sum += fiducial.second.x - fiducial.first.x * scale;
+    trans_y_sum += fiducial.second.y - fiducial.first.y * scale;
+  }
+  const double trans_x = trans_x_sum / fiducials.size();
+  const double trans_y = trans_y_sum / fiducials.size();
+
+  Map::Transform t;
+  t.scale = scale;
+  t.dx = trans_x;
+  t.dy = trans_y;
+
+  printf("transform estimate: scale = %.5f   translation = (%.2f, %.2f)\n",
+      t.scale,
+      t.dx,
+      t.dy);
+
+  return t;
+}
+
+Map::Transform Map::get_transform(
+      const int from_level_idx,
+      const int to_level_idx)
+{
+  // this operation is a bit "heavy" so we'll cache the transformations
+  // as they are computed
+  LevelPair level_pair;
+  level_pair.from_idx = from_level_idx;
+  level_pair.to_idx = to_level_idx;
+
+  TransformMap::iterator transform_it = transforms.find(level_pair);
+  Transform t;
+
+  if (transform_it == transforms.end())
+  {
+    // the transform wasn't in the cache, so we need to actually compute it now
+    t = compute_transform(from_level_idx, to_level_idx);
+    transforms[level_pair] = t;
+  }
+  else
+    t = transform_it->second;
+
+  return t;
 }

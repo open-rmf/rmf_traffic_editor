@@ -79,3 +79,10 @@ void Fiducial::draw(
     item->setPos(x, y + radius);
   }
 }
+
+double Fiducial::distance(const Fiducial& f)
+{
+  const double dx = f.x - x;
+  const double dy = f.y - y;
+  return sqrt(dx*dx + dy*dy);
+}

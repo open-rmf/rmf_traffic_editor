@@ -42,6 +42,8 @@ public:
   YAML::Node to_yaml() const;
 
   void draw(QGraphicsScene *, const double meters_per_pixel) const;
+
+  double distance(const Fiducial& f);
 };
 
 #endif

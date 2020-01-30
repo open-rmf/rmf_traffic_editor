@@ -78,8 +78,38 @@ Editor::Editor(QWidget *parent)
       [=](int row, int /*col*/) {
         if (row < static_cast<int>(map.levels.size()))
         {
+          // save the center point of the current level's image coordinates
+          const QPoint p_center_window(
+              map_view->viewport()->width() / 2,
+              map_view->viewport()->height() / 2);
+          const QPointF p_center_scene = map_view->mapToScene(p_center_window);
+          // printf("p_center_scene: (%.1f, %.1f)\n",
+          //   p_center_scene.x(), p_center_scene.y());
+
+          QPointF p_transformed;
+          map.transform_between_levels(
+              level_idx,
+              p_center_scene,
+              row,
+              p_transformed);
+          // printf("p_transformed: (%.1f, %.1f)\n",
+          //     p_transformed.x(),
+          //     p_transformed.y());
+          
+          // maintain the view scale
+          const double prev_scale = map_view->transform().m11();
+
+          const double scale = prev_scale *
+              map.levels[row].drawing_meters_per_pixel /
+              map.levels[level_idx].drawing_meters_per_pixel;
+
           level_idx = row;
           create_scene();
+
+          QTransform t;
+          t.scale(scale, scale);
+          map_view->setTransform(t);
+          map_view->centerOn(p_transformed);
         }
       });
 
@@ -1380,8 +1410,14 @@ void Editor::mouse_select(
   {
     // use the QGraphics stuff to see if it's an edge segment or polygon
     QGraphicsItem *item = map_view->itemAt(p.x(), p.y());
+    if (item)
+    {
+      printf("clicked something: type = %d\n", static_cast<int>(item->type()));
+    }
+
     if (item && item->type() == QGraphicsLineItem::Type)
     {
+      printf("clicked line\n");
       set_selected_line_item(
           qgraphicsitem_cast<QGraphicsLineItem *>(item));
     }

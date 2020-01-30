@@ -113,7 +113,10 @@ void Lift::draw(
     QGraphicsScene *scene,
     const double meters_per_pixel,
     const string& /*level_name*/,
-    const bool apply_transformation) const
+    const bool apply_transformation,
+    const double scale,
+    const double translate_x,
+    const double translate_y) const
 {
   const double cabin_w = width / meters_per_pixel;
   const double cabin_d = depth / meters_per_pixel;
@@ -172,7 +175,7 @@ void Lift::draw(
   if (apply_transformation)
   {
     group->setRotation(-180.0 / 3.1415926 * yaw);
-    group->setPos(x, y);
+    group->setPos(x * scale + translate_x, y * scale + translate_y);
   }
 }
 
