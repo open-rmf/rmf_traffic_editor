@@ -58,6 +58,9 @@ void Map::load_yaml(const string &filename)
   if (y["building_name"])
     building_name = y["building_name"].as<string>();
 
+  if (y["reference_level_name"])
+    reference_level_name = y["reference_level_name"].as<string>();
+
   if (!y["levels"] || !y["levels"].IsMap())
     throw std::runtime_error("expected top-level dictionary named 'levels'");
 
@@ -90,6 +93,9 @@ bool Map::save_yaml(const std::string &filename)
 
   YAML::Node y;
   y["building_name"] = building_name;
+
+  if (!reference_level_name.empty())
+    y["reference_level_name"] = reference_level_name;
 
   y["levels"] = YAML::Node(YAML::NodeType::Map);
   for (const auto &level : levels)

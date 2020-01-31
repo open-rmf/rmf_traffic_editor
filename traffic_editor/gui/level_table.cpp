@@ -22,7 +22,8 @@
 LevelTable::LevelTable()
 : TableList(5)
 {
-  const QStringList labels = { "Name", "Scale", "Meas", "Fiducials", "" };
+  const QStringList labels =
+      { "Name", "Elevation", "Scale", "Translation", "" };
   setHorizontalHeaderLabels(labels);
 }
 
@@ -46,11 +47,29 @@ void LevelTable::update(Map& map)
         i,
         1,
         new QTableWidgetItem(
+            QString::number(map.levels[i].elevation, 'g', 1)));
+
+    setItem(
+        i,
+        2,
+        new QTableWidgetItem(
             QString::number(
                 map.levels[i].drawing_meters_per_pixel,
                 'g',
                 4)));
 
+    QString translation_string;
+    if (map.levels[i].name == map.reference_level_name)
+    {
+      translation_string = "[reference]";
+    }
+    else
+    {
+    }
+
+    setItem(i, 3, new QTableWidgetItem(translation_string));
+
+    /*
     int nmeas = 0;
     for (const auto& edge : map.levels[i].edges)
       if (edge.type == Edge::MEAS)
@@ -62,6 +81,7 @@ void LevelTable::update(Map& map)
         3,
         new QTableWidgetItem(
             QString::number(map.levels[i].fiducials.size())));
+    */
 
     QPushButton *edit_button = new QPushButton("Edit...", this);
     setCellWidget(i, 4, edit_button);

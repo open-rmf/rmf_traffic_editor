@@ -44,6 +44,7 @@ public:
   std::string building_name;
   std::vector<Level> levels;
   std::vector<Lift> lifts;
+  std::string reference_level_name;
   bool changed;  // true if map changed since last save/open
 
   void add_level(const Level &level);

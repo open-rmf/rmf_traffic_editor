@@ -32,12 +32,15 @@ MapDialog::MapDialog(Map& map)
       this);
   building_name_hbox->addWidget(_building_name_line_edit);
 
-  /////////////////////////////////////////////
-
-  // TODO: combo box to select the reference level used to derive the
-  // coordinate system of the generated model(s)
-
-  /////////////////////////////////////////////
+  QHBoxLayout *reference_level_hbox = new QHBoxLayout;
+  reference_level_hbox->addWidget(new QLabel("Reference level:"));
+  _reference_floor_combo_box = new QComboBox;
+  for (const auto& level : map.levels)
+    _reference_floor_combo_box->addItem(QString::fromStdString(level.name));
+  if (!map.levels.empty() && !map.reference_level_name.empty())
+    _reference_floor_combo_box->setCurrentText(
+        QString::fromStdString(map.reference_level_name));
+  reference_level_hbox->addWidget(_reference_floor_combo_box);
 
   QHBoxLayout *bottom_buttons_hbox = new QHBoxLayout;
   bottom_buttons_hbox->addWidget(_cancel_button);
@@ -52,6 +55,7 @@ MapDialog::MapDialog(Map& map)
   QVBoxLayout *top_vbox = new QVBoxLayout;
 
   top_vbox->addLayout(building_name_hbox);
+  top_vbox->addLayout(reference_level_hbox);
   // todo: some sort of separator (?)
   top_vbox->addLayout(bottom_buttons_hbox);
 
@@ -65,5 +69,7 @@ MapDialog::~MapDialog()
 void MapDialog::ok_button_clicked()
 {
   _map.building_name = _building_name_line_edit->text().toStdString();
+  _map.reference_level_name =
+      _reference_floor_combo_box->currentText().toStdString();
   accept();
 }

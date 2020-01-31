@@ -31,7 +31,7 @@ AddParamDialog::AddParamDialog(
   QHBoxLayout *name_hbox_layout = new QHBoxLayout;
   name_hbox_layout->addWidget(new QLabel("name:"));
   name_combo_box = new QComboBox;
-  for (const auto & param_name : param_names)
+  for (const auto& param_name : param_names)
     name_combo_box->addItem(QString::fromStdString(param_name.first));
   name_hbox_layout->addWidget(name_combo_box);
 
