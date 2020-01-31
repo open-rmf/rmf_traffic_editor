@@ -397,6 +397,7 @@ void Editor::new_map()
   map.clear();
   create_scene();
   save();
+  populate_levels_table();
 
   QSettings settings;
   settings.setValue(
@@ -875,6 +876,8 @@ void Editor::delete_param_button_clicked()
 
 void Editor::populate_layers_table()
 {
+  if (map.levels.empty())
+    return;  // let's not crash...
   const Level &level = map.levels[level_idx];
   layers_table->blockSignals(true);  // otherwise we get tons of callbacks
   layers_table->setRowCount(2 + level.layers.size());

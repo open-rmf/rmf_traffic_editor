@@ -33,11 +33,13 @@ Starting the editor with `./traffic-editor` should bring up a blank window.
 
 Click `File->New...` and save your new map as something like `test`
 
-Click `Level->Add...` to create a new level, calling it something like `L1`
+Click the "Add..." button in the "levels" tab in the upper-right of the
+main editor window. This will pop up a dialog where you can create a new
+level, calling it something like `L1`.
 
-Then you should be able to click the `add vertex` tool (or press `V`) and
-click a few vertices in the white area. You can use the mouse wheel to zoom,
-and drag with the middle-button (wheel) to pan.
+Then you should be able to click the green dot toolbar icon, which is the "Add
+Vertex" tool (or press `V`) and click a few vertices in the white area. You can
+use the mouse wheel to zoom, and drag with the middle-button (wheel) to pan.
 
 Then you should be able to click the `add lane` tool (or press `L`) and
 drag from one vertex to another vertex to add a traffic lane.
@@ -49,7 +51,7 @@ To set the scale of the drawing, click the `add measurement` tool (or
 press `M`) and drag from one vertex to another to add a real-world measurement
 line, which should show up as a pink line. Then click the `select` tool (or
 press `Esc`) and click on the line with the left button. This should populate
-the property-editor in the rightmost pane of the editor window. You can then
+the property-editor in the lower-right pane of the editor window. You can then
 specify the real-world length of the measurement line in meters. If you set
 more than one measurement line on a drawing, the editor will compute an average
 value of pixels-per-meter from all supplied measurements.
