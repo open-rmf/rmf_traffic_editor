@@ -110,6 +110,12 @@ Editor::Editor(QWidget *parent)
         }
       });
 
+  connect(
+      level_table,
+      &LevelTable::redraw_scene,
+      this,
+      &Editor::create_scene);
+
   lift_table = new LiftTable;
   connect(
       lift_table, &TableList::redraw,
@@ -397,7 +403,7 @@ void Editor::new_map()
   map.clear();
   create_scene();
   save();
-  populate_levels_table();
+  level_table->update(map);
 
   QSettings settings;
   settings.setValue(

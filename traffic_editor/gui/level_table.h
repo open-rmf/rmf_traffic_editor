@@ -25,11 +25,16 @@
 
 class LevelTable : public TableList
 {
+  Q_OBJECT
+
 public:
   LevelTable();
   ~LevelTable();
 
   void update(Map& map);
+
+signals:
+  void redraw_scene();
 };
 
 #endif

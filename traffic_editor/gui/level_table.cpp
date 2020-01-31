@@ -96,6 +96,7 @@ void LevelTable::update(Map& map)
         if (level_dialog.exec() == QDialog::Accepted)
         {
           map.add_level(level);
+          emit redraw_scene();
           setWindowModified(true);
         }
       });
