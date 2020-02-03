@@ -683,11 +683,13 @@ void Editor::tool_toggled(int id, bool checked)
 
   tool_id = id;
 
+  /*
   // set the cursor
   Qt::CursorShape cursor = Qt::ArrowCursor;
   if (tool_id == TOOL_ADD_VERTEX)
     cursor = Qt::CrossCursor;
   map_view->setCursor(cursor);
+  */
 
   // set the status bar
   switch (id)
@@ -1305,7 +1307,8 @@ void Editor::set_selected_line_item(QGraphicsLineItem *line_item)
   for (auto &edge : map.levels[level_idx].edges) {
     const auto &v_start = map.levels[level_idx].vertices[edge.start_idx];
     const auto &v_end = map.levels[level_idx].vertices[edge.end_idx];
-    if (line_vertices_match(line_item, v_start, v_end, 10.0)) {
+    if (line_vertices_match(line_item, v_start, v_end, 10.0))
+    {
       edge.selected = true;
       return;  // stop after first one is found, don't select multiple
     }
@@ -1343,7 +1346,7 @@ bool Editor::line_vertices_match(
 ///////////////////////////////////////////////////////////////////////
 
 void Editor::mouse_select(
-    const MouseType type, QMouseEvent *, const QPointF &p)
+    const MouseType type, QMouseEvent *e, const QPointF &p)
 {
   if (type != MOUSE_PRESS)
     return;
@@ -1368,28 +1371,39 @@ void Editor::mouse_select(
   }
   else
   {
+    const QPoint p_global = mapToGlobal(e->pos());
+    const QPoint p_map = map_view->mapFromGlobal(p_global);
+
     // use the QGraphics stuff to see if it's an edge segment or polygon
-    QGraphicsItem *item = map_view->itemAt(p.x(), p.y());
+    QGraphicsItem *item = map_view->itemAt(p_map);
     if (item)
     {
-      printf("clicked something: type = %d\n", static_cast<int>(item->type()));
-    }
-
-    if (item && item->type() == QGraphicsLineItem::Type)
-    {
-      printf("clicked line\n");
-      set_selected_line_item(
-          qgraphicsitem_cast<QGraphicsLineItem *>(item));
-    }
-    else if (item && item->type() == QGraphicsPolygonItem::Type)
-    {
-      polygon_idx = get_polygon_idx(p.x(), p.y());
-      if (polygon_idx < 0)
-        return;  // didn't click on a polygon
-      Polygon &polygon = map.levels[level_idx].polygons[polygon_idx];
-      polygon.selected = true;
-      for (const auto &vertex_idx : polygon.vertices)
-        map.levels[level_idx].vertices[vertex_idx].selected = true;
+      switch (item->type())
+      {
+        case QGraphicsLineItem::Type:
+          printf("clicked line\n");
+          set_selected_line_item(
+              qgraphicsitem_cast<QGraphicsLineItem *>(item));
+          break;
+  
+        case QGraphicsPolygonItem::Type:
+        { // need new scope due to 'for' iterator variable
+          printf("clicked polygon\n");
+          polygon_idx = get_polygon_idx(p.x(), p.y());
+          if (polygon_idx < 0)
+            return;  // didn't click on a polygon
+          Polygon &polygon = map.levels[level_idx].polygons[polygon_idx];
+          polygon.selected = true;
+          for (const auto &vertex_idx : polygon.vertices)
+            map.levels[level_idx].vertices[vertex_idx].selected = true;
+          break;
+        }
+  
+        default:
+          printf("clicked unhandled type: %d\n",
+              static_cast<int>(item->type()));
+          break;
+      }
     }
   }
   // todo: be smarter and go find the actual GraphicsItem to avoid

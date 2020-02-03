@@ -54,7 +54,7 @@ void MapView::mousePressEvent(QMouseEvent *e)
     is_panning = true;
     pan_start_x = e->x();
     pan_start_y = e->y();
-    setCursor(Qt::ClosedHandCursor);
+    // setCursor(Qt::ClosedHandCursor);
     e->accept();
     return;
   }
