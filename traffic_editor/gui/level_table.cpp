@@ -20,10 +20,10 @@
 #include <QtWidgets>
 
 LevelTable::LevelTable()
-: TableList(5)
+: TableList(6)
 {
   const QStringList labels =
-      { "Name", "Elevation", "Scale", "Translation", "" };
+      { "Name", "Scale", "X", "Y", "Z", "" };
   setHorizontalHeaderLabels(labels);
 }
 
@@ -36,38 +36,36 @@ void LevelTable::update(Map& map)
   blockSignals(true);  // avoid tons of callbacks
 
   setRowCount(1 + map.levels.size());
+  const int reference_level_idx = map.get_reference_level_idx();
+
   for (size_t i = 0; i < map.levels.size(); i++)
   {
-    setItem(
-        i,
-        0,
-        new QTableWidgetItem(QString::fromStdString(map.levels[i].name)));
+    QTableWidgetItem *name_item = 
+        new QTableWidgetItem(QString::fromStdString(map.levels[i].name));
+    setItem(i, 0, name_item);
+
+    if (static_cast<int>(i) == reference_level_idx)
+      name_item->setBackground(QBrush(QColor("#e0ffe0")));
 
     setItem(
         i,
         1,
         new QTableWidgetItem(
-            QString::number(map.levels[i].elevation, 'g', 1)));
+            QString::number(
+                map.levels[i].drawing_meters_per_pixel,
+                'f',
+                4)));
+
+    Map::Transform t = map.get_transform(reference_level_idx, i);
+
+    setItem(i, 2, new QTableWidgetItem(QString::number(t.dx, 'f', 1)));
+    setItem(i, 3, new QTableWidgetItem(QString::number(t.dy, 'f', 1)));
 
     setItem(
         i,
-        2,
+        4,
         new QTableWidgetItem(
-            QString::number(
-                map.levels[i].drawing_meters_per_pixel,
-                'g',
-                4)));
-
-    QString translation_string;
-    if (map.levels[i].name == map.reference_level_name)
-    {
-      translation_string = "[reference]";
-    }
-    else
-    {
-    }
-
-    setItem(i, 3, new QTableWidgetItem(translation_string));
+            QString::number(map.levels[i].elevation, 'f', 1)));
 
     /*
     int nmeas = 0;
@@ -84,7 +82,7 @@ void LevelTable::update(Map& map)
     */
 
     QPushButton *edit_button = new QPushButton("Edit...", this);
-    setCellWidget(i, 4, edit_button);
+    setCellWidget(i, 5, edit_button);
     edit_button->setStyleSheet("QTableWidgetItem { background-color: red; }");
 
     connect(
@@ -106,7 +104,7 @@ void LevelTable::update(Map& map)
   // we'll use the last row for the "Add" button
   setCellWidget(last_row_idx, 0, nullptr);
   QPushButton *add_button = new QPushButton("Add...", this);
-  setCellWidget(last_row_idx, 4, add_button);
+  setCellWidget(last_row_idx, 5, add_button);
   connect(
       add_button, &QAbstractButton::clicked,
       [this, &map]()

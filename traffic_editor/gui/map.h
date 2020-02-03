@@ -158,6 +158,8 @@ public:
 
   void calculate_all_transforms();
 
+  int get_reference_level_idx();
+
 private:
   // Recursive function to write YAML ordered maps. Credit: Dave Hershberger
   void write_yaml_node(const YAML::Node& node, YAML::Emitter& emitter);
