@@ -419,12 +419,11 @@ class Level:
                 if l.orientation():
                     p['orientation_constraint'] = l.orientation()
 
-                # ABOMINATION
                 if 'demo_mock_floor_name' in l.params and \
                         l.params['demo_mock_floor_name'].value:
                     p['demo_mock_floor_name'] = \
                         l.params['demo_mock_floor_name'].value
-                # ANOTHER ABOMINATION
+                        
                 if 'demo_mock_lift_name' in l.params and \
                         l.params['demo_mock_lift_name'].value:
                     p['demo_mock_lift_name'] = \
