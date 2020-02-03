@@ -56,15 +56,15 @@ class Level:
             p.x *= self.scale
             p.y *= self.scale
 
-        self.lanes = None
+        self.lanes = []
         if 'lanes' in yaml_node:
             self.lanes = self.parse_edge_sequence(yaml_node['lanes'])
 
-        self.walls = None
+        self.walls = []
         if 'walls' in yaml_node:
             self.walls = self.parse_edge_sequence(yaml_node['walls'])
 
-        self.doors = None
+        self.doors = []
         if 'doors' in yaml_node:
             self.doors = self.parse_edge_sequence(yaml_node['doors'])
 
@@ -217,10 +217,9 @@ class Level:
         self.generate_wall_visual_mesh(model_name, model_path)
 
         wall_cnt = 0
-        if self.walls:
-            for wall in self.walls:
-                wall_cnt += 1
-                self.generate_wall(wall, link_ele, wall_cnt)
+        for wall in self.walls:
+            wall_cnt += 1
+            self.generate_wall(wall, link_ele, wall_cnt)
 
     def generate_sdf_models(self, world_ele):
         model_cnt = 0
@@ -234,9 +233,8 @@ class Level:
                 self.generate_robot_at_vertex_idx(vertex_idx, world_ele)
 
     def generate_doors(self, world_ele):
-        if self.doors:
-            for door in self.doors:
-                self.generate_door(door, world_ele)
+        for door in self.doors:
+            self.generate_door(door, world_ele)
 
     def generate_door(self, door_edge, world_ele):
         door_name = door_edge.params['name'].value
@@ -262,13 +260,12 @@ class Level:
 
         yaw = 0
         # find the first vertex connected by a lane to this vertex
-        if self.lanes:
-            for lane in self.lanes:
-                if vertex_idx == lane.start_idx or vertex_idx == lane.end_idx:
-                    yaw = self.edge_heading(lane)
-                    if lane.orientation() == 'backward':
-                        yaw += math.pi
-                    break
+        for lane in self.lanes:
+            if vertex_idx == lane.start_idx or vertex_idx == lane.end_idx:
+                yaw = self.edge_heading(lane)
+                if lane.orientation() == 'backward':
+                    yaw += math.pi
+                break
 
         include_ele = SubElement(world_ele, 'include')
         name_ele = SubElement(include_ele, 'name')
@@ -367,18 +364,17 @@ class Level:
         next_idx = 0
         vidx_to_mapped_idx = {}
         mapped_idx_to_vidx = {}
-        if self.lanes:
-            for l in self.lanes:
-                if l.params['graph_idx'].value != graph_idx:
-                    continue
-                if l.start_idx not in vidx_to_mapped_idx:
-                    vidx_to_mapped_idx[l.start_idx] = next_idx
-                    mapped_idx_to_vidx[next_idx] = l.start_idx
-                    next_idx += 1
-                if l.end_idx not in vidx_to_mapped_idx:
-                    vidx_to_mapped_idx[l.end_idx] = next_idx
-                    mapped_idx_to_vidx[next_idx] = l.end_idx
-                    next_idx += 1
+        for l in self.lanes:
+            if l.params['graph_idx'].value != graph_idx:
+                continue
+            if l.start_idx not in vidx_to_mapped_idx:
+                vidx_to_mapped_idx[l.start_idx] = next_idx
+                mapped_idx_to_vidx[next_idx] = l.start_idx
+                next_idx += 1
+            if l.end_idx not in vidx_to_mapped_idx:
+                vidx_to_mapped_idx[l.end_idx] = next_idx
+                mapped_idx_to_vidx[next_idx] = l.end_idx
+                next_idx += 1
         # print(vidx_to_mapped_idx)
         # print(mapped_idx_to_vidx)
 
@@ -393,80 +389,78 @@ class Level:
             nav_data['vertices'].append([v.x, v.y, p])
 
         nav_data['lanes'] = []
-        if self.lanes:
-            for l in self.lanes:
-                if l.params['graph_idx'].value != graph_idx:
-                    continue
-                v1 = self.vertices[l.start_idx]
-                v2 = self.vertices[l.end_idx]
+        for l in self.lanes:
+            if l.params['graph_idx'].value != graph_idx:
+                continue
+            v1 = self.vertices[l.start_idx]
+            v2 = self.vertices[l.end_idx]
 
-                start_idx = vidx_to_mapped_idx[l.start_idx]
-                end_idx = vidx_to_mapped_idx[l.end_idx]
+            start_idx = vidx_to_mapped_idx[l.start_idx]
+            end_idx = vidx_to_mapped_idx[l.end_idx]
 
-                p = {}  # params
+            p = {}  # params
 
-                # todo: calculate if this lane segment goes through
-                # any doors, and add the name of the door if so
-                if self.doors:
-                    for door in self.doors:
-                        door_v1 = self.vertices[door.start_idx]
-                        door_v2 = self.vertices[door.end_idx]
-                        door_name = door.params['name'].value
-                        if self.segments_intersect(v1, v2, door_v1, door_v2):
-                            print(f'found intersection with door {door_name}!')
-                            p['door_name'] = door_name
+            # todo: calculate if this lane segment goes through
+            # any doors, and add the name of the door if so
+            for door in self.doors:
+                door_v1 = self.vertices[door.start_idx]
+                door_v2 = self.vertices[door.end_idx]
+                door_name = door.params['name'].value
+                if self.segments_intersect(v1, v2, door_v1, door_v2):
+                    print(f'found intersection with door {door_name}!')
+                    p['door_name'] = door_name
+
+            if l.orientation():
+                p['orientation_constraint'] = l.orientation()
+
+            if 'demo_mock_floor_name' in l.params and \
+                    l.params['demo_mock_floor_name'].value:
+                p['demo_mock_floor_name'] = \
+                    l.params['demo_mock_floor_name'].value
+                    
+            if 'demo_mock_lift_name' in l.params and \
+                    l.params['demo_mock_lift_name'].value:
+                p['demo_mock_lift_name'] = \
+                    l.params['demo_mock_lift_name'].value
+
+            dock_name = None
+            dock_at_end = True
+            if 'dock_name' in v2.params:  # lane segment will end at dock
+                dock_name = v2.params['dock_name'].value
+            elif 'dock_name' in v1.params:
+                dock_name = v1.params['dock_name'].value
+                dock_at_end = False
+
+            if always_unidirectional and l.is_bidirectional():
+                # now flip things around and make the second link
+                forward_params = copy.deepcopy(p)
+                backward_params = copy.deepcopy(p)
+
+                # we need to create two unidirectional lane segments
+                # todo: clean up this logic, it's overly spaghetti
+                if dock_name:
+                    if dock_at_end:
+                        forward_params['dock_name'] = dock_name
+                    else:
+                        forward_params['undock_name'] = dock_name
+                nav_data['lanes'].append([start_idx, end_idx, forward_params])
+
+                if dock_name:
+                    if dock_at_end:
+                        backward_params['undock_name'] = dock_name
+                    else:
+                        backward_params['dock_name'] = dock_name
 
                 if l.orientation():
-                    p['orientation_constraint'] = l.orientation()
-
-                if 'demo_mock_floor_name' in l.params and \
-                        l.params['demo_mock_floor_name'].value:
-                    p['demo_mock_floor_name'] = \
-                        l.params['demo_mock_floor_name'].value
-                        
-                if 'demo_mock_lift_name' in l.params and \
-                        l.params['demo_mock_lift_name'].value:
-                    p['demo_mock_lift_name'] = \
-                        l.params['demo_mock_lift_name'].value
-
-                dock_name = None
-                dock_at_end = True
-                if 'dock_name' in v2.params:  # lane segment will end at dock
-                    dock_name = v2.params['dock_name'].value
-                elif 'dock_name' in v1.params:
-                    dock_name = v1.params['dock_name'].value
-                    dock_at_end = False
-
-                if always_unidirectional and l.is_bidirectional():
-                    # now flip things around and make the second link
-                    forward_params = copy.deepcopy(p)
-                    backward_params = copy.deepcopy(p)
-
-                    # we need to create two unidirectional lane segments
-                    # todo: clean up this logic, it's overly spaghetti
-                    if dock_name:
-                        if dock_at_end:
-                            forward_params['dock_name'] = dock_name
-                        else:
-                            forward_params['undock_name'] = dock_name
-                    nav_data['lanes'].append([start_idx, end_idx, forward_params])
-
-                    if dock_name:
-                        if dock_at_end:
-                            backward_params['undock_name'] = dock_name
-                        else:
-                            backward_params['dock_name'] = dock_name
-
-                    if l.orientation():
-                        backward_params['orientation_constraint'] = \
-                            l.reverse_orientation()
-                    nav_data['lanes'].append([end_idx, start_idx, backward_params])
-                else:
-                    # ensure the directionality parameter is set
-                    p['is_bidirectional'] = l.is_bidirectional()
-                    if dock_name:
-                        p['dock_name'] = dock_name
-                    nav_data['lanes'].append([start_idx, end_idx, p])
+                    backward_params['orientation_constraint'] = \
+                        l.reverse_orientation()
+                nav_data['lanes'].append([end_idx, start_idx, backward_params])
+            else:
+                # ensure the directionality parameter is set
+                p['is_bidirectional'] = l.is_bidirectional()
+                if dock_name:
+                    p['dock_name'] = dock_name
+                nav_data['lanes'].append([start_idx, end_idx, p])
 
         return nav_data
 
