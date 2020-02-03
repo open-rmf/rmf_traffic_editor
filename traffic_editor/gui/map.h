@@ -44,6 +44,7 @@ public:
   std::string building_name;
   std::vector<Level> levels;
   std::vector<Lift> lifts;
+  std::string reference_level_name;
   bool changed;  // true if map changed since last save/open
 
   void add_level(const Level &level);
@@ -154,6 +155,10 @@ public:
   Transform get_transform(
       const int from_level_idx,
       const int to_level_idx);
+
+  void calculate_all_transforms();
+
+  int get_reference_level_idx();
 
 private:
   // Recursive function to write YAML ordered maps. Credit: Dave Hershberger

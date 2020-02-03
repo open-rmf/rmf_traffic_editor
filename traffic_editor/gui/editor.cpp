@@ -33,6 +33,7 @@
 #include "level_dialog.h"
 #include "layer_dialog.h"
 #include "lift_table.h"
+#include "map_dialog.h"
 #include "model_dialog.h"
 #include "preferences_dialog.h"
 #include "preferences_keys.h"
@@ -71,10 +72,9 @@ Editor::Editor(QWidget *parent)
 
   layers_table = new TableList;  // todo: replace with specific subclass?
 
-  levels_table = new TableList;  // todo: replace with specific subclass?
-  levels_table->setAutoFillBackground(true);
+  level_table = new LevelTable;
   connect(
-      levels_table, &QTableWidget::cellClicked,
+      level_table, &QTableWidget::cellClicked,
       [=](int row, int /*col*/) {
         if (row < static_cast<int>(map.levels.size()))
         {
@@ -92,9 +92,6 @@ Editor::Editor(QWidget *parent)
               p_center_scene,
               row,
               p_transformed);
-          // printf("p_transformed: (%.1f, %.1f)\n",
-          //     p_transformed.x(),
-          //     p_transformed.y());
           
           // maintain the view scale
           const double prev_scale = map_view->transform().m11();
@@ -113,6 +110,12 @@ Editor::Editor(QWidget *parent)
         }
       });
 
+  connect(
+      level_table,
+      &LevelTable::redraw_scene,
+      this,
+      &Editor::create_scene);
+
   lift_table = new LiftTable;
   connect(
       lift_table, &TableList::redraw,
@@ -123,7 +126,7 @@ Editor::Editor(QWidget *parent)
 
   right_tab_widget = new QTabWidget;
   right_tab_widget->setStyleSheet("QTabBar::tab { color: white; }");
-  right_tab_widget->addTab(levels_table, "levels");
+  right_tab_widget->addTab(level_table, "levels");
   right_tab_widget->addTab(layers_table, "layers");
   right_tab_widget->addTab(lift_table, "lifts");
 
@@ -205,6 +208,11 @@ Editor::Editor(QWidget *parent)
 
   // EDIT MENU
   QMenu *edit_menu = menuBar()->addMenu("&Edit");
+  edit_menu->addAction(
+      "&Map properties...",
+      this,
+      &Editor::edit_map_properties);
+  edit_menu->addSeparator();
   edit_menu->addAction("&Preferences...", this, &Editor::edit_preferences);
 
   // VIEW MENU
@@ -255,6 +263,7 @@ Editor::Editor(QWidget *parent)
   tool_button_group->button(TOOL_SELECT)->click();
 
   load_model_names();
+  level_table->setCurrentCell(level_idx, 0);
 }
 
 void Editor::load_model_names()
@@ -352,7 +361,7 @@ bool Editor::load_project(const QString &filename)
   project_filename = filename;
   map_view->zoom_fit(map, level_idx);
   populate_layers_table();
-  populate_levels_table();
+  level_table->update(map);
   lift_table->update(map);
 
   QSettings settings;
@@ -394,7 +403,7 @@ void Editor::new_map()
   map.clear();
   create_scene();
   save();
-  populate_levels_table();
+  level_table->update(map);
 
   QSettings settings;
   settings.setValue(
@@ -465,21 +474,11 @@ void Editor::edit_preferences()
     load_model_names();
 }
 
-void Editor::level_add()
+void Editor::edit_map_properties()
 {
-  if (project_filename.isEmpty()) {
-    QMessageBox::critical(
-        this,
-        "Please save the project file",
-        "Please save the project file before adding a level");
-    return;
-  }
-  Level level;
-  LevelDialog level_dialog(this, level);
-  if (level_dialog.exec() == QDialog::Accepted) {
-    map.add_level(level);
-  }
-  setWindowModified(true);
+  MapDialog map_dialog(map);
+  if (map_dialog.exec() == QDialog::Accepted)
+    setWindowModified(true);
 }
 
 void Editor::zoom_fit()
@@ -684,11 +683,13 @@ void Editor::tool_toggled(int id, bool checked)
 
   tool_id = id;
 
+  /*
   // set the cursor
   Qt::CursorShape cursor = Qt::ArrowCursor;
   if (tool_id == TOOL_ADD_VERTEX)
     cursor = Qt::CrossCursor;
   map_view->setCursor(cursor);
+  */
 
   // set the status bar
   switch (id)
@@ -879,48 +880,6 @@ void Editor::delete_param_button_clicked()
       this,
       "work in progress",
       "TODO: something...sorry. For now, hand-edit the YAML.");
-}
-
-void Editor::populate_levels_table()
-{
-  levels_table->blockSignals(true);  // avoid tons of callbacks
-  levels_table->setRowCount(1 + map.levels.size());
-  for (size_t i = 0; i < map.levels.size(); i++)
-  {
-    const QString level_name(QString::fromStdString(map.levels[i].name));
-
-    QTableWidgetItem *item = new QTableWidgetItem(level_name);
-    levels_table->setItem(i, 0, item);
-
-    QPushButton *edit_button = new QPushButton("Edit...", this);
-    levels_table->setCellWidget(i, 1, edit_button);
-    edit_button->setStyleSheet("QTableWidgetItem { background-color: red; }");
-
-    connect(
-        edit_button, &QAbstractButton::clicked,
-        [=]() {
-          LevelDialog level_dialog(this, map.levels[i]);
-          if (level_dialog.exec() == QDialog::Accepted)
-          {
-            QMessageBox::about(
-                this,
-                "work in progress", "TODO: use this data...sorry.");
-          }
-        });
-  }
-
-  const int last_row_idx = static_cast<int>(map.levels.size());
-  // we'll use the last row for the "Add" button
-  levels_table->setCellWidget(last_row_idx, 0, nullptr);
-  QPushButton *add_button = new QPushButton("Add...", this);
-  levels_table->setCellWidget(last_row_idx, 1, add_button);
-  connect(
-      add_button, &QAbstractButton::clicked,
-      [=]() { this->level_add(); });
-
-  levels_table->setCurrentCell(level_idx, 0);
-
-  levels_table->blockSignals(false);
 }
 
 void Editor::populate_layers_table()
@@ -1348,7 +1307,8 @@ void Editor::set_selected_line_item(QGraphicsLineItem *line_item)
   for (auto &edge : map.levels[level_idx].edges) {
     const auto &v_start = map.levels[level_idx].vertices[edge.start_idx];
     const auto &v_end = map.levels[level_idx].vertices[edge.end_idx];
-    if (line_vertices_match(line_item, v_start, v_end, 10.0)) {
+    if (line_vertices_match(line_item, v_start, v_end, 10.0))
+    {
       edge.selected = true;
       return;  // stop after first one is found, don't select multiple
     }
@@ -1386,7 +1346,7 @@ bool Editor::line_vertices_match(
 ///////////////////////////////////////////////////////////////////////
 
 void Editor::mouse_select(
-    const MouseType type, QMouseEvent *, const QPointF &p)
+    const MouseType type, QMouseEvent *e, const QPointF &p)
 {
   if (type != MOUSE_PRESS)
     return;
@@ -1411,28 +1371,39 @@ void Editor::mouse_select(
   }
   else
   {
+    const QPoint p_global = mapToGlobal(e->pos());
+    const QPoint p_map = map_view->mapFromGlobal(p_global);
+
     // use the QGraphics stuff to see if it's an edge segment or polygon
-    QGraphicsItem *item = map_view->itemAt(p.x(), p.y());
+    QGraphicsItem *item = map_view->itemAt(p_map);
     if (item)
     {
-      printf("clicked something: type = %d\n", static_cast<int>(item->type()));
-    }
-
-    if (item && item->type() == QGraphicsLineItem::Type)
-    {
-      printf("clicked line\n");
-      set_selected_line_item(
-          qgraphicsitem_cast<QGraphicsLineItem *>(item));
-    }
-    else if (item && item->type() == QGraphicsPolygonItem::Type)
-    {
-      polygon_idx = get_polygon_idx(p.x(), p.y());
-      if (polygon_idx < 0)
-        return;  // didn't click on a polygon
-      Polygon &polygon = map.levels[level_idx].polygons[polygon_idx];
-      polygon.selected = true;
-      for (const auto &vertex_idx : polygon.vertices)
-        map.levels[level_idx].vertices[vertex_idx].selected = true;
+      switch (item->type())
+      {
+        case QGraphicsLineItem::Type:
+          printf("clicked line\n");
+          set_selected_line_item(
+              qgraphicsitem_cast<QGraphicsLineItem *>(item));
+          break;
+  
+        case QGraphicsPolygonItem::Type:
+        { // need new scope due to 'for' iterator variable
+          printf("clicked polygon\n");
+          polygon_idx = get_polygon_idx(p.x(), p.y());
+          if (polygon_idx < 0)
+            return;  // didn't click on a polygon
+          Polygon &polygon = map.levels[level_idx].polygons[polygon_idx];
+          polygon.selected = true;
+          for (const auto &vertex_idx : polygon.vertices)
+            map.levels[level_idx].vertices[vertex_idx].selected = true;
+          break;
+        }
+  
+        default:
+          printf("clicked unhandled type: %d\n",
+              static_cast<int>(item->type()));
+          break;
+      }
     }
   }
   // todo: be smarter and go find the actual GraphicsItem to avoid

@@ -36,6 +36,7 @@ class Level;
 #include "./map.h"
 #include "editor_model.h"
 #include "lift_table.h"
+#include "level_table.h"
 
 QT_BEGIN_NAMESPACE
 class QAction;
@@ -103,6 +104,7 @@ private slots:
 private:
   bool maybe_save();
   void edit_preferences();
+  void edit_map_properties();
 
   void level_add();
   void level_edit();
@@ -154,10 +156,8 @@ private:
   void layer_edit_button_clicked(const std::string &label);
   void layer_add_button_clicked();
 
-  QTableWidget *levels_table;
-  void populate_levels_table();
-
   LiftTable *lift_table;
+  LevelTable *level_table;
 
   QTableWidget *property_editor;
   void update_property_editor();

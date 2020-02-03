@@ -58,6 +58,9 @@ void Map::load_yaml(const string &filename)
   if (y["building_name"])
     building_name = y["building_name"].as<string>();
 
+  if (y["reference_level_name"])
+    reference_level_name = y["reference_level_name"].as<string>();
+
   if (!y["levels"] || !y["levels"].IsMap())
     throw std::runtime_error("expected top-level dictionary named 'levels'");
 
@@ -81,6 +84,7 @@ void Map::load_yaml(const string &filename)
     }
   }
 
+  calculate_all_transforms();
   changed = false;
 }
 
@@ -90,6 +94,9 @@ bool Map::save_yaml(const std::string &filename)
 
   YAML::Node y;
   y["building_name"] = building_name;
+
+  if (!reference_level_name.empty())
+    y["reference_level_name"] = reference_level_name;
 
   y["levels"] = YAML::Node(YAML::NodeType::Map);
   for (const auto &level : levels)
@@ -491,9 +498,6 @@ Map::Transform Map::compute_transform(
     const int from_level_idx,
     const int to_level_idx)
 {
-  printf("\n\ncomputing transform from level %d to level %d\n",
-      from_level_idx,
-      to_level_idx);
   // this internal function assumes that bounds checking has already happened
   const Level& from_level = levels[from_level_idx];
   const Level& to_level = levels[to_level_idx];
@@ -541,7 +545,9 @@ Map::Transform Map::compute_transform(
   t.dx = trans_x;
   t.dy = trans_y;
 
-  printf("transform estimate: scale = %.5f   translation = (%.2f, %.2f)\n",
+  printf("transform %d->%d: scale = %.5f translation = (%.2f, %.2f)\n",
+      from_level_idx,
+      to_level_idx,
       t.scale,
       t.dx,
       t.dy);
@@ -564,7 +570,7 @@ Map::Transform Map::get_transform(
 
   if (transform_it == transforms.end())
   {
-    // the transform wasn't in the cache, so we need to actually compute it now
+    // the transform wasn't in the cache, so we need to compute it
     t = compute_transform(from_level_idx, to_level_idx);
     transforms[level_pair] = t;
   }
@@ -572,4 +578,34 @@ Map::Transform Map::get_transform(
     t = transform_it->second;
 
   return t;
+}
+
+void Map::calculate_all_transforms()
+{
+  clear_transform_cache();
+  for (size_t i = 0; i < levels.size(); i++)
+    for (size_t j = 0; j < levels.size(); j++)
+      get_transform(i, j);
+
+  // set drawing scale using this data
+  const int ref_idx = get_reference_level_idx();
+  const double ref_scale = levels[ref_idx].drawing_meters_per_pixel;
+  for (int i = 0; i < static_cast<int>(levels.size()); i++)
+  {
+    if (i != get_reference_level_idx())
+    {
+      Transform t = get_transform(ref_idx, i);
+      levels[i].drawing_meters_per_pixel = ref_scale / t.scale;
+    }
+  }
+}
+
+int Map::get_reference_level_idx()
+{
+  if (reference_level_name.empty())
+    return 0;
+  for (size_t i = 0; i < levels.size(); i++)
+    if (levels[i].name == reference_level_name)
+      return static_cast<int>(i);
+  return 0;
 }

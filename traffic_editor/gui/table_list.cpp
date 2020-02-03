@@ -18,29 +18,38 @@
 #include "table_list.h"
 #include <QtWidgets>
 
-TableList::TableList()
+TableList::TableList(const int num_cols)
 {
   const char *style =
       "QTableWidget { background-color: #e0e0e0; color: black; } "
+      "QHeaderView::section { color: white; } "
       "QLineEdit { background:white; } "
       "QCheckBox { padding-left: 5px; background:white; } "
       "QPushButton { margin: 5px; background-color: #c0c0c0; border: 1px solid black; } "
       "QPushButton:pressed { background-color: #808080; }";
   setStyleSheet(style);
-  setColumnCount(2);
+  setColumnCount(num_cols);
   setMinimumSize(400, 200);
+
+  verticalHeader()->setVisible(false);
+  verticalHeader()->setSectionResizeMode(
+      QHeaderView::ResizeToContents);
+
+  horizontalHeader()->setVisible(true);
+  horizontalHeader()->setDefaultAlignment(Qt::AlignLeft);
+  horizontalHeader()->setSectionResizeMode(
+      0, QHeaderView::Stretch);
+
+  for (int col = 1; col < num_cols; col++)
+    horizontalHeader()->setSectionResizeMode(
+        col,
+        QHeaderView::ResizeToContents);
+
+  setAutoFillBackground(true);
+
   setSizePolicy(
       QSizePolicy::Fixed,
       QSizePolicy::MinimumExpanding);
-  horizontalHeader()->setVisible(false);
-  verticalHeader()->setVisible(false);
-  horizontalHeader()->setSectionResizeMode(
-      0, QHeaderView::Stretch);
-  horizontalHeader()->setSectionResizeMode(
-      1, QHeaderView::ResizeToContents);
-  verticalHeader()->setSectionResizeMode(
-      QHeaderView::ResizeToContents);
-  setAutoFillBackground(true);
 }
 
 TableList::~TableList()

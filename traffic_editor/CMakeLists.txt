@@ -28,12 +28,14 @@ add_executable(traffic-editor
   gui/layer_dialog.cpp
   gui/level.cpp
   gui/level_dialog.cpp
+  gui/level_table.cpp
   gui/lift.cpp
   gui/lift_dialog.cpp
   gui/lift_door.cpp
   gui/lift_table.cpp
   gui/main.cpp
   gui/map.cpp
+  gui/map_dialog.cpp
   gui/map_view.cpp
   gui/model.cpp
   gui/model_dialog.cpp
