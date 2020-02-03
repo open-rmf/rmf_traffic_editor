@@ -56,12 +56,15 @@ class Level:
             p.x *= self.scale
             p.y *= self.scale
 
+        self.lanes = []
         if 'lanes' in yaml_node:
             self.lanes = self.parse_edge_sequence(yaml_node['lanes'])
 
+        self.walls = []
         if 'walls' in yaml_node:
             self.walls = self.parse_edge_sequence(yaml_node['walls'])
 
+        self.doors = []
         if 'doors' in yaml_node:
             self.doors = self.parse_edge_sequence(yaml_node['doors'])
 
@@ -410,12 +413,13 @@ class Level:
             if l.orientation():
                 p['orientation_constraint'] = l.orientation()
 
-            # ABOMINATION
-            if l.params['demo_mock_floor_name'].value:
+            if 'demo_mock_floor_name' in l.params and \
+                    l.params['demo_mock_floor_name'].value:
                 p['demo_mock_floor_name'] = \
                     l.params['demo_mock_floor_name'].value
-            # ANOTHER ABOMINATION
-            if l.params['demo_mock_lift_name'].value:
+                    
+            if 'demo_mock_lift_name' in l.params and \
+                    l.params['demo_mock_lift_name'].value:
                 p['demo_mock_lift_name'] = \
                     l.params['demo_mock_lift_name'].value
 
