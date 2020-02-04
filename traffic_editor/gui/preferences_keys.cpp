@@ -8,3 +8,8 @@ const QString preferences_keys::open_previous_file(
 
 const QString preferences_keys::previous_project_path(
     "editor/previous_project_path");
+
+const QString preferences_keys::width("editor/width");
+const QString preferences_keys::height("editor/height");
+const QString preferences_keys::left("editor/left");
+const QString preferences_keys::top("editor/top");
