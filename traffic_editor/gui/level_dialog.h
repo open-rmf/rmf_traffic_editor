@@ -26,16 +26,17 @@ class QLineEdit;
 class LevelDialog : public QDialog
 {
 public:
-  LevelDialog(Level& _level);
+  LevelDialog(Level& level);
   ~LevelDialog();
  
 private:
-  Level &level;
+  Level &_level;
 
-  QLineEdit *name_line_edit, *drawing_filename_line_edit;
-  QLineEdit *x_line_edit, *y_line_edit;
-  QPushButton *drawing_filename_button;
-  QPushButton *ok_button, *cancel_button;
+  QLineEdit *_name_line_edit, *_drawing_filename_line_edit;
+  QLineEdit *_x_line_edit, *_y_line_edit;
+  QLineEdit *_elevation_line_edit;
+  QPushButton *_drawing_filename_button;
+  QPushButton *_ok_button, *_cancel_button;
 
   void enable_dimensions(const bool enable);
 

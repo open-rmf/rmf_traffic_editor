@@ -30,8 +30,7 @@ using std::make_pair;
 
 
 Map::Map()
-: building_name("building"),
-  changed(false)
+: building_name("building")
 {
 }
 
@@ -85,7 +84,6 @@ void Map::load_yaml(const string &filename)
   }
 
   calculate_all_transforms();
-  changed = false;
 }
 
 bool Map::save_yaml(const std::string &filename)
@@ -111,7 +109,6 @@ bool Map::save_yaml(const std::string &filename)
   std::ofstream fout(filename);
   fout << emitter.c_str() << std::endl;
 
-  changed = false;
   return true;
 }
 
@@ -120,7 +117,6 @@ void Map::add_vertex(int level_index, double x, double y)
   if (level_index >= static_cast<int>(levels.size()))
     return;
   levels[level_index].vertices.push_back(Vertex(x, y));
-  changed = true;
 }
 
 void Map::add_fiducial(int level_index, double x, double y)
@@ -277,7 +273,6 @@ void Map::add_edge(
       static_cast<int>(edge_type));
   levels[level_index].edges.push_back(
       Edge(start_vertex_index, end_vertex_index, edge_type));
-  changed = true;
 }
 
 bool Map::delete_selected(const int level_index)
@@ -289,7 +284,6 @@ bool Map::delete_selected(const int level_index)
   if (!levels[level_index].delete_selected())
     return false;
 
-  changed = true;
   return true;
 }
 
@@ -307,7 +301,6 @@ void Map::add_model(
       level_idx, x, y, yaw, model_name.c_str());
   levels[level_idx].models.push_back(
       Model(x, y, yaw, model_name, model_name));
-  changed = true;
 }
 
 void Map::set_model_yaw(
@@ -319,7 +312,6 @@ void Map::set_model_yaw(
     return;
 
   levels[level_idx].models[model_idx].yaw = yaw;
-  changed = true;
 }
 
 void Map::remove_polygon_vertex(
@@ -330,7 +322,6 @@ void Map::remove_polygon_vertex(
   if (level_idx < 0 || level_idx > static_cast<int>(levels.size()))
     return;  // oh no
   levels[level_idx].remove_polygon_vertex(polygon_idx, vertex_idx);
-  changed = true;
 }
 
 int Map::polygon_edge_drag_press(
@@ -346,7 +337,6 @@ int Map::polygon_edge_drag_press(
 
 void Map::clear()
 {
-  changed = true;
   building_name = "";
   levels.clear();
 }
@@ -357,7 +347,6 @@ void Map::add_level(const Level &new_level)
   for (const auto &level : levels)
     if (level.name == new_level.name)
       return;
-  changed = true;
   levels.push_back(new_level);
 }
 

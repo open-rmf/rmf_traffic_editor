@@ -67,20 +67,6 @@ void LevelTable::update(Map& map)
         new QTableWidgetItem(
             QString::number(map.levels[i].elevation, 'f', 1)));
 
-    /*
-    int nmeas = 0;
-    for (const auto& edge : map.levels[i].edges)
-      if (edge.type == Edge::MEAS)
-        nmeas++;
-    setItem(i, 2, new QTableWidgetItem(QString::number(nmeas)));
-
-    setItem(
-        i,
-        3,
-        new QTableWidgetItem(
-            QString::number(map.levels[i].fiducials.size())));
-    */
-
     QPushButton *edit_button = new QPushButton("Edit...", this);
     setCellWidget(i, 5, edit_button);
     edit_button->setStyleSheet("QTableWidgetItem { background-color: red; }");
@@ -92,11 +78,9 @@ void LevelTable::update(Map& map)
           LevelDialog level_dialog(map.levels[i]);
           if (level_dialog.exec() == QDialog::Accepted)
           {
-            QMessageBox::about(
-                this,
-                "work in progress", "TODO: use this data...sorry.");
-            setWindowModified(true);
+            setWindowModified(true);  // not sure why, but this doesn't work
           }
+          update(map);
         });
   }
 
@@ -114,8 +98,8 @@ void LevelTable::update(Map& map)
         if (level_dialog.exec() == QDialog::Accepted)
         {
           map.add_level(level);
-          emit redraw_scene();
           setWindowModified(true);
+          emit redraw_scene();
         }
       });
 
