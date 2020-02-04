@@ -260,7 +260,27 @@ Editor::Editor(QWidget *parent)
   addToolBar(Qt::TopToolBarArea, toolbar);
 
   // SET SIZE
-  resize(QGuiApplication::primaryScreen()->availableSize() / 2);
+  const int width =
+      settings.contains(preferences_keys::width) ?
+      settings.value(preferences_keys::width).toInt() :
+      QGuiApplication::primaryScreen()->availableSize().width();
+
+  const int height =
+      settings.contains(preferences_keys::height) ?
+      settings.value(preferences_keys::height).toInt() :
+      QGuiApplication::primaryScreen()->availableSize().height();
+
+  const int left =
+      settings.contains(preferences_keys::left) ?
+      settings.value(preferences_keys::left).toInt() :
+      0;
+
+  const int top =
+      settings.contains(preferences_keys::top) ?
+      settings.value(preferences_keys::top).toInt() :
+      0;
+
+  setGeometry(left, top, width, height);
   map_view->adjustSize();
 
   // default tool is the "select" tool
@@ -1916,6 +1936,13 @@ bool Editor::maybe_save()
 
 void Editor::closeEvent(QCloseEvent *event)
 {
+  // save window geometry
+  QSettings settings;
+  settings.setValue(preferences_keys::left, geometry().x());
+  settings.setValue(preferences_keys::top, geometry().y());
+  settings.setValue(preferences_keys::width, geometry().width());
+  settings.setValue(preferences_keys::height, geometry().height());
+
   if (maybe_save())
     event->accept();
   else
