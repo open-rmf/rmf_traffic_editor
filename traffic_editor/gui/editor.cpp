@@ -118,7 +118,8 @@ Editor::Editor(QWidget *parent)
 
   lift_table = new LiftTable;
   connect(
-      lift_table, &TableList::redraw,
+      lift_table,
+      &TableList::redraw,
       [this]()
       {
         this->create_scene();
@@ -132,16 +133,19 @@ Editor::Editor(QWidget *parent)
 
   property_editor = new QTableWidget;
   property_editor->setStyleSheet("QTableWidget { background-color: #e0e0e0; color: black; gridline-color: #606060; } QLineEdit { background:white; }");
-  property_editor->setMinimumSize(400, 200);
-  //property_editor->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Ignored);
-  property_editor->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::MinimumExpanding);
+  property_editor->setMinimumSize(500, 200);
+  property_editor->setSizePolicy(
+      QSizePolicy::Fixed,
+      QSizePolicy::MinimumExpanding);
   property_editor->setColumnCount(2);
   property_editor->horizontalHeader()->setVisible(false);
   property_editor->verticalHeader()->setVisible(false);
   property_editor->horizontalHeader()->setSectionResizeMode(
-      0, QHeaderView::ResizeToContents);
+      0,
+      QHeaderView::ResizeToContents);
   property_editor->horizontalHeader()->setSectionResizeMode(
-      1, QHeaderView::Stretch);
+      1,
+      QHeaderView::Stretch);
   property_editor->verticalHeader()->setSectionResizeMode(
       QHeaderView::ResizeToContents);
   property_editor->setAutoFillBackground(true);
@@ -239,13 +243,13 @@ Editor::Editor(QWidget *parent)
 
   create_tool_button(TOOL_ADD_VERTEX, ":icons/add_vertex.svg", "Add Vertex (V)");
   create_tool_button(TOOL_ADD_FIDUCIAL, ":icons/fiducial.svg", "Add Fiducial");
-  create_tool_button(TOOL_ADD_LANE, "", "");
-  create_tool_button(TOOL_ADD_WALL, "", "");
-  create_tool_button(TOOL_ADD_MEAS, "", "");
-  create_tool_button(TOOL_ADD_DOOR, "", "");
-  create_tool_button(TOOL_ADD_MODEL, "", "");
-  create_tool_button(TOOL_ADD_FLOOR, "", "");
-  create_tool_button(TOOL_EDIT_POLYGON, "", "");
+  create_tool_button(TOOL_ADD_LANE, "", "Add Lane (L)");
+  create_tool_button(TOOL_ADD_WALL, "", "Add Wall (W)");
+  create_tool_button(TOOL_ADD_MEAS, "", "Add Measurement");
+  create_tool_button(TOOL_ADD_DOOR, "", "Add Door");
+  create_tool_button(TOOL_ADD_MODEL, "", "Add Model");
+  create_tool_button(TOOL_ADD_FLOOR, "", "Add Floor Polygon");
+  create_tool_button(TOOL_EDIT_POLYGON, "", "Edit Polygon");
 
   connect(
       tool_button_group,
