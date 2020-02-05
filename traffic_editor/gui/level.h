@@ -22,6 +22,7 @@
 #include <string>
 
 #include "edge.h"
+#include "editor_model.h"
 #include "fiducial.h"
 #include "layer.h"
 #include "model.h"
@@ -63,11 +64,13 @@ public:
       const double x,
       const double y);
 
-  virtual void draw(QGraphicsScene *scene) const = 0;
+  virtual void draw(
+      QGraphicsScene *scene,
+      std::vector<EditorModel>& editor_models) const = 0;
 
   virtual void clear_selection() = 0;
 
-private:
+protected:
   double point_to_line_segment_distance(
       const double x,
       const double y,

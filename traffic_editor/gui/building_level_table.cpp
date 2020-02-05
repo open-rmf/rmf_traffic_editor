@@ -15,11 +15,11 @@
  *
 */
 
-#include "level_table.h"
-#include "level_dialog.h"
+#include "building_level_table.h"
+#include "building_level_dialog.h"
 #include <QtWidgets>
 
-LevelTable::LevelTable()
+BuildingLevelTable::BuildingLevelTable()
 : TableList(6)
 {
   const QStringList labels =
@@ -27,11 +27,11 @@ LevelTable::LevelTable()
   setHorizontalHeaderLabels(labels);
 }
 
-LevelTable::~LevelTable()
+BuildingLevelTable::~BuildingLevelTable()
 {
 }
 
-void LevelTable::update(Building& building)
+void BuildingLevelTable::update(Building& building)
 {
   blockSignals(true);  // avoid tons of callbacks
 
@@ -75,7 +75,7 @@ void LevelTable::update(Building& building)
         edit_button, &QAbstractButton::clicked,
         [this, &building, i]()
         {
-          LevelDialog level_dialog(building.levels[i]);
+          BuildingLevelDialog level_dialog(building.levels[i]);
           if (level_dialog.exec() == QDialog::Accepted)
           {
             setWindowModified(true);  // not sure why, but this doesn't work
@@ -90,11 +90,12 @@ void LevelTable::update(Building& building)
   QPushButton *add_button = new QPushButton("Add...", this);
   setCellWidget(last_row_idx, 5, add_button);
   connect(
-      add_button, &QAbstractButton::clicked,
+      add_button,
+      &QAbstractButton::clicked,
       [this, &building]()
       {
-        Level level;
-        LevelDialog level_dialog(level);
+        BuildingLevel level;
+        BuildingLevelDialog level_dialog(level);
         if (level_dialog.exec() == QDialog::Accepted)
         {
           building.add_level(level);

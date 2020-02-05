@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Open Source Robotics Foundation
+ * Copyright (C) 2019-2020 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,43 +15,46 @@
  *
 */
 
-#include "level_dialog.h"
+#include "building_level_dialog.h"
 #include <QtWidgets>
 
 
-LevelDialog::LevelDialog(Level &level)
-: _level(level)
+BuildingLevelDialog::BuildingLevelDialog(BuildingLevel& _level)
+: building_level(_level)
 {
-  _ok_button = new QPushButton("OK", this);  // first button = [enter] button
-  _cancel_button = new QPushButton("Cancel", this);
+  ok_button = new QPushButton("OK", this);  // first button = [enter] button
+  cancel_button = new QPushButton("Cancel", this);
 
-  _name_line_edit = new QLineEdit(QString::fromStdString(_level.name), this);
+  name_line_edit = new QLineEdit(
+      QString::fromStdString(building_level.name), this);
   QHBoxLayout *name_hbox = new QHBoxLayout;
   name_hbox->addWidget(new QLabel("name:"));
-  name_hbox->addWidget(_name_line_edit);
+  name_hbox->addWidget(name_line_edit);
 
-  _elevation_line_edit = new QLineEdit(
-      QString::number(_level.elevation));  //, 'f', 2));
+  elevation_line_edit = new QLineEdit(
+      QString::number(building_level.elevation));
   QHBoxLayout *elevation_hbox = new QHBoxLayout;
   elevation_hbox->addWidget(new QLabel("elevation:"));
-  elevation_hbox->addWidget(_elevation_line_edit);
+  elevation_hbox->addWidget(elevation_line_edit);
 
-  _drawing_filename_line_edit = new QLineEdit(
-      QString::fromStdString(_level.drawing_filename),
+  drawing_filename_line_edit = new QLineEdit(
+      QString::fromStdString(building_level.drawing_filename),
       this);
-  _drawing_filename_button = new QPushButton("Find...", this);
+  drawing_filename_button = new QPushButton("Find...", this);
   QHBoxLayout *drawing_filename_hbox = new QHBoxLayout;
   drawing_filename_hbox->addWidget(new QLabel("drawing:"));
-  drawing_filename_hbox->addWidget(_drawing_filename_line_edit);
-  drawing_filename_hbox->addWidget(_drawing_filename_button);
+  drawing_filename_hbox->addWidget(drawing_filename_line_edit);
+  drawing_filename_hbox->addWidget(drawing_filename_button);
   connect(
-      _drawing_filename_button, &QAbstractButton::clicked,
-      this, &LevelDialog::drawing_filename_button_clicked);
+      drawing_filename_button,
+      &QAbstractButton::clicked,
+      this,
+      &BuildingLevelDialog::drawing_filename_button_clicked);
   connect(
-      _drawing_filename_line_edit,
+      drawing_filename_line_edit,
       &QLineEdit::textEdited,
       this,
-      &LevelDialog::drawing_filename_line_edited);
+      &BuildingLevelDialog::drawing_filename_line_edited);
 
   QHBoxLayout *instr_hbox = new QHBoxLayout;
   instr_hbox->addWidget(
@@ -59,24 +62,28 @@ LevelDialog::LevelDialog(Level &level)
           "Explicit dimensions are only needed if drawing is not provided:"));
 
   QHBoxLayout *x_hbox = new QHBoxLayout;
-  _x_line_edit = new QLineEdit(QString::number(_level.x_meters), this);
+  x_line_edit = new QLineEdit(QString::number(building_level.x_meters), this);
   x_hbox->addWidget(new QLabel("x dimension (meters):"));
-  x_hbox->addWidget(_x_line_edit);
+  x_hbox->addWidget(x_line_edit);
 
   QHBoxLayout *y_hbox = new QHBoxLayout;
-  _y_line_edit = new QLineEdit(QString::number(_level.y_meters), this);
+  y_line_edit = new QLineEdit(QString::number(building_level.y_meters), this);
   y_hbox->addWidget(new QLabel("y dimension (meters):"));
-  y_hbox->addWidget(_y_line_edit);
+  y_hbox->addWidget(y_line_edit);
 
   QHBoxLayout *bottom_buttons_hbox = new QHBoxLayout;
-  bottom_buttons_hbox->addWidget(_cancel_button);
-  bottom_buttons_hbox->addWidget(_ok_button);
+  bottom_buttons_hbox->addWidget(cancel_button);
+  bottom_buttons_hbox->addWidget(ok_button);
   connect(
-      _ok_button, &QAbstractButton::clicked,
-      this, &LevelDialog::ok_button_clicked);
+      ok_button,
+      &QAbstractButton::clicked,
+      this,
+      &BuildingLevelDialog::ok_button_clicked);
   connect(
-      _cancel_button, &QAbstractButton::clicked,
-      this, &QDialog::reject);
+      cancel_button,
+      &QAbstractButton::clicked,
+      this,
+      &QDialog::reject);
 
   QVBoxLayout *top_vbox = new QVBoxLayout;
   top_vbox->addLayout(name_hbox);
@@ -90,21 +97,21 @@ LevelDialog::LevelDialog(Level &level)
 
   setLayout(top_vbox);
 
-  enable_dimensions(_level.drawing_filename.empty());
+  enable_dimensions(building_level.drawing_filename.empty());
 }
 
-LevelDialog::~LevelDialog()
+BuildingLevelDialog::~BuildingLevelDialog()
 {
 }
 
-void LevelDialog::drawing_filename_button_clicked()
+void BuildingLevelDialog::drawing_filename_button_clicked()
 {
   QFileDialog file_dialog(this, "Find Drawing");
   file_dialog.setFileMode(QFileDialog::ExistingFile);
   file_dialog.setNameFilter("*.png");
   if (file_dialog.exec() != QDialog::Accepted)
   {
-    if (_drawing_filename_line_edit->text().isEmpty())
+    if (drawing_filename_line_edit->text().isEmpty())
       enable_dimensions(true);
     return;  // user clicked 'cancel'
   }
@@ -115,21 +122,21 @@ void LevelDialog::drawing_filename_button_clicked()
         this,
         "Drawing file does not exist",
         "File does not exist.");
-    if (_drawing_filename_line_edit->text().isEmpty())
+    if (drawing_filename_line_edit->text().isEmpty())
       enable_dimensions(true);
     return;
   }
-  _drawing_filename_line_edit->setText(
+  drawing_filename_line_edit->setText(
       QDir::current().relativeFilePath(filename));
   enable_dimensions(false);
 }
 
-void LevelDialog::ok_button_clicked()
+void BuildingLevelDialog::ok_button_clicked()
 {
-  if (!_drawing_filename_line_edit->text().isEmpty())
+  if (!drawing_filename_line_edit->text().isEmpty())
   {
     // make sure the drawing file exists
-    if (!QFileInfo(_drawing_filename_line_edit->text()).exists())
+    if (!QFileInfo(drawing_filename_line_edit->text()).exists())
     {
       QMessageBox::critical(
           this,
@@ -149,47 +156,48 @@ void LevelDialog::ok_button_clicked()
     return;
   }
   */
-  if (_name_line_edit->text().isEmpty()) {
+  if (name_line_edit->text().isEmpty()) {
     QMessageBox::critical(
         this,
         "Name must not be empty",
         "Name must not be empty");
     return;
   }
-  _level.name = _name_line_edit->text().toStdString();
-  _level.elevation = _elevation_line_edit->text().toDouble();
-  _level.drawing_filename = _drawing_filename_line_edit->text().toStdString();
-  if (_level.drawing_filename.empty())
+  building_level.name = name_line_edit->text().toStdString();
+  building_level.elevation = elevation_line_edit->text().toDouble();
+  building_level.drawing_filename =
+      drawing_filename_line_edit->text().toStdString();
+  if (building_level.drawing_filename.empty())
   {
-    _level.x_meters = _x_line_edit->text().toDouble();
-    _level.y_meters = _y_line_edit->text().toDouble();
+    building_level.x_meters = x_line_edit->text().toDouble();
+    building_level.y_meters = y_line_edit->text().toDouble();
   }
   else
   {
-    _level.x_meters = 0.0;
-    _level.y_meters = 0.0;
+    building_level.x_meters = 0.0;
+    building_level.y_meters = 0.0;
   }
-  _level.calculate_scale();
+  building_level.calculate_scale();
   accept();
 }
 
-void LevelDialog::enable_dimensions(const bool enable)
+void BuildingLevelDialog::enable_dimensions(const bool enable)
 {
   if (enable)
   {
-    _x_line_edit->setEnabled(true);
-    _y_line_edit->setEnabled(true);
+    x_line_edit->setEnabled(true);
+    y_line_edit->setEnabled(true);
   }
   else
   {
-    _x_line_edit->setText("10");
-    _y_line_edit->setText("10");
-    _x_line_edit->setEnabled(false);
-    _y_line_edit->setEnabled(false);
+    x_line_edit->setText("10");
+    y_line_edit->setText("10");
+    x_line_edit->setEnabled(false);
+    y_line_edit->setEnabled(false);
   }
 }
 
-void LevelDialog::drawing_filename_line_edited(const QString &text)
+void BuildingLevelDialog::drawing_filename_line_edited(const QString &text)
 {
   enable_dimensions(text.isEmpty());
 }

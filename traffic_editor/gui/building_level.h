@@ -63,7 +63,9 @@ public:
 
   void clear_selection();
 
-  void draw(QGraphicsScene *scene) const;
+  virtual void draw(
+      QGraphicsScene *scene,
+      std::vector<EditorModel>& editor_models) const;
 
 private:
   void draw_lane(QGraphicsScene *scene, const Edge &edge) const;
@@ -71,6 +73,7 @@ private:
   void draw_meas(QGraphicsScene *scene, const Edge &edge) const;
   void draw_door(QGraphicsScene *scene, const Edge &edge) const;
   void draw_fiducials(QGraphicsScene *scene) const;
+  void draw_polygons(QGraphicsScene *scene) const;
 
   void add_door_swing_path(
       QPainterPath &path,

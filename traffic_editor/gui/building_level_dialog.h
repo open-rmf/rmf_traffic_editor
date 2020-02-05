@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Open Source Robotics Foundation
+ * Copyright (C) 2019-2020 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,28 +15,28 @@
  *
 */
 
-#ifndef LEVEL_DIALOG_H
-#define LEVEL_DIALOG_H
+#ifndef BUILDING_LEVEL_DIALOG_H
+#define BUILDING_LEVEL_DIALOG_H
 
 #include <QDialog>
-#include "level.h"
+#include "building_level.h"
 class QLineEdit;
 
 
-class LevelDialog : public QDialog
+class BuildingLevelDialog : public QDialog
 {
 public:
-  LevelDialog(Level& level);
-  ~LevelDialog();
+  BuildingLevelDialog(BuildingLevel& level);
+  ~BuildingLevelDialog();
  
 private:
-  Level &_level;
+  BuildingLevel& building_level;
 
-  QLineEdit *_name_line_edit, *_drawing_filename_line_edit;
-  QLineEdit *_x_line_edit, *_y_line_edit;
-  QLineEdit *_elevation_line_edit;
-  QPushButton *_drawing_filename_button;
-  QPushButton *_ok_button, *_cancel_button;
+  QLineEdit *name_line_edit, *drawing_filename_line_edit;
+  QLineEdit *x_line_edit, *y_line_edit;
+  QLineEdit *elevation_line_edit;
+  QPushButton *drawing_filename_button;
+  QPushButton *ok_button, *cancel_button;
 
   void enable_dimensions(const bool enable);
 

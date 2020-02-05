@@ -29,15 +29,14 @@
 #include <yaml-cpp/yaml.h>
 
 #include "add_param_dialog.h"
-#include "editor.h"
-#include "level_dialog.h"
-#include "layer_dialog.h"
-#include "lift_table.h"
 #include "building_dialog.h"
+#include "building_level_dialog.h"
+#include "editor.h"
+#include "layer_dialog.h"
+#include "map_view.h"
 #include "model_dialog.h"
 #include "preferences_dialog.h"
 #include "preferences_keys.h"
-#include "map_view.h"
 using std::string;
 
 
@@ -63,7 +62,7 @@ Editor::Editor()
 
   layers_table = new TableList;  // todo: replace with specific subclass?
 
-  level_table = new LevelTable;
+  level_table = new BuildingLevelTable;
   connect(
       level_table, &QTableWidget::cellClicked,
       [=](int row, int /*col*/) {
@@ -103,7 +102,7 @@ Editor::Editor()
 
   connect(
       level_table,
-      &LevelTable::redraw_scene,
+      &BuildingLevelTable::redraw_scene,
       this,
       &Editor::create_scene);
 
@@ -1060,7 +1059,7 @@ void Editor::layer_add_button_clicked()
 
 void Editor::populate_property_editor(const Edge& edge)
 {
-  const Level &level = building.levels[level_idx];
+  const BuildingLevel& level = building.levels[level_idx];
   const double scale = level.drawing_meters_per_pixel;
   const Vertex &sv = level.vertices[edge.start_idx];
   const Vertex &ev = level.vertices[edge.end_idx];
@@ -1101,7 +1100,7 @@ void Editor::populate_property_editor(const Edge& edge)
 
 void Editor::populate_property_editor(const Vertex& vertex)
 {
-  const Level &level = building.levels[level_idx];
+  const BuildingLevel& level = building.levels[level_idx];
   const double scale = level.drawing_meters_per_pixel;
  
   property_editor->blockSignals(true);  // otherwise we get tons of callbacks
@@ -1230,82 +1229,8 @@ bool Editor::create_scene()
     return false;
   }
 
-  const Level &level = building.levels[level_idx];
-
-  if (level.drawing_filename.size())
-  {
-    scene->setSceneRect(
-        QRectF(0, 0, level.drawing_width, level.drawing_height));
-    scene->addPixmap(level.floorplan_pixmap);
-  }
-  else
-  {
-    const double w = level.x_meters / level.drawing_meters_per_pixel;
-    const double h = level.y_meters / level.drawing_meters_per_pixel;
-    scene->setSceneRect(QRectF(0, 0, w, h));
-    scene->addRect(0, 0, w, h, QPen(), Qt::white);
-  }
-
-  for (const auto& layer : level.layers)
-  {
-    if (!layer.visible)
-      continue;
-
-    //printf("floorplan height: %d\n", level.floorplan_pixmap.height());
-    //printf("layer pixmap height: %d\n", layer.pixmap.height());
-    QGraphicsPixmapItem *item = scene->addPixmap(layer.pixmap);
-    // set the origin of the pixmap frame to the lower-left corner
-    item->setOffset(0, -layer.pixmap.height());
-    item->setPos(
-        -layer.translation_x / level.drawing_meters_per_pixel,
-        layer.translation_y / level.drawing_meters_per_pixel);
-    item->setScale(layer.meters_per_pixel / level.drawing_meters_per_pixel);
-    item->setRotation(-1.0 * layer.rotation * 180.0 / M_PI);
-    QGraphicsOpacityEffect *opacity_effect = new QGraphicsOpacityEffect;
-    opacity_effect->setOpacity(0.5);
-    item->setGraphicsEffect(opacity_effect);
-  }
-
-  level.draw_polygons(scene);
+  building.levels[level_idx].draw(scene, editor_models);
   building.draw_lifts(scene, level_idx);
-  level.draw_edges(scene);
-
-  // now draw all the models
-  for (const auto &model : level.models)
-  {
-    // find the pixmap we need for this model
-    QPixmap pixmap;
-    double model_meters_per_pixel = 1.0;  // will get overridden
-    for (auto &editor_model : editor_models)
-    {
-      if (editor_model.name == model.model_name)
-      {
-        pixmap = editor_model.get_pixmap();
-        model_meters_per_pixel = editor_model.meters_per_pixel;
-        break;
-      }
-    }
-    if (pixmap.isNull())
-      continue;  // couldn't load the pixmap; ignore it.
-
-    QGraphicsPixmapItem *item = scene->addPixmap(pixmap);
-    item->setOffset(-pixmap.width()/2, -pixmap.height()/2);
-    item->setScale(model_meters_per_pixel / level.drawing_meters_per_pixel);
-    item->setPos(model.x, model.y);
-    item->setRotation(-model.yaw * 180.0 / M_PI);
-
-    // make the model "glow" if it is selected
-    if (model.selected)
-    {
-      QGraphicsColorizeEffect *colorize = new QGraphicsColorizeEffect;
-      colorize->setColor(QColor::fromRgbF(1.0, 0.2, 0.0, 1.0));
-      colorize->setStrength(1.0);
-      item->setGraphicsEffect(colorize);
-    }
-  }
-
-  level.draw_vertices(scene);
-  level.draw_fiducials(scene);
 
   return true;
 }

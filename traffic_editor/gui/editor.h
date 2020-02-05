@@ -36,7 +36,7 @@ class Level;
 #include "building.h"
 #include "editor_model.h"
 #include "lift_table.h"
-#include "level_table.h"
+#include "building_level_table.h"
 
 QT_BEGIN_NAMESPACE
 class QAction;
@@ -175,7 +175,7 @@ private:
   void layer_add_button_clicked();
 
   LiftTable *lift_table;
-  LevelTable *level_table;
+  BuildingLevelTable *level_table;
 
   QTableWidget *property_editor;
   void update_property_editor();

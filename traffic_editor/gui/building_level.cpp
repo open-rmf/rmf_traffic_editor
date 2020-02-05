@@ -17,6 +17,8 @@
 
 #include <algorithm>
 
+#include <QGraphicsOpacityEffect>
+#include <QGraphicsPixmapItem>
 #include <QGraphicsScene>
 #include <QImage>
 #include <QImageReader>
@@ -688,36 +690,6 @@ void BuildingLevel::add_door_swing_path(
   path.lineTo(hinge_x, hinge_y);
 }
 
-void BuildingLevel::draw_edges(QGraphicsScene *scene) const
-{
-  for (const auto &edge : edges)
-  {
-    switch (edge.type)
-    {
-      case Edge::LANE: draw_lane(scene, edge); break;
-      case Edge::WALL: draw_wall(scene, edge); break;
-      case Edge::MEAS: draw_meas(scene, edge); break;
-      case Edge::DOOR: draw_door(scene, edge); break;
-      default:
-        printf("tried to draw unknown edge type: %d\n",
-            static_cast<int>(edge.type));
-        break;
-    }
-  }
-}
-
-void BuildingLevel::draw_vertices(QGraphicsScene *scene) const
-{
-  for (const auto &v : vertices)
-    v.draw(scene, drawing_meters_per_pixel);
-}
-
-void BuildingLevel::draw_fiducials(QGraphicsScene *scene) const
-{
-  for (const auto &f : fiducials)
-    f.draw(scene, drawing_meters_per_pixel);
-}
-
 void BuildingLevel::draw_polygons(QGraphicsScene *scene) const
 {
   QBrush polygon_brush(QColor::fromRgbF(0.8, 0.8, 0.8, 0.5));
@@ -772,6 +744,98 @@ void BuildingLevel::clear_selection()
     fiducial.selected = false;
 }
 
-void BuildingLevel::draw(QGraphicsScene *scene) const
+void BuildingLevel::draw(
+    QGraphicsScene *scene,
+    vector<EditorModel>& editor_models) const
 {
+  if (drawing_filename.size())
+  {
+    scene->setSceneRect(
+        QRectF(0, 0, drawing_width, drawing_height));
+    scene->addPixmap(floorplan_pixmap);
+  }
+  else
+  {
+    const double w = x_meters / drawing_meters_per_pixel;
+    const double h = y_meters / drawing_meters_per_pixel;
+    scene->setSceneRect(QRectF(0, 0, w, h));
+    scene->addRect(0, 0, w, h, QPen(), Qt::white);
+  }
+
+  draw_polygons(scene);
+
+  for (const auto& layer : layers)
+  {
+    if (!layer.visible)
+      continue;
+
+    //printf("floorplan height: %d\n", level.floorplan_pixmap.height());
+    //printf("layer pixmap height: %d\n", layer.pixmap.height());
+    QGraphicsPixmapItem *item = scene->addPixmap(layer.pixmap);
+    // set the origin of the pixmap frame to the lower-left corner
+    item->setOffset(0, -layer.pixmap.height());
+    item->setPos(
+        -layer.translation_x / drawing_meters_per_pixel,
+        layer.translation_y / drawing_meters_per_pixel);
+    item->setScale(layer.meters_per_pixel / drawing_meters_per_pixel);
+    item->setRotation(-1.0 * layer.rotation * 180.0 / M_PI);
+    QGraphicsOpacityEffect *opacity_effect = new QGraphicsOpacityEffect;
+    opacity_effect->setOpacity(0.5);
+    item->setGraphicsEffect(opacity_effect);
+  }
+
+  // now draw all the models
+  for (const auto &model : models)
+  {
+    // find the pixmap we need for this model
+    QPixmap pixmap;
+    double model_meters_per_pixel = 1.0;  // will get overridden
+    for (auto &editor_model : editor_models)
+    {
+      if (editor_model.name == model.model_name)
+      {
+        pixmap = editor_model.get_pixmap();
+        model_meters_per_pixel = editor_model.meters_per_pixel;
+        break;
+      }
+    }
+    if (pixmap.isNull())
+      continue;  // couldn't load the pixmap; ignore it.
+
+    QGraphicsPixmapItem *item = scene->addPixmap(pixmap);
+    item->setOffset(-pixmap.width()/2, -pixmap.height()/2);
+    item->setScale(model_meters_per_pixel / drawing_meters_per_pixel);
+    item->setPos(model.x, model.y);
+    item->setRotation(-model.yaw * 180.0 / M_PI);
+
+    // make the model "glow" if it is selected
+    if (model.selected)
+    {
+      QGraphicsColorizeEffect *colorize = new QGraphicsColorizeEffect;
+      colorize->setColor(QColor::fromRgbF(1.0, 0.2, 0.0, 1.0));
+      colorize->setStrength(1.0);
+      item->setGraphicsEffect(colorize);
+    }
+  }
+
+  for (const auto &edge : edges)
+  {
+    switch (edge.type)
+    {
+      case Edge::LANE: draw_lane(scene, edge); break;
+      case Edge::WALL: draw_wall(scene, edge); break;
+      case Edge::MEAS: draw_meas(scene, edge); break;
+      case Edge::DOOR: draw_door(scene, edge); break;
+      default:
+        printf("tried to draw unknown edge type: %d\n",
+            static_cast<int>(edge.type));
+        break;
+    }
+  }
+
+  for (const auto &v : vertices)
+    v.draw(scene, drawing_meters_per_pixel);
+
+  for (const auto &f : fiducials)
+    f.draw(scene, drawing_meters_per_pixel);
 }

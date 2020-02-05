@@ -15,21 +15,21 @@
  *
 */
 
-#ifndef LEVEL_TABLE_H
-#define LEVEL_TABLE_H
+#ifndef BUILDING_LEVEL_TABLE_H
+#define BUILDING_LEVEL_TABLE_H
 
 #include <QTableWidget>
 
 #include "table_list.h"
 #include "building.h"
 
-class LevelTable : public TableList
+class BuildingLevelTable : public TableList
 {
   Q_OBJECT
 
 public:
-  LevelTable();
-  ~LevelTable();
+  BuildingLevelTable();
+  ~BuildingLevelTable();
 
   void update(Building& building);
 
