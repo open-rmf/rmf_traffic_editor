@@ -33,26 +33,27 @@
 
 class MapView;
 class Level;
-#include "./map.h"
+#include "building.h"
 #include "editor_model.h"
 #include "lift_table.h"
 #include "level_table.h"
 
 QT_BEGIN_NAMESPACE
 class QAction;
-class QMenu;
-class QGraphicsView;
-class QToolButton;
 class QButtonGroup;
-class QTableWidget;
-class QTableWidgetItem;
+class QComboBox;
+class QGraphicsView;
+class QHBoxLayout;
 class QLabel;
 class QLineEdit;
 class QListWidget;
+class QMenu;
 class QMouseEvent;
-class QHBoxLayout;
 class QPushButton;
+class QTableWidget;
+class QTableWidgetItem;
 class QTabWidget;
+class QToolButton;
 QT_END_NAMESPACE
 
 
@@ -61,18 +62,33 @@ class Editor : public QMainWindow
   Q_OBJECT
 
 public:
-  Editor(QWidget *parent = nullptr);
+  Editor();
+
   static Editor *get_instance();
 
-  /// Load a project, replacing the current Map with a Map inflated from
-  /// the YAML filename provided to this function.
-  bool load_project(const QString &filename);
+  /// Load a project, replacing the current building being edited
+  bool load_building(const QString &filename);
 
   /// Attempt to load the most recently saved project, just for convenience
   /// when starting the application since often we want to 'resume' editing.
-  bool load_previous_project();
+  bool load_previous_files();
 
-  enum {
+protected:
+  void mousePressEvent(QMouseEvent *e);
+  void mouseReleaseEvent(QMouseEvent *e);
+  void mouseMoveEvent(QMouseEvent *e);
+  void keyPressEvent(QKeyEvent *event);
+  void closeEvent(QCloseEvent *event);
+
+private:
+  enum ModeId
+  {
+    MODE_BUILDING = 1,
+    MODE_TRAFFIC
+  } mode = MODE_BUILDING;
+
+  enum ToolId
+  {
     TOOL_SELECT = 1,
     TOOL_ADD_VERTEX,
     TOOL_MOVE,
@@ -86,31 +102,31 @@ public:
     TOOL_EDIT_POLYGON,
     TOOL_ADD_ZONE,
     TOOL_ADD_FIDUCIAL
-  };
+  } tool_id = TOOL_SELECT;
 
-protected:
-  void mousePressEvent(QMouseEvent *e);
-  void mouseReleaseEvent(QMouseEvent *e);
-  void mouseMoveEvent(QMouseEvent *e);
-  void keyPressEvent(QKeyEvent *event);
-  void closeEvent(QCloseEvent *event);
+  /////////////////
+  // MENU ACTIONS
+  void file_new_building();
+  void file_open_building();
+  bool file_save_building();
 
-private slots:
-  void new_map();
-  void open();
-  bool save();
-  void about();
+  void file_new_traffic_map();
 
-private:
   bool maybe_save();
   void edit_preferences();
-  void edit_map_properties();
+  void edit_building_properties();
+
+  void mode_building();
+  void mode_traffic();
 
   void level_add();
   void level_edit();
   void update_level_buttons();
 
   void zoom_fit();
+
+  void help_about();
+
 
   bool is_mouse_event_in_map(QMouseEvent *e, QPointF &p_scene);
 
@@ -121,13 +137,15 @@ private:
       const QString &tooltip);
   void tool_toggled(int id, bool checked);
 
+  QComboBox *mode_combo_box;
+
 /////////////////////////////
   static Editor *instance;  // there will only be one instance
 
-  Map map;
-  int level_idx;  // level that we are currently editing
-  int clicked_idx;  // point most recently clicked
-  int polygon_idx;  // currently selected polygon
+  Building building;
+  int level_idx = 0;  // level that we are currently editing
+  int clicked_idx = -1;  // point most recently clicked
+  int polygon_idx = -1;  // currently selected polygon
 
   QButtonGroup *level_button_group;
   QHBoxLayout *level_button_hbox_layout;
@@ -138,7 +156,7 @@ private:
   QAction *zoom_in_action, *zoom_out_action;
   QAction *zoom_normal_action, *zoom_fit_action;
 
-  QString project_filename;
+  QString building_filename;
 
   const QString tool_id_to_string(const int id);
   QButtonGroup *tool_button_group;
@@ -209,8 +227,6 @@ private:
   int mouse_fiducial_idx = -1;
   std::vector<int> mouse_motion_polygon_vertices;
   int mouse_motion_polygon_vertex_idx = -1;
-
-  int tool_id;
 
   void draw_mouse_motion_line_item(const double mouse_x, const double mouse_y);
   void remove_mouse_motion_item();

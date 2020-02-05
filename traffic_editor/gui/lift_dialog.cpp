@@ -20,11 +20,11 @@
 using std::vector;
 
 
-LiftDialog::LiftDialog(Lift& lift, const Map& map)
+LiftDialog::LiftDialog(Lift& lift, const Building& building)
 : QDialog(),
   _lift(lift)
 {
-  for (const Level& level : map.levels)
+  for (const Level& level : building.levels)
     _level_names.push_back(QString::fromStdString(level.name));
 
   QHBoxLayout *bottom_buttons_hbox = new QHBoxLayout;

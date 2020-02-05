@@ -15,23 +15,23 @@
  *
 */
 
-#ifndef MAP_DIALOG_H
-#define MAP_DIALOG_H
+#ifndef BUILDING_DIALOG_H
+#define BUILDING_DIALOG_H
 
 #include <QDialog>
-#include "./map.h"
+#include "building.h"
 class QLineEdit;
 class QComboBox;
 
 
-class MapDialog : public QDialog
+class BuildingDialog : public QDialog
 {
 public:
-  MapDialog(Map& map);
-  ~MapDialog();
+  BuildingDialog(Building& building);
+  ~BuildingDialog();
  
 private:
-  Map& _map;
+  Building& _building;
 
   QLineEdit *_building_name_line_edit;
   QComboBox *_reference_floor_combo_box;

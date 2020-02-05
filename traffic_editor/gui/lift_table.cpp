@@ -30,17 +30,17 @@ LiftTable::~LiftTable()
 {
 }
 
-void LiftTable::update(Map& map)
+void LiftTable::update(Building& building)
 {
   blockSignals(true);
-  setRowCount(1 + map.lifts.size());
-  for (size_t i = 0; i < map.lifts.size(); i++)
+  setRowCount(1 + building.lifts.size());
+  for (size_t i = 0; i < building.lifts.size(); i++)
   {
     setItem(
         i,
         0,
         new QTableWidgetItem(
-            QString::fromStdString(map.lifts[i].name)));
+            QString::fromStdString(building.lifts[i].name)));
 
     QPushButton *edit_button = new QPushButton("Edit...", this);
     setCellWidget(i, 1, edit_button);
@@ -48,14 +48,14 @@ void LiftTable::update(Map& map)
     connect(
         edit_button,
         &QAbstractButton::clicked,
-        [this, &map, i]() {
+        [this, &building, i]() {
           /*
-          LiftDialog lift_dialog(map.lifts[i], map);
+          LiftDialog lift_dialog(building.lifts[i], building);
           lift_dialog.exec();
-          update(map);
+          update(building);
           emit redraw();
           */
-          LiftDialog *dialog = new LiftDialog(map.lifts[i], map);
+          LiftDialog *dialog = new LiftDialog(building.lifts[i], building);
           dialog->show();
           dialog->raise();
           dialog->activateWindow();
@@ -67,19 +67,19 @@ void LiftTable::update(Map& map)
   }
 
   // we'll use the last row for the "Add" button
-  const int last_row_idx = static_cast<int>(map.lifts.size());
+  const int last_row_idx = static_cast<int>(building.lifts.size());
   setCellWidget(last_row_idx, 0, nullptr);
   QPushButton *add_button = new QPushButton("Add...", this);
   setCellWidget(last_row_idx, 1, add_button);
   connect(
       add_button, &QAbstractButton::clicked,
-      [this, &map]() {
+      [this, &building]() {
         Lift lift;
-        LiftDialog lift_dialog(lift, map);
+        LiftDialog lift_dialog(lift, building);
         if (lift_dialog.exec() == QDialog::Accepted)
         {
-          map.lifts.push_back(lift);
-          update(map);
+          building.lifts.push_back(lift);
+          update(building);
           emit redraw();
         }
       });

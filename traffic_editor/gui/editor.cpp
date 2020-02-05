@@ -33,7 +33,7 @@
 #include "level_dialog.h"
 #include "layer_dialog.h"
 #include "lift_table.h"
-#include "map_dialog.h"
+#include "building_dialog.h"
 #include "model_dialog.h"
 #include "preferences_dialog.h"
 #include "preferences_keys.h"
@@ -43,20 +43,11 @@ using std::string;
 
 Editor *Editor::instance = nullptr;
 
-Editor::Editor(QWidget *parent)
-: QMainWindow(parent),
-  level_idx(0),
-  clicked_idx(-1),
-  polygon_idx(-1),
-  tool_id(TOOL_SELECT)
+Editor::Editor()
+: QMainWindow()
 {
   instance = this;
   
-  /*
-  setStyleSheet(
-    "QLabel { color: white; }"
-  );
-  */
   setWindowTitle("Traffic Editor[*]");
 
   QSettings settings;
@@ -76,7 +67,7 @@ Editor::Editor(QWidget *parent)
   connect(
       level_table, &QTableWidget::cellClicked,
       [=](int row, int /*col*/) {
-        if (row < static_cast<int>(map.levels.size()))
+        if (row < static_cast<int>(building.levels.size()))
         {
           // save the center point of the current level's image coordinates
           const QPoint p_center_window(
@@ -87,7 +78,7 @@ Editor::Editor(QWidget *parent)
           //   p_center_scene.x(), p_center_scene.y());
 
           QPointF p_transformed;
-          map.transform_between_levels(
+          building.transform_between_levels(
               level_idx,
               p_center_scene,
               row,
@@ -97,8 +88,8 @@ Editor::Editor(QWidget *parent)
           const double prev_scale = map_view->transform().m11();
 
           const double scale = prev_scale *
-              map.levels[row].drawing_meters_per_pixel /
-              map.levels[level_idx].drawing_meters_per_pixel;
+              building.levels[row].drawing_meters_per_pixel /
+              building.levels[level_idx].drawing_meters_per_pixel;
 
           level_idx = row;
           create_scene();
@@ -193,31 +184,61 @@ Editor::Editor(QWidget *parent)
   // FILE MENU
   QMenu *file_menu = menuBar()->addMenu("&File");
 
-  QAction *new_action =
-      file_menu->addAction("&New Project...", this, &Editor::new_map);
-  new_action->setShortcut(QKeySequence::New);
+  file_menu->addAction(
+      "&New Building...",
+      this,
+      &Editor::file_new_building,
+      QKeySequence(Qt::CTRL + Qt::Key_N));
 
-  QAction *open_action =
-      file_menu->addAction("&Open Project...", this, &Editor::open);
-  open_action->setShortcut(QKeySequence::Open);
+  file_menu->addAction(
+      "&Open Building...",
+      this,
+      &Editor::file_open_building,
+      QKeySequence(Qt::CTRL + Qt::Key_O));
 
-  save_action =
-      file_menu->addAction("&Save Project", this, &Editor::save);
-  save_action->setShortcut(tr("Ctrl+S"));
+  file_menu->addAction(
+      "&Save Building",
+      this,
+      &Editor::file_save_building,
+      QKeySequence(Qt::CTRL + Qt::Key_S));
 
   file_menu->addSeparator();
 
-  QAction *exit_action = file_menu->addAction("E&xit", this, &QWidget::close);
-  exit_action->setShortcut(tr("Ctrl+Q"));
+  file_menu->addAction(
+      "New Traffic Map...",
+      this,
+      &Editor::file_new_traffic_map);
+
+  file_menu->addSeparator();
+
+  file_menu->addAction(
+      "E&xit",
+      this,
+      &QWidget::close,
+      QKeySequence(Qt::CTRL + Qt::Key_Q));
 
   // EDIT MENU
   QMenu *edit_menu = menuBar()->addMenu("&Edit");
   edit_menu->addAction(
-      "&Map properties...",
+      "&Building properties...",
       this,
-      &Editor::edit_map_properties);
+      &Editor::edit_building_properties);
   edit_menu->addSeparator();
   edit_menu->addAction("&Preferences...", this, &Editor::edit_preferences);
+
+  // MODE MENU
+  QMenu *mode_menu = menuBar()->addMenu("&Mode");
+  mode_menu->addAction(
+      "&Building",
+      this,
+      &Editor::mode_building,
+      QKeySequence(Qt::CTRL + Qt::Key_B));
+
+  mode_menu->addAction(
+      "&Traffic lanes",
+      this,
+      &Editor::mode_traffic,
+      QKeySequence(Qt::CTRL + Qt::Key_T));
 
   // VIEW MENU
   QMenu *view_menu = menuBar()->addMenu("&View");
@@ -229,11 +250,31 @@ Editor::Editor(QWidget *parent)
   // HELP MENU
   QMenu *help_menu = menuBar()->addMenu("&Help");
 
-  help_menu->addAction("&About", this, &Editor::about);
+  help_menu->addAction("&About", this, &Editor::help_about);
   help_menu->addAction("About &Qt", &QApplication::aboutQt);
 
   // TOOLBAR
   toolbar = new QToolBar();
+
+  mode_combo_box = new QComboBox;
+  mode_combo_box->addItem("Building");
+  mode_combo_box->addItem("Traffic");
+  connect(
+      mode_combo_box,
+      &QComboBox::currentTextChanged,
+      [this](const QString& text)
+      {
+        if (text == "Building")
+          mode_building();
+        else if (text == "Traffic")
+          mode_traffic();
+      });
+
+  QLabel *mode_label = new QLabel("Edit mode:");
+  mode_label->setStyleSheet("QLabel { color: white; }");
+  toolbar->addWidget(mode_label);
+  toolbar->addWidget(mode_combo_box);
+
   tool_button_group = new QButtonGroup(this);
   tool_button_group->setExclusive(true);
 
@@ -241,8 +282,14 @@ Editor::Editor(QWidget *parent)
   create_tool_button(TOOL_MOVE, ":icons/move.svg", "Move (M)");
   create_tool_button(TOOL_ROTATE, ":icons/rotate.svg", "Rotate (R)");
 
-  create_tool_button(TOOL_ADD_VERTEX, ":icons/add_vertex.svg", "Add Vertex (V)");
-  create_tool_button(TOOL_ADD_FIDUCIAL, ":icons/fiducial.svg", "Add Fiducial");
+  create_tool_button(
+      TOOL_ADD_VERTEX,
+      ":icons/add_vertex.svg",
+      "Add Vertex (V)");
+  create_tool_button(
+      TOOL_ADD_FIDUCIAL,
+      ":icons/fiducial.svg",
+      "Add Fiducial");
   create_tool_button(TOOL_ADD_LANE, "", "Add Lane (L)");
   create_tool_button(TOOL_ADD_WALL, "", "Add Wall (W)");
   create_tool_button(TOOL_ADD_MEAS, "", "Add Measurement");
@@ -259,6 +306,7 @@ Editor::Editor(QWidget *parent)
   toolbar->setStyleSheet("QToolBar {background-color: #404040; border: none; spacing: 5px} QToolButton {background-color: #c0c0c0; color: blue; border: 1px solid black;} QToolButton:checked {background-color: #808080; color: red; border: 1px solid black;}");
   addToolBar(Qt::TopToolBarArea, toolbar);
 
+  ///////////////////////////////////////////////////////////
   // SET SIZE
   const int width =
       settings.contains(preferences_keys::width) ?
@@ -358,14 +406,16 @@ Editor *Editor::get_instance()
   return instance;
 }
 
-bool Editor::load_project(const QString &filename)
+bool Editor::load_building(const QString &filename)
 {
   const std::string filename_std_string = filename.toStdString();
-  try {
-    map.load_yaml(filename_std_string);
+  try
+  {
+    building.load_yaml(filename_std_string);
     qInfo("parsed %s successfully", qUtf8Printable(filename));
   }
-  catch (const std::exception &e) {
+  catch (const std::exception &e)
+  {
     qWarning("couldn't parse %s: %s",
         qUtf8Printable(filename),
         e.what());
@@ -374,39 +424,44 @@ bool Editor::load_project(const QString &filename)
 
   level_idx = 0;
 
-  if (!map.levels.empty()) {
-    const Level &level = map.levels[level_idx];
+  if (!building.levels.empty())
+  {
+    const Level &level = building.levels[level_idx];
     scene->setSceneRect(
         QRectF(0, 0, level.drawing_width, level.drawing_height));
     previous_mouse_point = QPointF(level.drawing_width, level.drawing_height);
   }
 
   create_scene();
-  project_filename = filename;
-  map_view->zoom_fit(map, level_idx);
+  building_filename = filename;
+  map_view->zoom_fit(building, level_idx);
   populate_layers_table();
-  level_table->update(map);
-  lift_table->update(map);
+  level_table->update(building);
+  lift_table->update(building);
 
   QSettings settings;
-  settings.setValue(preferences_keys::previous_project_path, filename);
+  settings.setValue(preferences_keys::previous_building_path, filename);
 
   setWindowModified(false);
 
   return true;
 }
 
-bool Editor::load_previous_project()
+bool Editor::load_previous_files()
 {
   QSettings settings;
   const QString filename(
-      settings.value(preferences_keys::previous_project_path).toString());
+      settings.value(preferences_keys::previous_building_path).toString());
   if (!filename.isEmpty())
-    return load_project(filename);
+    return load_building(filename);
   return true;
 }
 
-void Editor::new_map()
+void Editor::file_new_traffic_map()
+{
+}
+
+void Editor::file_new_building()
 {
   QFileDialog dialog(this, "New Project");
   dialog.setNameFilter("*.yaml");
@@ -420,22 +475,22 @@ void Editor::new_map()
   QFileInfo file_info(dialog.selectedFiles().first());
   std::string fn = file_info.fileName().toStdString();
 
-  project_filename = file_info.absoluteFilePath();
+  building_filename = file_info.absoluteFilePath();
   QString dir_path = file_info.dir().path();
   QDir::setCurrent(dir_path);
 
-  map.clear();
+  building.clear();
   create_scene();
-  save();
-  level_table->update(map);
+  file_save_building();
+  level_table->update(building);
 
   QSettings settings;
   settings.setValue(
-      preferences_keys::previous_project_path,
-      project_filename);
+      preferences_keys::previous_building_path,
+      building_filename);
 }
 
-void Editor::open()
+void Editor::file_open_building()
 {
   QFileDialog file_dialog(this, "Open Project");
   file_dialog.setFileMode(QFileDialog::ExistingFile);
@@ -452,12 +507,12 @@ void Editor::open()
         "File does not exist. Cannot open file.");
     return;
   }
-  load_project(file_info.filePath());
+  load_building(file_info.filePath());
 }
 
-bool Editor::save()
+bool Editor::file_save_building()
 {
-  if (project_filename.isEmpty()) {
+  if (building_filename.isEmpty()) {
     QFileDialog dialog(this, "Save Project");
     dialog.setNameFilter("*.yaml");
     dialog.setDefaultSuffix(".yaml");
@@ -475,19 +530,18 @@ bool Editor::save()
     QFileInfo file_info(dialog.selectedFiles().first());
     std::string fn = file_info.fileName().toStdString();
 
-    project_filename = file_info.fileName();
+    building_filename = file_info.fileName();
     QString dir_path = file_info.dir().path();
     QDir::setCurrent(dir_path);
   }
-  const std::string filename_std_string = project_filename.toStdString();
-  map.save_yaml(filename_std_string);
+  building.save_yaml(building_filename.toStdString());
   setWindowModified(false);
   return true;
 }
 
-void Editor::about()
+void Editor::help_about()
 {
-  QMessageBox::about(this, "about", "hello world");
+  QMessageBox::about(this, "About", "Welcome to the Traffic Editor");
 }
 
 void Editor::edit_preferences()
@@ -498,10 +552,10 @@ void Editor::edit_preferences()
     load_model_names();
 }
 
-void Editor::edit_map_properties()
+void Editor::edit_building_properties()
 {
-  MapDialog map_dialog(map);
-  if (map_dialog.exec() == QDialog::Accepted)
+  BuildingDialog building_dialog(building);
+  if (building_dialog.exec() == QDialog::Accepted)
     setWindowModified(true);
 }
 
@@ -519,15 +573,15 @@ void Editor::mouse_event(const MouseType t, QMouseEvent *e)
     e->ignore();
     return;
   }
-  if (level_idx >= static_cast<int>(map.levels.size())) {
+  if (level_idx >= static_cast<int>(building.levels.size())) {
     if (t == MOUSE_RELEASE) {
-      if (project_filename.isEmpty()) {
+      if (building_filename.isEmpty()) {
         QMessageBox::critical(
             this,
-            "No project",
-            "Please try File->New... or File->Open...");
+            "No building",
+            "Please try File->New Building... or File->Open Building...");
       }
-      else if (map.levels.empty()) {
+      else if (building.levels.empty()) {
         QMessageBox::critical(
             this,
             "No levels defined",
@@ -572,7 +626,7 @@ void Editor::mouseMoveEvent(QMouseEvent *e)
 
 int Editor::get_polygon_idx(const double x, const double y)
 {
-  const Level &level = map.levels[level_idx];
+  const Level &level = building.levels[level_idx];
   for (size_t i = 0; i < level.polygons.size(); i++) {
     const auto &polygon = level.polygons[i];
     QVector<QPointF> polygon_vertices;
@@ -603,7 +657,7 @@ void Editor::keyPressEvent(QKeyEvent *e)
 {
   switch (e->key()) {
     case Qt::Key_Delete:
-      if (map.delete_selected(level_idx))
+      if (building.delete_selected(level_idx))
       {
         clear_property_editor();
         setWindowModified(true);
@@ -654,7 +708,7 @@ void Editor::keyPressEvent(QKeyEvent *e)
       tool_button_group->button(TOOL_EDIT_POLYGON)->click();
       break;
     case Qt::Key_B:
-      for (auto &edge : map.levels[level_idx].edges) {
+      for (auto &edge : building.levels[level_idx].edges) {
         if (edge.type == Edge::LANE && edge.selected) {
           // toggle bidirectional flag
           edge.set_param("bidirectional",
@@ -705,18 +759,19 @@ void Editor::tool_toggled(int id, bool checked)
   clicked_idx = -1;
   remove_mouse_motion_item();
 
-  tool_id = id;
+  tool_id = static_cast<ToolId>(id);
 
-  /*
+#if 0
+  // TODO: need to improve logic to set back to "normal" cursor...
   // set the cursor
   Qt::CursorShape cursor = Qt::ArrowCursor;
   if (tool_id == TOOL_ADD_VERTEX)
     cursor = Qt::CrossCursor;
   map_view->setCursor(cursor);
-  */
+#endif
 
   // set the status bar
-  switch (id)
+  switch (tool_id)
   {
     case TOOL_SELECT:
       statusBar()->showMessage("Click an item to select it.");
@@ -743,7 +798,7 @@ void Editor::tool_toggled(int id, bool checked)
   }
 
   // execute dialogs as needed
-  if (id == TOOL_ADD_MODEL)
+  if (tool_id == TOOL_ADD_MODEL)
   {
     Model model;
     ModelDialog dialog(this, model, editor_models);
@@ -759,7 +814,7 @@ void Editor::tool_toggled(int id, bool checked)
           mouse_motion_model->setOffset(-pixmap.width()/2, -pixmap.height()/2);
           mouse_motion_model->setScale(
               mouse_motion_editor_model->meters_per_pixel /
-              map.levels[level_idx].drawing_meters_per_pixel);
+              building.levels[level_idx].drawing_meters_per_pixel);
           mouse_motion_model->setPos(
               previous_mouse_point.x(),
               previous_mouse_point.y());
@@ -777,10 +832,10 @@ void Editor::update_property_editor()
   add_param_button->setEnabled(false);
   delete_param_button->setEnabled(false);
 
-  if (map.levels.empty())
+  if (building.levels.empty())
     return;
 
-  for (const auto& p : map.levels[level_idx].polygons)
+  for (const auto& p : building.levels[level_idx].polygons)
     if (p.selected)
     {
       printf("found a selected polygon\n");
@@ -788,28 +843,28 @@ void Editor::update_property_editor()
       return;
     }
 
-  for (const auto& e : map.levels[level_idx].edges)
+  for (const auto& e : building.levels[level_idx].edges)
     if (e.selected)
     {
       populate_property_editor(e);
       return;  // stop after finding the first one
     }
 
-  for (const auto& m : map.levels[level_idx].models)
+  for (const auto& m : building.levels[level_idx].models)
     if (m.selected)
     {
       populate_property_editor(m);
       return;  // stop after finding the first one
     }
 
-  for (const auto& v : map.levels[level_idx].vertices)
+  for (const auto& v : building.levels[level_idx].vertices)
     if (v.selected)
     {
       populate_property_editor(v);
       return;  // stop after finding the first one
     }
 
-  for (const auto& f : map.levels[level_idx].fiducials)
+  for (const auto& f : building.levels[level_idx].fiducials)
     if (f.selected)
     {
       populate_property_editor(f);
@@ -821,7 +876,8 @@ void Editor::update_property_editor()
 }
 
 QTableWidgetItem *Editor::create_table_item(
-    const QString &str, bool editable)
+    const QString &str,
+    bool editable)
 {
   QTableWidgetItem *item = new QTableWidgetItem(str);
   if (!editable)
@@ -885,7 +941,7 @@ void Editor::add_param_button_clicked()
     if (dialog.exec() != QDialog::Accepted)
       return;
 
-    for (auto &v : map.levels[level_idx].vertices)
+    for (auto &v : building.levels[level_idx].vertices)
     {
       if (v.selected)
       {
@@ -908,9 +964,9 @@ void Editor::delete_param_button_clicked()
 
 void Editor::populate_layers_table()
 {
-  if (map.levels.empty())
+  if (building.levels.empty())
     return;  // let's not crash...
-  const Level &level = map.levels[level_idx];
+  const Level &level = building.levels[level_idx];
   layers_table->blockSignals(true);  // otherwise we get tons of callbacks
   layers_table->setRowCount(2 + level.layers.size());
 
@@ -957,7 +1013,7 @@ void Editor::layers_table_set_row(
       [=](bool box_checked)
       {
         if (row_idx > 0)
-          map.levels[level_idx].layers[row_idx-1].visible = box_checked;
+          building.levels[level_idx].layers[row_idx-1].visible = box_checked;
         create_scene();
       });
 }
@@ -965,10 +1021,10 @@ void Editor::layers_table_set_row(
 void Editor::layer_edit_button_clicked(const std::string &label)
 {
   printf("clicked: [%s]\n", label.c_str());
-  if (map.levels.empty())
+  if (building.levels.empty())
     return;
   // find the index of this layer in the current level
-  Level &level = map.levels[level_idx];
+  Level &level = building.levels[level_idx];
   for (size_t i = 0; i < level.layers.size(); i++)
   {
     Layer& layer = level.layers[i];
@@ -989,9 +1045,9 @@ void Editor::layer_edit_button_clicked(const std::string &label)
 
 void Editor::layer_add_button_clicked()
 {
-  if (level_idx >= static_cast<int>(map.levels.size()))
+  if (level_idx >= static_cast<int>(building.levels.size()))
     return;  // let's not crash (yet)
-  Level& level = map.levels[level_idx];
+  Level& level = building.levels[level_idx];
   Layer layer;
   LayerDialog layer_dialog(this, layer);
   if (layer_dialog.exec() != QDialog::Accepted)
@@ -1004,7 +1060,7 @@ void Editor::layer_add_button_clicked()
 
 void Editor::populate_property_editor(const Edge& edge)
 {
-  const Level &level = map.levels[level_idx];
+  const Level &level = building.levels[level_idx];
   const double scale = level.drawing_meters_per_pixel;
   const Vertex &sv = level.vertices[edge.start_idx];
   const Vertex &ev = level.vertices[edge.end_idx];
@@ -1045,7 +1101,7 @@ void Editor::populate_property_editor(const Edge& edge)
 
 void Editor::populate_property_editor(const Vertex& vertex)
 {
-  const Level &level = map.levels[level_idx];
+  const Level &level = building.levels[level_idx];
   const double scale = level.drawing_meters_per_pixel;
  
   property_editor->blockSignals(true);  // otherwise we get tons of callbacks
@@ -1125,7 +1181,7 @@ void Editor::property_editor_cell_changed(int row, int column)
   printf("property_editor_cell_changed(%d, %d) = param %s\n",
       row, column, name.c_str());
 
-  for (auto& v : map.levels[level_idx].vertices)
+  for (auto& v : building.levels[level_idx].vertices)
   {
     if (!v.selected)
       continue;
@@ -1138,7 +1194,7 @@ void Editor::property_editor_cell_changed(int row, int column)
     return;  // stop after finding the first one
   }
 
-  for (auto& e : map.levels[level_idx].edges)
+  for (auto& e : building.levels[level_idx].edges)
   {
     if (!e.selected)
       continue;
@@ -1148,7 +1204,7 @@ void Editor::property_editor_cell_changed(int row, int column)
     return;  // stop after finding the first one
   }
 
-  for (auto& f : map.levels[level_idx].fiducials)
+  for (auto& f : building.levels[level_idx].fiducials)
   {
     if (!f.selected)
       continue;
@@ -1168,13 +1224,13 @@ bool Editor::create_scene()
   mouse_motion_ellipse = nullptr;
   mouse_motion_polygon = nullptr;
 
-  if (map.levels.empty())
+  if (building.levels.empty())
   {
     printf("nothing to draw!\n");
     return false;
   }
 
-  const Level &level = map.levels[level_idx];
+  const Level &level = building.levels[level_idx];
 
   if (level.drawing_filename.size())
   {
@@ -1211,7 +1267,7 @@ bool Editor::create_scene()
   }
 
   level.draw_polygons(scene);
-  map.draw_lifts(scene, level_idx);
+  building.draw_lifts(scene, level_idx);
   level.draw_edges(scene);
 
   // now draw all the models
@@ -1256,9 +1312,9 @@ bool Editor::create_scene()
 
 void Editor::clear_selection()
 {
-  if (map.levels.empty())
+  if (building.levels.empty())
     return;
-  map.levels[level_idx].clear_selection();
+  building.levels[level_idx].clear_selection();
 }
 
 void Editor::draw_mouse_motion_line_item(
@@ -1280,16 +1336,16 @@ void Editor::draw_mouse_motion_line_item(
       pen_width = 5;
       color = QColor::fromRgbF(1, 0, 1, 0.5); 
       break;
+    default:
+      break;
   }
 
   QPen pen(QBrush(color), pen_width, Qt::SolidLine, Qt::RoundCap);
-  const auto &start = map.levels[level_idx].vertices[clicked_idx];
-  if (!mouse_motion_line) {
+  const auto& start = building.levels[level_idx].vertices[clicked_idx];
+  if (!mouse_motion_line)
     mouse_motion_line = scene->addLine(start.x, start.y, mouse_x, mouse_y, pen);
-  }
-  else {
+  else
     mouse_motion_line->setLine(start.x, start.y, mouse_x, mouse_y);
-  }
 }
 
 void Editor::remove_mouse_motion_item()
@@ -1328,9 +1384,10 @@ void Editor::set_selected_line_item(QGraphicsLineItem *line_item)
     return;
 
   // find if any of our lanes match those vertices
-  for (auto &edge : map.levels[level_idx].edges) {
-    const auto &v_start = map.levels[level_idx].vertices[edge.start_idx];
-    const auto &v_end = map.levels[level_idx].vertices[edge.end_idx];
+  for (auto& edge : building.levels[level_idx].edges)
+  {
+    const auto& v_start = building.levels[level_idx].vertices[edge.start_idx];
+    const auto& v_end = building.levels[level_idx].vertices[edge.end_idx];
     if (line_vertices_match(line_item, v_start, v_end, 10.0))
     {
       edge.selected = true;
@@ -1376,23 +1433,14 @@ void Editor::mouse_select(
     return;
   clear_selection();
 
-  Map::NearestItem ni = map.nearest_items(level_idx, p.x(), p.y());
+  Building::NearestItem ni = building.nearest_items(level_idx, p.x(), p.y());
 
   if (ni.model_idx >= 0 && ni.model_dist < 50.0)
-  {
-    printf("selected model %d\n", ni.model_idx);
-    map.levels[level_idx].models[ni.model_idx].selected = true;
-  }
+    building.levels[level_idx].models[ni.model_idx].selected = true;
   else if (ni.vertex_idx >= 0 && ni.vertex_dist < 10.0)
-  {
-    printf("selected vertex %d\n", ni.vertex_idx);
-    map.levels[level_idx].vertices[ni.vertex_idx].selected = true;
-  }
+    building.levels[level_idx].vertices[ni.vertex_idx].selected = true;
   else if (ni.fiducial_idx >= 0 && ni.fiducial_dist < 10.0)
-  {
-    printf("selected fiducial %d\n", ni.fiducial_idx);
-    map.levels[level_idx].fiducials[ni.fiducial_idx].selected = true;
-  }
+    building.levels[level_idx].fiducials[ni.fiducial_idx].selected = true;
   else
   {
     const QPoint p_global = mapToGlobal(e->pos());
@@ -1416,10 +1464,10 @@ void Editor::mouse_select(
           polygon_idx = get_polygon_idx(p.x(), p.y());
           if (polygon_idx < 0)
             return;  // didn't click on a polygon
-          Polygon &polygon = map.levels[level_idx].polygons[polygon_idx];
+          Polygon &polygon = building.levels[level_idx].polygons[polygon_idx];
           polygon.selected = true;
           for (const auto &vertex_idx : polygon.vertices)
-            map.levels[level_idx].vertices[vertex_idx].selected = true;
+            building.levels[level_idx].vertices[vertex_idx].selected = true;
           break;
         }
   
@@ -1440,7 +1488,7 @@ void Editor::mouse_add_vertex(
     const MouseType t, QMouseEvent *, const QPointF &p)
 {
   if (t == MOUSE_PRESS) {
-    map.add_vertex(level_idx, p.x(), p.y());
+    building.add_vertex(level_idx, p.x(), p.y());
     setWindowModified(true);
     create_scene();
   }
@@ -1451,7 +1499,7 @@ void Editor::mouse_add_fiducial(
 {
   if (t == MOUSE_PRESS)
   {
-    map.add_fiducial(level_idx, p.x(), p.y());
+    building.add_fiducial(level_idx, p.x(), p.y());
     setWindowModified(true);
     create_scene();
   }
@@ -1462,15 +1510,15 @@ void Editor::mouse_move(
 {
   if (t == MOUSE_PRESS)
   {
-    Map::NearestItem ni = map.nearest_items(level_idx, p.x(), p.y());
+    Building::NearestItem ni = building.nearest_items(level_idx, p.x(), p.y());
 
     if (ni.model_idx >= 0 && ni.model_dist < 50.0)
     {
       // Now we need to find the pixmap item for this model.
       mouse_motion_model = get_closest_pixmap_item(
           QPointF(
-              map.levels[level_idx].models[clicked_idx].x,
-              map.levels[level_idx].models[clicked_idx].y));
+              building.levels[level_idx].models[clicked_idx].x,
+              building.levels[level_idx].models[clicked_idx].y));
       mouse_model_idx = ni.model_idx;
     }
     else if (ni.vertex_idx >= 0 && ni.vertex_dist < 10.0)
@@ -1502,21 +1550,21 @@ void Editor::mouse_move(
     {
       // we're dragging a model
       // update both the nav_model data and the pixmap in the scene
-      map.levels[level_idx].models[mouse_model_idx].x = p.x();
-      map.levels[level_idx].models[mouse_model_idx].y = p.y();
+      building.levels[level_idx].models[mouse_model_idx].x = p.x();
+      building.levels[level_idx].models[mouse_model_idx].y = p.y();
       mouse_motion_model->setPos(p);
     }
     else if (mouse_vertex_idx >= 0)
     {
       // we're dragging a vertex
-      Vertex& pt = map.levels[level_idx].vertices[mouse_vertex_idx];
+      Vertex& pt = building.levels[level_idx].vertices[mouse_vertex_idx];
       pt.x = p.x();
       pt.y = p.y();
       create_scene();
     }
     else if (mouse_fiducial_idx >= 0)
     {
-      Fiducial& f = map.levels[level_idx].fiducials[mouse_fiducial_idx];
+      Fiducial& f = building.levels[level_idx].fiducials[mouse_fiducial_idx];
       f.x = p.x();
       f.y = p.y();
       printf("moved fiducial %d to (%.1f, %.1f)\n",
@@ -1534,27 +1582,30 @@ void Editor::mouse_add_edge(
     const QPointF &p,
     const Edge::Type &edge_type)
 {
-  if (t == MOUSE_PRESS) {
-    clicked_idx = map.nearest_item_index_if_within_distance(
-        level_idx, p.x(), p.y(), 10.0, Map::VERTEX);
+  if (t == MOUSE_PRESS)
+  {
+    clicked_idx = building.nearest_item_index_if_within_distance(
+        level_idx, p.x(), p.y(), 10.0, Building::VERTEX);
   }
-  else if (t == MOUSE_RELEASE) {
+  else if (t == MOUSE_RELEASE)
+  {
     if (clicked_idx < 0)
       return;
     remove_mouse_motion_item();
     double distance = 0;
-    const int release_idx = map.find_nearest_vertex_index(
+    const int release_idx = building.find_nearest_vertex_index(
         level_idx, p.x(), p.y(), distance);
     if (distance > 10.0 || (clicked_idx == release_idx)) {
       clicked_idx = -1;
       return;
     }
-    map.add_edge(level_idx, clicked_idx, release_idx, edge_type);
+    building.add_edge(level_idx, clicked_idx, release_idx, edge_type);
     clicked_idx = -1;
     setWindowModified(true);
     create_scene();
   }
-  else if (t == MOUSE_MOVE) {
+  else if (t == MOUSE_MOVE)
+  {
     if (clicked_idx < 0)
       return;
     draw_mouse_motion_line_item(p.x(), p.y());
@@ -1588,10 +1639,11 @@ void Editor::mouse_add_door(
 void Editor::mouse_add_model(
     const MouseType t, QMouseEvent *, const QPointF &p)
 {
-  if (t == MOUSE_PRESS) {
+  if (t == MOUSE_PRESS)
+  {
     if (mouse_motion_editor_model == nullptr)
       return;
-    map.add_model(
+    building.add_model(
         level_idx,
         p.x(),
         p.y(),
@@ -1601,12 +1653,13 @@ void Editor::mouse_add_model(
     const int model_row = model_name_list_widget->currentRow();
     if (model_row < 0)
       return;  // nothing currently selected. nothing to do.
-    map.add_model(level_idx, p.x(), p.y(), 0.0, editor_models[model_row].name);
+    .add_model(level_idx, p.x(), p.y(), 0.0, editor_models[model_row].name);
     */
     setWindowModified(true);
     create_scene();
   }
-  else if (t == MOUSE_MOVE) {
+  else if (t == MOUSE_MOVE)
+  {
     if (mouse_motion_editor_model == nullptr)
       return;  // nothing currently selected. nothing to do.
     if (mouse_motion_model == nullptr)
@@ -1616,7 +1669,7 @@ void Editor::mouse_add_model(
       mouse_motion_model->setOffset(-pixmap.width()/2, -pixmap.height()/2);
       mouse_motion_model->setScale(
           mouse_motion_editor_model->meters_per_pixel /
-          map.levels[level_idx].drawing_meters_per_pixel);
+          building.levels[level_idx].drawing_meters_per_pixel);
     }
     mouse_motion_model->setPos(p.x(), p.y());
   }
@@ -1632,16 +1685,16 @@ void Editor::mouse_rotate(
     const MouseType t, QMouseEvent *mouse_event, const QPointF &p)
 {
   if (t == MOUSE_PRESS) {
-    clicked_idx = map.nearest_item_index_if_within_distance(
+    clicked_idx = building.nearest_item_index_if_within_distance(
         level_idx,
         p.x(),
         p.y(),
         50.0,
-        Map::MODEL);
+        Building::MODEL);
     if (clicked_idx < 0)
       return; // nothing to do. click wasn't on a model.
 
-    const Model &model = map.levels[level_idx].models[clicked_idx];
+    const Model &model = building.levels[level_idx].models[clicked_idx];
     mouse_motion_model = get_closest_pixmap_item(
         QPointF(model.x, model.y));
   
@@ -1665,16 +1718,16 @@ void Editor::mouse_rotate(
     //remove_mouse_motion_item();
     if (clicked_idx < 0)
       return;
-    const Model &model = map.levels[level_idx].models[clicked_idx];
+    const Model &model = building.levels[level_idx].models[clicked_idx];
     const double dx = p.x() - model.x;
     const double dy = -(p.y() - model.y);  // vertical axis is flipped
     double mouse_yaw = atan2(dy, dx);
     if (mouse_event->modifiers() & Qt::ShiftModifier)
       mouse_yaw = discretize_angle(mouse_yaw);
-    map.set_model_yaw(level_idx, clicked_idx, mouse_yaw);
+    building.set_model_yaw(level_idx, clicked_idx, mouse_yaw);
     clicked_idx = -1;  // we're done rotating it now
     setWindowModified(true);
-    // now re-render the whole map (could optimize in the future...)
+    // now re-render the whole scene (could optimize in the future...)
     create_scene();
   }
   else if (t == MOUSE_MOVE) {
@@ -1682,7 +1735,7 @@ void Editor::mouse_rotate(
       return;  // nothing currently selected. nothing to do.
 
     // re-orient the mouse_motion_model item and heading indicator as needed
-    const Model &model = map.levels[level_idx].models[clicked_idx];
+    const Model &model = building.levels[level_idx].models[clicked_idx];
     const double dx = p.x() - model.x;
     const double dy = -(p.y() - model.y);  // vertical axis is flipped
     double mouse_yaw = atan2(dy, dx);
@@ -1727,12 +1780,12 @@ void Editor::mouse_add_polygon(
 {
   if (t == MOUSE_PRESS) {
     if (e->buttons() & Qt::LeftButton) {
-      clicked_idx = map.nearest_item_index_if_within_distance(
-          level_idx, p.x(), p.y(), 10.0, Map::VERTEX);
+      clicked_idx = building.nearest_item_index_if_within_distance(
+          level_idx, p.x(), p.y(), 10.0, Building::VERTEX);
       if (clicked_idx < 0)
         return; // nothing to do. click wasn't on a vertex.
 
-      Vertex &v = map.levels[level_idx].vertices[clicked_idx];
+      Vertex &v = building.levels[level_idx].vertices[clicked_idx];
       v.selected = true;  // todo: find graphics item for vertex and colorize it
     
       if (mouse_motion_polygon == nullptr) {
@@ -1762,7 +1815,7 @@ void Editor::mouse_add_polygon(
         polygon.type = polygon_type;
         for (const auto &i : mouse_motion_polygon_vertices)
           polygon.vertices.push_back(i);
-        map.levels[level_idx].polygons.push_back(polygon);
+        building.levels[level_idx].polygons.push_back(polygon);
       }
       scene->removeItem(mouse_motion_polygon);
       delete mouse_motion_polygon;
@@ -1784,7 +1837,7 @@ void Editor::mouse_add_polygon(
     // now, make the updated polygon
     QVector<QPointF> polygon_vertices;
     for (const auto &vertex_idx: mouse_motion_polygon_vertices) {
-      const Vertex &v = map.levels[level_idx].vertices[vertex_idx];
+      const Vertex &v = building.levels[level_idx].vertices[vertex_idx];
       polygon_vertices.append(QPointF(v.x, v.y));
     }
     polygon_vertices.append(QPointF(p.x(), p.y()));
@@ -1811,12 +1864,12 @@ void Editor::mouse_edit_polygon(
     if (e->buttons() & Qt::RightButton) {
       if (polygon_idx < 0)
         return;  // no polygon is selected, nothing to do
-      int vertex_idx = map.nearest_item_index_if_within_distance(
-          level_idx, p.x(), p.y(), 10.0, Map::VERTEX);
+      int vertex_idx = building.nearest_item_index_if_within_distance(
+          level_idx, p.x(), p.y(), 10.0, Building::VERTEX);
       if (vertex_idx < 0)
         return;  // Nothing to do. Click wasn't near a vertex.
       // first mark the vertex as no longer selected
-      map.remove_polygon_vertex(level_idx, polygon_idx, vertex_idx);
+      building.remove_polygon_vertex(level_idx, polygon_idx, vertex_idx);
       setWindowModified(true);
       create_scene();
     }
@@ -1828,7 +1881,7 @@ void Editor::mouse_edit_polygon(
       const double x = p.x();
       const double y = p.y();
       const int polygon_vertex_drag_idx =
-          map.polygon_edge_drag_press(level_idx, polygon_idx, x, y);
+          building.polygon_edge_drag_press(level_idx, polygon_idx, x, y);
       if (polygon_vertex_drag_idx < 0)
         return;
     
@@ -1840,10 +1893,10 @@ void Editor::mouse_edit_polygon(
       // create the mouse motion polygon and insert a new edge
       QVector<QPointF> polygon_vertices;
       const Polygon &polygon =
-          map.levels[level_idx].polygons[polygon_idx];
+          building.levels[level_idx].polygons[polygon_idx];
       for (size_t i = 0; i < polygon.vertices.size(); i++) {
         const int v_idx = polygon.vertices[i];
-        const Vertex &v = map.levels[level_idx].vertices[v_idx];
+        const Vertex &v = building.levels[level_idx].vertices[v_idx];
         polygon_vertices.append(QPointF(v.x, v.y));
         if (v_idx == polygon_vertex_drag_idx) {
           polygon_vertices.append(QPointF(x, y));  // current mouse location
@@ -1870,12 +1923,12 @@ void Editor::mouse_edit_polygon(
     delete mouse_motion_polygon;
     mouse_motion_polygon = nullptr;
   
-    int release_vertex_idx = map.nearest_item_index_if_within_distance(
-        level_idx, p.x(), p.y(), 10.0, Map::VERTEX);
+    int release_vertex_idx = building.nearest_item_index_if_within_distance(
+        level_idx, p.x(), p.y(), 10.0, Building::VERTEX);
     if (release_vertex_idx < 0)
       return;  // nothing to do; didn't release near a vertex
   
-    Polygon &existing = map.levels[level_idx].polygons[polygon_idx];
+    Polygon &existing = building.levels[level_idx].polygons[polygon_idx];
     if (std::find(
         existing.vertices.begin(),
         existing.vertices.end(),
@@ -1904,7 +1957,8 @@ void Editor::mouse_edit_polygon(
 
 void Editor::number_key_pressed(const int n)
 {
-  for (auto &edge : map.levels[level_idx].edges) {
+  for (auto &edge : building.levels[level_idx].edges)
+  {
     if (edge.selected && edge.type == Edge::LANE)
       edge.set_graph_idx(n);
   }
@@ -1919,13 +1973,13 @@ bool Editor::maybe_save()
   const QMessageBox::StandardButton button_clicked =
       QMessageBox::warning(
           this,
-          "Document not saved!",
+          "Project not saved!",
           "Do you want to save your changes?",
           QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
   switch (button_clicked)
   {
     case QMessageBox::Save:
-      return save();
+      return file_save_building();
     case QMessageBox::Cancel:
       return false;
     default:
@@ -1947,4 +2001,18 @@ void Editor::closeEvent(QCloseEvent *event)
     event->accept();
   else
     event->ignore();
+}
+
+void Editor::mode_building()
+{
+  if (mode_combo_box->currentText() != "Building")
+    mode_combo_box->setCurrentText("Building");
+  printf("mode_building()\n");
+}
+
+void Editor::mode_traffic()
+{
+  if (mode_combo_box->currentText() != "Traffic")
+    mode_combo_box->setCurrentText("Traffic");
+  printf("mode_traffic()\n");
 }

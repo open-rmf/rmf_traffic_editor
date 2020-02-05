@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef NAV_MAP_H
-#define NAV_MAP_H
+#ifndef BUILDING_H
+#define BUILDING_H
 
 
 class QGraphicsScene;
@@ -31,20 +31,20 @@ class QGraphicsScene;
 #include "lift.h"
 
 
-class Map
+class Building
 {
 public:
-  Map();
-  ~Map();
+  Building();
+  ~Building();
+
+  std::string name;
+  std::string reference_level_name;
+  std::vector<Level> levels;
+  std::vector<Lift> lifts;
 
   void load_yaml(const std::string &filename);
   bool save_yaml(const std::string &filename);
   void clear();  // clear all internal data structures
-
-  std::string building_name;
-  std::vector<Level> levels;
-  std::vector<Lift> lifts;
-  std::string reference_level_name;
 
   void add_level(const Level &level);
 

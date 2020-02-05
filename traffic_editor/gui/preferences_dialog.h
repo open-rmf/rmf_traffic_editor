@@ -32,7 +32,7 @@ public:
 private:
   QLineEdit *thumbnail_path_line_edit;
   QPushButton *thumbnail_path_button;
-  QCheckBox *open_previous_file_checkbox;
+  QCheckBox *open_previous_files_checkbox;
   QPushButton *ok_button, *cancel_button;
 
 private slots:

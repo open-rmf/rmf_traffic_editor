@@ -21,7 +21,7 @@
 #include <QGraphicsView>
 #include <QWheelEvent>
 
-#include "./map.h"
+#include "building.h"
 
 
 class MapView : public QGraphicsView
@@ -30,7 +30,7 @@ class MapView : public QGraphicsView
 
 public:
   MapView(QWidget *parent = nullptr);
-  void zoom_fit(const Map &map, int level_index);
+  void zoom_fit(const Building& building, int level_index);
 
 protected:
   void wheelEvent(QWheelEvent *event);

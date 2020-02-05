@@ -50,12 +50,12 @@ PreferencesDialog::PreferencesDialog(QWidget *parent)
       this, &QDialog::reject);
 
   QVBoxLayout *vbox_layout = new QVBoxLayout;
-  open_previous_file_checkbox = new QCheckBox(
-      "Open previous file at startup", this);
-  open_previous_file_checkbox->setChecked(
-      settings.value(preferences_keys::open_previous_file).toBool());
+  open_previous_files_checkbox = new QCheckBox(
+      "Open previous files at startup", this);
+  open_previous_files_checkbox->setChecked(
+      settings.value(preferences_keys::open_previous_files).toBool());
 
-  vbox_layout->addWidget(open_previous_file_checkbox);
+  vbox_layout->addWidget(open_previous_files_checkbox);
   vbox_layout->addLayout(thumbnail_path_layout);
   // todo: some sort of separator (?)
   vbox_layout->addLayout(bottom_buttons_layout);
@@ -107,8 +107,8 @@ void PreferencesDialog::ok_button_clicked()
       thumbnail_path_line_edit->text());
 
   settings.setValue(
-      preferences_keys::open_previous_file,
-      open_previous_file_checkbox->isChecked());
+      preferences_keys::open_previous_files,
+      open_previous_files_checkbox->isChecked());
 
   accept();
 }

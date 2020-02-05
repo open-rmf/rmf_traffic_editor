@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.1.0)
 
-project(traffic-editor)
+project(traffic_editor)
 
 find_package(yaml-cpp REQUIRED)
 
@@ -34,8 +34,8 @@ add_executable(traffic-editor
   gui/lift_door.cpp
   gui/lift_table.cpp
   gui/main.cpp
-  gui/map.cpp
-  gui/map_dialog.cpp
+  gui/building.cpp
+  gui/building_dialog.cpp
   gui/map_view.cpp
   gui/model.cpp
   gui/model_dialog.cpp

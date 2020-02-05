@@ -21,7 +21,7 @@
 #include <QTableWidget>
 
 #include "table_list.h"
-#include "map.h"
+#include "building.h"
 
 class LevelTable : public TableList
 {
@@ -31,7 +31,7 @@ public:
   LevelTable();
   ~LevelTable();
 
-  void update(Map& map);
+  void update(Building& building);
 
 signals:
   void redraw_scene();
