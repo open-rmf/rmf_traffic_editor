@@ -77,7 +77,11 @@ class Floor:
 
         mesh_ele = SubElement(visual_geometry_ele, 'mesh')
         mesh_uri_ele = SubElement(mesh_ele, 'uri')
+
         meshes_path = f'{model_path}/meshes'
+        if not os.path.exists(meshes_path):
+            os.makedirs(meshes_path)
+
         obj_model_rel_path = f'meshes/floor_{floor_cnt}.obj'
         mesh_uri_ele.text = f'model://{model_name}/{obj_model_rel_path}'
 
@@ -101,9 +105,6 @@ class Floor:
         self.generate_geometry(collision_ele)
 
         triangles = tripy.earclip(self.vertices)
-
-        if not os.path.exists(meshes_path):
-            os.makedirs(meshes_path)
 
         obj_path = f'{model_path}/{obj_model_rel_path}'
         with open(obj_path, 'w') as f:

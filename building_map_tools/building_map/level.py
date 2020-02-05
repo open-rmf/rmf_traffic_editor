@@ -8,6 +8,7 @@ from .etree_utils import indent_etree
 
 from ament_index_python.packages import get_package_share_directory
 from .edge import Edge
+from .fiducial import Fiducial
 from .floor import Floor
 from .model import Model
 from .vertex import Vertex
@@ -18,10 +19,19 @@ from .doors.double_swing_door import DoubleSwingDoor
 class Level:
     def __init__(self, yaml_node, name):
         self.name = name
+        print(f'parsing level {name}')
         if 'drawing' in yaml_node:
             self.drawing_name = yaml_node['drawing']['filename']
         else:
             self.drawing_name = None
+
+        if 'elevation' in yaml_node:
+            self.elevation = yaml_node['elevation']
+
+        self.fiducials = []
+        if 'fiducials' in yaml_node:
+            for fiducial_yaml in yaml_node['fiducials']:
+                self.fiducials.append(Fiducial(fiducial_yaml))
 
         self.wall_height = 2.5  # meters
         self.wall_thickness = 0.1  # meters
@@ -29,13 +39,13 @@ class Level:
         self.cap_height = 0.02  # meters
 
         self.vertices = []
-        for vertex_yaml in yaml_node['vertices']:
-            self.vertices.append(Vertex(vertex_yaml))
+        if 'vertices' in yaml_node:
+            for vertex_yaml in yaml_node['vertices']:
+                self.vertices.append(Vertex(vertex_yaml))
 
+        self.meas = []
         if 'measurements' in yaml_node:
             self.meas = self.parse_edge_sequence(yaml_node['measurements'])
-        else:
-            self.meas = []
 
         # use the measurements to estimate scale for this level
         scale_cnt = 0
@@ -144,7 +154,10 @@ class Level:
 
     def generate_wall_visual_mesh(self, model_name, model_path):
         print(f'generate_wall_visual_mesh({model_name}, {model_path})')
+
         meshes_path = f'{model_path}/meshes'
+        if not os.path.exists(meshes_path):
+            os.makedirs(meshes_path)
 
         obj_model_rel_path = 'meshes/walls.obj'
         obj_path = os.path.join(model_path, obj_model_rel_path)
@@ -417,7 +430,7 @@ class Level:
                     l.params['demo_mock_floor_name'].value:
                 p['demo_mock_floor_name'] = \
                     l.params['demo_mock_floor_name'].value
-                    
+
             if 'demo_mock_lift_name' in l.params and \
                     l.params['demo_mock_lift_name'].value:
                 p['demo_mock_lift_name'] = \
