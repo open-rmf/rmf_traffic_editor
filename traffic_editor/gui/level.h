@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Open Source Robotics Foundation
+ * Copyright (C) 2019-2020 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,30 +40,21 @@ public:
   ~Level();
 
   std::string name;
-  std::string drawing_filename;
-  int drawing_width, drawing_height;
-  double drawing_meters_per_pixel;
-  double elevation;
-
-  double x_meters, y_meters;  // manually specified if no drawing supplied
 
   std::vector<Vertex> vertices;
   std::vector<Edge> edges;
-  std::vector<Model> models;
   std::vector<Polygon> polygons;
-  std::vector<Fiducial> fiducials;
 
-  QPixmap floorplan_pixmap;
   std::vector<Layer> layers;
 
   // temporary, just for debugging polygon edge projection...
-  double polygon_edge_proj_x, polygon_edge_proj_y;
+  double polygon_edge_proj_x = 0.0;
+  double polygon_edge_proj_y = 0.0;
 
-  bool from_yaml(const std::string &name, const YAML::Node &data);
-  YAML::Node to_yaml() const;
+  virtual bool from_yaml(const std::string &name, const YAML::Node &data) = 0;
+  virtual YAML::Node to_yaml() const = 0;
 
-  bool delete_selected();
-  void calculate_scale();
+  virtual bool delete_selected() = 0;
 
   void remove_polygon_vertex(const int polygon_idx, const int vertex_idx);
 
@@ -72,12 +63,9 @@ public:
       const double x,
       const double y);
 
-  void draw_edges(QGraphicsScene *scene) const;
-  void draw_vertices(QGraphicsScene *scene) const;
-  void draw_polygons(QGraphicsScene *scene) const;
-  void draw_fiducials(QGraphicsScene *scene) const;
+  virtual void draw(QGraphicsScene *scene) const = 0;
 
-  void clear_selection();
+  virtual void clear_selection() = 0;
 
 private:
   double point_to_line_segment_distance(
@@ -90,30 +78,11 @@ private:
       double &x_proj,
       double &y_proj);
 
-  void draw_lane(QGraphicsScene *scene, const Edge &edge) const;
-  void draw_wall(QGraphicsScene *scene, const Edge &edge) const;
-  void draw_meas(QGraphicsScene *scene, const Edge &edge) const;
-  void draw_door(QGraphicsScene *scene, const Edge &edge) const;
-
   void load_yaml_edge_sequence(
       const YAML::Node &data,
       const char *sequence_name,
       const Edge::Type type);
 
-  void add_door_swing_path(
-      QPainterPath &path,
-      double hinge_x,
-      double hinge_y,
-      double door_length,
-      double start_angle,
-      double end_angle) const;
-
-  void add_door_slide_path(
-      QPainterPath &path,
-      double hinge_x,
-      double hinge_y,
-      double door_length,
-      double door_angle) const;
 };
 
 #endif

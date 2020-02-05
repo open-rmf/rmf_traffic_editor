@@ -426,7 +426,7 @@ bool Editor::load_building(const QString &filename)
 
   if (!building.levels.empty())
   {
-    const Level &level = building.levels[level_idx];
+    const BuildingLevel& level = building.levels[level_idx];
     scene->setSceneRect(
         QRectF(0, 0, level.drawing_width, level.drawing_height));
     previous_mouse_point = QPointF(level.drawing_width, level.drawing_height);

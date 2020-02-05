@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Open Source Robotics Foundation
+ * Copyright (C) 2019-2020 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ class QGraphicsScene;
 
 #include <QPointF>
 
-#include "level.h"
+#include "building_level.h"
 #include "lift.h"
 
 
@@ -39,14 +39,14 @@ public:
 
   std::string name;
   std::string reference_level_name;
-  std::vector<Level> levels;
+  std::vector<BuildingLevel> levels;
   std::vector<Lift> lifts;
 
   void load_yaml(const std::string &filename);
   bool save_yaml(const std::string &filename);
   void clear();  // clear all internal data structures
 
-  void add_level(const Level &level);
+  void add_level(const BuildingLevel &level);
 
   void add_vertex(int level_index, double x, double y);
   void add_fiducial(int level_index, double x, double y);
