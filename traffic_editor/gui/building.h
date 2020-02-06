@@ -42,8 +42,10 @@ public:
   std::vector<BuildingLevel> levels;
   std::vector<Lift> lifts;
 
-  void load_yaml(const std::string &filename);
-  bool save_yaml(const std::string &filename);
+  std::string filename;
+
+  bool load_yaml_file();
+  bool save_yaml_file();
   void clear();  // clear all internal data structures
 
   void add_level(const BuildingLevel &level);

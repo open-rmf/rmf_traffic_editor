@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Open Source Robotics Foundation
+ * Copyright (C) 2019-2020 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,29 +15,30 @@
  *
 */
 
-#ifndef PREFERENCES_DIALOG_H
-#define PREFERENCES_DIALOG_H
+#ifndef PROJECT_H
+#define PROJECT_H
 
-#include <QDialog>
-class QLineEdit;
-class QCheckBox;
+#include "building.h"
+
+#include <string>
+#include <yaml-cpp/yaml.h>
 
 
-class PreferencesDialog : public QDialog
+class Project
 {
 public:
-  PreferencesDialog(QWidget *parent);
-  ~PreferencesDialog();
- 
-private:
-  QLineEdit *thumbnail_path_line_edit;
-  QPushButton *thumbnail_path_button;
-  QCheckBox *open_previous_project_checkbox;
-  QPushButton *ok_button, *cancel_button;
+  std::string name;
+  Building building;
 
-private slots:
-  void thumbnail_path_button_clicked();
-  void ok_button_clicked();
+  /////////////////////////////////
+  Project();
+  ~Project();
+
+  bool load_yaml_file(const std::string& _filename);
+  bool save_yaml_file() const;
+
+  std::string filename;
 };
+
 
 #endif

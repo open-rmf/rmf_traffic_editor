@@ -43,17 +43,22 @@ Building::~Building()
 ///
 /// This function replaces the contents of this object with what is
 /// in the YAML file.
-void Building::load_yaml(const string &filename)
+bool Building::load_yaml_file()
 {
   // This function may throw exceptions. Caller should be ready for them!
   YAML::Node y = YAML::LoadFile(filename.c_str());
 
   // change directory to the path of the file, so that we can correctly open
   // relative paths recorded in the file
+
+  // TODO: save previous directory and restore it when leaving this function
   QString dir(QFileInfo(QString::fromStdString(filename)).absolutePath());
   qDebug("changing directory to [%s]", qUtf8Printable(dir));
   if (!QDir::setCurrent(dir))
-    throw std::runtime_error("couldn't change directory");
+  {
+    printf("couldn't change directory\n");
+    return false;
+  }
 
   if (y["name"])
     name = y["name"].as<string>();
@@ -62,7 +67,10 @@ void Building::load_yaml(const string &filename)
     reference_level_name = y["reference_level_name"].as<string>();
 
   if (!y["levels"] || !y["levels"].IsMap())
-    throw std::runtime_error("expected top-level dictionary named 'levels'");
+  {
+    printf("expected top-level dictionary named 'levels'");
+    return false;
+  }
 
   levels.clear();
   const YAML::Node yl = y["levels"];
@@ -85,9 +93,10 @@ void Building::load_yaml(const string &filename)
   }
 
   calculate_all_transforms();
+  return true;
 }
 
-bool Building::save_yaml(const std::string &filename)
+bool Building::save_yaml_file()
 {
   printf("Building::save_yaml(%s)\n", filename.c_str());
 

@@ -30,21 +30,20 @@ int main(int argc, char *argv[])
 
   QCommandLineParser parser;
   parser.addHelpOption();
-  parser.addPositionalArgument("[building]", "Building map to open");
-  parser.addPositionalArgument("[traffic_map]", "Traffic map to open");
+  parser.addPositionalArgument("[project]", "Project to open");
   parser.process(QCoreApplication::arguments());
 
   Editor editor;
   QSettings settings;
 
   const bool load_previous = settings.value(
-      preferences_keys::open_previous_files, QVariant(true)).toBool();
+      preferences_keys::open_previous_project, QVariant(true)).toBool();
 
   if (load_previous && parser.positionalArguments().isEmpty())
-    editor.load_previous_files();
+    editor.load_previous_project();
 
   if (parser.positionalArguments().length() >= 1)
-    editor.load_building(parser.positionalArguments().at(0));
+    editor.load_project(parser.positionalArguments().at(0));
 
   // todo: load traffic map as second argument
 

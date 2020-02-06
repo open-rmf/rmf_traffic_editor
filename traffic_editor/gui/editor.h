@@ -33,6 +33,7 @@
 
 class MapView;
 class Level;
+#include "project.h"
 #include "building.h"
 #include "editor_model.h"
 #include "lift_table.h"
@@ -66,12 +67,12 @@ public:
 
   static Editor *get_instance();
 
-  /// Load a project, replacing the current building being edited
-  bool load_building(const QString &filename);
+  /// Load a project, replacing the current project being edited
+  bool load_project(const QString &filename);
 
   /// Attempt to load the most recently saved project, just for convenience
   /// when starting the application since often we want to 'resume' editing.
-  bool load_previous_files();
+  bool load_previous_project();
 
 protected:
   void mousePressEvent(QMouseEvent *e);
@@ -106,11 +107,9 @@ private:
 
   /////////////////
   // MENU ACTIONS
-  void file_new_building();
-  void file_open_building();
-  bool file_save_building();
-
-  void file_new_traffic_map();
+  void file_new_project();
+  void file_open_project();
+  bool file_save_project();
 
   bool maybe_save();
   void edit_preferences();
@@ -142,7 +141,7 @@ private:
 /////////////////////////////
   static Editor *instance;  // there will only be one instance
 
-  Building building;
+  Project project;
   int level_idx = 0;  // level that we are currently editing
   int clicked_idx = -1;  // point most recently clicked
   int polygon_idx = -1;  // currently selected polygon
@@ -155,8 +154,6 @@ private:
   QAction *save_action;
   QAction *zoom_in_action, *zoom_out_action;
   QAction *zoom_normal_action, *zoom_fit_action;
-
-  QString building_filename;
 
   const QString tool_id_to_string(const int id);
   QButtonGroup *tool_button_group;
