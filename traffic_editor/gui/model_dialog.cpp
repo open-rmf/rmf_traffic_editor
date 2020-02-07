@@ -28,6 +28,7 @@ ModelDialog::ModelDialog(
   _model(model),
   _editor_models(editor_models)
 {
+  setWindowTitle("Model Properties");
   QHBoxLayout *bottom_buttons_layout = new QHBoxLayout;
   _ok_button = new QPushButton("OK", this);  // first button = [enter] button
   bottom_buttons_layout->addWidget(_ok_button);

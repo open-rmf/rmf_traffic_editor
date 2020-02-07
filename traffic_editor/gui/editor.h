@@ -107,13 +107,14 @@ private:
 
   /////////////////
   // MENU ACTIONS
-  void file_new_project();
-  void file_open_project();
-  bool file_save_project();
+  void project_new();
+  void project_open();
+  bool project_save();
 
   bool maybe_save();
   void edit_preferences();
   void edit_building_properties();
+  void edit_project_properties();
 
   void mode_building();
   void mode_traffic();

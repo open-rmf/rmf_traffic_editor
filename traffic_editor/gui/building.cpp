@@ -45,6 +45,7 @@ Building::~Building()
 /// in the YAML file.
 bool Building::load_yaml_file()
 {
+  printf("Building::load_yaml_file(%s)\n", filename.c_str());
   // This function may throw exceptions. Caller should be ready for them!
   YAML::Node y = YAML::LoadFile(filename.c_str());
 

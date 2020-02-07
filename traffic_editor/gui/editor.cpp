@@ -37,6 +37,8 @@
 #include "model_dialog.h"
 #include "preferences_dialog.h"
 #include "preferences_keys.h"
+#include "project_dialog.h"
+
 using std::string;
 
 
@@ -180,30 +182,30 @@ Editor::Editor()
   w->setStyleSheet("background-color: #404040" );
   setCentralWidget(w);
 
-  // FILE MENU
-  QMenu *file_menu = menuBar()->addMenu("&File");
+  // PROJECT MENU
+  QMenu *project_menu = menuBar()->addMenu("&Project");
 
-  file_menu->addAction(
-      "&New Project...",
+  project_menu->addAction(
+      "&New...",
       this,
-      &Editor::file_new_project,
+      &Editor::project_new,
       QKeySequence(Qt::CTRL + Qt::Key_N));
 
-  file_menu->addAction(
-      "&Open Project...",
+  project_menu->addAction(
+      "&Open...",
       this,
-      &Editor::file_open_project,
+      &Editor::project_open,
       QKeySequence(Qt::CTRL + Qt::Key_O));
 
-  file_menu->addAction(
-      "&Save Project",
+  project_menu->addAction(
+      "&Save",
       this,
-      &Editor::file_save_project,
+      &Editor::project_save,
       QKeySequence(Qt::CTRL + Qt::Key_S));
 
-  file_menu->addSeparator();
+  project_menu->addSeparator();
 
-  file_menu->addAction(
+  project_menu->addAction(
       "E&xit",
       this,
       &QWidget::close,
@@ -215,6 +217,10 @@ Editor::Editor()
       "&Building properties...",
       this,
       &Editor::edit_building_properties);
+  edit_menu->addAction(
+      "&Project properties...",
+      this,
+      &Editor::edit_project_properties);
   edit_menu->addSeparator();
   edit_menu->addAction("&Preferences...", this, &Editor::edit_preferences);
 
@@ -438,7 +444,7 @@ bool Editor::load_previous_project()
   return true;
 }
 
-void Editor::file_new_project()
+void Editor::project_new()
 {
   QFileDialog dialog(this, "New Project");
   dialog.setNameFilter("*.yaml");
@@ -458,7 +464,7 @@ void Editor::file_new_project()
 
   project.building.clear();
   create_scene();
-  file_save_project();
+  project_save();
   level_table->update(project.building);
 
   QSettings settings;
@@ -467,7 +473,7 @@ void Editor::file_new_project()
       QString::fromStdString(project.filename));
 }
 
-void Editor::file_open_project()
+void Editor::project_open()
 {
   QFileDialog file_dialog(this, "Open Project");
   file_dialog.setFileMode(QFileDialog::ExistingFile);
@@ -487,7 +493,7 @@ void Editor::file_open_project()
   load_project(file_info.filePath());
 }
 
-bool Editor::file_save_project()
+bool Editor::project_save()
 {
   project.save_yaml_file();
   setWindowModified(false);
@@ -511,6 +517,13 @@ void Editor::edit_building_properties()
 {
   BuildingDialog building_dialog(project.building);
   if (building_dialog.exec() == QDialog::Accepted)
+    setWindowModified(true);
+}
+
+void Editor::edit_project_properties()
+{
+  ProjectDialog project_dialog(project);
+  if (project_dialog.exec() == QDialog::Accepted)
     setWindowModified(true);
 }
 
@@ -1861,7 +1874,7 @@ bool Editor::maybe_save()
   switch (button_clicked)
   {
     case QMessageBox::Save:
-      return file_save_project();
+      return project_save();
     case QMessageBox::Cancel:
       return false;
     default:

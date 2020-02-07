@@ -24,6 +24,7 @@ LiftDialog::LiftDialog(Lift& lift, const Building& building)
 : QDialog(),
   _lift(lift)
 {
+  setWindowTitle("Lift Properties");
   for (const Level& level : building.levels)
     _level_names.push_back(QString::fromStdString(level.name));
 

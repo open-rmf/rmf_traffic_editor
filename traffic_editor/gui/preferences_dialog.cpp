@@ -23,6 +23,8 @@
 PreferencesDialog::PreferencesDialog(QWidget *parent)
 : QDialog(parent)
 {
+  setWindowTitle("Preferences");
+
   QSettings settings;
 
   ok_button = new QPushButton("OK", this);  // first button = [enter] button

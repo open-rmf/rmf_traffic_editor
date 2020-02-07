@@ -22,6 +22,7 @@
 BuildingDialog::BuildingDialog(Building& building)
 : QDialog(), _building(building)
 {
+  setWindowTitle("Building Properties");
   _ok_button = new QPushButton("OK", this);  // first button = [enter] button
   _cancel_button = new QPushButton("Cancel", this);
 
