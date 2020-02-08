@@ -31,13 +31,17 @@
 #include "add_param_dialog.h"
 #include "building_dialog.h"
 #include "building_level_dialog.h"
+#include "building_level_table.h"
 #include "editor.h"
 #include "layer_dialog.h"
+#include "lift_table.h"
 #include "map_view.h"
 #include "model_dialog.h"
 #include "preferences_dialog.h"
 #include "preferences_keys.h"
 #include "project_dialog.h"
+#include "scenario_table.h"
+#include "traffic_table.h"
 
 using std::string;
 
@@ -112,16 +116,19 @@ Editor::Editor()
   connect(
       lift_table,
       &TableList::redraw,
-      [this]()
-      {
-        this->create_scene();
-      });
+      [this]() { this->create_scene(); });
+
+  traffic_table = new TrafficTable;
+
+  scenario_table = new ScenarioTable;
 
   right_tab_widget = new QTabWidget;
   right_tab_widget->setStyleSheet("QTabBar::tab { color: white; }");
   right_tab_widget->addTab(level_table, "levels");
   right_tab_widget->addTab(layers_table, "layers");
   right_tab_widget->addTab(lift_table, "lifts");
+  right_tab_widget->addTab(traffic_table, "traffic");
+  right_tab_widget->addTab(scenario_table, "scenarios");
 
   property_editor = new QTableWidget;
   property_editor->setStyleSheet("QTableWidget { background-color: #e0e0e0; color: black; gridline-color: #606060; } QLineEdit { background:white; }");

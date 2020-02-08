@@ -30,14 +30,15 @@
 #include <QMainWindow>
 #include <QSettings>
 
+#include "project.h"
+#include "editor_model.h"
 
+class BuildingLevelTable;
 class MapView;
 class Level;
-#include "project.h"
-#include "building.h"
-#include "editor_model.h"
-#include "lift_table.h"
-#include "building_level_table.h"
+class LiftTable;
+class ScenarioTable;
+class TrafficTable;
 
 QT_BEGIN_NAMESPACE
 class QAction;
@@ -172,8 +173,10 @@ private:
   void layer_edit_button_clicked(const std::string &label);
   void layer_add_button_clicked();
 
-  LiftTable *lift_table;
   BuildingLevelTable *level_table;
+  LiftTable *lift_table;
+  ScenarioTable *scenario_table;
+  TrafficTable *traffic_table;
 
   QTableWidget *property_editor;
   void update_property_editor();

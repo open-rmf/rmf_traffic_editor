@@ -47,6 +47,8 @@ add_executable(traffic-editor
   gui/project.cpp
   gui/project_dialog.cpp
   gui/table_list.cpp
+  gui/scenario_table.cpp
+  gui/traffic_table.cpp
   gui/vertex.cpp
   resources/resource.qrc
 )
