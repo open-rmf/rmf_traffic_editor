@@ -47,7 +47,7 @@ public:
 
   void set_param(const std::string& name, const std::string& value);
 
-  void draw(QGraphicsScene *, const double meters_per_pixel) const;
+  void draw(QGraphicsScene *, const double radius) const;
 
   ////////////////////////////////////////////////////////////
   static const std::vector<std::pair<std::string, Param::Type> > allowed_params;

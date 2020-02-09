@@ -91,11 +91,10 @@ YAML::Node Vertex::to_yaml() const
 
 void Vertex::draw(
     QGraphicsScene *scene,
-    const double meters_per_pixel) const
+    const double radius) const
 {
   QPen vertex_pen(Qt::black);
-  vertex_pen.setWidth(0.05 / meters_per_pixel);
-  const double radius = 0.1 / meters_per_pixel;
+  vertex_pen.setWidthF(radius / 2.0);
 
   const double a = 0.5;
   QColor color = QColor::fromRgbF(0.0, 1.0, 0.0, a);

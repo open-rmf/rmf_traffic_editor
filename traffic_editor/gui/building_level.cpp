@@ -834,7 +834,7 @@ void BuildingLevel::draw(
   }
 
   for (const auto &v : vertices)
-    v.draw(scene, drawing_meters_per_pixel);
+    v.draw(scene, 0.1 / drawing_meters_per_pixel);
 
   for (const auto &f : fiducials)
     f.draw(scene, drawing_meters_per_pixel);

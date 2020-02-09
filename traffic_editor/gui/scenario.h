@@ -15,34 +15,30 @@
  *
 */
 
-#ifndef PROJECT_H
-#define PROJECT_H
+#ifndef SCENARIO_H
+#define SCENARIO_H
 
-#include "building.h"
-#include "scenario.h"
+#include "polygon.h"
+#include "vertex.h"
 
+#include <map>
 #include <string>
-#include <vector>
 #include <yaml-cpp/yaml.h>
 
-
-class Project
+class Scenario
 {
 public:
   std::string name;
   std::string filename;
-
-  Building building;
-  std::vector<Scenario> scenarios;
+  std::vector<Vertex> vertices;
+  std::map<std::string, Polygon> roi;  // region of interest on each level
 
   /////////////////////////////////
-  Project();
-  ~Project();
+  Scenario();
+  ~Scenario();
 
   bool load_yaml_file(const std::string& _filename);
   bool save_yaml_file() const;
-
 };
-
 
 #endif

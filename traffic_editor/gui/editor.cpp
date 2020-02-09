@@ -132,7 +132,7 @@ Editor::Editor()
 
   property_editor = new QTableWidget;
   property_editor->setStyleSheet("QTableWidget { background-color: #e0e0e0; color: black; gridline-color: #606060; } QLineEdit { background:white; }");
-  property_editor->setMinimumSize(500, 200);
+  property_editor->setMinimumSize(600, 200);
   property_editor->setSizePolicy(
       QSizePolicy::Fixed,
       QSizePolicy::MinimumExpanding);

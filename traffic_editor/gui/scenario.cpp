@@ -15,34 +15,42 @@
  *
 */
 
-#ifndef PROJECT_H
-#define PROJECT_H
-
-#include "building.h"
 #include "scenario.h"
 
-#include <string>
-#include <vector>
-#include <yaml-cpp/yaml.h>
+using std::string;
 
 
-class Project
+Scenario::Scenario()
 {
-public:
-  std::string name;
-  std::string filename;
+}
 
-  Building building;
-  std::vector<Scenario> scenarios;
+Scenario::~Scenario()
+{
+}
 
-  /////////////////////////////////
-  Project();
-  ~Project();
+bool Scenario::load_yaml_file(const std::string& _filename)
+{
+  filename = _filename;
 
-  bool load_yaml_file(const std::string& _filename);
-  bool save_yaml_file() const;
+  // This function may throw exceptions. Caller should be ready for them!
+  YAML::Node yaml;
+  try
+  {
+    yaml = YAML::LoadFile(filename.c_str());
+  }
+  catch (const std::exception& e)
+  {
+    printf("couldn't parse %s: %s", filename.c_str(), e.what());
+    return false;
+  }
 
-};
+  if (yaml["name"])
+    name = yaml["name"].as<string>();
 
+  return true;
+}
 
-#endif
+bool Scenario::save_yaml_file() const
+{
+  return true;
+}
