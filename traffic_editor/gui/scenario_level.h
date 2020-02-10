@@ -15,49 +15,35 @@
  *
 */
 
-#ifndef PROJECT_H
-#define PROJECT_H
+#ifndef SCENARIO_LEVEL_H
+#define SCENARIO_LEVEL_H
 
-#include "building.h"
-#include "editor_model.h"
-#include "scenario.h"
+#include "level.h"
 
-#include <string>
-#include <vector>
 #include <yaml-cpp/yaml.h>
+#include <string>
 
 class QGraphicsScene;
 
 
-class Project
+class ScenarioLevel : public Level
 {
 public:
-  std::string name;
-  std::string filename;
+  ScenarioLevel();
+  ~ScenarioLevel();
 
-  Building building;
-  std::vector<Scenario> scenarios;
+  bool from_yaml(const std::string &name, const YAML::Node &data);
+  YAML::Node to_yaml() const;
 
-  int scenario_idx = -1;  // the current scenario being viewed/edited
+  bool delete_selected();
 
-  /////////////////////////////////
-  Project();
-  ~Project();
+  void clear_selection();
 
-  bool save();
-  bool load(const std::string& _filename);
-
-  void add_scenario_vertex(int level_index, double x, double y);
-  void scenario_row_clicked(const int row);
   void draw(
       QGraphicsScene *scene,
-      const int level_idx,
-      std::vector<EditorModel>& editor_models);
+      const double meters_per_pixel) const;
 
-private:
-  bool load_yaml_file(const std::string& _filename);
-  bool save_yaml_file() const;
+  void draw_polygons(QGraphicsScene *scene) const;
 };
-
 
 #endif

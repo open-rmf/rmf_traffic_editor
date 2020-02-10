@@ -64,10 +64,6 @@ public:
       const double x,
       const double y);
 
-  virtual void draw(
-      QGraphicsScene *scene,
-      std::vector<EditorModel>& editor_models) const = 0;
-
   virtual void clear_selection() = 0;
 
 protected:
@@ -86,6 +82,7 @@ protected:
       const char *sequence_name,
       const Edge::Type type);
 
+  bool parse_vertices(const YAML::Node &_data);
 };
 
 #endif

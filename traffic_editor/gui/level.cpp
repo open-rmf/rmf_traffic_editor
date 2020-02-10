@@ -151,3 +151,18 @@ int Level::polygon_edge_drag_press(
   }
   return min_idx;
 }
+
+bool Level::parse_vertices(const YAML::Node &_data)
+{
+  if (_data["vertices"] && _data["vertices"].IsSequence())
+  {
+    const YAML::Node &pts = _data["vertices"];
+    for (YAML::const_iterator it = pts.begin(); it != pts.end(); ++it)
+    {
+      Vertex v;
+      v.from_yaml(*it);
+      vertices.push_back(v);
+    }
+  }
+  return true;
+}

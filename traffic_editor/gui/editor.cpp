@@ -121,6 +121,13 @@ Editor::Editor()
   traffic_table = new TrafficTable;
 
   scenario_table = new ScenarioTable;
+  connect(
+      scenario_table, &QTableWidget::cellClicked,
+      [=](int row, int /*col*/)
+      {
+        project.scenario_row_clicked(row);
+        create_scene();
+      });
 
   right_tab_widget = new QTabWidget;
   right_tab_widget->setStyleSheet("QTabBar::tab { color: white; }");
@@ -236,14 +243,20 @@ Editor::Editor()
   mode_menu->addAction(
       "&Building",
       this,
-      &Editor::mode_building,
+      [this]() { this->set_mode(MODE_BUILDING, "Building"); },
       QKeySequence(Qt::CTRL + Qt::Key_B));
 
   mode_menu->addAction(
       "&Traffic lanes",
       this,
-      &Editor::mode_traffic,
+      [this]() { this->set_mode(MODE_TRAFFIC, "Traffic"); },
       QKeySequence(Qt::CTRL + Qt::Key_T));
+
+  mode_menu->addAction(
+      "&Scenario",
+      this,
+      [this]() { this->set_mode(MODE_SCENARIO, "Scenario"); },
+      QKeySequence(Qt::CTRL + Qt::Key_E));
 
   // VIEW MENU
   QMenu *view_menu = menuBar()->addMenu("&View");
@@ -264,15 +277,18 @@ Editor::Editor()
   mode_combo_box = new QComboBox;
   mode_combo_box->addItem("Building");
   mode_combo_box->addItem("Traffic");
+  mode_combo_box->addItem("Scenario");
   connect(
       mode_combo_box,
       &QComboBox::currentTextChanged,
       [this](const QString& text)
       {
         if (text == "Building")
-          mode_building();
+          set_mode(MODE_BUILDING, "Building");
         else if (text == "Traffic")
-          mode_traffic();
+          set_mode(MODE_TRAFFIC, "Traffic");
+        else if (text == "Scenario")
+          set_mode(MODE_SCENARIO, "Scenario");
       });
 
   QLabel *mode_label = new QLabel("Edit mode:");
@@ -286,21 +302,15 @@ Editor::Editor()
   create_tool_button(TOOL_SELECT, ":icons/select.svg", "Select (Esc)");
   create_tool_button(TOOL_MOVE, ":icons/move.svg", "Move (M)");
   create_tool_button(TOOL_ROTATE, ":icons/rotate.svg", "Rotate (R)");
-
-  create_tool_button(
-      TOOL_ADD_VERTEX,
-      ":icons/add_vertex.svg",
-      "Add Vertex (V)");
-  create_tool_button(
-      TOOL_ADD_FIDUCIAL,
-      ":icons/fiducial.svg",
-      "Add Fiducial");
+  create_tool_button(TOOL_ADD_VERTEX, ":icons/vertex.svg", "Add Vertex (V)");
+  create_tool_button(TOOL_ADD_FIDUCIAL, ":icons/fiducial.svg", "Add Fiducial");
   create_tool_button(TOOL_ADD_LANE, "", "Add Lane (L)");
   create_tool_button(TOOL_ADD_WALL, "", "Add Wall (W)");
   create_tool_button(TOOL_ADD_MEAS, "", "Add Measurement");
   create_tool_button(TOOL_ADD_DOOR, "", "Add Door");
   create_tool_button(TOOL_ADD_MODEL, "", "Add Model");
   create_tool_button(TOOL_ADD_FLOOR, "", "Add Floor Polygon");
+  create_tool_button(TOOL_ADD_ROI, ":icons/roi.svg", "Add Region of Interest");
   create_tool_button(TOOL_EDIT_POLYGON, "", "Edit Polygon");
 
   connect(
@@ -338,6 +348,7 @@ Editor::Editor()
 
   // default tool is the "select" tool
   tool_button_group->button(TOOL_SELECT)->click();
+  set_mode(MODE_BUILDING, "Building");
 
   load_model_names();
   level_table->setCurrentCell(level_idx, 0);
@@ -381,7 +392,7 @@ void Editor::load_model_names()
 }
 
 QToolButton *Editor::create_tool_button(
-    const int id,
+    const ToolId id,
     const QString& icon_filename,
     const QString & tooltip)
 {
@@ -399,7 +410,7 @@ QToolButton *Editor::create_tool_button(
     b->setText(tool_id_to_string(id));
     //b->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum);
   }
-  toolbar->addWidget(b);
+  tools[id] = toolbar->addWidget(b);
   tool_button_group->addButton(b, id);
   return b;
 }
@@ -578,6 +589,7 @@ void Editor::mouse_event(const MouseType t, QMouseEvent *e)
     case TOOL_ADD_FLOOR:    mouse_add_floor(t, e, p); break;
     case TOOL_EDIT_POLYGON: mouse_edit_polygon(t, e, p); break;
     case TOOL_ADD_FIDUCIAL: mouse_add_fiducial(t, e, p); break;
+    case TOOL_ADD_ROI:      mouse_add_roi(t, e, p); break;
     default: break;
   }
   previous_mouse_point = p;
@@ -1199,14 +1211,7 @@ bool Editor::create_scene()
   mouse_motion_ellipse = nullptr;
   mouse_motion_polygon = nullptr;
 
-  if (project.building.levels.empty())
-  {
-    printf("nothing to draw!\n");
-    return false;
-  }
-
-  project.building.levels[level_idx].draw(scene, editor_models);
-  project.building.draw_lifts(scene, level_idx);
+  project.draw(scene, level_idx, editor_models);
 
   return true;
 }
@@ -1388,8 +1393,15 @@ void Editor::mouse_select(
 void Editor::mouse_add_vertex(
     const MouseType t, QMouseEvent *, const QPointF &p)
 {
-  if (t == MOUSE_PRESS) {
-    project.building.add_vertex(level_idx, p.x(), p.y());
+  if (t == MOUSE_PRESS)
+  {
+    if (mode == MODE_BUILDING)
+      project.building.add_vertex(level_idx, p.x(), p.y());
+    else
+    {
+      QMessageBox::warning(this, "Add Vertex", "Only works in building mode");
+      return;
+    }
     setWindowModified(true);
     create_scene();
   }
@@ -1758,6 +1770,12 @@ void Editor::mouse_add_floor(
   mouse_add_polygon(t, e, p, Polygon::FLOOR);
 }
 
+void Editor::mouse_add_roi(
+    const MouseType t, QMouseEvent *e, const QPointF &p)
+{
+  mouse_add_polygon(t, e, p, Polygon::ROI);
+}
+
 void Editor::mouse_edit_polygon(
     const MouseType t, QMouseEvent *e, const QPointF &p)
 {
@@ -1904,16 +1922,40 @@ void Editor::closeEvent(QCloseEvent *event)
     event->ignore();
 }
 
-void Editor::mode_building()
+void Editor::set_tool_visibility(const ToolId id, const bool visible)
 {
-  if (mode_combo_box->currentText() != "Building")
-    mode_combo_box->setCurrentText("Building");
-  printf("mode_building()\n");
+  QAction *a = tools[id];
+  if (a)
+    a->setVisible(visible);
+  else
+    printf("unable to find tool action %d\n", static_cast<int>(id));
 }
 
-void Editor::mode_traffic()
+void Editor::set_mode(const ModeId _mode, const QString& mode_string)
 {
-  if (mode_combo_box->currentText() != "Traffic")
-    mode_combo_box->setCurrentText("Traffic");
-  printf("mode_traffic()\n");
+  if (mode_combo_box->currentText() != mode_string)
+  {
+    mode_combo_box->blockSignals(true);
+    mode_combo_box->setCurrentText(mode_string);
+    mode_combo_box->blockSignals(false);
+  }
+
+  mode = _mode;
+
+  // building tools
+  set_tool_visibility(TOOL_ADD_WALL, mode == MODE_BUILDING);
+  set_tool_visibility(TOOL_ADD_MEAS, mode == MODE_BUILDING);
+  set_tool_visibility(TOOL_ADD_DOOR, mode == MODE_BUILDING);
+  set_tool_visibility(TOOL_ADD_MODEL, mode == MODE_BUILDING);
+  set_tool_visibility(TOOL_ADD_FLOOR, mode == MODE_BUILDING);
+  set_tool_visibility(TOOL_ADD_FIDUCIAL, mode == MODE_BUILDING);
+
+  // traffic tools
+  set_tool_visibility(TOOL_ADD_LANE, mode == MODE_TRAFFIC);
+
+  // scenario tools
+  set_tool_visibility(TOOL_ADD_ROI, mode == MODE_SCENARIO);
+
+  // "multi-purpose" tools
+  set_tool_visibility(TOOL_EDIT_POLYGON, mode != MODE_TRAFFIC);
 }

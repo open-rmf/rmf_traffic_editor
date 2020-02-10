@@ -63,7 +63,7 @@ public:
 
   void clear_selection();
 
-  virtual void draw(
+  void draw(
       QGraphicsScene *scene,
       std::vector<EditorModel>& editor_models) const;
 

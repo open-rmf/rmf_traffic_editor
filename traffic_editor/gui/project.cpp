@@ -93,6 +93,8 @@ bool Project::load_yaml_file(const std::string& _filename)
       }
       scenarios.push_back(scenario);
     }
+    if (!scenarios.empty())
+      scenario_idx = 0;
   }
 
   return true;
@@ -138,5 +140,44 @@ bool Project::save()
 
 bool Project::load(const std::string& _filename)
 {
+  // future extension point: dispatch based on file type (json/yaml/...)
   return load_yaml_file(_filename);
+}
+
+void Project::add_scenario_vertex(
+    const int level_index,
+    const double x,
+    const double y)
+{
+  // todo
+  printf("add_scenario_vertex(%d, %.3f, %.3f)\n", level_index, x, y);
+}
+
+void Project::scenario_row_clicked(const int row)
+{
+  printf("Project::scenario_row_clicked(%d)\n", row);
+  if (row < 0 || row >= static_cast<int>(scenarios.size()))
+  {
+    scenario_idx = -1;
+    return;
+  }
+  scenario_idx = row;
+}
+
+void Project::draw(
+    QGraphicsScene *scene,
+    const int level_idx,
+    std::vector<EditorModel>& editor_models)
+{
+  if (building.levels.empty())
+  {
+    printf("nothing to draw!\n");
+    return;
+  }
+
+  building.levels[level_idx].draw(scene, editor_models);
+  building.draw_lifts(scene, level_idx);
+  
+  if (scenario_idx >= 0)
+    scenarios[scenario_idx].draw(scene, building.levels[level_idx].name);
 }

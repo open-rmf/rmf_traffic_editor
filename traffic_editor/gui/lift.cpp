@@ -129,7 +129,7 @@ void Lift::draw(
       cabin_w,
       cabin_d);
   cabin_rect->setPen(cabin_pen);
-  cabin_rect->setBrush(QBrush(QColor::fromRgbF(1.0, 1.0, 0.0, 0.5)));
+  cabin_rect->setBrush(QBrush(QColor::fromRgbF(0.5, 1.0, 0.5, 0.5)));
   scene->addItem(cabin_rect);
 
   QList<QGraphicsItem *> items;

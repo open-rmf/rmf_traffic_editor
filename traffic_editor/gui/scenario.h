@@ -18,7 +18,7 @@
 #ifndef SCENARIO_H
 #define SCENARIO_H
 
-#include "polygon.h"
+#include "scenario_level.h"
 #include "vertex.h"
 
 #include <map>
@@ -31,7 +31,7 @@ public:
   std::string name;
   std::string filename;
   std::vector<Vertex> vertices;
-  std::map<std::string, Polygon> roi;  // region of interest on each level
+  std::vector<ScenarioLevel> levels;
 
   /////////////////////////////////
   Scenario();
@@ -39,6 +39,8 @@ public:
 
   bool load();
   bool save() const;
+
+  void draw(QGraphicsScene *scene, const std::string& level_name) const;
 };
 
 #endif

@@ -63,3 +63,8 @@ bool Scenario::save() const
 
   return true;
 }
+
+void Scenario::draw(QGraphicsScene *scene, const std::string& level_name) const
+{
+  printf("Scenario::draw(%s)\n", level_name.c_str());
+}

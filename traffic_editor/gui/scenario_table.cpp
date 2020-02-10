@@ -38,10 +38,13 @@ void ScenarioTable::update(Project& project)
   {
     const Scenario& scenario = project.scenarios[i];
 
-    setItem(
-        i,
-        0,
-        new QTableWidgetItem(QString::fromStdString(scenario.name)));
+    QTableWidgetItem *name_item =
+        new QTableWidgetItem(QString::fromStdString(scenario.name));
+
+    if (static_cast<int>(i) == project.scenario_idx)
+      name_item->setBackground(QBrush(QColor("#e0ffe0")));
+
+    setItem(i, 0, name_item);
 
     QPushButton *edit_button = new QPushButton("Edit...", this);
     setCellWidget(i, 1, edit_button);

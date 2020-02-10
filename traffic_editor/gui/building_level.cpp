@@ -92,16 +92,7 @@ bool BuildingLevel::from_yaml(
     drawing_height = y_meters / drawing_meters_per_pixel;
   }
 
-  if (_data["vertices"] && _data["vertices"].IsSequence())
-  {
-    const YAML::Node &pts = _data["vertices"];
-    for (YAML::const_iterator it = pts.begin(); it != pts.end(); ++it)
-    {
-      Vertex v;
-      v.from_yaml(*it);
-      vertices.push_back(v);
-    }
-  }
+  parse_vertices(_data);
 
   if (_data["fiducials"] && _data["fiducials"].IsSequence())
   {

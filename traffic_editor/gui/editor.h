@@ -86,8 +86,11 @@ private:
   enum ModeId
   {
     MODE_BUILDING = 1,
-    MODE_TRAFFIC
+    MODE_TRAFFIC = 2,
+    MODE_SCENARIO = 3
   } mode = MODE_BUILDING;
+
+  void set_mode(const ModeId _mode, const QString& mode_string);
 
   enum ToolId
   {
@@ -103,8 +106,12 @@ private:
     TOOL_ADD_FLOOR,
     TOOL_EDIT_POLYGON,
     TOOL_ADD_ZONE,
-    TOOL_ADD_FIDUCIAL
+    TOOL_ADD_FIDUCIAL,
+    TOOL_ADD_ROI
   } tool_id = TOOL_SELECT;
+
+  std::map<ToolId, QAction *> tools;
+  void set_tool_visibility(const ToolId id, const bool visible);
 
   /////////////////
   // MENU ACTIONS
@@ -116,9 +123,6 @@ private:
   void edit_preferences();
   void edit_building_properties();
   void edit_project_properties();
-
-  void mode_building();
-  void mode_traffic();
 
   void level_add();
   void level_edit();
@@ -133,7 +137,7 @@ private:
 
   QToolBar *toolbar;
   QToolButton *create_tool_button(
-      const int id,
+      const ToolId id,
       const QString& icon_filename,
       const QString &tooltip);
   void tool_toggled(int id, bool checked);
@@ -280,6 +284,7 @@ private:
   void mouse_add_door(const MouseType t, QMouseEvent *e, const QPointF &p);
   void mouse_add_model(const MouseType t, QMouseEvent *e, const QPointF &p);
   void mouse_add_floor(const MouseType t, QMouseEvent *e, const QPointF &p);
+  void mouse_add_roi(const MouseType t, QMouseEvent *e, const QPointF &p);
   void mouse_edit_polygon(const MouseType t, QMouseEvent *e, const QPointF &p);
 
   QPointF previous_mouse_point;

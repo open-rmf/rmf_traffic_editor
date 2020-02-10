@@ -48,6 +48,7 @@ add_executable(traffic-editor
   gui/project_dialog.cpp
   gui/scenario.cpp
   gui/scenario_dialog.cpp
+  gui/scenario_level.cpp
   gui/scenario_table.cpp
   gui/table_list.cpp
   gui/traffic_table.cpp
