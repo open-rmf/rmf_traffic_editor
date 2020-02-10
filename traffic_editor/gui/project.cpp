@@ -15,7 +15,11 @@
  *
 */
 
+#include <fstream>
+
 #include "project.h"
+#include "yaml_utils.h"
+
 #include <QFileInfo>
 #include <QDir>
 
@@ -34,7 +38,6 @@ bool Project::load_yaml_file(const std::string& _filename)
 {
   filename = _filename;
 
-  // This function may throw exceptions. Caller should be ready for them!
   YAML::Node yaml;
   try
   {
@@ -75,10 +78,65 @@ bool Project::load_yaml_file(const std::string& _filename)
       return false;
   }
 
+  if (yaml["scenarios"] && yaml["scenarios"].IsSequence())
+  {
+    for (YAML::const_iterator scenario_node = yaml["scenarios"].begin();
+        scenario_node != yaml["scenarios"].end();
+        ++scenario_node)
+    {
+      Scenario scenario;
+      scenario.filename = (*scenario_node)["filename"].as<string>();
+      if (!scenario.load())
+      {
+        printf("couldn't load [%s]\n", scenario.filename.c_str());
+        //return false;
+      }
+      scenarios.push_back(scenario);
+    }
+  }
+
   return true;
 }
 
 bool Project::save_yaml_file() const
 {
+  printf("Project::save_yaml_file()\n");
+
+  YAML::Node y;
+  y["version"] = 1;
+  y["name"] = name;
+
+  y["building"] = YAML::Node(YAML::NodeType::Map);
+  y["building"]["filename"] = building.filename;
+
+  for (const auto& scenario : scenarios)
+  {
+    printf("saving scenario\n");
+    YAML::Node scenario_node;
+    scenario_node["filename"] = scenario.filename;
+    y["scenarios"].push_back(scenario_node);
+  }
+
+  YAML::Emitter emitter;
+  yaml_utils::write_node(y, emitter);
+  std::ofstream fout(filename);
+  fout << emitter.c_str() << std::endl;
+
   return true;
+}
+
+bool Project::save()
+{
+  if (!save_yaml_file())
+    return false;
+  building.save_yaml_file();
+  for (const auto& scenario : scenarios)
+    if (!scenario.save())
+      return false;
+  return true;
+}
+
+bool Project::load(const std::string& _filename)
+{
+  return load_yaml_file(_filename);
 }

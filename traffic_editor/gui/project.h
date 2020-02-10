@@ -39,9 +39,12 @@ public:
   Project();
   ~Project();
 
+  bool save();
+  bool load(const std::string& _filename);
+
+private:
   bool load_yaml_file(const std::string& _filename);
   bool save_yaml_file() const;
-
 };
 
 

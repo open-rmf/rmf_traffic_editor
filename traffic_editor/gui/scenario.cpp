@@ -15,7 +15,10 @@
  *
 */
 
+#include <fstream>
+
 #include "scenario.h"
+#include "yaml_utils.h"
 
 using std::string;
 
@@ -28,11 +31,8 @@ Scenario::~Scenario()
 {
 }
 
-bool Scenario::load_yaml_file(const std::string& _filename)
+bool Scenario::load()
 {
-  filename = _filename;
-
-  // This function may throw exceptions. Caller should be ready for them!
   YAML::Node yaml;
   try
   {
@@ -50,7 +50,16 @@ bool Scenario::load_yaml_file(const std::string& _filename)
   return true;
 }
 
-bool Scenario::save_yaml_file() const
+bool Scenario::save() const
 {
+  YAML::Node y;
+  y["version"] = 1;
+  y["name"] = name;
+
+  YAML::Emitter emitter;
+  yaml_utils::write_node(y, emitter);
+  std::ofstream fout(filename);
+  fout << emitter.c_str() << std::endl;
+
   return true;
 }

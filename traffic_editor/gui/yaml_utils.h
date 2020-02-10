@@ -15,30 +15,17 @@
  *
 */
 
-#ifndef SCENARIO_H
-#define SCENARIO_H
+#ifndef YAML_UTILS_H
+#define YAML_UTILS_H
 
-#include "polygon.h"
-#include "vertex.h"
-
-#include <map>
-#include <string>
 #include <yaml-cpp/yaml.h>
 
-class Scenario
+namespace yaml_utils
 {
-public:
-  std::string name;
-  std::string filename;
-  std::vector<Vertex> vertices;
-  std::map<std::string, Polygon> roi;  // region of interest on each level
 
-  /////////////////////////////////
-  Scenario();
-  ~Scenario();
+// Recursive function to write YAML ordered maps. Credit: Dave Hershberger
+void write_node(const YAML::Node& node, YAML::Emitter& emitter);
 
-  bool load();
-  bool save() const;
 };
 
 #endif

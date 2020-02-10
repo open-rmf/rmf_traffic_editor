@@ -24,6 +24,7 @@
 #include <QDir>
 
 #include "building.h"
+#include "yaml_utils.h"
 
 using std::string;
 using std::vector;
@@ -46,8 +47,16 @@ Building::~Building()
 bool Building::load_yaml_file()
 {
   printf("Building::load_yaml_file(%s)\n", filename.c_str());
-  // This function may throw exceptions. Caller should be ready for them!
-  YAML::Node y = YAML::LoadFile(filename.c_str());
+  YAML::Node y;
+  try
+  {
+    y = YAML::LoadFile(filename.c_str());
+  }
+  catch (const std::exception& e)
+  {
+    printf("couldn't parse %s: %s", filename.c_str(), e.what());
+    return false;
+  }
 
   // change directory to the path of the file, so that we can correctly open
   // relative paths recorded in the file
@@ -116,7 +125,7 @@ bool Building::save_yaml_file()
     y["lifts"][lift.name] = lift.to_yaml();
 
   YAML::Emitter emitter;
-  write_yaml_node(y, emitter);
+  yaml_utils::write_node(y, emitter);
   std::ofstream fout(filename);
   fout << emitter.c_str() << std::endl;
 
@@ -362,55 +371,6 @@ void Building::add_level(const BuildingLevel& new_level)
     if (level.name == new_level.name)
       return;
   levels.push_back(new_level);
-}
-
-// Recursive function to write YAML ordered maps. Credit: Dave Hershberger
-// posted to this GitHub issue: https://github.com/jbeder/yaml-cpp/issues/169
-void Building::write_yaml_node(const YAML::Node& node, YAML::Emitter& emitter)
-{
-  switch (node.Style())
-  {
-    case YAML::EmitterStyle::Block:
-      emitter << YAML::Block;
-      break;
-    case YAML::EmitterStyle::Flow:
-      emitter << YAML::Flow;
-      break;
-    default:
-      break;
-  }
-
-  switch (node.Type())
-  {
-    case YAML::NodeType::Sequence:
-    {
-      emitter << YAML::BeginSeq;
-      for (size_t i = 0; i < node.size(); i++)
-        write_yaml_node(node[i], emitter);
-      emitter << YAML::EndSeq;
-      break;
-    }
-    case YAML::NodeType::Map:
-    {
-      emitter << YAML::BeginMap;
-      // the keys are stored in random order, so we need to collect and sort
-      std::vector<string> keys;
-      keys.reserve(node.size());
-      for (YAML::const_iterator it = node.begin(); it != node.end(); ++it)
-        keys.push_back(it->first.as<string>());
-      std::sort(keys.begin(), keys.end());
-      for (size_t i = 0; i < keys.size(); i++)
-      {
-        emitter << YAML::Key << keys[i] << YAML::Value;
-        write_yaml_node(node[keys[i]], emitter);
-      }
-      emitter << YAML::EndMap;
-      break;
-    }
-    default:
-      emitter << node;
-      break;
-  }
 }
 
 void Building::draw_lifts(QGraphicsScene *scene, const int level_idx)

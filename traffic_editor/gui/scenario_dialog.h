@@ -15,30 +15,31 @@
  *
 */
 
-#ifndef SCENARIO_H
-#define SCENARIO_H
+#ifndef SCENARIO_DIALOG_H
+#define SCENARIO_DIALOG_H
 
-#include "polygon.h"
-#include "vertex.h"
+#include <QDialog>
+#include "project.h"
+class QLineEdit;
+class QComboBox;
 
-#include <map>
-#include <string>
-#include <yaml-cpp/yaml.h>
 
-class Scenario
+class ScenarioDialog : public QDialog
 {
 public:
-  std::string name;
-  std::string filename;
-  std::vector<Vertex> vertices;
-  std::map<std::string, Polygon> roi;  // region of interest on each level
+  ScenarioDialog(Scenario& _scenario);
+  ~ScenarioDialog();
+ 
+private:
+  Scenario& scenario;
 
-  /////////////////////////////////
-  Scenario();
-  ~Scenario();
+  QLineEdit *name_line_edit;
+  QLineEdit *scenario_path_line_edit;
+  QPushButton *ok_button, *cancel_button;
 
-  bool load();
-  bool save() const;
+private slots:
+  void ok_button_clicked();
+  void scenario_path_button_clicked();
 };
 
 #endif

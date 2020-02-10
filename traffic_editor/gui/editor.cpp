@@ -345,8 +345,6 @@ Editor::Editor()
 
 void Editor::load_model_names()
 {
-  // This function may throw exceptions. Caller should be ready for them!
-
   QSettings settings;
   QString thumbnail_path(
       settings.value(preferences_keys::thumbnail_path).toString());
@@ -414,7 +412,7 @@ Editor *Editor::get_instance()
 bool Editor::load_project(const QString &filename)
 {
   const std::string filename_std_string = filename.toStdString();
-  if (!project.load_yaml_file(filename.toStdString()))
+  if (!project.load(filename.toStdString()))
     return false;
 
   level_idx = 0;
@@ -432,6 +430,7 @@ bool Editor::load_project(const QString &filename)
   populate_layers_table();
   level_table->update(project.building);
   lift_table->update(project.building);
+  scenario_table->update(project);
 
   QSettings settings;
   settings.setValue(preferences_keys::previous_project_path, filename);
@@ -502,7 +501,7 @@ void Editor::project_open()
 
 bool Editor::project_save()
 {
-  project.save_yaml_file();
+  project.save();
   setWindowModified(false);
   return true;
 }

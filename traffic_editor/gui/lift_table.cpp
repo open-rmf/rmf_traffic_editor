@@ -15,8 +15,8 @@
  *
 */
 
-#include "lift_table.h"
 #include "lift_dialog.h"
+#include "lift_table.h"
 #include <QtWidgets>
 
 LiftTable::LiftTable()
