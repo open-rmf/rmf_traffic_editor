@@ -29,10 +29,12 @@ class QGraphicsScene;
 class ScenarioLevel : public Level
 {
 public:
+  std::string name;
+
   ScenarioLevel();
   ~ScenarioLevel();
 
-  bool from_yaml(const std::string &name, const YAML::Node &data);
+  bool from_yaml(const std::string &_name, const YAML::Node& yaml_node);
   YAML::Node to_yaml() const;
 
   bool delete_selected();

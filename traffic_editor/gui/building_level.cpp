@@ -825,7 +825,7 @@ void BuildingLevel::draw(
   }
 
   for (const auto &v : vertices)
-    v.draw(scene, 0.1 / drawing_meters_per_pixel);
+    v.draw(scene, 0.1 / drawing_meters_per_pixel, QColor::fromRgbF(0, 1, 0));
 
   for (const auto &f : fiducials)
     f.draw(scene, drawing_meters_per_pixel);

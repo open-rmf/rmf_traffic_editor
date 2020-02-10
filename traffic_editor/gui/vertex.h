@@ -47,7 +47,10 @@ public:
 
   void set_param(const std::string& name, const std::string& value);
 
-  void draw(QGraphicsScene *, const double radius) const;
+  void draw(
+      QGraphicsScene *scene,
+      const double radius,
+      const QColor& color) const;
 
   ////////////////////////////////////////////////////////////
   static const std::vector<std::pair<std::string, Param::Type> > allowed_params;

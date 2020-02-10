@@ -66,6 +66,8 @@ public:
 
   virtual void clear_selection() = 0;
 
+  void add_vertex(const double x, const double y);
+
 protected:
   double point_to_line_segment_distance(
       const double x,

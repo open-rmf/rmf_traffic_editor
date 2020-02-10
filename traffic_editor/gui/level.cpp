@@ -166,3 +166,8 @@ bool Level::parse_vertices(const YAML::Node &_data)
   }
   return true;
 }
+
+void Level::add_vertex(const double x, const double y)
+{
+  vertices.push_back(Vertex(x, y));
+}

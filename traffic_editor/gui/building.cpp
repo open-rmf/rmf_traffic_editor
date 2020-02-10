@@ -136,7 +136,7 @@ void Building::add_vertex(int level_index, double x, double y)
 {
   if (level_index >= static_cast<int>(levels.size()))
     return;
-  levels[level_index].vertices.push_back(Vertex(x, y));
+  levels[level_index].add_vertex(x, y);
 }
 
 void Building::add_fiducial(int level_index, double x, double y)

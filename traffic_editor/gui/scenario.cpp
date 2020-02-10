@@ -47,6 +47,15 @@ bool Scenario::load()
   if (yaml["name"])
     name = yaml["name"].as<string>();
 
+  levels.clear();
+  const YAML::Node yl = yaml["levels"];
+  for (YAML::const_iterator it = yl.begin(); it != yl.end(); ++it)
+  {
+    ScenarioLevel l;
+    l.from_yaml(it->first.as<string>(), it->second);
+    levels.push_back(l);
+  }
+
   return true;
 }
 
@@ -56,6 +65,10 @@ bool Scenario::save() const
   y["version"] = 1;
   y["name"] = name;
 
+  y["levels"] = YAML::Node(YAML::NodeType::Map);
+  for (const ScenarioLevel& level : levels)
+    y["levels"][level.name] = level.to_yaml();
+
   YAML::Emitter emitter;
   yaml_utils::write_node(y, emitter);
   std::ofstream fout(filename);
@@ -64,7 +77,28 @@ bool Scenario::save() const
   return true;
 }
 
-void Scenario::draw(QGraphicsScene *scene, const std::string& level_name) const
+void Scenario::draw(
+    QGraphicsScene *scene,
+    const std::string& level_name,
+    const double meters_per_pixel) const
 {
   printf("Scenario::draw(%s)\n", level_name.c_str());
+  for (const ScenarioLevel& level : levels)
+    if (level.name == level_name)
+    {
+      level.draw(scene, meters_per_pixel);
+      break;
+    }
+}
+
+void Scenario::add_vertex(
+    const std::string& level_name,
+    const double x,
+    const double y)
+{
+  // todo: add a ScenarioLevel, if necessary, to add this vertex
+  printf("Scenario::add_vertex(%s, %.1f, %.1f)\n", level_name.c_str(), x, y);
+  for (ScenarioLevel& level : levels)
+    if (level.name == level_name)
+      level.add_vertex(x, y);
 }

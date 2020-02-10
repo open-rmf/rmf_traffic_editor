@@ -30,7 +30,6 @@ class Scenario
 public:
   std::string name;
   std::string filename;
-  std::vector<Vertex> vertices;
   std::vector<ScenarioLevel> levels;
 
   /////////////////////////////////
@@ -40,7 +39,15 @@ public:
   bool load();
   bool save() const;
 
-  void draw(QGraphicsScene *scene, const std::string& level_name) const;
+  void draw(
+      QGraphicsScene *scene,
+      const std::string& level_name,
+      const double meters_per_pixel) const;
+
+  void add_vertex(
+      const std::string& level_name,
+      const double x,
+      const double y);
 };
 
 #endif

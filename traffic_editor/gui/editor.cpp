@@ -1397,9 +1397,14 @@ void Editor::mouse_add_vertex(
   {
     if (mode == MODE_BUILDING)
       project.building.add_vertex(level_idx, p.x(), p.y());
+    else if (mode == MODE_SCENARIO)
+      project.add_scenario_vertex(level_idx, p.x(), p.y());
     else
     {
-      QMessageBox::warning(this, "Add Vertex", "Only works in building mode");
+      QMessageBox::warning(
+          this,
+          "Add Vertex",
+          "Currently 'add vertex' is only used in building or scenaio modes");
       return;
     }
     setWindowModified(true);

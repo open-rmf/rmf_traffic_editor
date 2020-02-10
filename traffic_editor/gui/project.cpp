@@ -131,10 +131,13 @@ bool Project::save()
 {
   if (!save_yaml_file())
     return false;
+
   building.save_yaml_file();
+
   for (const auto& scenario : scenarios)
     if (!scenario.save())
       return false;
+
   return true;
 }
 
@@ -145,12 +148,14 @@ bool Project::load(const std::string& _filename)
 }
 
 void Project::add_scenario_vertex(
-    const int level_index,
+    const int level_idx,
     const double x,
     const double y)
 {
-  // todo
-  printf("add_scenario_vertex(%d, %.3f, %.3f)\n", level_index, x, y);
+  printf("add_scenario_vertex(%d, %.3f, %.3f)\n", level_idx, x, y);
+  if (scenario_idx < 0 || scenario_idx >= static_cast<int>(scenarios.size()))
+    return;
+  scenarios[scenario_idx].add_vertex(building.levels[level_idx].name, x, y);
 }
 
 void Project::scenario_row_clicked(const int row)
@@ -179,5 +184,8 @@ void Project::draw(
   building.draw_lifts(scene, level_idx);
   
   if (scenario_idx >= 0)
-    scenarios[scenario_idx].draw(scene, building.levels[level_idx].name);
+    scenarios[scenario_idx].draw(
+        scene,
+        building.levels[level_idx].name,
+        building.levels[level_idx].drawing_meters_per_pixel);
 }

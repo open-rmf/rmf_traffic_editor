@@ -160,5 +160,5 @@ void ScenarioLevel::draw(
   draw_polygons(scene);
 
   for (const auto &v : vertices)
-    v.draw(scene, 0.1 / meters_per_pixel);
+    v.draw(scene, 0.1 / meters_per_pixel, QColor::fromRgbF(1.0, 1.0, 0.0));
 }
