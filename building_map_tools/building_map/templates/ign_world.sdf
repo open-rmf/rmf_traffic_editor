@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <sdf version="1.6">
-  <world name="default">
+  <world name="sim_world">
     <physics name="1ms" type="ode">
       <max_step_size>0.001</max_step_size>
       <real_time_factor>1.0</real_time_factor>
@@ -61,8 +61,8 @@
         <play_pause>true</play_pause>
         <step>true</step>
         <start_paused>true</start_paused>
-        <service>/world/dp1/control</service>
-        <stats_topic>/world/dp1/stats</stats_topic>
+        <service>/world/sim_world/control</service>
+        <stats_topic>/world/sim_world/stats</stats_topic>
       </plugin>
 
       <!-- World statistics -->
@@ -86,7 +86,7 @@
         <real_time>true</real_time>
         <real_time_factor>true</real_time_factor>
         <iterations>true</iterations>
-        <topic>/world/dp1/stats</topic>
+        <topic>/world/sim_world/stats</topic>
       </plugin>
 
       <!-- Entity tree -->
