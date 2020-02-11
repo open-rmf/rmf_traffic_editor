@@ -464,8 +464,8 @@ bool Editor::load_previous_project()
 void Editor::project_new()
 {
   QFileDialog dialog(this, "New Project");
-  dialog.setNameFilter("*.yaml");
-  dialog.setDefaultSuffix(".yaml");
+  dialog.setNameFilter("*.project.yaml");
+  dialog.setDefaultSuffix(".project.yaml");
   dialog.setAcceptMode(QFileDialog::AcceptMode::AcceptSave);
   dialog.setConfirmOverwrite(true);
 
@@ -494,7 +494,7 @@ void Editor::project_open()
 {
   QFileDialog file_dialog(this, "Open Project");
   file_dialog.setFileMode(QFileDialog::ExistingFile);
-  file_dialog.setNameFilter("*.yaml");
+  file_dialog.setNameFilter("*.project.yaml");
 
   if (file_dialog.exec() != QDialog::Accepted)
     return;
@@ -1419,7 +1419,7 @@ void Editor::mouse_add_vertex(
 {
   if (t == MOUSE_PRESS)
   {
-    if (mode == MODE_BUILDING)
+    if (mode == MODE_BUILDING || mode == MODE_TRAFFIC)
       project.building.add_vertex(level_idx, p.x(), p.y());
     else if (mode == MODE_SCENARIO)
     {
@@ -1432,14 +1432,6 @@ void Editor::mouse_add_vertex(
         return;
       }
       project.add_scenario_vertex(level_idx, p.x(), p.y());
-    }
-    else
-    {
-      QMessageBox::warning(
-          this,
-          "Add Vertex",
-          "Currently 'add vertex' is only used in building or scenario modes");
-      return;
     }
     setWindowModified(true);
     create_scene();
