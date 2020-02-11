@@ -123,3 +123,10 @@ models:
 - NurseTable
 - TrolleyBed
 - TrolleyBedPatient
+- AdjTable
+- BigCubicle
+- Drawer
+- OfficeChairBlack
+- OfficeChairBlue
+- OfficeChairGrey
+- SmallCubicle
