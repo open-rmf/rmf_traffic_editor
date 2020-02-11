@@ -1470,8 +1470,8 @@ void Editor::mouse_move(
       // Now we need to find the pixmap item for this model.
       mouse_motion_model = get_closest_pixmap_item(
           QPointF(
-              project.building.levels[level_idx].models[clicked_idx].x,
-              project.building.levels[level_idx].models[clicked_idx].y));
+              project.building.levels[level_idx].models[ni.model_idx].x,
+              project.building.levels[level_idx].models[ni.model_idx].y));
       mouse_model_idx = ni.model_idx;
     }
     else if (ni.vertex_idx >= 0 && ni.vertex_dist < 10.0)
@@ -1713,11 +1713,17 @@ QGraphicsPixmapItem *Editor::get_closest_pixmap_item(const QPointF &p)
   const QList <QGraphicsItem *> items = scene->items();
   QGraphicsPixmapItem *pixmap_item = nullptr;
   double min_dist = 1.0e9;
-  for (const auto item : items) {
+  for (const auto item : items)
+  {
     if (item->type() != QGraphicsPixmapItem::Type)
       continue;  // ignore anything other than the pixmaps (models)
     const double model_click_distance = QLineF(p, item->pos()).length();
-    if (model_click_distance < min_dist) {
+    const double width = item->boundingRect().width();
+    const double height = item->boundingRect().height();
+    printf("model_click_distance = %.2f bounds = (%.1f, %.1f)\n",
+        model_click_distance, width, height);
+    if (model_click_distance < min_dist)
+    {
       min_dist = model_click_distance;
       pixmap_item = qgraphicsitem_cast<QGraphicsPixmapItem *>(item);
     }
