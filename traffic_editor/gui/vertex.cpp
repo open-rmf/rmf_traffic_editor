@@ -100,7 +100,7 @@ void Vertex::draw(
   const double a = 0.5;
 
   QColor nonselected_color(color);
-  nonselected_color.setAlpha(a);
+  nonselected_color.setAlphaF(a);
 
   QColor selected_color = QColor::fromRgbF(1.0, 0.0, 0.0, a);
 

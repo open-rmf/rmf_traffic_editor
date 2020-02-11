@@ -461,6 +461,16 @@ Building::Transform Building::compute_transform(
     const int from_level_idx,
     const int to_level_idx)
 {
+  // short-circuit if it's the same level
+  if (from_level_idx == to_level_idx)
+  {
+    Building::Transform t;
+    t.scale = 1.0;
+    t.dx = 0.0;
+    t.dy = 0.0;
+    return t;
+  }
+
   // this internal function assumes that bounds checking has already happened
   const BuildingLevel& from_level = levels[from_level_idx];
   const BuildingLevel& to_level = levels[to_level_idx];

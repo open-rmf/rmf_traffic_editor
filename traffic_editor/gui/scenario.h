@@ -48,6 +48,9 @@ public:
       const std::string& level_name,
       const double x,
       const double y);
+
+  void clear_selection(const std::string& level_name);
+  bool delete_selected(const std::string& level_name);
 };
 
 #endif

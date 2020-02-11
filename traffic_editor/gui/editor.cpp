@@ -643,7 +643,7 @@ void Editor::keyPressEvent(QKeyEvent *e)
 {
   switch (e->key()) {
     case Qt::Key_Delete:
-      if (project.building.delete_selected(level_idx))
+      if (project.delete_selected(level_idx))
       {
         clear_property_editor();
         setWindowModified(true);
@@ -655,14 +655,14 @@ void Editor::keyPressEvent(QKeyEvent *e)
             "Could not delete item",
             "If deleting a vertex, it must not be in any edges or polygons.");
 
-        clear_selection();
+        project.clear_selection(level_idx);
       }
       create_scene();
       break;
     case Qt::Key_S:
     case Qt::Key_Escape:
       tool_button_group->button(TOOL_SELECT)->click();
-      clear_selection();
+      project.clear_selection(level_idx);
       update_property_editor();
       create_scene();
       break;
@@ -1216,13 +1216,6 @@ bool Editor::create_scene()
   return true;
 }
 
-void Editor::clear_selection()
-{
-  if (project.building.levels.empty())
-    return;
-  project.building.levels[level_idx].clear_selection();
-}
-
 void Editor::draw_mouse_motion_line_item(
     const double mouse_x,
     const double mouse_y)
@@ -1284,7 +1277,7 @@ void Editor::remove_mouse_motion_item()
 
 void Editor::set_selected_line_item(QGraphicsLineItem *line_item)
 {
-  clear_selection();
+  project.clear_selection(level_idx);
 
   if (line_item == nullptr)
     return;
@@ -1337,53 +1330,84 @@ void Editor::mouse_select(
 {
   if (type != MOUSE_PRESS)
     return;
-  clear_selection();
+  project.clear_selection(level_idx);
 
-  Building::NearestItem ni = project.building.nearest_items(level_idx, p.x(), p.y());
-
-  if (ni.model_idx >= 0 && ni.model_dist < 50.0)
-    project.building.levels[level_idx].models[ni.model_idx].selected = true;
-  else if (ni.vertex_idx >= 0 && ni.vertex_dist < 10.0)
-    project.building.levels[level_idx].vertices[ni.vertex_idx].selected = true;
-  else if (ni.fiducial_idx >= 0 && ni.fiducial_dist < 10.0)
-    project.building.levels[level_idx].fiducials[ni.fiducial_idx].selected = true;
-  else
+  if (mode == MODE_BUILDING)
   {
-    const QPoint p_global = mapToGlobal(e->pos());
-    const QPoint p_map = map_view->mapFromGlobal(p_global);
+    // todo: refactor all this abomination into the project/building classes
+    Building::NearestItem ni =
+        project.building.nearest_items(level_idx, p.x(), p.y());
 
-    // use the QGraphics stuff to see if it's an edge segment or polygon
-    QGraphicsItem *item = map_view->itemAt(p_map);
-    if (item)
+    if (ni.model_idx >= 0 && ni.model_dist < 50.0)
+      project.building.levels[level_idx].models[ni.model_idx].selected = true;
+    else if (ni.vertex_idx >= 0 && ni.vertex_dist < 10.0)
+      project.building.levels[level_idx].vertices[ni.vertex_idx].selected = true;
+    else if (ni.fiducial_idx >= 0 && ni.fiducial_dist < 10.0)
+      project.building.levels[level_idx].fiducials[ni.fiducial_idx].selected = true;
+    else
     {
-      switch (item->type())
+      const QPoint p_global = mapToGlobal(e->pos());
+      const QPoint p_map = map_view->mapFromGlobal(p_global);
+  
+      // use the QGraphics stuff to see if it's an edge segment or polygon
+      QGraphicsItem *item = map_view->itemAt(p_map);
+      if (item)
       {
-        case QGraphicsLineItem::Type:
-          printf("clicked line\n");
-          set_selected_line_item(
-              qgraphicsitem_cast<QGraphicsLineItem *>(item));
-          break;
-  
-        case QGraphicsPolygonItem::Type:
-        { // need new scope due to 'for' iterator variable
-          printf("clicked polygon\n");
-          polygon_idx = get_polygon_idx(p.x(), p.y());
-          if (polygon_idx < 0)
-            return;  // didn't click on a polygon
-          Polygon &polygon = project.building.levels[level_idx].polygons[polygon_idx];
-          polygon.selected = true;
-          for (const auto &vertex_idx : polygon.vertices)
-            project.building.levels[level_idx].vertices[vertex_idx].selected = true;
-          break;
+        switch (item->type())
+        {
+          case QGraphicsLineItem::Type:
+            printf("clicked line\n");
+            set_selected_line_item(
+                qgraphicsitem_cast<QGraphicsLineItem *>(item));
+            break;
+    
+          case QGraphicsPolygonItem::Type:
+          { // need new scope due to 'for' iterator variable
+            printf("clicked polygon\n");
+            polygon_idx = get_polygon_idx(p.x(), p.y());
+            if (polygon_idx < 0)
+              return;  // didn't click on a polygon
+            Polygon &polygon = project.building.levels[level_idx].polygons[polygon_idx];
+            polygon.selected = true;
+            for (const auto &vertex_idx : polygon.vertices)
+              project.building.levels[level_idx].vertices[vertex_idx].selected = true;
+            break;
+          }
+    
+          default:
+            printf("clicked unhandled type: %d\n",
+                static_cast<int>(item->type()));
+            break;
         }
-  
-        default:
-          printf("clicked unhandled type: %d\n",
-              static_cast<int>(item->type()));
-          break;
       }
     }
   }
+  else if (mode == MODE_SCENARIO && project.scenario_idx >= 0)
+  {
+    Scenario& scenario = project.scenarios[project.scenario_idx];
+    for (ScenarioLevel& scenario_level : scenario.levels)
+    {
+      if (scenario_level.name != project.building.levels[level_idx].name)
+        continue;
+      double vertex_dist = 1e9;
+      int vertex_idx = -1;
+      for (size_t i = 0; i < scenario_level.vertices.size(); i++)
+      {
+        const Vertex& v = scenario_level.vertices[i];
+        const double dx = p.x() - v.x;
+        const double dy = p.y() - v.y;
+        const double dist = sqrt(dx*dx + dy*dy);
+        if (dist < vertex_dist)
+        {
+          vertex_dist = dist;
+          vertex_idx = i;
+        }
+      }
+      if (vertex_idx >= 0 && vertex_dist < 10.0)
+        scenario_level.vertices[vertex_idx].selected = true;
+    }
+  }
+
   // todo: be smarter and go find the actual GraphicsItem to avoid
   // a full repaint here...
   create_scene();
@@ -1398,13 +1422,23 @@ void Editor::mouse_add_vertex(
     if (mode == MODE_BUILDING)
       project.building.add_vertex(level_idx, p.x(), p.y());
     else if (mode == MODE_SCENARIO)
+    {
+      if (project.scenario_idx < 0)
+      {
+        QMessageBox::warning(
+            this,
+            "Add Vertex",
+            "No scenario currently defined.");
+        return;
+      }
       project.add_scenario_vertex(level_idx, p.x(), p.y());
+    }
     else
     {
       QMessageBox::warning(
           this,
           "Add Vertex",
-          "Currently 'add vertex' is only used in building or scenaio modes");
+          "Currently 'add vertex' is only used in building or scenario modes");
       return;
     }
     setWindowModified(true);
@@ -1428,7 +1462,8 @@ void Editor::mouse_move(
 {
   if (t == MOUSE_PRESS)
   {
-    Building::NearestItem ni = project.building.nearest_items(level_idx, p.x(), p.y());
+    Building::NearestItem ni =
+        project.building.nearest_items(level_idx, p.x(), p.y());
 
     if (ni.model_idx >= 0 && ni.model_dist < 50.0)
     {
@@ -1740,7 +1775,7 @@ void Editor::mouse_add_polygon(
       mouse_motion_polygon = nullptr;
 
       setWindowModified(true);
-      clear_selection();
+      project.clear_selection(level_idx);
       create_scene();
     }
   }

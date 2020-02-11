@@ -96,9 +96,33 @@ void Scenario::add_vertex(
     const double x,
     const double y)
 {
-  // todo: add a ScenarioLevel, if necessary, to add this vertex
   printf("Scenario::add_vertex(%s, %.1f, %.1f)\n", level_name.c_str(), x, y);
   for (ScenarioLevel& level : levels)
     if (level.name == level_name)
+    {
       level.add_vertex(x, y);
+      return;
+    }
+  // if we get here, we didn't find a ScenarioLevel for this level name,
+  // so we have to add it now.
+  printf("adding level [%s] to scenario\n", level_name.c_str());
+  ScenarioLevel level;
+  level.name = level_name;
+  level.add_vertex(x, y);
+  levels.push_back(level);
+}
+
+void Scenario::clear_selection(const std::string& level_name)
+{
+  for (ScenarioLevel& level : levels)
+    if (level.name == level_name)
+      level.clear_selection();
+}
+
+bool Scenario::delete_selected(const std::string& level_name)
+{
+  for (ScenarioLevel& level : levels)
+    if (level.name == level_name)
+      return level.delete_selected();
+  return true;
 }

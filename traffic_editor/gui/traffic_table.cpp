@@ -29,7 +29,7 @@ TrafficTable::~TrafficTable()
 {
 }
 
-void TrafficTable::update(Building& building)
+void TrafficTable::update(Building& /*building*/)
 {
   blockSignals(true);
 

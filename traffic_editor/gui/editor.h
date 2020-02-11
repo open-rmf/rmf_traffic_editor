@@ -219,7 +219,6 @@ private:
   int get_polygon_idx(const double x, const double y);
 
   bool create_scene();
-  void clear_selection();
 
   const static int ROTATION_INDICATOR_RADIUS = 50;
   QGraphicsLineItem *mouse_motion_line = nullptr;

@@ -189,3 +189,26 @@ void Project::draw(
         building.levels[level_idx].name,
         building.levels[level_idx].drawing_meters_per_pixel);
 }
+
+void Project::clear_selection(const int level_idx)
+{
+  if (building.levels.empty())
+    return;
+  building.levels[level_idx].clear_selection();
+
+  if (scenario_idx >= 0)
+    scenarios[scenario_idx].clear_selection(building.levels[level_idx].name);
+}
+
+bool Project::delete_selected(const int level_idx)
+{
+  if (building.levels.empty())
+    return false;
+  if (!building.delete_selected(level_idx))
+    return false;
+  const std::string level_name = building.levels[level_idx].name;
+  if (scenario_idx >= 0 &&
+      !scenarios[scenario_idx].delete_selected(level_name))
+      return false;
+  return true;
+}
