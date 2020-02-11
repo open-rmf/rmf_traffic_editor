@@ -6,7 +6,10 @@ from .level import Level
 
 class Building:
     def __init__(self, yaml_node):
-        self.name = yaml_node['building_name']
+        if 'building_name' in yaml_node:
+          self.name = yaml_node['building_name']
+        else:
+          self.name = yaml_node['name']
         print(f'building name: {self.name}')
 
         self.levels = {}
