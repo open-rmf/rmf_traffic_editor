@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Open Source Robotics Foundation
+ * Copyright (C) 2019-2020 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,29 +15,37 @@
  *
 */
 
-#ifndef PREFERENCES_DIALOG_H
-#define PREFERENCES_DIALOG_H
+#ifndef SCENARIO_LEVEL_H
+#define SCENARIO_LEVEL_H
 
-#include <QDialog>
-class QLineEdit;
-class QCheckBox;
+#include "level.h"
+
+#include <yaml-cpp/yaml.h>
+#include <string>
+
+class QGraphicsScene;
 
 
-class PreferencesDialog : public QDialog
+class ScenarioLevel : public Level
 {
 public:
-  PreferencesDialog(QWidget *parent);
-  ~PreferencesDialog();
- 
-private:
-  QLineEdit *thumbnail_path_line_edit;
-  QPushButton *thumbnail_path_button;
-  QCheckBox *open_previous_project_checkbox;
-  QPushButton *ok_button, *cancel_button;
+  std::string name;
 
-private slots:
-  void thumbnail_path_button_clicked();
-  void ok_button_clicked();
+  ScenarioLevel();
+  ~ScenarioLevel();
+
+  bool from_yaml(const std::string &_name, const YAML::Node& yaml_node);
+  YAML::Node to_yaml() const;
+
+  bool delete_selected();
+
+  void clear_selection();
+
+  void draw(
+      QGraphicsScene *scene,
+      const double meters_per_pixel) const;
+
+  void draw_polygons(QGraphicsScene *scene) const;
 };
 
 #endif

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Open Source Robotics Foundation
+ * Copyright (C) 2019-2020 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,29 +15,17 @@
  *
 */
 
-#ifndef PREFERENCES_DIALOG_H
-#define PREFERENCES_DIALOG_H
+#ifndef YAML_UTILS_H
+#define YAML_UTILS_H
 
-#include <QDialog>
-class QLineEdit;
-class QCheckBox;
+#include <yaml-cpp/yaml.h>
 
-
-class PreferencesDialog : public QDialog
+namespace yaml_utils
 {
-public:
-  PreferencesDialog(QWidget *parent);
-  ~PreferencesDialog();
- 
-private:
-  QLineEdit *thumbnail_path_line_edit;
-  QPushButton *thumbnail_path_button;
-  QCheckBox *open_previous_project_checkbox;
-  QPushButton *ok_button, *cancel_button;
 
-private slots:
-  void thumbnail_path_button_clicked();
-  void ok_button_clicked();
+// Recursive function to write YAML ordered maps. Credit: Dave Hershberger
+void write_node(const YAML::Node& node, YAML::Emitter& emitter);
+
 };
 
 #endif

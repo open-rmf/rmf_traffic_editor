@@ -15,26 +15,25 @@
  *
 */
 
-#ifndef LEVEL_TABLE_H
-#define LEVEL_TABLE_H
+#include "traffic_table.h"
+#include <QtWidgets>
 
-#include <QTableWidget>
-
-#include "table_list.h"
-#include "map.h"
-
-class LevelTable : public TableList
+TrafficTable::TrafficTable()
+: TableList(3)
 {
-  Q_OBJECT
+  const QStringList labels = { "#", "Name", "" };
+  setHorizontalHeaderLabels(labels);
+}
 
-public:
-  LevelTable();
-  ~LevelTable();
+TrafficTable::~TrafficTable()
+{
+}
 
-  void update(Map& map);
+void TrafficTable::update(Building& /*building*/)
+{
+  blockSignals(true);
 
-signals:
-  void redraw_scene();
-};
+  // todo...
 
-#endif
+  blockSignals(false);
+}

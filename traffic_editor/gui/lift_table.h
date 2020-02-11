@@ -21,7 +21,7 @@
 #include <QTableWidget>
 
 #include "table_list.h"
-#include "map.h"
+#include "building.h"
 
 class LiftTable : public TableList
 {
@@ -29,7 +29,7 @@ public:
   LiftTable();
   ~LiftTable();
 
-  void update(Map& map);
+  void update(Building& building);
 };
 
 #endif

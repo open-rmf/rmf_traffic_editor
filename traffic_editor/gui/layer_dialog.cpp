@@ -24,6 +24,7 @@ LayerDialog::LayerDialog(QWidget *parent, Layer &_layer, bool edit_mode)
   layer(_layer),
   _edit_mode(edit_mode)
 {
+  setWindowTitle("Layer Properties");
   QHBoxLayout *bottom_buttons_layout = new QHBoxLayout;
   ok_button = new QPushButton("OK", this);  // first button = [enter] button
   bottom_buttons_layout->addWidget(ok_button);

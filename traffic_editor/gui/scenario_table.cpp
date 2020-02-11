@@ -15,71 +15,65 @@
  *
 */
 
-#include "lift_dialog.h"
-#include "lift_table.h"
+#include "scenario_dialog.h"
+#include "scenario_table.h"
 #include <QtWidgets>
 
-LiftTable::LiftTable()
-: TableList()
+ScenarioTable::ScenarioTable()
+: TableList(2)
 {
-  const QStringList labels = { "Name", "" };
+  const QStringList labels = { "#", "Name", "" };
   setHorizontalHeaderLabels(labels);
 }
 
-LiftTable::~LiftTable()
+ScenarioTable::~ScenarioTable()
 {
 }
 
-void LiftTable::update(Building& building)
+void ScenarioTable::update(Project& project)
 {
   blockSignals(true);
-  setRowCount(1 + building.lifts.size());
-  for (size_t i = 0; i < building.lifts.size(); i++)
+  setRowCount(1 + project.scenarios.size());
+  for (size_t i = 0; i < project.scenarios.size(); i++)
   {
-    setItem(
-        i,
-        0,
-        new QTableWidgetItem(
-            QString::fromStdString(building.lifts[i].name)));
+    const Scenario& scenario = project.scenarios[i];
+
+    QTableWidgetItem *name_item =
+        new QTableWidgetItem(QString::fromStdString(scenario.name));
+
+    if (static_cast<int>(i) == project.scenario_idx)
+      name_item->setBackground(QBrush(QColor("#e0ffe0")));
+
+    setItem(i, 0, name_item);
 
     QPushButton *edit_button = new QPushButton("Edit...", this);
     setCellWidget(i, 1, edit_button);
-
     connect(
         edit_button,
         &QAbstractButton::clicked,
-        [this, &building, i]() {
-          /*
-          LiftDialog lift_dialog(building.lifts[i], building);
-          lift_dialog.exec();
-          update(building);
+        [this, &project, i]()
+        {
+          ScenarioDialog dialog(project.scenarios[i]);
+          dialog.exec();
+          update(project);
           emit redraw();
-          */
-          LiftDialog *dialog = new LiftDialog(building.lifts[i], building);
-          dialog->show();
-          dialog->raise();
-          dialog->activateWindow();
-          connect(
-              dialog,
-              &LiftDialog::redraw,
-              [this]() { emit redraw(); });
         });
   }
 
   // we'll use the last row for the "Add" button
-  const int last_row_idx = static_cast<int>(building.lifts.size());
+  const int last_row_idx = static_cast<int>(project.scenarios.size());
   setCellWidget(last_row_idx, 0, nullptr);
   QPushButton *add_button = new QPushButton("Add...", this);
   setCellWidget(last_row_idx, 1, add_button);
   connect(
       add_button, &QAbstractButton::clicked,
-      [this, &building]() {
-        Lift lift;
-        LiftDialog lift_dialog(lift, building);
-        if (lift_dialog.exec() == QDialog::Accepted)
+      [this, &project]() {
+        Scenario scenario;
+        ScenarioDialog scenario_dialog(scenario);
+        if (scenario_dialog.exec() == QDialog::Accepted)
         {
-          building.lifts.push_back(lift);
-          update(building);
+          project.scenarios.push_back(scenario);
+          update(project);
           emit redraw();
         }
       });

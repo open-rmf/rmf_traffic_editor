@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Open Source Robotics Foundation
+ * Copyright (C) 2019-2020 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,29 +15,31 @@
  *
 */
 
-#ifndef PREFERENCES_DIALOG_H
-#define PREFERENCES_DIALOG_H
+#ifndef PROJECT_DIALOG_H
+#define PROJECT_DIALOG_H
 
 #include <QDialog>
+#include "project.h"
 class QLineEdit;
-class QCheckBox;
+class QComboBox;
 
 
-class PreferencesDialog : public QDialog
+class ProjectDialog : public QDialog
 {
 public:
-  PreferencesDialog(QWidget *parent);
-  ~PreferencesDialog();
+  ProjectDialog(Project& _project);
+  ~ProjectDialog();
  
 private:
-  QLineEdit *thumbnail_path_line_edit;
-  QPushButton *thumbnail_path_button;
-  QCheckBox *open_previous_project_checkbox;
+  Project& project;
+
+  QLineEdit *name_line_edit;
+  QLineEdit *building_path_line_edit;
   QPushButton *ok_button, *cancel_button;
 
 private slots:
-  void thumbnail_path_button_clicked();
   void ok_button_clicked();
+  void building_path_button_clicked();
 };
 
 #endif

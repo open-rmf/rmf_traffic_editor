@@ -15,11 +15,11 @@
  *
 */
 
-#include "level_table.h"
-#include "level_dialog.h"
+#include "building_level_table.h"
+#include "building_level_dialog.h"
 #include <QtWidgets>
 
-LevelTable::LevelTable()
+BuildingLevelTable::BuildingLevelTable()
 : TableList(6)
 {
   const QStringList labels =
@@ -27,21 +27,21 @@ LevelTable::LevelTable()
   setHorizontalHeaderLabels(labels);
 }
 
-LevelTable::~LevelTable()
+BuildingLevelTable::~BuildingLevelTable()
 {
 }
 
-void LevelTable::update(Map& map)
+void BuildingLevelTable::update(Building& building)
 {
   blockSignals(true);  // avoid tons of callbacks
 
-  setRowCount(1 + map.levels.size());
-  const int reference_level_idx = map.get_reference_level_idx();
+  setRowCount(1 + building.levels.size());
+  const int reference_level_idx = building.get_reference_level_idx();
 
-  for (size_t i = 0; i < map.levels.size(); i++)
+  for (size_t i = 0; i < building.levels.size(); i++)
   {
     QTableWidgetItem *name_item = 
-        new QTableWidgetItem(QString::fromStdString(map.levels[i].name));
+        new QTableWidgetItem(QString::fromStdString(building.levels[i].name));
     setItem(i, 0, name_item);
 
     if (static_cast<int>(i) == reference_level_idx)
@@ -52,11 +52,11 @@ void LevelTable::update(Map& map)
         1,
         new QTableWidgetItem(
             QString::number(
-                map.levels[i].drawing_meters_per_pixel,
+                building.levels[i].drawing_meters_per_pixel,
                 'f',
                 4)));
 
-    Map::Transform t = map.get_transform(reference_level_idx, i);
+    Building::Transform t = building.get_transform(reference_level_idx, i);
 
     setItem(i, 2, new QTableWidgetItem(QString::number(t.dx, 'f', 1)));
     setItem(i, 3, new QTableWidgetItem(QString::number(t.dy, 'f', 1)));
@@ -65,7 +65,7 @@ void LevelTable::update(Map& map)
         i,
         4,
         new QTableWidgetItem(
-            QString::number(map.levels[i].elevation, 'f', 1)));
+            QString::number(building.levels[i].elevation, 'f', 1)));
 
     QPushButton *edit_button = new QPushButton("Edit...", this);
     setCellWidget(i, 5, edit_button);
@@ -73,31 +73,32 @@ void LevelTable::update(Map& map)
 
     connect(
         edit_button, &QAbstractButton::clicked,
-        [this, &map, i]()
+        [this, &building, i]()
         {
-          LevelDialog level_dialog(map.levels[i]);
+          BuildingLevelDialog level_dialog(building.levels[i]);
           if (level_dialog.exec() == QDialog::Accepted)
           {
             setWindowModified(true);  // not sure why, but this doesn't work
           }
-          update(map);
+          update(building);
         });
   }
 
-  const int last_row_idx = static_cast<int>(map.levels.size());
+  const int last_row_idx = static_cast<int>(building.levels.size());
   // we'll use the last row for the "Add" button
   setCellWidget(last_row_idx, 0, nullptr);
   QPushButton *add_button = new QPushButton("Add...", this);
   setCellWidget(last_row_idx, 5, add_button);
   connect(
-      add_button, &QAbstractButton::clicked,
-      [this, &map]()
+      add_button,
+      &QAbstractButton::clicked,
+      [this, &building]()
       {
-        Level level;
-        LevelDialog level_dialog(level);
+        BuildingLevel level;
+        BuildingLevelDialog level_dialog(level);
         if (level_dialog.exec() == QDialog::Accepted)
         {
-          map.add_level(level);
+          building.add_level(level);
           setWindowModified(true);
           emit redraw_scene();
         }

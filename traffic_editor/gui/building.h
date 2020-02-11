@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Open Source Robotics Foundation
+ * Copyright (C) 2019-2020 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef NAV_MAP_H
-#define NAV_MAP_H
+#ifndef BUILDING_H
+#define BUILDING_H
 
 
 class QGraphicsScene;
@@ -27,26 +27,28 @@ class QGraphicsScene;
 
 #include <QPointF>
 
-#include "level.h"
+#include "building_level.h"
 #include "lift.h"
 
 
-class Map
+class Building
 {
 public:
-  Map();
-  ~Map();
+  Building();
+  ~Building();
 
-  void load_yaml(const std::string &filename);
-  bool save_yaml(const std::string &filename);
+  std::string name;
+  std::string reference_level_name;
+  std::vector<BuildingLevel> levels;
+  std::vector<Lift> lifts;
+
+  std::string filename;
+
+  bool load_yaml_file();
+  bool save_yaml_file();
   void clear();  // clear all internal data structures
 
-  std::string building_name;
-  std::vector<Level> levels;
-  std::vector<Lift> lifts;
-  std::string reference_level_name;
-
-  void add_level(const Level &level);
+  void add_level(const BuildingLevel &level);
 
   void add_vertex(int level_index, double x, double y);
   void add_fiducial(int level_index, double x, double y);
@@ -158,10 +160,6 @@ public:
   void calculate_all_transforms();
 
   int get_reference_level_idx();
-
-private:
-  // Recursive function to write YAML ordered maps. Credit: Dave Hershberger
-  void write_yaml_node(const YAML::Node& node, YAML::Emitter& emitter);
 };
 
 #endif

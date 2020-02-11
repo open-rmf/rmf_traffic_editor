@@ -23,6 +23,8 @@
 PreferencesDialog::PreferencesDialog(QWidget *parent)
 : QDialog(parent)
 {
+  setWindowTitle("Preferences");
+
   QSettings settings;
 
   ok_button = new QPushButton("OK", this);  // first button = [enter] button
@@ -49,13 +51,13 @@ PreferencesDialog::PreferencesDialog(QWidget *parent)
       cancel_button, &QAbstractButton::clicked,
       this, &QDialog::reject);
 
-  QVBoxLayout *vbox_layout = new QVBoxLayout;
-  open_previous_file_checkbox = new QCheckBox(
-      "Open previous file at startup", this);
-  open_previous_file_checkbox->setChecked(
-      settings.value(preferences_keys::open_previous_file).toBool());
+  open_previous_project_checkbox = new QCheckBox(
+      "Open previous project at startup", this);
+  open_previous_project_checkbox->setChecked(
+      settings.value(preferences_keys::open_previous_project).toBool());
 
-  vbox_layout->addWidget(open_previous_file_checkbox);
+  QVBoxLayout *vbox_layout = new QVBoxLayout;
+  vbox_layout->addWidget(open_previous_project_checkbox);
   vbox_layout->addLayout(thumbnail_path_layout);
   // todo: some sort of separator (?)
   vbox_layout->addLayout(bottom_buttons_layout);
@@ -107,8 +109,8 @@ void PreferencesDialog::ok_button_clicked()
       thumbnail_path_line_edit->text());
 
   settings.setValue(
-      preferences_keys::open_previous_file,
-      open_previous_file_checkbox->isChecked());
+      preferences_keys::open_previous_project,
+      open_previous_project_checkbox->isChecked());
 
   accept();
 }

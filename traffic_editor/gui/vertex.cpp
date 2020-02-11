@@ -91,14 +91,17 @@ YAML::Node Vertex::to_yaml() const
 
 void Vertex::draw(
     QGraphicsScene *scene,
-    const double meters_per_pixel) const
+    const double radius,
+    const QColor& color) const
 {
   QPen vertex_pen(Qt::black);
-  vertex_pen.setWidth(0.05 / meters_per_pixel);
-  const double radius = 0.1 / meters_per_pixel;
+  vertex_pen.setWidthF(radius / 2.0);
 
   const double a = 0.5;
-  QColor color = QColor::fromRgbF(0.0, 1.0, 0.0, a);
+
+  QColor nonselected_color(color);
+  nonselected_color.setAlphaF(a);
+
   QColor selected_color = QColor::fromRgbF(1.0, 0.0, 0.0, a);
 
   scene->addEllipse(
@@ -107,12 +110,12 @@ void Vertex::draw(
       2 * radius,
       2 * radius,
       vertex_pen,
-      selected ? QBrush(selected_color) : QBrush(color));
+      selected ? QBrush(selected_color) : QBrush(nonselected_color));
 
   if (!name.empty()) {
     QGraphicsSimpleTextItem *item = scene->addSimpleText(
         QString::fromStdString(name));
-    item->setBrush(QColor(255, 0, 0, 255));
+    item->setBrush(color);  // QColor(255, 0, 0, 255));
     item->setPos(x, y + radius);
   }
 }

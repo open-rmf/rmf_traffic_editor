@@ -16,7 +16,6 @@
 */
 
 #include <algorithm>
-#include "./map.h"
 #include <iostream>
 #include <fstream>
 #include <yaml-cpp/yaml.h>
@@ -24,50 +23,70 @@
 #include <QFileInfo>
 #include <QDir>
 
+#include "building.h"
+#include "yaml_utils.h"
+
 using std::string;
 using std::vector;
 using std::make_pair;
 
 
-Map::Map()
-: building_name("building")
+Building::Building()
+: name("building")
 {
 }
 
-Map::~Map()
+Building::~Building()
 {
 }
 
-/// Load a YAML file description of a traffic-editor map
+/// Load a YAML file description of a building map
 ///
 /// This function replaces the contents of this object with what is
 /// in the YAML file.
-void Map::load_yaml(const string &filename)
+bool Building::load_yaml_file()
 {
-  // This function may throw exceptions. Caller should be ready for them!
-  YAML::Node y = YAML::LoadFile(filename.c_str());
+  printf("Building::load_yaml_file(%s)\n", filename.c_str());
+  YAML::Node y;
+  try
+  {
+    y = YAML::LoadFile(filename.c_str());
+  }
+  catch (const std::exception& e)
+  {
+    printf("couldn't parse %s: %s", filename.c_str(), e.what());
+    return false;
+  }
 
   // change directory to the path of the file, so that we can correctly open
   // relative paths recorded in the file
+
+  // TODO: save previous directory and restore it when leaving this function
   QString dir(QFileInfo(QString::fromStdString(filename)).absolutePath());
   qDebug("changing directory to [%s]", qUtf8Printable(dir));
   if (!QDir::setCurrent(dir))
-    throw std::runtime_error("couldn't change directory");
+  {
+    printf("couldn't change directory\n");
+    return false;
+  }
 
-  if (y["building_name"])
-    building_name = y["building_name"].as<string>();
+  if (y["name"])
+    name = y["name"].as<string>();
 
   if (y["reference_level_name"])
     reference_level_name = y["reference_level_name"].as<string>();
 
   if (!y["levels"] || !y["levels"].IsMap())
-    throw std::runtime_error("expected top-level dictionary named 'levels'");
+  {
+    printf("expected top-level dictionary named 'levels'");
+    return false;
+  }
 
   levels.clear();
   const YAML::Node yl = y["levels"];
   for (YAML::const_iterator it = yl.begin(); it != yl.end(); ++it)
   {
-    Level l;
+    BuildingLevel l;
     l.from_yaml(it->first.as<string>(), it->second);
     levels.push_back(l);
   }
@@ -84,14 +103,15 @@ void Map::load_yaml(const string &filename)
   }
 
   calculate_all_transforms();
+  return true;
 }
 
-bool Map::save_yaml(const std::string &filename)
+bool Building::save_yaml_file()
 {
-  printf("Map::save_yaml(%s)\n", filename.c_str());
+  printf("Building::save_yaml(%s)\n", filename.c_str());
 
   YAML::Node y;
-  y["building_name"] = building_name;
+  y["name"] = name;
 
   if (!reference_level_name.empty())
     y["reference_level_name"] = reference_level_name;
@@ -105,28 +125,28 @@ bool Map::save_yaml(const std::string &filename)
     y["lifts"][lift.name] = lift.to_yaml();
 
   YAML::Emitter emitter;
-  write_yaml_node(y, emitter);
+  yaml_utils::write_node(y, emitter);
   std::ofstream fout(filename);
   fout << emitter.c_str() << std::endl;
 
   return true;
 }
 
-void Map::add_vertex(int level_index, double x, double y)
+void Building::add_vertex(int level_index, double x, double y)
 {
   if (level_index >= static_cast<int>(levels.size()))
     return;
-  levels[level_index].vertices.push_back(Vertex(x, y));
+  levels[level_index].add_vertex(x, y);
 }
 
-void Map::add_fiducial(int level_index, double x, double y)
+void Building::add_fiducial(int level_index, double x, double y)
 {
   if (level_index >= static_cast<int>(levels.size()))
     return;
   levels[level_index].fiducials.push_back(Fiducial(x, y));
 }
 
-int Map::find_nearest_vertex_index(
+int Building::find_nearest_vertex_index(
     int level_index, double x, double y, double &distance)
 {
   double min_dist = 1e100;
@@ -145,7 +165,7 @@ int Map::find_nearest_vertex_index(
   return min_index;  // will be -1 if vertices vector is empty
 }
 
-Map::NearestItem Map::nearest_items(
+Building::NearestItem Building::nearest_items(
       const int level_index,
       const double x,
       const double y)
@@ -153,7 +173,7 @@ Map::NearestItem Map::nearest_items(
   NearestItem ni;
   if (level_index >= static_cast<int>(levels.size()))
     return ni;
-  const Level& level = levels[level_index];
+  const BuildingLevel& level = levels[level_index];
 
   for (size_t i = 0; i < level.vertices.size(); i++)
   {
@@ -197,7 +217,7 @@ Map::NearestItem Map::nearest_items(
   return ni;
 }
 
-int Map::nearest_item_index_if_within_distance(
+int Building::nearest_item_index_if_within_distance(
       const int level_index,
       const double x,
       const double y,
@@ -259,7 +279,7 @@ int Map::nearest_item_index_if_within_distance(
   return -1;
 }
 
-void Map::add_edge(
+void Building::add_edge(
       const int level_index,
       const int start_vertex_index,
       const int end_vertex_index,
@@ -268,26 +288,26 @@ void Map::add_edge(
   if (level_index >= static_cast<int>(levels.size()))
     return;
 
-  printf("Map::add_edge(%d, %d, %d, %d)\n",
+  printf("Building::add_edge(%d, %d, %d, %d)\n",
       level_index, start_vertex_index, end_vertex_index,
       static_cast<int>(edge_type));
   levels[level_index].edges.push_back(
       Edge(start_vertex_index, end_vertex_index, edge_type));
 }
 
-bool Map::delete_selected(const int level_index)
+bool Building::delete_selected(const int level_index)
 {
   if (level_index >= static_cast<int>(levels.size()))
     return false;
 
-  printf("Map::delete_keypress()\n");
+  printf("Building::delete_keypress()\n");
   if (!levels[level_index].delete_selected())
     return false;
 
   return true;
 }
 
-void Map::add_model(
+void Building::add_model(
     const int level_idx,
     const double x,
     const double y,
@@ -297,13 +317,13 @@ void Map::add_model(
   if (level_idx >= static_cast<int>(levels.size()))
     return;
 
-  printf("Map::add_model(%d, %.1f, %.1f, %.2f, %s)\n",
+  printf("Building::add_model(%d, %.1f, %.1f, %.2f, %s)\n",
       level_idx, x, y, yaw, model_name.c_str());
   levels[level_idx].models.push_back(
       Model(x, y, yaw, model_name, model_name));
 }
 
-void Map::set_model_yaw(
+void Building::set_model_yaw(
     const int level_idx,
     const int model_idx,
     const double yaw)
@@ -314,7 +334,7 @@ void Map::set_model_yaw(
   levels[level_idx].models[model_idx].yaw = yaw;
 }
 
-void Map::remove_polygon_vertex(
+void Building::remove_polygon_vertex(
     const int level_idx,
     const int polygon_idx,
     const int vertex_idx)
@@ -324,7 +344,7 @@ void Map::remove_polygon_vertex(
   levels[level_idx].remove_polygon_vertex(polygon_idx, vertex_idx);
 }
 
-int Map::polygon_edge_drag_press(
+int Building::polygon_edge_drag_press(
     const int level_idx,
     const int polygon_idx,
     const double x,
@@ -335,13 +355,16 @@ int Map::polygon_edge_drag_press(
   return levels[level_idx].polygon_edge_drag_press(polygon_idx, x, y);
 }
 
-void Map::clear()
+void Building::clear()
 {
-  building_name = "";
+  name = "";
+  reference_level_name = "";
   levels.clear();
+  lifts.clear();
+  clear_transform_cache();
 }
 
-void Map::add_level(const Level &new_level)
+void Building::add_level(const BuildingLevel& new_level)
 {
   // make sure we don't have this level already
   for (const auto &level : levels)
@@ -350,58 +373,9 @@ void Map::add_level(const Level &new_level)
   levels.push_back(new_level);
 }
 
-// Recursive function to write YAML ordered maps. Credit: Dave Hershberger
-// posted to this GitHub issue: https://github.com/jbeder/yaml-cpp/issues/169
-void Map::write_yaml_node(const YAML::Node& node, YAML::Emitter& emitter)
+void Building::draw_lifts(QGraphicsScene *scene, const int level_idx)
 {
-  switch (node.Style())
-  {
-    case YAML::EmitterStyle::Block:
-      emitter << YAML::Block;
-      break;
-    case YAML::EmitterStyle::Flow:
-      emitter << YAML::Flow;
-      break;
-    default:
-      break;
-  }
-
-  switch (node.Type())
-  {
-    case YAML::NodeType::Sequence:
-    {
-      emitter << YAML::BeginSeq;
-      for (size_t i = 0; i < node.size(); i++)
-        write_yaml_node(node[i], emitter);
-      emitter << YAML::EndSeq;
-      break;
-    }
-    case YAML::NodeType::Map:
-    {
-      emitter << YAML::BeginMap;
-      // the keys are stored in random order, so we need to collect and sort
-      std::vector<string> keys;
-      keys.reserve(node.size());
-      for (YAML::const_iterator it = node.begin(); it != node.end(); ++it)
-        keys.push_back(it->first.as<string>());
-      std::sort(keys.begin(), keys.end());
-      for (size_t i = 0; i < keys.size(); i++)
-      {
-        emitter << YAML::Key << keys[i] << YAML::Value;
-        write_yaml_node(node[keys[i]], emitter);
-      }
-      emitter << YAML::EndMap;
-      break;
-    }
-    default:
-      emitter << node;
-      break;
-  }
-}
-
-void Map::draw_lifts(QGraphicsScene *scene, const int level_idx)
-{
-  const Level& level = levels[level_idx];
+  const BuildingLevel& level = levels[level_idx];
   for (const auto &lift : lifts)
   {
     // find the level index referenced by the lift
@@ -428,7 +402,7 @@ void Map::draw_lifts(QGraphicsScene *scene, const int level_idx)
   }
 }
 
-bool Map::transform_between_levels(
+bool Building::transform_between_levels(
     const std::string& from_level_name,
     const QPointF& from_point,
     const std::string& to_level_name,
@@ -455,7 +429,7 @@ bool Map::transform_between_levels(
       to_point);
 }
 
-bool Map::transform_between_levels(
+bool Building::transform_between_levels(
     const int from_level_idx,
     const QPointF& from_point,
     const int to_level_idx,
@@ -478,18 +452,28 @@ bool Map::transform_between_levels(
   return true;
 }
 
-void Map::clear_transform_cache()
+void Building::clear_transform_cache()
 {
   transforms.clear();
 }
 
-Map::Transform Map::compute_transform(
+Building::Transform Building::compute_transform(
     const int from_level_idx,
     const int to_level_idx)
 {
+  // short-circuit if it's the same level
+  if (from_level_idx == to_level_idx)
+  {
+    Building::Transform t;
+    t.scale = 1.0;
+    t.dx = 0.0;
+    t.dy = 0.0;
+    return t;
+  }
+
   // this internal function assumes that bounds checking has already happened
-  const Level& from_level = levels[from_level_idx];
-  const Level& to_level = levels[to_level_idx];
+  const BuildingLevel& from_level = levels[from_level_idx];
+  const BuildingLevel& to_level = levels[to_level_idx];
 
   // assemble a vector of fudicials in common to these levels
   vector< std::pair<Fiducial, Fiducial> > fiducials;
@@ -529,7 +513,7 @@ Map::Transform Map::compute_transform(
   const double trans_x = trans_x_sum / fiducials.size();
   const double trans_y = trans_y_sum / fiducials.size();
 
-  Map::Transform t;
+  Building::Transform t;
   t.scale = scale;
   t.dx = trans_x;
   t.dy = trans_y;
@@ -544,7 +528,7 @@ Map::Transform Map::compute_transform(
   return t;
 }
 
-Map::Transform Map::get_transform(
+Building::Transform Building::get_transform(
       const int from_level_idx,
       const int to_level_idx)
 {
@@ -569,7 +553,7 @@ Map::Transform Map::get_transform(
   return t;
 }
 
-void Map::calculate_all_transforms()
+void Building::calculate_all_transforms()
 {
   clear_transform_cache();
   for (size_t i = 0; i < levels.size(); i++)
@@ -589,7 +573,7 @@ void Map::calculate_all_transforms()
   }
 }
 
-int Map::get_reference_level_idx()
+int Building::get_reference_level_idx()
 {
   if (reference_level_name.empty())
     return 0;

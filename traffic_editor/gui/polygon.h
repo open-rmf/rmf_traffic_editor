@@ -31,7 +31,8 @@ public:
   enum Type {
     UNDEFINED = 0,
     FLOOR,
-    ZONE
+    ZONE,
+    ROI
   } type;
 
   Polygon();

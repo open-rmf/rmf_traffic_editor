@@ -15,31 +15,32 @@
  *
 */
 
-#include "map_dialog.h"
+#include "building_dialog.h"
 #include <QtWidgets>
 
 
-MapDialog::MapDialog(Map& map)
-: QDialog(), _map(map)
+BuildingDialog::BuildingDialog(Building& building)
+: QDialog(), _building(building)
 {
+  setWindowTitle("Building Properties");
   _ok_button = new QPushButton("OK", this);  // first button = [enter] button
   _cancel_button = new QPushButton("Cancel", this);
 
   QHBoxLayout *building_name_hbox = new QHBoxLayout;
   building_name_hbox->addWidget(new QLabel("Building name:"));
   _building_name_line_edit = new QLineEdit(
-      QString::fromStdString(map.building_name),
+      QString::fromStdString(building.name),
       this);
   building_name_hbox->addWidget(_building_name_line_edit);
 
   QHBoxLayout *reference_level_hbox = new QHBoxLayout;
   reference_level_hbox->addWidget(new QLabel("Reference level:"));
   _reference_floor_combo_box = new QComboBox;
-  for (const auto& level : map.levels)
+  for (const auto& level : building.levels)
     _reference_floor_combo_box->addItem(QString::fromStdString(level.name));
-  if (!map.levels.empty() && !map.reference_level_name.empty())
+  if (!building.levels.empty() && !building.reference_level_name.empty())
     _reference_floor_combo_box->setCurrentText(
-        QString::fromStdString(map.reference_level_name));
+        QString::fromStdString(building.reference_level_name));
   reference_level_hbox->addWidget(_reference_floor_combo_box);
 
   QHBoxLayout *bottom_buttons_hbox = new QHBoxLayout;
@@ -47,7 +48,7 @@ MapDialog::MapDialog(Map& map)
   bottom_buttons_hbox->addWidget(_ok_button);
   connect(
       _ok_button, &QAbstractButton::clicked,
-      this, &MapDialog::ok_button_clicked);
+      this, &BuildingDialog::ok_button_clicked);
   connect(
       _cancel_button, &QAbstractButton::clicked,
       this, &QDialog::reject);
@@ -62,14 +63,14 @@ MapDialog::MapDialog(Map& map)
   setLayout(top_vbox);
 }
 
-MapDialog::~MapDialog()
+BuildingDialog::~BuildingDialog()
 {
 }
 
-void MapDialog::ok_button_clicked()
+void BuildingDialog::ok_button_clicked()
 {
-  _map.building_name = _building_name_line_edit->text().toStdString();
-  _map.reference_level_name =
+  _building.name = _building_name_line_edit->text().toStdString();
+  _building.reference_level_name =
       _reference_floor_combo_box->currentText().toStdString();
   accept();
 }

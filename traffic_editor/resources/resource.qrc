@@ -1,10 +1,11 @@
 <!DOCTYPE RCC>
 <RCC version="1.0">
 <qresource>
-  <file>icons/add_vertex.svg</file>
+  <file>icons/vertex.svg</file>
   <file>icons/move.svg</file>
   <file>icons/rotate.svg</file>
   <file>icons/select.svg</file>
   <file>icons/fiducial.svg</file>
+  <file>icons/roi.svg</file>
 </qresource>
 </RCC>

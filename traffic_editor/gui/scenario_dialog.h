@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Open Source Robotics Foundation
+ * Copyright (C) 2019-2020 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,35 +15,31 @@
  *
 */
 
-#ifndef LEVEL_DIALOG_H
-#define LEVEL_DIALOG_H
+#ifndef SCENARIO_DIALOG_H
+#define SCENARIO_DIALOG_H
 
 #include <QDialog>
-#include "level.h"
+#include "project.h"
 class QLineEdit;
+class QComboBox;
 
 
-class LevelDialog : public QDialog
+class ScenarioDialog : public QDialog
 {
 public:
-  LevelDialog(Level& level);
-  ~LevelDialog();
+  ScenarioDialog(Scenario& _scenario);
+  ~ScenarioDialog();
  
 private:
-  Level &_level;
+  Scenario& scenario;
 
-  QLineEdit *_name_line_edit, *_drawing_filename_line_edit;
-  QLineEdit *_x_line_edit, *_y_line_edit;
-  QLineEdit *_elevation_line_edit;
-  QPushButton *_drawing_filename_button;
-  QPushButton *_ok_button, *_cancel_button;
-
-  void enable_dimensions(const bool enable);
+  QLineEdit *name_line_edit;
+  QLineEdit *scenario_path_line_edit;
+  QPushButton *ok_button, *cancel_button;
 
 private slots:
-  void drawing_filename_button_clicked();
   void ok_button_clicked();
-  void drawing_filename_line_edited(const QString& text);
+  void scenario_path_button_clicked();
 };
 
 #endif

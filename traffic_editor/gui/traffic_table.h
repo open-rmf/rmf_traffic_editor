@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Open Source Robotics Foundation
+ * Copyright (C) 2019-2020 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,29 +15,21 @@
  *
 */
 
-#ifndef PREFERENCES_DIALOG_H
-#define PREFERENCES_DIALOG_H
+#ifndef TRAFFIC_TABLE_H
+#define TRAFFIC_TABLE_H
 
-#include <QDialog>
-class QLineEdit;
-class QCheckBox;
+#include <QTableWidget>
 
+#include "table_list.h"
+#include "building.h"
 
-class PreferencesDialog : public QDialog
+class TrafficTable : public TableList
 {
 public:
-  PreferencesDialog(QWidget *parent);
-  ~PreferencesDialog();
- 
-private:
-  QLineEdit *thumbnail_path_line_edit;
-  QPushButton *thumbnail_path_button;
-  QCheckBox *open_previous_project_checkbox;
-  QPushButton *ok_button, *cancel_button;
+  TrafficTable();
+  ~TrafficTable();
 
-private slots:
-  void thumbnail_path_button_clicked();
-  void ok_button_clicked();
+  void update(Building& building);
 };
 
 #endif

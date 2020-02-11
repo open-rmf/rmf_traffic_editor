@@ -15,30 +15,26 @@
  *
 */
 
-#ifndef MAP_DIALOG_H
-#define MAP_DIALOG_H
+#ifndef BUILDING_LEVEL_TABLE_H
+#define BUILDING_LEVEL_TABLE_H
 
-#include <QDialog>
-#include "./map.h"
-class QLineEdit;
-class QComboBox;
+#include <QTableWidget>
 
+#include "table_list.h"
+#include "building.h"
 
-class MapDialog : public QDialog
+class BuildingLevelTable : public TableList
 {
+  Q_OBJECT
+
 public:
-  MapDialog(Map& map);
-  ~MapDialog();
- 
-private:
-  Map& _map;
+  BuildingLevelTable();
+  ~BuildingLevelTable();
 
-  QLineEdit *_building_name_line_edit;
-  QComboBox *_reference_floor_combo_box;
-  QPushButton *_ok_button, *_cancel_button;
+  void update(Building& building);
 
-private slots:
-  void ok_button_clicked();
+signals:
+  void redraw_scene();
 };
 
 #endif

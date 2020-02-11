@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Open Source Robotics Foundation
+ * Copyright (C) 2019-2020 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,45 +15,42 @@
  *
 */
 
-#ifndef VERTEX_H
-#define VERTEX_H
+#ifndef SCENARIO_H
+#define SCENARIO_H
+
+#include "scenario_level.h"
+#include "vertex.h"
 
 #include <map>
 #include <string>
-#include <vector>
 #include <yaml-cpp/yaml.h>
 
-#include "param.h"
-
-class QGraphicsScene;
-
-
-class Vertex
+class Scenario
 {
 public:
-  double x;
-  double y;
   std::string name;
+  std::string filename;
+  std::vector<ScenarioLevel> levels;
 
-  bool selected;
+  /////////////////////////////////
+  Scenario();
+  ~Scenario();
 
-  std::map<std::string, Param> params;
-
-  Vertex();
-  Vertex(double _x, double _y, const std::string &_name = std::string());
-
-  void from_yaml(const YAML::Node &data);
-  YAML::Node to_yaml() const;
-
-  void set_param(const std::string& name, const std::string& value);
+  bool load();
+  bool save() const;
 
   void draw(
       QGraphicsScene *scene,
-      const double radius,
-      const QColor& color) const;
+      const std::string& level_name,
+      const double meters_per_pixel) const;
 
-  ////////////////////////////////////////////////////////////
-  static const std::vector<std::pair<std::string, Param::Type> > allowed_params;
+  void add_vertex(
+      const std::string& level_name,
+      const double x,
+      const double y);
+
+  void clear_selection(const std::string& level_name);
+  bool delete_selected(const std::string& level_name);
 };
 
 #endif

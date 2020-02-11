@@ -24,7 +24,7 @@
 #include <QObject>
 
 #include "lift.h"
-#include "map.h"
+#include "building.h"
 
 class QLineEdit;
 class QLabel;
@@ -37,7 +37,7 @@ class LiftDialog : public QDialog
   Q_OBJECT
 
 public:
-  LiftDialog(Lift& lift, const Map& map);
+  LiftDialog(Lift& lift, const Building& building);
   ~LiftDialog();
 
 private:
