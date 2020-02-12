@@ -75,6 +75,9 @@ public:
   /// when starting the application since often we want to 'resume' editing.
   bool load_previous_project();
 
+  /// Attempt to restore the previous viewport scale and center point
+  void restore_previous_viewport();
+
 protected:
   void mousePressEvent(QMouseEvent *e);
   void mouseReleaseEvent(QMouseEvent *e);
