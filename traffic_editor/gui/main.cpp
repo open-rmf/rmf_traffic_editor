@@ -45,9 +45,9 @@ int main(int argc, char *argv[])
   if (parser.positionalArguments().length() >= 1)
     editor.load_project(parser.positionalArguments().at(0));
 
-  // todo: load traffic map as second argument
-
   editor.show();
+
+  editor.restore_previous_viewport();
 
   return app.exec();
 }

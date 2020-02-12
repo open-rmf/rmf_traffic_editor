@@ -324,23 +324,23 @@ Editor::Editor()
   ///////////////////////////////////////////////////////////
   // SET SIZE
   const int width =
-      settings.contains(preferences_keys::width) ?
-      settings.value(preferences_keys::width).toInt() :
+      settings.contains(preferences_keys::window_width) ?
+      settings.value(preferences_keys::window_width).toInt() :
       QGuiApplication::primaryScreen()->availableSize().width();
 
   const int height =
-      settings.contains(preferences_keys::height) ?
-      settings.value(preferences_keys::height).toInt() :
+      settings.contains(preferences_keys::window_height) ?
+      settings.value(preferences_keys::window_height).toInt() :
       QGuiApplication::primaryScreen()->availableSize().height();
 
   const int left =
-      settings.contains(preferences_keys::left) ?
-      settings.value(preferences_keys::left).toInt() :
+      settings.contains(preferences_keys::window_left) ?
+      settings.value(preferences_keys::window_left).toInt() :
       0;
 
   const int top =
-      settings.contains(preferences_keys::top) ?
-      settings.value(preferences_keys::top).toInt() :
+      settings.contains(preferences_keys::window_top) ?
+      settings.value(preferences_keys::window_top).toInt() :
       0;
 
   setGeometry(left, top, width, height);
@@ -423,6 +423,7 @@ Editor *Editor::get_instance()
 bool Editor::load_project(const QString &filename)
 {
   const std::string filename_std_string = filename.toStdString();
+
   if (!project.load(filename.toStdString()))
     return false;
 
@@ -437,7 +438,7 @@ bool Editor::load_project(const QString &filename)
   }
 
   create_scene();
-  map_view->zoom_fit(project.building, level_idx);
+
   populate_layers_table();
   level_table->update(project.building);
   lift_table->update(project.building);
@@ -449,6 +450,36 @@ bool Editor::load_project(const QString &filename)
   setWindowModified(false);
 
   return true;
+}
+
+void Editor::restore_previous_viewport()
+{
+  QSettings settings;
+
+  const double viewport_center_x =
+      settings.contains(preferences_keys::viewport_center_x) ?
+      settings.value(preferences_keys::viewport_center_x).toDouble() :
+      0.0;
+
+  const double viewport_center_y =
+      settings.contains(preferences_keys::viewport_center_y) ?
+      settings.value(preferences_keys::viewport_center_y).toDouble() :
+      0.0;
+
+  const double viewport_scale =
+      settings.contains(preferences_keys::viewport_scale) ?
+      settings.value(preferences_keys::viewport_scale).toDouble() :
+      1.0;
+
+  printf("restoring viewport: (%.1f, %.1f, %3f)\n",
+      viewport_center_x,
+      viewport_center_y,
+      viewport_scale);
+
+  QTransform t;
+  t.scale(viewport_scale, viewport_scale);
+  map_view->setTransform(t);
+  map_view->centerOn(QPointF(viewport_center_x, viewport_center_y));
 }
 
 bool Editor::load_previous_project()
@@ -1949,10 +1980,27 @@ void Editor::closeEvent(QCloseEvent *event)
 {
   // save window geometry
   QSettings settings;
-  settings.setValue(preferences_keys::left, geometry().x());
-  settings.setValue(preferences_keys::top, geometry().y());
-  settings.setValue(preferences_keys::width, geometry().width());
-  settings.setValue(preferences_keys::height, geometry().height());
+  settings.setValue(preferences_keys::window_left, geometry().x());
+  settings.setValue(preferences_keys::window_top, geometry().y());
+  settings.setValue(preferences_keys::window_width, geometry().width());
+  settings.setValue(preferences_keys::window_height, geometry().height());
+
+  // save viewport center and scale
+  const QPoint p_center_window(
+      map_view->viewport()->width() / 2,
+      map_view->viewport()->height() / 2);
+  const QPointF p_center_scene = map_view->mapToScene(p_center_window);
+
+  printf("closeEvent:  (%d, %d) -> (%.1f, %.1f)\n",
+      p_center_window.x(),
+      p_center_window.y(),
+      p_center_scene.x(),
+      p_center_scene.y());
+
+  const double scale = map_view->transform().m11();
+  settings.setValue(preferences_keys::viewport_center_x, p_center_scene.x());
+  settings.setValue(preferences_keys::viewport_center_y, p_center_scene.y());
+  settings.setValue(preferences_keys::viewport_scale, scale);
 
   if (maybe_save())
     event->accept();
