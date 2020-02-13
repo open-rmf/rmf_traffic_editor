@@ -16,6 +16,8 @@
 */
 
 #include "polygon.h"
+using std::vector;
+
 
 Polygon::Polygon()
 : selected(false), type(UNDEFINED)
@@ -44,4 +46,12 @@ YAML::Node Polygon::to_yaml() const
     y["vertices"].push_back(vertex_idx);
   y["vertices"].SetStyle(YAML::EmitterStyle::Flow);
   return y;
+}
+
+void Polygon::remove_vertex(const int vertex_idx)
+{
+  if (vertex_idx < 0 || vertex_idx > static_cast<int>(vertices.size()))
+    return;  // oh no
+  vector<int> &v = vertices;  // save typing
+  v.erase(std::remove(v.begin(), v.end(), vertex_idx), v.end());
 }

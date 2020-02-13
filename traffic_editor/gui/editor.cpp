@@ -641,23 +641,6 @@ void Editor::mouseMoveEvent(QMouseEvent *e)
   mouse_event(MOUSE_MOVE, e);
 }
 
-int Editor::get_polygon_idx(const double x, const double y)
-{
-  const Level &level = project.building.levels[level_idx];
-  for (size_t i = 0; i < level.polygons.size(); i++) {
-    const auto &polygon = level.polygons[i];
-    QVector<QPointF> polygon_vertices;
-    for (const auto &vertex_idx: polygon.vertices) {
-      const Vertex &v = level.vertices[vertex_idx];
-      polygon_vertices.append(QPointF(v.x, v.y));
-    }
-    QPolygonF qpolygon(polygon_vertices);
-    if (qpolygon.containsPoint(QPoint(x, y), Qt::OddEvenFill))
-      return static_cast<int>(i);
-  }
-  return -1;  // not found
-}
-
 bool Editor::is_mouse_event_in_map(QMouseEvent *e, QPointF &p_scene)
 {
   const QPoint p_global = mapToGlobal(e->pos());
@@ -1306,52 +1289,6 @@ void Editor::remove_mouse_motion_item()
   mouse_fiducial_idx = -1;
 }
 
-void Editor::set_selected_line_item(QGraphicsLineItem *line_item)
-{
-  project.clear_selection(level_idx);
-
-  if (line_item == nullptr)
-    return;
-
-  // find if any of our lanes match those vertices
-  for (auto& edge : project.building.levels[level_idx].edges)
-  {
-    const auto& v_start = project.building.levels[level_idx].vertices[edge.start_idx];
-    const auto& v_end = project.building.levels[level_idx].vertices[edge.end_idx];
-    if (line_vertices_match(line_item, v_start, v_end, 10.0))
-    {
-      edge.selected = true;
-      return;  // stop after first one is found, don't select multiple
-    }
-  }
-}
-
-bool Editor::line_vertices_match(
-    const QGraphicsLineItem *line_item,
-    const Vertex &v1,
-    const Vertex &v2,
-    const double max_dist)
-{
-  if (!line_item)
-    return false;
-
-  // look up the line's vertices
-  const double x1 = line_item->line().x1();
-  const double y1 = line_item->line().y1();
-  const double x2 = line_item->line().x2();
-  const double y2 = line_item->line().y2();
-
-  // calculate distances
-  const double dx1 = v1.x - x1;
-  const double dy1 = v1.y - y1;
-  const double dx2 = v2.x - x2;
-  const double dy2 = v2.y - y2;
-  const double v1_dist = sqrt(dx1*dx1 + dy1*dy1);
-  const double v2_dist = sqrt(dx2*dx2 + dy2*dy2);
-
-  return v1_dist < max_dist && v2_dist < max_dist;
-}
-
 ///////////////////////////////////////////////////////////////////////
 // MOUSE HANDLERS
 ///////////////////////////////////////////////////////////////////////
@@ -1361,86 +1298,17 @@ void Editor::mouse_select(
 {
   if (type != MOUSE_PRESS)
     return;
-  project.clear_selection(level_idx);
+  const QPoint p_global = mapToGlobal(e->pos());
+  const QPoint p_map = map_view->mapFromGlobal(p_global);
+  QGraphicsItem *item = map_view->itemAt(p_map);
 
-  if (mode == MODE_BUILDING)
-  {
-    // todo: refactor all this abomination into the project/building classes
-    Building::NearestItem ni =
-        project.building.nearest_items(level_idx, p.x(), p.y());
+  project.mouse_select_press(mode, level_idx, p.x(), p.y(), item);
 
-    if (ni.model_idx >= 0 && ni.model_dist < 50.0)
-      project.building.levels[level_idx].models[ni.model_idx].selected = true;
-    else if (ni.vertex_idx >= 0 && ni.vertex_dist < 10.0)
-      project.building.levels[level_idx].vertices[ni.vertex_idx].selected = true;
-    else if (ni.fiducial_idx >= 0 && ni.fiducial_dist < 10.0)
-      project.building.levels[level_idx].fiducials[ni.fiducial_idx].selected = true;
-    else
-    {
-      const QPoint p_global = mapToGlobal(e->pos());
-      const QPoint p_map = map_view->mapFromGlobal(p_global);
-  
-      // use the QGraphics stuff to see if it's an edge segment or polygon
-      QGraphicsItem *item = map_view->itemAt(p_map);
-      if (item)
-      {
-        switch (item->type())
-        {
-          case QGraphicsLineItem::Type:
-            printf("clicked line\n");
-            set_selected_line_item(
-                qgraphicsitem_cast<QGraphicsLineItem *>(item));
-            break;
-    
-          case QGraphicsPolygonItem::Type:
-          { // need new scope due to 'for' iterator variable
-            printf("clicked polygon\n");
-            polygon_idx = get_polygon_idx(p.x(), p.y());
-            if (polygon_idx < 0)
-              return;  // didn't click on a polygon
-            Polygon &polygon = project.building.levels[level_idx].polygons[polygon_idx];
-            polygon.selected = true;
-            for (const auto &vertex_idx : polygon.vertices)
-              project.building.levels[level_idx].vertices[vertex_idx].selected = true;
-            break;
-          }
-    
-          default:
-            printf("clicked unhandled type: %d\n",
-                static_cast<int>(item->type()));
-            break;
-        }
-      }
-    }
-  }
-  else if (mode == MODE_SCENARIO && project.scenario_idx >= 0)
-  {
-    Scenario& scenario = project.scenarios[project.scenario_idx];
-    for (ScenarioLevel& scenario_level : scenario.levels)
-    {
-      if (scenario_level.name != project.building.levels[level_idx].name)
-        continue;
-      double vertex_dist = 1e9;
-      int vertex_idx = -1;
-      for (size_t i = 0; i < scenario_level.vertices.size(); i++)
-      {
-        const Vertex& v = scenario_level.vertices[i];
-        const double dx = p.x() - v.x;
-        const double dy = p.y() - v.y;
-        const double dist = sqrt(dx*dx + dy*dy);
-        if (dist < vertex_dist)
-        {
-          vertex_dist = dist;
-          vertex_idx = i;
-        }
-      }
-      if (vertex_idx >= 0 && vertex_dist < 10.0)
-        scenario_level.vertices[vertex_idx].selected = true;
-    }
-  }
+  // todo: figure out something smarter than this abomination
+  selected_polygon = project.get_selected_polygon(mode, level_idx);
 
   // todo: be smarter and go find the actual GraphicsItem to avoid
-  // a full repaint here...
+  // a full repaint here?
   create_scene();
   update_property_editor();
 }
@@ -1760,19 +1628,28 @@ void Editor::mouse_add_polygon(
     const QPointF &p,
     const Polygon::Type &polygon_type)
 {
-  if (t == MOUSE_PRESS) {
-    if (e->buttons() & Qt::LeftButton) {
-      clicked_idx = project.building.nearest_item_index_if_within_distance(
-          level_idx, p.x(), p.y(), 10.0, Building::VERTEX);
+  if (t == MOUSE_PRESS)
+  {
+    if (e->buttons() & Qt::LeftButton)
+    {
+      const Project::NearestItem ni =
+          project.nearest_items(mode, level_idx, p.x(), p.y());
+      clicked_idx = ni.vertex_dist < 10.0 ? ni.vertex_idx : -1;
       if (clicked_idx < 0)
         return; // nothing to do. click wasn't on a vertex.
 
-      Vertex &v = project.building.levels[level_idx].vertices[clicked_idx];
-      v.selected = true;  // todo: find graphics item for vertex and colorize it
-    
-      if (mouse_motion_polygon == nullptr) {
+      Vertex *v = nullptr;
+      if (mode == MODE_BUILDING)
+        v = &project.building.levels[level_idx].vertices[clicked_idx];
+      else if (mode == MODE_SCENARIO)
+        v = &project.scenario_level(level_idx)->vertices[clicked_idx];
+
+      v->selected = true;  // todo: colorize it?
+
+      if (mouse_motion_polygon == nullptr)
+      {
         QVector<QPointF> polygon_vertices;
-        polygon_vertices.append(QPointF(v.x, v.y));
+        polygon_vertices.append(QPointF(v->x, v->y));
         QPolygonF polygon(polygon_vertices);
         mouse_motion_polygon = scene->addPolygon(
             polygon,
@@ -1780,24 +1657,28 @@ void Editor::mouse_add_polygon(
             QBrush(QColor::fromRgbF(1.0, 0.0, 0.0, 0.5)));
         mouse_motion_polygon_vertices.clear();
       }
-    
+
       // only add vertex_idx is NOT already in the vertex list
       if (std::find(
           mouse_motion_polygon_vertices.begin(),
           mouse_motion_polygon_vertices.end(),
-          clicked_idx) == mouse_motion_polygon_vertices.end()) {
+          clicked_idx) == mouse_motion_polygon_vertices.end())
         mouse_motion_polygon_vertices.push_back(clicked_idx);
-      }
     }
-    else if (e->buttons() & Qt::RightButton) {
+    else if (e->buttons() & Qt::RightButton)
+    {
       if (mouse_motion_polygon == nullptr)
         return;
-      if (mouse_motion_polygon_vertices.size() >= 3) {
+      if (mouse_motion_polygon_vertices.size() >= 3)
+      {
         Polygon polygon;
         polygon.type = polygon_type;
         for (const auto &i : mouse_motion_polygon_vertices)
           polygon.vertices.push_back(i);
-        project.building.levels[level_idx].polygons.push_back(polygon);
+        if (mode == MODE_BUILDING)
+          project.building.levels[level_idx].polygons.push_back(polygon);
+        else if (mode == MODE_SCENARIO)
+          project.scenario_level(level_idx)->polygons.push_back(polygon);
       }
       scene->removeItem(mouse_motion_polygon);
       delete mouse_motion_polygon;
@@ -1808,9 +1689,10 @@ void Editor::mouse_add_polygon(
       create_scene();
     }
   }
-  else if (t == MOUSE_MOVE) {
+  else if (t == MOUSE_MOVE)
+  {
     if (mouse_motion_polygon == nullptr)
-      return;  // not sure how we got here
+      return;
 
     // first, remove the previous polygon
     scene->removeItem(mouse_motion_polygon);
@@ -1818,9 +1700,15 @@ void Editor::mouse_add_polygon(
  
     // now, make the updated polygon
     QVector<QPointF> polygon_vertices;
-    for (const auto &vertex_idx: mouse_motion_polygon_vertices) {
-      const Vertex &v = project.building.levels[level_idx].vertices[vertex_idx];
-      polygon_vertices.append(QPointF(v.x, v.y));
+    for (const auto &vertex_idx: mouse_motion_polygon_vertices)
+    {
+      const Vertex *v = nullptr;
+      if (mode == MODE_BUILDING)
+        v = &project.building.levels[level_idx].vertices[vertex_idx];
+      else if (mode == MODE_SCENARIO)
+        v = &project.scenario_level(level_idx)->vertices[vertex_idx];
+
+      polygon_vertices.append(QPointF(v->x, v->y));
     }
     polygon_vertices.append(QPointF(p.x(), p.y()));
  
@@ -1848,96 +1736,91 @@ void Editor::mouse_add_roi(
 void Editor::mouse_edit_polygon(
     const MouseType t, QMouseEvent *e, const QPointF &p)
 {
-  if (t == MOUSE_PRESS) {
-    if (e->buttons() & Qt::RightButton) {
-      if (polygon_idx < 0)
-        return;  // no polygon is selected, nothing to do
-      int vertex_idx = project.building.nearest_item_index_if_within_distance(
-          level_idx, p.x(), p.y(), 10.0, Building::VERTEX);
-      if (vertex_idx < 0)
-        return;  // Nothing to do. Click wasn't near a vertex.
-      // first mark the vertex as no longer selected
-      project.building.remove_polygon_vertex(level_idx, polygon_idx, vertex_idx);
+  if (selected_polygon == nullptr)
+    return;  // no polygon is selected, nothing to do
+
+  if (t == MOUSE_PRESS)
+  {
+    if (e->buttons() & Qt::RightButton)
+    {
+      const Project::NearestItem ni = project.nearest_items(
+          mode, level_idx, p.x(), p.y());
+      if (ni.vertex_dist > 10.0)
+        return;  // click wasn't near a vertex
+      selected_polygon->remove_vertex(ni.vertex_idx);
       setWindowModified(true);
       create_scene();
     }
-    else if (e->buttons() & Qt::LeftButton) {
-      // figure out which edge (if any) we are nearest on this polygon
-      if (polygon_idx < 0)
-        return;  // nothing to do; no polygon currently selected
-      mouse_motion_polygon_vertex_idx = -1;
-      const double x = p.x();
-      const double y = p.y();
-      const int polygon_vertex_drag_idx =
-          project.building.polygon_edge_drag_press(level_idx, polygon_idx, x, y);
-      if (polygon_vertex_drag_idx < 0)
+    else if (e->buttons() & Qt::LeftButton)
+    {
+      mouse_edge_drag_polygon =
+          project.polygon_edge_drag_press(
+              mode,
+              level_idx,
+              selected_polygon,
+              p.x(),
+              p.y());
+      if (mouse_edge_drag_polygon.movable_vertex < 0)
         return;
     
-      if (mouse_motion_polygon != nullptr) {
+      if (mouse_motion_polygon != nullptr)
+      {
         qWarning("edit_polygon_release() without null mouse_motion_polygon!");
         return;
       }
     
-      // create the mouse motion polygon and insert a new edge
-      QVector<QPointF> polygon_vertices;
-      const Polygon &polygon =
-          project.building.levels[level_idx].polygons[polygon_idx];
-      for (size_t i = 0; i < polygon.vertices.size(); i++) {
-        const int v_idx = polygon.vertices[i];
-        const Vertex &v = project.building.levels[level_idx].vertices[v_idx];
-        polygon_vertices.append(QPointF(v.x, v.y));
-        if (v_idx == polygon_vertex_drag_idx) {
-          polygon_vertices.append(QPointF(x, y));  // current mouse location
-          mouse_motion_polygon_vertex_idx = i + 1;
-        }
-      }
-      QPolygonF drag_polygon(polygon_vertices);
-    
       mouse_motion_polygon = scene->addPolygon(
-          drag_polygon,
+          mouse_edge_drag_polygon.polygon,
           QPen(Qt::black),
           QBrush(QColor::fromRgbF(1.0, 1.0, 0.5, 0.5)));
     }
   }
-  else if (t == MOUSE_RELEASE) {
+  else if (t == MOUSE_RELEASE)
+  {
     // todo by drag mode (left/right button?)
-    if (mouse_motion_polygon == nullptr) {
+    if (mouse_motion_polygon == nullptr)
+    {
       qInfo("woah! edit_polygon_release() with null mouse_motion_polygon!");
       return;
     }
-    qInfo("replacing vertices of polygon %d...", polygon_idx);
-    QPolygonF polygon = mouse_motion_polygon->polygon();
+    printf("replacing vertices of polygon...\n");
     scene->removeItem(mouse_motion_polygon);
     delete mouse_motion_polygon;
     mouse_motion_polygon = nullptr;
   
-    int release_vertex_idx = project.building.nearest_item_index_if_within_distance(
-        level_idx, p.x(), p.y(), 10.0, Building::VERTEX);
-    if (release_vertex_idx < 0)
+    const Project::NearestItem ni = project.nearest_items(
+        mode, level_idx, p.x(), p.y());
+
+    if (ni.vertex_dist > 10.0)
       return;  // nothing to do; didn't release near a vertex
+
+    const int release_vertex_idx = ni.vertex_idx;
   
-    Polygon &existing = project.building.levels[level_idx].polygons[polygon_idx];
     if (std::find(
-        existing.vertices.begin(),
-        existing.vertices.end(),
-        release_vertex_idx) != existing.vertices.end())
+        selected_polygon->vertices.begin(),
+        selected_polygon->vertices.end(),
+        release_vertex_idx) != selected_polygon->vertices.end())
       return;  // Release vertex is already in the polygon. Don't do anything.
   
-    existing.vertices.insert(
-        existing.vertices.begin() + mouse_motion_polygon_vertex_idx,
+    selected_polygon->vertices.insert(
+        selected_polygon->vertices.begin() +
+            mouse_edge_drag_polygon.movable_vertex,
         release_vertex_idx);
   
     setWindowModified(true);
     create_scene();
   }
-  else if (t == MOUSE_MOVE) {
-    if (e->buttons() & Qt::LeftButton) {
-      if (mouse_motion_polygon == nullptr) {
+  else if (t == MOUSE_MOVE)
+  {
+    if (e->buttons() & Qt::LeftButton)
+    {
+      if (mouse_motion_polygon == nullptr)
+      {
         qInfo("woah! edit_polygon_release() with null mouse_motion_polygon!");
         return;
       }
       QPolygonF polygon = mouse_motion_polygon->polygon();
-      polygon[mouse_motion_polygon_vertex_idx] = QPointF(p.x(), p.y());
+      polygon[mouse_edge_drag_polygon.movable_vertex] = QPointF(p.x(), p.y());
       mouse_motion_polygon->setPolygon(polygon);
     }
   }
@@ -2017,7 +1900,7 @@ void Editor::set_tool_visibility(const ToolId id, const bool visible)
     printf("unable to find tool action %d\n", static_cast<int>(id));
 }
 
-void Editor::set_mode(const ModeId _mode, const QString& mode_string)
+void Editor::set_mode(const EditorModeId _mode, const QString& mode_string)
 {
   if (mode_combo_box->currentText() != mode_string)
   {

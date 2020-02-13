@@ -50,19 +50,6 @@ void Level::load_yaml_edge_sequence(
   }
 }
 
-void Level::remove_polygon_vertex(
-    const int polygon_idx, const int vertex_idx)
-{
-  if (polygon_idx < 0 || polygon_idx > static_cast<int>(polygons.size()))
-    return;  // oh no
-  if (vertex_idx < 0 || vertex_idx > static_cast<int>(vertices.size()))
-    return;  // oh no
-  vertices[vertex_idx].selected = false;
-  vector<int> &v = polygons[polygon_idx].vertices;  // save typing
-  v.erase(std::remove(v.begin(), v.end(), vertex_idx), v.end());
-  printf("removed vertex %d from polygon %d\n", vertex_idx, polygon_idx);
-}
-
 double Level::point_to_line_segment_distance(
     const double x, const double y,
     const double x0, const double y0,
@@ -105,17 +92,15 @@ double Level::point_to_line_segment_distance(
  * This function returns the index of the polygon vertex that will be
  * 'split' by the newly created edge
  */
-int Level::polygon_edge_drag_press(
-    const int polygon_idx,
+Polygon::EdgeDragPolygon Level::polygon_edge_drag_press(
+    const Polygon *polygon,
     const double x,
     const double y)
 {
-  if (polygon_idx < 0 || polygon_idx > static_cast<int>(polygons.size()))
-    return -1;  // oh no
-  Polygon &polygon = polygons[polygon_idx];
+  Polygon::EdgeDragPolygon edp;
 
-  if (polygon.vertices.empty())
-    return -1;
+  if (polygon == nullptr || polygon->vertices.empty())
+    return edp;
 
   // cruise along all possible line segments and calculate the distance
   // to this point
@@ -123,12 +108,12 @@ int Level::polygon_edge_drag_press(
   size_t min_idx = 0;
   double min_dist = 1.0e9;
 
-  for (size_t v0_idx = 0; v0_idx < polygon.vertices.size(); v0_idx++)
+  for (size_t v0_idx = 0; v0_idx < polygon->vertices.size(); v0_idx++)
   {
     const size_t v1_idx =
-        v0_idx < polygon.vertices.size() - 1 ? v0_idx + 1 : 0;
-    const size_t v0 = polygon.vertices[v0_idx];
-    const size_t v1 = polygon.vertices[v1_idx];
+        v0_idx < polygon->vertices.size() - 1 ? v0_idx + 1 : 0;
+    const size_t v0 = polygon->vertices[v0_idx];
+    const size_t v1 = polygon->vertices[v1_idx];
 
     const double x0 = vertices[v0].x;
     const double y0 = vertices[v0].y;
@@ -149,7 +134,23 @@ int Level::polygon_edge_drag_press(
       polygon_edge_proj_y = y_proj;
     }
   }
-  return min_idx;
+
+  // create the mouse motion polygon and insert a new edge
+  QVector<QPointF> polygon_vertices;
+  for (size_t i = 0; i < polygon->vertices.size(); i++)
+  {
+    const int v_idx = polygon->vertices[i];
+    const Vertex &v = vertices[v_idx];
+    polygon_vertices.append(QPointF(v.x, v.y));
+    if (v_idx == min_idx)
+    {
+      polygon_vertices.append(QPointF(x, y));  // current mouse location
+      edp.movable_vertex = i + 1;
+    }
+  }
+  edp.polygon = QPolygonF(polygon_vertices);
+ 
+  return edp;
 }
 
 bool Level::parse_vertices(const YAML::Node &_data)

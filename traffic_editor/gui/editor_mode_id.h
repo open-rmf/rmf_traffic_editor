@@ -15,41 +15,14 @@
  *
 */
 
-#ifndef POLYGON_H
-#define POLYGON_H
+#ifndef EDITOR_MODE_ID_H
+#define EDITOR_MODE_ID_H
 
-#include <vector>
-#include <yaml-cpp/yaml.h>
-
-#include <QPolygonF>
-
-
-class Polygon
+enum EditorModeId
 {
-public:
-  std::vector<int> vertices;
-  bool selected;
-
-  enum Type {
-    UNDEFINED = 0,
-    FLOOR,
-    ZONE,
-    ROI
-  } type;
-
-  Polygon();
-  ~Polygon();
-
-  void from_yaml(const YAML::Node &data, const Type polygon_type);
-  YAML::Node to_yaml() const;
-
-  void remove_vertex(const int vertex_idx);
-
-  struct EdgeDragPolygon
-  {
-    QPolygonF polygon;
-    int movable_vertex = -1;
-  };
+  MODE_BUILDING = 1,
+  MODE_TRAFFIC = 2,
+  MODE_SCENARIO = 3
 };
 
 #endif
