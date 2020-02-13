@@ -96,13 +96,17 @@ class Floor:
 
         collision_ele = SubElement(link_ele, 'collision')
         collision_ele.set('name', 'collision')
+        # Use the mesh as a collision element
+        collision_geometry_ele = SubElement(collision_ele, 'geometry')
+        collision_mesh_ele = SubElement(collision_geometry_ele, 'mesh')
+        collision_mesh_uri_ele = SubElement(collision_mesh_ele, 'uri')
+        collision_mesh_uri_ele.text = f'model://{model_name}/{obj_model_rel_path}'
+
 
         surface_ele = SubElement(collision_ele, 'surface')
         contact_ele = SubElement(surface_ele, 'contact')
         collide_bitmask_ele = SubElement(contact_ele, 'collide_bitmask')
         collide_bitmask_ele.text = '0x01'
-
-        self.generate_geometry(collision_ele)
 
         triangles = tripy.earclip(self.vertices)
 

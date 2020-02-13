@@ -73,6 +73,8 @@ class Door:
         lower_ele.text = str(bounds[0])
         upper_ele = SubElement(limit_ele, 'upper')
         upper_ele.text = str(bounds[1])
+        effort_ele = SubElement(limit_ele, 'effort')
+        effort_ele.text = str(500.0)
 
     '''Generate a single swing section/panel of a door.
 
