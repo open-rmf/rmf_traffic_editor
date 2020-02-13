@@ -22,6 +22,7 @@
 
 #include <QFileInfo>
 #include <QDir>
+#include <QGraphicsItem>
 
 using std::string;
 
@@ -211,4 +212,294 @@ bool Project::delete_selected(const int level_idx)
       !scenarios[scenario_idx].delete_selected(level_name))
       return false;
   return true;
+}
+
+Project::NearestItem Project::nearest_items(
+      EditorModeId mode,
+      const int level_index,
+      const double x,
+      const double y)
+{
+  NearestItem ni;
+
+  if (level_index >= static_cast<int>(building.levels.size()))
+    return ni;
+  const BuildingLevel& building_level = building.levels[level_index];
+
+  if (mode == MODE_BUILDING)
+  {
+    for (size_t i = 0; i < building_level.vertices.size(); i++)
+    {
+      const Vertex& p = building_level.vertices[i];
+      const double dx = x - p.x;
+      const double dy = y - p.y;
+      const double dist = sqrt(dx*dx + dy*dy);
+      if (dist < ni.vertex_dist)
+      {
+        ni.vertex_dist = dist;
+        ni.vertex_idx = i;
+      }
+    }
+  
+    for (size_t i = 0; i < building_level.fiducials.size(); i++)
+    {
+      const Fiducial& f = building_level.fiducials[i];
+      const double dx = x - f.x;
+      const double dy = y - f.y;
+      const double dist = sqrt(dx*dx + dy*dy);
+      if (dist < ni.fiducial_dist)
+      {
+        ni.fiducial_dist = dist;
+        ni.fiducial_idx = i;
+      }
+    }
+  
+    for (size_t i = 0; i < building_level.models.size(); i++)
+    {
+      const Model& m = building_level.models[i];
+      const double dx = x - m.x;
+      const double dy = y - m.y;
+      const double dist = sqrt(dx*dx + dy*dy);  // no need for sqrt each time
+      if (dist < ni.model_dist)
+      {
+        ni.model_dist = dist;
+        ni.model_idx = i;
+      }
+    }
+  }
+  else if (mode == MODE_SCENARIO)
+  {
+    if (scenario_idx < 0 ||
+        scenario_idx >= static_cast<int>(scenarios.size()))
+      return ni;
+    const Scenario& scenario = scenarios[scenario_idx];
+
+    for (const ScenarioLevel& scenario_level : scenario.levels)
+    {
+      if (scenario_level.name != building_level.name)
+        continue;
+
+      for (size_t i = 0; i < scenario_level.vertices.size(); i++)
+      {
+        const Vertex& p = scenario_level.vertices[i];
+        const double dx = x - p.x;
+        const double dy = y - p.y;
+        const double dist = sqrt(dx*dx + dy*dy);
+        if (dist < ni.vertex_dist)
+        {
+          ni.vertex_dist = dist;
+          ni.vertex_idx = i;
+        }
+      }
+    }
+  }
+
+  return ni;
+}
+
+ScenarioLevel *Project::scenario_level(const int building_level_idx)
+{
+  if (building_level_idx >= static_cast<int>(building.levels.size()))
+    return nullptr;
+  const BuildingLevel& building_level = building.levels[building_level_idx];
+
+  if (scenario_idx < 0 ||
+      scenario_idx >= static_cast<int>(scenarios.size()))
+    return nullptr;
+  Scenario& scenario = scenarios[scenario_idx];
+  for (size_t i = 0; i < scenario.levels.size(); i++)
+  {
+    if (scenario.levels[i].name == building_level.name)
+      return &scenario.levels[i];
+  }
+  return nullptr;
+}
+
+void Project::mouse_select_press(
+    const EditorModeId mode,
+    const int level_idx,
+    const double x,
+    const double y,
+    QGraphicsItem *graphics_item)
+{
+  clear_selection(level_idx);
+  const NearestItem ni = nearest_items(mode, level_idx, x, y);
+
+  if (mode == MODE_BUILDING)
+  {
+    if (ni.model_idx >= 0 && ni.model_dist < 50.0)
+      building.levels[level_idx].models[ni.model_idx].selected = true;
+    else if (ni.vertex_idx >= 0 && ni.vertex_dist < 10.0)
+      building.levels[level_idx].vertices[ni.vertex_idx].selected = true;
+    else if (ni.fiducial_idx >= 0 && ni.fiducial_dist < 10.0)
+      building.levels[level_idx].fiducials[ni.fiducial_idx].selected = true;
+    else
+    {
+      // use the QGraphics stuff to see if it's an edge segment or polygon
+      if (graphics_item)
+      {
+        switch (graphics_item->type())
+        {
+          case QGraphicsLineItem::Type:
+            set_selected_line_item(
+                level_idx,
+                qgraphicsitem_cast<QGraphicsLineItem *>(graphics_item));
+            break;
+    
+          case QGraphicsPolygonItem::Type:
+            set_selected_containing_polygon(mode, level_idx, x, y);
+            break;
+    
+          default:
+            printf("clicked unhandled type: %d\n",
+                static_cast<int>(graphics_item->type()));
+            break;
+        }
+      }
+    }
+  }
+  else if (mode == MODE_SCENARIO && scenario_idx >= 0)
+  {
+    ScenarioLevel* level = scenario_level(level_idx);
+    if (ni.vertex_dist < 10.0)
+      level->vertices[ni.vertex_idx].selected = true;
+    else
+    {
+      // use the QGraphics stuff to see if it's an edge segment or polygon
+      if (graphics_item)
+      {
+        switch (graphics_item->type())
+        {
+          case QGraphicsPolygonItem::Type:
+            set_selected_containing_polygon(mode, level_idx, x, y);
+            break;
+    
+          default:
+            printf("clicked unhandled type: %d\n",
+                static_cast<int>(graphics_item->type()));
+            break;
+        }
+      }
+
+    }
+  }
+}
+
+void Project::set_selected_line_item(
+    const int level_idx,
+    QGraphicsLineItem *line_item)
+{
+  clear_selection(level_idx);
+
+  if (line_item == nullptr)
+    return;
+
+  // find if any of our lanes match those vertices
+  for (auto& edge : building.levels[level_idx].edges)
+  {
+    // look up the line's vertices
+    const double x1 = line_item->line().x1();
+    const double y1 = line_item->line().y1();
+    const double x2 = line_item->line().x2();
+    const double y2 = line_item->line().y2();
+
+    const auto& v_start = building.levels[level_idx].vertices[edge.start_idx];
+    const auto& v_end = building.levels[level_idx].vertices[edge.end_idx];
+
+    // calculate distances
+    const double dx1 = v_start.x - x1;
+    const double dy1 = v_start.y - y1;
+    const double dx2 = v_end.x - x2;
+    const double dy2 = v_end.y - y2;
+    const double v1_dist = sqrt(dx1*dx1 + dy1*dy1);
+    const double v2_dist = sqrt(dx2*dx2 + dy2*dy2);
+
+    const double thresh = 10.0;  // it should be really tiny if it matches
+    if (v1_dist < thresh && v2_dist < thresh)
+    {
+      edge.selected = true;
+      return;  // stop after first one is found, don't select multiple
+    }
+  }
+}
+
+Polygon::EdgeDragPolygon Project::polygon_edge_drag_press(
+    const EditorModeId mode,
+    const int level_idx,
+    const Polygon *polygon,
+    const double x,
+    const double y)
+{
+  Polygon::EdgeDragPolygon edp;
+
+  if (level_idx < 0 || level_idx > static_cast<int>(building.levels.size()))
+    return edp;  // oh no
+
+  if (mode == MODE_BUILDING)
+    return building.levels[level_idx].polygon_edge_drag_press(polygon, x, y);
+  else if (mode == MODE_SCENARIO)
+  {
+    ScenarioLevel *slevel = scenario_level(level_idx);
+    if (slevel == nullptr)
+      return edp;
+    return slevel->polygon_edge_drag_press(polygon, x, y);
+  }
+  
+  return edp;
+}
+
+Polygon *Project::get_selected_polygon(
+    const EditorModeId mode,
+    const int level_idx)
+{
+  if (mode == MODE_BUILDING)
+  {
+    for (size_t i = 0; i < building.levels[level_idx].polygons.size(); i++)
+      if (building.levels[level_idx].polygons[i].selected)
+        return &building.levels[level_idx].polygons[i];  // abomination
+  }
+  else if (mode == MODE_SCENARIO)
+  {
+    ScenarioLevel* slevel = scenario_level(level_idx);
+    if (slevel)
+    {
+      for (size_t i = 0; i < slevel->polygons.size(); i++)
+        if (slevel->polygons[i].selected)
+          return &slevel->polygons[i];  // abomination
+    }
+  }
+  return nullptr;
+}
+
+void Project::set_selected_containing_polygon(
+    const EditorModeId mode,
+    const int level_idx,
+    const double x,
+    const double y)
+{
+  Level *level = nullptr;
+  if (mode == MODE_BUILDING)
+    level = &building.levels[level_idx];
+  else if (mode == MODE_SCENARIO)
+    level = scenario_level(level_idx);
+
+  if (level == nullptr)
+    return;
+
+  for (size_t i = 0; i < level->polygons.size(); i++)
+  {
+    Polygon& polygon = level->polygons[i];
+    QVector<QPointF> polygon_vertices;
+    for (const auto& vertex_idx: polygon.vertices)
+    {
+      const Vertex& v = level->vertices[vertex_idx];
+      polygon_vertices.append(QPointF(v.x, v.y));
+    }
+    QPolygonF qpolygon(polygon_vertices);
+    if (qpolygon.containsPoint(QPoint(x, y), Qt::OddEvenFill))
+    {
+      polygon.selected = true;
+      return;
+    }
+  }
 }

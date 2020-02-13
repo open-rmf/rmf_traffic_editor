@@ -101,17 +101,6 @@ public:
       const int model_idx,
       const double yaw);
 
-  void remove_polygon_vertex(
-      const int level_idx,
-      const int polygon_idx,
-      const int vertex_idx);
-
-  int polygon_edge_drag_press(
-      const int level_idx,
-      const int polygon_idx,
-      const double x,
-      const double y);
-
   void draw_lifts(QGraphicsScene *scene, const int level_idx);
 
   bool transform_between_levels(

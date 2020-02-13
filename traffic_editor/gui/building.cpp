@@ -334,27 +334,6 @@ void Building::set_model_yaw(
   levels[level_idx].models[model_idx].yaw = yaw;
 }
 
-void Building::remove_polygon_vertex(
-    const int level_idx,
-    const int polygon_idx,
-    const int vertex_idx)
-{
-  if (level_idx < 0 || level_idx > static_cast<int>(levels.size()))
-    return;  // oh no
-  levels[level_idx].remove_polygon_vertex(polygon_idx, vertex_idx);
-}
-
-int Building::polygon_edge_drag_press(
-    const int level_idx,
-    const int polygon_idx,
-    const double x,
-    const double y)
-{
-  if (level_idx < 0 || level_idx > static_cast<int>(levels.size()))
-    return -1;  // oh no
-  return levels[level_idx].polygon_edge_drag_press(polygon_idx, x, y);
-}
-
 void Building::clear()
 {
   name = "";

@@ -57,10 +57,8 @@ public:
 
   virtual bool delete_selected() = 0;
 
-  void remove_polygon_vertex(const int polygon_idx, const int vertex_idx);
-
-  int polygon_edge_drag_press(
-      const int polygon_idx,
+  Polygon::EdgeDragPolygon polygon_edge_drag_press(
+      const Polygon *polygon,
       const double x,
       const double y);
 

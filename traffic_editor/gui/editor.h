@@ -32,6 +32,7 @@
 
 #include "project.h"
 #include "editor_model.h"
+#include "editor_mode_id.h"
 
 class BuildingLevelTable;
 class MapView;
@@ -86,14 +87,9 @@ protected:
   void closeEvent(QCloseEvent *event);
 
 private:
-  enum ModeId
-  {
-    MODE_BUILDING = 1,
-    MODE_TRAFFIC = 2,
-    MODE_SCENARIO = 3
-  } mode = MODE_BUILDING;
+  EditorModeId mode = MODE_BUILDING;
 
-  void set_mode(const ModeId _mode, const QString& mode_string);
+  void set_mode(const EditorModeId _mode, const QString& mode_string);
 
   enum ToolId
   {
@@ -153,7 +149,8 @@ private:
   Project project;
   int level_idx = 0;  // level that we are currently editing
   int clicked_idx = -1;  // point most recently clicked
-  int polygon_idx = -1;  // currently selected polygon
+  //int polygon_idx = -1;  // currently selected polygon
+  Polygon *selected_polygon = nullptr;
 
   QButtonGroup *level_button_group;
   QHBoxLayout *level_button_hbox_layout;
@@ -219,8 +216,6 @@ private:
   EditorModel *mouse_motion_editor_model = nullptr;
   void load_model_names();
 
-  int get_polygon_idx(const double x, const double y);
-
   bool create_scene();
 
   const static int ROTATION_INDICATOR_RADIUS = 50;
@@ -233,17 +228,11 @@ private:
   int mouse_vertex_idx = -1;
   int mouse_fiducial_idx = -1;
   std::vector<int> mouse_motion_polygon_vertices;
-  int mouse_motion_polygon_vertex_idx = -1;
+  //int mouse_motion_polygon_vertex_idx = -1;
+  Polygon::EdgeDragPolygon mouse_edge_drag_polygon;
 
   void draw_mouse_motion_line_item(const double mouse_x, const double mouse_y);
   void remove_mouse_motion_item();
-  void set_selected_line_item(QGraphicsLineItem *line_item);
-
-  bool line_vertices_match(
-      const QGraphicsLineItem *line_item,
-      const Vertex &v1,
-      const Vertex &v2,
-      const double max_dist);
 
   void number_key_pressed(const int n);
 

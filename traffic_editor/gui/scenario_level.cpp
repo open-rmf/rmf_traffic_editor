@@ -125,7 +125,7 @@ bool ScenarioLevel::delete_selected()
 
 void ScenarioLevel::draw_polygons(QGraphicsScene *scene) const
 {
-  QBrush polygon_brush(QColor::fromRgbF(0.8, 0.8, 0.0, 0.5));
+  QBrush polygon_brush(QColor::fromRgbF(0.8, 0.8, 0.0, 0.2));
   QBrush selected_polygon_brush(QColor::fromRgbF(1.0, 0.0, 0.0, 0.5));
 
   for (const auto &polygon : polygons)
