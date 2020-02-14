@@ -95,10 +95,6 @@
 
     </gui>
 
-    <scene>
-      <ambient>1 1 1 1</ambient>
-    </scene>
-
     <light type="directional" name="sun">
       <cast_shadows>true</cast_shadows>
       <pose>0 0 10 0 0 0</pose>
