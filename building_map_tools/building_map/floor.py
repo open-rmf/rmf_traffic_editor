@@ -21,38 +21,6 @@ class Floor:
     def __repr__(self):
         return self.__str__()
 
-    def generate_geometry(self, parent_ele):
-        pose_ele = SubElement(parent_ele, 'pose')
-        pose_ele.text = f'0 0 {-self.thickness} 0 0 0'
-
-        geometry_ele = SubElement(parent_ele, 'geometry')
-
-        polyline_ele = SubElement(geometry_ele, 'polyline')
-
-        height_ele = SubElement(polyline_ele, 'height')
-        height_ele.text = f'{self.thickness}'
-
-        x_bounds = [1e9, -1e9]
-        y_bounds = [1e9, -1e9]
-        for vertex in self.vertices:
-            if vertex[0] < x_bounds[0]:
-                x_bounds[0] = vertex[0]
-            if vertex[0] > x_bounds[1]:
-                x_bounds[1] = vertex[0]
-
-            if vertex[1] < y_bounds[0]:
-                y_bounds[0] = vertex[1]
-            if vertex[1] > y_bounds[1]:
-                y_bounds[1] = vertex[1]
-
-            point_ele = SubElement(polyline_ele, 'point')
-            point_ele.text = f'{vertex[0]} {vertex[1]}'
-
-        cx = (x_bounds[0] + x_bounds[1]) / 2.0
-        cy = (y_bounds[0] + y_bounds[1]) / 2.0
-        dx = x_bounds[1] - x_bounds[0]
-        dy = y_bounds[1] - y_bounds[0]
-
     def find_vertex_idx(self, x, y):
         for v_idx, v in enumerate(self.vertices):
             dx = x - v[0]
@@ -96,13 +64,17 @@ class Floor:
 
         collision_ele = SubElement(link_ele, 'collision')
         collision_ele.set('name', 'collision')
+        # Use the mesh as a collision element
+        collision_geometry_ele = SubElement(collision_ele, 'geometry')
+        collision_mesh_ele = SubElement(collision_geometry_ele, 'mesh')
+        collision_mesh_uri_ele = SubElement(collision_mesh_ele, 'uri')
+        collision_mesh_uri_ele.text = f'model://{model_name}/{obj_model_rel_path}'
+
 
         surface_ele = SubElement(collision_ele, 'surface')
         contact_ele = SubElement(surface_ele, 'contact')
         collide_bitmask_ele = SubElement(contact_ele, 'collide_bitmask')
         collide_bitmask_ele.text = '0x01'
-
-        self.generate_geometry(collision_ele)
 
         triangles = tripy.earclip(self.vertices)
 
