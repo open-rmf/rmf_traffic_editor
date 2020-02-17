@@ -2,7 +2,9 @@ import math
 import os
 import shutil
 
-from tripy import tripy
+import shapely.geometry
+import shapely.ops
+
 from xml.etree.ElementTree import SubElement
 from ament_index_python.packages import get_package_share_directory
 
@@ -11,9 +13,15 @@ class Floor:
     def __init__(self, yaml_node, level_vertices):
         self.vertices = []
         self.thickness = 0.1
+        vert_list = []
         for v_idx in yaml_node['vertices']:
             v = level_vertices[v_idx]
-            self.vertices.append([v.x, v.y])
+            #self.vertices.append([v.x, v.y])
+            self.vertices.append(shapely.geometry.Point(v.x, v.y))
+            vert_list.append((v.x, v.y))
+
+        self.polygon = shapely.geometry.Polygon(vert_list)
+        self.multipoint = shapely.geometry.MultiPoint(vert_list)
 
     def __str__(self):
         return f'floor ({len(self.vertices)} vertices)'
@@ -23,8 +31,8 @@ class Floor:
 
     def find_vertex_idx(self, x, y):
         for v_idx, v in enumerate(self.vertices):
-            dx = x - v[0]
-            dy = y - v[1]
+            dx = x - v.x
+            dy = y - v.y
             d = math.sqrt(dx*dx + dy*dy)
             if d < 0.0001:
                 return v_idx
@@ -33,7 +41,7 @@ class Floor:
     def generate(self, model_ele, floor_cnt, model_name, model_path):
         print(f'generating floor polygon {floor_cnt} on floor')
         # for v in self.vertices:
-        #     print(f'  {v[0]} {v[1]}')
+        #     print(f'  {v.x} {v.y}')
 
         link_ele = SubElement(model_ele, 'link')
         link_ele.set('name', f'floor_{floor_cnt}')
@@ -76,7 +84,20 @@ class Floor:
         collide_bitmask_ele = SubElement(contact_ele, 'collide_bitmask')
         collide_bitmask_ele.text = '0x01'
 
-        triangles = tripy.earclip(self.vertices)
+        #triangles = tripy.earclip(self.vertices)
+        triangles = shapely.ops.triangulate(self.multipoint)
+        print(triangles)
+        for triangle in triangles:
+            print(triangle.wkt)
+
+        # for unknown reasons, it seems that shapely.ops.triangulate
+        # doesn't return a list of vertices and triangles as indices,
+        # instead you get a bunch of coordinates, so we'll re-build
+        # a triangle index list now. There must be an easier way...
+        self.tri_index_list = []
+        for triangle in triangles:
+            v0_idx = TODO: write a helper function...
+
 
         obj_path = f'{model_path}/{obj_model_rel_path}'
         with open(obj_path, 'w') as f:
@@ -88,13 +109,13 @@ class Floor:
             # ordering already. todo: detect if the winding order is
             # inverted and re-wind appropriately
             for v in self.vertices:
-                f.write(f'v {v[0]} {v[1]} 0\n')
+                f.write(f'v {v.x} {v.y} 0\n')
 
             # in the future we may have texture tiles of a different size,
             # but for now let's assume 1-meter x 1-meter tiles, so we don't
             # need to scale the texture coordinates currently.
             for v in self.vertices:
-                f.write(f'vt {v[0]} {v[1]} 0\n')
+                f.write(f'vt {v.x} {v.y} 0\n')
 
             # our floors are always flat (for now), so we only have one normal
             f.write(f'vn 0 0 1\n')
