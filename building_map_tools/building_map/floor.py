@@ -93,7 +93,24 @@ class Floor:
         collide_bitmask_ele.text = '0x01'
 
         #triangles = tripy.earclip(self.vertices)
-        triangles = shapely.ops.triangulate(self.multipoint)
+        triangles_convex = shapely.ops.triangulate(self.multipoint)
+        triangles = []
+        for triangle_convex in triangles_convex:
+            print(f'before intersection: {triangle_convex.wkt}')
+            poly = triangle_convex.intersection(self.polygon)
+            #poly = triangle_convex
+            if poly.is_empty:
+                print("empty intersection")
+                continue
+            if poly.geom_type == 'Polygon':
+                print(f'  after: {poly.wkt}')
+                poly = shapely.geometry.polygon.orient(poly)
+                print(f'  after orient: {poly.wkt}')
+                triangles.append(poly)
+            elif poly.geom_type == 'MultiLineString':
+                print('Found a multilinestring. Ignoring it...')
+            else:
+                print('Found something else weird. Ignoring it...')
 
         # for unknown reasons, it seems that shapely.ops.triangulate
         # doesn't return a list of vertices and triangles as indices,
