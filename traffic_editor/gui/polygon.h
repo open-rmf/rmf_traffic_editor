@@ -18,6 +18,7 @@
 #ifndef POLYGON_H
 #define POLYGON_H
 
+#include <string>
 #include <vector>
 #include <yaml-cpp/yaml.h>
 
@@ -28,14 +29,16 @@ class Polygon
 {
 public:
   std::vector<int> vertices;
-  bool selected;
+  std::string texture_name;
+  double texture_scale = 1.0;
+  bool selected = false;
 
   enum Type {
     UNDEFINED = 0,
     FLOOR,
     ZONE,
     ROI
-  } type;
+  } type = UNDEFINED;
 
   Polygon();
   ~Polygon();

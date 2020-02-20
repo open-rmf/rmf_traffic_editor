@@ -20,7 +20,6 @@ using std::vector;
 
 
 Polygon::Polygon()
-: selected(false), type(UNDEFINED)
 {
 }
 
