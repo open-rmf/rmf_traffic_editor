@@ -46,6 +46,7 @@ public:
   int drawing_height = 0;
   double drawing_meters_per_pixel = 0.05;
   double elevation = 0.0;
+  const double vertex_radius = 0.1;  // meters
 
   double x_meters = 10.0;  // manually specified if no drawing supplied
   double y_meters = 10.0;  // manually specified if no drawing supplied

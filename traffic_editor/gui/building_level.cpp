@@ -507,14 +507,6 @@ void BuildingLevel::draw_door(QGraphicsScene *scene, const Edge &edge) const
   const double door_thickness = 0.2;  // meters
   const double door_motion_thickness = 0.05;  // meters
 
-  scene->addLine(
-      v_start.x, v_start.y,
-      v_end.x, v_end.y,
-      QPen(
-        QBrush(QColor::fromRgbF(1.0, g, 0.0, 0.5)),
-        door_thickness / drawing_meters_per_pixel,
-        Qt::SolidLine, Qt::RoundCap));
-
   auto door_axis_it = edge.params.find("motion_axis");
   std::string door_axis("start");
   if (door_axis_it != edge.params.end())
@@ -609,6 +601,15 @@ void BuildingLevel::draw_door(QGraphicsScene *scene, const Edge &edge) const
   scene->addPath(
       door_motion_path,
       QPen(Qt::black, door_motion_thickness / drawing_meters_per_pixel));
+
+  // add the doorjamb last, so it sits on top of the Z stack of the travel arc
+  scene->addLine(
+      v_start.x, v_start.y,
+      v_end.x, v_end.y,
+      QPen(
+        QBrush(QColor::fromRgbF(1.0, g, 0.0, 0.5)),
+        door_thickness / drawing_meters_per_pixel,
+        Qt::SolidLine, Qt::RoundCap));
 }
 
 void BuildingLevel::add_door_slide_path(
@@ -827,7 +828,7 @@ void BuildingLevel::draw(
   for (const auto &v : vertices)
     v.draw(
         scene,
-        0.1 / drawing_meters_per_pixel,
+        vertex_radius / drawing_meters_per_pixel,
         QColor::fromRgbF(0.0, 1.0, 0.0));
 
   for (const auto &f : fiducials)

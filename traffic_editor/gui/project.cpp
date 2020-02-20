@@ -327,9 +327,13 @@ void Project::mouse_select_press(
 
   if (mode == MODE_BUILDING)
   {
+    const double vertex_dist_thresh =
+        building.levels[level_idx].vertex_radius /
+        building.levels[level_idx].drawing_meters_per_pixel;
+
     if (ni.model_idx >= 0 && ni.model_dist < 50.0)
       building.levels[level_idx].models[ni.model_idx].selected = true;
-    else if (ni.vertex_idx >= 0 && ni.vertex_dist < 10.0)
+    else if (ni.vertex_idx >= 0 && ni.vertex_dist < vertex_dist_thresh)
       building.levels[level_idx].vertices[ni.vertex_idx].selected = true;
     else if (ni.fiducial_idx >= 0 && ni.fiducial_dist < 10.0)
       building.levels[level_idx].fiducials[ni.fiducial_idx].selected = true;
