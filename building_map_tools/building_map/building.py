@@ -56,7 +56,8 @@ class Building:
         user_camera.set('name', 'user_camera')
 
         user_camera_pose = SubElement(user_camera, 'pose')
-        user_camera_pose.text = '20 -10 10 0 0.6 -1.33'
+        center_xy = self.center()
+        user_camera_pose.text = f'{center_xy[0]} {center_xy[1]-20} 10 0 0.6 1.57'
 
         scene = SubElement(world, 'scene')
         ambient_ele = SubElement(scene, 'ambient')
@@ -91,3 +92,8 @@ class Building:
                 os.makedirs(model_path)
 
             level.generate_sdf_model(model_name, model_path)
+
+    def center(self):
+        # todo: something smarter in the future. For now just the center
+        # of the first level
+        return self.levels[list(self.levels.keys())[0]].center()

@@ -483,3 +483,9 @@ class Level:
         dx = v_end.x - v_start.x
         dy = v_end.y - v_start.y
         return math.atan2(dy, dx)
+
+    def center(self):
+        if not self.floors:
+            return (0, 0)
+        bounds = self.floors[0].polygon.bounds
+        return ( (bounds[0] + bounds[2]) / 2.0, (bounds[1] + bounds[3]) / 2.0)

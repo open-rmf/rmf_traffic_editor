@@ -2,7 +2,9 @@ import math
 import os
 import shutil
 
-from tripy import tripy
+import shapely.geometry
+import shapely.ops
+
 from xml.etree.ElementTree import SubElement
 from ament_index_python.packages import get_package_share_directory
 
@@ -11,9 +13,15 @@ class Floor:
     def __init__(self, yaml_node, level_vertices):
         self.vertices = []
         self.thickness = 0.1
+        vert_list = []
         for v_idx in yaml_node['vertices']:
             v = level_vertices[v_idx]
-            self.vertices.append([v.x, v.y])
+            #self.vertices.append([v.x, v.y])
+            self.vertices.append(shapely.geometry.Point(v.x, v.y))
+            vert_list.append((v.x, v.y))
+
+        self.polygon = shapely.geometry.Polygon(vert_list)
+        self.multipoint = shapely.geometry.MultiPoint(vert_list)
 
     def __str__(self):
         return f'floor ({len(self.vertices)} vertices)'
@@ -23,17 +31,25 @@ class Floor:
 
     def find_vertex_idx(self, x, y):
         for v_idx, v in enumerate(self.vertices):
-            dx = x - v[0]
-            dy = y - v[1]
+            dx = x - v.x
+            dy = y - v.y
             d = math.sqrt(dx*dx + dy*dy)
             if d < 0.0001:
                 return v_idx
         raise RuntimeError("Couldn't find vertex index!")
 
+    def triangle_to_vertex_index_list(self, triangle, vertices):
+        vertex_idx_list = []
+        c = triangle.exterior.coords  # save typing, make it easier to read
+        vertex_idx_list.append(self.find_vertex_idx(c[0][0], c[0][1]))
+        vertex_idx_list.append(self.find_vertex_idx(c[1][0], c[1][1]))
+        vertex_idx_list.append(self.find_vertex_idx(c[2][0], c[2][1]))
+        return vertex_idx_list
+
     def generate(self, model_ele, floor_cnt, model_name, model_path):
         print(f'generating floor polygon {floor_cnt} on floor')
         # for v in self.vertices:
-        #     print(f'  {v[0]} {v[1]}')
+        #     print(f'  {v.x} {v.y}')
 
         link_ele = SubElement(model_ele, 'link')
         link_ele.set('name', f'floor_{floor_cnt}')
@@ -76,8 +92,36 @@ class Floor:
         collide_bitmask_ele = SubElement(contact_ele, 'collide_bitmask')
         collide_bitmask_ele.text = '0x01'
 
-        triangles = tripy.earclip(self.vertices)
+        #triangles = tripy.earclip(self.vertices)
+        triangles_convex = shapely.ops.triangulate(self.multipoint)
+        triangles = []
+        for triangle_convex in triangles_convex:
+            print(f'before intersection: {triangle_convex.wkt}')
+            poly = triangle_convex.intersection(self.polygon)
+            #poly = triangle_convex
+            if poly.is_empty:
+                print("empty intersection")
+                continue
+            if poly.geom_type == 'Polygon':
+                print(f'  after: {poly.wkt}')
+                poly = shapely.geometry.polygon.orient(poly)
+                print(f'  after orient: {poly.wkt}')
+                triangles.append(poly)
+            elif poly.geom_type == 'MultiLineString':
+                print('Found a multilinestring. Ignoring it...')
+            else:
+                print('Found something else weird. Ignoring it...')
 
+        # for unknown reasons, it seems that shapely.ops.triangulate
+        # doesn't return a list of vertices and triangles as indices,
+        # instead you get a bunch of coordinates, so we'll re-build
+        # a triangle index list now. There must be an easier way...
+        tri_vertex_indices = []
+        for triangle in triangles:
+            tri_vertex_indices.append(
+                self.triangle_to_vertex_index_list(triangle, self.vertices))
+        print(tri_vertex_indices)
+            
         obj_path = f'{model_path}/{obj_model_rel_path}'
         with open(obj_path, 'w') as f:
             f.write('# The Great Editor v0.0.1\n')
@@ -87,34 +131,37 @@ class Floor:
             # this assumes that the vertices are in "correct" (OBJ) winding
             # ordering already. todo: detect if the winding order is
             # inverted and re-wind appropriately
+            # In order for the floors to be seen from below,
+            # we also add another set of vertices "below" the floor thickness
             for v in self.vertices:
-                f.write(f'v {v[0]} {v[1]} 0\n')
+                f.write(f'v {v.x} {v.y} 0\n')
+                f.write(f'v {v.x} {v.y} -{self.thickness}\n')
 
             # in the future we may have texture tiles of a different size,
             # but for now let's assume 1-meter x 1-meter tiles, so we don't
             # need to scale the texture coordinates currently.
             for v in self.vertices:
-                f.write(f'vt {v[0]} {v[1]} 0\n')
+                f.write(f'vt {v.x} {v.y} 0\n')
 
-            # our floors are always flat (for now), so we only have one normal
+            # our floors are always flat (for now), so normals are up or down
             f.write(f'vn 0 0 1\n')
+            f.write(f'vn 0 0 -1\n')
 
             f.write(f'usemtl floor_{floor_cnt}\n')
             f.write('s off\n')
 
-            for triangle in triangles:
+            for triangle in tri_vertex_indices:
                 # todo... clean this up. For now, wind the triangles both ways
 
                 f.write('f')
-                for tri_vertex in triangle:
-                    v_idx = self.find_vertex_idx(tri_vertex[0], tri_vertex[1])
-                    f.write(f' {v_idx+1}/{v_idx+1}/1')
+                for v_idx in triangle:
+                    f.write(f' {2*v_idx+1}/{v_idx+1}/1')
                 f.write('\n')
 
+                # now add the triangle on the bottom-side of the floor
                 f.write('f')
-                for tri_vertex in reversed(triangle):
-                    v_idx = self.find_vertex_idx(tri_vertex[0], tri_vertex[1])
-                    f.write(f' {v_idx+1}/{v_idx+1}/1')
+                for v_idx in reversed(triangle):
+                    f.write(f' {2*v_idx+2}/{v_idx+1}/2')
                 f.write('\n')
 
         print(f'  wrote {obj_path}')

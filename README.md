@@ -11,3 +11,16 @@ This repository has the following directories:
    * a ROS 2 node to serve maps using `building_map_msgs`
    * translators to simulators such as Gazebo
    * translators to navigation packages such as `rmf_core`
+
+# Installation
+
+The GUI of `traffic-editor` can be installed and used independently from ROS 2
+if desired. This process is documented in the `traffic_editor` package README.
+However, building with `colcon` as part of a ROS 2 workspace allows easier
+generation and use of Gazebo simulation worlds from `traffic-editor` buildings.
+The `building_map_tools` package requires the following Python 3 dependencies
+to generate worlds:
+
+```
+sudo apt install python3-shapely python3-yaml
+```

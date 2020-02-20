@@ -9,8 +9,7 @@ setup(
         'building_map',
         'building_map.doors',
         'building_map_server',
-        'building_map_generators',
-        'tripy'],
+        'building_map_generators'],
     py_modules=[],
     data_files=[
         ('share/ament_index/resource_index/packages',
@@ -20,7 +19,7 @@ setup(
         ('share/' + package_name + '/textures', ['building_map_generators/textures/blue_linoleum_high_contrast.png']),
         ('share/' + package_name + '/textures', ['building_map_generators/textures/wall.png']),
     ],
-    install_requires=['setuptools'],
+    install_requires=['setuptools', 'shapely', 'pyyaml'],
     author='Morgan Quigley',
     author_email='morgan@osrfoundation.org',
     zip_safe=True,
