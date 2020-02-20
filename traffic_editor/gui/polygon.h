@@ -18,20 +18,23 @@
 #ifndef POLYGON_H
 #define POLYGON_H
 
+#include <map>
 #include <string>
 #include <vector>
 #include <yaml-cpp/yaml.h>
 
 #include <QPolygonF>
 
+#include "param.h"
+
 
 class Polygon
 {
 public:
   std::vector<int> vertices;
-  std::string texture_name;
-  double texture_scale = 1.0;
   bool selected = false;
+
+  std::map<std::string, Param> params;
 
   enum Type {
     UNDEFINED = 0,
@@ -53,6 +56,15 @@ public:
     QPolygonF polygon;
     int movable_vertex = -1;
   };
+
+  void set_param(const std::string &name, const std::string &value);
+  void create_required_parameters();
+
+  template <typename T>
+  void create_param_if_needed(
+      const std::string& name,
+      const Param::Type& param_type,
+      const T& param_value);
 };
 
 #endif

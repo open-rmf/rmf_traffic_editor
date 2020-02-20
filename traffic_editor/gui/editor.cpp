@@ -1172,18 +1172,19 @@ void Editor::populate_property_editor(const Polygon& polygon)
   printf("populate_property_editor(polygon)\n");
   property_editor->blockSignals(true);  // otherwise we get tons of callbacks
 
-  property_editor->setRowCount(1);
+  property_editor->setRowCount(polygon.params.size());
 
-  property_editor_set_row(
-      0,
-      "texture_name",
-      QString::fromStdString(polygon.texture_name));
+  int row = 0;
+  for (const auto &param : polygon.params)
+  {
+    property_editor_set_row(
+        row,
+        QString::fromStdString(param.first),
+        param.second.to_qstring(),
+        true);
+    row++;
+  }
 
-  property_editor_set_row(
-      1,
-      "texture_scale",
-      QString::number(polygon.texture_scale));
-      
   property_editor->blockSignals(false);  // re-enable callbacks
 }
 
@@ -1231,6 +1232,15 @@ void Editor::property_editor_cell_changed(int row, int column)
     if (name == "name")
       f.name = value;
     create_scene();
+    setWindowModified(true);
+    return;  // stop after finding the first one
+  }
+
+  for (auto& p : project.building.levels[level_idx].polygons)
+  {
+    if (!p.selected)
+      continue;
+    p.set_param(name, value);
     setWindowModified(true);
     return;  // stop after finding the first one
   }
@@ -1765,7 +1775,14 @@ void Editor::mouse_edit_polygon(
       const Project::NearestItem ni = project.nearest_items(
           mode, level_idx, p.x(), p.y());
       if (ni.vertex_dist > 10.0)
+      {
+        printf("right-click wasn't near a vertex: %.1f\n", ni.vertex_dist);
         return;  // click wasn't near a vertex
+      }
+      else
+      {
+        printf("removing vertex %d\n", ni.vertex_idx);
+      }
       selected_polygon->remove_vertex(ni.vertex_idx);
       setWindowModified(true);
       create_scene();

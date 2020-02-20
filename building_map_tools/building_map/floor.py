@@ -8,6 +8,8 @@ import shapely.ops
 from xml.etree.ElementTree import SubElement
 from ament_index_python.packages import get_package_share_directory
 
+from .param_value import ParamValue
+
 
 class Floor:
     def __init__(self, yaml_node, level_vertices):
@@ -19,6 +21,13 @@ class Floor:
             #self.vertices.append([v.x, v.y])
             self.vertices.append(shapely.geometry.Point(v.x, v.y))
             vert_list.append((v.x, v.y))
+
+        self.params = {}
+        if yaml_node['parameters']:
+            for param_name, param_yaml in yaml_node['parameters'].items():
+                self.params[param_name] = ParamValue(param_yaml)
+        print('floor polygon params:')
+        print(self.params)
 
         self.polygon = shapely.geometry.Polygon(vert_list)
         self.multipoint = shapely.geometry.MultiPoint(vert_list)
@@ -110,7 +119,8 @@ class Floor:
             elif poly.geom_type == 'MultiLineString':
                 print('Found a multilinestring. Ignoring it...')
             else:
-                print('Found something else weird. Ignoring it...')
+                print('Found something else weird. Ignoring it:')
+                print(f'  {poly.wkt}')
 
         # for unknown reasons, it seems that shapely.ops.triangulate
         # doesn't return a list of vertices and triangles as indices,
@@ -121,7 +131,11 @@ class Floor:
             tri_vertex_indices.append(
                 self.triangle_to_vertex_index_list(triangle, self.vertices))
         print(tri_vertex_indices)
-            
+
+        texture_scale = 1.0
+        if 'texture_scale' in self.params:
+            texture_scale = self.params['texture_scale'].value
+
         obj_path = f'{model_path}/{obj_model_rel_path}'
         with open(obj_path, 'w') as f:
             f.write('# The Great Editor v0.0.1\n')
@@ -141,7 +155,7 @@ class Floor:
             # but for now let's assume 1-meter x 1-meter tiles, so we don't
             # need to scale the texture coordinates currently.
             for v in self.vertices:
-                f.write(f'vt {v.x} {v.y} 0\n')
+                f.write(f'vt {v.x / texture_scale} {v.y / texture_scale} 0\n')
 
             # our floors are always flat (for now), so normals are up or down
             f.write(f'vn 0 0 1\n')
@@ -181,12 +195,14 @@ class Floor:
 
         print(f'  wrote {mtl_path}')
 
-        # todo: read texture parameter somehow from YAML
-        # for now, just use blue linoleum
+        texture_name = 'blue_linoleum'
+        if 'texture_name' in self.params:
+            texture_name = self.params['texture_name'].value
+
         # todo: use ament_resource_index somehow to calculate this path
         texture_path_source = os.path.join(
             get_package_share_directory('building_map_tools'),
-            'textures/blue_linoleum.png')
+            f'textures/{texture_name}.png')
         texture_path_dest = f'{model_path}/meshes/floor_{floor_cnt}.png'
         shutil.copyfile(texture_path_source, texture_path_dest)
         print(f'  wrote {texture_path_dest}')
