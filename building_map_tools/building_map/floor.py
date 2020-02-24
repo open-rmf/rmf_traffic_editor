@@ -29,7 +29,7 @@ class Floor:
             vert_list.append((v.x, v.y))
 
         self.params = {}
-        if yaml_node['parameters']:
+        if 'parameters' in yaml_node and yaml_node['parameters']:
             for param_name, param_yaml in yaml_node['parameters'].items():
                 self.params[param_name] = ParamValue(param_yaml)
 
