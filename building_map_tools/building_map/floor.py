@@ -10,6 +10,9 @@ from ament_index_python.packages import get_package_share_directory
 
 from .param_value import ParamValue
 
+import numpy as np
+import matplotlib.pyplot as plt
+
 
 class Floor:
     def __init__(self, yaml_node, level_vertices):
@@ -101,26 +104,46 @@ class Floor:
         collide_bitmask_ele = SubElement(contact_ele, 'collide_bitmask')
         collide_bitmask_ele.text = '0x01'
 
-        #triangles = tripy.earclip(self.vertices)
         triangles_convex = shapely.ops.triangulate(self.multipoint)
         triangles = []
+
+        print(f'self.polygon = {self.polygon.wkt}')
+        self.debugging = False
+        if floor_cnt == 2 and model_name == 'cgh_B1':
+            self.debugging = True
+            x, y = self.polygon.exterior.coords.xy
+            plt.subplot(1, 2, 1);
+            plt.plot(x, y, linewidth=5.0)
+            plt.axis('equal')
+            plt.subplot(1, 2, 2);
+            plt.plot(x, y, linewidth=5.0)
+
         for triangle_convex in triangles_convex:
-            print(f'before intersection: {triangle_convex.wkt}')
+            if self.debugging:
+                tri_x, tri_y = triangle_convex.exterior.coords.xy
+                plt.plot(tri_x, tri_y, 'k', linewidth=1)
+
+            print(f'\nbefore intersection type: {triangle_convex.geom_type}: {triangle_convex.wkt}')
             poly = triangle_convex.intersection(self.polygon)
-            #poly = triangle_convex
             if poly.is_empty:
                 print("empty intersection")
                 continue
             if poly.geom_type == 'Polygon':
                 print(f'  after: {poly.wkt}')
                 poly = shapely.geometry.polygon.orient(poly)
+                poly_x, poly_y = poly.exterior.coords.xy
+                plt.plot(poly_x, poly_y, 'r', linewidth=1)
                 print(f'  after orient: {poly.wkt}')
                 triangles.append(poly)
             elif poly.geom_type == 'MultiLineString':
                 print('Found a multilinestring. Ignoring it...')
             else:
-                print('Found something else weird. Ignoring it:')
+                print('\n\n\nFound something else weird. Ignoring it:\n\n\n')
                 print(f'  {poly.wkt}')
+
+        if self.debugging:
+            plt.axis('equal')
+            plt.show();
 
         # for unknown reasons, it seems that shapely.ops.triangulate
         # doesn't return a list of vertices and triangles as indices,
