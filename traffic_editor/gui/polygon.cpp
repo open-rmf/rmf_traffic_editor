@@ -16,12 +16,13 @@
 */
 
 #include "polygon.h"
+using std::string;
 using std::vector;
 
 
 Polygon::Polygon()
-: selected(false), type(UNDEFINED)
 {
+  create_required_parameters();
 }
 
 Polygon::~Polygon()
@@ -37,6 +38,21 @@ void Polygon::from_yaml(const YAML::Node &data, const Type polygon_type)
       it != data["vertices"].end(); ++it) {
     vertices.push_back(it->as<int>());
   }
+
+  // load the parameters
+  if (data["parameters"])
+  {
+    for (YAML::const_iterator it = data["parameters"].begin();
+        it != data["parameters"].end();
+        ++it)
+    {
+      Param p;
+      p.from_yaml(it->second);
+      params[it->first.as<string>()] = p;
+    }
+  }
+
+  create_required_parameters();
 }
 
 YAML::Node Polygon::to_yaml() const
@@ -45,13 +61,73 @@ YAML::Node Polygon::to_yaml() const
   for (const auto &vertex_idx : vertices)
     y["vertices"].push_back(vertex_idx);
   y["vertices"].SetStyle(YAML::EmitterStyle::Flow);
+  y["parameters"] = YAML::Node(YAML::NodeType::Map);
+  for (const auto &param : params)
+    y["parameters"][param.first] = param.second.to_yaml();
+  y["parameters"].SetStyle(YAML::EmitterStyle::Flow);
   return y;
 }
 
 void Polygon::remove_vertex(const int vertex_idx)
 {
-  if (vertex_idx < 0 || vertex_idx > static_cast<int>(vertices.size()))
-    return;  // oh no
-  vector<int> &v = vertices;  // save typing
-  v.erase(std::remove(v.begin(), v.end(), vertex_idx), v.end());
+  // find first occurrence of this vertex_idx
+  int vertex_occurrence_idx = -1;
+  for (int i = 0; i < static_cast<int>(vertices.size()); i++)
+  {
+    if (vertices[i] == vertex_idx)
+    {
+      vertex_occurrence_idx = i;
+      break;
+    }
+  }
+  if (vertex_occurrence_idx < 0)
+  {
+    printf("never found vertex %d\n", vertex_idx);
+    return;  // never found it. so sad.
+  }
+  printf("found vertex %d at polygon vertices idx %d\n",
+      vertex_idx,
+      vertex_occurrence_idx);
+
+  vertices.erase(vertices.begin() + vertex_occurrence_idx);
+
+  // not sure what's going on here, but it doesn't work :(
+  //vector<int> &v = vertices;  // save typing
+  //v.erase(std::remove(v.begin(), v.end(), vertex_idx), v.end());
+}
+
+void Polygon::set_param(const std::string &name, const std::string &value)
+{
+  auto it = params.find(name);
+  if (it == params.end())
+  {
+    printf("tried to set unknown parameter [%s]\n", name.c_str());
+    return;  // unknown parameter
+  }
+  it->second.set(value);
+}
+
+void Polygon::create_required_parameters()
+{
+  // create required parameters if they don't exist yet on this edge
+  if (type == FLOOR)
+  {
+    create_param_if_needed(
+        "texture_name",
+        Param::STRING,
+        std::string("blue_linoleum"));
+    create_param_if_needed("texture_scale", Param::DOUBLE, 1.0);
+    create_param_if_needed("texture_rotation", Param::DOUBLE, 0.0);
+  }
+}
+
+template <typename T>
+void Polygon::create_param_if_needed(
+    const std::string& name,
+    const Param::Type& param_type,
+    const T& param_value)
+{
+  auto it = params.find(name);
+  if (it == params.end() || it->second.type != param_type)
+    params[name] = param_value;
 }

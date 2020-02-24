@@ -105,7 +105,7 @@ Polygon::EdgeDragPolygon Level::polygon_edge_drag_press(
   // cruise along all possible line segments and calculate the distance
   // to this point
 
-  size_t min_idx = 0;
+  int min_idx = 0;
   double min_dist = 1.0e9;
 
   for (size_t v0_idx = 0; v0_idx < polygon->vertices.size(); v0_idx++)

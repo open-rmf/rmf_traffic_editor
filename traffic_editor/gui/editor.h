@@ -189,6 +189,7 @@ private:
   void populate_property_editor(const Model& model);
   void populate_property_editor(const Vertex& vertex);
   void populate_property_editor(const Fiducial& fiducial);
+  void populate_property_editor(const Polygon& polygon);
 
   QTableWidgetItem *create_table_item(const QString &str, bool editable=false);
   void property_editor_cell_changed(int row, int column);

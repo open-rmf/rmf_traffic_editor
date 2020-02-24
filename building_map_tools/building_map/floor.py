@@ -8,6 +8,14 @@ import shapely.ops
 from xml.etree.ElementTree import SubElement
 from ament_index_python.packages import get_package_share_directory
 
+from .param_value import ParamValue
+
+triangulation_debugging = False
+
+if triangulation_debugging:
+    import numpy as np
+    import matplotlib.pyplot as plt
+
 
 class Floor:
     def __init__(self, yaml_node, level_vertices):
@@ -20,6 +28,11 @@ class Floor:
             self.vertices.append(shapely.geometry.Point(v.x, v.y))
             vert_list.append((v.x, v.y))
 
+        self.params = {}
+        if 'parameters' in yaml_node and yaml_node['parameters']:
+            for param_name, param_yaml in yaml_node['parameters'].items():
+                self.params[param_name] = ParamValue(param_yaml)
+
         self.polygon = shapely.geometry.Polygon(vert_list)
         self.multipoint = shapely.geometry.MultiPoint(vert_list)
 
@@ -29,14 +42,24 @@ class Floor:
     def __repr__(self):
         return self.__str__()
 
-    def find_vertex_idx(self, x, y):
+    def find_vertex_idx(self, x, y, failure_ok=False):
         for v_idx, v in enumerate(self.vertices):
             dx = x - v.x
             dy = y - v.y
             d = math.sqrt(dx*dx + dy*dy)
             if d < 0.0001:
                 return v_idx
-        raise RuntimeError("Couldn't find vertex index!")
+        if not failure_ok:
+            raise RuntimeError("Couldn't find vertex index!")
+        else:
+            return -1
+
+    def add_vertex_if_needed(self, x, y):
+        print(f'searching for vertex near ({x}, {y})')
+        idx = self.find_vertex_idx(x, y, True)
+        if idx >= 0:
+            return  # vertex already exists
+        self.vertices.append(shapely.geometry.Point(x, y))
 
     def triangle_to_vertex_index_list(self, triangle, vertices):
         vertex_idx_list = []
@@ -92,25 +115,61 @@ class Floor:
         collide_bitmask_ele = SubElement(contact_ele, 'collide_bitmask')
         collide_bitmask_ele.text = '0x01'
 
-        #triangles = tripy.earclip(self.vertices)
         triangles_convex = shapely.ops.triangulate(self.multipoint)
         triangles = []
+
+        print(f'self.polygon = {self.polygon.wkt}')
+
+        if floor_cnt == 2 and model_name == 'cgh_B1':
+            x, y = self.polygon.exterior.coords.xy
+
+            if triangulation_debugging:
+                plt.subplot(1, 2, 1);
+                plt.plot(x, y, linewidth=5.0)
+                plt.axis('equal')
+                plt.subplot(1, 2, 2);
+                plt.plot(x, y, linewidth=5.0)
+
         for triangle_convex in triangles_convex:
-            print(f'before intersection: {triangle_convex.wkt}')
+            if triangulation_debugging:
+                tri_x, tri_y = triangle_convex.exterior.coords.xy
+                plt.plot(tri_x, tri_y, 'k', linewidth=1)
+                print(f'\nbefore intersection: {triangle_convex.wkt}')
             poly = triangle_convex.intersection(self.polygon)
-            #poly = triangle_convex
             if poly.is_empty:
                 print("empty intersection")
                 continue
             if poly.geom_type == 'Polygon':
-                print(f'  after: {poly.wkt}')
                 poly = shapely.geometry.polygon.orient(poly)
-                print(f'  after orient: {poly.wkt}')
                 triangles.append(poly)
-            elif poly.geom_type == 'MultiLineString':
-                print('Found a multilinestring. Ignoring it...')
+                if triangulation_debugging:
+                    poly_x, poly_y = poly.exterior.coords.xy
+                    plt.plot(poly_x, poly_y, 'r', linewidth=1)
+            elif poly.geom_type == 'GeometryCollection':
+                # this can happen if the original triangulation needed
+                # to be clipped to lie within the original floor polygon
+                # for example, if a long triangle crossed a concave region
+                # todo: clean up the program flow here with a helper function
+                for item in poly:
+                    if item.geom_type == 'Polygon':
+                        poly = shapely.geometry.polygon.orient(item)
+                        triangles.append(poly)
+                        # in this case, it's possible that new vertices
+                        # need to be created.
+                        for coord in poly.exterior.coords:
+                            self.add_vertex_if_needed(coord[0], coord[1])
+
+                        if triangulation_debugging:
+                            poly_x, poly_y = poly.exterior.coords.xy
+                            plt.plot(poly_x, poly_y, 'r', linewidth=4)
             else:
-                print('Found something else weird. Ignoring it...')
+                if triangulation_debugging:
+                    print('\n\n\nFound something weird. Ignoring it:\n\n\n')
+                    print(f'  {poly.wkt}')
+
+        if triangulation_debugging:
+            plt.axis('equal')
+            plt.show();
 
         # for unknown reasons, it seems that shapely.ops.triangulate
         # doesn't return a list of vertices and triangles as indices,
@@ -121,7 +180,11 @@ class Floor:
             tri_vertex_indices.append(
                 self.triangle_to_vertex_index_list(triangle, self.vertices))
         print(tri_vertex_indices)
-            
+
+        texture_scale = 1.0
+        if 'texture_scale' in self.params:
+            texture_scale = self.params['texture_scale'].value
+
         obj_path = f'{model_path}/{obj_model_rel_path}'
         with open(obj_path, 'w') as f:
             f.write('# The Great Editor v0.0.1\n')
@@ -141,7 +204,7 @@ class Floor:
             # but for now let's assume 1-meter x 1-meter tiles, so we don't
             # need to scale the texture coordinates currently.
             for v in self.vertices:
-                f.write(f'vt {v.x} {v.y} 0\n')
+                f.write(f'vt {v.x / texture_scale} {v.y / texture_scale} 0\n')
 
             # our floors are always flat (for now), so normals are up or down
             f.write(f'vn 0 0 1\n')
@@ -181,12 +244,14 @@ class Floor:
 
         print(f'  wrote {mtl_path}')
 
-        # todo: read texture parameter somehow from YAML
-        # for now, just use blue linoleum
+        texture_name = 'blue_linoleum'
+        if 'texture_name' in self.params:
+            texture_name = self.params['texture_name'].value
+
         # todo: use ament_resource_index somehow to calculate this path
         texture_path_source = os.path.join(
             get_package_share_directory('building_map_tools'),
-            'textures/blue_linoleum.png')
+            f'textures/{texture_name}.png')
         texture_path_dest = f'{model_path}/meshes/floor_{floor_cnt}.png'
         shutil.copyfile(texture_path_source, texture_path_dest)
         print(f'  wrote {texture_path_dest}')
