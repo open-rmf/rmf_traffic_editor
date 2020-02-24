@@ -10,8 +10,11 @@ from ament_index_python.packages import get_package_share_directory
 
 from .param_value import ParamValue
 
-import numpy as np
-import matplotlib.pyplot as plt
+triangulation_debugging = False
+
+if triangulation_debugging:
+    import numpy as np
+    import matplotlib.pyplot as plt
 
 
 class Floor:
@@ -29,8 +32,6 @@ class Floor:
         if yaml_node['parameters']:
             for param_name, param_yaml in yaml_node['parameters'].items():
                 self.params[param_name] = ParamValue(param_yaml)
-        print('floor polygon params:')
-        print(self.params)
 
         self.polygon = shapely.geometry.Polygon(vert_list)
         self.multipoint = shapely.geometry.MultiPoint(vert_list)
@@ -41,14 +42,24 @@ class Floor:
     def __repr__(self):
         return self.__str__()
 
-    def find_vertex_idx(self, x, y):
+    def find_vertex_idx(self, x, y, failure_ok=False):
         for v_idx, v in enumerate(self.vertices):
             dx = x - v.x
             dy = y - v.y
             d = math.sqrt(dx*dx + dy*dy)
             if d < 0.0001:
                 return v_idx
-        raise RuntimeError("Couldn't find vertex index!")
+        if not failure_ok:
+            raise RuntimeError("Couldn't find vertex index!")
+        else:
+            return -1
+
+    def add_vertex_if_needed(self, x, y):
+        print(f'searching for vertex near ({x}, {y})')
+        idx = self.find_vertex_idx(x, y, True)
+        if idx >= 0:
+            return  # vertex already exists
+        self.vertices.append(shapely.geometry.Point(x, y))
 
     def triangle_to_vertex_index_list(self, triangle, vertices):
         vertex_idx_list = []
@@ -108,40 +119,55 @@ class Floor:
         triangles = []
 
         print(f'self.polygon = {self.polygon.wkt}')
-        self.debugging = False
+
         if floor_cnt == 2 and model_name == 'cgh_B1':
-            self.debugging = True
             x, y = self.polygon.exterior.coords.xy
-            plt.subplot(1, 2, 1);
-            plt.plot(x, y, linewidth=5.0)
-            plt.axis('equal')
-            plt.subplot(1, 2, 2);
-            plt.plot(x, y, linewidth=5.0)
+
+            if triangulation_debugging:
+                plt.subplot(1, 2, 1);
+                plt.plot(x, y, linewidth=5.0)
+                plt.axis('equal')
+                plt.subplot(1, 2, 2);
+                plt.plot(x, y, linewidth=5.0)
 
         for triangle_convex in triangles_convex:
-            if self.debugging:
+            if triangulation_debugging:
                 tri_x, tri_y = triangle_convex.exterior.coords.xy
                 plt.plot(tri_x, tri_y, 'k', linewidth=1)
-
-            print(f'\nbefore intersection type: {triangle_convex.geom_type}: {triangle_convex.wkt}')
+                print(f'\nbefore intersection: {triangle_convex.wkt}')
             poly = triangle_convex.intersection(self.polygon)
             if poly.is_empty:
                 print("empty intersection")
                 continue
             if poly.geom_type == 'Polygon':
-                print(f'  after: {poly.wkt}')
                 poly = shapely.geometry.polygon.orient(poly)
-                poly_x, poly_y = poly.exterior.coords.xy
-                plt.plot(poly_x, poly_y, 'r', linewidth=1)
-                print(f'  after orient: {poly.wkt}')
                 triangles.append(poly)
-            elif poly.geom_type == 'MultiLineString':
-                print('Found a multilinestring. Ignoring it...')
-            else:
-                print('\n\n\nFound something else weird. Ignoring it:\n\n\n')
-                print(f'  {poly.wkt}')
+                if triangulation_debugging:
+                    poly_x, poly_y = poly.exterior.coords.xy
+                    plt.plot(poly_x, poly_y, 'r', linewidth=1)
+            elif poly.geom_type == 'GeometryCollection':
+                # this can happen if the original triangulation needed
+                # to be clipped to lie within the original floor polygon
+                # for example, if a long triangle crossed a concave region
+                # todo: clean up the program flow here with a helper function
+                for item in poly:
+                    if item.geom_type == 'Polygon':
+                        poly = shapely.geometry.polygon.orient(item)
+                        triangles.append(poly)
+                        # in this case, it's possible that new vertices
+                        # need to be created.
+                        for coord in poly.exterior.coords:
+                            self.add_vertex_if_needed(coord[0], coord[1])
 
-        if self.debugging:
+                        if triangulation_debugging:
+                            poly_x, poly_y = poly.exterior.coords.xy
+                            plt.plot(poly_x, poly_y, 'r', linewidth=4)
+            else:
+                if triangulation_debugging:
+                    print('\n\n\nFound something weird. Ignoring it:\n\n\n')
+                    print(f'  {poly.wkt}')
+
+        if triangulation_debugging:
             plt.axis('equal')
             plt.show();
 
