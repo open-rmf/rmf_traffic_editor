@@ -780,7 +780,7 @@ void Editor::tool_toggled(int id, bool checked)
     case TOOL_ADD_WALL:
     case TOOL_ADD_MEAS:
       statusBar()->showMessage(
-          "Click and drag from a vertex to another vertex to add an edge.");
+          "Click one vertex and then another vertex to add an edge.");
       break;
     case TOOL_ADD_FLOOR:
       statusBar()->showMessage(
@@ -1451,37 +1451,58 @@ void Editor::mouse_move(
 
 void Editor::mouse_add_edge(
     const MouseType t,
-    QMouseEvent *,
+    QMouseEvent *e,
     const QPointF &p,
     const Edge::Type &edge_type)
 {
   if (t == MOUSE_PRESS)
   {
+    if (e->buttons() & Qt::RightButton)
+    {
+      // right button means "exit edge drawing mode please"
+      clicked_idx = -1;
+      remove_mouse_motion_item();
+      return;
+    }
+
     const int prev_clicked_idx = clicked_idx;
     clicked_idx = project.building.nearest_item_index_if_within_distance(
         level_idx, p.x(), p.y(), 10.0, Building::VERTEX);
-    if (clicked_idx < 0 || clicked_idx == prev_clicked_idx)  // bogus clicks
+
+    if (prev_clicked_idx < 0)
+      return;  // no previous vertex click happened; nothing else to do
+
+    if (clicked_idx == prev_clicked_idx)  // don't create self edge loops
     {
       remove_mouse_motion_item();
       return;
     }
 
-    if (prev_clicked_idx >= 0)
+    if (clicked_idx < 0)
     {
-      project.building.add_edge(
-          level_idx,
-          prev_clicked_idx,
-          clicked_idx,
-          edge_type);
-      create_scene();
-      setWindowModified(true);
+      // current click is not on an existing vertex. Add one.
+      project.building.add_vertex(level_idx, p.x(), p.y());
 
-      if (edge_type == Edge::DOOR || edge_type == Edge::MEAS)
-      {
-        clicked_idx = -1;  // doors and measurements don't usually chain
-        remove_mouse_motion_item();
-      }
+      // set the new vertex as "clicked_idx"  todo: encapsulate better
+      clicked_idx =
+          static_cast<int>(
+              project.building.levels[level_idx].vertices.size() - 1);
     }
+
+    project.building.add_edge(
+        level_idx,
+        prev_clicked_idx,
+        clicked_idx,
+        edge_type);
+
+    if (edge_type == Edge::DOOR || edge_type == Edge::MEAS)
+    {
+      clicked_idx = -1;  // doors and measurements don't usually chain
+      remove_mouse_motion_item();
+    }
+
+    create_scene();
+    setWindowModified(true);
   }
   else if (t == MOUSE_MOVE)
   {
