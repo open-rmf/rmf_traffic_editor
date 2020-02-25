@@ -1457,25 +1457,31 @@ void Editor::mouse_add_edge(
 {
   if (t == MOUSE_PRESS)
   {
+    const int prev_clicked_idx = clicked_idx;
     clicked_idx = project.building.nearest_item_index_if_within_distance(
         level_idx, p.x(), p.y(), 10.0, Building::VERTEX);
-  }
-  else if (t == MOUSE_RELEASE)
-  {
-    if (clicked_idx < 0)
-      return;
-    remove_mouse_motion_item();
-    double distance = 0;
-    const int release_idx = project.building.find_nearest_vertex_index(
-        level_idx, p.x(), p.y(), distance);
-    if (distance > 10.0 || (clicked_idx == release_idx)) {
-      clicked_idx = -1;
+    if (clicked_idx < 0 || clicked_idx == prev_clicked_idx)  // bogus clicks
+    {
+      remove_mouse_motion_item();
       return;
     }
-    project.building.add_edge(level_idx, clicked_idx, release_idx, edge_type);
-    clicked_idx = -1;
-    setWindowModified(true);
-    create_scene();
+
+    if (prev_clicked_idx >= 0)
+    {
+      project.building.add_edge(
+          level_idx,
+          prev_clicked_idx,
+          clicked_idx,
+          edge_type);
+      create_scene();
+      setWindowModified(true);
+
+      if (edge_type == Edge::DOOR || edge_type == Edge::MEAS)
+      {
+        clicked_idx = -1;  // doors and measurements don't usually chain
+        remove_mouse_motion_item();
+      }
+    }
   }
   else if (t == MOUSE_MOVE)
   {
