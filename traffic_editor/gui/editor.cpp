@@ -1475,6 +1475,12 @@ void Editor::mouse_add_edge(
           edge_type);
       create_scene();
       setWindowModified(true);
+
+      if (edge_type == Edge::DOOR || edge_type == Edge::MEAS)
+      {
+        clicked_idx = -1;  // doors and measurements don't usually chain
+        remove_mouse_motion_item();
+      }
     }
   }
   else if (t == MOUSE_MOVE)
