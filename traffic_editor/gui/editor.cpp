@@ -1469,15 +1469,6 @@ void Editor::mouse_add_edge(
     clicked_idx = project.building.nearest_item_index_if_within_distance(
         level_idx, p.x(), p.y(), 10.0, Building::VERTEX);
 
-    if (prev_clicked_idx < 0)
-      return;  // no previous vertex click happened; nothing else to do
-
-    if (clicked_idx == prev_clicked_idx)  // don't create self edge loops
-    {
-      remove_mouse_motion_item();
-      return;
-    }
-
     if (clicked_idx < 0)
     {
       // current click is not on an existing vertex. Add one.
@@ -1487,6 +1478,15 @@ void Editor::mouse_add_edge(
       clicked_idx =
           static_cast<int>(
               project.building.levels[level_idx].vertices.size() - 1);
+    }
+
+    if (prev_clicked_idx < 0)
+      return;  // no previous vertex click happened; nothing else to do
+
+    if (clicked_idx == prev_clicked_idx)  // don't create self edge loops
+    {
+      remove_mouse_motion_item();
+      return;
     }
 
     project.building.add_edge(
