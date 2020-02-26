@@ -101,7 +101,7 @@ class Level:
         y2 = self.vertices[wall.end_idx].y
         dx = x1 - x2
         dy = y1 - y2
-        length = math.sqrt(dx*dx + dy*dy)
+        length = math.sqrt(dx*dx + dy*dy) + self.wall_thickness
         cx = (x1 + x2) / 2.0
         cy = (y1 + y2) / 2.0
         wall_yaw = math.atan2(dy, dx)
