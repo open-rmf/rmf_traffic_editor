@@ -86,7 +86,9 @@ void BuildingLevelTable::update(Building& building)
 
   const int last_row_idx = static_cast<int>(building.levels.size());
   // we'll use the last row for the "Add" button
-  setCellWidget(last_row_idx, 0, nullptr);
+  for (int i = 0; i < 5; i++)
+    setItem(last_row_idx, i, new QTableWidgetItem(QString()));
+
   QPushButton *add_button = new QPushButton("Add...", this);
   setCellWidget(last_row_idx, 5, add_button);
   connect(

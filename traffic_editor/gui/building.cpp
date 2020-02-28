@@ -534,6 +534,9 @@ Building::Transform Building::get_transform(
 
 void Building::calculate_all_transforms()
 {
+  if (levels.empty())
+    return;  // let's not crash
+
   clear_transform_cache();
   for (size_t i = 0; i < levels.size(); i++)
     for (size_t j = 0; j < levels.size(); j++)
