@@ -68,6 +68,8 @@ public:
       QGraphicsScene *scene,
       std::vector<EditorModel>& editor_models) const;
 
+  bool load_drawing();
+
 private:
   void draw_lane(QGraphicsScene *scene, const Edge &edge) const;
   void draw_wall(QGraphicsScene *scene, const Edge &edge) const;

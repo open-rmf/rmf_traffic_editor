@@ -53,27 +53,8 @@ bool BuildingLevel::from_yaml(
     if (!drawing_data["filename"])
       throw std::runtime_error("level " + name + " drawing invalid");
     drawing_filename = drawing_data["filename"].as<string>();
-
-    printf("  level %s drawing: %s\n",
-        name.c_str(),
-        drawing_filename.c_str());
-
-    QString qfilename = QString::fromStdString(drawing_filename);
-
-    QImageReader image_reader(qfilename);
-    image_reader.setAutoTransform(true);
-    QImage image = image_reader.read();
-    if (image.isNull())
-    {
-      qWarning("unable to read %s: %s",
-          qUtf8Printable(qfilename),
-          qUtf8Printable(image_reader.errorString()));
+    if (!load_drawing())
       return false;
-    }
-    image = image.convertToFormat(QImage::Format_Grayscale8);
-    floorplan_pixmap = QPixmap::fromImage(image);
-    drawing_width = floorplan_pixmap.width();
-    drawing_height = floorplan_pixmap.height();
   }
   else if (_data["x_meters"] && _data["y_meters"])
   {
@@ -147,6 +128,34 @@ bool BuildingLevel::from_yaml(
   }
 
   calculate_scale();
+  return true;
+}
+
+bool BuildingLevel::load_drawing()
+{
+  if (drawing_filename.empty())
+    return true;  // nothing to load
+
+  printf("  level %s drawing: %s\n",
+      name.c_str(),
+      drawing_filename.c_str());
+
+  QString qfilename = QString::fromStdString(drawing_filename);
+
+  QImageReader image_reader(qfilename);
+  image_reader.setAutoTransform(true);
+  QImage image = image_reader.read();
+  if (image.isNull())
+  {
+    qWarning("unable to read %s: %s",
+        qUtf8Printable(qfilename),
+        qUtf8Printable(image_reader.errorString()));
+    return false;
+  }
+  image = image.convertToFormat(QImage::Format_Grayscale8);
+  floorplan_pixmap = QPixmap::fromImage(image);
+  drawing_width = floorplan_pixmap.width();
+  drawing_height = floorplan_pixmap.height();
   return true;
 }
 
