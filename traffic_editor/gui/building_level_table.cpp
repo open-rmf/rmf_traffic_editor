@@ -78,6 +78,7 @@ void BuildingLevelTable::update(Building& building)
           BuildingLevelDialog level_dialog(building.levels[i]);
           if (level_dialog.exec() == QDialog::Accepted)
           {
+            building.levels[i].load_drawing();
             setWindowModified(true);  // not sure why, but this doesn't work
           }
           update(building);
@@ -86,7 +87,9 @@ void BuildingLevelTable::update(Building& building)
 
   const int last_row_idx = static_cast<int>(building.levels.size());
   // we'll use the last row for the "Add" button
-  setCellWidget(last_row_idx, 0, nullptr);
+  for (int i = 0; i < 5; i++)
+    setItem(last_row_idx, i, new QTableWidgetItem(QString()));
+
   QPushButton *add_button = new QPushButton("Add...", this);
   setCellWidget(last_row_idx, 5, add_button);
   connect(
@@ -98,6 +101,7 @@ void BuildingLevelTable::update(Building& building)
         BuildingLevelDialog level_dialog(level);
         if (level_dialog.exec() == QDialog::Accepted)
         {
+          level.load_drawing();
           building.add_level(level);
           setWindowModified(true);
           emit redraw_scene();
