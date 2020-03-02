@@ -2,6 +2,7 @@ import copy
 import math
 import os
 import shutil
+import numpy as np
 
 from xml.etree.ElementTree import ElementTree, Element, SubElement
 from .etree_utils import indent_etree
@@ -167,17 +168,24 @@ class Level:
             f.write(f'mtllib wall.mtl\n')
             f.write(f'o walls\n')
 
-            '''
+            h = self.wall_height  # todo: allow per-segment height?
+
             # calculate faces for all the wall segments
             wall_cnt = 0
+            wall_verts = np.array([])
+
+            texture_lengths = [0]
+
+            norms = np.array([])
+
             for wall in self.walls:
                 wall_cnt += 1
-                # self.generate_wall(wall, link_ele, wall_cnt)
 
                 wx1 = self.vertices[wall.start_idx].x
                 wy1 = self.vertices[wall.start_idx].y
                 wx2 = self.vertices[wall.end_idx].x
                 wy2 = self.vertices[wall.end_idx].y
+
                 wdx = wx1 - wx2
                 wdy = wy1 - wy2
                 wlen = math.sqrt(wdx*wdx + wdy*wdy)
@@ -185,24 +193,73 @@ class Level:
                 wcy = (wy1 + wy2) / 2.0
                 wyaw = math.atan2(wdy, wdx)
 
-                box_thickness = self.wall_thickness
-                box_height = self.wall_height
-                cz = self.wall_height / 2.0
-            '''
+                # calculate the 4 corners of the wall footprint
+                t2 = self.wall_thickness / 2.0
 
-            '''
-            # this assumes that the vertices are in "correct" (OBJ) winding
-            # ordering already. todo: detect if the winding order is
-            # inverted and re-wind appropriately
-            for v in self.vertices:
+                wall_footprint_at_origin = np.array([
+                    [-wlen - t2,  t2],
+                    [ wlen + t2,  t2],
+                    [ wlen + t2, -t2],
+                    [-wlen - t2, -t2]])
+
+                # now rotate the wall footprint
+                rot = np.array([
+                    [math.cos(wyaw), -math.sin(wyaw)],
+                    [math.sin(wyaw),  math.cos(wyaw)]])
+
+                rot_verts = wall_footprint_at_origin.dot(rot)
+
+                # finally, translate the wall segment vertices
+                v = rot_verts + np.array([[wcx, wcy]])
+
+                segment_norms_at_origin = np.array([
+                    [0, 1],
+                    [-1, 0],
+                    [0, -1],
+                    [1, 0]])
+                segment_norms = segment_norms_at_origin.dot(rot)
+
+                print('\n\n\n')
+                print(wall_footprint_at_origin)
+                print(rot)
+                print(rot_verts)
+                print(v)
+
+                if not wall_verts.any():
+                    wall_verts = v
+                    norms = segment_norms
+                else:
+                    wall_verts = np.vstack((wall_verts, v))
+                    norms = np.vstack((norms, segment_norms))
+
+                # in the future we may have texture tiles of different scale,
+                # but for now let's assume 1-meter x 1-meter tiles, so we don't
+                # need to scale the texture coordinates currently.
+                texture_lengths.append(wlen)
+
+            for v in wall_verts:
                 f.write(f'v {v[0]} {v[1]} 0\n')
+                f.write(f'v {v[0]} {v[1]} {h}\n')
 
-            # in the future we may have texture tiles of a different size,
-            # but for now let's assume 1-meter x 1-meter tiles, so we don't
-            # need to scale the texture coordinates currently.
-            for v in self.vertices:
-                f.write(f'vt {v[0]} {v[1]} 0\n')
-            '''
+            for length in texture_lengths:
+                f.write(f'vt {length} 0 0\n')
+                f.write(f'vt {length} {h} 0\n')
+
+            for norm in norms:
+                f.write(f'vn {norm[0]} {norm[1]} 0\n')
+
+            f.write(f'usemtl wall\n')
+            f.write('s off\n')
+
+            # print(f'{wall_verts.size()} {len(texture_lengths)} {norms.size()}')
+
+            # finally we can wind the actual 8 face triangles
+            for w in range(0, len(self.walls)):
+                # first the side facing 'north' before rotation
+                f.write(f'f ')
+                f.write(f'{w*8+0}/0/{w*4+0} ')
+                f.write(f'{w*8+1}/1/{w*4+0} ')
+                f.write(f'{w*8+2}/{w*2+2}/{w*4+0}\n')
 
         mtl_path = f'{meshes_path}/wall.mtl'
         print(f'  generating {mtl_path}')
@@ -233,6 +290,8 @@ class Level:
         for wall in self.walls:
             wall_cnt += 1
             self.generate_wall(wall, link_ele, wall_cnt)
+
+        print(f'generated {wall_cnt} walls on level {model_name}')
 
     def generate_sdf_models(self, world_ele):
         model_cnt = 0
