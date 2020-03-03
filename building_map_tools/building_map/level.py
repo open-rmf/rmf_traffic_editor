@@ -186,8 +186,10 @@ class Level:
                 wx2 = self.vertices[wall.end_idx].x
                 wy2 = self.vertices[wall.end_idx].y
 
-                wdx = wx1 - wx2
-                wdy = wy1 - wy2
+                # f.write(f'# wx1={wx1:.3f} wy1={wy1:.3f} wx2={wx2:.3f} wy2={wy2:.3f}\n')
+
+                wdx = wx2 - wx1
+                wdy = wy2 - wy1
                 wlen = math.sqrt(wdx*wdx + wdy*wdy)
                 wcx = (wx1 + wx2) / 2.0
                 wcy = (wy1 + wy2) / 2.0
@@ -197,15 +199,15 @@ class Level:
                 t2 = self.wall_thickness / 2.0
 
                 wall_footprint_at_origin = np.array([
-                    [-wlen - t2,  t2],
-                    [ wlen + t2,  t2],
-                    [ wlen + t2, -t2],
-                    [-wlen - t2, -t2]])
+                    [-wlen / 2.0 - t2,  t2],
+                    [ wlen / 2.0 + t2,  t2],
+                    [ wlen / 2.0 + t2, -t2],
+                    [-wlen / 2.0 - t2, -t2]])
 
                 # now rotate the wall footprint
                 rot = np.array([
-                    [math.cos(wyaw), -math.sin(wyaw)],
-                    [math.sin(wyaw),  math.cos(wyaw)]])
+                    [ math.cos(wyaw), math.sin(wyaw)],
+                    [-math.sin(wyaw), math.cos(wyaw)]])
 
                 rot_verts = wall_footprint_at_origin.dot(rot)
 
@@ -237,29 +239,45 @@ class Level:
                 # need to scale the texture coordinates currently.
                 texture_lengths.append(wlen)
 
+                # break  # DEBUGGING
+
             for v in wall_verts:
-                f.write(f'v {v[0]} {v[1]} 0\n')
-                f.write(f'v {v[0]} {v[1]} {h}\n')
+                f.write(f'v {v[0]:.3f} {v[1]:.3f} 0.000\n')
+                f.write(f'v {v[0]:.3f} {v[1]:.3f} {h:.3f}\n')
 
             for length in texture_lengths:
-                f.write(f'vt {length} 0 0\n')
-                f.write(f'vt {length} {h} 0\n')
+                f.write(f'vt {length:.3f} 0.000\n')
+                f.write(f'vt {length:.3f} 1.000\n')
 
             for norm in norms:
-                f.write(f'vn {norm[0]} {norm[1]} 0\n')
+                f.write(f'vn {norm[0]:.3f} {norm[1]:.3f} 0\n')
 
-            f.write(f'usemtl wall\n')
+            f.write('usemtl wall\n')
             f.write('s off\n')
+            f.write('g walls\n')
 
             # print(f'{wall_verts.size()} {len(texture_lengths)} {norms.size()}')
 
             # finally we can wind the actual 8 face triangles
             for w in range(0, len(self.walls)):
                 # first the side facing 'north' before rotation
-                f.write(f'f ')
-                f.write(f'{w*8+0}/0/{w*4+0} ')
-                f.write(f'{w*8+1}/1/{w*4+0} ')
-                f.write(f'{w*8+2}/{w*2+2}/{w*4+0}\n')
+                f.write(f'f {w*8+1}/1/{w*4+1} {w*8+2}/2/{w*4+1} {w*8+3}/{w*2+3}/{w*4+1}\n')
+                f.write(f'f {w*8+4}/{w*2+4}/{w*4+1} {w*8+3}/{w*2+3}/{w*4+1} {w*8+2}/2/{w*4+1}\n')
+                #f.write(f'f {w*8+1}/1/{w*4+1} {w*8+2}/2/{w*4+1} {w*8+3}/{w*2+3}/{w*4+1}\n')
+                #f.write(f'f {w*8+2}/2/{w*4+1} {w*8+3}/{w*2+3}/{w*4+1} {w*8+4}/{w*2+4}/{w*4+1}\n')
+                # now the 'east' side
+                f.write(f'f {w*8+3}/1/{w*4+2} {w*8+4}/2/{w*4+2} {w*8+5}/1/{w*4+2}\n')
+                f.write(f'f {w*8+6}/2/{w*4+2} {w*8+5}/1/{w*4+2} {w*8+4}/2/{w*4+2}\n')
+                # now the 'south' side
+                f.write(f'f {w*8+5}/1/{w*4+3} {w*8+6}/2/{w*4+3} {w*8+7}/1/{w*4+3}\n')
+                f.write(f'f {w*8+8}/2/{w*4+3} {w*8+7}/1/{w*4+3} {w*8+6}/2/{w*4+3}\n')
+                # now the 'west' side
+                f.write(f'f {w*8+7}/1/{w*4+4} {w*8+8}/2/{w*4+4} {w*8+1}/1/{w*4+4}\n')
+                f.write(f'f {w*8+2}/2/{w*4+4} {w*8+1}/1/{w*4+4} {w*8+8}/2/{w*4+4}\n')
+                # break  # DEBUGGING
+                # now the top
+                f.write(f'f {w*8+2}/1 {w*8+6}/1 {w*8+4}/1\n')
+                f.write(f'f {w*8+2}/1 {w*8+8}/1 {w*8+6}/1\n')
 
         mtl_path = f'{meshes_path}/wall.mtl'
         print(f'  generating {mtl_path}')
@@ -286,12 +304,31 @@ class Level:
         link_ele = SubElement(model_ele, 'link', {'name': 'walls'})
         self.generate_wall_visual_mesh(model_name, model_path)
 
-        wall_cnt = 0
-        for wall in self.walls:
-            wall_cnt += 1
-            self.generate_wall(wall, link_ele, wall_cnt)
+        obj_path = f'model://{model_name}/meshes/walls.obj'
 
-        print(f'generated {wall_cnt} walls on level {model_name}')
+        visual_ele = SubElement(link_ele, 'visual')
+        visual_ele.set('name', f'walls_{self.name}')
+
+        v_geom_ele = SubElement(visual_ele, 'geometry')
+
+        v_mesh_ele = SubElement(v_geom_ele, 'mesh')
+        v_mesh_uri_ele = SubElement(v_mesh_ele, 'uri')
+        v_mesh_uri_ele.text = obj_path
+
+        collision_ele = SubElement(link_ele, 'collision')
+        collision_ele.set('name', 'collision')
+
+        c_geom_ele = SubElement(collision_ele, 'geometry')
+        c_mesh_ele = SubElement(c_geom_ele, 'mesh')
+        c_mesh_uri_ele = SubElement(c_mesh_ele, 'uri')
+        c_mesh_uri_ele.text = obj_path
+
+        # wall_cnt = 0
+        # for wall in self.walls:
+        #     wall_cnt += 1
+        #     self.generate_wall(wall, link_ele, wall_cnt)
+        # print(f'generated {wall_cnt} walls on level {model_name}')
+
 
     def generate_sdf_models(self, world_ele):
         model_cnt = 0
