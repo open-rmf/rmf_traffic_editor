@@ -221,12 +221,6 @@ class Level:
                     [1, 0]])
                 segment_norms = segment_norms_at_origin.dot(rot)
 
-                print('\n\n\n')
-                print(wall_footprint_at_origin)
-                print(rot)
-                print(rot_verts)
-                print(v)
-
                 if not wall_verts.any():
                     wall_verts = v
                     norms = segment_norms
@@ -238,8 +232,6 @@ class Level:
                 # but for now let's assume 1-meter x 1-meter tiles, so we don't
                 # need to scale the texture coordinates currently.
                 texture_lengths.append(wlen)
-
-                # break  # DEBUGGING
 
             for v in wall_verts:
                 f.write(f'v {v[0]:.3f} {v[1]:.3f} 0.000\n')
@@ -256,15 +248,11 @@ class Level:
             f.write('s off\n')
             f.write('g walls\n')
 
-            # print(f'{wall_verts.size()} {len(texture_lengths)} {norms.size()}')
-
             # finally we can wind the actual 8 face triangles
             for w in range(0, len(self.walls)):
                 # first the side facing 'north' before rotation
                 f.write(f'f {w*8+1}/1/{w*4+1} {w*8+2}/2/{w*4+1} {w*8+3}/{w*2+3}/{w*4+1}\n')
                 f.write(f'f {w*8+4}/{w*2+4}/{w*4+1} {w*8+3}/{w*2+3}/{w*4+1} {w*8+2}/2/{w*4+1}\n')
-                #f.write(f'f {w*8+1}/1/{w*4+1} {w*8+2}/2/{w*4+1} {w*8+3}/{w*2+3}/{w*4+1}\n')
-                #f.write(f'f {w*8+2}/2/{w*4+1} {w*8+3}/{w*2+3}/{w*4+1} {w*8+4}/{w*2+4}/{w*4+1}\n')
                 # now the 'east' side
                 f.write(f'f {w*8+3}/1/{w*4+2} {w*8+4}/2/{w*4+2} {w*8+5}/1/{w*4+2}\n')
                 f.write(f'f {w*8+6}/2/{w*4+2} {w*8+5}/1/{w*4+2} {w*8+4}/2/{w*4+2}\n')
@@ -274,8 +262,7 @@ class Level:
                 # now the 'west' side
                 f.write(f'f {w*8+7}/1/{w*4+4} {w*8+8}/2/{w*4+4} {w*8+1}/1/{w*4+4}\n')
                 f.write(f'f {w*8+2}/2/{w*4+4} {w*8+1}/1/{w*4+4} {w*8+8}/2/{w*4+4}\n')
-                # break  # DEBUGGING
-                # now the top
+                # now the top "cap" of this wall segment
                 f.write(f'f {w*8+2}/1 {w*8+6}/1 {w*8+4}/1\n')
                 f.write(f'f {w*8+2}/1 {w*8+8}/1 {w*8+6}/1\n')
 
