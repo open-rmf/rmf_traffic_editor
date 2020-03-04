@@ -34,7 +34,6 @@ class Floor:
                 self.params[param_name] = ParamValue(param_yaml)
 
         self.polygon = shapely.geometry.Polygon(vert_list)
-        self.multipoint = shapely.geometry.MultiPoint(vert_list)
 
     def __str__(self):
         return f'floor ({len(self.vertices)} vertices)'
@@ -55,7 +54,6 @@ class Floor:
             return -1
 
     def add_vertex_if_needed(self, x, y):
-        print(f'searching for vertex near ({x}, {y})')
         idx = self.find_vertex_idx(x, y, True)
         if idx >= 0:
             return  # vertex already exists
@@ -69,10 +67,73 @@ class Floor:
         vertex_idx_list.append(self.find_vertex_idx(c[2][0], c[2][1]))
         return vertex_idx_list
 
+    def triangulate_polygon(self, polygon, triangles):
+        # calculate Delaunay triangulation of the polygon
+        convex_triangulation = shapely.ops.triangulate(polygon)
+
+        # the Delaunay triangulation returned by Shapely will be convex,
+        # but often the floor plan polygons are not, so we have to intersect
+        # each triangle with the original floorplan polygon and recurse
+        # if needed (i.e. if the intersection returns a poly with >3 sides)
+        for triangle in convex_triangulation:
+
+            if triangulation_debugging:
+                tri_x, tri_y = triangle.exterior.coords.xy
+                plt.plot(tri_x, tri_y, 'k', linewidth=1)
+
+            # create a new geometry by intersecting this triangle with the
+            # original polygon. This may create a triangle, or it may also
+            # create all sorts of things: nothing, an N-sided polygon, etc.
+            geom = triangle.intersection(self.polygon)
+
+            # if the polygon intersection has no area, ignore it.
+            if geom.is_empty:
+                print("empty intersection")
+                continue
+            elif geom.geom_type == 'MultiLineString':
+                print('ignoring MultiLineString intersection')
+                continue
+            elif geom.geom_type == 'MultiPoint':
+                print('ignoring MultiPoint intersection')
+                continue
+
+            # now we need to actually deal with an intersection area
+            if geom.geom_type == 'Polygon':
+                # first ensure the winding is in canonical order (CCW)
+                poly = shapely.geometry.polygon.orient(geom)
+
+                if triangulation_debugging:
+                    poly_x, poly_y = poly.exterior.coords.xy
+                    plt.plot(poly_x, poly_y, 'r', linewidth=2)
+
+                # if this is a 3-sided polygon, hooray! it's a triangle
+                if len(poly.exterior.coords) == 4:
+                    triangles.append(poly)
+                else:
+                    # we got a N-sided polygon, N > 3. We need to recurse
+                    # to chop up this polygon some more.
+                    self.triangulate_polygon(poly, triangles)
+
+                    if triangulation_debugging:
+                        poly_x, poly_y = poly.exterior.coords.xy
+                        plt.plot(poly_x, poly_y, 'r', linewidth=4)
+
+            elif geom.geom_type == 'GeometryCollection':
+                # this can happen if the original triangulation needed
+                # to be clipped to lie within the original floor polygon
+                # for example, if a long triangle crossed a concave region
+                # and you end up with >=1 polygons and >=1 points or edges.
+                for item in geom:
+                    if item.geom_type == 'Polygon':
+                        self.triangulate_polygon(item, triangles)
+            else:
+                if triangulation_debugging:
+                    print('\n\n\nFound something weird. Ignoring it:\n\n\n')
+                    print(f'  {poly.wkt}')
+
+
     def generate(self, model_ele, floor_cnt, model_name, model_path):
-        print(f'generating floor polygon {floor_cnt} on floor')
-        # for v in self.vertices:
-        #     print(f'  {v.x} {v.y}')
+        print(f'generating floor polygon {floor_cnt} on floor {model_name}')
 
         link_ele = SubElement(model_ele, 'link')
         link_ele.set('name', f'floor_{floor_cnt}')
@@ -109,18 +170,12 @@ class Floor:
         collision_mesh_uri_ele = SubElement(collision_mesh_ele, 'uri')
         collision_mesh_uri_ele.text = f'model://{model_name}/{obj_model_rel_path}'
 
-
         surface_ele = SubElement(collision_ele, 'surface')
         contact_ele = SubElement(surface_ele, 'contact')
         collide_bitmask_ele = SubElement(contact_ele, 'collide_bitmask')
         collide_bitmask_ele.text = '0x01'
 
-        triangles_convex = shapely.ops.triangulate(self.multipoint)
-        triangles = []
-
-        print(f'self.polygon = {self.polygon.wkt}')
-
-        if floor_cnt == 2 and model_name == 'cgh_B1':
+        if floor_cnt == 1 and model_name == 'cgh_B1':
             x, y = self.polygon.exterior.coords.xy
 
             if triangulation_debugging:
@@ -130,42 +185,12 @@ class Floor:
                 plt.subplot(1, 2, 2);
                 plt.plot(x, y, linewidth=5.0)
 
-        for triangle_convex in triangles_convex:
-            if triangulation_debugging:
-                tri_x, tri_y = triangle_convex.exterior.coords.xy
-                plt.plot(tri_x, tri_y, 'k', linewidth=1)
-                print(f'\nbefore intersection: {triangle_convex.wkt}')
-            poly = triangle_convex.intersection(self.polygon)
-            if poly.is_empty:
-                print("empty intersection")
-                continue
-            if poly.geom_type == 'Polygon':
-                poly = shapely.geometry.polygon.orient(poly)
-                triangles.append(poly)
-                if triangulation_debugging:
-                    poly_x, poly_y = poly.exterior.coords.xy
-                    plt.plot(poly_x, poly_y, 'r', linewidth=1)
-            elif poly.geom_type == 'GeometryCollection':
-                # this can happen if the original triangulation needed
-                # to be clipped to lie within the original floor polygon
-                # for example, if a long triangle crossed a concave region
-                # todo: clean up the program flow here with a helper function
-                for item in poly:
-                    if item.geom_type == 'Polygon':
-                        poly = shapely.geometry.polygon.orient(item)
-                        triangles.append(poly)
-                        # in this case, it's possible that new vertices
-                        # need to be created.
-                        for coord in poly.exterior.coords:
-                            self.add_vertex_if_needed(coord[0], coord[1])
+        triangles = []
+        self.triangulate_polygon(self.polygon, triangles)
 
-                        if triangulation_debugging:
-                            poly_x, poly_y = poly.exterior.coords.xy
-                            plt.plot(poly_x, poly_y, 'r', linewidth=4)
-            else:
-                if triangulation_debugging:
-                    print('\n\n\nFound something weird. Ignoring it:\n\n\n')
-                    print(f'  {poly.wkt}')
+        for triangle in triangles:
+            for coord in triangle.exterior.coords:
+                self.add_vertex_if_needed(coord[0], coord[1])
 
         if triangulation_debugging:
             plt.axis('equal')
