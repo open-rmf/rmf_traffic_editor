@@ -550,7 +550,8 @@ void Building::calculate_all_transforms()
     if (i != get_reference_level_idx())
     {
       Transform t = get_transform(ref_idx, i);
-      levels[i].drawing_meters_per_pixel = ref_scale / t.scale;
+      if (levels[i].fiducials.size() >= 2)
+        levels[i].drawing_meters_per_pixel = ref_scale / t.scale;
     }
   }
 }
