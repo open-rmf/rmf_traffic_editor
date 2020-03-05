@@ -104,6 +104,7 @@ void BuildingLevelTable::update(Building& building)
           level.load_drawing();
           building.add_level(level);
           setWindowModified(true);
+          update(building);
           emit redraw_scene();
         }
       });
