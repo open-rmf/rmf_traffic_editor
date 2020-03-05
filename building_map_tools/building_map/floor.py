@@ -76,7 +76,6 @@ class Floor:
         # each triangle with the original floorplan polygon and recurse
         # if needed (i.e. if the intersection returns a poly with >3 sides)
         for triangle in convex_triangulation:
-
             if triangulation_debugging:
                 tri_x, tri_y = triangle.exterior.coords.xy
                 plt.plot(tri_x, tri_y, 'k', linewidth=1)
@@ -88,13 +87,10 @@ class Floor:
 
             # if the polygon intersection has no area, ignore it.
             if geom.is_empty:
-                print("empty intersection")
                 continue
             elif geom.geom_type == 'MultiLineString':
-                print('ignoring MultiLineString intersection')
                 continue
             elif geom.geom_type == 'MultiPoint':
-                print('ignoring MultiPoint intersection')
                 continue
 
             # now we need to actually deal with an intersection area
@@ -105,6 +101,10 @@ class Floor:
                 if triangulation_debugging:
                     poly_x, poly_y = poly.exterior.coords.xy
                     plt.plot(poly_x, poly_y, 'r', linewidth=2)
+
+                # first simplify it to remove duplicate points, which seems to
+                # happen sometimes
+                poly = poly.simplify(0.001)
 
                 # if this is a 3-sided polygon, hooray! it's a triangle
                 if len(poly.exterior.coords) == 4:
