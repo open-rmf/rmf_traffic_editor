@@ -16,11 +16,59 @@ class Building:
         for level_name, level_yaml in yaml_node['levels'].items():
             self.levels[level_name] = Level(level_yaml, level_name)
 
+        if 'reference_level_name' in yaml_node:
+            self.reference_level_name = yaml_node['reference_level_name']
+        else:
+            self.reference_level_name = next(iter(self.levels))
+        self.ref_level = self.levels[self.reference_level_name]  # save typing
+
+        self.calculate_level_offsets_and_scales()
+
     def __str__(self):
         s = ''
-        for level_name, level_data in self.levels.items():
-            s += f'{level_name}: ({len(level_data.vertices)} vertices) '
+        for level_name, level in self.levels.items():
+            s += f'{level_name}: ({len(level.vertices)} vertices) '
         return s
+
+    def calculate_level_offsets_and_scales(self):
+        # calculate all level offsets relative to reference_level_name
+        print(f'calculating levels relative to {self.reference_level_name}')
+        
+        # first calculate scale of the reference level using its measurements
+        self.ref_level.calculate_scale_using_measurements()
+
+        # now calculate every other level's scale and offsets
+        for level_name, level in self.levels.items():
+            if level_name == self.reference_level_name:
+                continue
+            self.calculate_level_offset_and_scale(level_name)
+
+    def calculate_level_offset_and_scale(self, level_name):
+        print(f'calculating level {level_name} offset and scale...')
+        level = self.levels[level_name]
+        # find which fiducials are in common between ref_level and level
+        fiducials = []
+        for ref_fiducial in self.ref_level.fiducials:
+            for fiducial in level.fiducials:
+                if ref_fiducial.name == fiducial.name:
+                    fiducials.append((ref_fiducial, fiducial))
+        print(f'  {len(fiducials)} common fiducials:')
+        for f_pair in fiducials:
+            f0 = f_pair[0]
+            f1 = f_pair[1]
+            print(f'    ({f0.x:.5}, {f0.y:.5}) -> ({f1.x:.5}, {f1.y:.5})  {f0.name}')
+
+        # calculate the distances between each fiducial on their levels
+        distances = []
+        for f0_idx in range(0, len(fiducials)):
+            for f1_idx in range(f0_idx + 1, len(fiducials)):
+                f0_pair = fiducials[f0_idx]
+                f1_pair = fiducials[f1_idx]
+                print(f'    calc dist {f0_pair[0].name} <=> {f1_pair[0].name}')
+                ref_dist = f0_pair[0].distance(f1_pair[0])
+                target_dist = f0_pair[1].distance(f1_pair[1])
+                distances.append((ref_dist, target_dist))
+        print(distances)
 
     def generate_nav_graphs(self):
         """ Returns a dict of all non-empty nav graphs """
