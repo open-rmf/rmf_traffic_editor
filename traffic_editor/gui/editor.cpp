@@ -44,6 +44,7 @@
 #include "traffic_table.h"
 
 using std::string;
+using std::isnan;
 
 
 Editor *Editor::instance = nullptr;
@@ -78,7 +79,7 @@ Editor::Editor()
           const QPoint p_center_window(
               map_view->viewport()->width() / 2,
               map_view->viewport()->height() / 2);
-          const QPointF p_center_scene = map_view->mapToScene(p_center_window);
+          QPointF p_center_scene = map_view->mapToScene(p_center_window);
           // printf("p_center_scene: (%.1f, %.1f)\n",
           //   p_center_scene.x(), p_center_scene.y());
 
@@ -92,9 +93,14 @@ Editor::Editor()
           // maintain the view scale
           const double prev_scale = map_view->transform().m11();
 
-          const double scale = prev_scale *
+          double scale = prev_scale *
               project.building.levels[row].drawing_meters_per_pixel /
               project.building.levels[level_idx].drawing_meters_per_pixel;
+          if (isnan(scale))
+          {
+            scale = 1.0;
+            p_transformed = QPointF(0.0, 0.0);
+          }
 
           level_idx = row;
           create_scene();
@@ -456,20 +462,29 @@ void Editor::restore_previous_viewport()
 {
   QSettings settings;
 
-  const double viewport_center_x =
+  double viewport_center_x =
       settings.contains(preferences_keys::viewport_center_x) ?
       settings.value(preferences_keys::viewport_center_x).toDouble() :
       0.0;
 
-  const double viewport_center_y =
+  double viewport_center_y =
       settings.contains(preferences_keys::viewport_center_y) ?
       settings.value(preferences_keys::viewport_center_y).toDouble() :
       0.0;
 
-  const double viewport_scale =
+  double viewport_scale =
       settings.contains(preferences_keys::viewport_scale) ?
       settings.value(preferences_keys::viewport_scale).toDouble() :
       1.0;
+
+  // sanity-check the viewport center and scale, since they can be garbage
+  // if the last loaded level doesn't have its scale set up.
+  if (isnan(viewport_center_x))
+    viewport_center_x = 0.0;
+  if (isnan(viewport_center_y))
+    viewport_center_y = 0.0;
+  if (isnan(viewport_scale))
+    viewport_scale = 1.0;
 
   printf("restoring viewport: (%.1f, %.1f, %3f)\n",
       viewport_center_x,
