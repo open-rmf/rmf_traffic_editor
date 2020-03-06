@@ -18,22 +18,17 @@ if triangulation_debugging:
 
 
 class Floor:
-    def __init__(self, yaml_node, level_vertices):
+    def __init__(self, yaml_node):
+        self.vertex_indices = []
         self.vertices = []
         self.thickness = 0.1
-        vert_list = []
         for v_idx in yaml_node['vertices']:
-            v = level_vertices[v_idx]
-            #self.vertices.append([v.x, v.y])
-            self.vertices.append(shapely.geometry.Point(v.x, v.y))
-            vert_list.append((v.x, v.y))
+            self.vertex_indices.append(v_idx)
 
         self.params = {}
         if 'parameters' in yaml_node and yaml_node['parameters']:
             for param_name, param_yaml in yaml_node['parameters'].items():
                 self.params[param_name] = ParamValue(param_yaml)
-
-        self.polygon = shapely.geometry.Polygon(vert_list)
 
     def __str__(self):
         return f'floor ({len(self.vertices)} vertices)'
@@ -132,8 +127,17 @@ class Floor:
                     print(f'  {poly.wkt}')
 
 
-    def generate(self, model_ele, floor_cnt, model_name, model_path):
+    def generate(self, model_ele, floor_cnt, model_name, model_path, vertices, scale):
         print(f'generating floor polygon {floor_cnt} on floor {model_name}')
+
+        vert_list = []
+        self.vertices = []
+        for v_idx in self.vertex_indices:
+            v = vertices[v_idx]
+            self.vertices.append(shapely.geometry.Point(v.x * scale, v.y * scale))
+            vert_list.append((v.x * scale, v.y * scale))
+
+        self.polygon = shapely.geometry.Polygon(vert_list)
 
         link_ele = SubElement(model_ele, 'link')
         link_ele.set('name', f'floor_{floor_cnt}')

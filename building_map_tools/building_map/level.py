@@ -39,6 +39,9 @@ class Level:
         self.cap_thickness = 0.11  # meters
         self.cap_height = 0.02  # meters
 
+        self.scale = 1.0  # will get overwritten later...
+        self.translation = [0, 0]  # will get overwritten later...
+
         self.vertices = []
         if 'vertices' in yaml_node:
             for vertex_yaml in yaml_node['vertices']:
@@ -48,24 +51,10 @@ class Level:
         if 'measurements' in yaml_node:
             self.meas = self.parse_edge_sequence(yaml_node['measurements'])
 
-        # use the measurements to estimate scale for this level
-        scale_cnt = 0
-        scale_sum = 0
-        for m in self.meas:
-            scale_cnt += 1
-            scale_sum += m.params['distance'].value / m.length
-        if scale_cnt > 0:
-            self.scale = scale_sum / float(scale_cnt)
-            print(f'level {self.name} scale estimated as {self.scale}')
-        else:
-            self.scale = 1.0
-            print('WARNING! No measurements defined. Scale is indetermined.')
-            print('         Nav graph generated in pixel units, not meters!')
-
-        # scale the vertex list
-        for p in self.vertices:
-            p.x *= self.scale
-            p.y *= self.scale
+        # # scale the vertex list
+        # for p in self.vertices:
+        #     p.x *= self.scale
+        #     p.y *= self.scale
 
         self.lanes = []
         if 'lanes' in yaml_node:
@@ -82,12 +71,27 @@ class Level:
         self.models = []
         if 'models' in yaml_node:
             for model_yaml in yaml_node['models']:
-                self.models.append(Model(model_yaml, self.scale))
+                self.models.append(Model(model_yaml))
 
         self.floors = []
         if 'floors' in yaml_node:
             for floor_yaml in yaml_node['floors']:
-                self.floors.append(Floor(floor_yaml, self.vertices))
+                self.floors.append(Floor(floor_yaml))
+
+    def calculate_scale_using_measurements(self):
+        # use the measurements to estimate scale for this level
+        scale_cnt = 0
+        scale_sum = 0
+        for m in self.meas:
+            scale_cnt += 1
+            scale_sum += m.params['distance'].value / m.length
+        if scale_cnt > 0:
+            self.scale = scale_sum / float(scale_cnt)
+            print(f'level {self.name} scale estimated as {self.scale}')
+        else:
+            self.scale = 1.0
+            print('WARNING! No measurements defined. Scale is indetermined.')
+            print('         Nav graph generated in pixel units, not meters!')
 
     def parse_edge_sequence(self, sequence_yaml):
         edges = []
@@ -96,10 +100,10 @@ class Level:
         return edges
 
     def generate_wall_box_geometry(self, wall, parent_ele, item):
-        x1 = self.vertices[wall.start_idx].x
-        y1 = self.vertices[wall.start_idx].y
-        x2 = self.vertices[wall.end_idx].x
-        y2 = self.vertices[wall.end_idx].y
+        x1 = self.vertices[wall.start_idx].x * self.scale
+        y1 = self.vertices[wall.start_idx].y * self.scale
+        x2 = self.vertices[wall.end_idx].x * self.scale
+        y2 = self.vertices[wall.end_idx].y * self.scale
         dx = x1 - x2
         dy = y1 - y2
         length = math.sqrt(dx*dx + dy*dy) + self.wall_thickness
@@ -181,10 +185,10 @@ class Level:
             for wall in self.walls:
                 wall_cnt += 1
 
-                wx1 = self.vertices[wall.start_idx].x
-                wy1 = self.vertices[wall.start_idx].y
-                wx2 = self.vertices[wall.end_idx].x
-                wy2 = self.vertices[wall.end_idx].y
+                wx1 = self.vertices[wall.start_idx].x * self.scale
+                wy1 = self.vertices[wall.start_idx].y * self.scale
+                wx2 = self.vertices[wall.end_idx].x * self.scale
+                wy2 = self.vertices[wall.end_idx].y * self.scale
 
                 # f.write(f'# wx1={wx1:.3f} wy1={wy1:.3f} wx2={wx2:.3f} wy2={wy2:.3f}\n')
 
@@ -321,7 +325,7 @@ class Level:
         model_cnt = 0
         for model in self.models:
             model_cnt += 1
-            model.generate(world_ele, model_cnt)
+            model.generate(world_ele, model_cnt, self.scale)
 
         # sniff around in our vertices and spawn robots if requested
         for vertex_idx, vertex in enumerate(self.vertices):
@@ -369,13 +373,15 @@ class Level:
         uri_ele = SubElement(include_ele, 'uri')
         uri_ele.text = f'model://{robot_type}'
         pose_ele = SubElement(include_ele, 'pose')
-        pose_ele.text = f'{vertex.x} {vertex.y} {vertex.z} 0 0 {yaw}'
+        x = vertex.x * self.scale
+        y = vertex.y * self.scale
+        pose_ele.text = f'{x} {y} {vertex.z} 0 0 {yaw}'
 
     def generate_floors(self, world_ele, model_name, model_path):
-        floor_cnt = 0
+        i = 0
         for floor in self.floors:
-            floor_cnt += 1
-            floor.generate(world_ele, floor_cnt, model_name, model_path)
+            i += 1
+            floor.generate(world_ele, i, model_name, model_path, self.vertices, self.scale)
 
     def write_sdf(self, model_name, model_path):
         sdf_ele = Element('sdf', {'version': '1.6'})
@@ -482,7 +488,7 @@ class Level:
             p = {'name': v.name}
             for param_name, param_value in v.params.items():
                 p[param_name] = param_value.value
-            nav_data['vertices'].append([v.x, v.y, p])
+            nav_data['vertices'].append([v.x * self.scale, v.y * self.scale, p])
 
         nav_data['lanes'] = []
         for l in self.lanes:
@@ -572,3 +578,11 @@ class Level:
             return (0, 0)
         bounds = self.floors[0].polygon.bounds
         return ( (bounds[0] + bounds[2]) / 2.0, (bounds[1] + bounds[3]) / 2.0)
+
+    def pose_string(self):
+        return (
+            f'{-self.translation[0]} '
+            f'{-self.translation[1]} '
+            f'{self.elevation} '
+            '0 0 0'
+        )
