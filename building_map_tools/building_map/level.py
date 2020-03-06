@@ -38,7 +38,9 @@ class Level:
         self.wall_thickness = 0.1  # meters
         self.cap_thickness = 0.11  # meters
         self.cap_height = 0.02  # meters
+
         self.scale = 1.0  # will get overwritten later...
+        self.translation = [0, 0]  # will get overwritten later...
 
         self.vertices = []
         if 'vertices' in yaml_node:
@@ -576,3 +578,11 @@ class Level:
             return (0, 0)
         bounds = self.floors[0].polygon.bounds
         return ( (bounds[0] + bounds[2]) / 2.0, (bounds[1] + bounds[3]) / 2.0)
+
+    def pose_string(self):
+        return (
+            f'{-self.translation[0]} '
+            f'{-self.translation[1]} '
+            f'{self.elevation} '
+            '0 0 0'
+        )

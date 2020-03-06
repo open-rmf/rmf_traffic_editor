@@ -70,6 +70,24 @@ class Building:
                 distances.append((ref_dist, target_dist))
         print(distances)
 
+        mean_rel_scale = 0.0
+        for distance in distances:
+            mean_rel_scale += distance[1] / distance[0]
+        mean_rel_scale /= float(len(distances))
+        print(f'mean relative scale: {mean_rel_scale}')
+        level.scale = self.ref_level.scale / mean_rel_scale
+
+        mean_translation = [0.0, 0.0]
+        for f_pair in fiducials:
+            mean_translation[0] += f_pair[1].x / mean_rel_scale - f_pair[0].x
+            mean_translation[1] += f_pair[1].y / mean_rel_scale - f_pair[0].y
+
+        if len(fiducials):
+            mean_translation[0] *= self.ref_level.scale / float(len(fiducials))
+            mean_translation[1] *= self.ref_level.scale / float(len(fiducials))
+        print(f'mean translation: ({mean_translation[0]:.5}, {mean_translation[1]:.5})')
+        level.translation = mean_translation
+
     def generate_nav_graphs(self):
         """ Returns a dict of all non-empty nav graphs """
         print("generating nav data")
@@ -128,7 +146,7 @@ class Building:
             uri_ele = SubElement(level_include_ele, 'uri')
             uri_ele.text = f'model://{level_model_name}'
             pose_ele = SubElement(level_include_ele, 'pose')
-            pose_ele.text = f'0 0 {level.elevation} 0 0 0'
+            pose_ele.text = level.pose_string()
 
         return sdf
 
