@@ -43,9 +43,12 @@ class Door:
         mass_ele = SubElement(inertial_ele, 'mass')
         mass_ele.text = str(mass)
         inertia_ele = SubElement(inertial_ele, 'inertia')
-        SubElement(inertia_ele, 'ixx').text = str(mass/12.0*(self.thickness**2 + self.height**2))
-        SubElement(inertia_ele, 'iyy').text = str(mass/12.0*(width**2 + self.height**2))
-        SubElement(inertia_ele, 'izz').text = str(mass/12.0*(self.thickness**2 + width**2))
+        SubElement(inertia_ele, 'ixx').text = \
+            str(mass/12.0*(self.thickness**2 + self.height**2))
+        SubElement(inertia_ele, 'iyy').text = \
+            str(mass/12.0*(width**2 + self.height**2))
+        SubElement(inertia_ele, 'izz').text = \
+            str(mass/12.0*(self.thickness**2 + width**2))
 
         return link_ele
 

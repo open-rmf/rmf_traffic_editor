@@ -1,6 +1,7 @@
 from xml.etree.ElementTree import Element, SubElement
 from .door import Door
 
+
 class DoubleSlidingDoor(Door):
     def __init__(self, door_edge):
         super().__init__(door_edge)

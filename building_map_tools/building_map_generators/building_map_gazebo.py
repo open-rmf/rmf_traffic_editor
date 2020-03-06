@@ -4,7 +4,7 @@ from building_map.generator import Generator
 
 def main():
     if len(sys.argv) != 4:
-        print('usage: building_map_gazebo INPUT_YAML OUTPUT_WORLD OUTPUT_MODEL_DIR')
+        print('usage: building_map_gazebo INPUT OUTPUT_WORLD OUTPUT_MODEL_DIR')
         sys.exit(1)
     input_filename = sys.argv[1]
     output_filename = sys.argv[2]

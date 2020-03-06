@@ -126,15 +126,23 @@ class Floor:
                     print('\n\n\nFound something weird. Ignoring it:\n\n\n')
                     print(f'  {poly.wkt}')
 
-
-    def generate(self, model_ele, floor_cnt, model_name, model_path, vertices, scale):
+    def generate(
+        self,
+        model_ele,
+        floor_cnt,
+        model_name,
+        model_path,
+        vertices,
+        scale
+    ):
         print(f'generating floor polygon {floor_cnt} on floor {model_name}')
 
         vert_list = []
         self.vertices = []
         for v_idx in self.vertex_indices:
             v = vertices[v_idx]
-            self.vertices.append(shapely.geometry.Point(v.x * scale, v.y * scale))
+            self.vertices.append(
+                shapely.geometry.Point(v.x * scale, v.y * scale))
             vert_list.append((v.x * scale, v.y * scale))
 
         self.polygon = shapely.geometry.Polygon(vert_list)
@@ -172,7 +180,8 @@ class Floor:
         collision_geometry_ele = SubElement(collision_ele, 'geometry')
         collision_mesh_ele = SubElement(collision_geometry_ele, 'mesh')
         collision_mesh_uri_ele = SubElement(collision_mesh_ele, 'uri')
-        collision_mesh_uri_ele.text = f'model://{model_name}/{obj_model_rel_path}'
+        collision_mesh_uri_ele.text = \
+            f'model://{model_name}/{obj_model_rel_path}'
 
         surface_ele = SubElement(collision_ele, 'surface')
         contact_ele = SubElement(surface_ele, 'contact')
@@ -183,10 +192,10 @@ class Floor:
             x, y = self.polygon.exterior.coords.xy
 
             if triangulation_debugging:
-                plt.subplot(1, 2, 1);
+                plt.subplot(1, 2, 1)
                 plt.plot(x, y, linewidth=5.0)
                 plt.axis('equal')
-                plt.subplot(1, 2, 2);
+                plt.subplot(1, 2, 2)
                 plt.plot(x, y, linewidth=5.0)
 
         triangles = []
@@ -198,7 +207,7 @@ class Floor:
 
         if triangulation_debugging:
             plt.axis('equal')
-            plt.show();
+            plt.show()
 
         # for unknown reasons, it seems that shapely.ops.triangulate
         # doesn't return a list of vertices and triangles as indices,

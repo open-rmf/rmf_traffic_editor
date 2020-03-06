@@ -1,0 +1,15 @@
+name: style
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-18.04
+    
+    steps:
+    - uses: actions/checkout@v1
+    - name: deps
+      run: |
+        sudo apt-get update
+        sudo apt-get install pycodestyle
+    - name: pycodestyle
+      run: |
+        pycodestyle .
