@@ -7,5 +7,10 @@
   <file>icons/select.svg</file>
   <file>icons/fiducial.svg</file>
   <file>icons/roi.svg</file>
+  <file>icons/floor.svg</file>
+  <file>icons/hole.svg</file>
+  <file>icons/wall.svg</file>
+  <file>icons/door.svg</file>
+  <file>icons/measurement.svg</file>
 </qresource>
 </RCC>

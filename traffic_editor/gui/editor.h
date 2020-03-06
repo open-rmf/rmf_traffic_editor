@@ -106,7 +106,8 @@ private:
     TOOL_EDIT_POLYGON,
     TOOL_ADD_ZONE,
     TOOL_ADD_FIDUCIAL,
-    TOOL_ADD_ROI
+    TOOL_ADD_ROI,
+    TOOL_ADD_HOLE,
   } tool_id = TOOL_SELECT;
 
   std::map<ToolId, QAction *> tools;
