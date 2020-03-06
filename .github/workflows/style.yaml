@@ -1,4 +1,4 @@
-name: pycodestyle
+name: style
 on: push
 jobs:
   build:
