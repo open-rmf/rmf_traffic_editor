@@ -132,31 +132,6 @@ class Level:
         pose_ele = SubElement(parent_ele, 'pose')
         pose_ele.text = f'{cx} {cy} {cz} 0 0 {wall_yaw}'
 
-    def generate_wall(self, wall, link_ele, wall_cnt):
-        visual_ele = SubElement(link_ele, 'visual')
-        visual_ele.set('name', f'walls_{wall_cnt}')
-        self.generate_wall_box_geometry(wall, visual_ele, 'wall')
-        material_ele = SubElement(visual_ele, 'material')
-        script_ele = SubElement(material_ele, 'script')
-        name_ele = SubElement(script_ele, 'name')
-        name_ele.text = 'SossSimulation/SimpleWall'
-
-        collision_ele = SubElement(link_ele, 'collision')
-        collision_ele.set('name', f'walls_{wall_cnt}')
-        self.generate_wall_box_geometry(wall, collision_ele, 'wall')
-        surface_ele = SubElement(collision_ele, 'surface')
-        contact_ele = SubElement(surface_ele, 'contact')
-        bitmask_ele = SubElement(contact_ele, 'collide_bitmask')
-        bitmask_ele.text = '0x01'
-
-        cap_visual_ele = SubElement(link_ele, 'visual')
-        cap_visual_ele.set('name', f'cap_{wall_cnt}')
-        self.generate_wall_box_geometry(wall, cap_visual_ele, 'cap')
-        cap_material_ele = SubElement(cap_visual_ele, 'material')
-        cap_script_ele = SubElement(cap_material_ele, 'script')
-        cap_script_name_ele = SubElement(cap_script_ele, 'name')
-        cap_script_name_ele.text = 'Gazebo/Black'
-
     def generate_wall_visual_mesh(self, model_name, model_path):
         print(f'generate_wall_visual_mesh({model_name}, {model_path})')
 
@@ -190,8 +165,6 @@ class Level:
                 wx2 = self.vertices[wall.end_idx].x * self.scale
                 wy2 = self.vertices[wall.end_idx].y * self.scale
 
-                # f.write(f'# wx1={wx1:.3f} wy1={wy1:.3f} wx2={wx2:.3f} wy2={wy2:.3f}\n')
-
                 wdx = wx2 - wx1
                 wdy = wy2 - wy1
                 wlen = math.sqrt(wdx*wdx + wdy*wdy)
@@ -203,14 +176,14 @@ class Level:
                 t2 = self.wall_thickness / 2.0
 
                 wall_footprint_at_origin = np.array([
-                    [-wlen / 2.0 - t2,  t2],
-                    [ wlen / 2.0 + t2,  t2],
-                    [ wlen / 2.0 + t2, -t2],
+                    [-wlen / 2.0 - t2, t2],
+                    [wlen / 2.0 + t2, t2],
+                    [wlen / 2.0 + t2, -t2],
                     [-wlen / 2.0 - t2, -t2]])
 
                 # now rotate the wall footprint
                 rot = np.array([
-                    [ math.cos(wyaw), math.sin(wyaw)],
+                    [math.cos(wyaw), math.sin(wyaw)],
                     [-math.sin(wyaw), math.cos(wyaw)]])
 
                 rot_verts = wall_footprint_at_origin.dot(rot)
@@ -255,17 +228,45 @@ class Level:
             # finally we can wind the actual 8 face triangles
             for w in range(0, len(self.walls)):
                 # first the side facing 'north' before rotation
-                f.write(f'f {w*8+1}/1/{w*4+1} {w*8+2}/2/{w*4+1} {w*8+3}/{w*2+3}/{w*4+1}\n')
-                f.write(f'f {w*8+4}/{w*2+4}/{w*4+1} {w*8+3}/{w*2+3}/{w*4+1} {w*8+2}/2/{w*4+1}\n')
+                f.write(
+                    f'f {w*8+1}/1/{w*4+1}'
+                    f' {w*8+2}/2/{w*4+1}'
+                    f' {w*8+3}/{w*2+3}/{w*4+1}\n')
+                f.write(
+                    f'f {w*8+4}/{w*2+4}/{w*4+1}'
+                    f' {w*8+3}/{w*2+3}/{w*4+1}'
+                    f' {w*8+2}/2/{w*4+1}\n')
+
                 # now the 'east' side
-                f.write(f'f {w*8+3}/1/{w*4+2} {w*8+4}/2/{w*4+2} {w*8+5}/1/{w*4+2}\n')
-                f.write(f'f {w*8+6}/2/{w*4+2} {w*8+5}/1/{w*4+2} {w*8+4}/2/{w*4+2}\n')
+                f.write(
+                    f'f {w*8+3}/1/{w*4+2}'
+                    f' {w*8+4}/2/{w*4+2}'
+                    f' {w*8+5}/1/{w*4+2}\n')
+                f.write(
+                    f'f {w*8+6}/2/{w*4+2}'
+                    f' {w*8+5}/1/{w*4+2}'
+                    f' {w*8+4}/2/{w*4+2}\n')
+
                 # now the 'south' side
-                f.write(f'f {w*8+5}/1/{w*4+3} {w*8+6}/2/{w*4+3} {w*8+7}/1/{w*4+3}\n')
-                f.write(f'f {w*8+8}/2/{w*4+3} {w*8+7}/1/{w*4+3} {w*8+6}/2/{w*4+3}\n')
+                f.write(
+                    f'f {w*8+5}/1/{w*4+3}'
+                    f' {w*8+6}/2/{w*4+3}'
+                    f' {w*8+7}/1/{w*4+3}\n')
+                f.write(
+                    f'f {w*8+8}/2/{w*4+3} '
+                    f' {w*8+7}/1/{w*4+3} '
+                    f' {w*8+6}/2/{w*4+3}\n')
+
                 # now the 'west' side
-                f.write(f'f {w*8+7}/1/{w*4+4} {w*8+8}/2/{w*4+4} {w*8+1}/1/{w*4+4}\n')
-                f.write(f'f {w*8+2}/2/{w*4+4} {w*8+1}/1/{w*4+4} {w*8+8}/2/{w*4+4}\n')
+                f.write(
+                    f'f {w*8+7}/1/{w*4+4}'
+                    f' {w*8+8}/2/{w*4+4}'
+                    f' {w*8+1}/1/{w*4+4}\n')
+                f.write(
+                    f'f {w*8+2}/2/{w*4+4}'
+                    f' {w*8+1}/1/{w*4+4}'
+                    f' {w*8+8}/2/{w*4+4}\n')
+
                 # now the top "cap" of this wall segment
                 f.write(f'f {w*8+2}/1 {w*8+6}/1 {w*8+4}/1\n')
                 f.write(f'f {w*8+2}/1 {w*8+8}/1 {w*8+6}/1\n')
@@ -313,13 +314,6 @@ class Level:
         c_mesh_ele = SubElement(c_geom_ele, 'mesh')
         c_mesh_uri_ele = SubElement(c_mesh_ele, 'uri')
         c_mesh_uri_ele.text = obj_path
-
-        # wall_cnt = 0
-        # for wall in self.walls:
-        #     wall_cnt += 1
-        #     self.generate_wall(wall, link_ele, wall_cnt)
-        # print(f'generated {wall_cnt} walls on level {model_name}')
-
 
     def generate_sdf_models(self, world_ele):
         model_cnt = 0
@@ -381,7 +375,13 @@ class Level:
         i = 0
         for floor in self.floors:
             i += 1
-            floor.generate(world_ele, i, model_name, model_path, self.vertices, self.scale)
+            floor.generate(
+                world_ele,
+                i,
+                model_name,
+                model_path,
+                self.vertices,
+                self.scale)
 
     def write_sdf(self, model_name, model_path):
         sdf_ele = Element('sdf', {'version': '1.6'})
@@ -488,7 +488,9 @@ class Level:
             p = {'name': v.name}
             for param_name, param_value in v.params.items():
                 p[param_name] = param_value.value
-            nav_data['vertices'].append([v.x * self.scale, v.y * self.scale, p])
+            nav_data['vertices'].append(
+                [v.x * self.scale, v.y * self.scale, p]
+            )
 
         nav_data['lanes'] = []
         for l in self.lanes:
@@ -577,7 +579,7 @@ class Level:
         if not self.floors:
             return (0, 0)
         bounds = self.floors[0].polygon.bounds
-        return ( (bounds[0] + bounds[2]) / 2.0, (bounds[1] + bounds[3]) / 2.0)
+        return ((bounds[0] + bounds[2]) / 2.0, (bounds[1] + bounds[3]) / 2.0)
 
     def pose_string(self):
         return (

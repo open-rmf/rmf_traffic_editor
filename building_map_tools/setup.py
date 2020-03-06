@@ -1,4 +1,4 @@
-import glob
+from glob import glob
 from setuptools import setup
 
 package_name = 'building_map_tools'
@@ -16,10 +16,10 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
-        ('share/' + package_name + '/textures', glob.glob('building_map_generators/textures/*.png')),
-        ('share/' + package_name + '/textures', ['building_map_generators/textures/blue_linoleum.png']),
-        ('share/' + package_name + '/textures', ['building_map_generators/textures/blue_linoleum_high_contrast.png']),
-        ('share/' + package_name + '/textures', ['building_map_generators/textures/wall.png']),
+        (
+            'share/' + package_name +
+            '/textures', glob('building_map_generators/textures/*.png')
+        ),
     ],
     install_requires=['setuptools', 'shapely', 'pyyaml'],
     author='Morgan Quigley',
@@ -40,8 +40,10 @@ setup(
     scripts=[],
     entry_points={
         'console_scripts': [
-            'building_map_server = building_map_server.building_map_server:main',
-            'building_map_gazebo = building_map_generators.building_map_gazebo:main',
+            'building_map_server = '
+            'building_map_server.building_map_server:main',
+            'building_map_gazebo = '
+            'building_map_generators.building_map_gazebo:main',
             'building_map_nav = building_map_generators.building_map_nav:main'
         ],
     },

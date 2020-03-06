@@ -8,9 +8,9 @@ from numpy import inf
 
 import rclpy
 from rclpy.qos import QoSProfile
-from rclpy.qos import QoSHistoryPolicy
-from rclpy.qos import QoSDurabilityPolicy
-from rclpy.qos import QoSReliabilityPolicy
+from rclpy.qos import QoSHistoryPolicy as History
+from rclpy.qos import QoSDurabilityPolicy as Durability
+from rclpy.qos import QoSReliabilityPolicy as Reliability
 from rclpy.node import Node
 
 from building_map_msgs.srv import GetBuildingMap
@@ -25,6 +25,7 @@ from building_map_msgs.msg import Door
 from building_map_msgs.msg import Lift
 
 from building_map.building import Building
+
 
 class BuildingMapServer(Node):
     def __init__(self, map_path):
@@ -46,10 +47,10 @@ class BuildingMapServer(Node):
             GetBuildingMap, 'get_building_map', self.get_building_map)
 
         qos = QoSProfile(
-            history=QoSHistoryPolicy.RMW_QOS_POLICY_HISTORY_KEEP_LAST,
+            history=History.RMW_QOS_POLICY_HISTORY_KEEP_LAST,
             depth=1,
-            reliability=QoSReliabilityPolicy.RMW_QOS_POLICY_RELIABILITY_RELIABLE,
-            durability=QoSDurabilityPolicy.RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL)
+            reliability=Reliability.RMW_QOS_POLICY_RELIABILITY_RELIABLE,
+            durability=Durability.RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL)
 
         self.building_map_pub = self.create_publisher(
             BuildingMap, 'map', qos_profile=qos)

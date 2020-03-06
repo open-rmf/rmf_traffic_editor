@@ -7,9 +7,9 @@ from .level import Level
 class Building:
     def __init__(self, yaml_node):
         if 'building_name' in yaml_node:
-          self.name = yaml_node['building_name']
+            self.name = yaml_node['building_name']
         else:
-          self.name = yaml_node['name']
+            self.name = yaml_node['name']
         print(f'building name: {self.name}')
 
         self.levels = {}
@@ -33,7 +33,7 @@ class Building:
     def calculate_level_offsets_and_scales(self):
         # calculate all level offsets relative to reference_level_name
         print(f'calculating levels relative to {self.reference_level_name}')
-        
+
         # first calculate scale of the reference level using its measurements
         self.ref_level.calculate_scale_using_measurements()
 
@@ -56,7 +56,10 @@ class Building:
         for f_pair in fiducials:
             f0 = f_pair[0]
             f1 = f_pair[1]
-            print(f'    ({f0.x:.5}, {f0.y:.5}) -> ({f1.x:.5}, {f1.y:.5})  {f0.name}')
+            print(
+                f'    ({f0.x:.5}, {f0.y:.5})'
+                f' -> ({f1.x:.5}, {f1.y:.5})'
+                f'   {f0.name}')
 
         # calculate the distances between each fiducial on their levels
         distances = []
@@ -85,7 +88,10 @@ class Building:
         if len(fiducials):
             mean_translation[0] *= self.ref_level.scale / float(len(fiducials))
             mean_translation[1] *= self.ref_level.scale / float(len(fiducials))
-        print(f'mean translation: ({mean_translation[0]:.5}, {mean_translation[1]:.5})')
+        print(
+            f'translation: '
+            f'({mean_translation[0]:.5}, '
+            f'{mean_translation[1]:.5})')
         level.translation = mean_translation
 
     def generate_nav_graphs(self):
@@ -123,7 +129,8 @@ class Building:
 
         user_camera_pose = SubElement(user_camera, 'pose')
         center_xy = self.center()
-        user_camera_pose.text = f'{center_xy[0]} {center_xy[1]-20} 10 0 0.6 1.57'
+        user_camera_pose.text = \
+            f'{center_xy[0]} {center_xy[1]-20} 10 0 0.6 1.57'
 
         scene = SubElement(world, 'scene')
         ambient_ele = SubElement(scene, 'ambient')
