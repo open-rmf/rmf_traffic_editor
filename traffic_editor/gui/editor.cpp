@@ -1173,7 +1173,7 @@ void Editor::populate_property_editor(const Model& model)
   printf("populate_property_editor(model)\n");
   property_editor->blockSignals(true);  // otherwise we get tons of callbacks
 
-  property_editor->setRowCount(2);
+  property_editor->setRowCount(3);
 
   property_editor_set_row(
       0,
@@ -1185,6 +1185,13 @@ void Editor::populate_property_editor(const Model& model)
       "model_name",
       QString::fromStdString(model.model_name));
       
+  property_editor_set_row(
+      2,
+      "elevation",
+      model.z,
+      3,
+      true);
+
   property_editor->blockSignals(false);  // re-enable callbacks
 }
 
@@ -1264,6 +1271,15 @@ void Editor::property_editor_cell_changed(int row, int column)
     p.set_param(name, value);
     setWindowModified(true);
     return;  // stop after finding the first one
+  }
+  
+  for (auto& m : project.building.levels[level_idx].models)
+  {
+    if (!m.selected)
+      continue;
+    m.set_param(name, value);
+    setWindowModified(true);
+    return; // stop after finding the first one
   }
 }
 
@@ -1568,6 +1584,7 @@ void Editor::mouse_add_model(
         level_idx,
         p.x(),
         p.y(),
+        0.0,
         0.0,
         mouse_motion_editor_model->name);
     /*
