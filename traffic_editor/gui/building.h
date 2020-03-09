@@ -91,6 +91,7 @@ public:
       const int level_idx,
       const double x,
       const double y,
+      const double z,
       const double yaw,
       const std::string &model_name);
 

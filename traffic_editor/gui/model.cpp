@@ -15,22 +15,25 @@
  *
 */
 
+#include <QtGlobal>
+
 #include "model.h"
 using std::string;
 
 
 Model::Model()
-: x(0), y(0), yaw(0), selected(false)
+: x(0), y(0), z(0.0), yaw(0), selected(false)
 {
 }
 
 Model::Model(
     const double _x,
     const double _y,
+    const double _z,
     const double _yaw,
     const std::string &_model_name,
     const std::string &_instance_name)
-: x(_x), y(_y), yaw(_yaw),
+: x(_x), y(_y), z(_z), yaw(_yaw),
   model_name(_model_name),
   instance_name(_instance_name),
   selected(false)
@@ -43,6 +46,16 @@ void Model::from_yaml(const YAML::Node &data)
     throw std::runtime_error("Model::from_yaml() expected a map");
   x = data["x"].as<double>();
   y = data["y"].as<double>();
+  if (data["z"])
+  {
+    z = data["z"].as<double>();
+  }
+  else
+  {
+    qWarning(
+        "parsed a deprecated .building.yaml, models should have z defined.");
+    z = 0.0;
+  }
   yaw = data["yaw"].as<double>();
   model_name = data["model_name"].as<string>();
   instance_name = data["name"].as<string>();
@@ -57,9 +70,25 @@ YAML::Node Model::to_yaml() const
   n.SetStyle(YAML::EmitterStyle::Flow);
   n["x"] = round(x * 1000.0) / 1000.0;
   n["y"] = round(y * 1000.0) / 1000.0;
+  n["z"] = round(z * 1000.0) / 1000.0;
   // let's give yaw another decimal place because, I don't know, reasons (?)
   n["yaw"] = round(yaw * 10000.0) / 10000.0;
   n["name"] = instance_name;
   n["model_name"] = model_name;
   return n;
+}
+
+void Model::set_param(const std::string &name, const std::string &value)
+{
+  if (name != "elevation")
+    return;
+
+  try
+  {
+    z = std::stod(value);
+  }
+  catch(const std::exception& e)
+  {
+    qWarning("[elevation] field can only be a double/float.");
+  }
 }
