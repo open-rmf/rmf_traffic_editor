@@ -15,6 +15,8 @@
  *
 */
 
+#include <QtGlobal>
+
 #include "model.h"
 using std::string;
 
@@ -44,7 +46,16 @@ void Model::from_yaml(const YAML::Node &data)
     throw std::runtime_error("Model::from_yaml() expected a map");
   x = data["x"].as<double>();
   y = data["y"].as<double>();
-  z.from_yaml(data["z"]);
+  if (data["z"])
+  {
+    z = data["z"].as<double>();
+  }
+  else
+  {
+    qWarning(
+        "parsed a deprecated .building.yaml, models should have z defined.");
+    z = 0.0;
+  }
   yaw = data["yaw"].as<double>();
   model_name = data["model_name"].as<string>();
   instance_name = data["name"].as<string>();
@@ -59,7 +70,7 @@ YAML::Node Model::to_yaml() const
   n.SetStyle(YAML::EmitterStyle::Flow);
   n["x"] = round(x * 1000.0) / 1000.0;
   n["y"] = round(y * 1000.0) / 1000.0;
-  n["z"] = z.to_yaml();
+  n["z"] = round(z * 1000.0) / 1000.0;
   // let's give yaw another decimal place because, I don't know, reasons (?)
   n["yaw"] = round(yaw * 10000.0) / 10000.0;
   n["name"] = instance_name;
@@ -71,5 +82,13 @@ void Model::set_param(const std::string &name, const std::string &value)
 {
   if (name != "elevation")
     return;
-  z.set(value);
+
+  try
+  {
+    z = std::stod(value);
+  }
+  catch(const std::exception& e)
+  {
+    qWarning("[elevation] field can only be a double/float.");
+  }
 }

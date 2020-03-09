@@ -7,7 +7,9 @@ class Model:
         self.model_name = yaml_node['model_name']
         self.x = yaml_node['x']
         self.y = -yaml_node['y']
-        self.z = 0.0  # todo
+        self.z = 0.0
+        if 'z' in yaml_node:
+            self.z = yaml_node['z']
         self.yaw = yaml_node['yaw']
 
     def generate(self, world_ele, model_cnt, scale):
@@ -19,12 +21,14 @@ class Model:
         pose_ele = SubElement(include_ele, 'pose')
         x = self.x * scale
         y = self.y * scale
-        pose_ele.text = f'{x} {y} {self.z} 0 0 {self.yaw + 1.5707}'
+        z = self.z * scale
+        pose_ele.text = f'{x} {y} {z} 0 0 {self.yaw + 1.5707}'
 
         # hack... for now, everything other than robots is static (?)
         non_static_model_names = [
           'Sesto',
-          'MiR100'
+          'MiR100',
+          'Magni'
         ]
         if self.name not in non_static_model_names:
             static_ele = SubElement(include_ele, 'static')

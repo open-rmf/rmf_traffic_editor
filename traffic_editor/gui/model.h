@@ -28,14 +28,12 @@
 #include <string>
 #include <yaml-cpp/yaml.h>
 
-#include "param.h"
-
 class Model
 {
 public:
   double x;
   double y;
-  Param z;
+  double z;
   double yaw;
   std::string model_name;
   std::string instance_name;

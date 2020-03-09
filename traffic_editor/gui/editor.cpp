@@ -1182,7 +1182,9 @@ void Editor::populate_property_editor(const Model& model)
   property_editor_set_row(
       2,
       "elevation",
-      model.z.to_qstring());
+      model.z,
+      3,
+      true);
 
   property_editor->blockSignals(false);  // re-enable callbacks
 }
