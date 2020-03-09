@@ -311,16 +311,17 @@ void Building::add_model(
     const int level_idx,
     const double x,
     const double y,
+    const double z,
     const double yaw,
     const std::string &model_name)
 {
   if (level_idx >= static_cast<int>(levels.size()))
     return;
 
-  printf("Building::add_model(%d, %.1f, %.1f, %.2f, %s)\n",
-      level_idx, x, y, yaw, model_name.c_str());
+  printf("Building::add_model(%d, %.1f, %.1f, %.1f, %.2f, %s)\n",
+      level_idx, x, y, z, yaw, model_name.c_str());
   levels[level_idx].models.push_back(
-      Model(x, y, yaw, model_name, model_name));
+      Model(x, y, z, yaw, model_name, model_name));
 }
 
 void Building::set_model_yaw(

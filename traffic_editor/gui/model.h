@@ -28,12 +28,14 @@
 #include <string>
 #include <yaml-cpp/yaml.h>
 
+#include "param.h"
 
 class Model
 {
 public:
   double x;
   double y;
+  Param z;
   double yaw;
   std::string model_name;
   std::string instance_name;
@@ -43,12 +45,15 @@ public:
   Model(
       const double _x,
       const double _y,
+      const double _z,
       const double _yaw,
       const std::string &_model_name,
       const std::string &_instance_name);
 
   YAML::Node to_yaml() const;
   void from_yaml(const YAML::Node &data);
+
+  void set_param(const std::string &name, const std::string &value);
 };
 
 #endif
