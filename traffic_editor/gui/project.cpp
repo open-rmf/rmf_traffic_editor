@@ -490,6 +490,8 @@ void Project::set_selected_containing_polygon(
   if (level == nullptr)
     return;
 
+  // holes are "higher" in our Z-stack (to make them clickable), so first
+  // we need to search for holes. Then we can search for non-holes
   for (size_t i = 0; i < level->polygons.size(); i++)
   {
     Polygon& polygon = level->polygons[i];

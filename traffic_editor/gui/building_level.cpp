@@ -113,6 +113,17 @@ bool BuildingLevel::from_yaml(
     }
   }
 
+  if (_data["holes"] && _data["holes"].IsSequence())
+  {
+    const YAML::Node &yf = _data["holes"];
+    for (YAML::const_iterator it = yf.begin(); it != yf.end(); ++it)
+    {
+      Polygon p;
+      p.from_yaml(*it, Polygon::HOLE);
+      polygons.push_back(p);
+    }
+  }
+
   if (_data["elevation"])
     elevation = _data["elevation"].as<double>();
 
@@ -216,6 +227,9 @@ YAML::Node BuildingLevel::to_yaml() const
     {
       case Polygon::FLOOR:
         y["floors"].push_back(polygon.to_yaml());
+        break;
+      case Polygon::HOLE:
+        y["holes"].push_back(polygon.to_yaml());
         break;
       default:
         printf("tried to save an unknown polygon type: %d\n",
@@ -691,25 +705,41 @@ void BuildingLevel::add_door_swing_path(
   path.lineTo(hinge_x, hinge_y);
 }
 
+void BuildingLevel::draw_polygon(
+    QGraphicsScene *scene,
+    const QBrush& brush,
+    const Polygon& polygon) const
+{
+  QBrush selected_brush(QColor::fromRgbF(1.0, 0.0, 0.0, 0.5));
+
+  QVector<QPointF> polygon_vertices;
+  for (const auto &vertex_idx: polygon.vertices)
+  {
+    const Vertex &v = vertices[vertex_idx];
+    polygon_vertices.append(QPointF(v.x, v.y));
+  }
+
+  scene->addPolygon(
+      QPolygonF(polygon_vertices),
+      QPen(Qt::black),
+      polygon.selected ? selected_brush : brush);
+}
+
 void BuildingLevel::draw_polygons(QGraphicsScene *scene) const
 {
-  QBrush polygon_brush(QColor::fromRgbF(0.8, 0.8, 0.8, 0.5));
-  QBrush selected_polygon_brush(QColor::fromRgbF(1.0, 0.0, 0.0, 0.5));
+  const QBrush floor_brush(QColor::fromRgbF(0.8, 0.8, 0.8, 0.5));
+  const QBrush hole_brush(QColor::fromRgbF(0.3, 0.3, 0.3, 0.5));
 
-  for (const auto &polygon : polygons)
-  {
-    // now draw the polygons
-    QVector<QPointF> polygon_vertices;
-    for (const auto &vertex_idx: polygon.vertices)
-    {
-      const Vertex &v = vertices[vertex_idx];
-      polygon_vertices.append(QPointF(v.x, v.y));
-    }
-    scene->addPolygon(
-        QPolygonF(polygon_vertices),
-        QPen(Qt::black),
-        polygon.selected ? selected_polygon_brush : polygon_brush);
-  }
+  // first draw the floor polygons
+  for (const auto& polygon : polygons)
+    if (polygon.type == Polygon::FLOOR)
+      draw_polygon(scene, floor_brush, polygon);
+
+  // now draw the holes
+  for (const auto& polygon : polygons)
+    if (polygon.type == Polygon::HOLE)
+      draw_polygon(scene, hole_brush, polygon);
+
 #if 0
   // ahhhhh only for debugging...
   // plot the nearest projection point to a polygon, if it's set

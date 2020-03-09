@@ -40,7 +40,8 @@ public:
     UNDEFINED = 0,
     FLOOR,
     ZONE,
-    ROI
+    ROI,
+    HOLE
   } type = UNDEFINED;
 
   Polygon();

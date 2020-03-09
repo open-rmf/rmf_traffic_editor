@@ -637,6 +637,7 @@ void Editor::mouse_event(const MouseType t, QMouseEvent *e)
     case TOOL_ADD_MODEL:    mouse_add_model(t, e, p); break;
     case TOOL_ROTATE:       mouse_rotate(t, e, p); break;
     case TOOL_ADD_FLOOR:    mouse_add_floor(t, e, p); break;
+    case TOOL_ADD_HOLE:     mouse_add_hole(t, e, p); break;
     case TOOL_EDIT_POLYGON: mouse_edit_polygon(t, e, p); break;
     case TOOL_ADD_FIDUCIAL: mouse_add_fiducial(t, e, p); break;
     case TOOL_ADD_ROI:      mouse_add_roi(t, e, p); break;
@@ -765,6 +766,7 @@ const QString Editor::tool_id_to_string(const int id)
     case TOOL_ADD_DOOR: return "add door";
     case TOOL_ADD_MODEL: return "add m&odel";
     case TOOL_ADD_FLOOR: return "add &floor";
+    case TOOL_ADD_HOLE: return "add hole";
     case TOOL_EDIT_POLYGON: return "&edit polygon";
     default: return "unknown tool ID";
   }
@@ -1800,6 +1802,12 @@ void Editor::mouse_add_floor(
     const MouseType t, QMouseEvent *e, const QPointF &p)
 {
   mouse_add_polygon(t, e, p, Polygon::FLOOR);
+}
+
+void Editor::mouse_add_hole(
+    const MouseType t, QMouseEvent *e, const QPointF &p)
+{
+  mouse_add_polygon(t, e, p, Polygon::HOLE);
 }
 
 void Editor::mouse_add_roi(
