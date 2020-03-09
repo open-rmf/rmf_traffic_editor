@@ -11,8 +11,8 @@ class Model:
         if 'z' in yaml_node:
             self.z = yaml_node['z']
         else:
-            print('parsed a deprecated .building.yaml, model should have a z' \
-                    ' field, setting elevation to 0.0 for now')
+            print('parsed a deprecated .building.yaml, model should have a z'
+                ' field, setting elevation to 0.0 for now')
         self.yaw = yaml_node['yaw']
 
     def generate(self, world_ele, model_cnt, scale):
