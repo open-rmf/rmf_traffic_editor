@@ -592,6 +592,6 @@ class Level:
         return (
             f'{-self.translation[0]} '
             f'{-self.translation[1]} '
-            f'{self.elevation * 0.26} '
+            f'{self.elevation} '
             '0 0 0'
         )
