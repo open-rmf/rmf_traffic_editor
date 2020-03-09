@@ -25,6 +25,7 @@
 #include <QGraphicsItem>
 
 using std::string;
+using std::vector;
 
 
 Project::Project()
@@ -491,7 +492,8 @@ void Project::set_selected_containing_polygon(
     return;
 
   // holes are "higher" in our Z-stack (to make them clickable), so first
-  // we need to search for holes. Then we can search for non-holes
+  // we need to make a list of all polygons that contain this point.
+  vector<Polygon *> containing_polygons;
   for (size_t i = 0; i < level->polygons.size(); i++)
   {
     Polygon& polygon = level->polygons[i];
@@ -503,10 +505,22 @@ void Project::set_selected_containing_polygon(
     }
     QPolygonF qpolygon(polygon_vertices);
     if (qpolygon.containsPoint(QPoint(x, y), Qt::OddEvenFill))
+      containing_polygons.push_back(&level->polygons[i]);
+  }
+
+  // first search for holes
+  for (Polygon* p : containing_polygons)
+    if (p->type == Polygon::HOLE)
     {
-      polygon.selected = true;
+      p->selected = true;
       return;
     }
+
+  // if we get here, just return the first thing.
+  for (Polygon* p : containing_polygons)
+  {
+    p->selected = true;
+    return;
   }
 }
 
