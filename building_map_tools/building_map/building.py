@@ -114,7 +114,7 @@ class Building:
                 nav_graphs[f'{i}'] = g
         return nav_graphs
 
-    def generate_sdf_world(self):
+    def generate_sdf_world(self, flattened):
         """ Return an etree of this Building in SDF XML """
 
         sdf = Element('sdf', {'version': '1.6'})
@@ -153,7 +153,7 @@ class Building:
             uri_ele = SubElement(level_include_ele, 'uri')
             uri_ele.text = f'model://{level_model_name}'
             pose_ele = SubElement(level_include_ele, 'pose')
-            pose_ele.text = level.pose_string()
+            pose_ele.text = level.pose_string(flattened)
 
         return sdf
 
