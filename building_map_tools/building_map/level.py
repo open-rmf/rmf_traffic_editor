@@ -11,6 +11,7 @@ from ament_index_python.packages import get_package_share_directory
 from .edge import Edge
 from .fiducial import Fiducial
 from .floor import Floor
+from .hole import Hole
 from .model import Model
 from .vertex import Vertex
 from .doors.double_sliding_door import DoubleSlidingDoor
@@ -77,6 +78,11 @@ class Level:
         if 'floors' in yaml_node:
             for floor_yaml in yaml_node['floors']:
                 self.floors.append(Floor(floor_yaml))
+
+        self.holes = []
+        if 'holes' in yaml_node:
+            for hole_yaml in yaml_node['holes']:
+                self.holes.append(Hole(hole_yaml))
 
     def calculate_scale_using_measurements(self):
         # use the measurements to estimate scale for this level
@@ -381,7 +387,8 @@ class Level:
                 model_name,
                 model_path,
                 self.vertices,
-                self.scale)
+                self.scale,
+                self.holes)
 
     def write_sdf(self, model_name, model_path):
         sdf_ele = Element('sdf', {'version': '1.6'})

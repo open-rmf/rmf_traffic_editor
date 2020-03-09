@@ -78,6 +78,12 @@ private:
   void draw_fiducials(QGraphicsScene *scene) const;
   void draw_polygons(QGraphicsScene *scene) const;
 
+  // helper function
+  void draw_polygon(
+      QGraphicsScene *scene,
+      const QBrush& brush,
+      const Polygon& polygon) const;
+
   void add_door_swing_path(
       QPainterPath &path,
       double hinge_x,

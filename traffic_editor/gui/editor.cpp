@@ -311,12 +311,16 @@ Editor::Editor()
   create_tool_button(TOOL_ADD_VERTEX, ":icons/vertex.svg", "Add Vertex (V)");
   create_tool_button(TOOL_ADD_FIDUCIAL, ":icons/fiducial.svg", "Add Fiducial");
   create_tool_button(TOOL_ADD_LANE, "", "Add Lane (L)");
-  create_tool_button(TOOL_ADD_WALL, "", "Add Wall (W)");
-  create_tool_button(TOOL_ADD_MEAS, "", "Add Measurement");
-  create_tool_button(TOOL_ADD_DOOR, "", "Add Door");
+  create_tool_button(TOOL_ADD_WALL, ":icons/wall.svg", "Add Wall (W)");
+  create_tool_button(
+      TOOL_ADD_MEAS,
+      ":icons/measurement.svg",
+      "Add Measurement");
+  create_tool_button(TOOL_ADD_DOOR, ":icons/door.svg", "Add Door");
   create_tool_button(TOOL_ADD_MODEL, "", "Add Model");
-  create_tool_button(TOOL_ADD_FLOOR, "", "Add Floor Polygon");
-  create_tool_button(TOOL_ADD_ROI, ":icons/roi.svg", "Add Region of Interest");
+  create_tool_button(TOOL_ADD_FLOOR, ":icons/floor.svg", "Add floor polygon");
+  create_tool_button(TOOL_ADD_HOLE, ":icons/hole.svg", "Add hole polygon");
+  create_tool_button(TOOL_ADD_ROI, ":icons/roi.svg", "Add region of interest");
   create_tool_button(TOOL_EDIT_POLYGON, "", "Edit Polygon");
 
   connect(
@@ -521,11 +525,11 @@ void Editor::project_new()
   QFileInfo file_info(dialog.selectedFiles().first());
   std::string fn = file_info.fileName().toStdString();
 
+  project.clear();
   project.filename = file_info.absoluteFilePath().toStdString();
   QString dir_path = file_info.dir().path();
   QDir::setCurrent(dir_path);
 
-  project.building.clear();
   create_scene();
   project_save();
   level_table->update(project.building);
@@ -633,6 +637,7 @@ void Editor::mouse_event(const MouseType t, QMouseEvent *e)
     case TOOL_ADD_MODEL:    mouse_add_model(t, e, p); break;
     case TOOL_ROTATE:       mouse_rotate(t, e, p); break;
     case TOOL_ADD_FLOOR:    mouse_add_floor(t, e, p); break;
+    case TOOL_ADD_HOLE:     mouse_add_hole(t, e, p); break;
     case TOOL_EDIT_POLYGON: mouse_edit_polygon(t, e, p); break;
     case TOOL_ADD_FIDUCIAL: mouse_add_fiducial(t, e, p); break;
     case TOOL_ADD_ROI:      mouse_add_roi(t, e, p); break;
@@ -761,6 +766,7 @@ const QString Editor::tool_id_to_string(const int id)
     case TOOL_ADD_DOOR: return "add door";
     case TOOL_ADD_MODEL: return "add m&odel";
     case TOOL_ADD_FLOOR: return "add &floor";
+    case TOOL_ADD_HOLE: return "add hole";
     case TOOL_EDIT_POLYGON: return "&edit polygon";
     default: return "unknown tool ID";
   }
@@ -1815,6 +1821,12 @@ void Editor::mouse_add_floor(
   mouse_add_polygon(t, e, p, Polygon::FLOOR);
 }
 
+void Editor::mouse_add_hole(
+    const MouseType t, QMouseEvent *e, const QPointF &p)
+{
+  mouse_add_polygon(t, e, p, Polygon::HOLE);
+}
+
 void Editor::mouse_add_roi(
     const MouseType t, QMouseEvent *e, const QPointF &p)
 {
@@ -2012,6 +2024,7 @@ void Editor::set_mode(const EditorModeId _mode, const QString& mode_string)
   set_tool_visibility(TOOL_ADD_DOOR, mode == MODE_BUILDING);
   set_tool_visibility(TOOL_ADD_MODEL, mode == MODE_BUILDING);
   set_tool_visibility(TOOL_ADD_FLOOR, mode == MODE_BUILDING);
+  set_tool_visibility(TOOL_ADD_HOLE, mode == MODE_BUILDING);
   set_tool_visibility(TOOL_ADD_FIDUCIAL, mode == MODE_BUILDING);
 
   // traffic tools

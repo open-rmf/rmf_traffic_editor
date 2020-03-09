@@ -106,7 +106,8 @@ private:
     TOOL_EDIT_POLYGON,
     TOOL_ADD_ZONE,
     TOOL_ADD_FIDUCIAL,
-    TOOL_ADD_ROI
+    TOOL_ADD_ROI,
+    TOOL_ADD_HOLE,
   } tool_id = TOOL_SELECT;
 
   std::map<ToolId, QAction *> tools;
@@ -276,6 +277,7 @@ private:
   void mouse_add_door(const MouseType t, QMouseEvent *e, const QPointF &p);
   void mouse_add_model(const MouseType t, QMouseEvent *e, const QPointF &p);
   void mouse_add_floor(const MouseType t, QMouseEvent *e, const QPointF &p);
+  void mouse_add_hole(const MouseType t, QMouseEvent *e, const QPointF &p);
   void mouse_add_roi(const MouseType t, QMouseEvent *e, const QPointF &p);
   void mouse_edit_polygon(const MouseType t, QMouseEvent *e, const QPointF &p);
 
