@@ -21,7 +21,7 @@ class Model:
         pose_ele = SubElement(include_ele, 'pose')
         x = self.x * scale
         y = self.y * scale
-        z = self.z * scale
+        z = self.z
         pose_ele.text = f'{x} {y} {z} 0 0 {self.yaw + 1.5707}'
 
         # hack... for now, everything other than robots is static (?)
