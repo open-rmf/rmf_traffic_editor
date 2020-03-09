@@ -525,11 +525,11 @@ void Editor::project_new()
   QFileInfo file_info(dialog.selectedFiles().first());
   std::string fn = file_info.fileName().toStdString();
 
+  project.clear();
   project.filename = file_info.absoluteFilePath().toStdString();
   QString dir_path = file_info.dir().path();
   QDir::setCurrent(dir_path);
 
-  project.building.clear();
   create_scene();
   project_save();
   level_table->update(project.building);

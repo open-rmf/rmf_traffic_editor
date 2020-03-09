@@ -50,6 +50,8 @@ public:
   bool save();
   bool load(const std::string& _filename);
 
+  void clear();
+
   void add_scenario_vertex(int level_index, double x, double y);
   void scenario_row_clicked(const int row);
   void draw(

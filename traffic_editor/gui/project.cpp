@@ -509,3 +509,12 @@ void Project::set_selected_containing_polygon(
     }
   }
 }
+
+void Project::clear()
+{
+  building.clear();
+  name.clear();
+  filename.clear();
+  scenarios.clear();
+  scenario_idx = -1;
+}
