@@ -30,6 +30,16 @@ class Level:
         if 'elevation' in yaml_node:
             self.elevation = yaml_node['elevation']
 
+        if 'flattened_x_offset' in yaml_node:
+            self.flattened_x_offset = yaml_node['flattened_x_offset']
+        else:
+            self.flattened_x_offset = 0.0
+
+        if 'flattened_y_offset' in yaml_node:
+            self.flattened_y_offset = yaml_node['flattened_y_offset']
+        else:
+            self.flattened_y_offset = 0.0
+
         self.fiducials = []
         if 'fiducials' in yaml_node:
             for fiducial_yaml in yaml_node['fiducials']:
@@ -588,10 +598,17 @@ class Level:
         bounds = self.floors[0].polygon.bounds
         return ((bounds[0] + bounds[2]) / 2.0, (bounds[1] + bounds[3]) / 2.0)
 
-    def pose_string(self):
-        return (
-            f'{-self.translation[0]} '
-            f'{-self.translation[1]} '
-            f'{self.elevation} '
-            '0 0 0'
-        )
+    def pose_string(self, flattened):
+        if flattened:
+            return (
+                f'{-self.translation[0] + self.flattened_x_offset} '
+                f'{-self.translation[1] + self.flattened_y_offset} '
+                f'0 0 0 0'
+            )
+        else:
+            return (
+                f'{-self.translation[0]} '
+                f'{-self.translation[1]} '
+                f'{self.elevation} '
+                '0 0 0'
+            )
