@@ -133,7 +133,8 @@ class Floor:
         model_name,
         model_path,
         vertices,
-        scale
+        scale,
+        holes
     ):
         print(f'generating floor polygon {floor_cnt} on floor {model_name}')
 
@@ -145,7 +146,16 @@ class Floor:
                 shapely.geometry.Point(v.x * scale, v.y * scale))
             vert_list.append((v.x * scale, v.y * scale))
 
-        self.polygon = shapely.geometry.Polygon(vert_list)
+        hole_vert_lists = []
+        for hole in holes:
+            hole_vertices = []
+            for v_idx in hole.vertex_indices:
+                v = vertices[v_idx]
+                hole_vertices.append((v.x * scale, v.y * scale))
+            hole_vert_lists.append(hole_vertices)
+        print(f'hole vertices: {hole_vert_lists}')
+
+        self.polygon = shapely.geometry.Polygon(vert_list, hole_vert_lists)
 
         link_ele = SubElement(model_ele, 'link')
         link_ele.set('name', f'floor_{floor_cnt}')
@@ -194,6 +204,9 @@ class Floor:
             if triangulation_debugging:
                 plt.subplot(1, 2, 1)
                 plt.plot(x, y, linewidth=5.0)
+                for hole in self.polygon.interiors:
+                    hx, hy = hole.coords.xy
+                    plt.plot(hx, hy, linewidth=3.0)
                 plt.axis('equal')
                 plt.subplot(1, 2, 2)
                 plt.plot(x, y, linewidth=5.0)
