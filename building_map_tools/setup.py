@@ -48,6 +48,8 @@ setup(
             'building_map_server.building_map_server:main',
             'building_map_gazebo = '
             'building_map_generators.building_map_gazebo:main',
+            'building_map_ignition = '
+            'building_map_generators.building_map_ignition:main',
             'building_map_nav = building_map_generators.building_map_nav:main'
         ],
     },

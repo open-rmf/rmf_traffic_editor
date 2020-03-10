@@ -58,7 +58,7 @@ class Generator:
     def generate_ignition_sdf(
         self,
         input_filename,
-        ouput_filename,
+        output_filename,
         output_models_dir,
         options
     ):
