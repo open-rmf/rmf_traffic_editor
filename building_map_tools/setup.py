@@ -17,8 +17,12 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
         (
-            'share/' + package_name +
-            '/textures', glob('building_map_generators/textures/*.png')
+            'share/' + package_name + '/templates',
+            glob('building_map/templates/*')
+        ),
+        (
+            'share/' + package_name + '/textures',
+            glob('building_map_generators/textures/*.png')
         ),
     ],
     install_requires=['setuptools', 'shapely', 'pyyaml'],

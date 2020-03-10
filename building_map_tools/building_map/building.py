@@ -1,5 +1,6 @@
 import os
-from xml.etree.ElementTree import Element, SubElement
+from xml.etree.ElementTree import Element, SubElement, parse
+from ament_index_python.packages import get_package_share_directory
 
 from .level import Level
 
@@ -114,33 +115,24 @@ class Building:
                 nav_graphs[f'{i}'] = g
         return nav_graphs
 
-    def generate_sdf_world(self, flattened):
-        """ Return an etree of this Building in SDF XML """
+    def generate_sdf_world(self, options):
+        """ Return an etree of this Building in SDF starting from a template"""
+        print(f'generator options: {options}')
+        if 'gazebo' in options:
+            template_name = 'gz_world.sdf'
+        elif 'ignition' in options:
+            template_name = 'ign_world.sdf'
+        else:
+            raise RuntimeError("expected either gazebo or ignition in options")
 
-        sdf = Element('sdf', {'version': '1.6'})
+        template_path = os.path.join(
+            get_package_share_directory('building_map_tools'),
+            f'templates/{template_name}')
+        #file_dir = os.path.dirname(os.path.realpath(__file__))
+        tree = parse(template_path) #file_dir + '/templates/ign_world.sdf')
+        sdf = tree.getroot()
 
-        world = SubElement(sdf, 'world')
-        world.set('name', 'default')
-
-        gui = SubElement(world, 'gui')
-
-        user_camera = SubElement(gui, 'camera')
-        user_camera.set('name', 'user_camera')
-
-        user_camera_pose = SubElement(user_camera, 'pose')
-        center_xy = self.center()
-        user_camera_pose.text = \
-            f'{center_xy[0]} {center_xy[1]-20} 10 0 0.6 1.57'
-
-        scene = SubElement(world, 'scene')
-        ambient_ele = SubElement(scene, 'ambient')
-        ambient_ele.text = '0.8 0.8 0.8 1.0'
-        background_ele = SubElement(scene, 'background')
-        background_ele.text = '0 0 0'
-
-        include_sun = SubElement(world, 'include')
-        sun_uri = SubElement(include_sun, 'uri')
-        sun_uri.text = 'model://sun'
+        world = sdf.find('world')
 
         for level_name, level in self.levels.items():
             level.generate_sdf_models(world)  # todo: a better name
@@ -153,7 +145,7 @@ class Building:
             uri_ele = SubElement(level_include_ele, 'uri')
             uri_ele.text = f'model://{level_model_name}'
             pose_ele = SubElement(level_include_ele, 'pose')
-            pose_ele.text = level.pose_string(flattened)
+            pose_ele.text = level.pose_string('flattened' in options)
 
         return sdf
 

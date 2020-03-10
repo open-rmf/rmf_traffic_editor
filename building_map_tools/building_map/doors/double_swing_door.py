@@ -7,7 +7,7 @@ class DoubleSwingDoor(Door):
         super().__init__(door_edge)
         print(f'DoubleSwingDoor({self.name})')
 
-    def generate(self, world_ele):
+    def generate(self, world_ele, options):
         print('DoubleSwingDoor.generate()')
 
         self.generate_swing_section(
@@ -15,17 +15,19 @@ class DoubleSwingDoor(Door):
             self.length / 2 - 0.01,
             -self.length / 4,
             (-1.6, 0),
-            (-self.length / 4, 0, 0))
+            (-self.length / 4, 0, 0),
+            options)
 
         self.generate_swing_section(
             'right',
             self.length / 2 - 0.01,
             self.length / 4,
             (0, 1.6),
-            (self.length / 4, 0, 0))
+            (self.length / 4, 0, 0),
+            options)
 
         plugin_ele = SubElement(self.model_ele, 'plugin')
-        plugin_ele.set('name', f'plugin_{self.name}')
+        plugin_ele.set('name', 'door')
         plugin_ele.set('filename', 'libdoor.so')
         plugin_params = {
           'v_max_door': '0.5',

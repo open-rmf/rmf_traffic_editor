@@ -7,23 +7,25 @@ class DoubleSlidingDoor(Door):
         super().__init__(door_edge)
         print(f'DoubleSliding({self.name})')
 
-    def generate(self, world_ele):
+    def generate(self, world_ele, options):
         print('DoubleSliding.generate()')
 
         self.generate_sliding_section(
             'left',
             self.length/2 - 0.01,
             -self.length/4,
-            (-self.length/2, 0.0))
+            (-self.length/2, 0.0),
+            options)
 
         self.generate_sliding_section(
             'right',
             self.length/2 - 0.01,
             self.length/4,
-            (0.0, self.length/2))
+            (0.0, self.length/2),
+            options)
 
         plugin_ele = SubElement(self.model_ele, 'plugin')
-        plugin_ele.set('name', f'plugin_{self.name}')
+        plugin_ele.set('name', 'door')
         plugin_ele.set('filename', 'libdoor.so')
         plugin_params = {
           'v_max_door': '0.2',
