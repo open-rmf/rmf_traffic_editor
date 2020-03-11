@@ -61,6 +61,8 @@ class Level:
         self.meas = []
         if 'measurements' in yaml_node:
             self.meas = self.parse_edge_sequence(yaml_node['measurements'])
+            for meas in self.meas:
+                meas.calc_statistics(self.vertices, 1.0)
 
         # # scale the vertex list
         # for p in self.vertices:
@@ -111,8 +113,8 @@ class Level:
 
     def parse_edge_sequence(self, sequence_yaml):
         edges = []
-        for edge in sequence_yaml:
-            edges.append(Edge(edge, self.vertices))
+        for edge_yaml in sequence_yaml:
+            edges.append(Edge(edge_yaml))
         return edges
 
     def generate_wall_box_geometry(self, wall, parent_ele, item):
@@ -331,6 +333,11 @@ class Level:
         c_mesh_uri_ele = SubElement(c_mesh_ele, 'uri')
         c_mesh_uri_ele.text = obj_path
 
+        c_surface_ele = SubElement(collision_ele, 'surface')
+        c_contact_ele = SubElement(c_surface_ele, 'contact')
+        c_bitmask_ele = SubElement(c_contact_ele, 'collide_bitmask')
+        c_bitmask_ele.text = '0x01'
+
     def generate_sdf_models(self, world_ele):
         model_cnt = 0
         for model in self.models:
@@ -343,8 +350,9 @@ class Level:
                 self.generate_robot_at_vertex_idx(vertex_idx, world_ele)
 
     def generate_doors(self, world_ele, options):
-        for door in self.doors:
-            self.generate_door(door, world_ele, options)
+        for door_edge in self.doors:
+            door_edge.calc_statistics(self.vertices, self.scale)
+            self.generate_door(door_edge, world_ele, options)
 
     def generate_door(self, door_edge, world_ele, options):
         door_name = door_edge.params['name'].value
