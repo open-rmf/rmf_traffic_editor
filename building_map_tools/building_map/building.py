@@ -128,8 +128,7 @@ class Building:
         template_path = os.path.join(
             get_package_share_directory('building_map_tools'),
             f'templates/{template_name}')
-        #file_dir = os.path.dirname(os.path.realpath(__file__))
-        tree = parse(template_path) #file_dir + '/templates/ign_world.sdf')
+        tree = parse(template_path)
         sdf = tree.getroot()
 
         world = sdf.find('world')
