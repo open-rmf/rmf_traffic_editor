@@ -17,7 +17,13 @@ class Generator:
             y = yaml.safe_load(f)
             return Building(y)
 
-    def generate_sdf(self, input_filename, output_filename, output_models_dir):
+    def generate_sdf(
+        self,
+        input_filename,
+        output_filename,
+        output_models_dir,
+        options
+    ):
         print('generating {} from {}'.format(output_filename, input_filename))
 
         building = self.parse_editor_yaml(input_filename)
@@ -28,7 +34,10 @@ class Generator:
         building.generate_sdf_models(output_models_dir)
 
         # generate a top-level SDF for convenience
-        sdf = building.generate_sdf_world()
+        flattened = 'flattened' in options
+        print(f'generator options: {options} flattened = {flattened}')
+
+        sdf = building.generate_sdf_world(flattened)
 
         indent_etree(sdf)
         sdf_str = str(ElementToString(sdf), 'utf-8')

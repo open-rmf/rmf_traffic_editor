@@ -114,7 +114,7 @@ class Building:
                 nav_graphs[f'{i}'] = g
         return nav_graphs
 
-    def generate_sdf_world(self):
+    def generate_sdf_world(self, flattened):
         """ Return an etree of this Building in SDF starting from a template"""
         file_dir = os.path.dirname(os.path.realpath(__file__))
         tree = parse(file_dir + '/templates/ign_world.sdf')
@@ -133,7 +133,7 @@ class Building:
             uri_ele = SubElement(level_include_ele, 'uri')
             uri_ele.text = f'model://{level_model_name}'
             pose_ele = SubElement(level_include_ele, 'pose')
-            pose_ele.text = level.pose_string()
+            pose_ele.text = level.pose_string(flattened)
 
         return sdf
 
