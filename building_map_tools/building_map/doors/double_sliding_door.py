@@ -5,11 +5,8 @@ from .door import Door
 class DoubleSlidingDoor(Door):
     def __init__(self, door_edge):
         super().__init__(door_edge)
-        print(f'DoubleSliding({self.name})')
 
     def generate(self, world_ele, options):
-        print('DoubleSliding.generate()')
-
         self.generate_sliding_section(
             'left',
             self.length/2 - 0.01,

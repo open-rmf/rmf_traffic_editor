@@ -3,7 +3,7 @@ from .param_value import ParamValue
 
 
 class Edge:
-    def __init__(self, yaml_node, vertices):
+    def __init__(self, yaml_node):
         self.start_idx = int(yaml_node[0])
         self.end_idx = int(yaml_node[1])
         self.params = {}
@@ -11,13 +11,11 @@ class Edge:
             for param_name, param_yaml in yaml_node[2].items():
                 self.params[param_name] = ParamValue(param_yaml)
 
-        self.calc_statistics(vertices)
-
-    def calc_statistics(self, vertices):
-        self.x1 = vertices[self.start_idx].x
-        self.y1 = vertices[self.start_idx].y
-        self.x2 = vertices[self.end_idx].x
-        self.y2 = vertices[self.end_idx].y
+    def calc_statistics(self, vertices, scale):
+        self.x1 = vertices[self.start_idx].x * scale
+        self.y1 = vertices[self.start_idx].y * scale
+        self.x2 = vertices[self.end_idx].x * scale
+        self.y2 = vertices[self.end_idx].y * scale
         self.dx = self.x1 - self.x2
         self.dy = self.y1 - self.y2
         self.length = math.sqrt(self.dx*self.dx + self.dy*self.dy)

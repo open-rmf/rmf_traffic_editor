@@ -5,11 +5,8 @@ from .door import Door
 class DoubleSwingDoor(Door):
     def __init__(self, door_edge):
         super().__init__(door_edge)
-        print(f'DoubleSwingDoor({self.name})')
 
     def generate(self, world_ele, options):
-        print('DoubleSwingDoor.generate()')
-
         self.generate_swing_section(
             'left',
             self.length / 2 - 0.01,
