@@ -136,4 +136,8 @@ class Door:
         ambient_ele.text = '{} {} {} {}'.format(120, 60, 0, 0.6)
         diffuse_ele = SubElement(material_ele, 'diffuse')
         diffuse_ele.text = '{} {} {} {}'.format(120, 60, 0, 0.6)
+        pbr_ele = SubElement(material_ele, 'pbr')
+        metal_ele = SubElement(pbr_ele, 'metal')
+        metalness_ele = SubElement(metal_ele, 'metalness')
+        metalness_ele.text = '0.0'
         return material_ele
