@@ -135,7 +135,7 @@ class Building:
 
         for level_name, level in self.levels.items():
             level.generate_sdf_models(world)  # todo: a better name
-            level.generate_doors(world)
+            level.generate_doors(world, options)
 
             level_include_ele = SubElement(world, 'include')
             level_model_name = f'{self.name}_{level_name}'

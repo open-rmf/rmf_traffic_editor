@@ -26,7 +26,7 @@ class Door:
 
         visual_ele = SubElement(link_ele, 'visual')
         visual_ele.set('name', name)
-        visual_ele.append(self.material())
+        visual_ele.append(self.material(options))
         visual_geometry_ele = SubElement(visual_ele, 'geometry')
         visual_geometry_ele.append(
             self.box(width, self.thickness, self.height))

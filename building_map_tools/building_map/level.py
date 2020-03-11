@@ -342,9 +342,9 @@ class Level:
             if 'spawn_robot_type' in vertex.params:
                 self.generate_robot_at_vertex_idx(vertex_idx, world_ele)
 
-    def generate_doors(self, world_ele):
+    def generate_doors(self, world_ele, options):
         for door in self.doors:
-            self.generate_door(door, world_ele)
+            self.generate_door(door, world_ele, options)
 
     def generate_door(self, door_edge, world_ele, options):
         door_name = door_edge.params['name'].value
