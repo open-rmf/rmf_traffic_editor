@@ -299,7 +299,6 @@ class Floor:
         if 'texture_name' in self.params:
             texture_name = self.params['texture_name'].value
 
-        # todo: use ament_resource_index somehow to calculate this path
         texture_path_source = os.path.join(
             get_package_share_directory('building_map_tools'),
             f'textures/{texture_name}.png')

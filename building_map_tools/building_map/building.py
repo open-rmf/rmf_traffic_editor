@@ -1,5 +1,6 @@
 import os
 from xml.etree.ElementTree import Element, SubElement, parse
+from ament_index_python.packages import get_package_share_directory
 
 from .level import Level
 
@@ -114,17 +115,27 @@ class Building:
                 nav_graphs[f'{i}'] = g
         return nav_graphs
 
-    def generate_sdf_world(self, flattened):
+    def generate_sdf_world(self, options):
         """ Return an etree of this Building in SDF starting from a template"""
-        file_dir = os.path.dirname(os.path.realpath(__file__))
-        tree = parse(file_dir + '/templates/ign_world.sdf')
+        print(f'generator options: {options}')
+        if 'gazebo' in options:
+            template_name = 'gz_world.sdf'
+        elif 'ignition' in options:
+            template_name = 'ign_world.sdf'
+        else:
+            raise RuntimeError("expected either gazebo or ignition in options")
+
+        template_path = os.path.join(
+            get_package_share_directory('building_map_tools'),
+            f'templates/{template_name}')
+        tree = parse(template_path)
         sdf = tree.getroot()
 
         world = sdf.find('world')
 
         for level_name, level in self.levels.items():
             level.generate_sdf_models(world)  # todo: a better name
-            level.generate_doors(world)
+            level.generate_doors(world, options)
 
             level_include_ele = SubElement(world, 'include')
             level_model_name = f'{self.name}_{level_name}'
@@ -133,7 +144,7 @@ class Building:
             uri_ele = SubElement(level_include_ele, 'uri')
             uri_ele.text = f'model://{level_model_name}'
             pose_ele = SubElement(level_include_ele, 'pose')
-            pose_ele.text = level.pose_string(flattened)
+            pose_ele.text = level.pose_string('flattened' in options)
 
         return sdf
 

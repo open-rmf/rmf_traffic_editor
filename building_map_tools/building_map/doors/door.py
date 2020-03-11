@@ -18,7 +18,7 @@ class Door:
         pose_ele = SubElement(self.model_ele, 'pose')
         pose_ele.text = f'{self.cx} {self.cy} 0 0 0 {self.yaw}'
 
-    def generate_section(self, name, width, x_offset):
+    def generate_section(self, name, width, x_offset, options):
         link_ele = SubElement(self.model_ele, 'link')
         link_ele.set('name', name)
         pose_ele = SubElement(link_ele, 'pose')
@@ -26,7 +26,7 @@ class Door:
 
         visual_ele = SubElement(link_ele, 'visual')
         visual_ele.set('name', name)
-        visual_ele.append(self.material())
+        visual_ele.append(self.material(options))
         visual_geometry_ele = SubElement(visual_ele, 'geometry')
         visual_geometry_ele.append(
             self.box(width, self.thickness, self.height))
@@ -52,8 +52,8 @@ class Door:
 
         return link_ele
 
-    def generate_sliding_section(self, name, width, x_offset, bounds):
-        self.generate_section(name, width, x_offset)
+    def generate_sliding_section(self, name, width, x_offset, bounds, options):
+        self.generate_section(name, width, x_offset, options)
 
         # now, the joint for this link
         joint_ele = SubElement(self.model_ele, 'joint')
@@ -88,8 +88,16 @@ class Door:
     bounds = bounds for the range of motion of this section, in radians
     axis = pose of the joint axis, in the door *section* frame
     '''
-    def generate_swing_section(self, name, width, x_offset, bounds, axis):
-        self.generate_section(name, width, x_offset)
+    def generate_swing_section(
+        self,
+        name,
+        width,
+        x_offset,
+        bounds,
+        axis,
+        options
+    ):
+        self.generate_section(name, width, x_offset, options)
 
         # now, the joint for this link
         joint_ele = SubElement(self.model_ele, 'joint')
@@ -129,15 +137,16 @@ class Door:
         size_ele.text = f'{x} {y} {z}'
         return box_ele
 
-    def material(self):
+    def material(self, options):
         material_ele = Element('material')
         # blue-green glass as a default, so it's easy to see
         ambient_ele = SubElement(material_ele, 'ambient')
         ambient_ele.text = '{} {} {} {}'.format(120, 60, 0, 0.6)
         diffuse_ele = SubElement(material_ele, 'diffuse')
         diffuse_ele.text = '{} {} {} {}'.format(120, 60, 0, 0.6)
-        pbr_ele = SubElement(material_ele, 'pbr')
-        metal_ele = SubElement(pbr_ele, 'metal')
-        metalness_ele = SubElement(metal_ele, 'metalness')
-        metalness_ele.text = '0.0'
+        if 'ignition' in options:
+            pbr_ele = SubElement(material_ele, 'pbr')
+            metal_ele = SubElement(pbr_ele, 'metal')
+            metalness_ele = SubElement(metal_ele, 'metalness')
+            metalness_ele.text = '0.0'
         return material_ele
