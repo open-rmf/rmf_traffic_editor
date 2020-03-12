@@ -311,6 +311,9 @@ class Level:
         shutil.copyfile(texture_path_source, texture_path_dest)
 
     def generate_walls(self, model_ele, model_name, model_path):
+        if not self.walls:
+            return
+
         link_ele = SubElement(model_ele, 'link', {'name': 'walls'})
         self.generate_wall_visual_mesh(model_name, model_path)
 
