@@ -33,6 +33,6 @@ class SwingDoor(Door):
         door_ele.set('name', self.name)
         door_ele.set('type', 'SwingDoor')
         door_ele.set('left_joint_name', 'left_joint')
-        door_ele.set('right_joint_name', '')
+        door_ele.set('right_joint_name', 'empty_joint')
 
         world_ele.append(self.model_ele)

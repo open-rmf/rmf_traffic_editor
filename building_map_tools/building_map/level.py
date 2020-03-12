@@ -15,8 +15,9 @@ from .hole import Hole
 from .model import Model
 from .vertex import Vertex
 from .doors.swing_door import SwingDoor
-from .doors.double_sliding_door import DoubleSlidingDoor
+from .doors.sliding_door import SlidingDoor
 from .doors.double_swing_door import DoubleSwingDoor
+from .doors.double_sliding_door import DoubleSlidingDoor
 
 
 class Level:
@@ -363,7 +364,9 @@ class Level:
         print(f'generate door name={door_name} type={door_type}')
 
         door = None
-        if door_type == 'hinged':
+        if door_type == 'sliding':
+            door = SlidingDoor(door_edge)
+        elif door_type == 'hinged':
             door = SwingDoor(door_edge)
         elif door_type == 'double_sliding':
             door = DoubleSlidingDoor(door_edge)
