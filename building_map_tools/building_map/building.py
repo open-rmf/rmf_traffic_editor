@@ -146,6 +146,27 @@ class Building:
             pose_ele = SubElement(level_include_ele, 'pose')
             pose_ele.text = level.pose_string('flattened' in options)
 
+        # add floor-toggle GUI plugin parameters
+        if 'gazebo' in options:
+            gui_ele = SubElement(world, 'gui')
+            camera_ele = SubElement(gui_ele, 'camera', {'name': 'gui_camera'})
+            pose_ele = SubElement(camera_ele, 'pose')
+            c = self.center()
+            pose_ele.text = f'{c[0]} {c[1]-20} 10 0 0.6 1.57'
+
+            toggle_ele = SubElement(
+                gui_ele,
+                'plugin',
+                {'name': 'toggle_floors', 'filename': 'libtoggle_floors.so'})
+
+            for level_name, level in self.levels.items():
+                floor_ele = SubElement(
+                    toggle_ele,
+                    'floor',
+                    {
+                        'name': level_name,
+                        'model_name': f'{self.name}_{level_name}'})
+
         return sdf
 
     def generate_sdf_models(self, models_path):
