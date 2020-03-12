@@ -22,26 +22,28 @@ class Level:
     def __init__(self, yaml_node, name):
         self.name = name
         print(f'parsing level {name}')
-        if 'drawing' in yaml_node:
+        if yaml_node['drawing']:
             self.drawing_name = yaml_node['drawing']['filename']
         else:
             self.drawing_name = None
 
-        if 'elevation' in yaml_node:
+        if yaml_node['elevation']:
             self.elevation = yaml_node['elevation']
+        else:
+            self.elevation = 0.0
 
-        if 'flattened_x_offset' in yaml_node:
+        if yaml_node['flattened_x_offset']:
             self.flattened_x_offset = yaml_node['flattened_x_offset']
         else:
             self.flattened_x_offset = 0.0
 
-        if 'flattened_y_offset' in yaml_node:
+        if yaml_node['flattened_y_offset']:
             self.flattened_y_offset = yaml_node['flattened_y_offset']
         else:
             self.flattened_y_offset = 0.0
 
         self.fiducials = []
-        if 'fiducials' in yaml_node:
+        if yaml_node['fiducials']:
             for fiducial_yaml in yaml_node['fiducials']:
                 self.fiducials.append(Fiducial(fiducial_yaml))
 
@@ -54,7 +56,7 @@ class Level:
         self.translation = [0, 0]  # will get overwritten later...
 
         self.vertices = []
-        if 'vertices' in yaml_node:
+        if yaml_node['vertices']:
             for vertex_yaml in yaml_node['vertices']:
                 self.vertices.append(Vertex(vertex_yaml))
 
