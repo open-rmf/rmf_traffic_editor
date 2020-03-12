@@ -12,7 +12,7 @@ class SwingDoor(Door):
             self.length - 0.01,
             0,
             (-1.6, 0),
-            (0, 0, 0),
+            (self.length / 2, 0, 0),
             options)
 
         plugin_ele = SubElement(self.model_ele, 'plugin')

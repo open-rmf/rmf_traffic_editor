@@ -10,7 +10,8 @@ class SlidingDoor(Door):
         self.generate_sliding_section(
             'left',
             self.length - 0.01,
-            (-self.length, 0.0),
+            self.length / 2,
+            (0.0, self.length),
             options)
 
         plugin_ele = SubElement(self.model_ele, 'plugin')
