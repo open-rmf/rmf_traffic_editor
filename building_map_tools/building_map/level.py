@@ -22,7 +22,7 @@ class Level:
     def __init__(self, yaml_node, name):
         self.name = name
         print(f'parsing level {name}')
-        
+
         self.drawing_name = None
         if 'drawing' in yaml_node:
             self.drawing_name = yaml_node['drawing']['filename']
