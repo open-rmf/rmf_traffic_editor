@@ -5,15 +5,27 @@ from .door import Door
 class SwingDoor(Door):
     def __init__(self, door_edge):
         super().__init__(door_edge)
+        motion_degrees = door_edge.params['motion_degrees'].value
+        self.motion_radians = 3.14 * motion_degrees / 180.0
+        self.motion_direction = door_edge.params['motion_direction'].value
 
     def generate(self, world_ele, options):
-        self.generate_swing_section(
-            'left',
-            self.length - 0.01,
-            0,
-            (-1.6, 0),
-            (self.length / 2, 0, 0),
-            options)
+        if self.motion_direction > 0:
+            self.generate_swing_section(
+                'left',
+                self.length - 0.01,
+                0,
+                (-self.motion_radians, 0),
+                (self.length / 2, 0, 0),
+                options)
+        else:
+            self.generate_swing_section(
+                'left',
+                self.length - 0.01,
+                0,
+                (0, self.motion_radians),
+                (self.length / 2, 0, 0),
+                options)
 
         plugin_ele = SubElement(self.model_ele, 'plugin')
         plugin_ele.set('name', 'door')

@@ -361,9 +361,7 @@ class Level:
     def generate_door(self, door_edge, world_ele, options):
         door_name = door_edge.params['name'].value
         door_type = door_edge.params['type'].value
-        door_motion_direction = door_edge.params['motion_direction'].value
-        print(f'generate door name={door_name} type={door_type} \
-                direction={door_motion_direction}')
+        print(f'generate door name={door_name} type={door_type}')
 
         door = None
         if door_type == 'sliding':
