@@ -8,9 +8,9 @@ class SlidingDoor(Door):
 
     def generate(self, world_ele, options):
         self.generate_sliding_section(
-            'left',
+            'right',
             self.length - 0.01,
-            self.length / 2,
+            0,
             (0.0, self.length),
             options)
 
@@ -31,7 +31,7 @@ class SlidingDoor(Door):
         door_ele = SubElement(plugin_ele, 'door')
         door_ele.set('name', self.name)
         door_ele.set('type', 'SlidingDoor')
-        door_ele.set('left_joint_name', 'left_joint')
-        door_ele.set('right_joint_name', 'empty_joint')
+        door_ele.set('left_joint_name', 'empty_joint')
+        door_ele.set('right_joint_name', 'right_joint')
 
         world_ele.append(self.model_ele)
