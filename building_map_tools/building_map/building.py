@@ -73,6 +73,8 @@ class Building:
                 target_dist = f0_pair[1].distance(f1_pair[1])
                 distances.append((ref_dist, target_dist))
         print(distances)
+        if len(distances) == 0:
+            return
 
         mean_rel_scale = 0.0
         for distance in distances:

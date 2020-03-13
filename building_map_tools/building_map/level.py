@@ -55,7 +55,7 @@ class Level:
         self.translation = [0, 0]  # will get overwritten later...
 
         self.vertices = []
-        if 'vertices' in yaml_node:
+        if 'vertices' in yaml_node and yaml_node['vertices']:
             for vertex_yaml in yaml_node['vertices']:
                 self.vertices.append(Vertex(vertex_yaml))
 
