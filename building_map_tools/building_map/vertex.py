@@ -12,3 +12,6 @@ class Vertex:
         if len(yaml_node) > 4 and len(yaml_node[4]) > 0:
             for param_name, param_yaml in yaml_node[4].items():
                 self.params[param_name] = ParamValue(param_yaml)
+
+    def xy(self):
+        return (self.x, self.y)

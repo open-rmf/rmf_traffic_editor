@@ -12,3 +12,15 @@ class Fiducial:
         dx = f.x - self.x
         dy = f.y - self.y
         return math.sqrt(dx*dx + dy*dy)
+
+    def bearing(self, f):
+        """
+        Calculate the bearing angle to another fiducial.
+
+        If the fiducial 'f' is directly east (+x) of the current fiducial,
+        This function will return 0. If 'f' is directly north (+y), this
+        function will return pi/2.
+        """
+        dx = f.x - self.x
+        dy = f.y - self.y
+        return math.atan2(dy, dx)
