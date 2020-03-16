@@ -545,7 +545,7 @@ void BuildingLevel::draw_door(QGraphicsScene *scene, const Edge &edge) const
   double motion_degrees = 90;
   auto motion_degrees_it = edge.params.find("motion_degrees");
   if (motion_degrees_it != edge.params.end())
-    motion_degrees = motion_degrees_it->second.value_double;
+    motion_degrees = std::abs(motion_degrees_it->second.value_double);
 
   int motion_dir = 1;
   auto motion_dir_it = edge.params.find("motion_direction");
