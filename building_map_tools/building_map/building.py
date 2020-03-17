@@ -35,9 +35,9 @@ class Building:
             s += f'{level_name}: ({len(level.vertices)} vertices) '
         return s
 
-    def transform_all_vertices():
+    def transform_all_vertices(self):
         """ Transform all vertices on all levels to a unified system """
-        for level_name, level in self.levels.items();
+        for level_name, level in self.levels.items():
             level.transform_all_vertices()
 
     def calculate_level_offsets_and_scales(self):
@@ -100,9 +100,9 @@ class Building:
             bearing_sum[0] += math.sin(d_theta)
             bearing_sum[1] += math.cos(d_theta)
             print(f'  {d_theta}')
-        mean_bearing_difference = math.atan2(bearing_sum[0], bearing_sum[1])
+        mean_bearing_difference = -math.atan2(bearing_sum[0], bearing_sum[1])
         print(f'  Circular mean: {mean_bearing_difference}')
-        level.rotation = mean_bearing_difference
+        level.transform.set_rotation(mean_bearing_difference)
 
         print("Distances:")
         print(distances)
@@ -112,7 +112,8 @@ class Building:
             mean_rel_scale += distance[1] / distance[0]
         mean_rel_scale /= float(len(distances))
         print(f'mean relative scale: {mean_rel_scale}')
-        level.scale = self.ref_level.scale / mean_rel_scale
+        ref_scale = self.ref_level.transform.scale
+        level.transform.set_scale(ref_scale / mean_rel_scale)
 
         mean_translation = [0.0, 0.0]
         cr = math.cos(mean_bearing_difference)
@@ -129,13 +130,13 @@ class Building:
             mean_translation[1] += rot_f1y - f_pair[0].y
 
         if len(fiducials):
-            mean_translation[0] *= self.ref_level.scale / float(len(fiducials))
-            mean_translation[1] *= self.ref_level.scale / float(len(fiducials))
+            mean_translation[0] *= -ref_scale / float(len(fiducials))
+            mean_translation[1] *= -ref_scale / float(len(fiducials))
         print(
             f'translation: '
             f'({mean_translation[0]:.5}, '
             f'{mean_translation[1]:.5})')
-        level.translation = mean_translation
+        level.transform.set_translation(*mean_translation)
 
     def generate_nav_graphs(self):
         """ Returns a dict of all non-empty nav graphs """
@@ -186,7 +187,7 @@ class Building:
             uri_ele = SubElement(level_include_ele, 'uri')
             uri_ele.text = f'model://{level_model_name}'
             pose_ele = SubElement(level_include_ele, 'pose')
-            pose_ele.text = f'0 0 {level.elevation} 0 0 0'
+            pose_ele.text = f'0 0 {level.elevation/4} 0 0 0'
 
         # add floor-toggle GUI plugin parameters
         if 'gazebo' in options:

@@ -15,18 +15,17 @@ class Model:
                   ' field, setting elevation to 0.0 for now')
         self.yaw = yaml_node['yaw']
 
-    def generate(self, world_ele, model_cnt, transform_point):
+    def generate(self, world_ele, model_cnt, transform):
         include_ele = SubElement(world_ele, 'include')
         name_ele = SubElement(include_ele, 'name')
         name_ele.text = f'{self.model_name}_{model_cnt}'
         uri_ele = SubElement(include_ele, 'uri')
         uri_ele.text = f'model://{self.model_name}'
         pose_ele = SubElement(include_ele, 'pose')
-        x, y = transform_point((self.x, self.y))
-        # x = self.x * scale
-        # y = self.y * scale
+        x, y = transform.transform_point((self.x, self.y))
         z = self.z
-        pose_ele.text = f'{x} {y} {z} 0 0 {self.yaw + 1.5707}'
+        yaw = self.yaw + 1.5707 + transform.rotation
+        pose_ele.text = f'{x} {y} {z} 0 0 {yaw}'
 
         # hack... for now, everything other than robots is static (?)
         non_static_model_names = [

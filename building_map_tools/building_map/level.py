@@ -13,6 +13,7 @@ from .fiducial import Fiducial
 from .floor import Floor
 from .hole import Hole
 from .model import Model
+from .transform import Transform
 from .vertex import Vertex
 from .doors.swing_door import SwingDoor
 from .doors.sliding_door import SlidingDoor
@@ -43,9 +44,7 @@ class Level:
         self.cap_thickness = 0.11  # meters
         self.cap_height = 0.02  # meters
 
-        self.scale = 1.0  # will get overwritten later...
-        self.translation = [0, 0]  # will get overwritten later...
-        self.rotation = 0.0  # will get overwritten later
+        self.transform = Transform()
 
         self.vertices = []
         if 'vertices' in yaml_node and yaml_node['vertices']:
@@ -59,11 +58,6 @@ class Level:
             self.meas = self.parse_edge_sequence(yaml_node['measurements'])
             for meas in self.meas:
                 meas.calc_statistics(self.vertices, 1.0)
-
-        # # scale the vertex list
-        # for p in self.vertices:
-        #     p.x *= self.scale
-        #     p.y *= self.scale
 
         self.lanes = []
         if 'lanes' in yaml_node:
@@ -92,18 +86,13 @@ class Level:
             for hole_yaml in yaml_node['holes']:
                 self.holes.append(Hole(hole_yaml))
 
-    def transform_all_vertices():
-        cr = math.cos(self.rotation)
-        sr = math.sin(self.rotation)
-        rot_mat = np.array([[cr, -sr], [sr, cr]])
-        t = np.array([[self.translation[0]], [self.translation[1]]])
+    def transform_all_vertices(self):
         self.transformed_vertices = []
 
         for untransformed_vertex in self.vertices:
             v = copy.deepcopy(untransformed_vertex)
-            transformed = rot_mat * np.array([[p[0]], [p[1]]]) * self.scale + t
-            v.x = np.asscalar(transformed[0])
-            v.y = np.asscalar(transformed[1])
+            transformed = self.transform.transform_point(v.xy())
+            v.x, v.y = transformed
             self.transformed_vertices.append(v)
 
     def calculate_scale_using_measurements(self):
@@ -114,10 +103,10 @@ class Level:
             scale_cnt += 1
             scale_sum += m.params['distance'].value / m.length
         if scale_cnt > 0:
-            self.scale = scale_sum / float(scale_cnt)
-            print(f'level {self.name} scale estimated as {self.scale}')
+            self.transform.set_scale(scale_sum / float(scale_cnt))
+            print(f'level {self.name} scale: {self.transform.scale}')
         else:
-            self.scale = 1.0
+            self.transform.set_scale(1.0)
             print('WARNING! No measurements defined. Scale is indetermined.')
             print('         Nav graph generated in pixel units, not meters!')
 
@@ -187,8 +176,8 @@ class Level:
             for wall in self.walls:
                 wall_cnt += 1
 
-                wx1, wy1 = self.transformed_vertices[wall.start_idx]
-                wx2, wy2 = self.transformed_vertices[wall.end_idx]
+                wx1, wy1 = self.transformed_vertices[wall.start_idx].xy()
+                wx2, wy2 = self.transformed_vertices[wall.end_idx].xy()
 
                 wdx = wx2 - wx1
                 wdy = wy2 - wy1
@@ -352,7 +341,7 @@ class Level:
         model_cnt = 0
         for model in self.models:
             model_cnt += 1
-            model.generate(world_ele, model_cnt, self.transform_point)
+            model.generate(world_ele, model_cnt, self.transform)
 
         # sniff around in our vertices and spawn robots if requested
         for vertex_idx, vertex in enumerate(self.vertices):
