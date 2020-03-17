@@ -23,7 +23,7 @@ class Transform:
 
     def set_scale(self, scale):
         self.scale = scale
- 
+
     def transform_point(self, p):
         vec = np.array([[p[0]], [p[1]]])
         transformed = (self.rot_mat @ vec) * self.scale + self.t_vec
