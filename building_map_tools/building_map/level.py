@@ -57,7 +57,7 @@ class Level:
         if 'measurements' in yaml_node:
             self.meas = self.parse_edge_sequence(yaml_node['measurements'])
             for meas in self.meas:
-                meas.calc_statistics(self.vertices, 1.0)
+                meas.calc_statistics(self.vertices)
 
         self.lanes = []
         if 'lanes' in yaml_node:
@@ -350,7 +350,7 @@ class Level:
 
     def generate_doors(self, world_ele, options):
         for door_edge in self.doors:
-            door_edge.calc_statistics(self.vertices, self.transform_vertex)
+            door_edge.calc_statistics(self.transformed_vertices)
             self.generate_door(door_edge, world_ele, options)
 
     def generate_door(self, door_edge, world_ele, options):
@@ -374,7 +374,7 @@ class Level:
             door.generate(world_ele, options)
 
     def generate_robot_at_vertex_idx(self, vertex_idx, world_ele):
-        vertex = self.vertices[vertex_idx]
+        vertex = self.transformed_vertices[vertex_idx]
         robot_type = vertex.params['spawn_robot_type'].value
         robot_name = vertex.params['spawn_robot_name'].value
         print(f'spawning robot name {robot_name} of type {robot_type}')
@@ -394,8 +394,7 @@ class Level:
         uri_ele = SubElement(include_ele, 'uri')
         uri_ele.text = f'model://{robot_type}'
         pose_ele = SubElement(include_ele, 'pose')
-        x, y = self.transform_vertex(vertex)
-        pose_ele.text = f'{x} {y} {vertex.z} 0 0 {yaw}'
+        pose_ele.text = f'{vertex.x} {vertex.y} {vertex.z} 0 0 {yaw}'
 
     def generate_floors(self, world_ele, model_name, model_path):
         i = 0
@@ -510,12 +509,11 @@ class Level:
         nav_data = {}
         nav_data['vertices'] = []
         for i in range(0, next_idx):
-            v = self.vertices[mapped_idx_to_vidx[i]]
+            v = self.transformed_vertices[mapped_idx_to_vidx[i]]
             p = {'name': v.name}
             for param_name, param_value in v.params.items():
                 p[param_name] = param_value.value
-            x, y = self.transform_vertex(v)
-            nav_data['vertices'].append([x, y, p])
+            nav_data['vertices'].append([v.x, v.y, p])
 
         nav_data['lanes'] = []
         for l in self.lanes:
@@ -592,10 +590,10 @@ class Level:
         return nav_data
 
     def edge_heading(self, edge):
-        vs_x, vs_y = self.transform_vertex(self.vertices[edge.start_idx])
-        ve_x, ve_y = self.transform_vertex(self.vertices[edge.end_idx])
-        dx = ve.x - vs.x
-        dy = ve.y - vs.y
+        vs_x, vs_y = self.transformed_vertices[edge.start_idx].xy()
+        ve_x, ve_y = self.transformed_vertices[edge.end_idx].xy()
+        dx = ve_x - vs_x
+        dy = ve_y - vs_y
         return math.atan2(dy, dx)
 
     def center(self):
