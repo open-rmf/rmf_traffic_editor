@@ -132,8 +132,7 @@ class Floor:
         floor_cnt,
         model_name,
         model_path,
-        vertices,
-        scale,
+        transformed_vertices,
         holes
     ):
         print(f'generating floor polygon {floor_cnt} on floor {model_name}')
@@ -141,17 +140,16 @@ class Floor:
         vert_list = []
         self.vertices = []
         for v_idx in self.vertex_indices:
-            v = vertices[v_idx]
-            self.vertices.append(
-                shapely.geometry.Point(v.x * scale, v.y * scale))
-            vert_list.append((v.x * scale, v.y * scale))
+            vx, vy = transformed_vertices[v_idx].xy()
+            self.vertices.append(shapely.geometry.Point(vx, vy))
+            vert_list.append((vx, vy))
 
         hole_vert_lists = []
         for hole in holes:
             hole_vertices = []
             for v_idx in hole.vertex_indices:
-                v = vertices[v_idx]
-                hole_vertices.append((v.x * scale, v.y * scale))
+                vx, vy = transform_vertex(vertices[v_idx])
+                hole_vertices.append((vx, vy))
             hole_vert_lists.append(hole_vertices)
         print(f'hole vertices: {hole_vert_lists}')
 

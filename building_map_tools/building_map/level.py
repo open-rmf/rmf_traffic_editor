@@ -13,6 +13,7 @@ from .fiducial import Fiducial
 from .floor import Floor
 from .hole import Hole
 from .model import Model
+from .transform import Transform
 from .vertex import Vertex
 from .doors.swing_door import SwingDoor
 from .doors.sliding_door import SlidingDoor
@@ -33,14 +34,6 @@ class Level:
         if 'elevation' in yaml_node:
             self.elevation = yaml_node['elevation']
 
-        self.flattened_x_offset = 0.0
-        if 'flattened_x_offset' in yaml_node:
-            self.flattened_x_offset = yaml_node['flattened_x_offset']
-
-        self.flattened_y_offset = 0.0
-        if 'flattened_y_offset' in yaml_node:
-            self.flattened_y_offset = yaml_node['flattened_y_offset']
-
         self.fiducials = []
         if 'fiducials' in yaml_node:
             for fiducial_yaml in yaml_node['fiducials']:
@@ -51,24 +44,20 @@ class Level:
         self.cap_thickness = 0.11  # meters
         self.cap_height = 0.02  # meters
 
-        self.scale = 1.0  # will get overwritten later...
-        self.translation = [0, 0]  # will get overwritten later...
+        self.transform = Transform()
 
         self.vertices = []
         if 'vertices' in yaml_node and yaml_node['vertices']:
             for vertex_yaml in yaml_node['vertices']:
                 self.vertices.append(Vertex(vertex_yaml))
 
+        self.transformed_vertices = []  # will be calculated in a later pass
+
         self.meas = []
         if 'measurements' in yaml_node:
             self.meas = self.parse_edge_sequence(yaml_node['measurements'])
             for meas in self.meas:
-                meas.calc_statistics(self.vertices, 1.0)
-
-        # # scale the vertex list
-        # for p in self.vertices:
-        #     p.x *= self.scale
-        #     p.y *= self.scale
+                meas.calc_statistics(self.vertices)
 
         self.lanes = []
         if 'lanes' in yaml_node:
@@ -97,6 +86,15 @@ class Level:
             for hole_yaml in yaml_node['holes']:
                 self.holes.append(Hole(hole_yaml))
 
+    def transform_all_vertices(self):
+        self.transformed_vertices = []
+
+        for untransformed_vertex in self.vertices:
+            v = copy.deepcopy(untransformed_vertex)
+            transformed = self.transform.transform_point(v.xy())
+            v.x, v.y = transformed
+            self.transformed_vertices.append(v)
+
     def calculate_scale_using_measurements(self):
         # use the measurements to estimate scale for this level
         scale_cnt = 0
@@ -105,10 +103,10 @@ class Level:
             scale_cnt += 1
             scale_sum += m.params['distance'].value / m.length
         if scale_cnt > 0:
-            self.scale = scale_sum / float(scale_cnt)
-            print(f'level {self.name} scale estimated as {self.scale}')
+            self.transform.set_scale(scale_sum / float(scale_cnt))
+            print(f'level {self.name} scale: {self.transform.scale}')
         else:
-            self.scale = 1.0
+            self.transform.set_scale(1.0)
             print('WARNING! No measurements defined. Scale is indetermined.')
             print('         Nav graph generated in pixel units, not meters!')
 
@@ -119,10 +117,9 @@ class Level:
         return edges
 
     def generate_wall_box_geometry(self, wall, parent_ele, item):
-        x1 = self.vertices[wall.start_idx].x * self.scale
-        y1 = self.vertices[wall.start_idx].y * self.scale
-        x2 = self.vertices[wall.end_idx].x * self.scale
-        y2 = self.vertices[wall.end_idx].y * self.scale
+        x1, y1 = self.transformed_vertices[wall.start_idx]
+        x2, y2 = self.transformed_vertices[wall.end_idx]
+
         dx = x1 - x2
         dy = y1 - y2
         length = math.sqrt(dx*dx + dy*dy) + self.wall_thickness
@@ -179,10 +176,8 @@ class Level:
             for wall in self.walls:
                 wall_cnt += 1
 
-                wx1 = self.vertices[wall.start_idx].x * self.scale
-                wy1 = self.vertices[wall.start_idx].y * self.scale
-                wx2 = self.vertices[wall.end_idx].x * self.scale
-                wy2 = self.vertices[wall.end_idx].y * self.scale
+                wx1, wy1 = self.transformed_vertices[wall.start_idx].xy()
+                wx2, wy2 = self.transformed_vertices[wall.end_idx].xy()
 
                 wdx = wx2 - wx1
                 wdy = wy2 - wy1
@@ -346,7 +341,7 @@ class Level:
         model_cnt = 0
         for model in self.models:
             model_cnt += 1
-            model.generate(world_ele, model_cnt, self.scale)
+            model.generate(world_ele, model_cnt, self.transform)
 
         # sniff around in our vertices and spawn robots if requested
         for vertex_idx, vertex in enumerate(self.vertices):
@@ -355,7 +350,7 @@ class Level:
 
     def generate_doors(self, world_ele, options):
         for door_edge in self.doors:
-            door_edge.calc_statistics(self.vertices, self.scale)
+            door_edge.calc_statistics(self.transformed_vertices)
             self.generate_door(door_edge, world_ele, options)
 
     def generate_door(self, door_edge, world_ele, options):
@@ -379,7 +374,7 @@ class Level:
             door.generate(world_ele, options)
 
     def generate_robot_at_vertex_idx(self, vertex_idx, world_ele):
-        vertex = self.vertices[vertex_idx]
+        vertex = self.transformed_vertices[vertex_idx]
         robot_type = vertex.params['spawn_robot_type'].value
         robot_name = vertex.params['spawn_robot_name'].value
         print(f'spawning robot name {robot_name} of type {robot_type}')
@@ -399,9 +394,7 @@ class Level:
         uri_ele = SubElement(include_ele, 'uri')
         uri_ele.text = f'model://{robot_type}'
         pose_ele = SubElement(include_ele, 'pose')
-        x = vertex.x * self.scale
-        y = vertex.y * self.scale
-        pose_ele.text = f'{x} {y} {vertex.z} 0 0 {yaw}'
+        pose_ele.text = f'{vertex.x} {vertex.y} {vertex.z} 0 0 {yaw}'
 
     def generate_floors(self, world_ele, model_name, model_path):
         i = 0
@@ -412,8 +405,7 @@ class Level:
                 i,
                 model_name,
                 model_path,
-                self.vertices,
-                self.scale,
+                self.transformed_vertices,
                 self.holes)
 
     def write_sdf(self, model_name, model_path):
@@ -517,13 +509,11 @@ class Level:
         nav_data = {}
         nav_data['vertices'] = []
         for i in range(0, next_idx):
-            v = self.vertices[mapped_idx_to_vidx[i]]
+            v = self.transformed_vertices[mapped_idx_to_vidx[i]]
             p = {'name': v.name}
             for param_name, param_value in v.params.items():
                 p[param_name] = param_value.value
-            nav_data['vertices'].append(
-                [v.x * self.scale, v.y * self.scale, p]
-            )
+            nav_data['vertices'].append([v.x, v.y, p])
 
         nav_data['lanes'] = []
         for l in self.lanes:
@@ -537,8 +527,6 @@ class Level:
 
             p = {}  # params
 
-            # todo: calculate if this lane segment goes through
-            # any doors, and add the name of the door if so
             for door in self.doors:
                 door_v1 = self.vertices[door.start_idx]
                 door_v2 = self.vertices[door.end_idx]
@@ -602,10 +590,10 @@ class Level:
         return nav_data
 
     def edge_heading(self, edge):
-        v_start = self.vertices[edge.start_idx]
-        v_end = self.vertices[edge.end_idx]
-        dx = v_end.x - v_start.x
-        dy = v_end.y - v_start.y
+        vs_x, vs_y = self.transformed_vertices[edge.start_idx].xy()
+        ve_x, ve_y = self.transformed_vertices[edge.end_idx].xy()
+        dx = ve_x - vs_x
+        dy = ve_y - vs_y
         return math.atan2(dy, dx)
 
     def center(self):
@@ -613,18 +601,3 @@ class Level:
             return (0, 0)
         bounds = self.floors[0].polygon.bounds
         return ((bounds[0] + bounds[2]) / 2.0, (bounds[1] + bounds[3]) / 2.0)
-
-    def pose_string(self, flattened):
-        if flattened:
-            return (
-                f'{-self.translation[0] + self.flattened_x_offset} '
-                f'{-self.translation[1] + self.flattened_y_offset} '
-                f'0 0 0 0'
-            )
-        else:
-            return (
-                f'{-self.translation[0]} '
-                f'{-self.translation[1]} '
-                f'{self.elevation} '
-                '0 0 0'
-            )
