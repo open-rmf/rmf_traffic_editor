@@ -171,7 +171,8 @@ class Level:
 
             texture_lengths = [0]
 
-            norms = np.array([])
+            # normal #1 is the vertical normal for wall "caps"
+            norms = np.array([[0, 0, 1]])
 
             for wall in self.walls:
                 wall_cnt += 1
@@ -214,10 +215,14 @@ class Level:
 
                 if not wall_verts.any():
                     wall_verts = v
-                    norms = segment_norms
                 else:
                     wall_verts = np.vstack((wall_verts, v))
-                    norms = np.vstack((norms, segment_norms))
+
+                # add z=0 to all segment norms
+                norms = np.vstack((
+                    norms,
+                    np.hstack((segment_norms, np.zeros((4, 1))))
+                ))
 
                 # in the future we may have texture tiles of different scale,
                 # but for now let's assume 1-meter x 1-meter tiles, so we don't
@@ -225,15 +230,15 @@ class Level:
                 texture_lengths.append(wlen)
 
             for v in wall_verts:
-                f.write(f'v {v[0]:.3f} {v[1]:.3f} 0.000\n')
-                f.write(f'v {v[0]:.3f} {v[1]:.3f} {h:.3f}\n')
+                f.write(f'v {v[0]:.4f} {v[1]:.4f} 0.000\n')
+                f.write(f'v {v[0]:.4f} {v[1]:.4f} {h:.4f}\n')
 
             for length in texture_lengths:
-                f.write(f'vt {length:.3f} 0.000\n')
-                f.write(f'vt {length:.3f} 1.000\n')
+                f.write(f'vt {length:.4f} 0.000\n')
+                f.write(f'vt {length:.4f} 1.000\n')
 
             for norm in norms:
-                f.write(f'vn {norm[0]:.3f} {norm[1]:.3f} 0\n')
+                f.write(f'vn {norm[0]:.4f} {norm[1]:.4f} {norm[2]:.4f}\n')
 
             f.write('usemtl wall\n')
             f.write('s off\n')
@@ -243,47 +248,47 @@ class Level:
             for w in range(0, len(self.walls)):
                 # first the side facing 'north' before rotation
                 f.write(
-                    f'f {w*8+1}/1/{w*4+1}'
-                    f' {w*8+2}/2/{w*4+1}'
-                    f' {w*8+3}/{w*2+3}/{w*4+1}\n')
+                    f'f {w*8+1}/1/{w*4+2}'
+                    f' {w*8+2}/2/{w*4+2}'
+                    f' {w*8+3}/1/{w*4+2}\n')
                 f.write(
-                    f'f {w*8+4}/{w*2+4}/{w*4+1}'
-                    f' {w*8+3}/{w*2+3}/{w*4+1}'
-                    f' {w*8+2}/2/{w*4+1}\n')
+                    f'f {w*8+4}/2/{w*4+2}'
+                    f' {w*8+3}/1/{w*4+2}'
+                    f' {w*8+2}/2/{w*4+2}\n')
 
                 # now the 'east' side
                 f.write(
-                    f'f {w*8+3}/1/{w*4+2}'
-                    f' {w*8+4}/2/{w*4+2}'
-                    f' {w*8+5}/1/{w*4+2}\n')
+                    f'f {w*8+3}/1/{w*4+3}'
+                    f' {w*8+4}/2/{w*4+3}'
+                    f' {w*8+5}/1/{w*4+3}\n')
                 f.write(
-                    f'f {w*8+6}/2/{w*4+2}'
-                    f' {w*8+5}/1/{w*4+2}'
-                    f' {w*8+4}/2/{w*4+2}\n')
+                    f'f {w*8+6}/2/{w*4+3}'
+                    f' {w*8+5}/1/{w*4+3}'
+                    f' {w*8+4}/2/{w*4+3}\n')
 
                 # now the 'south' side
                 f.write(
-                    f'f {w*8+5}/1/{w*4+3}'
-                    f' {w*8+6}/2/{w*4+3}'
-                    f' {w*8+7}/1/{w*4+3}\n')
+                    f'f {w*8+5}/1/{w*4+4}'
+                    f' {w*8+6}/2/{w*4+4}'
+                    f' {w*8+7}/1/{w*4+4}\n')
                 f.write(
-                    f'f {w*8+8}/2/{w*4+3} '
-                    f' {w*8+7}/1/{w*4+3} '
-                    f' {w*8+6}/2/{w*4+3}\n')
+                    f'f {w*8+8}/2/{w*4+4}'
+                    f' {w*8+7}/1/{w*4+4}'
+                    f' {w*8+6}/2/{w*4+4}\n')
 
                 # now the 'west' side
                 f.write(
-                    f'f {w*8+7}/1/{w*4+4}'
-                    f' {w*8+8}/2/{w*4+4}'
-                    f' {w*8+1}/1/{w*4+4}\n')
+                    f'f {w*8+7}/1/{w*4+5}'
+                    f' {w*8+8}/2/{w*4+5}'
+                    f' {w*8+1}/1/{w*4+5}\n')
                 f.write(
-                    f'f {w*8+2}/2/{w*4+4}'
-                    f' {w*8+1}/1/{w*4+4}'
-                    f' {w*8+8}/2/{w*4+4}\n')
+                    f'f {w*8+2}/2/{w*4+5}'
+                    f' {w*8+1}/1/{w*4+5}'
+                    f' {w*8+8}/2/{w*4+5}\n')
 
                 # now the top "cap" of this wall segment
-                f.write(f'f {w*8+2}/1 {w*8+6}/1 {w*8+4}/1\n')
-                f.write(f'f {w*8+2}/1 {w*8+8}/1 {w*8+6}/1\n')
+                f.write(f'f {w*8+2}/1/1 {w*8+6}/1/1 {w*8+4}/1/1\n')
+                f.write(f'f {w*8+2}/1/1 {w*8+8}/1/1 {w*8+6}/1/1\n')
 
         mtl_path = f'{meshes_path}/wall.mtl'
         print(f'  generating {mtl_path}')
