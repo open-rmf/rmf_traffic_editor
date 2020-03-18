@@ -221,7 +221,7 @@ class Level:
                 # add z=0 to all segment norms
                 norms = np.vstack((
                     norms,
-                    np.hstack((segment_norms, np.zeros((4,1))))
+                    np.hstack((segment_norms, np.zeros((4, 1))))
                 ))
 
                 # in the future we may have texture tiles of different scale,
