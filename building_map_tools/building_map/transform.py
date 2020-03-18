@@ -6,9 +6,9 @@ class Transform:
     """This class represents an 2D rotation, scaling, and translation."""
 
     def __init__(self):
-        self.set_rotation(0)
-        self.set_translation(0, 0)
-        self.set_scale(1)
+        self.set_rotation(0.0)
+        self.set_translation(0.0, 0.0)
+        self.set_scale(1.0)
 
     def set_rotation(self, rotation):
         """Calculate rotation matrix"""
