@@ -83,19 +83,23 @@ target_include_directories(slotcar
 
 add_library(door SHARED src/door.cpp)
 
-target_include_directories(door
+target_link_libraries(door
   PUBLIC
-    ${GAZEBO_INCLUDE_DIRS}
-    ${geometry_msgs_INCLUDE_DIRS}
-    ${rmf_door_msgs_INCLUDE_DIRS}
+    building_sim_utils
+    ${rmf_fleet_msgs_LIBRARIES}
+    ${rclcpp_LIBRARIES}
+    ${GAZEBO_LIBRARIES}
+    ${gazebo_ros_LIBRARIES}
+    ${rmf_door_msgs_LIBRARIES}
 )
 
-ament_target_dependencies(door
-  "rmf_fleet_msgs"
-  "rclcpp"
-  "gazebo_dev"
-  "gazebo_ros"
-  "rmf_door_msgs"
+target_include_directories(door
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    ${GAZEBO_INCLUDE_DIRS}
+    ${rmf_fleet_msgs_INCLUDE_DIRS}
+    ${rmf_door_msgs_INCLUDE_DIRS}
 )
 
 ###############################
