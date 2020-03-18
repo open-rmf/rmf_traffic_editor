@@ -13,6 +13,21 @@ class Model:
         else:
             print('parsed a deprecated .building.yaml, model should have a z'
                   ' field, setting elevation to 0.0 for now')
+
+        # temporary hack: whitelist of robot models which must be non-static
+        non_static_model_names = [
+          'Sesto',
+          'MiR100',
+          'Magni'
+        ]
+        if self.model_name in non_static_model_names:
+            self.static = False
+        else:
+            if 'static' in yaml_node:
+                self.static = yaml_node['static']
+            else:
+                self.static = True
+
         self.yaw = yaml_node['yaw']
 
     def generate(self, world_ele, model_cnt, transform):
@@ -27,12 +42,5 @@ class Model:
         yaw = self.yaw + 1.5707 + transform.rotation
         pose_ele.text = f'{x} {y} {z} 0 0 {yaw}'
 
-        # hack... for now, everything other than robots is static (?)
-        non_static_model_names = [
-          'Sesto',
-          'MiR100',
-          'Magni'
-        ]
-        if self.name not in non_static_model_names:
-            static_ele = SubElement(include_ele, 'static')
-            static_ele.text = 'true'
+        static_ele = SubElement(include_ele, 'static')
+        static_ele.text = str(self.static)
