@@ -1173,7 +1173,7 @@ void Editor::populate_property_editor(const Model& model)
   printf("populate_property_editor(model)\n");
   property_editor->blockSignals(true);  // otherwise we get tons of callbacks
 
-  property_editor->setRowCount(3);
+  property_editor->setRowCount(4);
 
   property_editor_set_row(
       0,
@@ -1190,6 +1190,12 @@ void Editor::populate_property_editor(const Model& model)
       "elevation",
       model.z,
       3,
+      true);
+
+  property_editor_set_row(
+      3,
+      "static",
+      model.is_static ? QString("true") : QString("false"),
       true);
 
   property_editor->blockSignals(false);  // re-enable callbacks

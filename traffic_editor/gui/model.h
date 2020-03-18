@@ -31,22 +31,16 @@
 class Model
 {
 public:
-  double x;
-  double y;
-  double z;
-  double yaw;
+  double x = 0.0;
+  double y = 0.0;
+  double z = 0.0;
+  double yaw = 0.0;
   std::string model_name;
   std::string instance_name;
-  bool selected;  // only for visualization, not saved to YAML
+  bool selected = false;  // only for visualization, not saved to YAML
+  bool is_static = true;
 
   Model();
-  Model(
-      const double _x,
-      const double _y,
-      const double _z,
-      const double _yaw,
-      const std::string &_model_name,
-      const std::string &_instance_name);
 
   YAML::Node to_yaml() const;
   void from_yaml(const YAML::Node &data);

@@ -22,21 +22,6 @@ using std::string;
 
 
 Model::Model()
-: x(0), y(0), z(0.0), yaw(0), selected(false)
-{
-}
-
-Model::Model(
-    const double _x,
-    const double _y,
-    const double _z,
-    const double _yaw,
-    const std::string &_model_name,
-    const std::string &_instance_name)
-: x(_x), y(_y), z(_z), yaw(_yaw),
-  model_name(_model_name),
-  instance_name(_instance_name),
-  selected(false)
 {
 }
 
@@ -59,6 +44,10 @@ void Model::from_yaml(const YAML::Node &data)
   yaw = data["yaw"].as<double>();
   model_name = data["model_name"].as<string>();
   instance_name = data["name"].as<string>();
+  if (data["static"])
+    is_static = data["static"].as<bool>();
+  else
+    is_static = true;
 }
 
 YAML::Node Model::to_yaml() const
@@ -75,20 +64,36 @@ YAML::Node Model::to_yaml() const
   n["yaw"] = round(yaw * 10000.0) / 10000.0;
   n["name"] = instance_name;
   n["model_name"] = model_name;
+  n["static"] = is_static;
   return n;
 }
 
 void Model::set_param(const std::string &name, const std::string &value)
 {
-  if (name != "elevation")
-    return;
-
-  try
+  if (name == "elevation")
   {
-    z = std::stod(value);
+    try
+    {
+      z = std::stod(value);
+    }
+    catch(const std::exception& e)
+    {
+      qWarning("[elevation] field can only be a double/float.");
+    }
   }
-  catch(const std::exception& e)
+  else if (name == "static")
   {
-    qWarning("[elevation] field can only be a double/float.");
+    // not sure if there is a super elite way to parse 'true' in STL
+    string lowercase(value);
+    std::transform(
+        lowercase.begin(),
+        lowercase.end(),
+        lowercase.begin(),
+        [](char c) { return std::tolower(c); });
+
+    if (value == "true")
+      is_static = true;
+    else
+      is_static = false;
   }
 }

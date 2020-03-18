@@ -320,8 +320,15 @@ void Building::add_model(
 
   printf("Building::add_model(%d, %.1f, %.1f, %.1f, %.2f, %s)\n",
       level_idx, x, y, z, yaw, model_name.c_str());
-  levels[level_idx].models.push_back(
-      Model(x, y, z, yaw, model_name, model_name));
+  Model m;
+  m.x = x;
+  m.y = y;
+  m.z = z;
+  m.yaw = yaw;
+  m.model_name = model_name;
+  m.instance_name = model_name;  // todo: add unique numeric suffix?
+  m.is_static = true;
+  levels[level_idx].models.push_back(m);
 }
 
 void Building::set_model_yaw(
