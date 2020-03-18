@@ -8,18 +8,18 @@ class DoubleSwingDoor(Door):
 
     def generate(self, world_ele, options):
         self.generate_swing_section(
-            'left',
+            'right',
             self.length / 2 - 0.01,
             -self.length / 4,
-            (-1.6, 0),
+            (0, 1.6),
             (-self.length / 4, 0, 0),
             options)
 
         self.generate_swing_section(
-            'right',
+            'left',
             self.length / 2 - 0.01,
             self.length / 4,
-            (0, 1.6),
+            (-1.6, 0),
             (self.length / 4, 0, 0),
             options)
 
