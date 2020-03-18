@@ -78,10 +78,10 @@ class BuildingMapServer(Node):
             image = AffineImage()
             image_filename = level.drawing_name
             image.encoding = image_filename.split('.')[-1]
-            image.scale = level.scale
-            image.x_offset = 0.0
-            image.y_offset = 0.0
-            image.yaw = 0.0
+            image.scale = level.transform.scale
+            image.x_offset = level.transform.translation[0]
+            image.y_offset = level.transform.translation[1]
+            image.yaw = level.transform.rotation
 
             image_path = os.path.join(self.map_dir, image_filename)
 
