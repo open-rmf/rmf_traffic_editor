@@ -1428,7 +1428,11 @@ void Editor::mouse_move(
     Building::NearestItem ni =
         project.building.nearest_items(level_idx, p.x(), p.y());
 
-    if (ni.model_idx >= 0 && ni.model_dist < 50.0)
+    // todo: use QGraphics stuff to see if we clicked a model pixmap...
+    const double model_dist_thresh = 0.5 /
+        project.building.levels[level_idx].drawing_meters_per_pixel;
+
+    if (ni.model_idx >= 0 && ni.model_dist < model_dist_thresh)
     {
       // Now we need to find the pixmap item for this model.
       mouse_motion_model = get_closest_pixmap_item(

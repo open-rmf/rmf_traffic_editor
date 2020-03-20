@@ -332,7 +332,11 @@ void Project::mouse_select_press(
         building.levels[level_idx].vertex_radius /
         building.levels[level_idx].drawing_meters_per_pixel;
 
-    if (ni.model_idx >= 0 && ni.model_dist < 50.0)
+    // todo: use QGraphics stuff to see if we clicked a model pixmap...
+    const double model_dist_thresh = 0.5 /
+        building.levels[level_idx].drawing_meters_per_pixel;
+
+    if (ni.model_idx >= 0 && ni.model_dist < model_dist_thresh)
       building.levels[level_idx].models[ni.model_idx].selected = true;
     else if (ni.vertex_idx >= 0 && ni.vertex_dist < vertex_dist_thresh)
       building.levels[level_idx].vertices[ni.vertex_idx].selected = true;
