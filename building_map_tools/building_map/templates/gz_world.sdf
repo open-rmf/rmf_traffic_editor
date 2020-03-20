@@ -11,5 +11,11 @@
       <uri>model://sun</uri>
     </include>
 
+     <gui>
+       <camera name="gui_camera">
+         <pose>10 -20 10 0 0.6 1.57</pose>
+       </camera>
+     </gui>
+
   </world>
 </sdf>
