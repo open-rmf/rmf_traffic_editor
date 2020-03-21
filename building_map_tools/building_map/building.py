@@ -189,13 +189,13 @@ class Building:
             pose_ele = SubElement(level_include_ele, 'pose')
             pose_ele.text = f'0 0 {level.elevation/4} 0 0 0'
 
+        gui_ele = world.find('gui')
+        c = self.center()
+        camera_pose = f'{c[0]} {c[1]-20} 10 0 0.6 1.57'
         # add floor-toggle GUI plugin parameters
         if 'gazebo' in options:
-            gui_ele = SubElement(world, 'gui')
-            camera_ele = SubElement(gui_ele, 'camera', {'name': 'gui_camera'})
-            pose_ele = SubElement(camera_ele, 'pose')
-            c = self.center()
-            pose_ele.text = f'{c[0]} {c[1]-20} 10 0 0.6 1.57'
+            camera_pose_ele = gui_ele.find('camera').find('pose')
+            camera_pose_ele.text = camera_pose
 
             toggle_ele = SubElement(
                 gui_ele,
@@ -209,6 +209,11 @@ class Building:
                     {
                         'name': level_name,
                         'model_name': f'{self.name}_{level_name}'})
+
+        elif 'ignition' in options:
+            plugin_ele = gui_ele.find('.//plugin[@filename="GzScene3D"]')
+            camera_pose_ele = plugin_ele.find('camera_pose')
+            camera_pose_ele.text = camera_pose
 
         return sdf
 
