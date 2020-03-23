@@ -32,22 +32,16 @@ find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(rmf_fleet_msgs REQUIRED)
 find_package(rmf_door_msgs REQUIRED)
+find_package(building_sim_common REQUIRED)
 
 include(GNUInstallDirs)
-
-add_library(building_sim_utils SHARED src/utils.cpp)
-
-target_include_directories(building_sim_utils
-  PUBLIC
-    ${GAZEBO_INCLUDE_DIRS}
-)
 
 add_library(slotcar SHARED ${PROJECT_SOURCE_DIR}/src/slotcar.cpp)
 
 target_link_libraries(slotcar
   PUBLIC
-    building_sim_utils
     ${rmf_fleet_msgs_LIBRARIES}
+    ${building_sim_common_LIBRARIES}
     ${rclcpp_LIBRARIES}
     ${GAZEBO_LIBRARIES}
     ${gazebo_ros_LIBRARIES}
@@ -60,6 +54,7 @@ target_include_directories(slotcar
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     ${GAZEBO_INCLUDE_DIRS}
+    ${building_sim_common_INCLUDE_DIRS}
     ${geometry_msgs_INCLUDE_DIRS}
     ${std_msgs_INCLUDE_DIRS}
     ${rmf_fleet_msgs_INCLUDE_DIRS}
@@ -85,7 +80,7 @@ add_library(door SHARED src/door.cpp)
 
 target_link_libraries(door
   PUBLIC
-    building_sim_utils
+    ${building_sim_common_LIBRARIES}
     ${rmf_fleet_msgs_LIBRARIES}
     ${rclcpp_LIBRARIES}
     ${GAZEBO_LIBRARIES}
@@ -98,6 +93,7 @@ target_include_directories(door
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     ${GAZEBO_INCLUDE_DIRS}
+    ${building_sim_common_INCLUDE_DIRS}
     ${rmf_fleet_msgs_INCLUDE_DIRS}
     ${rmf_door_msgs_INCLUDE_DIRS}
 )
@@ -111,6 +107,7 @@ add_library(toggle_floors SHARED src/toggle_floors.cpp)
 target_include_directories(toggle_floors
   PUBLIC
     ${GAZEBO_INCLUDE_DIRS}
+    #${building_sim_common_INCLUDE_DIRS}
     ${Qt5Core_INCLUDE_DIRS}
 )
 
@@ -124,7 +121,7 @@ target_link_libraries(toggle_floors
 ###############################
 
 install(
-  TARGETS building_sim_utils slotcar door toggle_floors
+  TARGETS slotcar door toggle_floors
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

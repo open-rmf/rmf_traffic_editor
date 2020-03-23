@@ -1,7 +1,7 @@
 #include <cmath>
 #include <algorithm>
 
-#include "utils.hpp"
+#include <building_sim_common/utils.hpp>
 
 namespace building_gazebo_plugins {
 
