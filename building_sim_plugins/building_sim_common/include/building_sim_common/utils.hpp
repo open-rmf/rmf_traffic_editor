@@ -1,9 +1,9 @@
-#ifndef SRC__BUILDING_GAZEBO_PLUGINS__UTILS_HPP
-#define SRC__BUILDING_GAZEBO_PLUGINS__UTILS_HPP
+#ifndef SRC__BUILDING_SIM_COMMON__UTILS_HPP
+#define SRC__BUILDING_SIM_COMMON__UTILS_HPP
 
 #include <sdf/Element.hh>
 
-namespace building_gazebo_plugins {
+namespace building_sim_common {
 
 // TODO(MXG): Refactor the use of this function to replace it with
 // compute_desired_rate_of_change()
@@ -116,8 +116,9 @@ double compute_desired_rate_of_change(
 }
 
 //==============================================================================
+template<typename SdfPtrT>
 bool get_element_required(
-    const sdf::ElementPtr& _sdf,
+    SdfPtrT& _sdf,
     const std::string& _element_name,
     sdf::ElementPtr& _element)
 {
@@ -144,8 +145,8 @@ bool get_element_required(
 */
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-template<typename T>
-bool get_sdf_attribute_required(const sdf::ElementPtr& sdf, const std::string& attribute_name, T& value)
+template<typename T, typename SdfPtrT>
+bool get_sdf_attribute_required(SdfPtrT& sdf, const std::string& attribute_name, T& value)
 {
   if(sdf->HasAttribute(attribute_name))
   {
@@ -171,8 +172,8 @@ bool get_sdf_attribute_required(const sdf::ElementPtr& sdf, const std::string& a
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-template<typename T>
-bool get_sdf_param_required(const sdf::ElementPtr& sdf, const std::string& parameter_name, T& value)
+template<typename T, typename SdfPtrT>
+bool get_sdf_param_required(SdfPtrT& sdf, const std::string& parameter_name, T& value)
 {
   if(sdf->HasElement(parameter_name))
   {
@@ -197,8 +198,8 @@ bool get_sdf_param_required(const sdf::ElementPtr& sdf, const std::string& param
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-template<typename T>
-void get_sdf_param_if_available(const sdf::ElementPtr& sdf, const std::string& parameter_name, T& value)
+template<typename T, typename SdfPtrT>
+void get_sdf_param_if_available(SdfPtrT& sdf, const std::string& parameter_name, T& value)
 {
   if(sdf->HasElement(parameter_name))
   {
@@ -220,6 +221,6 @@ void get_sdf_param_if_available(const sdf::ElementPtr& sdf, const std::string& p
   }
 }
 
-} // namespace building_gazebo_plugins
+} // namespace building_sim_common
 
-#endif // SRC__BUILDING_GAZEBO_PLUGINS__UTILS_HPP
+#endif // SRC__BUILDING_SIM_COMMON__UTILS_HPP

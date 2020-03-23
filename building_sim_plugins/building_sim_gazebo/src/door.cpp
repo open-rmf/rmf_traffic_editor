@@ -11,7 +11,9 @@
 
 #include <building_sim_common/utils.hpp>
 
-namespace building_gazebo_plugins {
+using namespace building_sim_common;
+
+namespace building_sim_gazebo {
 
 //==============================================================================
 class Door
@@ -289,4 +291,4 @@ private:
 };
 
 GZ_REGISTER_MODEL_PLUGIN(DoorPlugin)
-} // namespace building_gazebo_plugins
+} // namespace building_sim_gazebo
