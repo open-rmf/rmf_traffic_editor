@@ -16,7 +16,7 @@
 #include <rmf_fleet_msgs/msg/robot_state.hpp>
 #include <rclcpp/logger.hpp>
 
-#include "utils.hpp"
+#include <building_sim_common/utils.hpp>
 
 using namespace building_gazebo_plugins;
 
