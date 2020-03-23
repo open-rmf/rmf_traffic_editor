@@ -137,14 +137,4 @@ install(
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
-install(DIRECTORY
-  worlds
-  DESTINATION share/${PROJECT_NAME}/
-)
-
-install(DIRECTORY
-  test_models
-  DESTINATION share/${PROJECT_NAME}/
-)
-
 ament_package()
