@@ -8,6 +8,7 @@ class DoubleSwingDoor(Door):
         motion_degrees = door_edge.params['motion_degrees'].value
         self.motion_radians = 3.14 * motion_degrees / 180.0
         self.motion_direction = door_edge.params['motion_direction'].value
+        self.joint_offset = 3 * self.thickness
 
     def generate(self, world_ele, options):
         if self.motion_direction > 0:
@@ -20,7 +21,7 @@ class DoubleSwingDoor(Door):
             self.length / 2 - 0.01,
             x_flip_sign * -self.length / 4,
             (0, self.motion_radians),
-            (x_flip_sign * -self.length / 4, 0, 0),
+            (x_flip_sign * (-self.length/4 + self.joint_offset), 0, 0),
             options)
 
         self.generate_swing_section(
@@ -28,7 +29,7 @@ class DoubleSwingDoor(Door):
             self.length / 2 - 0.01,
             x_flip_sign * self.length / 4,
             (-self.motion_radians, 0),
-            (x_flip_sign * self.length / 4, 0, 0),
+            (x_flip_sign * (self.length/4 - self.joint_offset), 0, 0),
             options)
 
         plugin_ele = SubElement(self.model_ele, 'plugin')

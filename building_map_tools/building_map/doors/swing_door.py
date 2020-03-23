@@ -8,6 +8,7 @@ class SwingDoor(Door):
         motion_degrees = door_edge.params['motion_degrees'].value
         self.motion_radians = 3.14 * motion_degrees / 180.0
         self.motion_direction = door_edge.params['motion_direction'].value
+        self.joint_offset = 3 * self.thickness
 
     def generate(self, world_ele, options):
         plugin_ele = SubElement(self.model_ele, 'plugin')
@@ -34,7 +35,7 @@ class SwingDoor(Door):
                 self.length - 0.01,
                 0,
                 (-self.motion_radians, 0),
-                (self.length / 2, 0, 0),
+                ((self.length/2 - self.joint_offset), 0, 0),
                 options)
             door_ele.set('left_joint_name', 'left_joint')
             door_ele.set('right_joint_name', 'empty_joint')
@@ -44,7 +45,7 @@ class SwingDoor(Door):
                 self.length - 0.01,
                 0,
                 (0, self.motion_radians),
-                (self.length / 2, 0, 0),
+                ((self.length/2 - self.joint_offset), 0, 0),
                 options)
             door_ele.set('left_joint_name', 'empty_joint')
             door_ele.set('right_joint_name', 'right_joint')
