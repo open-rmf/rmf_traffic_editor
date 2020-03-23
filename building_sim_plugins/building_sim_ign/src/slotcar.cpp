@@ -21,6 +21,7 @@
 #include <rclcpp/logger.hpp>
 
 #include <building_sim_common/utils.hpp>
+#include <building_sim_common/slotcar_common.hpp>
 
 // TODO remove this
 using namespace ignition;
@@ -45,6 +46,7 @@ public:
   void PreUpdate(const UpdateInfo& info, EntityComponentManager& ecm) override;
 
 private:
+  std::unique_ptr<SlotcarCommon> dataPtr;
   rclcpp::Logger logger();
 
   rclcpp::Node::SharedPtr _ros_node;
@@ -203,7 +205,8 @@ private:
 
 };
 
-SlotcarPlugin::SlotcarPlugin()
+SlotcarPlugin::SlotcarPlugin() :
+  dataPtr(std::make_unique<SlotcarCommon>())
 {
   // We do initialization only during ::Load
 }

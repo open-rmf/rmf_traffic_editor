@@ -1,7 +1,7 @@
 #ifndef SRC__BUILDING_SIM_COMMON__UTILS_HPP
 #define SRC__BUILDING_SIM_COMMON__UTILS_HPP
 
-#include <sdf/Element.hh>
+#include <cmath>
 
 namespace building_sim_common {
 
@@ -116,11 +116,11 @@ double compute_desired_rate_of_change(
 }
 
 //==============================================================================
-template<typename SdfPtrT>
+template<typename SdfPtrT, typename SdfElementPtrT>
 bool get_element_required(
     SdfPtrT& _sdf,
     const std::string& _element_name,
-    sdf::ElementPtr& _element)
+    SdfElementPtrT& _element)
 {
   if (!_sdf->HasElement(_element_name))
   {

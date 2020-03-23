@@ -38,8 +38,11 @@ include(GNUInstallDirs)
 
 add_library(slotcar SHARED ${PROJECT_SOURCE_DIR}/src/slotcar.cpp)
 
+message("${building_sim_common_LIBRARIES}")
+
 target_link_libraries(slotcar
   PUBLIC
+    ${building_sim_common_LIBRARIES}
     ${rmf_fleet_msgs_LIBRARIES}
     ${building_sim_common_LIBRARIES}
     ${rclcpp_LIBRARIES}
