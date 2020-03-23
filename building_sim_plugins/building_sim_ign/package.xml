@@ -1,20 +1,16 @@
 <package format="3">
-  <name>building_sim_common</name>
+  <name>building_sim_ign</name>
   <version>0.0.0</version>
   <description>
-    Common utility functions for Gazebo and ignition building plugins
+    Ignition gazebo plugins for building infrastructure simulation
   </description>
-  <author>Morgan Quigley</author>
-  <author>Michael Grey</author>
-  <author>Roselle Carmen</author>
-  <author>Aaron Chong</author>
-  <author>Brandon Ong</author>
-  <maintainer email="morgan@openrobotics.org">Morgan Quigley</maintainer>
+  <author>Luca Della Vedova</author>
+  <maintainer email="luca@openrobotics.org">Luca Della Vedova</maintainer>
   <license>Apache 2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <!-- TODO check dependencies -->
+  <!-- TODO fix dependencies -->
   <depend>rclcpp</depend>
   <depend>gazebo_ros</depend>
   <depend>gazebo_msgs</depend>
