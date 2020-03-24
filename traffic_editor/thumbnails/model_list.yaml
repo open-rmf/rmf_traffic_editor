@@ -8,6 +8,7 @@ models:
 - BedsideTable
 - BedTable
 - BMWCart
+- Bookshelf
 - BPCart
 - BumperBig
 - BumperCorner
@@ -16,6 +17,7 @@ models:
 - BumperSmall
 - BumperWallBig
 - BumperWallSmall
+- CafeTable
 - CGMVanguard
 - Chair
 - Cleanfix
@@ -31,9 +33,11 @@ models:
 - door
 - ElderLadyPatient
 - ElderMalePatient
+- ElectronicsRecycling
 - Enterprise8000
 - Extinguisher
 - FemalePatient
+- Fountain
 - Fridge
 - HCR-5
 - HOSPI
@@ -53,6 +57,7 @@ models:
 - MetalCabinet
 - MetalCabinetYellow
 - MalePatientBed
+- MainTable
 - Microwave
 - Milo
 - MiniSofa
@@ -66,11 +71,15 @@ models:
 - NormalBed
 - Nurse
 - NurseDesk
+- OakTree
 - OfficeChair
 - OpScrubs
+- ParkingTrolleyMax
 - PatientWheelchair
 - PharmaTrolley
+- PineTree
 - Pitti
+- Postbox
 - RoboGate
 - RobotFrame
 - RoboWarningLight
@@ -82,6 +91,7 @@ models:
 - SmartTrolleyBed
 - Sofa
 - StackedBuckets
+- StandingPerson
 - StorageRack
 - StorageRackCovered
 - StorageRackCoverOpen
