@@ -22,6 +22,7 @@
 #include "editor_model.h"
 #include "editor_mode_id.h"
 #include "scenario.h"
+#include "traffic_map.h"
 
 #include <string>
 #include <vector>
