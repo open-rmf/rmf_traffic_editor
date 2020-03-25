@@ -62,6 +62,20 @@ The contours of the models are then extracted from the green-screened images usi
 
 The generated thumbnails in `images/cropped` can then be added to `traffic_editor/thumbnails/images/`, while the model names need to be updated to `traffic_editor/thumbnails/model_list.yaml`.
 
+# Utilities
+
+A new model list `.yaml` file can be generated using the utility script, where an optional blacklisted model names can be added, to avoid creating moving models or agents,
+
+```bash
+./scripts/generate_model_list.py -d MODEL_DIR -b test/model_blacklist.yaml -o test/output_model_list.yaml
+```
+
+In the event that merging multiple model lists is required, a different utility script can be used,
+
+```bash
+./scripts/merge_model_lists.py -s test/model_list.yaml -d test/copied_model_list.yaml
+```
+
 # Credits
 
 Created by [codebot](https://github.com/codebot).
