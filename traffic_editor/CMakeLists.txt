@@ -52,6 +52,7 @@ add_executable(traffic-editor
   gui/scenario_table.cpp
   gui/table_list.cpp
   gui/traffic_table.cpp
+  gui/traffic_map.cpp
   gui/vertex.cpp
   gui/yaml_utils.cpp
   resources/resource.qrc

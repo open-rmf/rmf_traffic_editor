@@ -27,19 +27,37 @@ TrafficMap::~TrafficMap()
 {
 }
 
-bool TrafficMap::from_project_yaml(const YAML::Node& y)
+bool TrafficMap::from_project_yaml(const string& _name, const YAML::Node& y)
 {
-  if (y["name"])
-    name = y["name"].as<string>();
+  name = _name;
 
-  if (y["filename"])
-    filename = y["filename"].as<string>();
-
-  if (y["x_offset"])
-    x_offset = y["x_offset"].as<double>();
-
-  if (y["y_offset"])
-    y_offset = y["y_offset"].as<double>();
+  if (y["offset"] && y["offset"].IsSequence())
+  {
+    x_offset = y["offset"][0].as<double>();
+    y_offset = y["offset"][1].as<double>();
+  }
 
   // todo: open 'filename' and load its contents
+  if (y["filename"])
+  {
+    filename = y["filename"].as<string>();
+    return load_file();
+  }
+
+  return true;
+}
+
+bool TrafficMap::load_file()
+{
+  return true;
+}
+
+YAML::Node TrafficMap::to_project_yaml() const
+{
+  YAML::Node y;
+  y["filename"] = filename;
+  y["offset"].push_back(x_offset);
+  y["offset"].push_back(y_offset);
+  y["offset"].SetStyle(YAML::EmitterStyle::Flow);
+  return y;
 }

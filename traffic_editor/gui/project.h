@@ -41,6 +41,7 @@ public:
 
   Building building;
   std::vector<Scenario> scenarios;
+  std::vector<TrafficMap> traffic_maps;
 
   int scenario_idx = -1;  // the current scenario being viewed/edited
 

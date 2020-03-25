@@ -33,9 +33,10 @@ public:
   TrafficMap();
   ~TrafficMap();
 
-  bool from_project_yaml(const YAML::Node& data);
+  bool from_project_yaml(const std::string& name, const YAML::Node& data);
+  YAML::Node to_project_yaml() const;
 
-  bool load(const std::string& _filename);
+  bool load_file();
 };
 
 #endif

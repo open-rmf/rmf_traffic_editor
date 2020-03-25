@@ -99,6 +99,17 @@ bool Project::load_yaml_file(const std::string& _filename)
       scenario_idx = 0;
   }
 
+  if (yaml["traffic_maps"] && yaml["traffic_maps"].IsMap())
+  {
+    const YAML::Node& ytm = yaml["traffic_maps"];
+    for (YAML::const_iterator it = ytm.begin(); it != ytm.end(); ++it)
+    {
+      TrafficMap tm;
+      tm.from_project_yaml(it->first.as<string>(), it->second);
+      traffic_maps.push_back(tm);
+    }
+  }
+
   return true;
 }
 
@@ -120,6 +131,10 @@ bool Project::save_yaml_file() const
     scenario_node["filename"] = scenario.filename;
     y["scenarios"].push_back(scenario_node);
   }
+
+  y["traffic_maps"] = YAML::Node(YAML::NodeType::Map);
+  for (const auto& traffic_map : traffic_maps)
+    y["traffic_maps"][traffic_map.name] = traffic_map.to_project_yaml();
 
   YAML::Emitter emitter;
   yaml_utils::write_node(y, emitter);
