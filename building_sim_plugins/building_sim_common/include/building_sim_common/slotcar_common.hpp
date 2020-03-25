@@ -103,9 +103,6 @@ public:
 
   void publish_robot_state(const Eigen::Isometry3d &pose, const double time);
 
-  bool path_request_cb(const rmf_fleet_msgs::msg::PathRequest::SharedPtr msg,
-      const Eigen::Isometry3d &pose);
-
 private:
   // Constants for update rate of tf2 and robot_state topic
   static constexpr float TF2_RATE = 100.0;
@@ -127,9 +124,12 @@ private:
   std::shared_ptr<tf2_ros::TransformBroadcaster> _tf2_broadcaster;
   rclcpp::Publisher<rmf_fleet_msgs::msg::RobotState>::SharedPtr _robot_state_pub;
 
+  rclcpp::Subscription<rmf_fleet_msgs::msg::PathRequest>::SharedPtr _traj_sub;
+  rclcpp::Subscription<rmf_fleet_msgs::msg::ModeRequest>::SharedPtr _mode_sub;
+
+  rmf_fleet_msgs::msg::RobotMode _current_mode;
+
   std::string _current_task_id;
-  uint32_t _current_mode;
-  // TODO remove duplication of this
   std::vector<rmf_fleet_msgs::msg::Location> _remaining_path;
  
   // Vehicle dynamic constants
@@ -151,14 +151,15 @@ private:
   double _stop_distance = 1.0;
   double _stop_radius = 1.0;
 
-  template<typename PoseT>
-  auto heading_from_pose(const PoseT &pose) const;
-
   double compute_change_in_rotation(Eigen::Vector3d heading_vec, const Eigen::Vector3d &dpos, double* permissive = nullptr);
 
   void publish_tf2(const Eigen::Isometry3d &pose, const rclcpp::Time &t);
 
   void publish_state_topic(const Eigen::Isometry3d &pose, const rclcpp::Time &t);
+
+  void path_request_cb(const rmf_fleet_msgs::msg::PathRequest::SharedPtr msg);
+
+  void mode_request_cb(const rmf_fleet_msgs::msg::ModeRequest::SharedPtr msg);
 };
 
 template<typename SdfPtrT>
@@ -206,17 +207,4 @@ void SlotcarCommon::read_sdf(SdfPtrT& sdf)
 
   RCLCPP_INFO(logger(), "Setting name to: " + _model_name);
 }
-
-// TODO move to utils.hpp
-template<typename PoseT>
-auto SlotcarCommon::heading_from_pose(const PoseT &pose) const
-{
-  // TODO bit hacky
-  // We want heading as a Vec3, which is also the type of Pose3.Pos()
-  typedef decltype (pose.Pos()) Vec3T;
-  const double yaw = pose.Rot().Yaw();
-  return Vec3T{std::cos(yaw), std::sin(yaw), 0.0};
-  
-}
-
 } // namespace building_sim_common

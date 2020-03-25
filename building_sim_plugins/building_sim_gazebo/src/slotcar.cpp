@@ -36,15 +36,10 @@ private:
   std::unique_ptr<SlotcarCommon> dataPtr;
 
   gazebo::event::ConnectionPtr _update_connection;
-  gazebo_ros::Node::SharedPtr _ros_node;
   gazebo::physics::ModelPtr _model;
-
-  rclcpp::Subscription<rmf_fleet_msgs::msg::PathRequest>::SharedPtr traj_sub;
-  rclcpp::Subscription<rmf_fleet_msgs::msg::ModeRequest>::SharedPtr mode_sub;
 
   std::array<gazebo::physics::JointPtr, 2> joints;
   bool emergency_stop = false;
-  rmf_fleet_msgs::msg::RobotMode current_mode;
 
   std::unordered_set<gazebo::physics::Model*> infrastructure;
 
@@ -84,24 +79,16 @@ SlotcarPlugin::~SlotcarPlugin()
 
 void SlotcarPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf)
 {
-  current_mode.mode = rmf_fleet_msgs::msg::RobotMode::MODE_MOVING;
   _model = model;
   dataPtr->set_model_name(_model->GetName());
   dataPtr->read_sdf(sdf);
-  // TODO can we push _ros_node to common library?
-  _ros_node = gazebo_ros::Node::Get(sdf);
+  gazebo_ros::Node::SharedPtr _ros_node = gazebo_ros::Node::Get(sdf);
   dataPtr->init_ros_node(_ros_node);
 
-  RCLCPP_INFO(dataPtr->logger(), "hello i am " + model->GetName());
+  RCLCPP_INFO(dataPtr->logger(), "Initialising slotcar for " + model->GetName());
 
   _update_connection = gazebo::event::Events::ConnectWorldUpdateBegin(
       std::bind(&SlotcarPlugin::OnUpdate, this));
-
-  traj_sub = _ros_node->create_subscription<rmf_fleet_msgs::msg::PathRequest>(
-      "/robot_path_requests", 10, std::bind(&SlotcarPlugin::path_request_cb, this, std::placeholders::_1));
-
-  mode_sub = _ros_node->create_subscription<rmf_fleet_msgs::msg::ModeRequest>(
-      "/robot_mode_requests", 10, std::bind(&SlotcarPlugin::mode_request_cb, this, std::placeholders::_1));
 
   joints[0] = _model->GetJoint("joint_tire_left");
   if (!joints[0])
@@ -191,18 +178,6 @@ void SlotcarPlugin::OnUpdate()
   }
 
   send_control_signals(x_target, yaw_target, dt);
-}
-
-void SlotcarPlugin::path_request_cb(const rmf_fleet_msgs::msg::PathRequest::SharedPtr msg)
-{
-  const auto initial_pose = _model->WorldPose();
-  dataPtr->path_request_cb(msg, convert_pose(initial_pose));
-
-}
-
-void SlotcarPlugin::mode_request_cb(const rmf_fleet_msgs::msg::ModeRequest::SharedPtr msg)
-{
-  current_mode = msg->mode;
 }
 
 GZ_REGISTER_MODEL_PLUGIN(SlotcarPlugin)

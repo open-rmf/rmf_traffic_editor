@@ -65,16 +65,23 @@ double SlotcarCommon::stop_radius() const
 
 void SlotcarCommon::init_ros_node(const rclcpp::Node::SharedPtr node)
 {
+  _current_mode.mode = rmf_fleet_msgs::msg::RobotMode::MODE_MOVING;
   _ros_node = std::move(node);
 
   _tf2_broadcaster = std::make_shared<tf2_ros::TransformBroadcaster>(_ros_node);
 
   _robot_state_pub = _ros_node->create_publisher<rmf_fleet_msgs::msg::RobotState>(
       "/robot_state", 10);
+
+  _traj_sub = _ros_node->create_subscription<rmf_fleet_msgs::msg::PathRequest>(
+      "/robot_path_requests", 10, std::bind(&SlotcarCommon::path_request_cb, this, std::placeholders::_1));
+
+  _mode_sub = _ros_node->create_subscription<rmf_fleet_msgs::msg::ModeRequest>(
+      "/robot_mode_requests", 10, std::bind(&SlotcarCommon::mode_request_cb, this, std::placeholders::_1));
+
 }
 
-bool SlotcarCommon::path_request_cb(const rmf_fleet_msgs::msg::PathRequest::SharedPtr msg,
-    const Eigen::Isometry3d &pose)
+void SlotcarCommon::path_request_cb(const rmf_fleet_msgs::msg::PathRequest::SharedPtr msg)
 {
   // TODO refactor checking in another function?
   if (msg->robot_name != _model_name)
@@ -83,7 +90,7 @@ bool SlotcarCommon::path_request_cb(const rmf_fleet_msgs::msg::PathRequest::Shar
           logger(),
           "Ignoring path request for ["
           + msg->robot_name + "]");
-    return false;
+    return;
   }
 
   if (msg->task_id == _current_task_id)
@@ -92,13 +99,13 @@ bool SlotcarCommon::path_request_cb(const rmf_fleet_msgs::msg::PathRequest::Shar
           logger(),
           "Already received task [" + _current_task_id
           + "] -- continuing as normal");
-    return false;
+    return;
   }
 
   if (msg->path.size() == 0)
   {
     RCLCPP_WARN(logger(), "got a path with no waypoints");
-    return false;
+    return;
   }
 
   RCLCPP_INFO(
@@ -125,7 +132,6 @@ bool SlotcarCommon::path_request_cb(const rmf_fleet_msgs::msg::PathRequest::Shar
         Eigen::AngleAxisd(msg->path[i].yaw, Eigen::Vector3d::UnitZ()));
     trajectory[i].translation() = v3;
     trajectory[i].linear() = Eigen::Matrix3d(quat);
-    //trajectory[i] = Eigen::Isometry3d(v3, quat);
 
     _hold_times[i] = msg->path[i].t;
 
@@ -143,15 +149,7 @@ bool SlotcarCommon::path_request_cb(const rmf_fleet_msgs::msg::PathRequest::Shar
 
   _current_task_id = msg->task_id;
 
-  const double initial_dist = compute_dpos(trajectory.front(), pose).norm();
-  if (initial_dist > 0.5)
-  {
-    RCLCPP_ERROR(
-          _ros_node->get_logger(),
-          "BIG ERROR IN INITIAL DISTANCE: " + std::to_string(initial_dist));
-  }
-
-  return true; 
+  return; 
 }
 
 std::array<double, 2> SlotcarCommon::calculate_control_signals(
@@ -180,7 +178,6 @@ std::array<double, 2> SlotcarCommon::calculate_control_signals(
 // TODO refactor, return instead of change reference parameters
 bool SlotcarCommon::update(const Eigen::Isometry3d &pose, const double time, double& x_target, double &yaw_target)
 {
-  const double dt = time - _last_update_time;
   const int32_t t_sec = static_cast<int32_t>(time);
   const uint32_t t_nsec =
       static_cast<uint32_t>((time-static_cast<double>(t_sec)) *1e9);
@@ -345,14 +342,18 @@ void SlotcarCommon::publish_state_topic(const Eigen::Isometry3d &pose, const rcl
 
   robot_state_msg.location.x = pose.translation()[0];
   robot_state_msg.location.y = pose.translation()[1];
-  // CHECK THIS
   robot_state_msg.location.yaw = compute_yaw(pose);
   robot_state_msg.location.t = t;
 
-  // TODO fill these
   robot_state_msg.task_id = _current_task_id;
   robot_state_msg.path = _remaining_path;
-  robot_state_msg.mode.mode = _current_mode;
+  robot_state_msg.mode = _current_mode;
 
   _robot_state_pub->publish(robot_state_msg);
 }
+
+void SlotcarCommon::mode_request_cb(const rmf_fleet_msgs::msg::ModeRequest::SharedPtr msg)
+{
+  _current_mode = msg->mode;
+}
+
