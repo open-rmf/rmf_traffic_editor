@@ -22,6 +22,7 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(Eigen3 REQUIRED)
 #find_package(sdformat9 REQUIRED)
 #find_package(gazebo REQUIRED)
 #find_package(gazebo_ros REQUIRED)
@@ -48,10 +49,9 @@ add_library(slotcar_common SHARED ${PROJECT_SOURCE_DIR}/src/slotcar.cpp)
 
 target_link_libraries(slotcar_common
   PUBLIC
+    Eigen3::Eigen
     ${rmf_fleet_msgs_LIBRARIES}
     ${rclcpp_LIBRARIES}
-    ${GAZEBO_LIBRARIES}
-    ${gazebo_ros_LIBRARIES}
     ${geometry_msgs_LIBRARIES}
     ${tf2_ros_LIBRARIES}
 )
@@ -60,6 +60,7 @@ target_include_directories(slotcar_common
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    ${EIGEN3_INCLUDE_DIRS}
     ${GAZEBO_INCLUDE_DIRS}
     ${geometry_msgs_INCLUDE_DIRS}
     ${std_msgs_INCLUDE_DIRS}
@@ -123,6 +124,7 @@ target_include_directories(slotcar_common
 ###############################
 # install stuff
 ###############################
+ament_export_dependencies(Eigen3)
 ament_export_include_directories(include)
 ament_export_libraries(slotcar_common)
 
