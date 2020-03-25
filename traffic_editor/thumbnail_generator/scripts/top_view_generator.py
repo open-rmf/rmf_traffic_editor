@@ -41,10 +41,11 @@ xml = '''\
 class TopViewGenerator:
     def __init__(self, argv=sys.argv):
         parser = argparse.ArgumentParser()
-        parser.add_argument('-m', '--model-list', 
-                default='../test/model_list.yaml', 
+        parser.add_argument(
+                '-m', '--model-list', default='../test/model_list.yaml',
                 help='Path of model_list.yaml')
-        parser.add_argument('-o', '--output-dir',
+        parser.add_argument(
+                '-o', '--output-dir',
                 help='Directory where the output images will be saved')
         args = parser.parse_args(argv[1:])
 
@@ -65,15 +66,13 @@ class TopViewGenerator:
         self.last_image_msg = None
 
         self.cv_bridge = CvBridge()
-        
 
     def image_cb(self, msg):
         self.last_image_msg = msg
 
-    
     def run(self):
         for model_name in self.yaml['models']:
-            file_path = os.path.join(self.output_dir, 
+            file_path = os.path.join(self.output_dir,
                                      '{}.png'.format(model_name))
             if os.path.exists(file_path):
                 continue
@@ -83,8 +82,8 @@ class TopViewGenerator:
             pose.orientation.w = 1.0
             print('spawning {}'.format(model_name))
             self.spawn(
-                    model_name='model', model_xml=model_xml, robot_namespace='',
-                    initial_pose=pose, reference_frame='')
+                    model_name='model', model_xml=model_xml,
+                    robot_namespace='', initial_pose=pose, reference_frame='')
             rospy.sleep(3.0)
 
             # Grab the last-received image and save it
@@ -92,8 +91,8 @@ class TopViewGenerator:
             cv2.imwrite(file_path, cv_img)
             print('wrote {}'.format(file_path))
 
-            # for unknown reasons occasionally the 'delete' command doesn't work
-            # so let's send it a few times
+            # for unknown reasons occasionally the 'delete' command doesn't
+            # work so let's send it a few times
             for x in xrange(0, 4):
                 self.delete(model_name='model')
                 rospy.sleep(0.5)

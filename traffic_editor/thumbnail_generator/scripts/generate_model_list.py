@@ -22,19 +22,24 @@ import argparse
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d', '--model-dir', 
-            help='Directory of models to be added.')
-    parser.add_argument('-b', '--blacklist-models', default='',
-            help='Optional blacklisted models that will be excluded from your model directory')
-    parser.add_argument('-o', '--output-yaml',
-            help='Output yaml file that the directory of models will be added to.')
-    parser.add_argument('--meters-per-pixel', type=float, default=0.004,
+    parser.add_argument(
+            '-d', '--model-dir', help='Directory of models to be added.')
+    parser.add_argument(
+            '-b', '--blacklist-models', default='',
+            help='Optional blacklisted models that will be excluded from your '
+            'model directory')
+    parser.add_argument(
+            '-o', '--output-yaml',
+            help='Output yaml file that the directory of models will be added '
+            'to.')
+    parser.add_argument(
+            '--meters-per-pixel', type=float, default=0.004,
             help='Scale of models in meters per pixel for the images.')
     args = parser.parse_args(sys.argv[1:])
 
     y = {}
     y['models'] = []
-    
+
     blacklist_yaml = None
     if args.blacklist_models != '':
         print('Blacklisted models:')
@@ -48,15 +53,17 @@ if __name__ == '__main__':
                 continue
             if blacklist_yaml is not None and \
                     entry.name in blacklist_yaml['blacklist']:
-                print('ignoring {} because it is blacklisted'.format(entry.name))
+                print('ignoring {} because it is blacklisted'.format(
+                        entry.name))
                 continue
             if entry.name in y['models']:
-                print('skipping {} because it already exists'.format(entry.name))
+                print('skipping {} because it already exists'.format(
+                        entry.name))
                 continue
             y['models'].append(entry.name)
 
     print('found {} models'.format(len(y['models'])))
-    y['models'] = sorted(y['models'], key = lambda s: s.lower())
+    y['models'] = sorted(y['models'], key=lambda s: s.lower())
 
     y['meters_per_pixel'] = 0.004
 

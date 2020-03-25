@@ -30,7 +30,7 @@ cd traffic_editor/traffic_editor/thumbnail_generator
 
 **Notes before running any scripts,**
 * take note to clear up or backup any pre-existing thumbnails and images created inside the default folders, `images/green`, `images/white`, `images/cropped`, if they are intended to be used.
-* make sure to include all your necessary model, plugin, resource paths in `scripts/start_gazebo_screen.sh`, otherwise any custom models will not be found and spawneds
+* make sure to include all your necessary model, plugin, resource paths in `scripts/start_gazebo_screen.sh`, otherwise any custom models will not be found or spawned.
 
 Create a green screen world in `gazebo`, and start spawning models listed in your `model_list.yaml`. The scripts will take care of spawning the models one-at-a-time inside the green screen world and record an approximate orthogonal view of them.
 

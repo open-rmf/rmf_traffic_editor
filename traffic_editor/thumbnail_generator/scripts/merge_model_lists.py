@@ -23,8 +23,10 @@ import argparse
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-s', '--source', help='Source list of models.')
-    parser.add_argument('-d', '--destination', 
-            help='Destination list of models which the source will be merged into.')
+    parser.add_argument(
+            '-d', '--destination',
+            help='Destination list of models which the source will be '
+            'merged into.')
     args = parser.parse_args(sys.argv[1:])
 
     if not os.path.exists(args.source):
@@ -33,27 +35,29 @@ if __name__ == '__main__':
     if not os.path.exists(args.destination):
         print('Destination model list not found: {}'.format(args.destination))
         exit()
-    
+
     source_yaml = None
     with open(args.source) as f:
         source_yaml = yaml.load(f)
-    
+
     destination_yaml = None
     with open(args.destination) as f:
         destination_yaml = yaml.load(f)
 
-    if abs(source_yaml['meters_per_pixel'] - destination_yaml['meters_per_pixel']) > 1e-6:
+    if abs(source_yaml['meters_per_pixel'] -
+            destination_yaml['meters_per_pixel']) > 1e-6:
         print('Both model lists have different meters_per_pixel.')
         exit()
 
     for model_name in source_yaml['models']:
         if model_name in destination_yaml['models']:
-            print('Skipping model {} because it already exists'.format(model_name))
+            print('Skipping model {} because it already exists'.format(
+                    model_name))
             continue
         destination_yaml['models'].append(model_name)
-    
-    destination_yaml['models'] = \
-            sorted(destination_yaml['models'], key = lambda s: s.lower())
+
+    destination_yaml['models'] = sorted(
+            destination_yaml['models'], key=lambda s: s.lower())
 
     with open(args.destination, 'w') as f:
         yaml.dump(destination_yaml, f, default_flow_style=False)

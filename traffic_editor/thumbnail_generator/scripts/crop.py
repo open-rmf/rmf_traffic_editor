@@ -23,11 +23,13 @@ import argparse
 
 def crop(green_img, white_img):
     ''' Crop the image, keeping the center point still inthe center. '''
-    #ret, thresh = cv2.threshold(img, 0, 255, 0)
+
     # first find the crop mask on the green image
-    print('green image size: {}x{}'.format(green_img.shape[1], green_img.shape[0]))
+    print('green image size: {}x{}'.format(
+            green_img.shape[1], green_img.shape[0]))
     mask = cv2.bitwise_not(cv2.inRange(green_img, (0, 200, 0), (30, 255, 30)))
-    _, contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    _, contours, _ = cv2.findContours(
+            mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
     # now, apply that mask to the white image to avoid green-fringe effects
     img = cv2.cvtColor(white_img, cv2.COLOR_BGR2BGRA)
@@ -46,7 +48,6 @@ def crop(green_img, white_img):
         if y + h > ybounds[1]:
             ybounds[1] = y + h
 
-    #cv2.rectangle(img, (xbounds[0], ybounds[0]), (xbounds[1], ybounds[1]), (255, 0, 0), 2)
     # we have to stay centered on the midpoint of the image
     left_extent = img.shape[1]/2 - xbounds[0]
     right_extent = xbounds[1] - img.shape[1]/2
@@ -75,13 +76,17 @@ def crop(green_img, white_img):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-m', '--model-list', default='../test/model_list.yaml',
+    parser.add_argument(
+            '-m', '--model-list', default='../test/model_list.yaml',
             help='Path of model_list.yaml')
-    parser.add_argument('-g', '--green-img-dir', default='../images/green/',
+    parser.add_argument(
+            '-g', '--green-img-dir', default='../images/green/',
             help='Directory filled with green screened model images')
-    parser.add_argument('-w', '--white-img-dir', default='../images/white/',
-            help='Directory filled with white screened model images')
-    parser.add_argument('-o', '--output-dir', default='../images/cropped/',
+    parser.add_argument(
+        '-w', '--white-img-dir', default='../images/white/',
+        help='Directory f   illed with white screened model images')
+    parser.add_argument(
+            '-o', '--output-dir', default='../images/cropped/',
             help='Directory where the cropped output images will be saved')
     args = parser.parse_args(sys.argv[1:])
 
