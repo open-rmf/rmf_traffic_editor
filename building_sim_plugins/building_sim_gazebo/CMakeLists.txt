@@ -34,6 +34,9 @@ find_package(rmf_fleet_msgs REQUIRED)
 find_package(rmf_door_msgs REQUIRED)
 find_package(building_sim_common REQUIRED)
 
+# TODO this is a dependency of building_sim_common, it shouldn't be needed
+find_package(Eigen3 REQUIRED)
+
 include(GNUInstallDirs)
 
 add_library(slotcar SHARED ${PROJECT_SOURCE_DIR}/src/slotcar.cpp)
@@ -42,6 +45,8 @@ message("${building_sim_common_LIBRARIES}")
 
 target_link_libraries(slotcar
   PUBLIC
+    # TODO remove eigen
+    Eigen3::Eigen
     ${building_sim_common_LIBRARIES}
     ${rmf_fleet_msgs_LIBRARIES}
     ${building_sim_common_LIBRARIES}
