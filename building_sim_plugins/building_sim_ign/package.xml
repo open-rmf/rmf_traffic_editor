@@ -22,6 +22,8 @@
   <depend>std_msgs</depend>
   <depend>std_srvs</depend>
 
+  <depend>building_sim_common</depend>
+
   <export>
     <build_type>ament_cmake</build_type>
   </export>

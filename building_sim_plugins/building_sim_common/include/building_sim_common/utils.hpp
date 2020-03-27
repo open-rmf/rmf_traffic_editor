@@ -2,6 +2,7 @@
 #define SRC__BUILDING_SIM_COMMON__UTILS_HPP
 
 #include <cmath>
+#include <iostream>
 
 namespace building_sim_common {
 

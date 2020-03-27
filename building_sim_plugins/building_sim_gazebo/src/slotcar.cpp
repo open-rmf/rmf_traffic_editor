@@ -3,17 +3,10 @@
 #include <gazebo/physics/Joint.hh>
 #include <gazebo/physics/Link.hh>
 #include <gazebo_ros/node.hpp>
-#include <rclcpp/rclcpp.hpp>
-#include <tf2_ros/transform_broadcaster.h>
 
 #include <memory>
 
 #include <gazebo/common/Plugin.hh>
-#include <rmf_fleet_msgs/msg/destination_request.hpp>
-#include <geometry_msgs/msg/transform_stamped.hpp>
-#include <rmf_fleet_msgs/msg/path_request.hpp>
-#include <rmf_fleet_msgs/msg/mode_request.hpp>
-#include <rmf_fleet_msgs/msg/robot_state.hpp>
 #include <rclcpp/logger.hpp>
 
 #include <building_sim_common/utils.hpp>

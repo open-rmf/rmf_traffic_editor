@@ -1,13 +1,14 @@
 // TODO header guards
-#define _USE_MATH_DEFINES
-#include <cmath>
 
+#include <rclcpp/rclcpp.hpp>
 #include <Eigen/Geometry>
 #include <tf2_ros/transform_broadcaster.h>
 
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <rmf_fleet_msgs/msg/robot_mode.hpp>
 #include <rmf_fleet_msgs/msg/robot_state.hpp>
+#include <rmf_fleet_msgs/msg/path_request.hpp>
+#include <rmf_fleet_msgs/msg/mode_request.hpp>
 
 namespace building_sim_common
 {
