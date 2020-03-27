@@ -31,16 +31,17 @@ using namespace systems;
 using namespace building_sim_common;
 
 class IGNITION_GAZEBO_VISIBLE SlotcarPlugin
-    : public System,
-      public ISystemConfigure,
-      public ISystemPreUpdate
+  : public System,
+  public ISystemConfigure,
+  public ISystemPreUpdate
 {
 public:
   SlotcarPlugin();
   ~SlotcarPlugin();
 
-  void Configure(const Entity& entity, const std::shared_ptr<const sdf::Element> &sdf,
-      EntityComponentManager& ecm, EventManager& eventMgr) override;
+  void Configure(const Entity& entity,
+    const std::shared_ptr<const sdf::Element>& sdf,
+    EntityComponentManager& ecm, EventManager& eventMgr) override;
   void path_request_cb(const rmf_fleet_msgs::msg::PathRequest::SharedPtr msg);
   void mode_request_cb(const rmf_fleet_msgs::msg::ModeRequest::SharedPtr msg);
   void PreUpdate(const UpdateInfo& info, EntityComponentManager& ecm) override;
@@ -65,14 +66,15 @@ private:
   int update_count = 0;
 
   void send_control_signals(
-      EntityComponentManager &ecm,
-      const double x_target,
-      const double yaw_target,
-      const double dt)
+    EntityComponentManager& ecm,
+    const double x_target,
+    const double yaw_target,
+    const double dt)
   {
     std::array<double, 2> w_tire_actual;
     for (std::size_t i = 0; i < 2; ++i)
-      w_tire_actual[i] = ecm.Component<components::JointVelocity>(joints[i])->Data()[0];
+      w_tire_actual[i] =
+        ecm.Component<components::JointVelocity>(joints[i])->Data()[0];
     auto joint_signals = dataPtr->calculate_control_signals(w_tire_actual,
         x_target, yaw_target, dt);
     for (std::size_t i = 0; i < 2; ++i)
@@ -83,8 +85,8 @@ private:
   }
 };
 
-SlotcarPlugin::SlotcarPlugin() :
-  dataPtr(std::make_unique<SlotcarCommon>())
+SlotcarPlugin::SlotcarPlugin()
+: dataPtr(std::make_unique<SlotcarCommon>())
 {
   // We do initialization only during ::Load
 }
@@ -94,8 +96,8 @@ SlotcarPlugin::~SlotcarPlugin()
 }
 
 void SlotcarPlugin::Configure(const Entity& entity,
-    const std::shared_ptr<const sdf::Element> &sdf,
-    EntityComponentManager& ecm, EventManager& eventMgr)
+  const std::shared_ptr<const sdf::Element>& sdf,
+  EntityComponentManager& ecm, EventManager& eventMgr)
 {
   _entity = entity;
   _model = Model(entity);
@@ -118,18 +120,22 @@ void SlotcarPlugin::Configure(const Entity& entity,
 
   joints[0] = _model.JointByName(ecm, "joint_tire_left");
   if (!joints[0])
-    RCLCPP_ERROR(dataPtr->logger(), "Could not find tire for [joint_tire_left]");
+    RCLCPP_ERROR(dataPtr->logger(),
+      "Could not find tire for [joint_tire_left]");
 
   joints[1] = _model.JointByName(ecm, "joint_tire_right");
   if (!joints[1])
-    RCLCPP_ERROR(dataPtr->logger(), "Could not find tire for [joint_tire_right]");
+    RCLCPP_ERROR(dataPtr->logger(),
+      "Could not find tire for [joint_tire_right]");
 
   // Initialise JointVelocityCmd / JointVelocity components for velocity control
   for (const auto& joint : joints)
   {
-    if (!ecm.EntityHasComponentType(joint, components::JointVelocityCmd().TypeId()))
+    if (!ecm.EntityHasComponentType(joint,
+      components::JointVelocityCmd().TypeId()))
       ecm.CreateComponent(joint, components::JointVelocityCmd({0}));
-    if (!ecm.EntityHasComponentType(joint, components::JointVelocity().TypeId()))
+    if (!ecm.EntityHasComponentType(joint,
+      components::JointVelocity().TypeId()))
       ecm.CreateComponent(joint, components::JointVelocity({0}));
   }
   // Initialize Pose3d component
@@ -137,7 +143,8 @@ void SlotcarPlugin::Configure(const Entity& entity,
     ecm.CreateComponent(entity, components::Pose());
 }
 
-void SlotcarPlugin::PreUpdate(const UpdateInfo& info, EntityComponentManager& ecm)
+void SlotcarPlugin::PreUpdate(const UpdateInfo& info,
+  EntityComponentManager& ecm)
 {
   // TODO parallel thread executor?
   rclcpp::spin_some(_ros_node);
@@ -164,11 +171,13 @@ void SlotcarPlugin::PreUpdate(const UpdateInfo& info, EntityComponentManager& ec
   double x_target = 0.0;
   double yaw_target = 0.0;
 
-  double dt = (std::chrono::duration_cast<std::chrono::nanoseconds>
-      (info.dt).count()) * 1e-9;
+  double dt =
+    (std::chrono::duration_cast<std::chrono::nanoseconds>(info.dt).count()) *
+    1e-9;
 
-  double time = (std::chrono::duration_cast<std::chrono::nanoseconds>
-      (info.simTime).count()) * 1e-9;
+  double time =
+    (std::chrono::duration_cast<std::chrono::nanoseconds>(info.simTime).count())
+    * 1e-9;
 
   auto pose = ecm.Component<components::Pose>(_entity)->Data();
 
@@ -180,7 +189,7 @@ void SlotcarPlugin::PreUpdate(const UpdateInfo& info, EntityComponentManager& ec
     std::cos(current_yaw), std::sin(current_yaw), 0.0};
 
   const ignition::math::Vector3d stop_zone =
-      pose.Pos() + dataPtr->stop_distance()*current_heading;
+    pose.Pos() + dataPtr->stop_distance()*current_heading;
 
   bool need_to_stop = false;
   // TODO implement infrastructure emergency stop
@@ -220,10 +229,12 @@ void SlotcarPlugin::PreUpdate(const UpdateInfo& info, EntityComponentManager& ec
   send_control_signals(ecm, x_target, yaw_target, dt);
 }
 
-IGNITION_ADD_PLUGIN(SlotcarPlugin,
-                    System,
-                    SlotcarPlugin::ISystemConfigure,
-                    SlotcarPlugin::ISystemPreUpdate)
+IGNITION_ADD_PLUGIN(
+  SlotcarPlugin,
+  System,
+  SlotcarPlugin::ISystemConfigure,
+  SlotcarPlugin::ISystemPreUpdate)
 
-IGNITION_ADD_PLUGIN_ALIAS(SlotcarPlugin,
-                          "slotcar")
+IGNITION_ADD_PLUGIN_ALIAS(
+  SlotcarPlugin,
+  "slotcar")

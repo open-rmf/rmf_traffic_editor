@@ -23,9 +23,9 @@ public:
   bool _debuggable;
 
   Door(const bool debuggable,
-      const gazebo::physics::JointPtr& joint,
-       const MotionParams& params,
-       const bool flip_direction = false)
+    const gazebo::physics::JointPtr& joint,
+    const MotionParams& params,
+    const bool flip_direction = false)
   : _debuggable(debuggable),
     _joint(joint),
     _params(params)
@@ -141,11 +141,11 @@ public:
     std::string right_door_joint_name;
     std::string door_type;
     if (!get_element_required(sdf, "door", door_element) ||
-        !get_sdf_attribute_required<std::string>(
+      !get_sdf_attribute_required<std::string>(
           door_element, "left_joint_name", left_door_joint_name) ||
-        !get_sdf_attribute_required<std::string>(
+      !get_sdf_attribute_required<std::string>(
           door_element, "right_joint_name", right_door_joint_name) ||
-        !get_sdf_attribute_required<std::string>(
+      !get_sdf_attribute_required<std::string>(
           door_element, "type", door_type))
     {
       RCLCPP_ERROR(
@@ -156,7 +156,7 @@ public:
     }
 
     if (left_door_joint_name == "empty_joint" &&
-        right_door_joint_name == "empty_joint")
+      right_door_joint_name == "empty_joint")
     {
       RCLCPP_ERROR(
           _ros_node->get_logger(),
@@ -203,11 +203,11 @@ public:
 
     _door_request_sub = _ros_node->create_subscription<DoorRequest>(
           "/door_requests", rclcpp::SystemDefaultsQoS(),
-          [&](DoorRequest::UniquePtr msg)
-    {
-      if (msg->door_name == _state.door_name)
-        _request = *msg;
-    });
+      [&](DoorRequest::UniquePtr msg)
+      {
+        if (msg->door_name == _state.door_name)
+          _request = *msg;
+      });
 
     _state.door_name = model->GetName();
 
@@ -287,7 +287,7 @@ private:
       _door_state_pub->publish(_state);
     }
   }
- 
+
 };
 
 GZ_REGISTER_MODEL_PLUGIN(DoorPlugin)

@@ -9,23 +9,24 @@
 
 using namespace building_sim_common;
 
-static double compute_yaw(const Eigen::Isometry3d &pose)
+static double compute_yaw(const Eigen::Isometry3d& pose)
 {
   auto quat = Eigen::Quaterniond(pose.linear());
   // Taken from ignition math quaternion Euler()
   double yaw = std::atan2(2 * (quat.x()*quat.y() + quat.w()*quat.z()),
-  (quat.w() * quat.w()) + (quat.x() * quat.x()) - (quat.y() * quat.y()) - (quat.z() * quat.z()));
+    (quat.w() * quat.w()) + (quat.x() * quat.x()) - (quat.y() * quat.y()) -
+    (quat.z() * quat.z()));
   return yaw;
 }
 
-static Eigen::Vector3d compute_heading(const Eigen::Isometry3d &pose)
+static Eigen::Vector3d compute_heading(const Eigen::Isometry3d& pose)
 {
   double yaw = compute_yaw(pose);
   return Eigen::Vector3d(std::cos(yaw), std::sin(yaw), 0.0);
 }
 
-static auto compute_dpos(const Eigen::Isometry3d &target,
-    const Eigen::Isometry3d &actual)
+static auto compute_dpos(const Eigen::Isometry3d& target,
+  const Eigen::Isometry3d& actual)
 {
   Eigen::Vector3d dpos(target.translation() - actual.translation());
   dpos(2) = 0.0;
@@ -64,18 +65,24 @@ void SlotcarCommon::init_ros_node(const rclcpp::Node::SharedPtr node)
 
   _tf2_broadcaster = std::make_shared<tf2_ros::TransformBroadcaster>(_ros_node);
 
-  _robot_state_pub = _ros_node->create_publisher<rmf_fleet_msgs::msg::RobotState>(
+  _robot_state_pub =
+    _ros_node->create_publisher<rmf_fleet_msgs::msg::RobotState>(
       "/robot_state", 10);
 
   _traj_sub = _ros_node->create_subscription<rmf_fleet_msgs::msg::PathRequest>(
-      "/robot_path_requests", 10, std::bind(&SlotcarCommon::path_request_cb, this, std::placeholders::_1));
+    "/robot_path_requests",
+    10,
+    std::bind(&SlotcarCommon::path_request_cb, this, std::placeholders::_1));
 
   _mode_sub = _ros_node->create_subscription<rmf_fleet_msgs::msg::ModeRequest>(
-      "/robot_mode_requests", 10, std::bind(&SlotcarCommon::mode_request_cb, this, std::placeholders::_1));
+    "/robot_mode_requests",
+    10,
+    std::bind(&SlotcarCommon::mode_request_cb, this, std::placeholders::_1));
 
 }
 
-void SlotcarCommon::path_request_cb(const rmf_fleet_msgs::msg::PathRequest::SharedPtr msg)
+void SlotcarCommon::path_request_cb(
+  const rmf_fleet_msgs::msg::PathRequest::SharedPtr msg)
 {
   // TODO refactor checking in another function?
   if (msg->robot_name != _model_name)
@@ -103,9 +110,9 @@ void SlotcarCommon::path_request_cb(const rmf_fleet_msgs::msg::PathRequest::Shar
   }
 
   RCLCPP_INFO(
-      logger(),
-      "greetings. got a path with %d waypoints",
-      (int)msg->path.size());
+    logger(),
+    "greetings. got a path with %d waypoints",
+    (int)msg->path.size());
 
   // Reset this if we aren't at the final waypoint
   trajectory.resize(msg->path.size());
@@ -113,17 +120,17 @@ void SlotcarCommon::path_request_cb(const rmf_fleet_msgs::msg::PathRequest::Shar
   for (size_t i = 0; i < msg->path.size(); ++i)
   {
     Eigen::Vector3d v3(
-        msg->path[i].x,
-        msg->path[i].y,
-        0);
+      msg->path[i].x,
+      msg->path[i].y,
+      0);
 
     Eigen::Vector3d yaw_euler(
-        0,
-        0,
-        msg->path[i].yaw);
+      0,
+      0,
+      msg->path[i].yaw);
 
     Eigen::Quaterniond quat(
-        Eigen::AngleAxisd(msg->path[i].yaw, Eigen::Vector3d::UnitZ()));
+      Eigen::AngleAxisd(msg->path[i].yaw, Eigen::Vector3d::UnitZ()));
     trajectory[i].translation() = v3;
     trajectory[i].linear() = Eigen::Matrix3d(quat);
 
@@ -143,38 +150,42 @@ void SlotcarCommon::path_request_cb(const rmf_fleet_msgs::msg::PathRequest::Shar
 
   _current_task_id = msg->task_id;
 
-  return; 
+  return;
 }
 
 std::array<double, 2> SlotcarCommon::calculate_control_signals(
-    const std::array<double, 2> &w_tire_actual,
-    const double x_target,
-    const double yaw_target,
-    const double dt) const
+  const std::array<double, 2>& w_tire_actual,
+  const double x_target,
+  const double yaw_target,
+  const double dt) const
 {
   std::array<double, 2> joint_signals;
-  const double v_actual = (w_tire_actual[0] + w_tire_actual[1]) * _tire_radius / 2.0;
-  const double w_actual = (w_tire_actual[1] - w_tire_actual[0]) * _tire_radius / _base_width;
+  const double v_actual = (w_tire_actual[0] + w_tire_actual[1]) * _tire_radius /
+    2.0;
+  const double w_actual = (w_tire_actual[1] - w_tire_actual[0]) * _tire_radius /
+    _base_width;
 
   const double v_target = compute_ds(x_target, v_actual, _nominal_drive_speed,
-                                     _nominal_drive_acceleration, _max_drive_acceleration, dt);
+    _nominal_drive_acceleration, _max_drive_acceleration, dt);
 
   const double w_target = compute_ds(yaw_target, w_actual, _nominal_turn_speed,
-                                     _nominal_turn_acceleration, _max_turn_acceleration, dt);
+    _nominal_turn_acceleration, _max_turn_acceleration, dt);
   for (std::size_t i = 0; i < 2; ++i)
   {
     const double yaw_sign = i == 0 ? -1.0 : 1.0;
-    joint_signals[i] = v_target / _tire_radius + yaw_sign * w_target * _base_width / (2.0 * _tire_radius);
+    joint_signals[i] = v_target / _tire_radius + yaw_sign * w_target *
+      _base_width / (2.0 * _tire_radius);
   }
   return joint_signals;
 }
 
 // TODO refactor, return instead of change reference parameters
-bool SlotcarCommon::update(const Eigen::Isometry3d &pose, const double time, double& x_target, double &yaw_target)
+bool SlotcarCommon::update(const Eigen::Isometry3d& pose, const double time,
+  double& x_target, double& yaw_target)
 {
   const int32_t t_sec = static_cast<int32_t>(time);
   const uint32_t t_nsec =
-      static_cast<uint32_t>((time-static_cast<double>(t_sec)) *1e9);
+    static_cast<uint32_t>((time-static_cast<double>(t_sec)) *1e9);
   const rclcpp::Time now{t_sec, t_nsec, RCL_ROS_TIME};
   _last_update_time = time;
 
@@ -211,16 +222,16 @@ bool SlotcarCommon::update(const Eigen::Isometry3d &pose, const double time, dou
 
       _remaining_path.erase(_remaining_path.begin());
       RCLCPP_INFO(logger(),
-                  "%s reached waypoint %d/%d",
-                  _model_name.c_str(),
-                  _traj_wp_idx,
-                  (int)trajectory.size());
+        "%s reached waypoint %d/%d",
+        _model_name.c_str(),
+        _traj_wp_idx,
+        (int)trajectory.size());
       if (_traj_wp_idx == trajectory.size())
       {
         RCLCPP_INFO(
-            logger(),
-            "%s reached goal -- rotating to face target",
-            _model_name.c_str());
+          logger(),
+          "%s reached goal -- rotating to face target",
+          _model_name.c_str());
       }
     }
 
@@ -260,9 +271,9 @@ bool SlotcarCommon::update(const Eigen::Isometry3d &pose, const double time, dou
 }
 
 double SlotcarCommon::compute_change_in_rotation(
-    Eigen::Vector3d heading_vec,
-    const Eigen::Vector3d &dpos,
-    double* permissive)
+  Eigen::Vector3d heading_vec,
+  const Eigen::Vector3d& dpos,
+  double* permissive)
 {
   if (dpos.norm() < 1e-3)
   {
@@ -292,11 +303,12 @@ double SlotcarCommon::compute_change_in_rotation(
   return d_yaw;
 }
 
-void SlotcarCommon::publish_robot_state(const Eigen::Isometry3d &pose, const double time)
+void SlotcarCommon::publish_robot_state(const Eigen::Isometry3d& pose,
+  const double time)
 {
   const int32_t t_sec = static_cast<int32_t>(time);
   const uint32_t t_nsec =
-      static_cast<uint32_t>((time-static_cast<double>(t_sec)) *1e9);
+    static_cast<uint32_t>((time-static_cast<double>(t_sec)) *1e9);
   const rclcpp::Time ros_time{t_sec, t_nsec, RCL_ROS_TIME};
   if ((time - last_tf2_pub) > (1.0 / TF2_RATE))
   {
@@ -312,7 +324,8 @@ void SlotcarCommon::publish_robot_state(const Eigen::Isometry3d &pose, const dou
   }
 }
 
-void SlotcarCommon::publish_tf2(const Eigen::Isometry3d &pose, const rclcpp::Time &t)
+void SlotcarCommon::publish_tf2(const Eigen::Isometry3d& pose,
+  const rclcpp::Time& t)
 {
   geometry_msgs::msg::TransformStamped tf_stamped;
   Eigen::Quaterniond quat(pose.linear());
@@ -329,7 +342,8 @@ void SlotcarCommon::publish_tf2(const Eigen::Isometry3d &pose, const rclcpp::Tim
   _tf2_broadcaster->sendTransform(tf_stamped);
 }
 
-void SlotcarCommon::publish_state_topic(const Eigen::Isometry3d &pose, const rclcpp::Time &t)
+void SlotcarCommon::publish_state_topic(const Eigen::Isometry3d& pose,
+  const rclcpp::Time& t)
 {
   rmf_fleet_msgs::msg::RobotState robot_state_msg;
   robot_state_msg.name = _model_name;
@@ -346,8 +360,8 @@ void SlotcarCommon::publish_state_topic(const Eigen::Isometry3d &pose, const rcl
   _robot_state_pub->publish(robot_state_msg);
 }
 
-void SlotcarCommon::mode_request_cb(const rmf_fleet_msgs::msg::ModeRequest::SharedPtr msg)
+void SlotcarCommon::mode_request_cb(
+  const rmf_fleet_msgs::msg::ModeRequest::SharedPtr msg)
 {
   _current_mode = msg->mode;
 }
-

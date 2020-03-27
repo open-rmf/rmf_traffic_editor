@@ -38,20 +38,23 @@ public:
   bool _debuggable;
 
   Door(const bool debuggable,
-       const Entity &entity,
-       EntityComponentManager &ecm,
-       const MotionParams& params,
-       const bool flip_direction = false)
+    const Entity& entity,
+    EntityComponentManager& ecm,
+    const MotionParams& params,
+    const bool flip_direction = false)
   : _debuggable(debuggable),
     _entity(entity),
     _params(params)
   {
     // Create components for joint position, velocity and velocitycmd
-    if (!ecm.EntityHasComponentType(entity, components::JointPosition().TypeId()))
+    if (!ecm.EntityHasComponentType(entity,
+      components::JointPosition().TypeId()))
       ecm.CreateComponent(entity, components::JointPosition({0}));
-    if (!ecm.EntityHasComponentType(entity, components::JointVelocity().TypeId()))
+    if (!ecm.EntityHasComponentType(entity,
+      components::JointVelocity().TypeId()))
       ecm.CreateComponent(entity, components::JointVelocity({0}));
-    if (!ecm.EntityHasComponentType(entity, components::JointVelocityCmd().TypeId()))
+    if (!ecm.EntityHasComponentType(entity,
+      components::JointVelocityCmd().TypeId()))
       ecm.CreateComponent(entity, components::JointVelocityCmd({0}));
     auto axis = ecm.Component<components::JointAxis>(entity)->Data();
     auto lower = axis.Lower();
@@ -68,24 +71,24 @@ public:
     }
   }
 
-  bool is_open(EntityComponentManager &ecm) const
+  bool is_open(EntityComponentManager& ecm) const
   {
     auto pos = _get_door_position(ecm);
     return std::abs(_open_position - pos) <= _params.dx_min;
   }
 
-  bool is_closed(EntityComponentManager &ecm) const
+  bool is_closed(EntityComponentManager& ecm) const
   {
     auto pos = _get_door_position(ecm);
     return std::abs(_closed_position - pos) <= _params.dx_min;
   }
 
-  void open(EntityComponentManager &ecm, double dt)
+  void open(EntityComponentManager& ecm, double dt)
   {
     _set_door_command(ecm, _open_position, dt);
   }
 
-  void close(EntityComponentManager &ecm, double dt)
+  void close(EntityComponentManager& ecm, double dt)
   {
     _set_door_command(ecm, _closed_position, dt);
   }
@@ -93,7 +96,8 @@ public:
 
 private:
 
-  void _set_door_command(EntityComponentManager &ecm, const double target, const double dt)
+  void _set_door_command(EntityComponentManager& ecm, const double target,
+    const double dt)
   {
     double dx = target - _get_door_position(ecm);
     auto vel_cmd = ecm.Component<components::JointVelocityCmd>(_entity);
@@ -110,12 +114,12 @@ private:
   }
 
   // TODO template these two functions
-  double _get_door_position(EntityComponentManager &ecm) const
+  double _get_door_position(EntityComponentManager& ecm) const
   {
     return ecm.Component<components::JointPosition>(_entity)->Data()[0];
   }
 
-  double _get_door_velocity(EntityComponentManager &ecm) const
+  double _get_door_velocity(EntityComponentManager& ecm) const
   {
     return ecm.Component<components::JointVelocity>(_entity)->Data()[0];
   }
@@ -128,10 +132,10 @@ private:
 
 };
 
-class IGNITION_GAZEBO_VISIBLE DoorPlugin 
-    : public System,
-      public ISystemConfigure,
-      public ISystemPreUpdate
+class IGNITION_GAZEBO_VISIBLE DoorPlugin
+  : public System,
+  public ISystemConfigure,
+  public ISystemPreUpdate
 {
 private:
   rclcpp::Node::SharedPtr _ros_node;
@@ -161,8 +165,9 @@ public:
     // Do nothing
   }
 
-  void Configure(const Entity &entity, const std::shared_ptr<const sdf::Element> &sdf,
-      EntityComponentManager &ecm, EventManager &_eventMgr) override
+  void Configure(const Entity& entity,
+    const std::shared_ptr<const sdf::Element>& sdf,
+    EntityComponentManager& ecm, EventManager& _eventMgr) override
   {
     //_ros_node = gazebo_ros::Node::Get(sdf);
     // TODO get properties from sdf instead of hardcoded (will fail for multiple instantiations)
@@ -194,60 +199,62 @@ public:
     std::string right_door_joint_name;
     std::string door_type;
     if (!get_element_required(sdfClone, "door", door_element) ||
-        !get_sdf_attribute_required<std::string>(
-          door_element, "left_joint_name", left_door_joint_name) ||
-        !get_sdf_attribute_required<std::string>(
-          door_element, "right_joint_name", right_door_joint_name) ||
-        !get_sdf_attribute_required<std::string>(
-          door_element, "type", door_type))
+      !get_sdf_attribute_required<std::string>(
+        door_element, "left_joint_name", left_door_joint_name) ||
+      !get_sdf_attribute_required<std::string>(
+        door_element, "right_joint_name", right_door_joint_name) ||
+      !get_sdf_attribute_required<std::string>(
+        door_element, "type", door_type))
     {
       RCLCPP_ERROR(
-            _ros_node->get_logger(),
-            " -- Missing required parameters for [%s] plugin",
-            _model.Name(ecm).c_str());
+        _ros_node->get_logger(),
+        " -- Missing required parameters for [%s] plugin",
+        _model.Name(ecm).c_str());
       return;
     }
 
     if (left_door_joint_name != "empty_joint")
     {
-      const auto left_door_joint = _model.JointByName(ecm, left_door_joint_name);
+      const auto left_door_joint =
+        _model.JointByName(ecm, left_door_joint_name);
       if (!left_door_joint)
       {
         RCLCPP_ERROR(
-              _ros_node->get_logger(),
-              " -- Model is missing the left door joint [%s]",
-              left_door_joint_name.c_str());
+          _ros_node->get_logger(),
+          " -- Model is missing the left door joint [%s]",
+          left_door_joint_name.c_str());
         return;
       }
       _doors.emplace_back(_model.Name(ecm) == "chart_lift_door",
-                          left_door_joint, ecm, params);
+        left_door_joint, ecm, params);
     }
 
     if (right_door_joint_name != "empty_joint")
     {
-      const auto right_door_joint = _model.JointByName(ecm, right_door_joint_name);
+      const auto right_door_joint = _model.JointByName(ecm,
+        right_door_joint_name);
       if (!right_door_joint)
       {
         RCLCPP_ERROR(
-              _ros_node->get_logger(),
-              " -- Model is missing the right door joint [%s]",
-              right_door_joint_name.c_str());
+          _ros_node->get_logger(),
+          " -- Model is missing the right door joint [%s]",
+          right_door_joint_name.c_str());
         return;
       }
       _doors.emplace_back(_model.Name(ecm) == "chart_lift_door",
-                          right_door_joint, ecm, params, true);
+        right_door_joint, ecm, params, true);
     }
 
     _door_state_pub = _ros_node->create_publisher<DoorState>(
-          "/door_states", rclcpp::SystemDefaultsQoS());
+      "/door_states", rclcpp::SystemDefaultsQoS());
 
     _door_request_sub = _ros_node->create_subscription<DoorRequest>(
-          "/door_requests", rclcpp::SystemDefaultsQoS(),
-          [&](DoorRequest::UniquePtr msg)
-    {
-      if (msg->door_name == _state.door_name)
-        _request = *msg;
-    });
+      "/door_requests", rclcpp::SystemDefaultsQoS(),
+      [&](DoorRequest::UniquePtr msg)
+      {
+        if (msg->door_name == _state.door_name)
+          _request = *msg;
+      });
 
     _state.door_name = _model.Name(ecm);
 
@@ -257,22 +264,24 @@ public:
     _initialized = true;
 
     RCLCPP_INFO(
-          _ros_node->get_logger(),
-          "Finished loading [%s]",
-          _model.Name(ecm).c_str());
+      _ros_node->get_logger(),
+      "Finished loading [%s]",
+      _model.Name(ecm).c_str());
   }
 
-  void PreUpdate(const UpdateInfo &info, EntityComponentManager &ecm) override
+  void PreUpdate(const UpdateInfo& info, EntityComponentManager& ecm) override
   {
     // TODO parallel thread executor?
     rclcpp::spin_some(_ros_node);
     if (!_initialized)
       return;
-    double dt = (std::chrono::duration_cast<std::chrono::nanoseconds>
-        (info.dt).count()) * 1e-9;
+    double dt =
+      (std::chrono::duration_cast<std::chrono::nanoseconds>(info.dt).count())
+      * 1e-9;
 
-    double t = (std::chrono::duration_cast<std::chrono::nanoseconds>
-        (info.simTime).count()) * 1e-9;
+    double t =
+      (std::chrono::duration_cast<std::chrono::nanoseconds>(info.simTime).
+      count()) * 1e-9;
 
     if (_request.requested_mode.value == DoorMode::MODE_OPEN)
     {
@@ -309,7 +318,7 @@ public:
 
 private:
 
-  bool all_doors_open(EntityComponentManager &ecm) const
+  bool all_doors_open(EntityComponentManager& ecm) const
   {
     for (const auto& door : _doors)
     {
@@ -320,7 +329,7 @@ private:
     return true;
   }
 
-  bool all_doors_closed(EntityComponentManager &ecm) const
+  bool all_doors_closed(EntityComponentManager& ecm) const
   {
     for (const auto& door : _doors)
     {
@@ -332,12 +341,14 @@ private:
   }
 };
 
-IGNITION_ADD_PLUGIN(DoorPlugin,
-                    System,
-                    DoorPlugin::ISystemConfigure,
-                    DoorPlugin::ISystemPreUpdate)
+IGNITION_ADD_PLUGIN(
+  DoorPlugin,
+  System,
+  DoorPlugin::ISystemConfigure,
+  DoorPlugin::ISystemPreUpdate)
 
 // TODO would prefer namespaced
-IGNITION_ADD_PLUGIN_ALIAS(DoorPlugin,
-                          "door")
+IGNITION_ADD_PLUGIN_ALIAS(
+  DoorPlugin,
+  "door")
 } // namespace building_sim_ign
