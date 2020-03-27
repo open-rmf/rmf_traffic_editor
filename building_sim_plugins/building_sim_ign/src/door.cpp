@@ -208,31 +208,35 @@ public:
       return;
     }
 
-    const auto left_door_joint = _model.JointByName(ecm, left_door_joint_name);
-    if (!left_door_joint)
+    if (left_door_joint_name != "empty_joint")
     {
-      RCLCPP_ERROR(
-            _ros_node->get_logger(),
-            " -- Model is missing the left door joint [%s]",
-            left_door_joint_name.c_str());
-      return;
+      const auto left_door_joint = _model.JointByName(ecm, left_door_joint_name);
+      if (!left_door_joint)
+      {
+        RCLCPP_ERROR(
+              _ros_node->get_logger(),
+              " -- Model is missing the left door joint [%s]",
+              left_door_joint_name.c_str());
+        return;
+      }
+      _doors.emplace_back(_model.Name(ecm) == "chart_lift_door",
+                          left_door_joint, ecm, params);
     }
 
-    const auto right_door_joint = _model.JointByName(ecm, right_door_joint_name);
-    if (!right_door_joint)
+    if (right_door_joint_name != "empty_joint")
     {
-      RCLCPP_ERROR(
-            _ros_node->get_logger(),
-            " -- Model is missing the right door joint [%s]",
-            right_door_joint_name.c_str());
-      return;
+      const auto right_door_joint = _model.JointByName(ecm, right_door_joint_name);
+      if (!right_door_joint)
+      {
+        RCLCPP_ERROR(
+              _ros_node->get_logger(),
+              " -- Model is missing the right door joint [%s]",
+              right_door_joint_name.c_str());
+        return;
+      }
+      _doors.emplace_back(_model.Name(ecm) == "chart_lift_door",
+                          right_door_joint, ecm, params, true);
     }
-
-    _doors.emplace_back(_model.Name(ecm) == "chart_lift_door",
-                        left_door_joint, ecm, params);
-    _doors.emplace_back(_model.Name(ecm) == "chart_lift_door",
-                        right_door_joint, ecm, params, true);
-
 
     _door_state_pub = _ros_node->create_publisher<DoorState>(
           "/door_states", rclcpp::SystemDefaultsQoS());

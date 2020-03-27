@@ -1,0 +1,49 @@
+levels:
+  L1:
+    doors:
+      - [10, 11, {motion_axis: [1, start], motion_degrees: [3, 90], motion_direction: [2, -1], name: [1, negative_motion], type: [1, double_hinged]}]
+      - [8, 9, {motion_axis: [1, start], motion_degrees: [3, 90], motion_direction: [2, 1], name: [1, positive_motion], type: [1, double_hinged]}]
+    elevation: 0
+    flattened_x_offset: 0
+    flattened_y_offset: 0
+    floors:
+      - parameters: {texture_name: [1, blue_linoleum], texture_rotation: [3, 0], texture_scale: [3, 1]}
+        vertices: [0, 3, 4, 7]
+    layers:
+      {}
+    measurements:
+      - [0, 7, {distance: [3, 4]}]
+    models:
+      - {model_name: VendingMachine, name: VendingMachine, static: true, x: 62.373, y: 73.121, yaw: -3.1416, z: 0}
+      - {model_name: VendingMachine, name: VendingMachine, static: true, x: 62.64, y: 112.802, yaw: -3.1416, z: 0}
+      - {model_name: VendingMachine, name: VendingMachine, static: true, x: 111.89, y: 72.617, yaw: -3.1416, z: 0}
+      - {model_name: VendingMachine, name: VendingMachine, static: true, x: 111.355, y: 108.893, yaw: -3.1416, z: 0}
+    vertices:
+      - [27.219, 60.337, 0, ""]
+      - [75.157, 60.87, 0, ""]
+      - [122.026, 60.739, 0, ""]
+      - [177.423, 60.604, 0, ""]
+      - [177.157, 124.787, 0, ""]
+      - [122.828, 124.787, 0, ""]
+      - [74.89, 125.585, 0, ""]
+      - [25.621, 126.118, 0, ""]
+      - [75.157, 107.742, 0, ""]
+      - [74.89, 77.116, 0, ""]
+      - [122.029, 73.92, 0, ""]
+      - [122.828, 104.813, 0, ""]
+    walls:
+      - [0, 1, {}]
+      - [1, 2, {}]
+      - [2, 3, {}]
+      - [7, 6, {}]
+      - [6, 5, {}]
+      - [5, 4, {}]
+      - [5, 11, {}]
+      - [6, 8, {}]
+      - [9, 1, {}]
+      - [10, 2, {}]
+    x_meters: 3.161074671053361
+    y_meters: 3.161074671053361
+lifts:
+  {}
+name: building

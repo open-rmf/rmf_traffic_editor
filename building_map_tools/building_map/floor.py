@@ -148,7 +148,7 @@ class Floor:
         for hole in holes:
             hole_vertices = []
             for v_idx in hole.vertex_indices:
-                vx, vy = transform_vertex(vertices[v_idx])
+                vx, vy = transformed_vertices[v_idx].xy()
                 hole_vertices.append((vx, vy))
             hole_vert_lists.append(hole_vertices)
         print(f'hole vertices: {hole_vert_lists}')
