@@ -45,7 +45,7 @@ include(GNUInstallDirs)
 #    ${GAZEBO_INCLUDE_DIRS}
 #)
 
-add_library(slotcar_common SHARED ${PROJECT_SOURCE_DIR}/src/slotcar.cpp)
+add_library(slotcar_common SHARED ${PROJECT_SOURCE_DIR}/src/slotcar_common.cpp)
 
 target_link_libraries(slotcar_common
   PUBLIC

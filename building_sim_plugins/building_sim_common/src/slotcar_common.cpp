@@ -88,18 +88,18 @@ void SlotcarCommon::path_request_cb(
   if (msg->robot_name != _model_name)
   {
     RCLCPP_INFO(
-          logger(),
-          "Ignoring path request for ["
-          + msg->robot_name + "]");
+      logger(),
+      "Ignoring path request for ["
+      + msg->robot_name + "]");
     return;
   }
 
   if (msg->task_id == _current_task_id)
   {
     RCLCPP_INFO(
-          logger(),
-          "Already received task [" + _current_task_id
-          + "] -- continuing as normal");
+      logger(),
+      "Already received task [" + _current_task_id
+      + "] -- continuing as normal");
     return;
   }
 
@@ -199,7 +199,7 @@ bool SlotcarCommon::update(const Eigen::Isometry3d& pose, const double time,
   if ((unsigned int)_traj_wp_idx < trajectory.size())
   {
     const Eigen::Vector3d dpos = compute_dpos(
-          trajectory[_traj_wp_idx], pose);
+      trajectory[_traj_wp_idx], pose);
 
     auto dpos_mag = dpos.norm();
     const auto hold_time = _hold_times[_traj_wp_idx];
@@ -212,7 +212,7 @@ bool SlotcarCommon::update(const Eigen::Isometry3d& pose, const double time,
       auto goal_heading = compute_heading(trajectory[_traj_wp_idx]);
 
       yaw_target = compute_change_in_rotation(
-            current_heading, goal_heading);
+        current_heading, goal_heading);
     }
     else if (close_enough)
     {
@@ -254,8 +254,8 @@ bool SlotcarCommon::update(const Eigen::Isometry3d& pose, const double time,
   {
     const auto goal_heading = compute_heading(trajectory.back());
     yaw_target = compute_change_in_rotation(
-        current_heading,
-        goal_heading);
+      current_heading,
+      goal_heading);
 
     // Put in a deadzone if yaw is small enough. This essentially locks the
     // tires. COMMENTED OUT as it breaks rotations for some reason...
