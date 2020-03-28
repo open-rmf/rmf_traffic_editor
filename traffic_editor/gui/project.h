@@ -44,6 +44,7 @@ public:
   std::vector<TrafficMap> traffic_maps;
 
   int scenario_idx = -1;  // the current scenario being viewed/edited
+  int traffic_map_idx = -1;  // the current traffic map being viewed/edited
 
   /////////////////////////////////
   Project();

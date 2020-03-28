@@ -125,10 +125,15 @@ Editor::Editor()
       [this]() { this->create_scene(); });
 
   traffic_table = new TrafficTable;
+  connect(
+      traffic_table,
+      &TableList::redraw,
+      [this]() { this->create_scene(); });
 
   scenario_table = new ScenarioTable;
   connect(
-      scenario_table, &QTableWidget::cellClicked,
+      scenario_table,
+      &QTableWidget::cellClicked,
       [=](int row, int /*col*/)
       {
         project.scenario_row_clicked(row);
@@ -449,10 +454,7 @@ bool Editor::load_project(const QString &filename)
 
   create_scene();
 
-  populate_layers_table();
-  level_table->update(project.building);
-  lift_table->update(project.building);
-  scenario_table->update(project);
+  update_tables();
 
   QSettings settings;
   settings.setValue(preferences_keys::previous_project_path, filename);
@@ -532,7 +534,7 @@ void Editor::project_new()
 
   create_scene();
   project_save();
-  level_table->update(project.building);
+  update_tables();
 
   QSettings settings;
   settings.setValue(
@@ -2045,4 +2047,13 @@ void Editor::set_mode(const EditorModeId _mode, const QString& mode_string)
 
   // "multi-purpose" tools
   set_tool_visibility(TOOL_EDIT_POLYGON, mode != MODE_TRAFFIC);
+}
+
+void Editor::update_tables()
+{
+  populate_layers_table();
+  level_table->update(project.building);
+  lift_table->update(project.building);
+  scenario_table->update(project);
+  traffic_table->update(project);
 }

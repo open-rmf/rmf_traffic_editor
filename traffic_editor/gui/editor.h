@@ -168,6 +168,7 @@ private:
   QTabWidget *right_tab_widget;
 
   QTableWidget *create_tabbed_table();
+  void update_tables();
 
   QTableWidget *layers_table;
   void populate_layers_table();

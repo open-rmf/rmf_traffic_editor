@@ -28,6 +28,7 @@ public:
   std::string filename;
   double x_offset = 0;
   double y_offset = 0;
+  bool visible = true;
 
   /////////////////////////////////
   TrafficMap();
