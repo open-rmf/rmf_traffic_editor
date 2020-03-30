@@ -16,6 +16,7 @@
 */
 
 #include "traffic_table.h"
+#include "traffic_map_dialog.h"
 #include <QtWidgets>
 
 TrafficTable::TrafficTable()
@@ -69,9 +70,8 @@ void TrafficTable::update(Project& project)
         &QAbstractButton::clicked,
         [this, &project, i]()
         {
-          // TrafficMapDialog dialog(project.traffic_maps[i]);
-          // dialog.exec();
-          QMessageBox::information(this, "TODO", "TODO");
+          TrafficMapDialog dialog(project.traffic_maps[i]);
+          dialog.exec();
           update(project);
           emit redraw();
         });
@@ -89,10 +89,8 @@ void TrafficTable::update(Project& project)
       [this, &project]()
       {
         TrafficMap traffic_map;
-        QMessageBox::information(this, "TODO", "TODO");
-        // TrafficMapDialog dialog(traffic_map);
-        //if (dialog.exec() == QDialog::Accepted)
-        if (false)
+        TrafficMapDialog dialog(traffic_map);
+        if (dialog.exec() == QDialog::Accepted)
         {
           project.traffic_maps.push_back(traffic_map);
           update(project);
