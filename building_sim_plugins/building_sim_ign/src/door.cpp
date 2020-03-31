@@ -106,7 +106,7 @@ private:
       dx = 0.0;
 
     const double door_v = compute_desired_rate_of_change(
-          dx, _get_door_velocity(ecm), _params, dt);
+      dx, _get_door_velocity(ecm), _params, dt);
 
     vel_cmd->Data()[0] = door_v;
     // TODO f_max in the SDF file
@@ -181,9 +181,9 @@ public:
     _ros_node = std::make_shared<rclcpp::Node>(plugin_name);
 
     RCLCPP_INFO(
-          _ros_node->get_logger(),
-          "Loading DoorPlugin for [%s]",
-          _model.Name(ecm).c_str());
+      _ros_node->get_logger(),
+      "Loading DoorPlugin for [%s]",
+      _model.Name(ecm).c_str());
     auto sdfClone = sdf->Clone();
 
     MotionParams params;
@@ -232,7 +232,7 @@ public:
     if (right_door_joint_name != "empty_joint")
     {
       const auto right_door_joint = _model.JointByName(ecm,
-        right_door_joint_name);
+          right_door_joint_name);
       if (!right_door_joint)
       {
         RCLCPP_ERROR(

@@ -82,7 +82,7 @@ void SlotcarPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf)
     "Initialising slotcar for " + model->GetName());
 
   _update_connection = gazebo::event::Events::ConnectWorldUpdateBegin(
-      std::bind(&SlotcarPlugin::OnUpdate, this));
+    std::bind(&SlotcarPlugin::OnUpdate, this));
 
   joints[0] = _model->GetJoint("joint_tire_left");
   if (!joints[0])

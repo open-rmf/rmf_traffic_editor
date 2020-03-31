@@ -183,7 +183,7 @@ void SlotcarCommon::read_sdf(SdfPtrT& sdf)
   RCLCPP_INFO(
     logger(),
     "Setting nominal drive acceleration to: " + std::to_string(
-    _nominal_drive_acceleration));
+      _nominal_drive_acceleration));
 
   if (sdf->HasElement("max_drive_acceleration"))
     _max_drive_acceleration =
@@ -202,7 +202,7 @@ void SlotcarCommon::read_sdf(SdfPtrT& sdf)
     _nominal_turn_acceleration = sdf->template Get<double>(
       "nominal_turn_acceleration");
   RCLCPP_INFO(logger(), "Setting nominal turn acceleration to:" + std::to_string(
-    _nominal_turn_acceleration));
+      _nominal_turn_acceleration));
 
   if (sdf->HasElement("max_turn_acceleration"))
     _max_turn_acceleration = sdf->template Get<double>("max_turn_acceleration");

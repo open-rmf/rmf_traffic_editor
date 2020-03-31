@@ -70,9 +70,9 @@ public:
   {
     bool visible = button->isChecked();
     printf(
-        "clicked: [%s] %s\n",
-        model_name.c_str(),
-        visible ? "SHOW" : "HIDE");
+      "clicked: [%s] %s\n",
+      model_name.c_str(),
+      visible ? "SHOW" : "HIDE");
     gazebo::msgs::Visual visual_msg;
     visual_msg.set_parent_name("world");
     visual_msg.set_name(model_name);

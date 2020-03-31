@@ -14,8 +14,8 @@ static double compute_yaw(const Eigen::Isometry3d& pose)
   auto quat = Eigen::Quaterniond(pose.linear());
   // Taken from ignition math quaternion Euler()
   double yaw = std::atan2(2 * (quat.x()*quat.y() + quat.w()*quat.z()),
-    (quat.w() * quat.w()) + (quat.x() * quat.x()) - (quat.y() * quat.y()) -
-    (quat.z() * quat.z()));
+      (quat.w() * quat.w()) + (quat.x() * quat.x()) - (quat.y() * quat.y()) -
+      (quat.z() * quat.z()));
   return yaw;
 }
 
@@ -67,7 +67,7 @@ void SlotcarCommon::init_ros_node(const rclcpp::Node::SharedPtr node)
 
   _robot_state_pub =
     _ros_node->create_publisher<rmf_fleet_msgs::msg::RobotState>(
-      "/robot_state", 10);
+    "/robot_state", 10);
 
   _traj_sub = _ros_node->create_subscription<rmf_fleet_msgs::msg::PathRequest>(
     "/robot_path_requests",
@@ -166,10 +166,10 @@ std::array<double, 2> SlotcarCommon::calculate_control_signals(
     _base_width;
 
   const double v_target = compute_ds(x_target, v_actual, _nominal_drive_speed,
-    _nominal_drive_acceleration, _max_drive_acceleration, dt);
+      _nominal_drive_acceleration, _max_drive_acceleration, dt);
 
   const double w_target = compute_ds(yaw_target, w_actual, _nominal_turn_speed,
-    _nominal_turn_acceleration, _max_turn_acceleration, dt);
+      _nominal_turn_acceleration, _max_turn_acceleration, dt);
   for (std::size_t i = 0; i < 2; ++i)
   {
     const double yaw_sign = i == 0 ? -1.0 : 1.0;

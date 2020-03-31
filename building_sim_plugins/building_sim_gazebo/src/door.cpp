@@ -73,7 +73,7 @@ private:
       dx = 0.0;
 
     const double door_v = compute_desired_rate_of_change(
-          dx, _joint->GetVelocity(0), _params, dt);
+      dx, _joint->GetVelocity(0), _params, dt);
 
     _joint->SetParam("vel", 0, door_v);
     _joint->SetParam("fmax", 0, _params.f_max);
@@ -125,9 +125,9 @@ public:
     _model = model;
 
     RCLCPP_INFO(
-          _ros_node->get_logger(),
-          "Loading DoorPlugin for [%s]",
-          _model->GetName().c_str());
+      _ros_node->get_logger(),
+      "Loading DoorPlugin for [%s]",
+      _model->GetName().c_str());
 
     MotionParams params;
     get_sdf_param_if_available<double>(sdf, "v_max_door", params.v_max);
@@ -142,16 +142,16 @@ public:
     std::string door_type;
     if (!get_element_required(sdf, "door", door_element) ||
       !get_sdf_attribute_required<std::string>(
-          door_element, "left_joint_name", left_door_joint_name) ||
+        door_element, "left_joint_name", left_door_joint_name) ||
       !get_sdf_attribute_required<std::string>(
-          door_element, "right_joint_name", right_door_joint_name) ||
+        door_element, "right_joint_name", right_door_joint_name) ||
       !get_sdf_attribute_required<std::string>(
-          door_element, "type", door_type))
+        door_element, "type", door_type))
     {
       RCLCPP_ERROR(
-            _ros_node->get_logger(),
-            " -- Missing required parameters for [%s] plugin",
-            _model->GetName().c_str());
+        _ros_node->get_logger(),
+        " -- Missing required parameters for [%s] plugin",
+        _model->GetName().c_str());
       return;
     }
 
@@ -159,9 +159,9 @@ public:
       right_door_joint_name == "empty_joint")
     {
       RCLCPP_ERROR(
-          _ros_node->get_logger(),
-          " -- Both door joint names are missing for [%s] plugin, at least one"
-          " is required", _model->GetName().c_str());
+        _ros_node->get_logger(),
+        " -- Both door joint names are missing for [%s] plugin, at least one"
+        " is required", _model->GetName().c_str());
       return;
     }
 
@@ -171,13 +171,13 @@ public:
       if (!left_door_joint)
       {
         RCLCPP_ERROR(
-              _ros_node->get_logger(),
-              " -- Model is missing the left door joint [%s]",
-              left_door_joint_name.c_str());
+          _ros_node->get_logger(),
+          " -- Model is missing the left door joint [%s]",
+          left_door_joint_name.c_str());
         return;
       }
       _doors.emplace_back(_model->GetName() == "chart_lift_door",
-                          left_door_joint, params);
+        left_door_joint, params);
     }
 
     if (right_door_joint_name != "empty_joint")
@@ -186,23 +186,23 @@ public:
       if (!right_door_joint)
       {
         RCLCPP_ERROR(
-              _ros_node->get_logger(),
-              " -- Model is missing the right door joint [%s]",
-              right_door_joint_name.c_str());
+          _ros_node->get_logger(),
+          " -- Model is missing the right door joint [%s]",
+          right_door_joint_name.c_str());
         return;
       }
       _doors.emplace_back(_model->GetName() == "chart_lift_door",
-                          right_door_joint, params, true);
+        right_door_joint, params, true);
     }
 
     _update_connection = gazebo::event::Events::ConnectWorldUpdateBegin(
       std::bind(&DoorPlugin::on_update, this));
 
     _door_state_pub = _ros_node->create_publisher<DoorState>(
-          "/door_states", rclcpp::SystemDefaultsQoS());
+      "/door_states", rclcpp::SystemDefaultsQoS());
 
     _door_request_sub = _ros_node->create_subscription<DoorRequest>(
-          "/door_requests", rclcpp::SystemDefaultsQoS(),
+      "/door_requests", rclcpp::SystemDefaultsQoS(),
       [&](DoorRequest::UniquePtr msg)
       {
         if (msg->door_name == _state.door_name)
@@ -217,9 +217,9 @@ public:
     _initialized = true;
 
     RCLCPP_INFO(
-          _ros_node->get_logger(),
-          "Finished loading [%s]",
-          _model->GetName().c_str());
+      _ros_node->get_logger(),
+      "Finished loading [%s]",
+      _model->GetName().c_str());
   }
 
 private:
