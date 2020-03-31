@@ -16,6 +16,7 @@
 */
 
 #include "traffic_map.h"
+#include <yaml-cpp/yaml.h>
 
 using std::string;
 
@@ -49,6 +50,19 @@ bool TrafficMap::from_project_yaml(const string& _name, const YAML::Node& y)
 
 bool TrafficMap::load_file()
 {
+  printf("Building::load_yaml_file(%s)\n", filename.c_str());
+  YAML::Node y;
+  try
+  {
+    y = YAML::LoadFile(filename.c_str());
+  }
+  catch (const std::exception& e)
+  {
+    printf("couldn't parse %s: %s", filename.c_str(), e.what());
+    return false;
+  }
+  printf("parsed traffic-map file %s\n", filename.c_str());
+
   return true;
 }
 
