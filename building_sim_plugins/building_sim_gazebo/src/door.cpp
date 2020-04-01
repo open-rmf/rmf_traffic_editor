@@ -5,15 +5,12 @@
 #include <gazebo_ros/node.hpp>
 #include <rclcpp/rclcpp.hpp>
 
-#include <rmf_door_msgs/msg/door_mode.hpp>
-#include <rmf_door_msgs/msg/door_state.hpp>
-#include <rmf_door_msgs/msg/door_request.hpp>
-
 #include <building_sim_common/utils.hpp>
 #include <building_sim_common/door_common.hpp>
 
 using namespace building_sim_common;
 
+namespace building_sim_gazebo {
 //==============================================================================
 class Door
 {
@@ -240,3 +237,5 @@ private:
 };
 
 GZ_REGISTER_MODEL_PLUGIN(DoorPlugin)
+
+} // namespace building_sim_gazebo 

@@ -15,11 +15,8 @@
 
 #include <rclcpp/rclcpp.hpp>
 
-#include <rmf_door_msgs/msg/door_mode.hpp>
-#include <rmf_door_msgs/msg/door_state.hpp>
-#include <rmf_door_msgs/msg/door_request.hpp>
-
 #include <building_sim_common/utils.hpp>
+#include <building_sim_common/door_common.hpp>
 
 // TODO remove this
 using namespace ignition;
@@ -140,18 +137,9 @@ class IGNITION_GAZEBO_VISIBLE DoorPlugin
 private:
   rclcpp::Node::SharedPtr _ros_node;
   Model _model;
-
-  using DoorMode = rmf_door_msgs::msg::DoorMode;
-  using DoorState = rmf_door_msgs::msg::DoorState;
-  rclcpp::Publisher<DoorState>::SharedPtr _door_state_pub;
-
-  using DoorRequest = rmf_door_msgs::msg::DoorRequest;
-  rclcpp::Subscription<DoorRequest>::SharedPtr _door_request_sub;
+  std::shared_ptr<DoorCommon> _door_common = nullptr;
 
   std::vector<Door> _doors;
-
-  DoorState _state;
-  DoorRequest _request;
 
   double _last_pub_time;
 
@@ -186,32 +174,16 @@ public:
       _model.Name(ecm).c_str());
     auto sdfClone = sdf->Clone();
 
-    MotionParams params;
-    get_sdf_param_if_available<double>(sdfClone, "v_max_door", params.v_max);
-    get_sdf_param_if_available<double>(sdfClone, "a_max_door", params.a_max);
-    get_sdf_param_if_available<double>(sdfClone, "a_nom_door", params.a_nom);
-    get_sdf_param_if_available<double>(sdfClone, "dx_min_door", params.dx_min);
-    // TODO add to traffic_editor
-    //get_sdf_param_if_available<double>(sdf, "f_max_door", params.f_max);
+    _door_common = DoorCommon::make(
+         _model.Name(ecm),
+        _ros_node,
+        sdf);
 
-    sdf::ElementPtr door_element;
-    std::string left_door_joint_name;
-    std::string right_door_joint_name;
-    std::string door_type;
-    if (!get_element_required(sdfClone, "door", door_element) ||
-      !get_sdf_attribute_required<std::string>(
-        door_element, "left_joint_name", left_door_joint_name) ||
-      !get_sdf_attribute_required<std::string>(
-        door_element, "right_joint_name", right_door_joint_name) ||
-      !get_sdf_attribute_required<std::string>(
-        door_element, "type", door_type))
-    {
-      RCLCPP_ERROR(
-        _ros_node->get_logger(),
-        " -- Missing required parameters for [%s] plugin",
-        _model.Name(ecm).c_str());
+    if (!_door_common)
       return;
-    }
+
+    const auto left_door_joint_name = _door_common->left_door_joint_name();
+    const auto right_door_joint_name = _door_common->right_door_joint_name();
 
     if (left_door_joint_name != "empty_joint")
     {
@@ -245,22 +217,6 @@ public:
         right_door_joint, ecm, params, true);
     }
 
-    _door_state_pub = _ros_node->create_publisher<DoorState>(
-      "/door_states", rclcpp::SystemDefaultsQoS());
-
-    _door_request_sub = _ros_node->create_subscription<DoorRequest>(
-      "/door_requests", rclcpp::SystemDefaultsQoS(),
-      [&](DoorRequest::UniquePtr msg)
-      {
-        if (msg->door_name == _state.door_name)
-          _request = *msg;
-      });
-
-    _state.door_name = _model.Name(ecm);
-
-    // Set the mode to closed by default
-    _request.requested_mode.value = DoorMode::MODE_CLOSED;
-
     _initialized = true;
 
     RCLCPP_INFO(
@@ -283,7 +239,7 @@ public:
       (std::chrono::duration_cast<std::chrono::nanoseconds>(info.simTime).
       count()) * 1e-9;
 
-    if (_request.requested_mode.value == DoorMode::MODE_OPEN)
+    if (_door_common->requested_mode().value == DoorMode::MODE_OPEN)
     {
       for (auto& door : _doors)
         door.open(ecm, dt);
@@ -297,22 +253,23 @@ public:
     if (t - _last_pub_time >= 1.0)
     {
       _last_pub_time = t;
-
-      _state.door_time = _ros_node->now();
+      const int32_t t_sec = static_cast<int32_t>(t);
+      const uint32_t t_nsec =
+        static_cast<uint32_t>((t-static_cast<double>(t_sec)) *1e9);
+      const rclcpp::Time now{t_sec, t_nsec, RCL_ROS_TIME};      
+      
       if (all_doors_open(ecm))
       {
-        _state.current_mode.value = DoorMode::MODE_OPEN;
+        _door_common->publish_state(DoorMode::MODE_OPEN, now);
       }
       else if (all_doors_closed(ecm))
       {
-        _state.current_mode.value = DoorMode::MODE_CLOSED;
+        _door_common->publish_state(DoorMode::MODE_CLOSED, now);
       }
       else
       {
-        _state.current_mode.value = DoorMode::MODE_MOVING;
+        _door_common->publish_state(DoorMode::MODE_MOVING, now);
       }
-
-      _door_state_pub->publish(_state);
     }
   }
 
@@ -348,7 +305,6 @@ IGNITION_ADD_PLUGIN(
   DoorPlugin::ISystemPreUpdate)
 
 // TODO would prefer namespaced
-IGNITION_ADD_PLUGIN_ALIAS(
-  DoorPlugin,
-  "door")
+IGNITION_ADD_PLUGIN_ALIAS(DoorPlugin, "door")
+
 } // namespace building_sim_ign
