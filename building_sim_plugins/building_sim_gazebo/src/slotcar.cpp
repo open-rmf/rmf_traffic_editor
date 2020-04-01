@@ -43,9 +43,9 @@ private:
   void init_infrastructure();
 
   void send_control_signals(
-      const double x_target,
-      const double yaw_target,
-      const double dt)
+    const double x_target,
+    const double yaw_target,
+    const double dt)
   {
     std::array<double, 2> w_tire_actual;
     for (std::size_t i = 0; i < 2; ++i)
@@ -60,8 +60,8 @@ private:
   }
 };
 
-SlotcarPlugin::SlotcarPlugin() :
-  dataPtr(std::make_unique<SlotcarCommon>())
+SlotcarPlugin::SlotcarPlugin()
+: dataPtr(std::make_unique<SlotcarCommon>())
 {
   // We do initialization only during ::Load
 }
@@ -78,18 +78,21 @@ void SlotcarPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf)
   gazebo_ros::Node::SharedPtr _ros_node = gazebo_ros::Node::Get(sdf);
   dataPtr->init_ros_node(_ros_node);
 
-  RCLCPP_INFO(dataPtr->logger(), "Initialising slotcar for " + model->GetName());
+  RCLCPP_INFO(dataPtr->logger(),
+    "Initialising slotcar for " + model->GetName());
 
   _update_connection = gazebo::event::Events::ConnectWorldUpdateBegin(
-      std::bind(&SlotcarPlugin::OnUpdate, this));
+    std::bind(&SlotcarPlugin::OnUpdate, this));
 
   joints[0] = _model->GetJoint("joint_tire_left");
   if (!joints[0])
-    RCLCPP_ERROR(dataPtr->logger(), "Could not find tire for [joint_tire_left]");
+    RCLCPP_ERROR(dataPtr->logger(),
+      "Could not find tire for [joint_tire_left]");
 
   joints[1] = _model->GetJoint("joint_tire_right");
   if (!joints[1])
-    RCLCPP_ERROR(dataPtr->logger(), "Could not find tire for [joint_tire_right]");
+    RCLCPP_ERROR(dataPtr->logger(),
+      "Could not find tire for [joint_tire_right]");
 
 }
 
@@ -136,7 +139,7 @@ void SlotcarPlugin::OnUpdate()
     std::cos(current_yaw), std::sin(current_yaw), 0.0};
 
   const ignition::math::Vector3d stop_zone =
-      pose.Pos() + dataPtr->stop_distance()*current_heading;
+    pose.Pos() + dataPtr->stop_distance()*current_heading;
 
   bool need_to_stop = false;
   for (const auto& m : world->Models())

@@ -10,14 +10,13 @@
 #include <rmf_fleet_msgs/msg/path_request.hpp>
 #include <rmf_fleet_msgs/msg/mode_request.hpp>
 
-namespace building_sim_common
-{
+namespace building_sim_common {
 
 // TODO migrate ign-math-eigen conversions when upgrading to ign-math5
 
 // Edit reference of parameter for template type deduction
 template<typename IgnQuatT>
-inline void convert(const Eigen::Quaterniond &_q, IgnQuatT &quat)
+inline void convert(const Eigen::Quaterniond& _q, IgnQuatT& quat)
 {
   quat.W() = _q.w();
   quat.X() = _q.x();
@@ -26,7 +25,7 @@ inline void convert(const Eigen::Quaterniond &_q, IgnQuatT &quat)
 }
 
 template<typename IgnVec3T>
-inline void convert(const Eigen::Vector3d &_v, IgnVec3T &vec)
+inline void convert(const Eigen::Vector3d& _v, IgnVec3T& vec)
 {
   vec.X() = _v[0];
   vec.Y() = _v[1];
@@ -34,13 +33,13 @@ inline void convert(const Eigen::Vector3d &_v, IgnVec3T &vec)
 }
 
 template<typename IgnVec3T>
-inline Eigen::Vector3d convert_vec(const IgnVec3T &_v)
+inline Eigen::Vector3d convert_vec(const IgnVec3T& _v)
 {
   return Eigen::Vector3d(_v[0], _v[1], _v[2]);
 }
 
 template<typename IgnQuatT>
-inline Eigen::Quaterniond convert_quat(const IgnQuatT &_q)
+inline Eigen::Quaterniond convert_quat(const IgnQuatT& _q)
 {
   Eigen::Quaterniond quat;
   quat.w() = _q.W();
@@ -52,7 +51,7 @@ inline Eigen::Quaterniond convert_quat(const IgnQuatT &_q)
 }
 
 template<typename IgnPoseT>
-inline auto convert(const Eigen::Isometry3d &_tf)
+inline auto convert(const Eigen::Isometry3d& _tf)
 {
   IgnPoseT pose;
   convert(Eigen::Vector3d(_tf.translation()), pose.Pos());
@@ -62,7 +61,7 @@ inline auto convert(const Eigen::Isometry3d &_tf)
 }
 
 template<typename IgnPoseT>
-inline Eigen::Isometry3d convert_pose(const IgnPoseT &_pose)
+inline Eigen::Isometry3d convert_pose(const IgnPoseT& _pose)
 {
   Eigen::Isometry3d tf = Eigen::Isometry3d::Identity();
   tf.translation() = convert_vec(_pose.Pos());
@@ -75,7 +74,8 @@ typedef struct TrajectoryPoint
 {
   Eigen::Vector3d pos;
   Eigen::Quaterniond quat;
-  TrajectoryPoint(const Eigen::Vector3d &_pos, const Eigen::Quaterniond &_quat) : pos(_pos), quat(_quat) {}
+  TrajectoryPoint(const Eigen::Vector3d& _pos, const Eigen::Quaterniond& _quat)
+  : pos(_pos), quat(_quat) {}
 } TrajectoryPoint;
 
 class SlotcarCommon
@@ -95,14 +95,16 @@ public:
 
   void init_ros_node(const rclcpp::Node::SharedPtr node);
 
-  bool update(const Eigen::Isometry3d &pose, const double time, double &x_target, double &yaw_target);
+  bool update(const Eigen::Isometry3d& pose, const double time,
+    double& x_target, double& yaw_target);
 
-  std::array<double, 2> calculate_control_signals(const std::array<double, 2> &w_tire_actual,
-      const double x_target,
-      const double yaw_target,
-      const double dt) const;
+  std::array<double, 2> calculate_control_signals(const std::array<double,
+    2>& w_tire_actual,
+    const double x_target,
+    const double yaw_target,
+    const double dt) const;
 
-  void publish_robot_state(const Eigen::Isometry3d &pose, const double time);
+  void publish_robot_state(const Eigen::Isometry3d& pose, const double time);
 
 private:
   // Constants for update rate of tf2 and robot_state topic
@@ -132,7 +134,7 @@ private:
 
   std::string _current_task_id;
   std::vector<rmf_fleet_msgs::msg::Location> _remaining_path;
- 
+
   // Vehicle dynamic constants
   // TODO(MXG): Consider fetching these values from model data
   // Radius of a tire
@@ -152,11 +154,14 @@ private:
   double _stop_distance = 1.0;
   double _stop_radius = 1.0;
 
-  double compute_change_in_rotation(Eigen::Vector3d heading_vec, const Eigen::Vector3d &dpos, double* permissive = nullptr);
+  double compute_change_in_rotation(Eigen::Vector3d heading_vec,
+    const Eigen::Vector3d& dpos,
+    double* permissive = nullptr);
 
-  void publish_tf2(const Eigen::Isometry3d &pose, const rclcpp::Time &t);
+  void publish_tf2(const Eigen::Isometry3d& pose, const rclcpp::Time& t);
 
-  void publish_state_topic(const Eigen::Isometry3d &pose, const rclcpp::Time &t);
+  void publish_state_topic(const Eigen::Isometry3d& pose,
+    const rclcpp::Time& t);
 
   void path_request_cb(const rmf_fleet_msgs::msg::PathRequest::SharedPtr msg);
 
@@ -168,39 +173,57 @@ void SlotcarCommon::read_sdf(SdfPtrT& sdf)
 {
   if (sdf->HasElement("nominal_drive_speed"))
     _nominal_drive_speed = sdf->template Get<double>("nominal_drive_speed");
-  RCLCPP_INFO(logger(), "Setting nominal drive speed to: " + std::to_string(_nominal_drive_speed));
+  RCLCPP_INFO(logger(),
+    "Setting nominal drive speed to: " +
+    std::to_string(_nominal_drive_speed));
 
   if (sdf->HasElement("nominal_drive_acceleration"))
-    _nominal_drive_acceleration = sdf->template Get<double>("nominal_drive_acceleration");
-  RCLCPP_INFO(logger(), "Setting nominal drive acceleration to: " + std::to_string(_nominal_drive_acceleration));
+    _nominal_drive_acceleration = sdf->template Get<double>(
+      "nominal_drive_acceleration");
+  RCLCPP_INFO(
+    logger(),
+    "Setting nominal drive acceleration to: " + std::to_string(
+      _nominal_drive_acceleration));
 
   if (sdf->HasElement("max_drive_acceleration"))
-    _max_drive_acceleration = sdf->template Get<double>("max_drive_acceleration");
-  RCLCPP_INFO(logger(), "Setting max drive acceleration to: " + std::to_string(_max_drive_acceleration));
+    _max_drive_acceleration =
+      sdf->template Get<double>("max_drive_acceleration");
+  RCLCPP_INFO(logger(),
+    "Setting max drive acceleration to: "
+    + std::to_string(_max_drive_acceleration));
 
   if (sdf->HasElement("nominal_turn_speed"))
     _nominal_turn_speed = sdf->template Get<double>("nominal_turn_speed");
-  RCLCPP_INFO(logger(), "Setting nominal turn speed to:" + std::to_string(_nominal_turn_speed));
+  RCLCPP_INFO(logger(),
+    "Setting nominal turn speed to:"
+    + std::to_string(_nominal_turn_speed));
 
   if (sdf->HasElement("nominal_turn_acceleration"))
-    _nominal_turn_acceleration = sdf->template Get<double>("nominal_turn_acceleration");
-  RCLCPP_INFO(logger(), "Setting nominal turn acceleration to:" + std::to_string(_nominal_turn_acceleration));
+    _nominal_turn_acceleration = sdf->template Get<double>(
+      "nominal_turn_acceleration");
+  RCLCPP_INFO(logger(), "Setting nominal turn acceleration to:" + std::to_string(
+      _nominal_turn_acceleration));
 
   if (sdf->HasElement("max_turn_acceleration"))
     _max_turn_acceleration = sdf->template Get<double>("max_turn_acceleration");
-  RCLCPP_INFO(logger(), "Setting max turn acceleration to:" + std::to_string(_max_turn_acceleration));
+  RCLCPP_INFO(logger(),
+    "Setting max turn acceleration to:"
+    + std::to_string(_max_turn_acceleration));
 
   if (sdf->HasElement("stop_distance"))
     _stop_distance = sdf->template Get<double>("stop_distance");
-  RCLCPP_INFO(logger(), "Setting stop distance to:" + std::to_string(_stop_distance));
+  RCLCPP_INFO(logger(),
+    "Setting stop distance to:" + std::to_string(_stop_distance));
 
   if (sdf->HasElement("stop_radius"))
     _stop_radius = sdf->template Get<double>("stop_radius");
-  RCLCPP_INFO(logger(), "Setting stop radius to:" + std::to_string(_stop_radius));
+  RCLCPP_INFO(logger(),
+    "Setting stop radius to:" + std::to_string(_stop_radius));
 
   if (sdf->HasElement("tire_radius"))
     _tire_radius = sdf->template Get<double>("tire_radius");
-  RCLCPP_INFO(logger(), "Setting tire radius to:" + std::to_string(_tire_radius));
+  RCLCPP_INFO(logger(),
+    "Setting tire radius to:" + std::to_string(_tire_radius));
 
   if (sdf->HasElement("base_width"))
     _base_width = sdf->template Get<double>("base_width");
