@@ -8,7 +8,7 @@ models:
 - BedsideTable
 - BedTable
 - BMWCart
-- Bookshelf
+- bookshelf
 - BPCart
 - BumperBig
 - BumperCorner
@@ -17,7 +17,7 @@ models:
 - BumperSmall
 - BumperWallBig
 - BumperWallSmall
-- CafeTable
+- cafe_table
 - CGMVanguard
 - Chair
 - Cleanfix
@@ -37,7 +37,7 @@ models:
 - Enterprise8000
 - Extinguisher
 - FemalePatient
-- Fountain
+- fountain
 - Fridge
 - HCR-5
 - HOSPI
@@ -71,15 +71,15 @@ models:
 - NormalBed
 - Nurse
 - NurseDesk
-- OakTree
+- oak_tree
 - OfficeChair
 - OpScrubs
 - ParkingTrolleyMax
 - PatientWheelchair
 - PharmaTrolley
-- PineTree
+- pine_tree
 - Pitti
-- Postbox
+- postbox
 - RoboGate
 - RobotFrame
 - RoboWarningLight
@@ -91,7 +91,7 @@ models:
 - SmartTrolleyBed
 - Sofa
 - StackedBuckets
-- StandingPerson
+- person_standing
 - StorageRack
 - StorageRackCovered
 - StorageRackCoverOpen
@@ -144,3 +144,12 @@ models:
 - RecTable
 - SquareShelf
 - WhiteCabinet
+- ambulance
+- beer
+- cafe
+- playground
+- lamp_post
+- suv
+- gazebo
+- construction_barrel
+- construction_cone
