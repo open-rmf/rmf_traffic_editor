@@ -235,6 +235,4 @@ IGNITION_ADD_PLUGIN(
   SlotcarPlugin::ISystemConfigure,
   SlotcarPlugin::ISystemPreUpdate)
 
-IGNITION_ADD_PLUGIN_ALIAS(
-  SlotcarPlugin,
-  "slotcar")
+IGNITION_ADD_PLUGIN_ALIAS(SlotcarPlugin, "slotcar")

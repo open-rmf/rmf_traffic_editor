@@ -348,7 +348,6 @@ IGNITION_ADD_PLUGIN(
   DoorPlugin::ISystemPreUpdate)
 
 // TODO would prefer namespaced
-IGNITION_ADD_PLUGIN_ALIAS(
-  DoorPlugin,
-  "door")
+IGNITION_ADD_PLUGIN_ALIAS(DoorPlugin, "door")
+
 } // namespace building_sim_ign
