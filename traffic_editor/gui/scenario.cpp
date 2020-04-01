@@ -33,6 +33,7 @@ Scenario::~Scenario()
 
 bool Scenario::load()
 {
+  printf("Scenario::load(%s)\n", filename.c_str());
   YAML::Node yaml;
   try
   {
@@ -48,15 +49,53 @@ bool Scenario::load()
     name = yaml["name"].as<string>();
 
   levels.clear();
-  const YAML::Node yl = yaml["levels"];
-  for (YAML::const_iterator it = yl.begin(); it != yl.end(); ++it)
+  if (yaml["levels"])
   {
-    ScenarioLevel l;
-    l.from_yaml(it->first.as<string>(), it->second);
-    levels.push_back(l);
+    const YAML::Node yl = yaml["levels"];
+    for (YAML::const_iterator it = yl.begin(); it != yl.end(); ++it)
+    {
+      ScenarioLevel l;
+      l.from_yaml(it->first.as<string>(), it->second);
+      levels.push_back(l);
+    }
   }
 
+  behaviors.clear();
+  if (yaml["behaviors"])
+  {
+    const YAML::Node yb = yaml["behaviors"];
+    for (YAML::const_iterator it = yb.begin(); it != yb.end(); ++it)
+    {
+      Behavior b;
+      if (b.from_yaml(it->first.as<string>(), it->second))
+        behaviors.push_back(b);
+    }
+  }
+
+  behavior_schedule.clear();
+  if (yaml["behavior_schedule"])
+  {
+    const YAML::Node yb = yaml["behavior_schedule"];
+    for (YAML::const_iterator it = yb.begin(); it != yb.end(); ++it)
+    {
+      BehaviorScheduleItem bsi;
+      if (bsi.from_yaml(*it))
+        behavior_schedule.push_back(bsi);
+    }
+  }
+
+  print();
+
   return true;
+}
+
+void Scenario::print() const
+{
+  printf("scenario: [%s]\n", name.c_str());
+  printf("  filename: [%s]\n", filename.c_str());
+  printf("  behaviors:\n");
+  for (const auto& behavior : behaviors)
+    behavior.print();
 }
 
 bool Scenario::save() const

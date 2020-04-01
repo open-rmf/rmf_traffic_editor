@@ -18,6 +18,8 @@
 #ifndef SCENARIO_H
 #define SCENARIO_H
 
+#include "behavior.h"
+#include "behavior_schedule_item.h"
 #include "scenario_level.h"
 #include "vertex.h"
 
@@ -31,6 +33,8 @@ public:
   std::string name;
   std::string filename;
   std::vector<ScenarioLevel> levels;
+  std::vector<Behavior> behaviors;
+  std::vector<BehaviorScheduleItem> behavior_schedule;
 
   /////////////////////////////////
   Scenario();
@@ -51,6 +55,8 @@ public:
 
   void clear_selection(const std::string& level_name);
   bool delete_selected(const std::string& level_name);
+
+  void print() const;
 };
 
 #endif
