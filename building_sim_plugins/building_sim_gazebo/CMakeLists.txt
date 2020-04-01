@@ -49,7 +49,6 @@ target_link_libraries(slotcar
     Eigen3::Eigen
     ${building_sim_common_LIBRARIES}
     ${rmf_fleet_msgs_LIBRARIES}
-    ${building_sim_common_LIBRARIES}
     ${rclcpp_LIBRARIES}
     ${GAZEBO_LIBRARIES}
     ${gazebo_ros_LIBRARIES}
