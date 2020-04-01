@@ -18,6 +18,7 @@
 #ifndef BEHAVIOR_H
 #define BEHAVIOR_H
 
+#include <memory>
 #include <string>
 #include <vector>
 #include <yaml-cpp/yaml.h>
@@ -28,14 +29,12 @@
 class Behavior
 {
 public:
-  Behavior();
+  Behavior(const std::string& _name, const YAML::Node& yaml);
   ~Behavior();
 
   std::string name;
 
-  std::vector<BehaviorNode> nodes;
-
-  bool from_yaml(const std::string &_name, const YAML::Node& yaml_node);
+  std::vector<std::unique_ptr<BehaviorNode> > nodes;
 
   void print() const;
 };

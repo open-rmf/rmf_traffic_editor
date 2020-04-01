@@ -24,11 +24,10 @@
 class BehaviorNodeWait : public BehaviorNode
 {
 public:
-  BehaviorNodeWait() : BehaviorNode() { }
-  ~BehaviorNodeWait() { }
+  BehaviorNodeWait(const YAML::Node& y);
+  ~BehaviorNodeWait();
 
   double seconds = 0.0;
-  bool from_yaml(const YAML::Node& yaml_node);
   virtual void print() const;
 };
 

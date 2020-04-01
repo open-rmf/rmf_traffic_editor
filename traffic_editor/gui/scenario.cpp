@@ -21,6 +21,7 @@
 #include "yaml_utils.h"
 
 using std::string;
+using std::unique_ptr;
 
 
 Scenario::Scenario()
@@ -65,11 +66,9 @@ bool Scenario::load()
   {
     const YAML::Node yb = yaml["behaviors"];
     for (YAML::const_iterator it = yb.begin(); it != yb.end(); ++it)
-    {
-      Behavior b;
-      if (b.from_yaml(it->first.as<string>(), it->second))
-        behaviors.push_back(b);
-    }
+      behaviors.push_back(
+          unique_ptr<Behavior>(
+              new Behavior(it->first.as<string>(), it->second)));
   }
 
   behavior_schedule.clear();
@@ -95,7 +94,7 @@ void Scenario::print() const
   printf("  filename: [%s]\n", filename.c_str());
   printf("  behaviors:\n");
   for (const auto& behavior : behaviors)
-    behavior.print();
+    behavior->print();
 }
 
 bool Scenario::save() const

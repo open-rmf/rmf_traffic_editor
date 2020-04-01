@@ -18,10 +18,14 @@
 #include "behavior_node_navigate.h"
 using std::string;
 
-bool BehaviorNodeNavigate::from_yaml(const YAML::Node& y)
+BehaviorNodeNavigate::BehaviorNodeNavigate(const YAML::Node& y)
+: BehaviorNode()
 {
   destination = y[1].as<string>();
-  return true;
+}
+
+BehaviorNodeNavigate::~BehaviorNodeNavigate()
+{
 }
 
 void BehaviorNodeNavigate::print() const

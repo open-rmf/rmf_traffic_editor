@@ -24,6 +24,7 @@
 #include "vertex.h"
 
 #include <map>
+#include <memory>
 #include <string>
 #include <yaml-cpp/yaml.h>
 
@@ -33,7 +34,7 @@ public:
   std::string name;
   std::string filename;
   std::vector<ScenarioLevel> levels;
-  std::vector<Behavior> behaviors;
+  std::vector<std::unique_ptr<Behavior> > behaviors;
   std::vector<BehaviorScheduleItem> behavior_schedule;
 
   /////////////////////////////////

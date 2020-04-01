@@ -20,26 +20,17 @@
 #include "behavior_node_wait.h"
 #include "behavior_node_navigate.h"
 using std::string;
+using std::unique_ptr;
 
-Behavior::Behavior()
+Behavior::Behavior(const string &_name, const YAML::Node& y)
+: name(_name)
 {
-}
-
-Behavior::~Behavior()
-{
-}
-
-bool Behavior::from_yaml(const string &_name, const YAML::Node& y)
-{
-  name = _name;
   printf("Behavior::from_yaml(%s)\n", name.c_str());
-
-  nodes.clear();
 
   if (!y["sequence"].IsSequence())
   {
     printf("ERROR: expected a map key 'sequence' !\n");
-    return false;
+    return;
   }
   const YAML::Node &ys = y["sequence"];  // save some typing
   for (YAML::const_iterator it = ys.begin(); it != ys.end(); ++it)
@@ -47,30 +38,21 @@ bool Behavior::from_yaml(const string &_name, const YAML::Node& y)
     if (!((*it).IsSequence()))
     {
       printf("ERROR: expected a sequence of YAML sequences...\n");
-      return false;
+      return;
     }
     string type_name = (*it)[0].as<string>();
     printf("node type name: [%s]\n", type_name.c_str());
 
     // i'm sure there is some hyper-elite C++ way to avoid this "if" tree...
     if (type_name == "teleport")
-    {
-      BehaviorNodeTeleport node;
-      if (node.from_yaml(*it))
-        nodes.push_back(node);
-    }
+      nodes.push_back(
+          unique_ptr<BehaviorNodeTeleport>(new BehaviorNodeTeleport(*it)));
     else if (type_name == "wait")
-    {
-      BehaviorNodeWait node;
-      if (node.from_yaml(*it))
-        nodes.push_back(node);
-    }
+      nodes.push_back(
+          unique_ptr<BehaviorNodeWait>(new BehaviorNodeWait(*it)));
     else if (type_name == "navigate")
-    {
-      BehaviorNodeNavigate node;
-      if (node.from_yaml(*it))
-        nodes.push_back(node);
-    }
+      nodes.push_back(
+          unique_ptr<BehaviorNodeNavigate>(new BehaviorNodeNavigate(*it)));
     else
     {
       printf(
@@ -78,12 +60,15 @@ bool Behavior::from_yaml(const string &_name, const YAML::Node& y)
           type_name.c_str());
     }
   }
-  return true;
+}
+
+Behavior::~Behavior()
+{
 }
 
 void Behavior::print() const
 {
   printf("    %s:\n", name.c_str());
   for (const auto& node : nodes)
-    node.print();
+    node->print();
 }

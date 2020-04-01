@@ -27,10 +27,9 @@ class BehaviorNodeTeleport : public BehaviorNode
 public:
   std::string destination;
 
-  BehaviorNodeTeleport() : BehaviorNode() { }
-  ~BehaviorNodeTeleport() { }
+  BehaviorNodeTeleport(const YAML::Node& y);
+  ~BehaviorNodeTeleport();
 
-  bool from_yaml(const YAML::Node& yaml_node);
   virtual void print() const;
 };
 

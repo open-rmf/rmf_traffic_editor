@@ -86,14 +86,14 @@ bool Project::load_yaml_file(const std::string& _filename)
         scenario_node != yaml["scenarios"].end();
         ++scenario_node)
     {
-      Scenario scenario;
-      scenario.filename = (*scenario_node)["filename"].as<string>();
-      if (!scenario.load())
+      std::unique_ptr<Scenario> scenario(new Scenario);
+      scenario->filename = (*scenario_node)["filename"].as<string>();
+      if (!scenario->load())
       {
-        printf("couldn't load [%s]\n", scenario.filename.c_str());
+        printf("couldn't load [%s]\n", scenario->filename.c_str());
         //return false;
       }
-      scenarios.push_back(scenario);
+      scenarios.push_back(std::move(scenario));
     }
     if (!scenarios.empty())
       scenario_idx = 0;
@@ -128,7 +128,7 @@ bool Project::save_yaml_file() const
   {
     printf("saving scenario\n");
     YAML::Node scenario_node;
-    scenario_node["filename"] = scenario.filename;
+    scenario_node["filename"] = scenario->filename;
     y["scenarios"].push_back(scenario_node);
   }
 
@@ -152,7 +152,7 @@ bool Project::save()
   building.save_yaml_file();
 
   for (const auto& scenario : scenarios)
-    if (!scenario.save())
+    if (!scenario->save())
       return false;
 
   return true;
@@ -172,7 +172,7 @@ void Project::add_scenario_vertex(
   printf("add_scenario_vertex(%d, %.3f, %.3f)\n", level_idx, x, y);
   if (scenario_idx < 0 || scenario_idx >= static_cast<int>(scenarios.size()))
     return;
-  scenarios[scenario_idx].add_vertex(building.levels[level_idx].name, x, y);
+  scenarios[scenario_idx]->add_vertex(building.levels[level_idx].name, x, y);
 }
 
 void Project::scenario_row_clicked(const int row)
@@ -201,7 +201,7 @@ void Project::draw(
   building.draw_lifts(scene, level_idx);
   
   if (scenario_idx >= 0)
-    scenarios[scenario_idx].draw(
+    scenarios[scenario_idx]->draw(
         scene,
         building.levels[level_idx].name,
         building.levels[level_idx].drawing_meters_per_pixel);
@@ -214,7 +214,7 @@ void Project::clear_selection(const int level_idx)
   building.levels[level_idx].clear_selection();
 
   if (scenario_idx >= 0)
-    scenarios[scenario_idx].clear_selection(building.levels[level_idx].name);
+    scenarios[scenario_idx]->clear_selection(building.levels[level_idx].name);
 }
 
 bool Project::delete_selected(const int level_idx)
@@ -225,7 +225,7 @@ bool Project::delete_selected(const int level_idx)
     return false;
   const std::string level_name = building.levels[level_idx].name;
   if (scenario_idx >= 0 &&
-      !scenarios[scenario_idx].delete_selected(level_name))
+      !scenarios[scenario_idx]->delete_selected(level_name))
       return false;
   return true;
 }
@@ -288,7 +288,7 @@ Project::NearestItem Project::nearest_items(
     if (scenario_idx < 0 ||
         scenario_idx >= static_cast<int>(scenarios.size()))
       return ni;
-    const Scenario& scenario = scenarios[scenario_idx];
+    const Scenario& scenario = *scenarios[scenario_idx];
 
     for (const ScenarioLevel& scenario_level : scenario.levels)
     {
@@ -322,7 +322,8 @@ ScenarioLevel *Project::scenario_level(const int building_level_idx)
   if (scenario_idx < 0 ||
       scenario_idx >= static_cast<int>(scenarios.size()))
     return nullptr;
-  Scenario& scenario = scenarios[scenario_idx];
+  // I'm sure this is a horrific abomination. Fix someday.
+  Scenario& scenario = *scenarios[scenario_idx];
   for (size_t i = 0; i < scenario.levels.size(); i++)
   {
     if (scenario.levels[i].name == building_level.name)

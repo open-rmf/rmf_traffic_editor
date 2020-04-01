@@ -17,10 +17,13 @@
 
 #include "scenario_dialog.h"
 #include <QtWidgets>
+#include <utility>
+using std::unique_ptr;
 
 
-ScenarioDialog::ScenarioDialog(Scenario& _scenario)
-: QDialog(), scenario(_scenario)
+ScenarioDialog::ScenarioDialog(unique_ptr<Scenario> _scenario)
+: QDialog(),
+  scenario(std::move(_scenario))
 {
   setWindowTitle("Scenario Properties");
   ok_button = new QPushButton("OK", this);  // first button = [enter] button
@@ -28,12 +31,12 @@ ScenarioDialog::ScenarioDialog(Scenario& _scenario)
 
   QHBoxLayout *name_hbox = new QHBoxLayout;
   name_hbox->addWidget(new QLabel("Scenario name:"));
-  name_line_edit = new QLineEdit(QString::fromStdString(scenario.name));
+  name_line_edit = new QLineEdit(QString::fromStdString(scenario->name));
   name_hbox->addWidget(name_line_edit);
 
   QHBoxLayout *scenario_hbox = new QHBoxLayout;
   scenario_path_line_edit = new QLineEdit(
-      QString::fromStdString(scenario.filename));
+      QString::fromStdString(scenario->filename));
   QPushButton *scenario_path_button = new QPushButton("Find...");
   connect(
       scenario_path_button,
@@ -74,7 +77,7 @@ ScenarioDialog::~ScenarioDialog()
 
 void ScenarioDialog::ok_button_clicked()
 {
-  scenario.name = name_line_edit->text().toStdString();
+  scenario->name = name_line_edit->text().toStdString();
 
   if (scenario_path_line_edit->text().isEmpty())
   {
@@ -94,7 +97,7 @@ void ScenarioDialog::ok_button_clicked()
     return;
   }
 
-  scenario.filename = scenario_path_line_edit->text().toStdString();
+  scenario->filename = scenario_path_line_edit->text().toStdString();
 
   accept();
 }
@@ -109,16 +112,16 @@ void ScenarioDialog::scenario_path_button_clicked()
   const QString filename = file_dialog.selectedFiles().first();
 
   // if the scenario filename has changed, load it.
-  const std::string previous_scenario_filename = scenario.filename;
+  const std::string previous_scenario_filename = scenario->filename;
 
   scenario_path_line_edit->setText(
       QDir::current().relativeFilePath(filename));
 
-  scenario.filename = scenario_path_line_edit->text().toStdString();
+  scenario->filename = scenario_path_line_edit->text().toStdString();
 
-  if (scenario.filename != previous_scenario_filename)
+  if (scenario->filename != previous_scenario_filename)
   {
-    if (QFileInfo(filename).exists() && !scenario.load())
+    if (QFileInfo(filename).exists() && !scenario->load())
     {
       QMessageBox::critical(
           this,

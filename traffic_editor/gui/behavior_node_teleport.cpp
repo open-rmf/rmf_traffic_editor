@@ -18,10 +18,14 @@
 #include "behavior_node_teleport.h"
 using std::string;
 
-bool BehaviorNodeTeleport::from_yaml(const YAML::Node& y)
+BehaviorNodeTeleport::BehaviorNodeTeleport(const YAML::Node& y)
+: BehaviorNode()
 {
   destination = y[1].as<string>();
-  return true;
+}
+
+BehaviorNodeTeleport::~BehaviorNodeTeleport()
+{
 }
 
 void BehaviorNodeTeleport::print() const

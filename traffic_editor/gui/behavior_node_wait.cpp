@@ -18,10 +18,14 @@
 #include "behavior_node_wait.h"
 using std::string;
 
-bool BehaviorNodeWait::from_yaml(const YAML::Node& y)
+BehaviorNodeWait::BehaviorNodeWait(const YAML::Node& y)
+: BehaviorNode()
 {
   seconds = y[1].as<double>();
-  return true;
+}
+
+BehaviorNodeWait::~BehaviorNodeWait()
+{
 }
 
 void BehaviorNodeWait::print() const
