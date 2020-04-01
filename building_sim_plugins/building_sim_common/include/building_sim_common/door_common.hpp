@@ -82,9 +82,9 @@ private:
 
 template<typename SdfPtrT>
 std::shared_ptr<DoorCommon> DoorCommon::make(
-    const std::string& door_name,
-    rclcpp::Node::SharedPtr node,
-    SdfPtrT& sdf)
+  const std::string& door_name,
+  rclcpp::Node::SharedPtr node,
+  SdfPtrT& sdf)
 {
   MotionParams params;
   get_sdf_param_if_available<double>(sdf, "v_max_door", params.v_max);
@@ -114,18 +114,17 @@ std::shared_ptr<DoorCommon> DoorCommon::make(
   }
 
   if (left_door_joint_name == "empty_joint" &&
-      right_door_joint_name == "empty_joint")
-    {
-      RCLCPP_ERROR(
-        node->get_logger(),
-        " -- Both door joint names are missing for [%s] plugin, at least one"
-        " is required", door_name.c_str());
-      return nullptr;
-    }
+    right_door_joint_name == "empty_joint")
+  {
+    RCLCPP_ERROR(
+      node->get_logger(),
+      " -- Both door joint names are missing for [%s] plugin, at least one"
+      " is required", door_name.c_str());
+    return nullptr;
+  }
 
-  std::shared_ptr<DoorCommon> door_common(
-    new DoorCommon(door_name,
-      node, params, left_door_joint_name,right_door_joint_name));
+  std::shared_ptr<DoorCommon> door_common(new DoorCommon(door_name,
+    node, params, left_door_joint_name, right_door_joint_name));
 
   return door_common;
 

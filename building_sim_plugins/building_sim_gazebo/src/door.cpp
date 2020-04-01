@@ -89,7 +89,7 @@ private:
   gazebo::event::ConnectionPtr _update_connection;
   gazebo::physics::ModelPtr _model;
   std::shared_ptr<DoorCommon> _door_common = nullptr;
-  
+
   std::vector<Door> _doors;
 
   double _last_update_time;
@@ -116,9 +116,9 @@ public:
       _model->GetName().c_str());
 
     _door_common = DoorCommon::make(
-         _model->GetName(),
-        _ros_node,
-        sdf);
+      _model->GetName(),
+      _ros_node,
+      sdf);
 
     if (!_door_common)
       return;
@@ -238,4 +238,4 @@ private:
 
 GZ_REGISTER_MODEL_PLUGIN(DoorPlugin)
 
-} // namespace building_sim_gazebo 
+} // namespace building_sim_gazebo

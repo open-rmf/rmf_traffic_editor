@@ -90,16 +90,16 @@ DoorCommon::DoorCommon(const std::string& door_name,
   // TODO(YV) Consider putting these statements into a start() function
   // that can be called after checking if joint names exist in the model
   _door_state_pub = _ros_node->create_publisher<DoorState>(
-  "/door_states", rclcpp::SystemDefaultsQoS());
+    "/door_states", rclcpp::SystemDefaultsQoS());
 
   _door_request_sub = _ros_node->create_subscription<DoorRequest>(
-  "/door_requests", rclcpp::SystemDefaultsQoS(),
-  [&](DoorRequest::UniquePtr msg)
-  {
-    std::unique_lock<std::mutex> lock(_mutex);
-    if (msg->door_name == _state.door_name)
-      _request = *msg;
-  });
+    "/door_requests", rclcpp::SystemDefaultsQoS(),
+    [&](DoorRequest::UniquePtr msg)
+    {
+      std::unique_lock<std::mutex> lock(_mutex);
+      if (msg->door_name == _state.door_name)
+        _request = *msg;
+    });
 
   _initialized = true;
 }

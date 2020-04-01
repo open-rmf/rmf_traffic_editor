@@ -175,9 +175,9 @@ public:
     auto sdfClone = sdf->Clone();
 
     _door_common = DoorCommon::make(
-         _model.Name(ecm),
-        _ros_node,
-        sdf);
+      _model.Name(ecm),
+      _ros_node,
+      sdf);
 
     if (!_door_common)
       return;
@@ -256,8 +256,8 @@ public:
       const int32_t t_sec = static_cast<int32_t>(t);
       const uint32_t t_nsec =
         static_cast<uint32_t>((t-static_cast<double>(t_sec)) *1e9);
-      const rclcpp::Time now{t_sec, t_nsec, RCL_ROS_TIME};      
-      
+      const rclcpp::Time now{t_sec, t_nsec, RCL_ROS_TIME};
+
       if (all_doors_open(ecm))
       {
         _door_common->publish_state(DoorMode::MODE_OPEN, now);
