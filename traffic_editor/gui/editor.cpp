@@ -333,9 +333,6 @@ Editor::Editor()
       QOverload<int, bool>::of(&QButtonGroup::buttonToggled),
       this, &Editor::tool_toggled);
 
-  QVBoxLayout *scenario_tab_layout = new QVBoxLayout;
-  scenario_tab_layout->addWidget(scenario_table);
-
   toolbar->addSeparator();
 
   sim_reset_action = toolbar->addAction(
