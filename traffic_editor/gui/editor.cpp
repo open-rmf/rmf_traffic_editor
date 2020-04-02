@@ -64,8 +64,8 @@ Editor::Editor()
   map_view = new MapView(this);
   map_view->setScene(scene);
 
-  QVBoxLayout *map_layout = new QVBoxLayout;
-  map_layout->addWidget(map_view);
+  QVBoxLayout *left_layout = new QVBoxLayout;
+  left_layout->addWidget(map_view);
 
   layers_table = new TableList;  // todo: replace with specific subclass?
 
@@ -197,7 +197,7 @@ Editor::Editor()
   right_column_layout->addLayout(param_button_layout);
 
   QHBoxLayout *hbox_layout = new QHBoxLayout;
-  hbox_layout->addLayout(map_layout, 1);
+  hbox_layout->addLayout(left_layout, 1);
   hbox_layout->addLayout(right_column_layout);
 
   QWidget *w = new QWidget();
@@ -333,6 +333,21 @@ Editor::Editor()
       QOverload<int, bool>::of(&QButtonGroup::buttonToggled),
       this, &Editor::tool_toggled);
 
+  QVBoxLayout *scenario_tab_layout = new QVBoxLayout;
+  scenario_tab_layout->addWidget(scenario_table);
+
+  toolbar->addSeparator();
+
+  sim_reset_action = toolbar->addAction(
+      "Reset",
+      this,
+      &Editor::sim_reset);
+
+  sim_play_pause_action = toolbar->addAction(
+      "Play",
+      this,
+      &Editor::sim_play_pause);
+
   toolbar->setStyleSheet("QToolBar {background-color: #404040; border: none; spacing: 5px} QToolButton {background-color: #c0c0c0; color: blue; border: 1px solid black;} QToolButton:checked {background-color: #808080; color: red; border: 1px solid black;}");
   addToolBar(Qt::TopToolBarArea, toolbar);
 
@@ -367,6 +382,10 @@ Editor::Editor()
 
   load_model_names();
   level_table->setCurrentCell(level_idx, 0);
+}
+
+Editor::~Editor()
+{
 }
 
 void Editor::load_model_names()
@@ -1978,8 +1997,19 @@ bool Editor::maybe_save()
   return true;
 }
 
+void Editor::showEvent(QShowEvent *event)
+{
+  QMainWindow::showEvent(event);
+  sim_thread.start();
+}
+
 void Editor::closeEvent(QCloseEvent *event)
 {
+  printf("waiting on sim_thread...\n");
+  sim_thread.requestInterruption();
+  sim_thread.quit();
+  sim_thread.wait();
+
   // save window geometry
   QSettings settings;
   settings.setValue(preferences_keys::window_left, geometry().x());
@@ -2056,4 +2086,14 @@ void Editor::update_tables()
   lift_table->update(project.building);
   scenario_table->update(project);
   traffic_table->update(project);
+}
+
+void Editor::sim_reset()
+{
+  printf("sim_reset()\n");
+}
+
+void Editor::sim_play_pause()
+{
+  printf("sim_play_pause()\n");
 }

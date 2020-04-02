@@ -56,6 +56,7 @@ add_executable(traffic-editor
   gui/scenario_dialog.cpp
   gui/scenario_level.cpp
   gui/scenario_table.cpp
+  gui/sim_thread.cpp
   gui/table_list.cpp
   gui/traffic_table.cpp
   gui/traffic_map.cpp

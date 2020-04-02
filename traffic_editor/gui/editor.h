@@ -19,6 +19,7 @@
 #define EDITOR_H
 
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -33,6 +34,7 @@
 #include "project.h"
 #include "editor_model.h"
 #include "editor_mode_id.h"
+#include "sim_thread.h"
 
 class BuildingLevelTable;
 class MapView;
@@ -66,6 +68,7 @@ class Editor : public QMainWindow
 
 public:
   Editor();
+  ~Editor();
 
   static Editor *get_instance();
 
@@ -85,6 +88,7 @@ protected:
   void mouseMoveEvent(QMouseEvent *e);
   void keyPressEvent(QKeyEvent *event);
   void closeEvent(QCloseEvent *event);
+  void showEvent(QShowEvent *event) override;
 
 private:
   EditorModeId mode = MODE_BUILDING;
@@ -131,7 +135,6 @@ private:
   void zoom_fit();
 
   void help_about();
-
 
   bool is_mouse_event_in_map(QMouseEvent *e, QPointF &p_scene);
 
@@ -214,6 +217,12 @@ private:
   QPushButton *add_param_button, *delete_param_button;
   void add_param_button_clicked();
   void delete_param_button_clicked();
+
+  QAction *sim_reset_action;
+  QAction *sim_play_pause_action;
+  void sim_reset();
+  void sim_play_pause();
+  SimThread sim_thread;
 
   std::vector<EditorModel> editor_models;
   EditorModel *mouse_motion_editor_model = nullptr;
