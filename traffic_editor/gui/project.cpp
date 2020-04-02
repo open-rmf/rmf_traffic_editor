@@ -151,9 +151,13 @@ bool Project::save()
 
   building.save_yaml_file();
 
+  /*
+  // TODO: currently the scenarios are not fully parsed, so we
+  // can't save them back to disk without data loss
   for (const auto& scenario : scenarios)
     if (!scenario->save())
       return false;
+  */
 
   return true;
 }
@@ -342,12 +346,12 @@ void Project::mouse_select_press(
   clear_selection(level_idx);
   const NearestItem ni = nearest_items(mode, level_idx, x, y);
 
+  const double vertex_dist_thresh =
+      building.levels[level_idx].vertex_radius /
+      building.levels[level_idx].drawing_meters_per_pixel;
+
   if (mode == MODE_BUILDING)
   {
-    const double vertex_dist_thresh =
-        building.levels[level_idx].vertex_radius /
-        building.levels[level_idx].drawing_meters_per_pixel;
-
     // todo: use QGraphics stuff to see if we clicked a model pixmap...
     const double model_dist_thresh = 0.5 /
         building.levels[level_idx].drawing_meters_per_pixel;
@@ -368,13 +372,43 @@ void Project::mouse_select_press(
           case QGraphicsLineItem::Type:
             set_selected_line_item(
                 level_idx,
-                qgraphicsitem_cast<QGraphicsLineItem *>(graphics_item));
+                qgraphicsitem_cast<QGraphicsLineItem *>(graphics_item),
+                mode);
             break;
     
           case QGraphicsPolygonItem::Type:
             set_selected_containing_polygon(mode, level_idx, x, y);
             break;
     
+          default:
+            printf("clicked unhandled type: %d\n",
+                static_cast<int>(graphics_item->type()));
+            break;
+        }
+      }
+    }
+  }
+  else if (mode == MODE_TRAFFIC)
+  {
+    // todo: keep traffic-map vertices separate from building vertices
+    // for now, they're using the same vertex list.
+
+    if (ni.vertex_idx >= 0 && ni.vertex_dist < vertex_dist_thresh)
+      building.levels[level_idx].vertices[ni.vertex_idx].selected = true;
+    else
+    {
+      // use the QGraphics stuff to see if it's an edge segment or polygon
+      if (graphics_item)
+      {
+        switch (graphics_item->type())
+        {
+          case QGraphicsLineItem::Type:
+            set_selected_line_item(
+                level_idx,
+                qgraphicsitem_cast<QGraphicsLineItem *>(graphics_item),
+                mode);
+            break;
+   
           default:
             printf("clicked unhandled type: %d\n",
                 static_cast<int>(graphics_item->type()));
@@ -412,7 +446,8 @@ void Project::mouse_select_press(
 
 void Project::set_selected_line_item(
     const int level_idx,
-    QGraphicsLineItem *line_item)
+    QGraphicsLineItem *line_item,
+    const EditorModeId mode)
 {
   clear_selection(level_idx);
 
@@ -422,6 +457,11 @@ void Project::set_selected_line_item(
   // find if any of our lanes match those vertices
   for (auto& edge : building.levels[level_idx].edges)
   {
+    if (mode == MODE_TRAFFIC && edge.type != Edge::LANE)
+      continue;
+    if (mode == MODE_BUILDING && edge.type == Edge::LANE)
+      continue;
+
     // look up the line's vertices
     const double x1 = line_item->line().x1();
     const double y1 = line_item->line().y1();

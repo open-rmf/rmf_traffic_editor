@@ -115,7 +115,7 @@ void Vertex::draw(
   if (!name.empty()) {
     QGraphicsSimpleTextItem *item = scene->addSimpleText(
         QString::fromStdString(name));
-    item->setBrush(color);  // QColor(255, 0, 0, 255));
+    item->setBrush(color);
     item->setPos(x, y + radius);
   }
 }

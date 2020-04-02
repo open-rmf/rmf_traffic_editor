@@ -113,7 +113,8 @@ private:
 
   void set_selected_line_item(
       const int level_idx,
-      QGraphicsLineItem *line_item);
+      QGraphicsLineItem *line_item,
+      const EditorModeId mode);
 };
 
 #endif

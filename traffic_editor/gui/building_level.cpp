@@ -360,6 +360,7 @@ void BuildingLevel::calculate_scale()
   }
 }
 
+// todo: migrate this to the TrafficMap class eventually
 void BuildingLevel::draw_lane(QGraphicsScene *scene, const Edge &edge) const
 {
   const auto &v_start = vertices[edge.start_idx];
@@ -382,30 +383,28 @@ void BuildingLevel::draw_lane(QGraphicsScene *scene, const Edge &edge) const
   const double norm_x = dx / len;
   const double norm_y = dy / len;
 
-  for (double d = 0.0; d < len; d += arrow_spacing)
-  {
-    // first calculate the center vertex of this arrowhead
-    const double cx = v_start.x + d * norm_x;
-    const double cy = v_start.y + d * norm_y;
-    // one edge vertex of arrowhead
-    const double e1x = cx - arrow_w * norm_y;
-    const double e1y = cy + arrow_w * norm_x;
-    // another edge vertex of arrowhead
-    const double e2x = cx + arrow_w * norm_y;
-    const double e2y = cy - arrow_w * norm_x;
-    // tip of arrowhead
-    const double tx = cx + arrow_l * norm_x;
-    const double ty = cy + arrow_l * norm_y;
-    // now add arrowhead lines
-    scene->addLine(e1x, e1y, tx, ty, arrow_pen);
-    scene->addLine(e2x, e2y, tx, ty, arrow_pen);
+  // only draw arrows if it's a unidirectional lane. We used to draw
+  // arrows in both directions for bidirectional, but it was messy.
 
-    if (d > 0.0 && edge.is_bidirectional())
+  if (!edge.is_bidirectional())
+  {
+    for (double d = 0.0; d < len; d += arrow_spacing)
     {
-      const double back_tx = cx - arrow_l * norm_x;
-      const double back_ty = cy - arrow_l * norm_y;
-      scene->addLine(e1x, e1y, back_tx, back_ty, arrow_pen);
-      scene->addLine(e2x, e2y, back_tx, back_ty, arrow_pen);
+      // first calculate the center vertex of this arrowhead
+      const double cx = v_start.x + d * norm_x;
+      const double cy = v_start.y + d * norm_y;
+      // one edge vertex of arrowhead
+      const double e1x = cx - arrow_w * norm_y;
+      const double e1y = cy + arrow_w * norm_x;
+      // another edge vertex of arrowhead
+      const double e2x = cx + arrow_w * norm_y;
+      const double e2y = cy - arrow_w * norm_x;
+      // tip of arrowhead
+      const double tx = cx + arrow_l * norm_x;
+      const double ty = cy + arrow_l * norm_y;
+      // now add arrowhead lines
+      scene->addLine(e1x, e1y, tx, ty, arrow_pen);
+      scene->addLine(e2x, e2y, tx, ty, arrow_pen);
     }
   }
 
@@ -417,7 +416,7 @@ void BuildingLevel::draw_lane(QGraphicsScene *scene, const Edge &edge) const
     case 2: color.setRgbF(0.0, 0.5, 0.5); break;
     case 3: color.setRgbF(0.5, 0.5, 0.0); break;
     case 4: color.setRgbF(0.5, 0.0, 0.5); break;
-    case 5: color.setRgbF(0.5, 0.5, 0.5); break;
+    case 5: color.setRgbF(0.8, 0.0, 0.0); break;
     default: break;  // will render as dark grey
   }
 
@@ -875,7 +874,7 @@ void BuildingLevel::draw(
     v.draw(
         scene,
         vertex_radius / drawing_meters_per_pixel,
-        QColor::fromRgbF(0.0, 1.0, 0.0));
+        QColor::fromRgbF(0.0, 0.5, 0.0));
 
   for (const auto &f : fiducials)
     f.draw(scene, drawing_meters_per_pixel);
