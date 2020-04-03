@@ -150,7 +150,7 @@ private:
 /////////////////////////////
   static Editor *instance;  // there will only be one instance
 
-  Project project;
+  std::shared_ptr<Project> project;
   int level_idx = 0;  // level that we are currently editing
   int clicked_idx = -1;  // point most recently clicked
   //int polygon_idx = -1;  // currently selected polygon

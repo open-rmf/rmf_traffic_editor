@@ -33,13 +33,9 @@ void SimThread::run()
   while (true)
   {
     msleep(500);
-    tick();
     if (isInterruptionRequested())
       break;
+    if (project)
+      project->sim_tick();
   }
-}
-
-void SimThread::tick()
-{
-  printf("SimThread::tick()\n");
 }

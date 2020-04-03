@@ -16,6 +16,7 @@
 */
 
 #include <algorithm>
+#include <memory>
 
 #include <QGraphicsOpacityEffect>
 #include <QGraphicsPixmapItem>
@@ -101,9 +102,9 @@ bool BuildingLevel::from_yaml(
     const YAML::Node &ys = _data["models"];
     for (YAML::const_iterator it = ys.begin(); it != ys.end(); ++it)
     {
-      Model m;
-      m.from_yaml(*it);
-      models.push_back(m);
+      std::unique_ptr<Model> m = std::make_unique<Model>();
+      m->from_yaml(*it);
+      models.push_back(std::move(m));
     }
   }
 
@@ -226,7 +227,7 @@ YAML::Node BuildingLevel::to_yaml() const
   }
 
   for (const auto& model : models)
-    y["models"].push_back(model.to_yaml());
+    y["models"].push_back(model->to_yaml());
 
   for (const auto& polygon : polygons)
   {
@@ -258,21 +259,21 @@ bool BuildingLevel::delete_selected()
       std::remove_if(
           edges.begin(),
           edges.end(),
-          [](Edge edge) { return edge.selected; }),
+          [](const Edge& edge) { return edge.selected; }),
       edges.end());
 
   models.erase(
       std::remove_if(
           models.begin(),
           models.end(),
-          [](Model model) { return model.selected; }),
+          [](const auto& model) { return model->selected; }),
       models.end());
 
   fiducials.erase(
       std::remove_if(
           fiducials.begin(),
           fiducials.end(),
-          [](Fiducial fiducial) { return fiducial.selected; }),
+          [](const Fiducial& fiducial) { return fiducial.selected; }),
       fiducials.end());
 
   // Vertices take a lot more care, because we have to check if a vertex
@@ -772,7 +773,7 @@ void BuildingLevel::clear_selection()
     edge.selected = false;
 
   for (auto& model : models)
-    model.selected = false;
+    model->selected = false;
 
   for (auto& polygon : polygons)
     polygon.selected = false;
@@ -829,7 +830,7 @@ void BuildingLevel::draw(
     double model_meters_per_pixel = 1.0;  // will get overridden
     for (auto &editor_model : editor_models)
     {
-      if (editor_model.name == model.model_name)
+      if (editor_model.name == model->model_name)
       {
         pixmap = editor_model.get_pixmap();
         model_meters_per_pixel = editor_model.meters_per_pixel;
@@ -842,11 +843,11 @@ void BuildingLevel::draw(
     QGraphicsPixmapItem *item = scene->addPixmap(pixmap);
     item->setOffset(-pixmap.width()/2, -pixmap.height()/2);
     item->setScale(model_meters_per_pixel / drawing_meters_per_pixel);
-    item->setPos(model.x, model.y);
-    item->setRotation(-model.yaw * 180.0 / M_PI);
+    item->setPos(model->x, model->y);
+    item->setRotation(-model->yaw * 180.0 / M_PI);
 
     // make the model "glow" if it is selected
-    if (model.selected)
+    if (model->selected)
     {
       QGraphicsColorizeEffect *colorize = new QGraphicsColorizeEffect;
       colorize->setColor(QColor::fromRgbF(1.0, 0.2, 0.0, 1.0));

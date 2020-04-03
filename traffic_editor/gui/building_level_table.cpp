@@ -18,6 +18,7 @@
 #include "building_level_table.h"
 #include "building_level_dialog.h"
 #include <QtWidgets>
+using std::unique_ptr;
 
 BuildingLevelTable::BuildingLevelTable()
 : TableList(6)
@@ -41,7 +42,7 @@ void BuildingLevelTable::update(Building& building)
   for (size_t i = 0; i < building.levels.size(); i++)
   {
     QTableWidgetItem *name_item = 
-        new QTableWidgetItem(QString::fromStdString(building.levels[i].name));
+        new QTableWidgetItem(QString::fromStdString(building.levels[i]->name));
     setItem(i, 0, name_item);
 
     if (static_cast<int>(i) == reference_level_idx)
@@ -52,7 +53,7 @@ void BuildingLevelTable::update(Building& building)
         1,
         new QTableWidgetItem(
             QString::number(
-                building.levels[i].drawing_meters_per_pixel,
+                building.levels[i]->drawing_meters_per_pixel,
                 'f',
                 4)));
 
@@ -65,20 +66,21 @@ void BuildingLevelTable::update(Building& building)
         i,
         4,
         new QTableWidgetItem(
-            QString::number(building.levels[i].elevation, 'f', 1)));
+            QString::number(building.levels[i]->elevation, 'f', 1)));
 
     QPushButton *edit_button = new QPushButton("Edit...", this);
     setCellWidget(i, 5, edit_button);
     edit_button->setStyleSheet("QTableWidgetItem { background-color: red; }");
 
     connect(
-        edit_button, &QAbstractButton::clicked,
+        edit_button,
+        &QAbstractButton::clicked,
         [this, &building, i]()
         {
-          BuildingLevelDialog level_dialog(building.levels[i]);
+          BuildingLevelDialog level_dialog(*building.levels[i]);
           if (level_dialog.exec() == QDialog::Accepted)
           {
-            building.levels[i].load_drawing();
+            building.levels[i]->load_drawing();
             setWindowModified(true);  // not sure why, but this doesn't work
           }
           update(building);
@@ -97,12 +99,12 @@ void BuildingLevelTable::update(Building& building)
       &QAbstractButton::clicked,
       [this, &building]()
       {
-        BuildingLevel level;
-        BuildingLevelDialog level_dialog(level);
+        unique_ptr<BuildingLevel> level = std::make_unique<BuildingLevel>();
+        BuildingLevelDialog level_dialog(*level);
         if (level_dialog.exec() == QDialog::Accepted)
         {
-          level.load_drawing();
-          building.add_level(level);
+          level->load_drawing();
+          building.add_level(std::move(level));
           setWindowModified(true);
           update(building);
           emit redraw_scene();

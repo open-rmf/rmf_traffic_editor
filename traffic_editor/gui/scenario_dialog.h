@@ -28,10 +28,10 @@ class QComboBox;
 class ScenarioDialog : public QDialog
 {
 public:
-  ScenarioDialog(std::unique_ptr<Scenario> _scenario);
+  ScenarioDialog(Scenario& _scenario);
   ~ScenarioDialog();
  
-  std::unique_ptr<Scenario> scenario;
+  Scenario& scenario;
 
 private:
 

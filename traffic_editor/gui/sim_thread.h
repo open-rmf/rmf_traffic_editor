@@ -19,6 +19,8 @@
 #define SIM_THREAD_H
 
 #include <QThread>
+#include <memory>
+#include "project.h"
 
 class SimThread : public QThread
 {
@@ -28,8 +30,9 @@ public:
   SimThread();
   ~SimThread();
 
+  std::shared_ptr<Project> project;
+
   void run() override;
-  void tick();
 };
 
 #endif

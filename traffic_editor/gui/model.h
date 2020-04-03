@@ -25,8 +25,11 @@
  * a map.
  */
 
+#include "behavior.h"
+
 #include <string>
 #include <yaml-cpp/yaml.h>
+
 
 class Model
 {
@@ -40,12 +43,18 @@ public:
   bool selected = false;  // only for visualization, not saved to YAML
   bool is_static = true;
 
+  Behavior behavior;
+
   Model();
 
   YAML::Node to_yaml() const;
   void from_yaml(const YAML::Node &data);
 
   void set_param(const std::string &name, const std::string &value);
+
+  void read_behavior_state();
+  void write_behavior_state();
+  void tick(const double dt_seconds);
 };
 
 #endif

@@ -21,6 +21,7 @@
 
 class QGraphicsScene;
 
+#include <memory>
 #include <string>
 #include <vector>
 #include <yaml-cpp/yaml.h>
@@ -39,7 +40,7 @@ public:
 
   std::string name;
   std::string reference_level_name;
-  std::vector<BuildingLevel> levels;
+  std::vector<std::unique_ptr<BuildingLevel> > levels;
   std::vector<Lift> lifts;
 
   std::string filename;
@@ -48,7 +49,7 @@ public:
   bool save_yaml_file();
   void clear();  // clear all internal data structures
 
-  void add_level(const BuildingLevel &level);
+  void add_level(std::unique_ptr<BuildingLevel> level);
 
   void add_vertex(int level_index, double x, double y);
   void add_fiducial(int level_index, double x, double y);

@@ -18,6 +18,8 @@
 #include "traffic_table.h"
 #include "traffic_map_dialog.h"
 #include <QtWidgets>
+using std::shared_ptr;
+
 
 TrafficTable::TrafficTable()
 : TableList(3)
@@ -34,14 +36,14 @@ TrafficTable::~TrafficTable()
 {
 }
 
-void TrafficTable::update(Project& project)
+void TrafficTable::update(std::shared_ptr<Project> project)
 {
   blockSignals(true);
-  setRowCount(1 + project.traffic_maps.size());
+  setRowCount(1 + project->traffic_maps.size());
 
-  for (size_t i = 0; i < project.traffic_maps.size(); i++)
+  for (size_t i = 0; i < project->traffic_maps.size(); i++)
   {
-    const TrafficMap& traffic_map = project.traffic_maps[i];
+    const TrafficMap& traffic_map = project->traffic_maps[i];
 
     QCheckBox *checkbox = new QCheckBox;
     checkbox->setChecked(traffic_map.visible);
@@ -49,16 +51,16 @@ void TrafficTable::update(Project& project)
     connect(
         checkbox,
         &QAbstractButton::clicked,
-        [this, &project, i](bool box_checked)
+        [this, project, i](bool box_checked)
         {
-          project.traffic_maps[i].visible = box_checked;
+          project->traffic_maps[i].visible = box_checked;
           emit redraw();
         });
 
     QTableWidgetItem *name_item =
         new QTableWidgetItem(QString::fromStdString(traffic_map.name));
 
-    if (static_cast<int>(i) == project.traffic_map_idx)
+    if (static_cast<int>(i) == project->traffic_map_idx)
       name_item->setBackground(QBrush(QColor("#e0ffe0")));
 
     setItem(i, 1, name_item);
@@ -68,9 +70,9 @@ void TrafficTable::update(Project& project)
     connect(
         edit_button,
         &QAbstractButton::clicked,
-        [this, &project, i]()
+        [this, project, i]()
         {
-          TrafficMapDialog dialog(project.traffic_maps[i]);
+          TrafficMapDialog dialog(project->traffic_maps[i]);
           dialog.exec();
           update(project);
           emit redraw();
@@ -78,7 +80,7 @@ void TrafficTable::update(Project& project)
   }
 
   // we'll use the last row for the "Add" button
-  const int last_row_idx = static_cast<int>(project.scenarios.size());
+  const int last_row_idx = static_cast<int>(project->scenarios.size());
   setCellWidget(last_row_idx, 0, nullptr);
   setCellWidget(last_row_idx, 1, nullptr);
   QPushButton *add_button = new QPushButton("Add...", this);
@@ -86,13 +88,13 @@ void TrafficTable::update(Project& project)
   connect(
       add_button,
       &QAbstractButton::clicked,
-      [this, &project]()
+      [this, project]()
       {
         TrafficMap traffic_map;
         TrafficMapDialog dialog(traffic_map);
         if (dialog.exec() == QDialog::Accepted)
         {
-          project.traffic_maps.push_back(traffic_map);
+          project->traffic_maps.push_back(traffic_map);
           update(project);
           emit redraw();
         }

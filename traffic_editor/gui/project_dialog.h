@@ -19,6 +19,7 @@
 #define PROJECT_DIALOG_H
 
 #include <QDialog>
+#include <memory>
 #include "project.h"
 class QLineEdit;
 class QComboBox;
@@ -27,11 +28,11 @@ class QComboBox;
 class ProjectDialog : public QDialog
 {
 public:
-  ProjectDialog(Project& _project);
+  ProjectDialog(std::shared_ptr<Project> _project);
   ~ProjectDialog();
  
 private:
-  Project& project;
+  std::shared_ptr<Project> project;
 
   QLineEdit *name_line_edit;
   QLineEdit *building_path_line_edit;

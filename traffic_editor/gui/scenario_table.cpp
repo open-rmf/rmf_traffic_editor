@@ -20,6 +20,8 @@
 #include "scenario_table.h"
 #include <QtWidgets>
 using std::unique_ptr;
+using std::shared_ptr;
+
 
 ScenarioTable::ScenarioTable()
 : TableList(2)
@@ -32,18 +34,18 @@ ScenarioTable::~ScenarioTable()
 {
 }
 
-void ScenarioTable::update(Project& project)
+void ScenarioTable::update(shared_ptr<Project> project)
 {
   blockSignals(true);
-  setRowCount(1 + project.scenarios.size());
-  for (size_t i = 0; i < project.scenarios.size(); i++)
+  setRowCount(1 + project->scenarios.size());
+  for (size_t i = 0; i < project->scenarios.size(); i++)
   {
-    const Scenario& scenario = *project.scenarios[i];
+    const Scenario& scenario = *project->scenarios[i];
 
     QTableWidgetItem *name_item =
         new QTableWidgetItem(QString::fromStdString(scenario.name));
 
-    if (static_cast<int>(i) == project.scenario_idx)
+    if (static_cast<int>(i) == project->scenario_idx)
       name_item->setBackground(QBrush(QColor("#e0ffe0")));
 
     setItem(i, 0, name_item);
@@ -53,31 +55,33 @@ void ScenarioTable::update(Project& project)
     connect(
         edit_button,
         &QAbstractButton::clicked,
-        [this, &project, i]()
+        [this, project, i]()
         {
-          ScenarioDialog dialog(std::move(project.scenarios[i]));
+          ScenarioDialog dialog(*project->scenarios[i]);
           dialog.exec();
-          project.scenarios[i] = std::move(dialog.scenario);
           update(project);
           emit redraw();
         });
   }
 
   // we'll use the last row for the "Add" button
-  const int last_row_idx = static_cast<int>(project.scenarios.size());
+  const int last_row_idx = static_cast<int>(project->scenarios.size());
   setCellWidget(last_row_idx, 0, nullptr);
   QPushButton *add_button = new QPushButton("Add...", this);
   setCellWidget(last_row_idx, 1, add_button);
   connect(
       add_button, &QAbstractButton::clicked,
-      [this, &project]() {
-        ScenarioDialog scenario_dialog(unique_ptr<Scenario>(new Scenario));
+      [this, project]() {
+        unique_ptr<Scenario> scenario = std::make_unique<Scenario>();
+        ScenarioDialog scenario_dialog(*scenario);
         if (scenario_dialog.exec() == QDialog::Accepted)
         {
-          project.scenarios.push_back(std::move(scenario_dialog.scenario));
+          project->scenarios.push_back(std::move(scenario));
           update(project);
           emit redraw();
         }
+        else
+          scenario.release();
       });
 
   blockSignals(false);

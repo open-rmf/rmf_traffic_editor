@@ -25,6 +25,7 @@ class BehaviorScheduleItem
 {
 public:
   double start_seconds = 0.0;
+  bool started = false;
   std::string model_name;
   std::string behavior_name;
 

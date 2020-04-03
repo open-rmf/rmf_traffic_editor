@@ -37,7 +37,7 @@ BuildingDialog::BuildingDialog(Building& building)
   reference_level_hbox->addWidget(new QLabel("Reference level:"));
   _reference_floor_combo_box = new QComboBox;
   for (const auto& level : building.levels)
-    _reference_floor_combo_box->addItem(QString::fromStdString(level.name));
+    _reference_floor_combo_box->addItem(QString::fromStdString(level->name));
   if (!building.levels.empty() && !building.reference_level_name.empty())
     _reference_floor_combo_box->setCurrentText(
         QString::fromStdString(building.reference_level_name));

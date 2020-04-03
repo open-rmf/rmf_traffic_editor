@@ -107,6 +107,10 @@ public:
 
   Polygon *get_selected_polygon(const EditorModeId mode, const int level_idx);
 
+  // simulation stuff
+  void sim_reset();
+  void sim_tick();
+
 private:
   bool load_yaml_file(const std::string& _filename);
   bool save_yaml_file() const;
@@ -115,6 +119,9 @@ private:
       const int level_idx,
       QGraphicsLineItem *line_item,
       const EditorModeId mode);
+
+  // simulation stuff
+  double sim_time_seconds = 0.0;
 };
 
 #endif

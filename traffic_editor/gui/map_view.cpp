@@ -90,7 +90,7 @@ void MapView::zoom_fit(const Building& building, int level_index)
 {
   if (building.levels.empty())
     return;
-  const BuildingLevel& level = building.levels[level_index];
+  const BuildingLevel& level = *building.levels[level_index];
   const int w = level.drawing_width;
   const int h = level.drawing_height;
   const double cx = w / 2;

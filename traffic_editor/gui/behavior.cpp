@@ -22,17 +22,21 @@
 using std::string;
 using std::unique_ptr;
 
-Behavior::Behavior(const string &_name, const YAML::Node& y)
+Behavior::Behavior()
+{
+}
+
+Behavior::Behavior(const string &_name, const YAML::Node& yaml)
 : name(_name)
 {
   printf("Behavior::from_yaml(%s)\n", name.c_str());
 
-  if (!y["sequence"].IsSequence())
+  if (!yaml["sequence"].IsSequence())
   {
     printf("ERROR: expected a map key 'sequence' !\n");
     return;
   }
-  const YAML::Node &ys = y["sequence"];  // save some typing
+  const YAML::Node &ys = yaml["sequence"];  // save some typing
   for (YAML::const_iterator it = ys.begin(); it != ys.end(); ++it)
   {
     if (!((*it).IsSequence()))
@@ -71,4 +75,8 @@ void Behavior::print() const
   printf("    %s:\n", name.c_str());
   for (const auto& node : nodes)
     node->print();
+}
+
+void Behavior::tick(const double /*dt_seconds*/)
+{
 }

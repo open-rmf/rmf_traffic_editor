@@ -29,6 +29,12 @@
 class Behavior
 {
 public:
+  double x = 0.0;
+  double y = 0.0;
+  double z = 0.0;
+  double yaw = 0.0;
+
+  Behavior();
   Behavior(const std::string& _name, const YAML::Node& yaml);
   ~Behavior();
 
@@ -37,6 +43,8 @@ public:
   std::vector<std::unique_ptr<BehaviorNode> > nodes;
 
   void print() const;
+
+  void tick(const double dt_seconds);
 };
 
 #endif

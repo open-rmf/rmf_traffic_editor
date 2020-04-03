@@ -16,8 +16,9 @@
 */
 
 #include <algorithm>
-#include <iostream>
 #include <fstream>
+#include <iostream>
+#include <memory>
 #include <yaml-cpp/yaml.h>
 
 #include <QFileInfo>
@@ -86,9 +87,9 @@ bool Building::load_yaml_file()
   const YAML::Node yl = y["levels"];
   for (YAML::const_iterator it = yl.begin(); it != yl.end(); ++it)
   {
-    BuildingLevel l;
-    l.from_yaml(it->first.as<string>(), it->second);
-    levels.push_back(l);
+    std::unique_ptr<BuildingLevel> l = std::make_unique<BuildingLevel>();
+    l->from_yaml(it->first.as<string>(), it->second);
+    levels.push_back(std::move(l));
   }
 
   if (y["lifts"] && y["lifts"].IsMap())
@@ -118,7 +119,7 @@ bool Building::save_yaml_file()
 
   y["levels"] = YAML::Node(YAML::NodeType::Map);
   for (const auto &level : levels)
-    y["levels"][level.name] = level.to_yaml();
+    y["levels"][level->name] = level->to_yaml();
 
   y["lifts"] = YAML::Node(YAML::NodeType::Map);
   for (const auto& lift : lifts)
@@ -136,14 +137,14 @@ void Building::add_vertex(int level_index, double x, double y)
 {
   if (level_index >= static_cast<int>(levels.size()))
     return;
-  levels[level_index].add_vertex(x, y);
+  levels[level_index]->add_vertex(x, y);
 }
 
 void Building::add_fiducial(int level_index, double x, double y)
 {
   if (level_index >= static_cast<int>(levels.size()))
     return;
-  levels[level_index].fiducials.push_back(Fiducial(x, y));
+  levels[level_index]->fiducials.push_back(Fiducial(x, y));
 }
 
 int Building::find_nearest_vertex_index(
@@ -151,8 +152,8 @@ int Building::find_nearest_vertex_index(
 {
   double min_dist = 1e100;
   int min_index = -1;
-  for (size_t i = 0; i < levels[level_index].vertices.size(); i++) {
-    const Vertex &v = levels[level_index].vertices[i];
+  for (size_t i = 0; i < levels[level_index]->vertices.size(); i++) {
+    const Vertex &v = levels[level_index]->vertices[i];
     const double dx = x - v.x;
     const double dy = y - v.y;
     const double dist2 = dx*dx + dy*dy;  // no need for sqrt each time
@@ -173,7 +174,7 @@ Building::NearestItem Building::nearest_items(
   NearestItem ni;
   if (level_index >= static_cast<int>(levels.size()))
     return ni;
-  const BuildingLevel& level = levels[level_index];
+  const BuildingLevel& level = *levels[level_index];
 
   for (size_t i = 0; i < level.vertices.size(); i++)
   {
@@ -203,7 +204,7 @@ Building::NearestItem Building::nearest_items(
 
   for (size_t i = 0; i < level.models.size(); i++)
   {
-    const Model& m = level.models[i];
+    const Model& m = *level.models[i];
     const double dx = x - m.x;
     const double dy = y - m.y;
     const double dist = sqrt(dx*dx + dy*dy);  // no need for sqrt each time
@@ -231,9 +232,9 @@ int Building::nearest_item_index_if_within_distance(
   int min_index = -1;
   if (item_type == VERTEX)
   {
-    for (size_t i = 0; i < levels[level_index].vertices.size(); i++)
+    for (size_t i = 0; i < levels[level_index]->vertices.size(); i++)
     {
-      const Vertex& p = levels[level_index].vertices[i];
+      const Vertex& p = levels[level_index]->vertices[i];
       const double dx = x - p.x;
       const double dy = y - p.y;
       const double dist2 = dx*dx + dy*dy;  // no need for sqrt each time
@@ -246,9 +247,9 @@ int Building::nearest_item_index_if_within_distance(
   }
   else if (item_type == FIDUCIAL)
   {
-    for (size_t i = 0; i < levels[level_index].fiducials.size(); i++)
+    for (size_t i = 0; i < levels[level_index]->fiducials.size(); i++)
     {
-      const Fiducial& f = levels[level_index].fiducials[i];
+      const Fiducial& f = levels[level_index]->fiducials[i];
       const double dx = x - f.x;
       const double dy = y - f.y;
       const double dist2 = dx*dx + dy*dy;
@@ -261,9 +262,9 @@ int Building::nearest_item_index_if_within_distance(
   }
   else if (item_type == MODEL)
   {
-    for (size_t i = 0; i < levels[level_index].models.size(); i++)
+    for (size_t i = 0; i < levels[level_index]->models.size(); i++)
     {
-      const Model& m = levels[level_index].models[i];
+      const Model& m = *levels[level_index]->models[i];
       const double dx = x - m.x;
       const double dy = y - m.y;
       const double dist2 = dx*dx + dy*dy;  // no need for sqrt each time
@@ -291,7 +292,7 @@ void Building::add_edge(
   printf("Building::add_edge(%d, %d, %d, %d)\n",
       level_index, start_vertex_index, end_vertex_index,
       static_cast<int>(edge_type));
-  levels[level_index].edges.push_back(
+  levels[level_index]->edges.push_back(
       Edge(start_vertex_index, end_vertex_index, edge_type));
 }
 
@@ -301,7 +302,7 @@ bool Building::delete_selected(const int level_index)
     return false;
 
   printf("Building::delete_keypress()\n");
-  if (!levels[level_index].delete_selected())
+  if (!levels[level_index]->delete_selected())
     return false;
 
   return true;
@@ -320,15 +321,15 @@ void Building::add_model(
 
   printf("Building::add_model(%d, %.1f, %.1f, %.1f, %.2f, %s)\n",
       level_idx, x, y, z, yaw, model_name.c_str());
-  Model m;
-  m.x = x;
-  m.y = y;
-  m.z = z;
-  m.yaw = yaw;
-  m.model_name = model_name;
-  m.instance_name = model_name;  // todo: add unique numeric suffix?
-  m.is_static = true;
-  levels[level_idx].models.push_back(m);
+  std::unique_ptr<Model> m = std::make_unique<Model>();
+  m->x = x;
+  m->y = y;
+  m->z = z;
+  m->yaw = yaw;
+  m->model_name = model_name;
+  m->instance_name = model_name;  // todo: add unique numeric suffix?
+  m->is_static = true;
+  levels[level_idx]->models.push_back(std::move(m));
 }
 
 void Building::set_model_yaw(
@@ -339,7 +340,7 @@ void Building::set_model_yaw(
   if (level_idx >= static_cast<int>(levels.size()))
     return;
 
-  levels[level_idx].models[model_idx].yaw = yaw;
+  levels[level_idx]->models[model_idx]->yaw = yaw;
 }
 
 void Building::clear()
@@ -351,24 +352,24 @@ void Building::clear()
   clear_transform_cache();
 }
 
-void Building::add_level(const BuildingLevel& new_level)
+void Building::add_level(std::unique_ptr<BuildingLevel> new_level)
 {
   // make sure we don't have this level already
   for (const auto &level : levels)
-    if (level.name == new_level.name)
+    if (level->name == new_level->name)
       return;
-  levels.push_back(new_level);
+  levels.push_back(std::move(new_level));
 }
 
 void Building::draw_lifts(QGraphicsScene *scene, const int level_idx)
 {
-  const BuildingLevel& level = levels[level_idx];
+  const BuildingLevel& level = *levels[level_idx];
   for (const auto &lift : lifts)
   {
     // find the level index referenced by the lift
     int reference_floor_idx = -1;
     for (size_t i = 0; i < levels.size(); i++)
-      if (levels[i].name == lift.reference_floor_name)
+      if (levels[i]->name == lift.reference_floor_name)
       {
         reference_floor_idx = static_cast<int>(i);
         break;
@@ -399,9 +400,9 @@ bool Building::transform_between_levels(
   int to_level_idx = -1;
   for (size_t i = 0; i < levels.size(); i++)
   {
-    if (levels[i].name == from_level_name)
+    if (levels[i]->name == from_level_name)
       from_level_idx = i;
-    if (levels[i].name == to_level_name)
+    if (levels[i]->name == to_level_name)
       to_level_idx = i;
   }
   if (from_level_idx < 0 || to_level_idx < 0)
@@ -459,8 +460,8 @@ Building::Transform Building::compute_transform(
   }
 
   // this internal function assumes that bounds checking has already happened
-  const BuildingLevel& from_level = levels[from_level_idx];
-  const BuildingLevel& to_level = levels[to_level_idx];
+  const BuildingLevel& from_level = *levels[from_level_idx];
+  const BuildingLevel& to_level = *levels[to_level_idx];
 
   // assemble a vector of fudicials in common to these levels
   vector< std::pair<Fiducial, Fiducial> > fiducials;
@@ -552,14 +553,14 @@ void Building::calculate_all_transforms()
 
   // set drawing scale using this data
   const int ref_idx = get_reference_level_idx();
-  const double ref_scale = levels[ref_idx].drawing_meters_per_pixel;
+  const double ref_scale = levels[ref_idx]->drawing_meters_per_pixel;
   for (int i = 0; i < static_cast<int>(levels.size()); i++)
   {
     if (i != get_reference_level_idx())
     {
       Transform t = get_transform(ref_idx, i);
-      if (levels[i].fiducials.size() >= 2)
-        levels[i].drawing_meters_per_pixel = ref_scale / t.scale;
+      if (levels[i]->fiducials.size() >= 2)
+        levels[i]->drawing_meters_per_pixel = ref_scale / t.scale;
     }
   }
 }
@@ -569,7 +570,7 @@ int Building::get_reference_level_idx()
   if (reference_level_name.empty())
     return 0;
   for (size_t i = 0; i < levels.size(); i++)
-    if (levels[i].name == reference_level_name)
+    if (levels[i]->name == reference_level_name)
       return static_cast<int>(i);
   return 0;
 }

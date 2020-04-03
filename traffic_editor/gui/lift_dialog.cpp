@@ -25,8 +25,8 @@ LiftDialog::LiftDialog(Lift& lift, const Building& building)
   _lift(lift)
 {
   setWindowTitle("Lift Properties");
-  for (const Level& level : building.levels)
-    _level_names.push_back(QString::fromStdString(level.name));
+  for (const auto& level : building.levels)
+    _level_names.push_back(QString::fromStdString(level->name));
 
   QHBoxLayout *bottom_buttons_hbox = new QHBoxLayout;
   _ok_button = new QPushButton("OK", this);  // first button = [enter] button
@@ -38,8 +38,10 @@ LiftDialog::LiftDialog(Lift& lift, const Building& building)
   _cancel_button = new QPushButton("Cancel", this);
   bottom_buttons_hbox->addWidget(_cancel_button);
   connect(
-    _cancel_button, &QAbstractButton::clicked,
-    this, &QDialog::reject);
+    _cancel_button,
+    &QAbstractButton::clicked,
+    this,
+    &QDialog::reject);
 
   QHBoxLayout *name_hbox = new QHBoxLayout;
   name_hbox->addWidget(new QLabel("Name:"));

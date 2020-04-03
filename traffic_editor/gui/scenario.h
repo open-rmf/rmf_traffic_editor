@@ -22,6 +22,7 @@
 #include "behavior_schedule_item.h"
 #include "scenario_level.h"
 #include "vertex.h"
+#include "model.h"
 
 #include <map>
 #include <memory>
@@ -36,6 +37,8 @@ public:
   std::vector<ScenarioLevel> levels;
   std::vector<std::unique_ptr<Behavior> > behaviors;
   std::vector<BehaviorScheduleItem> behavior_schedule;
+
+  std::vector<std::shared_ptr<Model> > active_models;
 
   /////////////////////////////////
   Scenario();

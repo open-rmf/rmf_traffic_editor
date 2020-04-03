@@ -97,3 +97,24 @@ void Model::set_param(const std::string &name, const std::string &value)
       is_static = false;
   }
 }
+
+void Model::read_behavior_state()
+{
+  x = behavior.x;
+  y = behavior.y;
+  z = behavior.z;
+  yaw = behavior.yaw;
+}
+
+void Model::write_behavior_state()
+{
+  behavior.x = x;
+  behavior.y = y;
+  behavior.z = z;
+  behavior.yaw = yaw;
+}
+
+void Model::tick(const double dt_seconds)
+{
+  behavior.tick(dt_seconds);
+}

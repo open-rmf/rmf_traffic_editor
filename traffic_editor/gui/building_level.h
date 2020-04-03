@@ -26,6 +26,7 @@
 #include "edge.h"
 #include "fiducial.h"
 #include "layer.h"
+#include "memory.h"
 #include "model.h"
 #include "polygon.h"
 #include "vertex.h"
@@ -56,7 +57,7 @@ public:
   double flattened_x_offset = 0.0;
   double flattened_y_offset = 0.0;
 
-  std::vector<Model> models;
+  std::vector<std::unique_ptr<Model> > models;
   std::vector<Fiducial> fiducials;
 
   QPixmap floorplan_pixmap;

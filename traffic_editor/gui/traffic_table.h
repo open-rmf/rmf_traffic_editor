@@ -18,6 +18,7 @@
 #ifndef TRAFFIC_TABLE_H
 #define TRAFFIC_TABLE_H
 
+#include <memory>
 #include <QTableWidget>
 
 #include "table_list.h"
@@ -29,7 +30,7 @@ public:
   TrafficTable();
   ~TrafficTable();
 
-  void update(Project& project);
+  void update(std::shared_ptr<Project> project);
 };
 
 #endif
