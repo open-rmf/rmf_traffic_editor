@@ -81,7 +81,7 @@ models:
 - Pitti
 - postbox
 - RoboGate
-- RobotFrame
+- RobotPlaceholder
 - RoboWarningLight
 - Saeco
 - Scrubber
