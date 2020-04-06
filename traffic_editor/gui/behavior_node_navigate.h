@@ -20,17 +20,31 @@
 
 #include <string>
 #include <yaml-cpp/yaml.h>
+
 #include "behavior_node.h"
+#include "model_state.h"
 
 class BehaviorNodeNavigate : public BehaviorNode
 {
 public:
-  std::string destination;
+  std::string destination_name;
+  bool destination_found = false;
+  ModelState destination_state;
 
   BehaviorNodeNavigate(const YAML::Node& yaml_node);
   ~BehaviorNodeNavigate();
+  virtual std::unique_ptr<BehaviorNode> clone() const override;
 
-  virtual void print() const;
+  virtual void print() const override;
+
+  virtual void tick(
+      const double dt_seconds,
+      ModelState& state,
+      Building& building,
+      const std::vector<std::unique_ptr<Model> >& active_models
+  ) override;
+
+  bool is_complete() const override;
 };
 
 #endif

@@ -25,25 +25,28 @@ Model::Model()
 {
 }
 
-void Model::from_yaml(const YAML::Node &data)
+void Model::from_yaml(const YAML::Node &data, const string& level_name)
 {
   if (!data.IsMap())
     throw std::runtime_error("Model::from_yaml() expected a map");
-  x = data["x"].as<double>();
-  y = data["y"].as<double>();
+  state.x = data["x"].as<double>();
+  state.y = data["y"].as<double>();
   if (data["z"])
   {
-    z = data["z"].as<double>();
+    state.z = data["z"].as<double>();
   }
   else
   {
     qWarning(
         "parsed a deprecated .building.yaml, models should have z defined.");
-    z = 0.0;
+    state.z = 0.0;
   }
-  yaw = data["yaw"].as<double>();
+  state.yaw = data["yaw"].as<double>();
+
   model_name = data["model_name"].as<string>();
   instance_name = data["name"].as<string>();
+  starting_level = level_name;
+
   if (data["static"])
     is_static = data["static"].as<bool>();
   else
@@ -57,11 +60,11 @@ YAML::Node Model::to_yaml() const
 
   YAML::Node n;
   n.SetStyle(YAML::EmitterStyle::Flow);
-  n["x"] = round(x * 1000.0) / 1000.0;
-  n["y"] = round(y * 1000.0) / 1000.0;
-  n["z"] = round(z * 1000.0) / 1000.0;
+  n["x"] = round(state.x * 1000.0) / 1000.0;
+  n["y"] = round(state.y * 1000.0) / 1000.0;
+  n["z"] = round(state.z * 1000.0) / 1000.0;
   // let's give yaw another decimal place because, I don't know, reasons (?)
-  n["yaw"] = round(yaw * 10000.0) / 10000.0;
+  n["yaw"] = round(state.yaw * 10000.0) / 10000.0;
   n["name"] = instance_name;
   n["model_name"] = model_name;
   n["static"] = is_static;
@@ -74,7 +77,7 @@ void Model::set_param(const std::string &name, const std::string &value)
   {
     try
     {
-      z = std::stod(value);
+      state.z = std::stod(value);
     }
     catch(const std::exception& e)
     {
@@ -98,23 +101,16 @@ void Model::set_param(const std::string &name, const std::string &value)
   }
 }
 
-void Model::read_behavior_state()
+void Model::tick(
+    const double dt_seconds,
+    Building& building,
+    const std::vector<std::unique_ptr<Model> >& active_models)
 {
-  x = behavior.x;
-  y = behavior.y;
-  z = behavior.z;
-  yaw = behavior.yaw;
+  next_state = state;
+  behavior->tick(dt_seconds, next_state, building, active_models);
 }
 
-void Model::write_behavior_state()
+void Model::set_behavior(std::unique_ptr<Behavior> _behavior)
 {
-  behavior.x = x;
-  behavior.y = y;
-  behavior.z = z;
-  behavior.yaw = yaw;
-}
-
-void Model::tick(const double dt_seconds)
-{
-  behavior.tick(dt_seconds);
+  behavior = std::move(_behavior);
 }

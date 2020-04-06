@@ -21,7 +21,7 @@ using std::string;
 BehaviorNodeNavigate::BehaviorNodeNavigate(const YAML::Node& y)
 : BehaviorNode()
 {
-  destination = y[1].as<string>();
+  destination_name = y[1].as<string>();
 }
 
 BehaviorNodeNavigate::~BehaviorNodeNavigate()
@@ -30,5 +30,47 @@ BehaviorNodeNavigate::~BehaviorNodeNavigate()
 
 void BehaviorNodeNavigate::print() const
 {
-  printf("      navigate: [%s]\n", destination.c_str());
+  printf("      navigate: [%s]\n", destination_name.c_str());
+}
+
+std::unique_ptr<BehaviorNode> BehaviorNodeNavigate::clone() const
+{
+  return std::make_unique<BehaviorNodeNavigate>(*this);
+}
+
+void BehaviorNodeNavigate::tick(
+    const double dt_seconds,
+    ModelState& state,
+    Building& building,
+    const std::vector<std::unique_ptr<Model> >& /*active_models*/)
+{
+  printf("BehaviorNodeNavigate::tick()\n");
+  if (!destination_found)
+  {
+    destination_found = true;
+    populate_model_state_from_vertex_name(
+        destination_state,
+        destination_name,
+        building);
+  }
+
+  // for now, assume just single-level navigation, no lifts, etc.
+
+  const double error_x = destination_state.x - state.x;
+  const double error_y = destination_state.y - state.y;
+  const double bearing = atan2(error_y, error_x);
+
+  const double speed = 0.5;  // SI units = meters/sec
+  const double x_dot = speed * cos(bearing);
+  const double y_dot = speed * sin(bearing);
+
+  state.x += dt_seconds * x_dot;
+  state.y += dt_seconds * y_dot;
+
+  printf("  (%.2f, %.2f)\n", state.x, state.y);
+}
+
+bool BehaviorNodeNavigate::is_complete() const
+{
+  return false;
 }

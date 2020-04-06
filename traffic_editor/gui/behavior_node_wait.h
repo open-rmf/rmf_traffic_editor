@@ -24,11 +24,22 @@
 class BehaviorNodeWait : public BehaviorNode
 {
 public:
+  double seconds = 0.0;
+
   BehaviorNodeWait(const YAML::Node& y);
   ~BehaviorNodeWait();
+  virtual std::unique_ptr<BehaviorNode> clone() const override;
 
-  double seconds = 0.0;
   virtual void print() const;
+
+  virtual void tick(
+      const double dt_seconds,
+      ModelState& state,
+      Building& building,
+      const std::vector<std::unique_ptr<Model> >& active_models
+  ) override;
+
+  bool is_complete() const override;
 };
 
 #endif

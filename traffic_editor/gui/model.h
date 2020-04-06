@@ -26,35 +26,41 @@
  */
 
 #include "behavior.h"
+#include "model_state.h"
 
 #include <string>
 #include <yaml-cpp/yaml.h>
+class Building;
 
 
 class Model
 {
 public:
-  double x = 0.0;
-  double y = 0.0;
-  double z = 0.0;
-  double yaw = 0.0;
+  ModelState state;
+  ModelState next_state;
+
   std::string model_name;
   std::string instance_name;
   bool selected = false;  // only for visualization, not saved to YAML
   bool is_static = true;
+  bool is_active = false;
+  std::string starting_level;  // used when resetting a test scenario
 
-  Behavior behavior;
+  std::unique_ptr<Behavior> behavior;
 
   Model();
 
   YAML::Node to_yaml() const;
-  void from_yaml(const YAML::Node &data);
+  void from_yaml(const YAML::Node &data, const std::string& level_name);
 
   void set_param(const std::string &name, const std::string &value);
 
-  void read_behavior_state();
-  void write_behavior_state();
-  void tick(const double dt_seconds);
+  void tick(
+      const double dt_seconds,
+      Building& building,
+      const std::vector<std::unique_ptr<Model> >& active_models);
+
+  void set_behavior(std::unique_ptr<Behavior> _behavior);
 };
 
 #endif

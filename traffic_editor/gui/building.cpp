@@ -218,8 +218,8 @@ Building::NearestItem Building::nearest_items(
   for (size_t i = 0; i < level.models.size(); i++)
   {
     const Model& m = *level.models[i];
-    const double dx = x - m.x;
-    const double dy = y - m.y;
+    const double dx = x - m.state.x;
+    const double dy = y - m.state.y;
     const double dist = sqrt(dx*dx + dy*dy);  // no need for sqrt each time
     if (dist < ni.model_dist)
     {
@@ -278,8 +278,8 @@ int Building::nearest_item_index_if_within_distance(
     for (size_t i = 0; i < levels[level_index]->models.size(); i++)
     {
       const Model& m = *levels[level_index]->models[i];
-      const double dx = x - m.x;
-      const double dy = y - m.y;
+      const double dx = x - m.state.x;
+      const double dy = y - m.state.y;
       const double dist2 = dx*dx + dy*dy;  // no need for sqrt each time
       if (dist2 < min_dist)
       {
@@ -335,10 +335,10 @@ void Building::add_model(
   printf("Building::add_model(%d, %.1f, %.1f, %.1f, %.2f, %s)\n",
       level_idx, x, y, z, yaw, model_name.c_str());
   std::unique_ptr<Model> m = std::make_unique<Model>();
-  m->x = x;
-  m->y = y;
-  m->z = z;
-  m->yaw = yaw;
+  m->state.x = x;
+  m->state.y = y;
+  m->state.z = z;
+  m->state.yaw = yaw;
   m->model_name = model_name;
   m->instance_name = model_name;  // todo: add unique numeric suffix?
   m->is_static = true;
@@ -353,7 +353,7 @@ void Building::set_model_yaw(
   if (level_idx >= static_cast<int>(levels.size()))
     return;
 
-  levels[level_idx]->models[model_idx]->yaw = yaw;
+  levels[level_idx]->models[model_idx]->state.yaw = yaw;
 }
 
 void Building::clear()

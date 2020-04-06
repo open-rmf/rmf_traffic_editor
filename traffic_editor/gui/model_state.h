@@ -15,22 +15,19 @@
  *
 */
 
-#include "behavior_schedule_item.h"
-using std::string;
+#ifndef MODEL_STATE_H
+#define MODEL_STATE_H
 
-bool BehaviorScheduleItem::from_yaml(const YAML::Node& y)
-{
-  start_seconds = y[0].as<double>();
-  model_name = y[1].as<string>();
-  behavior_name = y[2].as<string>();
-  return true;
-}
+#include <string>
 
-void BehaviorScheduleItem::print() const
+class ModelState
 {
-  printf(
-      "    start time: %.3f  model_name: %s  behavior_name: %s\n",
-      start_seconds,
-      model_name.c_str(),
-      behavior_name.c_str());
-}
+public:
+  double x = 0.0;
+  double y = 0.0;
+  double z = 0.0;
+  double yaw = 0.0;
+  std::string level_name;
+};
+
+#endif

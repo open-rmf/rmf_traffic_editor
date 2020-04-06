@@ -25,26 +25,32 @@
 
 #include "behavior_node.h"
 #include "behavior_schedule_item.h"
+#include "model_state.h"
 
 class Behavior
 {
 public:
-  double x = 0.0;
-  double y = 0.0;
-  double z = 0.0;
-  double yaw = 0.0;
-
   Behavior();
   Behavior(const std::string& _name, const YAML::Node& yaml);
+  Behavior(const Behavior& copy);
   ~Behavior();
 
   std::string name;
 
   std::vector<std::unique_ptr<BehaviorNode> > nodes;
+  int active_node_idx = 0;
 
   void print() const;
 
-  void tick(const double dt_seconds);
+  void tick(
+      const double dt_seconds,
+      ModelState& state,
+      Building& building,
+      const std::vector<std::unique_ptr<Model> >& active_models);
+
+  // in the future, we'll probably have ways to parameterize this
+  // for now it's basically a deep-copy
+  std::unique_ptr<Behavior> instantiate() const;
 };
 
 #endif

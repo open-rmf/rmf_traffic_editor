@@ -16,6 +16,8 @@
 */
 
 #include "behavior_node.h"
+#include "building.h"
+using std::string;
 
 BehaviorNode::BehaviorNode()
 {
@@ -25,7 +27,41 @@ BehaviorNode::~BehaviorNode()
 {
 }
 
-void BehaviorNode::print() const
+bool BehaviorNode::populate_model_state_from_vertex_name(
+    ModelState& state,
+    const std::string vertex_name,
+    Building& building)
 {
-  printf("      (parent BehaviorNode class)\n");
+  // look up the destination in the building
+  printf("  finding destination [%s]\n", vertex_name.c_str());
+  bool found = false;
+  for (const auto& level : building.levels)
+    for (const auto& vertex : level->vertices)
+    {
+      const string full_name = level->name + "/" + vertex.name;
+      if (full_name == vertex_name)
+      {
+        found = true;
+        state.x = vertex.x;
+        state.y = vertex.y;
+        state.level_name = level->name;
+        break;
+      }
+    }
+
+  if (found)
+  {
+    printf(
+        "  vertex [%s] = (%.2f, %.2f) on level [%s]\n",
+        vertex_name.c_str(),
+        state.x,
+        state.y,
+        state.level_name.c_str());
+    return true;
+  }
+  else
+  {
+    printf("  ERROR: could not find [%s]\n", vertex_name.c_str());
+    return false;
+  }
 }

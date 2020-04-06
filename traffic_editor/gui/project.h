@@ -119,11 +119,6 @@ private:
       const int level_idx,
       QGraphicsLineItem *line_item,
       const EditorModeId mode);
-
-  // simulation stuff
-  double sim_time_seconds = 0.0;
-
-  void start_behavior_schedule_item(BehaviorScheduleItem& item);
 };
 
 #endif

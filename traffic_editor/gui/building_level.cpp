@@ -105,7 +105,7 @@ bool BuildingLevel::from_yaml(
     for (YAML::const_iterator it = ys.begin(); it != ys.end(); ++it)
     {
       std::unique_ptr<Model> m = std::make_unique<Model>();
-      m->from_yaml(*it);
+      m->from_yaml(*it, this->name);
       models.push_back(std::move(m));
     }
   }
@@ -844,8 +844,8 @@ void BuildingLevel::draw(
     QGraphicsPixmapItem *item = scene->addPixmap(pixmap);
     item->setOffset(-pixmap.width()/2, -pixmap.height()/2);
     item->setScale(model_meters_per_pixel / drawing_meters_per_pixel);
-    item->setPos(model->x, model->y);
-    item->setRotation(-model->yaw * 180.0 / M_PI);
+    item->setPos(model->state.x, model->state.y);
+    item->setRotation(-model->state.yaw * 180.0 / M_PI);
 
     // make the model "glow" if it is selected
     if (model->selected)

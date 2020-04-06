@@ -32,3 +32,22 @@ void BehaviorNodeWait::print() const
 {
   printf("      wait: %.3f\n", seconds);
 }
+
+std::unique_ptr<BehaviorNode> BehaviorNodeWait::clone() const
+{
+  return std::make_unique<BehaviorNodeWait>(*this);
+}
+
+void BehaviorNodeWait::tick(
+    const double /*dt_seconds*/,
+    ModelState& /*state*/,
+    Building& /*building*/,
+    const std::vector<std::unique_ptr<Model> >& /*active_models*/)
+{
+  printf("BehaviorNodeWait::tick()\n");
+}
+
+bool BehaviorNodeWait::is_complete() const
+{
+  return true;  // TODO
+}

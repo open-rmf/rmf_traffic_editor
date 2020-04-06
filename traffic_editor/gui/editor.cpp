@@ -1215,7 +1215,7 @@ void Editor::populate_property_editor(const Model& model)
   property_editor_set_row(
       2,
       "elevation",
-      model.z,
+      model.state.z,
       3,
       true);
 
@@ -1463,10 +1463,10 @@ void Editor::mouse_move(
     if (ni.model_idx >= 0 && ni.model_dist < model_dist_thresh)
     {
       // Now we need to find the pixmap item for this model.
+      const Model& model =
+          *project->building.levels[level_idx]->models[ni.model_idx];
       mouse_motion_model = get_closest_pixmap_item(
-          QPointF(
-              project->building.levels[level_idx]->models[ni.model_idx]->x,
-              project->building.levels[level_idx]->models[ni.model_idx]->y));
+          QPointF(model.state.x, model.state.y));
       mouse_model_idx = ni.model_idx;
     }
     else if (ni.vertex_idx >= 0 && ni.vertex_dist < 10.0)
@@ -1498,8 +1498,10 @@ void Editor::mouse_move(
     {
       // we're dragging a model
       // update both the nav_model data and the pixmap in the scene
-      project->building.levels[level_idx]->models[mouse_model_idx]->x = p.x();
-      project->building.levels[level_idx]->models[mouse_model_idx]->y = p.y();
+      Model& model =
+          *project->building.levels[level_idx]->models[mouse_model_idx];
+      model.state.x = p.x();
+      model.state.y = p.y();
       mouse_motion_model->setPos(p);
     }
     else if (mouse_vertex_idx >= 0)
@@ -1675,22 +1677,22 @@ void Editor::mouse_rotate(
     const Model &model =
         *project->building.levels[level_idx]->models[clicked_idx];
     mouse_motion_model = get_closest_pixmap_item(
-        QPointF(model.x, model.y));
+        QPointF(model.state.x, model.state.y));
   
     QPen pen(Qt::red);
     pen.setWidth(4);
     const double r = static_cast<double>(ROTATION_INDICATOR_RADIUS);
     mouse_motion_ellipse = scene->addEllipse(
-        model.x - r,  // ellipse upper-left column
-        model.y - r,  // ellipse upper-left row
+        model.state.x - r,  // ellipse upper-left column
+        model.state.y - r,  // ellipse upper-left row
         2 * r,  // ellipse width
         2 * r,  // ellipse height
         pen);
     mouse_motion_line = scene->addLine(
-        model.x,
-        model.y,
-        model.x + r * cos(model.yaw),
-        model.y - r * sin(model.yaw),
+        model.state.x,
+        model.state.y,
+        model.state.x + r * cos(model.state.yaw),
+        model.state.y - r * sin(model.state.yaw),
         pen);
   }
   else if (t == MOUSE_RELEASE) {
@@ -1699,8 +1701,8 @@ void Editor::mouse_rotate(
       return;
     const Model &model =
         *project->building.levels[level_idx]->models[clicked_idx];
-    const double dx = p.x() - model.x;
-    const double dy = -(p.y() - model.y);  // vertical axis is flipped
+    const double dx = p.x() - model.state.x;
+    const double dy = -(p.y() - model.state.y);  // vertical axis is flipped
     double mouse_yaw = atan2(dy, dx);
     if (mouse_event->modifiers() & Qt::ShiftModifier)
       mouse_yaw = discretize_angle(mouse_yaw);
@@ -1717,17 +1719,17 @@ void Editor::mouse_rotate(
     // re-orient the mouse_motion_model item and heading indicator as needed
     const Model &model =
         *project->building.levels[level_idx]->models[clicked_idx];
-    const double dx = p.x() - model.x;
-    const double dy = -(p.y() - model.y);  // vertical axis is flipped
+    const double dx = p.x() - model.state.x;
+    const double dy = -(p.y() - model.state.y);  // vertical axis is flipped
     double mouse_yaw = atan2(dy, dx);
     if (mouse_event->modifiers() & Qt::ShiftModifier)
       mouse_yaw = discretize_angle(mouse_yaw);
     const double r = static_cast<double>(ROTATION_INDICATOR_RADIUS);
     mouse_motion_line->setLine(
-        model.x,
-        model.y,
-        model.x + r * cos(mouse_yaw),
-        model.y - r * sin(mouse_yaw));
+        model.state.x,
+        model.state.y,
+        model.state.x + r * cos(mouse_yaw),
+        model.state.y - r * sin(mouse_yaw));
 
     if (mouse_motion_model)
       mouse_motion_model->setRotation(-mouse_yaw * 180.0 / M_PI);

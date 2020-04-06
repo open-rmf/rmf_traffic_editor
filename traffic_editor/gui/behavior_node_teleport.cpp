@@ -16,12 +16,13 @@
 */
 
 #include "behavior_node_teleport.h"
+#include "building.h"
 using std::string;
 
 BehaviorNodeTeleport::BehaviorNodeTeleport(const YAML::Node& y)
 : BehaviorNode()
 {
-  destination = y[1].as<string>();
+  destination_name = y[1].as<string>();
 }
 
 BehaviorNodeTeleport::~BehaviorNodeTeleport()
@@ -30,5 +31,29 @@ BehaviorNodeTeleport::~BehaviorNodeTeleport()
 
 void BehaviorNodeTeleport::print() const
 {
-  printf("      teleport: [%s]\n", destination.c_str());
+  printf("      teleport: [%s]\n", destination_name.c_str());
+}
+
+std::unique_ptr<BehaviorNode> BehaviorNodeTeleport::clone() const
+{
+  return std::make_unique<BehaviorNodeTeleport>(*this);
+}
+
+void BehaviorNodeTeleport::tick(
+    const double /*dt_seconds*/,
+    ModelState& state,
+    Building& building,
+    const std::vector<std::unique_ptr<Model> >& /*active_models*/)
+{
+  printf("BehaviorNodeTeleport::tick()\n");
+  populate_model_state_from_vertex_name(
+        destination_state,
+        destination_name,
+        building);
+  state = destination_state;
+}
+
+bool BehaviorNodeTeleport::is_complete() const
+{
+  return true;
 }

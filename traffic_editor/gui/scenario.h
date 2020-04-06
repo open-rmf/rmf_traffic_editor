@@ -20,9 +20,10 @@
 
 #include "behavior.h"
 #include "behavior_schedule_item.h"
+#include "building.h"
+#include "model.h"
 #include "scenario_level.h"
 #include "vertex.h"
-#include "model.h"
 
 #include <map>
 #include <memory>
@@ -38,7 +39,9 @@ public:
   std::vector<std::unique_ptr<Behavior> > behaviors;
   std::vector<BehaviorScheduleItem> behavior_schedule;
 
-  std::vector<std::shared_ptr<Model> > active_models;
+  // when a model starts to become an "active participant" in a scenario,
+  // it is removed from the building level and owned by the Scenario
+  std::vector<std::unique_ptr<Model> > models;
 
   /////////////////////////////////
   Scenario();
@@ -61,6 +64,16 @@ public:
   bool delete_selected(const std::string& level_name);
 
   void print() const;
+
+  // simulation stuff
+  double sim_time_seconds = 0.0;
+
+  void sim_tick(Building& building);
+  void sim_reset(Building& building);
+
+  void start_behavior_schedule_item(
+      BehaviorScheduleItem& item,
+      Building& building);
 };
 
 #endif

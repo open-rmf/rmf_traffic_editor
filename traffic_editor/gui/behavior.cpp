@@ -66,6 +66,13 @@ Behavior::Behavior(const string &_name, const YAML::Node& yaml)
   }
 }
 
+Behavior::Behavior(const Behavior& copy)
+{
+  name = copy.name;
+  for (const auto& node : copy.nodes)
+    nodes.push_back(node->clone());
+}
+
 Behavior::~Behavior()
 {
 }
@@ -77,6 +84,21 @@ void Behavior::print() const
     node->print();
 }
 
-void Behavior::tick(const double /*dt_seconds*/)
+void Behavior::tick(
+      const double dt_seconds,
+      ModelState &state,
+      Building& building,
+      const std::vector<std::unique_ptr<Model> >& active_models)
 {
+  printf("Behavior::tick() in behavior [%s]\n", name.c_str());
+  if (active_node_idx >= static_cast<int>(nodes.size()))
+    return;  // behavior is complete
+  nodes[active_node_idx]->tick(dt_seconds, state, building, active_models);
+  if (nodes[active_node_idx]->is_complete())
+    active_node_idx++;
+}
+
+std::unique_ptr<Behavior> Behavior::instantiate() const
+{
+  return std::make_unique<Behavior>(*this);
 }

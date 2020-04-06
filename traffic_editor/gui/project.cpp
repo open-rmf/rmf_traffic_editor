@@ -277,8 +277,8 @@ Project::NearestItem Project::nearest_items(
     for (size_t i = 0; i < building_level.models.size(); i++)
     {
       const Model& m = *building_level.models[i];
-      const double dx = x - m.x;
-      const double dy = y - m.y;
+      const double dx = x - m.state.x;
+      const double dy = y - m.state.y;
       const double dist = sqrt(dx*dx + dy*dy);  // no need for sqrt each time
       if (dist < ni.model_dist)
       {
@@ -598,41 +598,12 @@ void Project::sim_tick()
   printf("Project::sim_tick()\n");
   if (scenario_idx < 0 || scenario_idx >= static_cast<int>(scenarios.size()))
     return;
-  Scenario& scenario = *scenarios[scenario_idx];  // save some typing
-
-  // see if we need to start any new model behaviors
-  for (auto& schedule_item : scenario.behavior_schedule)
-  {
-    if (schedule_item.started)
-      continue;
-    if (sim_time_seconds > schedule_item.start_seconds)
-      start_behavior_schedule_item(schedule_item);
-  }
-
-  // tick all the model behaviors to move them forward one timestep
-  const double dt = 0.5;
-  for (auto& model : scenario.active_models)
-    model->tick(dt);
-  sim_time_seconds += dt;
-
-  // now that we have computed all the states, copy them into the
-  // state used for rendering
-  // todo: mutex
-  for (auto& model : scenario.active_models)
-    model->read_behavior_state();
+  scenarios[scenario_idx]->sim_tick(building);
 }
 
 void Project::sim_reset()
 {
-  sim_time_seconds = 0.0;
   if (scenario_idx < 0 || scenario_idx >= static_cast<int>(scenarios.size()))
     return;
-  Scenario& scenario = *scenarios[scenario_idx];
-  scenario.active_models.clear();
-}
-
-void Project::start_behavior_schedule_item(BehaviorScheduleItem& item)
-{
-  printf("Project::start_behavior_schedule_item()\n");
-  item.start_seconds = sim_time_seconds;
+  scenarios[scenario_idx]->sim_reset(building);
 }

@@ -19,6 +19,12 @@
 #define BEHAVIOR_NODE_H
 
 #include <yaml-cpp/yaml.h>
+#include <vector>
+
+#include "model_state.h"
+
+class Building;
+class Model;
 
 class BehaviorNode
 {
@@ -26,7 +32,22 @@ public:
   BehaviorNode();
   virtual ~BehaviorNode();
 
-  virtual void print() const;
+  virtual std::unique_ptr<BehaviorNode> clone() const = 0;
+
+  virtual void print() const = 0;
+
+  virtual void tick(
+      const double dt_seconds,
+      ModelState& state,
+      Building& building,
+      const std::vector<std::unique_ptr<Model> >& active_models) = 0;
+
+  virtual bool is_complete() const = 0;
+
+  bool populate_model_state_from_vertex_name(
+      ModelState& state,
+      const std::string vertex_name,
+      Building& building);
 };
 
 #endif

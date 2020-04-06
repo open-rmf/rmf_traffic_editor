@@ -95,6 +95,9 @@ void Scenario::print() const
   printf("  behaviors:\n");
   for (const auto& behavior : behaviors)
     behavior->print();
+  printf("  schedule:\n");
+  for (const auto& schedule_item : behavior_schedule)
+    schedule_item.print();
 }
 
 bool Scenario::save() const
@@ -163,4 +166,92 @@ bool Scenario::delete_selected(const std::string& level_name)
     if (level.name == level_name)
       return level.delete_selected();
   return true;
+}
+
+void Scenario::sim_tick(Building& building)
+{
+  // see if we need to start any new model behaviors
+  for (auto& schedule_item : behavior_schedule)
+  {
+    if (schedule_item.started)
+      continue;
+    if (sim_time_seconds > schedule_item.start_seconds)
+      start_behavior_schedule_item(schedule_item, building);
+  }
+
+  const double dt = 0.5;
+
+
+  // tick all the model behaviors to move them forward one timestep
+  printf("ticking %d models...\n", static_cast<int>(models.size()));
+
+  for (auto& model : models)
+    model->tick(dt, building, models);
+  sim_time_seconds += dt;
+
+  // now that we have computed all the states, copy them into the
+  // state used for rendering
+  // todo: mutex
+  for (auto& model : models)
+    model->state = model->next_state;
+}
+
+void Scenario::sim_reset(Building& building)
+{
+  sim_time_seconds = 0.0;
+
+  // reset all our models and restore ownership to their building levels
+  for (auto& model : models)
+    for (auto& level : building.levels)
+      if (level->name == model->starting_level)
+      {
+        level->models.push_back(std::move(model));
+        break;
+      }
+  models.clear();  // this will now just be a bunch of empty unique_ptr
+}
+
+void Scenario::start_behavior_schedule_item(
+    BehaviorScheduleItem& item,
+    Building& building)
+{
+  printf(
+      "Scenario::start_behavior_schedule_item(%s, %s)\n",
+      item.model_name.c_str(),
+      item.behavior_name.c_str());
+  item.start_seconds = sim_time_seconds;
+  item.started = true;
+
+  // generate the behavior instance (future: evaluate parameters, etc.)
+  std::unique_ptr<Behavior> model_behavior;
+  for (const auto& behavior : behaviors)
+    if (behavior->name == item.behavior_name)
+      model_behavior = std::move(behavior->instantiate());
+
+  if (!model_behavior)
+  {
+    printf("couldn't find behavior [%s]!\n", item.behavior_name.c_str());
+    return;
+  }
+
+  // see if we already own this model
+  for (auto& model : models)
+    if (model->instance_name == item.model_name)
+    {
+      model->set_behavior(std::move(model_behavior));
+      return;
+    }
+
+  // if we get here, we need to go take ownership of the model
+  for (auto& level : building.levels)
+    for (auto& model : level->models)
+      if (model->instance_name == item.model_name)
+      {
+        model->set_behavior(std::move(model_behavior));
+        models.push_back(std::move(model));
+        return;
+      }
+
+  // if we get here, we never found the model name :(
+  printf("couldn't find model [%s]\n", item.model_name.c_str());
 }

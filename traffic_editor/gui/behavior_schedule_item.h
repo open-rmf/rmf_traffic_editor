@@ -33,6 +33,7 @@ public:
   ~BehaviorScheduleItem() { }
 
   bool from_yaml(const YAML::Node& yaml_node);
+  void print() const;
 };
 
 #endif
