@@ -598,7 +598,7 @@ void Project::sim_tick()
   printf("Project::sim_tick()\n");
   if (scenario_idx < 0 || scenario_idx >= static_cast<int>(scenarios.size()))
     return;
-  const Scenario& scenario = *scenarios[scenario_idx];
+  Scenario& scenario = *scenarios[scenario_idx];  // save some typing
 
   // see if we need to start any new model behaviors
   for (auto& schedule_item : scenario.behavior_schedule)
@@ -606,9 +606,7 @@ void Project::sim_tick()
     if (schedule_item.started)
       continue;
     if (sim_time_seconds > schedule_item.start_seconds)
-    {
-      // start the behavior
-    }
+      start_behavior_schedule_item(schedule_item);
   }
 
   // tick all the model behaviors to move them forward one timestep
@@ -631,4 +629,10 @@ void Project::sim_reset()
     return;
   Scenario& scenario = *scenarios[scenario_idx];
   scenario.active_models.clear();
+}
+
+void Project::start_behavior_schedule_item(BehaviorScheduleItem& item)
+{
+  printf("Project::start_behavior_schedule_item()\n");
+  item.start_seconds = sim_time_seconds;
 }

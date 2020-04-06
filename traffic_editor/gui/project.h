@@ -122,6 +122,8 @@ private:
 
   // simulation stuff
   double sim_time_seconds = 0.0;
+
+  void start_behavior_schedule_item(BehaviorScheduleItem& item);
 };
 
 #endif

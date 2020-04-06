@@ -23,6 +23,9 @@
 
 #include <QFileInfo>
 #include <QDir>
+#include <QThread>
+#include <QtConcurrent/QtConcurrent>
+#include <QElapsedTimer>
 
 #include "building.h"
 #include "yaml_utils.h"
@@ -63,6 +66,7 @@ bool Building::load_yaml_file()
   // relative paths recorded in the file
 
   // TODO: save previous directory and restore it when leaving this function
+  // in case the building file is in a different path from the project file
   QString dir(QFileInfo(QString::fromStdString(filename)).absolutePath());
   qDebug("changing directory to [%s]", qUtf8Printable(dir));
   if (!QDir::setCurrent(dir))
@@ -91,6 +95,15 @@ bool Building::load_yaml_file()
     l->from_yaml(it->first.as<string>(), it->second);
     levels.push_back(std::move(l));
   }
+
+  QtConcurrent::blockingMap(
+    levels,
+    [&](auto& level) { level->load_drawing(); });
+
+  // now that all images are loaded, we can calculate scale for annotated
+  // measurement lanes
+  for (auto& level : levels)
+    level->calculate_scale();
 
   if (y["lifts"] && y["lifts"].IsMap())
   {

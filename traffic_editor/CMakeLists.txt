@@ -20,7 +20,7 @@ if(CMAKE_VERSION VERSION_LESS "3.7.0")
   set(CMAKE_INCLUDE_CURRENT_DIR ON)
 endif()
 
-find_package(Qt5 COMPONENTS Widgets REQUIRED)
+find_package(Qt5 COMPONENTS Widgets Concurrent REQUIRED)
 
 add_executable(traffic-editor
   gui/add_param_dialog.cpp
@@ -72,6 +72,7 @@ add_executable(traffic-editor
 
 target_link_libraries(traffic-editor
   Qt5::Widgets
+  Qt5::Concurrent
   yaml-cpp)
 
 install(

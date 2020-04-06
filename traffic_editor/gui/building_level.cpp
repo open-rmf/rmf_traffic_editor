@@ -54,8 +54,10 @@ bool BuildingLevel::from_yaml(
     if (!drawing_data["filename"])
       throw std::runtime_error("level " + name + " drawing invalid");
     drawing_filename = drawing_data["filename"].as<string>();
+    /*
     if (!load_drawing())
       return false;
+    */
   }
   else if (_data["x_meters"] && _data["y_meters"])
   {
@@ -144,7 +146,6 @@ bool BuildingLevel::from_yaml(
     }
   }
 
-  calculate_scale();
   return true;
 }
 
