@@ -22,6 +22,7 @@
 class QGraphicsScene;
 
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 #include <yaml-cpp/yaml.h>
@@ -42,6 +43,7 @@ public:
   std::string reference_level_name;
   std::vector<std::unique_ptr<BuildingLevel> > levels;
   std::vector<Lift> lifts;
+  std::mutex building_mutex;
 
   std::string filename;
 
@@ -151,6 +153,8 @@ public:
   void calculate_all_transforms();
 
   int get_reference_level_idx();
+
+  void clear_scene();
 };
 
 #endif

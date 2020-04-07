@@ -58,10 +58,19 @@ public:
 
   void add_scenario_vertex(int level_index, double x, double y);
   void scenario_row_clicked(const int row);
+
+  void clear_scene();
+
   void draw(
       QGraphicsScene *scene,
       const int level_idx,
       std::vector<EditorModel>& editor_models);
+
+  void draw_scenario_models(
+      QGraphicsScene *scene,
+      const int level_idx,
+      std::vector<EditorModel>& editor_models);
+
   void clear_selection(const int level_idx);
   bool delete_selected(const int level_idx);
 

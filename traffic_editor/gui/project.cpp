@@ -195,6 +195,8 @@ void Project::draw(
     const int level_idx,
     std::vector<EditorModel>& editor_models)
 {
+  std::lock_guard<std::mutex> building_guard(building.building_mutex);
+
   if (building.levels.empty())
   {
     printf("nothing to draw!\n");
@@ -208,7 +210,8 @@ void Project::draw(
     scenarios[scenario_idx]->draw(
         scene,
         building.levels[level_idx]->name,
-        building.levels[level_idx]->drawing_meters_per_pixel);
+        building.levels[level_idx]->drawing_meters_per_pixel,
+        editor_models);
 }
 
 void Project::clear_selection(const int level_idx)
@@ -595,7 +598,6 @@ void Project::clear()
 
 void Project::sim_tick()
 {
-  printf("Project::sim_tick()\n");
   if (scenario_idx < 0 || scenario_idx >= static_cast<int>(scenarios.size()))
     return;
   scenarios[scenario_idx]->sim_tick(building);
@@ -606,4 +608,30 @@ void Project::sim_reset()
   if (scenario_idx < 0 || scenario_idx >= static_cast<int>(scenarios.size()))
     return;
   scenarios[scenario_idx]->sim_reset(building);
+}
+
+void Project::clear_scene()
+{
+  building.clear_scene();
+
+  for (auto& scenario : scenarios)
+    scenario->clear_scene();
+}
+
+void Project::draw_scenario_models(
+    QGraphicsScene *scene,
+    const int level_idx,
+    std::vector<EditorModel>& editor_models)
+{
+  if (building.levels.empty())
+    return;
+
+  if (scenario_idx < 0 || scenario_idx >= static_cast<int>(scenarios.size()))
+    return;
+
+  scenarios[scenario_idx]->draw_models(
+      scene,
+      building.levels[level_idx]->name,
+      building.levels[level_idx]->drawing_meters_per_pixel,
+      editor_models);
 }

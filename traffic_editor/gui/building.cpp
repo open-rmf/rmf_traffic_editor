@@ -587,3 +587,9 @@ int Building::get_reference_level_idx()
       return static_cast<int>(i);
   return 0;
 }
+
+void Building::clear_scene()
+{
+  for (auto& level : levels)
+    level->clear_scene();
+}

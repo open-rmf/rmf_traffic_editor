@@ -58,6 +58,7 @@ class QPushButton;
 class QTableWidget;
 class QTableWidgetItem;
 class QTabWidget;
+class QTimer;
 class QToolButton;
 QT_END_NAMESPACE
 
@@ -292,6 +293,9 @@ private:
   void mouse_edit_polygon(const MouseType t, QMouseEvent *e, const QPointF &p);
 
   QPointF previous_mouse_point;
+
+  QTimer* scene_update_timer;
+  void scene_update_timer_timeout();
 };
 
 #endif

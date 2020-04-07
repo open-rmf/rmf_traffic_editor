@@ -121,7 +121,8 @@ bool Scenario::save() const
 void Scenario::draw(
     QGraphicsScene *scene,
     const std::string& level_name,
-    const double meters_per_pixel) const
+    const double meters_per_pixel,
+    std::vector<EditorModel>& editor_models) const
 {
   printf("Scenario::draw(%s)\n", level_name.c_str());
   for (const ScenarioLevel& level : levels)
@@ -130,6 +131,19 @@ void Scenario::draw(
       level.draw(scene, meters_per_pixel);
       break;
     }
+
+  draw_models(scene, level_name, meters_per_pixel, editor_models);
+}
+
+void Scenario::draw_models(
+    QGraphicsScene *scene,
+    const std::string& level_name,
+    const double meters_per_pixel,
+    std::vector<EditorModel>& editor_models) const
+{
+  for (const auto& model : models)
+    if (model->state.level_name == level_name)
+      model->draw(scene, editor_models, meters_per_pixel);
 }
 
 void Scenario::add_vertex(
@@ -179,12 +193,9 @@ void Scenario::sim_tick(Building& building)
       start_behavior_schedule_item(schedule_item, building);
   }
 
-  const double dt = 0.5;
-
+  const double dt = 0.01;
 
   // tick all the model behaviors to move them forward one timestep
-  printf("ticking %d models...\n", static_cast<int>(models.size()));
-
   for (auto& model : models)
     model->tick(dt, building, models);
   sim_time_seconds += dt;
@@ -244,14 +255,28 @@ void Scenario::start_behavior_schedule_item(
 
   // if we get here, we need to go take ownership of the model
   for (auto& level : building.levels)
-    for (auto& model : level->models)
-      if (model->instance_name == item.model_name)
+    for (auto it = level->models.begin(); it != level->models.end(); ++it)
+    {
+      if ((*it)->instance_name == item.model_name)
       {
-        model->set_behavior(std::move(model_behavior));
-        models.push_back(std::move(model));
+        std::lock_guard<std::mutex> building_guard(building.building_mutex);
+
+        (*it)->set_behavior(std::move(model_behavior));
+        models.push_back(std::move(*it));
+        level->models.erase(it);
+        // now that we've called erase(), we need to stop this iteration
+        // which is fine, since we only wanted to find the first match.
         return;
       }
+    }
 
   // if we get here, we never found the model name :(
   printf("couldn't find model [%s]\n", item.model_name.c_str());
+}
+
+void Scenario::clear_scene()
+{
+  printf("Scenario::clear_scene()\n");
+  for (auto& model : models)
+    model->clear_scene();
 }

@@ -16,7 +16,10 @@
 */
 
 #include "behavior_node_navigate.h"
+#include "building.h"
+
 using std::string;
+
 
 BehaviorNodeNavigate::BehaviorNodeNavigate(const YAML::Node& y)
 : BehaviorNode()
@@ -44,7 +47,6 @@ void BehaviorNodeNavigate::tick(
     Building& building,
     const std::vector<std::unique_ptr<Model> >& /*active_models*/)
 {
-  printf("BehaviorNodeNavigate::tick()\n");
   if (!destination_found)
   {
     destination_found = true;
@@ -54,23 +56,36 @@ void BehaviorNodeNavigate::tick(
         building);
   }
 
+  // look up the scale of this level's drawing
+  double drawing_pixels_per_meter = 0.05;
+  for (const auto& level : building.levels)
+    if (level->name == state.level_name)
+    {
+      drawing_pixels_per_meter = level->drawing_meters_per_pixel;
+      break;
+    }
+
   // for now, assume just single-level navigation, no lifts, etc.
 
   const double error_x = destination_state.x - state.x;
   const double error_y = destination_state.y - state.y;
+  const double error_2d = sqrt(error_x * error_x + error_y * error_y);
+
   const double bearing = atan2(error_y, error_x);
 
   const double speed = 0.5;  // SI units = meters/sec
   const double x_dot = speed * cos(bearing);
   const double y_dot = speed * sin(bearing);
 
-  state.x += dt_seconds * x_dot;
-  state.y += dt_seconds * y_dot;
+  state.x += dt_seconds * x_dot / drawing_pixels_per_meter;
+  state.y += dt_seconds * y_dot / drawing_pixels_per_meter;
 
   printf("  (%.2f, %.2f)\n", state.x, state.y);
+
+  prev_error = error_2d;
 }
 
 bool BehaviorNodeNavigate::is_complete() const
 {
-  return false;
+  return prev_error < 1.0;
 }

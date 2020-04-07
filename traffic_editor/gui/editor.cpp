@@ -382,10 +382,23 @@ Editor::Editor()
 
   load_model_names();
   level_table->setCurrentCell(level_idx, 0);
+
+  scene_update_timer = new QTimer;
+  connect(
+      scene_update_timer,
+      &QTimer::timeout,
+      this,
+      &Editor::scene_update_timer_timeout);
+  scene_update_timer->start(1000 / 30);
 }
 
 Editor::~Editor()
 {
+}
+
+void Editor::scene_update_timer_timeout()
+{
+  project->draw_scenario_models(scene, level_idx, editor_models);
 }
 
 void Editor::load_model_names()
@@ -1319,6 +1332,7 @@ void Editor::property_editor_cell_changed(int row, int column)
 bool Editor::create_scene()
 {
   scene->clear();  // destroys the mouse_motion_* items if they are there
+  project->clear_scene();  // forget all pointers to the graphics items
   mouse_motion_line = nullptr;
   mouse_motion_model = nullptr;
   mouse_motion_ellipse = nullptr;

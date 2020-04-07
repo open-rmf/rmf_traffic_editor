@@ -16,6 +16,8 @@
 */
 
 #include <QtGlobal>
+#include <QGraphicsPixmapItem>
+#include <QGraphicsColorizeEffect>
 
 #include "model.h"
 using std::string;
@@ -113,4 +115,49 @@ void Model::tick(
 void Model::set_behavior(std::unique_ptr<Behavior> _behavior)
 {
   behavior = std::move(_behavior);
+}
+
+void Model::draw(
+    QGraphicsScene *scene,
+    std::vector<EditorModel>& editor_models,
+    const double drawing_meters_per_pixel)
+{
+  if (pixmap_item == nullptr)
+  {
+    // find the pixmap we need for this model
+    QPixmap pixmap;
+    double model_meters_per_pixel = 1.0;  // will get overridden
+    for (auto &editor_model : editor_models)
+    {
+      if (editor_model.name == model_name)
+      {
+        pixmap = editor_model.get_pixmap();
+        model_meters_per_pixel = editor_model.meters_per_pixel;
+        break;
+      }
+    }
+    if (pixmap.isNull())
+      return;  // couldn't load the pixmap; ignore it.
+  
+    pixmap_item = scene->addPixmap(pixmap);
+    pixmap_item->setOffset(-pixmap.width()/2, -pixmap.height()/2);
+    pixmap_item->setScale(model_meters_per_pixel / drawing_meters_per_pixel);
+  }
+
+  pixmap_item->setPos(state.x, state.y);
+  pixmap_item->setRotation(-state.yaw * 180.0 / M_PI);
+
+  // make the model "glow" if it is selected
+  if (selected)
+  {
+    QGraphicsColorizeEffect *colorize = new QGraphicsColorizeEffect;
+    colorize->setColor(QColor::fromRgbF(1.0, 0.2, 0.0, 1.0));
+    colorize->setStrength(1.0);
+    pixmap_item->setGraphicsEffect(colorize);
+  }
+}
+
+void Model::clear_scene()
+{
+  pixmap_item = nullptr;
 }

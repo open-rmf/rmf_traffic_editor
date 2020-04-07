@@ -26,11 +26,15 @@
  */
 
 #include "behavior.h"
+#include "editor_model.h"
 #include "model_state.h"
 
 #include <string>
 #include <yaml-cpp/yaml.h>
+#include <QGraphicsScene>
+
 class Building;
+class QGraphicsPixmapItem;
 
 
 class Model
@@ -45,6 +49,7 @@ public:
   bool is_static = true;
   bool is_active = false;
   std::string starting_level;  // used when resetting a test scenario
+  QGraphicsPixmapItem* pixmap_item = nullptr;
 
   std::unique_ptr<Behavior> behavior;
 
@@ -61,6 +66,13 @@ public:
       const std::vector<std::unique_ptr<Model> >& active_models);
 
   void set_behavior(std::unique_ptr<Behavior> _behavior);
+
+  void draw(
+      QGraphicsScene *scene,
+      std::vector<EditorModel>& editor_models,
+      const double meters_per_pixel);
+
+  void clear_scene();
 };
 
 #endif

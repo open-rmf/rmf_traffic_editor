@@ -21,6 +21,7 @@
 #include "behavior.h"
 #include "behavior_schedule_item.h"
 #include "building.h"
+#include "editor_model.h"
 #include "model.h"
 #include "scenario_level.h"
 #include "vertex.h"
@@ -50,10 +51,19 @@ public:
   bool load();
   bool save() const;
 
+  void clear_scene();
+
   void draw(
       QGraphicsScene *scene,
       const std::string& level_name,
-      const double meters_per_pixel) const;
+      const double meters_per_pixel,
+      std::vector<EditorModel>& editor_models) const;
+
+  void draw_models(
+      QGraphicsScene *scene,
+      const std::string& level_name,
+      const double meters_per_pixel,
+      std::vector<EditorModel>& editor_models) const;
 
   void add_vertex(
       const std::string& level_name,

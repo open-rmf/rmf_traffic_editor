@@ -823,39 +823,8 @@ void BuildingLevel::draw(
     item->setGraphicsEffect(opacity_effect);
   }
 
-  // now draw all the models
   for (const auto &model : models)
-  {
-    // find the pixmap we need for this model
-    QPixmap pixmap;
-    double model_meters_per_pixel = 1.0;  // will get overridden
-    for (auto &editor_model : editor_models)
-    {
-      if (editor_model.name == model->model_name)
-      {
-        pixmap = editor_model.get_pixmap();
-        model_meters_per_pixel = editor_model.meters_per_pixel;
-        break;
-      }
-    }
-    if (pixmap.isNull())
-      continue;  // couldn't load the pixmap; ignore it.
-
-    QGraphicsPixmapItem *item = scene->addPixmap(pixmap);
-    item->setOffset(-pixmap.width()/2, -pixmap.height()/2);
-    item->setScale(model_meters_per_pixel / drawing_meters_per_pixel);
-    item->setPos(model->state.x, model->state.y);
-    item->setRotation(-model->state.yaw * 180.0 / M_PI);
-
-    // make the model "glow" if it is selected
-    if (model->selected)
-    {
-      QGraphicsColorizeEffect *colorize = new QGraphicsColorizeEffect;
-      colorize->setColor(QColor::fromRgbF(1.0, 0.2, 0.0, 1.0));
-      colorize->setStrength(1.0);
-      item->setGraphicsEffect(colorize);
-    }
-  }
+    model->draw(scene, editor_models, drawing_meters_per_pixel);
 
   for (const auto &edge : edges)
   {
@@ -880,4 +849,10 @@ void BuildingLevel::draw(
 
   for (const auto &f : fiducials)
     f.draw(scene, drawing_meters_per_pixel);
+}
+
+void BuildingLevel::clear_scene()
+{
+  for (auto& model : models)
+    model->clear_scene();
 }

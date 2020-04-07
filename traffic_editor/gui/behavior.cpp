@@ -90,7 +90,7 @@ void Behavior::tick(
       Building& building,
       const std::vector<std::unique_ptr<Model> >& active_models)
 {
-  printf("Behavior::tick() in behavior [%s]\n", name.c_str());
+  // printf("Behavior::tick() in behavior [%s]\n", name.c_str());
   if (active_node_idx >= static_cast<int>(nodes.size()))
     return;  // behavior is complete
   nodes[active_node_idx]->tick(dt_seconds, state, building, active_models);

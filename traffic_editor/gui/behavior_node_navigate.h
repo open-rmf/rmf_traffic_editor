@@ -45,6 +45,9 @@ public:
   ) override;
 
   bool is_complete() const override;
+
+private:
+  double prev_error = 1e100;
 };
 
 #endif

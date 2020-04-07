@@ -32,7 +32,7 @@ void SimThread::run()
   printf("entering SimThread::run()\n");
   while (true)
   {
-    msleep(500);
+    msleep(1);
     if (isInterruptionRequested())
       break;
     if (project)
