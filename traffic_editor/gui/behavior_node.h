@@ -54,6 +54,9 @@ public:
       planner::Node& node,
       const std::string vertex_name,
       Building& building);
+
+  double angle_difference(const double a, const double b) const;
+  double angle_sum(const double a, const double b) const;
 };
 
 #endif

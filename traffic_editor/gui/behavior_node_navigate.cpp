@@ -78,6 +78,7 @@ void BehaviorNodeNavigate::tick(
     start_node.y = state.y * meters_per_pixel;
 
     path = graph->plan_path(start_node, goal_node);
+    printf("\n");
   }
 
   if (path.empty())
@@ -92,26 +93,52 @@ void BehaviorNodeNavigate::tick(
   const double error_y = next_node->y - state_y_meters;
   const double error_2d = sqrt(error_x * error_x + error_y * error_y);
 
-  const double bearing = atan2(error_y, error_x);
+  // for now assume we always rotate in place to face the next node, either
+  // forwards or backwards
+  const double bearing = -atan2(error_y, error_x);
+  const double forwards_yaw_error = angle_difference(bearing, state.yaw);
+  const double backwards_yaw_error =
+      angle_difference(angle_sum(bearing, M_PI), state.yaw);
+  double error_yaw = 0;
+  if (fabs(forwards_yaw_error) < fabs(backwards_yaw_error))
+    error_yaw = forwards_yaw_error;
+  else
+    error_yaw = backwards_yaw_error;
+  const double max_yaw_rate = 1.0;
+  double yaw_rate = max_yaw_rate;  // yaw speed controller later...
+  if (error_yaw < 0)
+    yaw_rate *= -1.0;
+  state.yaw = angle_sum(state.yaw, dt_seconds * yaw_rate);
 
-  const double speed = 0.5;  // SI units = meters/sec
+  const double max_speed = 0.5;  // SI units = meters/sec
+  double speed = max_speed * ((M_PI_2 - fabs(error_yaw)) / M_PI_2);
+
+  if (error_yaw == backwards_yaw_error)
+    speed *= -1;
 
   if (error_2d < speed)
     path.erase(path.begin());  // todo: don't use vector...
 
-  const double x_dot = speed * cos(bearing);
-  const double y_dot = speed * sin(bearing);
+  const double x_dot = speed * cos(state.yaw);
+  const double y_dot = speed * sin(state.yaw);
 
   state.x += dt_seconds * x_dot / meters_per_pixel;
-  state.y += dt_seconds * y_dot / meters_per_pixel;
+  state.y -= dt_seconds * y_dot / meters_per_pixel;
 
+#if 0
   static int print_count = 0;
-  if (print_count++ % 100 == 0)
-    printf("  (%.2f, %.2f)  err = (%.2f, %.2f)\n",
-        state.x,
-        state.y,
+  if (print_count++ % 10 == 0)
+    printf("  (%.2f, %.2f, %.2f)  err = (%.2f, %.2f, %.2f) |%.2f| spd = (%.2f, %.2f)\n",
+        state_x_meters,
+        state_y_meters,
+        state.yaw,
         error_x,
-        error_y);
+        error_y,
+        error_yaw,
+        error_2d,
+        speed,
+        yaw_rate);
+#endif
 
   prev_error = error_2d;
 }

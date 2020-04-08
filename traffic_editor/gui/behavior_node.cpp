@@ -15,6 +15,7 @@
  *
 */
 
+#include <cmath>
 #include "behavior_node.h"
 #include "building.h"
 using std::string;
@@ -88,3 +89,24 @@ bool BehaviorNode::populate_planner_node_from_vertex_name(
   return false;
 }
 
+double BehaviorNode::angle_difference(const double a, const double b) const
+{
+  double delta = a - b;
+  if (delta > M_PI)
+    return delta - 2 * M_PI;
+  else if (delta < -M_PI)
+    return delta + 2 * M_PI;
+  else
+    return delta;
+}
+
+double BehaviorNode::angle_sum(const double a, const double b) const
+{
+  double sum = a + b;
+  if (sum > M_PI)
+    return sum - 2 * M_PI;
+  else if (sum < -M_PI)
+    return sum + 2 * M_PI;
+  else
+    return sum;
+}
