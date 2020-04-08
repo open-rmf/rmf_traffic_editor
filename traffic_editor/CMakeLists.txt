@@ -22,6 +22,8 @@ endif()
 
 find_package(Qt5 COMPONENTS Widgets Concurrent REQUIRED)
 
+find_package(OpenCV REQUIRED)
+
 add_executable(traffic-editor
   gui/add_param_dialog.cpp
   gui/behavior.cpp
@@ -76,7 +78,8 @@ add_executable(traffic-editor
 target_link_libraries(traffic-editor
   Qt5::Widgets
   Qt5::Concurrent
-  yaml-cpp)
+  yaml-cpp
+  ${OpenCV_LIBS})
 
 install(
   TARGETS traffic-editor

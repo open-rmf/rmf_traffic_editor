@@ -43,6 +43,10 @@ class LiftTable;
 class ScenarioTable;
 class TrafficTable;
 
+namespace cv {
+  class VideoWriter;
+}
+
 QT_BEGIN_NAMESPACE
 class QAction;
 class QButtonGroup;
@@ -224,6 +228,12 @@ private:
   void sim_reset();
   void sim_play_pause();
   SimThread sim_thread;
+
+  QAction *record_start_stop_action;
+  bool is_recording = false;
+  void record_start_stop();
+  void record_frame_to_video();
+  cv::VideoWriter *video_writer = nullptr;
 
   std::vector<EditorModel> editor_models;
   EditorModel *mouse_motion_editor_model = nullptr;

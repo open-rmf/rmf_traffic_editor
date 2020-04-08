@@ -50,7 +50,8 @@ void MapView::wheelEvent(QWheelEvent *e)
 
 void MapView::mousePressEvent(QMouseEvent *e)
 {
-  if (e->button() == Qt::MiddleButton) {
+  if (e->button() == Qt::MiddleButton)
+  {
     is_panning = true;
     pan_start_x = e->x();
     pan_start_y = e->y();
@@ -63,7 +64,8 @@ void MapView::mousePressEvent(QMouseEvent *e)
 
 void MapView::mouseReleaseEvent(QMouseEvent *e)
 {
-  if (e->button() == Qt::MiddleButton) {
+  if (e->button() == Qt::MiddleButton)
+  {
     is_panning = false;
     e->accept();
     return;
@@ -73,7 +75,8 @@ void MapView::mouseReleaseEvent(QMouseEvent *e)
 
 void MapView::mouseMoveEvent(QMouseEvent *e)
 {
-  if (is_panning) {
+  if (is_panning)
+  {
     const int dx = e->x() - pan_start_x;
     const int dy = e->y() - pan_start_y;
     horizontalScrollBar()->setValue(horizontalScrollBar()->value() - dx);

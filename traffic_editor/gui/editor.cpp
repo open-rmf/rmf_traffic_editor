@@ -26,6 +26,10 @@
 #include <QListWidget>
 #include <QToolBar>
 
+#include <opencv2/core/core.hpp>
+#include <opencv2/videoio.hpp>
+#include <opencv2/imgproc.hpp>
+
 #include <yaml-cpp/yaml.h>
 
 #include "add_param_dialog.h"
@@ -348,6 +352,11 @@ Editor::Editor()
       this,
       &Editor::sim_play_pause);
 
+  record_start_stop_action = toolbar->addAction(
+      "Record",
+      this,
+      &Editor::record_start_stop);
+
   toolbar->setStyleSheet("QToolBar {background-color: #404040; border: none; spacing: 5px} QToolButton {background-color: #c0c0c0; color: blue; border: 1px solid black;} QToolButton:checked {background-color: #808080; color: red; border: 1px solid black;}");
   addToolBar(Qt::TopToolBarArea, toolbar);
 
@@ -394,11 +403,17 @@ Editor::Editor()
 
 Editor::~Editor()
 {
+  if (video_writer)
+  {
+    delete video_writer;
+    video_writer = nullptr;
+  }
 }
 
 void Editor::scene_update_timer_timeout()
 {
   project->draw_scenario_models(scene, level_idx, editor_models);
+  record_frame_to_video();
 }
 
 void Editor::load_model_names()
@@ -2124,4 +2139,42 @@ void Editor::sim_reset()
 void Editor::sim_play_pause()
 {
   printf("sim_play_pause()\n");
+}
+
+void Editor::record_start_stop()
+{
+  is_recording = !is_recording;
+}
+
+void Editor::record_frame_to_video()
+{
+  if (!is_recording)
+    return;
+
+  QPixmap pixmap = map_view->viewport()->grab();
+  const int w = pixmap.size().width();
+  const int h = pixmap.size().height();
+  QImage image(pixmap.toImage());
+  int format = static_cast<int>(image.format());
+  cv::Mat mat(
+      h,
+      w,
+      CV_8UC4,
+      const_cast<uchar*>(image.bits()),
+      static_cast<size_t>(image.bytesPerLine()));
+  cv::Mat mat_rgb_swap;
+  cv::cvtColor(mat, mat_rgb_swap, cv::COLOR_RGBA2BGRA);
+
+  if (video_writer == nullptr)
+  {
+    printf("initializing video writer...\n");
+    video_writer =
+        new cv::VideoWriter(
+            "test.avi",
+            cv::VideoWriter::fourcc('M','J','P','G'),
+            30,
+            cv::Size(w, h));
+  }
+
+  video_writer->write(mat_rgb_swap);
 }
