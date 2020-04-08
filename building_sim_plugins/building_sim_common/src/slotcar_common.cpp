@@ -48,16 +48,6 @@ std::string SlotcarCommon::model_name() const
   return _model_name;
 }
 
-double SlotcarCommon::stop_distance() const
-{
-  return _stop_distance;
-}
-
-double SlotcarCommon::stop_radius() const
-{
-  return _stop_radius;
-}
-
 void SlotcarCommon::init_ros_node(const rclcpp::Node::SharedPtr node)
 {
   _current_mode.mode = rmf_fleet_msgs::msg::RobotMode::MODE_MOVING;
@@ -189,17 +179,18 @@ bool SlotcarCommon::update(const Eigen::Isometry3d& pose, const double time,
   const rclcpp::Time now{t_sec, t_nsec, RCL_ROS_TIME};
   _last_update_time = time;
 
-  publish_robot_state(pose, time);
+  _pose = pose;
+  publish_robot_state(_pose, time);
 
   if (trajectory.empty())
     return false;
 
-  Eigen::Vector3d current_heading = compute_heading(pose);
+  Eigen::Vector3d current_heading = compute_heading(_pose);
 
   if ((unsigned int)_traj_wp_idx < trajectory.size())
   {
     const Eigen::Vector3d dpos = compute_dpos(
-      trajectory[_traj_wp_idx], pose);
+      trajectory[_traj_wp_idx], _pose);
 
     auto dpos_mag = dpos.norm();
     const auto hold_time = _hold_times[_traj_wp_idx];
@@ -268,6 +259,36 @@ bool SlotcarCommon::update(const Eigen::Isometry3d& pose, const double time,
   }
 
   return true;
+}
+
+bool SlotcarCommon::emergency_stop(const std::vector<Eigen::Vector3d>& obstacle_positions)
+{
+  const Eigen::Vector3d current_heading = compute_heading(_pose);
+
+  const Eigen::Vector3d stop_zone =
+    _pose.translation() + _stop_distance * current_heading;
+
+  bool need_to_stop = false;
+  for (const auto& obstacle_pos : obstacle_positions)
+  {
+    if ((obstacle_pos - stop_zone).norm() < _stop_radius)
+    {
+      need_to_stop = true;
+      break;
+    }
+  }
+
+  if (need_to_stop != _emergency_stop)
+  {
+    _emergency_stop = need_to_stop;
+    // TODO flush logger here
+    if (need_to_stop)
+      RCLCPP_INFO(logger(), "Stopping vehicle to avoid a collision");
+    else
+      RCLCPP_INFO(logger(), "No more obstacles; resuming course");
+  }
+
+  return _emergency_stop;
 }
 
 double SlotcarCommon::compute_change_in_rotation(

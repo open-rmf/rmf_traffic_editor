@@ -32,15 +32,15 @@ private:
   gazebo::physics::ModelPtr _model;
 
   std::array<gazebo::physics::JointPtr, 2> joints;
-  bool emergency_stop = false;
 
   std::unordered_set<gazebo::physics::Model*> infrastructure;
 
   // Book keeping
   double last_update_time = 0.0;
-  bool initialised = false;
 
   void init_infrastructure();
+
+  std::vector<Eigen::Vector3d> get_obstacle_positions(const gazebo::physics::WorldPtr& world);
 
   void send_control_signals(
     const double x_target,
@@ -114,34 +114,10 @@ void SlotcarPlugin::init_infrastructure()
   }
 }
 
-void SlotcarPlugin::OnUpdate()
+std::vector<Eigen::Vector3d> SlotcarPlugin::get_obstacle_positions(const gazebo::physics::WorldPtr& world)
 {
-  const auto& world = _model->GetWorld();
-  if (initialised == false)
-  {
-    init_infrastructure();
-    initialised = true;
-  }
-  double x_target = 0.0;
-  double yaw_target = 0.0;
+  std::vector<Eigen::Vector3d> obstacle_positions;
 
-  const double time = world->SimTime().Double();
-  const double dt = time - last_update_time;
-  last_update_time = time;
-
-  ignition::math::Pose3d pose = _model->WorldPose();
-  // Will return false if there is no more waypoints
-  if (!dataPtr->update(convert_pose(pose), time, x_target, yaw_target))
-    return;
-
-  const double current_yaw = pose.Rot().Yaw();
-  ignition::math::Vector3d current_heading{
-    std::cos(current_yaw), std::sin(current_yaw), 0.0};
-
-  const ignition::math::Vector3d stop_zone =
-    pose.Pos() + dataPtr->stop_distance()*current_heading;
-
-  bool need_to_stop = false;
   for (const auto& m : world->Models())
   {
     if (m->IsStatic())
@@ -151,21 +127,33 @@ void SlotcarPlugin::OnUpdate()
       continue;
 
     const auto p_obstacle = m->WorldPose().Pos();
-    if ( (p_obstacle - stop_zone).Length() < dataPtr->stop_radius() )
-    {
-      need_to_stop = true;
-      break;
-    }
+    obstacle_positions.push_back(convert_vec(p_obstacle));
   }
 
-  if (need_to_stop != emergency_stop)
-  {
-    emergency_stop = need_to_stop;
-    if (need_to_stop)
-      std::cout << "Stopping vehicle to avoid a collision" << std::endl;
-    else
-      std::cout << "No more obstacles; resuming course" << std::endl;
-  }
+  return obstacle_positions;
+}
+
+void SlotcarPlugin::OnUpdate()
+{
+  const auto& world = _model->GetWorld();
+  if (infrastructure.empty())
+    init_infrastructure();
+  double x_target = 0.0;
+  double yaw_target = 0.0;
+
+  const double time = world->SimTime().Double();
+  const double dt = time - last_update_time;
+  last_update_time = time;
+
+  ignition::math::Pose3d pose = _model->WorldPose();
+
+  // Will return false if there is no more waypoints
+  if (!dataPtr->update(convert_pose(pose), time, x_target, yaw_target))
+    return;
+
+  auto obstacle_positions = get_obstacle_positions(world);
+
+  bool emergency_stop = dataPtr->emergency_stop(obstacle_positions);
 
   if (emergency_stop)
   {

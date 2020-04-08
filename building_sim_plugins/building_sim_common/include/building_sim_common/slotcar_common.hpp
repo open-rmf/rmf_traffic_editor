@@ -90,13 +90,12 @@ public:
 
   std::string model_name() const;
 
-  double stop_distance() const;
-  double stop_radius() const;
-
   void init_ros_node(const rclcpp::Node::SharedPtr node);
 
   bool update(const Eigen::Isometry3d& pose, const double time,
     double& x_target, double& yaw_target);
+
+  bool emergency_stop(const std::vector<Eigen::Vector3d>& obstacle_positions);
 
   std::array<double, 2> calculate_control_signals(const std::array<double,
     2>& w_tire_actual,
@@ -123,6 +122,8 @@ private:
   std::vector<rclcpp::Time> _hold_times;
 
   std::string _model_name;
+  Eigen::Isometry3d _pose;
+  bool _emergency_stop = false;
 
   std::shared_ptr<tf2_ros::TransformBroadcaster> _tf2_broadcaster;
   rclcpp::Publisher<rmf_fleet_msgs::msg::RobotState>::SharedPtr _robot_state_pub;

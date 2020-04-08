@@ -53,14 +53,11 @@ private:
   std::unique_ptr<SlotcarCommon> dataPtr;
 
   rclcpp::Node::SharedPtr _ros_node;
-  Model _model;
   Entity _entity;
-  std::string _name;
 
   // TODO check if Entity is OK here
   std::array<Entity, 2> joints;
   std::unique_ptr<rclcpp::executors::MultiThreadedExecutor> executor;
-  bool emergency_stop = false;
 
   // TODO check
   std::unordered_set<Entity> _infrastructure;
@@ -84,7 +81,9 @@ private:
     }
   }
 
-  void init_infrastructure(EntityComponentManager &ecm);
+  void init_infrastructure(EntityComponentManager& ecm);
+
+  std::vector<Eigen::Vector3d> get_obstacle_positions(EntityComponentManager& ecm);
 };
 
 SlotcarPlugin::SlotcarPlugin()
@@ -102,15 +101,15 @@ void SlotcarPlugin::Configure(const Entity& entity,
   EntityComponentManager& ecm, EventManager&)
 {
   _entity = entity;
-  _model = Model(entity);
-  _name = _model.Name(ecm);
-  dataPtr->set_model_name(_model.Name(ecm));
+  auto model = Model(entity);
+  std::string model_name = model.Name(ecm);
+  dataPtr->set_model_name(model_name);
   dataPtr->read_sdf(sdf);
   // TODO proper argc argv
   char const** argv = NULL;
   if (!rclcpp::is_initialized())
     rclcpp::init(0, argv);
-  std::string plugin_name("plugin_" + _name);
+  std::string plugin_name("plugin_" + model_name);
   _ros_node = std::make_shared<rclcpp::Node>(plugin_name);
   // TODO Check if executor is getting callbacks
   //executor = std::make_unique<rclcpp::executors::MultiThreadedExecutor>();
@@ -118,14 +117,12 @@ void SlotcarPlugin::Configure(const Entity& entity,
   //executor->spin();
   dataPtr->init_ros_node(_ros_node);
 
-  RCLCPP_INFO(dataPtr->logger(), "hello i am " + _name);
-
-  joints[0] = _model.JointByName(ecm, "joint_tire_left");
+  joints[0] = model.JointByName(ecm, "joint_tire_left");
   if (!joints[0])
     RCLCPP_ERROR(dataPtr->logger(),
       "Could not find tire for [joint_tire_left]");
 
-  joints[1] = _model.JointByName(ecm, "joint_tire_right");
+  joints[1] = model.JointByName(ecm, "joint_tire_right");
   if (!joints[1])
     RCLCPP_ERROR(dataPtr->logger(),
       "Could not find tire for [joint_tire_right]");
@@ -168,6 +165,31 @@ void SlotcarPlugin::init_infrastructure(EntityComponentManager& ecm)
   _infrastructure.insert(_entity);
 }
 
+std::vector<Eigen::Vector3d> SlotcarPlugin::get_obstacle_positions(EntityComponentManager& ecm)
+{
+  std::vector<Eigen::Vector3d> obstacle_positions;
+  ecm.Each<components::Model, components::Name, components::Pose, components::Static>(
+      [&](const Entity& entity,
+        const components::Model*,
+        const components::Name*,
+        const components::Pose* pose,
+        const components::Static* is_static
+        )->bool
+      {
+        // Object should not be static
+        // It should not be part of infrastructure (doors / lifts)
+        // And it should be closer than the "stop" range
+        const auto obstacle_position = pose->Data().Pos();
+        if (is_static->Data() == false &&
+           _infrastructure.find(entity) == _infrastructure.end())
+        {
+          obstacle_positions.push_back(convert_vec(obstacle_position));
+        }
+        return true;
+      });
+  return obstacle_positions;
+}
+
 void SlotcarPlugin::PreUpdate(const UpdateInfo& info,
   EntityComponentManager& ecm)
 {
@@ -188,48 +210,13 @@ void SlotcarPlugin::PreUpdate(const UpdateInfo& info,
 
   auto pose = ecm.Component<components::Pose>(_entity)->Data();
 
+  // Will return false if there is no more waypoints
   if (!dataPtr->update(convert_pose(pose), time, x_target, yaw_target))
     return;
 
-  const double current_yaw = pose.Rot().Yaw();
-  ignition::math::Vector3d current_heading{
-    std::cos(current_yaw), std::sin(current_yaw), 0.0};
+  auto obstacle_positions = get_obstacle_positions(ecm);
 
-  const ignition::math::Vector3d stop_zone =
-    pose.Pos() + dataPtr->stop_distance()*current_heading;
-
-  bool need_to_stop = false;
-  // TODO implement infrastructure emergency stop
-
-  ecm.Each<components::Model, components::Name, components::Pose, components::Static>(
-      [&](const Entity& entity,
-        const components::Model*,
-        const components::Name*,
-        const components::Pose* pose,
-        const components::Static* is_static 
-        )->bool
-      {
-        // Object should not be static
-        // It should not be part of infrastructure (doors / lifts)
-        // And it should be closer than the "stop" range
-        auto obstacle_position = pose->Data().Pos();
-        if (is_static->Data() == false &&
-           _infrastructure.find(entity) == _infrastructure.end() &&
-           (obstacle_position - stop_zone).Length() < dataPtr->stop_radius())
-        {
-          need_to_stop = true;
-        }
-        return true;
-      });
-
-  if (need_to_stop != emergency_stop)
-  {
-    emergency_stop = need_to_stop;
-    if (need_to_stop)
-      std::cout << "Stopping vehicle to avoid a collision" << std::endl;
-    else
-      std::cout << "No more obstacles; resuming course" << std::endl;
-  }
+  bool emergency_stop = dataPtr->emergency_stop(obstacle_positions);
 
   if (emergency_stop)
   {
