@@ -186,6 +186,7 @@ vector<shared_ptr<planner::Node>> Graph::plan_path(
   vector<shared_ptr<Node>> path;
   for (std::shared_ptr<Node> n = goal_node; n->parent; n = n->parent)
     path.push_back(n);
+  std::reverse(path.begin(), path.end());
 
   printf("path has %d elements:\n", static_cast<int>(path.size()));
   for (const auto& n : path)

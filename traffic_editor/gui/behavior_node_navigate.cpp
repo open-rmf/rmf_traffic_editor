@@ -77,32 +77,46 @@ void BehaviorNodeNavigate::tick(
     start_node.x = state.x * meters_per_pixel;
     start_node.y = state.y * meters_per_pixel;
 
-    vector<shared_ptr<planner::Node>> path =
-        graph->plan_path(start_node, goal_node);
+    path = graph->plan_path(start_node, goal_node);
   }
 
+  if (path.empty())
+    return;  // nothing to do
 
-  // for now, assume just single-level navigation, no lifts, etc.
+  const shared_ptr<const planner::Node> next_node = path.front();
 
-  const double error_x = destination_state.x - state.x;
-  const double error_y = destination_state.y - state.y;
+  const double state_x_meters = state.x * meters_per_pixel;
+  const double state_y_meters = state.y * meters_per_pixel;
+
+  const double error_x = next_node->x - state_x_meters;
+  const double error_y = next_node->y - state_y_meters;
   const double error_2d = sqrt(error_x * error_x + error_y * error_y);
 
   const double bearing = atan2(error_y, error_x);
 
   const double speed = 0.5;  // SI units = meters/sec
+
+  if (error_2d < speed)
+    path.erase(path.begin());  // todo: don't use vector...
+
   const double x_dot = speed * cos(bearing);
   const double y_dot = speed * sin(bearing);
 
   state.x += dt_seconds * x_dot / meters_per_pixel;
   state.y += dt_seconds * y_dot / meters_per_pixel;
 
-  // printf("  (%.2f, %.2f)\n", state.x, state.y);
+  static int print_count = 0;
+  if (print_count++ % 100 == 0)
+    printf("  (%.2f, %.2f)  err = (%.2f, %.2f)\n",
+        state.x,
+        state.y,
+        error_x,
+        error_y);
 
   prev_error = error_2d;
 }
 
 bool BehaviorNodeNavigate::is_complete() const
 {
-  return prev_error < 1.0;
+  return path.empty();
 }

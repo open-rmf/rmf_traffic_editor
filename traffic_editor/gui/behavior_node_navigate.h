@@ -18,7 +18,10 @@
 #ifndef BEHAVIOR_NODE_NAVIGATE_H
 #define BEHAVIOR_NODE_NAVIGATE_H
 
+#include <memory>
 #include <string>
+#include <vector>
+
 #include <yaml-cpp/yaml.h>
 
 #include "behavior_node.h"
@@ -30,6 +33,7 @@ public:
   std::string destination_name;
   bool destination_found = false;
   ModelState destination_state;
+  std::vector<std::shared_ptr<planner::Node>> path;
 
   BehaviorNodeNavigate(const YAML::Node& yaml_node);
   ~BehaviorNodeNavigate();
