@@ -41,7 +41,11 @@ public:
 
   void print() const;
 
-  void plan_path(const Node& start, const Node& goal);
+  std::vector<std::shared_ptr<Node>> plan_path(
+      const Node& start,
+      const Node& goal);
+
+  std::shared_ptr<Node> nearest_node(const double x, const double y);
 };
 
 }  // namespace planner

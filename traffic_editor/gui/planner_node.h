@@ -31,14 +31,17 @@ public:
   double y = 0.0;
 
   double actual_cost = 0.0;
-  double estimated_cost_to_goal = 1.0e9;
+  double estimated_cost = 1.0e9;
   std::shared_ptr<Node> parent;  // to build optimal path back to start
   std::vector<std::shared_ptr<Node>> neighbors;
+  bool visited = false;
 
   Node();
   Node(const Vertex& v);
 
   double distance(const Node& n) const;
+
+  void print(const std::string& prefix) const;
 };
 
 }  // namespace planner

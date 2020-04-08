@@ -20,6 +20,7 @@
 
 using std::string;
 using std::shared_ptr;
+using std::vector;
 
 
 BehaviorNodeNavigate::BehaviorNodeNavigate(const YAML::Node& y)
@@ -76,7 +77,8 @@ void BehaviorNodeNavigate::tick(
     start_node.x = state.x * meters_per_pixel;
     start_node.y = state.y * meters_per_pixel;
 
-    graph->plan_path(start_node, goal_node);
+    vector<shared_ptr<planner::Node>> path =
+        graph->plan_path(start_node, goal_node);
   }
 
 

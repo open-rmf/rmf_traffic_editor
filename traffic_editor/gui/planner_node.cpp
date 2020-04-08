@@ -34,3 +34,13 @@ double Node::distance(const Node& n) const
   const double dy = n.y - y;
   return sqrt(dx * dx + dy * dy);
 }
+
+void Node::print(const std::string& prefix) const
+{
+  printf("%s(%.2f, %.2f) actual: %.2f  estimated: %.2f\n",
+      prefix.c_str(),
+      x,
+      y,
+      actual_cost,
+      estimated_cost);
+}
