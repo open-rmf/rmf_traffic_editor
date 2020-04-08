@@ -25,6 +25,7 @@ class BehaviorNodeWait : public BehaviorNode
 {
 public:
   double seconds = 0.0;
+  double elapsed_seconds = 0.0;
 
   BehaviorNodeWait(const YAML::Node& y);
   ~BehaviorNodeWait();

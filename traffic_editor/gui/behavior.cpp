@@ -102,3 +102,8 @@ std::unique_ptr<Behavior> Behavior::instantiate() const
 {
   return std::make_unique<Behavior>(*this);
 }
+
+bool Behavior::is_completed()
+{
+  return active_node_idx >= static_cast<int>(nodes.size());
+}

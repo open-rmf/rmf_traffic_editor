@@ -51,6 +51,8 @@ public:
   // in the future, we'll probably have ways to parameterize this
   // for now it's basically a deep-copy
   std::unique_ptr<Behavior> instantiate() const;
+
+  bool is_completed();
 };
 
 #endif

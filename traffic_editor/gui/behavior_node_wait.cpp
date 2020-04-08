@@ -39,15 +39,15 @@ std::unique_ptr<BehaviorNode> BehaviorNodeWait::clone() const
 }
 
 void BehaviorNodeWait::tick(
-    const double /*dt_seconds*/,
+    const double dt_seconds,
     ModelState& /*state*/,
     Building& /*building*/,
     const std::vector<std::unique_ptr<Model> >& /*active_models*/)
 {
-  printf("BehaviorNodeWait::tick()\n");
+  elapsed_seconds += dt_seconds;
 }
 
 bool BehaviorNodeWait::is_complete() const
 {
-  return true;  // TODO
+  return elapsed_seconds > seconds;
 }

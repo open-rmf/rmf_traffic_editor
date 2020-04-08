@@ -205,6 +205,31 @@ void Scenario::sim_tick(Building& building)
   // todo: mutex
   for (auto& model : models)
     model->state = model->next_state;
+
+  // if we have reached the end of our schedule, reset time and loop
+  bool all_started = true;
+  for (auto& schedule_item : behavior_schedule)
+    if (!schedule_item.started)
+    {
+      all_started = false;
+      break;
+    }
+
+  if (all_started)
+  {
+    bool all_completed = true;
+    // see if we have all finished
+    for (auto& model : models)
+      if (!model->behavior->is_completed())
+        all_completed = false;
+
+    if (all_completed)
+    {
+      sim_time_seconds = 0;
+      for (auto& schedule_item : behavior_schedule)
+        schedule_item.started = false;
+    }
+  }
 }
 
 void Scenario::sim_reset(Building& building)
