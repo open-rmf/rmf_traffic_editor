@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "model_state.h"
+#include "planner_node.h"
 
 class Building;
 class Model;
@@ -46,6 +47,11 @@ public:
 
   bool populate_model_state_from_vertex_name(
       ModelState& state,
+      const std::string vertex_name,
+      Building& building);
+
+  bool populate_planner_node_from_vertex_name(
+      planner::Node& node,
       const std::string vertex_name,
       Building& building);
 };

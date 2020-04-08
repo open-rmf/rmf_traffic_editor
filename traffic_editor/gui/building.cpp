@@ -33,6 +33,8 @@
 using std::string;
 using std::vector;
 using std::make_pair;
+using std::unique_ptr;
+using std::shared_ptr;
 
 
 Building::Building()
@@ -91,7 +93,7 @@ bool Building::load_yaml_file()
   const YAML::Node yl = y["levels"];
   for (YAML::const_iterator it = yl.begin(); it != yl.end(); ++it)
   {
-    std::unique_ptr<BuildingLevel> l = std::make_unique<BuildingLevel>();
+    unique_ptr<BuildingLevel> l = std::make_unique<BuildingLevel>();
     l->from_yaml(it->first.as<string>(), it->second);
     levels.push_back(std::move(l));
   }
@@ -334,7 +336,7 @@ void Building::add_model(
 
   printf("Building::add_model(%d, %.1f, %.1f, %.1f, %.2f, %s)\n",
       level_idx, x, y, z, yaw, model_name.c_str());
-  std::unique_ptr<Model> m = std::make_unique<Model>();
+  unique_ptr<Model> m = std::make_unique<Model>();
   m->state.x = x;
   m->state.y = y;
   m->state.z = z;
@@ -365,7 +367,7 @@ void Building::clear()
   clear_transform_cache();
 }
 
-void Building::add_level(std::unique_ptr<BuildingLevel> new_level)
+void Building::add_level(unique_ptr<BuildingLevel> new_level)
 {
   // make sure we don't have this level already
   for (const auto &level : levels)
@@ -592,4 +594,46 @@ void Building::clear_scene()
 {
   for (auto& level : levels)
     level->clear_scene();
+}
+
+shared_ptr<planner::Graph> Building::planner_graph(
+    const int graph_idx,
+    const string& level_name)
+{
+  shared_ptr<planner::Graph> graph = std::make_shared<planner::Graph>();
+
+  // spin through all edges
+  for (const auto& level : levels)
+  {
+    if (level->name != level_name)
+      continue;
+
+    for (const auto& edge : level->edges)
+    {
+      if (edge.type != Edge::LANE)
+        continue;
+
+      if (edge.get_graph_idx() == graph_idx)
+      {
+        const Vertex& v_start = level->vertices[edge.start_idx];
+        const Vertex& v_end = level->vertices[edge.end_idx];
+        graph->add_edge(v_start, v_end);
+        if (edge.is_bidirectional())
+          graph->add_edge(v_end, v_start);
+      }
+    }
+
+    graph->scale_all_nodes(level->drawing_meters_per_pixel);
+    break;  // there will only be one level of this name.
+  }
+
+  return graph;
+}
+
+double Building::level_meters_per_pixel(const string& level_name) const
+{
+  for (const auto& level : levels)
+    if (level->name == level_name)
+      return level->drawing_meters_per_pixel;
+  return 0.05;  // just a somewhat sane default
 }

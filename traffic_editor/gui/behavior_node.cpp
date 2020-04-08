@@ -32,8 +32,8 @@ bool BehaviorNode::populate_model_state_from_vertex_name(
     const std::string vertex_name,
     Building& building)
 {
-  // look up the destination in the building
-  printf("  finding destination [%s]\n", vertex_name.c_str());
+  // look up the vertex in the building
+  printf("  finding vertex [%s]\n", vertex_name.c_str());
   bool found = false;
   for (const auto& level : building.levels)
     for (const auto& vertex : level->vertices)
@@ -65,3 +65,26 @@ bool BehaviorNode::populate_model_state_from_vertex_name(
     return false;
   }
 }
+
+bool BehaviorNode::populate_planner_node_from_vertex_name(
+    planner::Node& node,
+    const std::string vertex_name,
+    Building& building)
+{
+  // look up the vertex in the building
+  printf("  finding vertex [%s]\n", vertex_name.c_str());
+  for (const auto& level : building.levels)
+    for (const auto& vertex : level->vertices)
+    {
+      const string full_name = level->name + "/" + vertex.name;
+      if (full_name == vertex_name)
+      {
+        node.x = vertex.x * level->drawing_meters_per_pixel;
+        node.y = vertex.y * level->drawing_meters_per_pixel;
+        return true;
+      }
+    }
+  printf("couldn't find vertex [%s]!\n", vertex_name.c_str());
+  return false;
+}
+

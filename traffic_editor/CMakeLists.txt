@@ -51,6 +51,10 @@ add_executable(traffic-editor
   gui/model.cpp
   gui/model_dialog.cpp
   gui/param.cpp
+  gui/planner.cpp
+  gui/planner_edge.cpp
+  gui/planner_graph.cpp
+  gui/planner_node.cpp
   gui/polygon.cpp
   gui/preferences_dialog.cpp
   gui/preferences_keys.cpp

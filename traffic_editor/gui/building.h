@@ -31,6 +31,7 @@ class QGraphicsScene;
 
 #include "building_level.h"
 #include "lift.h"
+#include "planner_graph.h"
 
 
 class Building
@@ -41,7 +42,7 @@ public:
 
   std::string name;
   std::string reference_level_name;
-  std::vector<std::unique_ptr<BuildingLevel> > levels;
+  std::vector<std::unique_ptr<BuildingLevel>> levels;
   std::vector<Lift> lifts;
   std::mutex building_mutex;
 
@@ -155,6 +156,12 @@ public:
   int get_reference_level_idx();
 
   void clear_scene();
+
+  std::shared_ptr<planner::Graph> planner_graph(
+      const int graph_idx,
+      const std::string& level_name);
+
+  double level_meters_per_pixel(const std::string& level_name) const;
 };
 
 #endif

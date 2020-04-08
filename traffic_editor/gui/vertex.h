@@ -23,6 +23,8 @@
 #include <vector>
 #include <yaml-cpp/yaml.h>
 
+#include <QColor>
+
 #include "param.h"
 
 class QGraphicsScene;

@@ -23,6 +23,7 @@
 
 #include "behavior_node.h"
 #include "model_state.h"
+#include "planner.h"
 
 class BehaviorNodeNavigate : public BehaviorNode
 {
@@ -30,6 +31,7 @@ public:
   std::string destination_name;
   bool destination_found = false;
   ModelState destination_state;
+  planner::Planner destination_planner;
 
   BehaviorNodeNavigate(const YAML::Node& yaml_node);
   ~BehaviorNodeNavigate();
