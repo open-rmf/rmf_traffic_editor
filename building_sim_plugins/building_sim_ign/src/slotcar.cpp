@@ -6,7 +6,10 @@
 #include <ignition/gazebo/components/JointPosition.hh>
 #include <ignition/gazebo/components/JointVelocity.hh>
 #include <ignition/gazebo/components/JointVelocityCmd.hh>
+#include <ignition/gazebo/components/Model.hh>
+#include <ignition/gazebo/components/Name.hh>
 #include <ignition/gazebo/components/Pose.hh>
+#include <ignition/gazebo/components/Static.hh>
 
 #include <rclcpp/rclcpp.hpp>
 #include <tf2_ros/transform_broadcaster.h>
@@ -60,10 +63,7 @@ private:
   bool emergency_stop = false;
 
   // TODO check
-  //std::unordered_set<gazebo::physics::Model*> infrastructure;
-
-  // Book keeping
-  int update_count = 0;
+  std::unordered_set<Entity> _infrastructure;
 
   void send_control_signals(
     EntityComponentManager& ecm,
@@ -83,6 +83,8 @@ private:
       vel_cmd->Data()[0] = joint_signals[i];
     }
   }
+
+  void init_infrastructure(EntityComponentManager &ecm);
 };
 
 SlotcarPlugin::SlotcarPlugin()
@@ -97,7 +99,7 @@ SlotcarPlugin::~SlotcarPlugin()
 
 void SlotcarPlugin::Configure(const Entity& entity,
   const std::shared_ptr<const sdf::Element>& sdf,
-  EntityComponentManager& ecm, EventManager& eventMgr)
+  EntityComponentManager& ecm, EventManager&)
 {
   _entity = entity;
   _model = Model(entity);
@@ -143,31 +145,36 @@ void SlotcarPlugin::Configure(const Entity& entity,
     ecm.CreateComponent(entity, components::Pose());
 }
 
+void SlotcarPlugin::init_infrastructure(EntityComponentManager& ecm)
+{
+  // Cycle through all the static entities with Model and Name components
+  ecm.Each<components::Model, components::Name, components::Pose, components::Static>(
+      [&](const Entity& entity,
+        const components::Model*,
+        const components::Name* name,
+        const components::Pose*,
+        const components::Static* is_static
+        )->bool
+      {
+        if ((is_static->Data() == false) &&
+            (name->Data().find("door") != std::string::npos ||
+            name->Data().find("lift") != std::string::npos))
+        {
+          _infrastructure.insert(entity);
+        }
+        return true;
+      });
+  // Also add itself
+  _infrastructure.insert(_entity);
+}
+
 void SlotcarPlugin::PreUpdate(const UpdateInfo& info,
   EntityComponentManager& ecm)
 {
   // TODO parallel thread executor?
   rclcpp::spin_some(_ros_node);
-  /*
-  update_count++;
-  const auto& world = _model->GetWorld();
-  if (update_count <= 1)
-  {
-    infrastructure.insert(_model.get());
-    const auto& all_models = world->Models();
-    for (const auto& m : all_models)
-    {
-      if (m->IsStatic())
-        continue;
-
-      if (m->GetName().find("door") != std::string::npos)
-        infrastructure.insert(m.get());
-
-      if (m->GetName().find("lift") != std::string::npos)
-        infrastructure.insert(m.get());
-    }
-  }
-  */
+  if (_infrastructure.empty())
+    init_infrastructure(ecm);
   double x_target = 0.0;
   double yaw_target = 0.0;
 
@@ -193,22 +200,27 @@ void SlotcarPlugin::PreUpdate(const UpdateInfo& info,
 
   bool need_to_stop = false;
   // TODO implement infrastructure emergency stop
-  /*
-  for (const auto& m : world->Models())
-  {
-    if (m->IsStatic())
-      continue;
 
-    if (infrastructure.count(m.get()) > 0)
-      continue;
-
-    const auto p_obstacle = m->WorldPose().Pos();
-    if ( (p_obstacle - stop_zone).Length() < dataPtr->stop_radius() )
-    {
-      need_to_stop = true;
-      break;
-    }
-  }
+  ecm.Each<components::Model, components::Name, components::Pose, components::Static>(
+      [&](const Entity& entity,
+        const components::Model*,
+        const components::Name*,
+        const components::Pose* pose,
+        const components::Static* is_static 
+        )->bool
+      {
+        // Object should not be static
+        // It should not be part of infrastructure (doors / lifts)
+        // And it should be closer than the "stop" range
+        auto obstacle_position = pose->Data().Pos();
+        if (is_static->Data() == false &&
+           _infrastructure.find(entity) == _infrastructure.end() &&
+           (obstacle_position - stop_zone).Length() < dataPtr->stop_radius())
+        {
+          need_to_stop = true;
+        }
+        return true;
+      });
 
   if (need_to_stop != emergency_stop)
   {
@@ -224,7 +236,6 @@ void SlotcarPlugin::PreUpdate(const UpdateInfo& info,
     // Allow spinning but not translating
     x_target = 0.0;
   }
-  */
 
   send_control_signals(ecm, x_target, yaw_target, dt);
 }
