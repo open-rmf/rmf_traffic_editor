@@ -83,7 +83,8 @@ private:
 
   void init_infrastructure(EntityComponentManager& ecm);
 
-  std::vector<Eigen::Vector3d> get_obstacle_positions(EntityComponentManager& ecm);
+  std::vector<Eigen::Vector3d> get_obstacle_positions(
+    EntityComponentManager& ecm);
 };
 
 SlotcarPlugin::SlotcarPlugin()
@@ -145,48 +146,51 @@ void SlotcarPlugin::Configure(const Entity& entity,
 void SlotcarPlugin::init_infrastructure(EntityComponentManager& ecm)
 {
   // Cycle through all the static entities with Model and Name components
-  ecm.Each<components::Model, components::Name, components::Pose, components::Static>(
-      [&](const Entity& entity,
-        const components::Model*,
-        const components::Name* name,
-        const components::Pose*,
-        const components::Static* is_static
-        )->bool
+  ecm.Each<components::Model, components::Name, components::Pose,
+    components::Static>(
+    [&](const Entity& entity,
+    const components::Model*,
+    const components::Name* name,
+    const components::Pose*,
+    const components::Static* is_static
+    ) -> bool
+    {
+      if ((is_static->Data() == false) &&
+      (name->Data().find("door") != std::string::npos ||
+      name->Data().find("lift") != std::string::npos))
       {
-        if ((is_static->Data() == false) &&
-            (name->Data().find("door") != std::string::npos ||
-            name->Data().find("lift") != std::string::npos))
-        {
-          _infrastructure.insert(entity);
-        }
-        return true;
-      });
+        _infrastructure.insert(entity);
+      }
+      return true;
+    });
   // Also add itself
   _infrastructure.insert(_entity);
 }
 
-std::vector<Eigen::Vector3d> SlotcarPlugin::get_obstacle_positions(EntityComponentManager& ecm)
+std::vector<Eigen::Vector3d> SlotcarPlugin::get_obstacle_positions(
+  EntityComponentManager& ecm)
 {
   std::vector<Eigen::Vector3d> obstacle_positions;
-  ecm.Each<components::Model, components::Name, components::Pose, components::Static>(
-      [&](const Entity& entity,
-        const components::Model*,
-        const components::Name*,
-        const components::Pose* pose,
-        const components::Static* is_static
-        )->bool
+  ecm.Each<components::Model, components::Name, components::Pose,
+    components::Static>(
+    [&](const Entity& entity,
+    const components::Model*,
+    const components::Name*,
+    const components::Pose* pose,
+    const components::Static* is_static
+    ) -> bool
+    {
+      // Object should not be static
+      // It should not be part of infrastructure (doors / lifts)
+      // And it should be closer than the "stop" range
+      const auto obstacle_position = pose->Data().Pos();
+      if (is_static->Data() == false &&
+      _infrastructure.find(entity) == _infrastructure.end())
       {
-        // Object should not be static
-        // It should not be part of infrastructure (doors / lifts)
-        // And it should be closer than the "stop" range
-        const auto obstacle_position = pose->Data().Pos();
-        if (is_static->Data() == false &&
-           _infrastructure.find(entity) == _infrastructure.end())
-        {
-          obstacle_positions.push_back(convert_vec(obstacle_position));
-        }
-        return true;
-      });
+        obstacle_positions.push_back(convert_vec(obstacle_position));
+      }
+      return true;
+    });
   return obstacle_positions;
 }
 

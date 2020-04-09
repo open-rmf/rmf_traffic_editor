@@ -261,7 +261,8 @@ bool SlotcarCommon::update(const Eigen::Isometry3d& pose, const double time,
   return true;
 }
 
-bool SlotcarCommon::emergency_stop(const std::vector<Eigen::Vector3d>& obstacle_positions)
+bool SlotcarCommon::emergency_stop(
+  const std::vector<Eigen::Vector3d>& obstacle_positions)
 {
   const Eigen::Vector3d current_heading = compute_heading(_pose);
 
