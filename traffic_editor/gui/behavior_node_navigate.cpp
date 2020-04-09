@@ -21,12 +21,14 @@
 using std::string;
 using std::shared_ptr;
 using std::vector;
+using std::make_unique;
 
 
 BehaviorNodeNavigate::BehaviorNodeNavigate(const YAML::Node& y)
 : BehaviorNode()
 {
   destination_name = y[1].as<string>();
+  nav_graph_idx = y[2].as<int>();
 }
 
 BehaviorNodeNavigate::~BehaviorNodeNavigate()
@@ -38,16 +40,21 @@ void BehaviorNodeNavigate::print() const
   printf("      navigate: [%s]\n", destination_name.c_str());
 }
 
-std::unique_ptr<BehaviorNode> BehaviorNodeNavigate::clone() const
+std::unique_ptr<BehaviorNode> BehaviorNodeNavigate::instantiate(
+    const YAML::Node& params) const
 {
-  return std::make_unique<BehaviorNodeNavigate>(*this);
+  auto b = make_unique<BehaviorNodeNavigate>(*this);
+  b->destination_name = interpolate_string_params(destination_name, params);
+  return b;
 }
 
 void BehaviorNodeNavigate::tick(
     const double dt_seconds,
     ModelState& state,
     Building& building,
-    const std::vector<std::unique_ptr<Model> >& /*active_models*/)
+    const std::vector<std::unique_ptr<Model> >& /*active_models*/,
+    const std::vector<std::string>& /*inbound_signals*/,
+    std::vector<std::string>& /*outbound_signals*/)
 {
   // look up the scale of this level's drawing
   const double meters_per_pixel =
@@ -61,11 +68,10 @@ void BehaviorNodeNavigate::tick(
         destination_name,
         building);
 
-    const int graph_idx = 4;  // todo
     shared_ptr<planner::Graph> graph = building.planner_graph(
-        graph_idx,
+        nav_graph_idx,
         state.level_name);
-    graph->print();
+    // graph->print();
 
     planner::Node goal_node;
     populate_planner_node_from_vertex_name(
@@ -78,7 +84,7 @@ void BehaviorNodeNavigate::tick(
     start_node.y = state.y * meters_per_pixel;
 
     path = graph->plan_path(start_node, goal_node);
-    printf("\n");
+    // printf("\n");
   }
 
   if (path.empty())
@@ -116,7 +122,7 @@ void BehaviorNodeNavigate::tick(
   if (error_yaw == backwards_yaw_error)
     speed *= -1;
 
-  if (error_2d < speed)
+  if (error_2d < speed / 2.0)
     path.erase(path.begin());  // todo: don't use vector...
 
   const double x_dot = speed * cos(state.yaw);

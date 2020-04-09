@@ -34,7 +34,7 @@ bool BehaviorNode::populate_model_state_from_vertex_name(
     Building& building)
 {
   // look up the vertex in the building
-  printf("  finding vertex [%s]\n", vertex_name.c_str());
+  //printf("  finding vertex [%s]\n", vertex_name.c_str());
   bool found = false;
   for (const auto& level : building.levels)
     for (const auto& vertex : level->vertices)
@@ -52,12 +52,14 @@ bool BehaviorNode::populate_model_state_from_vertex_name(
 
   if (found)
   {
+#if 0
     printf(
         "  vertex [%s] = (%.2f, %.2f) on level [%s]\n",
         vertex_name.c_str(),
         state.x,
         state.y,
         state.level_name.c_str());
+#endif
     return true;
   }
   else
@@ -73,7 +75,7 @@ bool BehaviorNode::populate_planner_node_from_vertex_name(
     Building& building)
 {
   // look up the vertex in the building
-  printf("  finding vertex [%s]\n", vertex_name.c_str());
+  // printf("  finding vertex [%s]\n", vertex_name.c_str());
   for (const auto& level : building.levels)
     for (const auto& vertex : level->vertices)
     {
@@ -109,4 +111,50 @@ double BehaviorNode::angle_sum(const double a, const double b) const
     return sum + 2 * M_PI;
   else
     return sum;
+}
+
+string BehaviorNode::interpolate_string_params(
+    const string& in,
+    const YAML::Node& params) const
+{
+  // todo: something smarter someday. for now, no attempt at smartness.
+  string param_name;
+  string out;
+  bool in_param_name = false;
+
+  for (size_t i = 0; i < in.length(); i++)
+  {
+    if (!in_param_name)
+    {
+      if (in[i] == '{')
+      {
+        in_param_name = true;
+        param_name.clear();
+      }
+      else
+        out += in[i];
+    }
+    else
+    {
+      if (in[i] == '}')
+      {
+        in_param_name = false;
+        if (!params[param_name])
+        {
+          printf(
+              "ERROR: couldn't find BehaviorNode instance param [%s]\n",
+              param_name.c_str());
+        }
+        else
+        {
+          printf("looking up param [%s]\n", param_name.c_str());
+          out += params[param_name].as<string>();
+        }
+      }
+      else
+        param_name += in[i];
+    }
+  }
+  printf("%s => %s\n", in.c_str(), out.c_str());
+  return out;
 }

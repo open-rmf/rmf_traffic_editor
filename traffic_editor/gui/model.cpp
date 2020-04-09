@@ -106,10 +106,18 @@ void Model::set_param(const std::string &name, const std::string &value)
 void Model::tick(
     const double dt_seconds,
     Building& building,
-    const std::vector<std::unique_ptr<Model> >& active_models)
+    const std::vector<std::unique_ptr<Model> >& active_models,
+    const std::vector<std::string>& inbound_signals,
+    std::vector<std::string>& outbound_signals)
 {
   next_state = state;
-  behavior->tick(dt_seconds, next_state, building, active_models);
+  behavior->tick(
+      dt_seconds,
+      next_state,
+      building,
+      active_models,
+      inbound_signals,
+      outbound_signals);
 }
 
 void Model::set_behavior(std::unique_ptr<Behavior> _behavior)

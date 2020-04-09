@@ -23,6 +23,7 @@ bool BehaviorScheduleItem::from_yaml(const YAML::Node& y)
   start_seconds = y[0].as<double>();
   model_name = y[1].as<string>();
   behavior_name = y[2].as<string>();
+  behavior_params = YAML::Clone(y[3]);
   return true;
 }
 

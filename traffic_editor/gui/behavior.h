@@ -32,7 +32,6 @@ class Behavior
 public:
   Behavior();
   Behavior(const std::string& _name, const YAML::Node& yaml);
-  Behavior(const Behavior& copy);
   ~Behavior();
 
   std::string name;
@@ -46,11 +45,11 @@ public:
       const double dt_seconds,
       ModelState& state,
       Building& building,
-      const std::vector<std::unique_ptr<Model> >& active_models);
+      const std::vector<std::unique_ptr<Model> >& active_models,
+      const std::vector<std::string>& inbound_signals,
+      std::vector<std::string>& outbound_signals);
 
-  // in the future, we'll probably have ways to parameterize this
-  // for now it's basically a deep-copy
-  std::unique_ptr<Behavior> instantiate() const;
+  std::unique_ptr<Behavior> instantiate(const YAML::Node& params) const;
 
   bool is_completed();
 };

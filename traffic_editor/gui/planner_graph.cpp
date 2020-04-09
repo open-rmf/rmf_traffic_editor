@@ -98,22 +98,24 @@ vector<shared_ptr<planner::Node>> Graph::plan_path(
 {
   // the inbound start_pos might not be exactly on a planner node, so we have
   // to start by finding the nearest planner node on this graph
+
+  std::shared_ptr<Node> start_node = nearest_node(start_pos.x, start_pos.y);
+  std::shared_ptr<Node> goal_node = nearest_node(goal_pos.x, goal_pos.y);
+
+  start_node->estimated_cost = start_node->distance(*goal_node);
+
+#if 0
   printf("planning path from (%.2f, %.2f) -> (%.2f, %.2f)\n",
       start_pos.x,
       start_pos.y,
       goal_pos.x,
       goal_pos.y);
 
-  // find the nearest start and goal nodes on our graph
-  std::shared_ptr<Node> start_node = nearest_node(start_pos.x, start_pos.y);
-  std::shared_ptr<Node> goal_node = nearest_node(goal_pos.x, goal_pos.y);
-
   printf("  start node: (%.2f, %.2f)\n", start_node->x, start_node->y);
   printf("    end node: (%.2f, %.2f)\n", goal_node->x, goal_node->y);
   printf("\n");
-
-  start_node->estimated_cost = start_node->distance(*goal_node);
   start_node->print("  start:");
+#endif
 
   vector<shared_ptr<Node>> unvisited_nodes;
   unvisited_nodes.push_back(start_node);
@@ -122,7 +124,7 @@ vector<shared_ptr<planner::Node>> Graph::plan_path(
 
   for (int num_iter = 0; num_iter < 100000; num_iter++)
   {
-    printf("A* iteration %d:\n", num_iter);
+    // printf("A* iteration %d:\n", num_iter);
     double lowest_estimated_cost = 1e9;
     shared_ptr<Node> lowest_estimated_cost_node;
 
@@ -136,7 +138,7 @@ vector<shared_ptr<planner::Node>> Graph::plan_path(
     }
 
     lowest_estimated_cost_node->visited = true;
-    lowest_estimated_cost_node->print("  lowest_cost:");
+    // lowest_estimated_cost_node->print("  lowest_cost:");
 
     if (lowest_estimated_cost_node == goal_node)
     {
@@ -188,9 +190,11 @@ vector<shared_ptr<planner::Node>> Graph::plan_path(
     path.push_back(n);
   std::reverse(path.begin(), path.end());
 
+  /*
   printf("path has %d elements:\n", static_cast<int>(path.size()));
   for (const auto& n : path)
     n->print("  ");
+  */
 
   return path;
 }

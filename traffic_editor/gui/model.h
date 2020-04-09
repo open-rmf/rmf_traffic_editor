@@ -63,7 +63,9 @@ public:
   void tick(
       const double dt_seconds,
       Building& building,
-      const std::vector<std::unique_ptr<Model> >& active_models);
+      const std::vector<std::unique_ptr<Model> >& active_models,
+      const std::vector<std::string>& inbound_signals,
+      std::vector<std::string>& outbound_signals);
 
   void set_behavior(std::unique_ptr<Behavior> _behavior);
 

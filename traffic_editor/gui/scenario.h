@@ -29,6 +29,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <vector>
 #include <yaml-cpp/yaml.h>
 
 class Scenario
@@ -84,6 +85,8 @@ public:
   void start_behavior_schedule_item(
       BehaviorScheduleItem& item,
       Building& building);
+
+  std::vector<std::string> behavior_signals;
 };
 
 #endif

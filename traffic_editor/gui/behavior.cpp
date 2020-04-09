@@ -19,8 +19,12 @@
 #include "behavior_node_teleport.h"
 #include "behavior_node_wait.h"
 #include "behavior_node_navigate.h"
+#include "behavior_node_send_signal.h"
+#include "behavior_node_await_signal.h"
+
 using std::string;
 using std::unique_ptr;
+using std::make_unique;
 
 Behavior::Behavior()
 {
@@ -49,14 +53,15 @@ Behavior::Behavior(const string &_name, const YAML::Node& yaml)
 
     // i'm sure there is some hyper-elite C++ way to avoid this "if" tree...
     if (type_name == "teleport")
-      nodes.push_back(
-          unique_ptr<BehaviorNodeTeleport>(new BehaviorNodeTeleport(*it)));
+      nodes.push_back(make_unique<BehaviorNodeTeleport>(*it));
     else if (type_name == "wait")
-      nodes.push_back(
-          unique_ptr<BehaviorNodeWait>(new BehaviorNodeWait(*it)));
+      nodes.push_back(make_unique<BehaviorNodeWait>(*it));
     else if (type_name == "navigate")
-      nodes.push_back(
-          unique_ptr<BehaviorNodeNavigate>(new BehaviorNodeNavigate(*it)));
+      nodes.push_back(make_unique<BehaviorNodeNavigate>(*it));
+    else if (type_name == "send_signal")
+      nodes.push_back(make_unique<BehaviorNodeSendSignal>(*it));
+    else if (type_name == "await_signal")
+      nodes.push_back(make_unique<BehaviorNodeAwaitSignal>(*it));
     else
     {
       printf(
@@ -64,13 +69,6 @@ Behavior::Behavior(const string &_name, const YAML::Node& yaml)
           type_name.c_str());
     }
   }
-}
-
-Behavior::Behavior(const Behavior& copy)
-{
-  name = copy.name;
-  for (const auto& node : copy.nodes)
-    nodes.push_back(node->clone());
 }
 
 Behavior::~Behavior()
@@ -88,19 +86,33 @@ void Behavior::tick(
       const double dt_seconds,
       ModelState &state,
       Building& building,
-      const std::vector<std::unique_ptr<Model> >& active_models)
+      const std::vector<std::unique_ptr<Model> >& active_models,
+      const std::vector<std::string>& inbound_signals,
+      std::vector<std::string>& outbound_signals)
 {
   // printf("Behavior::tick() in behavior [%s]\n", name.c_str());
   if (active_node_idx >= static_cast<int>(nodes.size()))
     return;  // behavior is complete
-  nodes[active_node_idx]->tick(dt_seconds, state, building, active_models);
+
+  nodes[active_node_idx]->tick(
+      dt_seconds,
+      state,
+      building,
+      active_models,
+      inbound_signals,
+      outbound_signals);
+
   if (nodes[active_node_idx]->is_complete())
     active_node_idx++;
 }
 
-std::unique_ptr<Behavior> Behavior::instantiate() const
+std::unique_ptr<Behavior> Behavior::instantiate(const YAML::Node& params) const
 {
-  return std::make_unique<Behavior>(*this);
+  std::unique_ptr<Behavior> instantiated = std::make_unique<Behavior>();
+  instantiated->name = name;
+  for (const auto& node : nodes)
+    instantiated->nodes.push_back(node->instantiate(params));
+  return instantiated;
 }
 
 bool Behavior::is_completed()

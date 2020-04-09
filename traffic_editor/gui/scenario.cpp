@@ -195,10 +195,27 @@ void Scenario::sim_tick(Building& building)
 
   const double dt = 0.01;
 
+  for (auto& signal_name : behavior_signals)
+    printf("SIGNAL: [%s]\n", signal_name.c_str());
+
   // tick all the model behaviors to move them forward one timestep
+  std::vector<std::string> all_outbound_signals;
+
   for (auto& model : models)
-    model->tick(dt, building, models);
+  {
+    std::vector<std::string> outbound_signals;
+    model->tick(dt, building, models, behavior_signals, outbound_signals);
+
+    // append this model's outbound signals to the composite signal vector
+    all_outbound_signals.insert(
+        all_outbound_signals.end(),
+        outbound_signals.begin(),
+        outbound_signals.end());
+  }
+
   sim_time_seconds += dt;
+
+  behavior_signals = all_outbound_signals;  // save for next tick
 
   // now that we have computed all the states, copy them into the
   // state used for rendering
@@ -258,11 +275,11 @@ void Scenario::start_behavior_schedule_item(
   item.start_seconds = sim_time_seconds;
   item.started = true;
 
-  // generate the behavior instance (future: evaluate parameters, etc.)
+  // generate the behavior instance
   std::unique_ptr<Behavior> model_behavior;
   for (const auto& behavior : behaviors)
     if (behavior->name == item.behavior_name)
-      model_behavior = std::move(behavior->instantiate());
+      model_behavior = std::move(behavior->instantiate(item.behavior_params));
 
   if (!model_behavior)
   {

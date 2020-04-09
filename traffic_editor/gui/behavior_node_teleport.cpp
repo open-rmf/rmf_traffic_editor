@@ -18,6 +18,7 @@
 #include "behavior_node_teleport.h"
 #include "building.h"
 using std::string;
+using std::make_unique;
 
 BehaviorNodeTeleport::BehaviorNodeTeleport(const YAML::Node& y)
 : BehaviorNode()
@@ -34,18 +35,22 @@ void BehaviorNodeTeleport::print() const
   printf("      teleport: [%s]\n", destination_name.c_str());
 }
 
-std::unique_ptr<BehaviorNode> BehaviorNodeTeleport::clone() const
+std::unique_ptr<BehaviorNode> BehaviorNodeTeleport::instantiate(
+    const YAML::Node& params) const
 {
-  return std::make_unique<BehaviorNodeTeleport>(*this);
+  auto b = make_unique<BehaviorNodeTeleport>(*this);
+  b->destination_name = interpolate_string_params(destination_name, params);
+  return b;
 }
 
 void BehaviorNodeTeleport::tick(
     const double /*dt_seconds*/,
     ModelState& state,
     Building& building,
-    const std::vector<std::unique_ptr<Model> >& /*active_models*/)
+    const std::vector<std::unique_ptr<Model> >& /*active_models*/,
+    const std::vector<std::string>& /*inbound_signals*/,
+    std::vector<std::string>& /*outbound_signals*/)
 {
-  printf("BehaviorNodeTeleport::tick()\n");
   populate_model_state_from_vertex_name(
         destination_state,
         destination_name,

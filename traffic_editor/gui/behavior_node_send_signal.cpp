@@ -15,42 +15,42 @@
  *
 */
 
-#include "behavior_node_wait.h"
+#include "behavior_node_send_signal.h"
 using std::string;
 
-BehaviorNodeWait::BehaviorNodeWait(const YAML::Node& y)
+BehaviorNodeSendSignal::BehaviorNodeSendSignal(const YAML::Node& y)
 : BehaviorNode()
 {
-  seconds = y[1].as<double>();
+  signal_name = y[1].as<string>();
 }
 
-BehaviorNodeWait::~BehaviorNodeWait()
+BehaviorNodeSendSignal::~BehaviorNodeSendSignal()
 {
 }
 
-void BehaviorNodeWait::print() const
+void BehaviorNodeSendSignal::print() const
 {
-  printf("      wait: %.3f\n", seconds);
+  printf("      send_signal: %s\n", signal_name.c_str());
 }
 
-std::unique_ptr<BehaviorNode> BehaviorNodeWait::instantiate(
+std::unique_ptr<BehaviorNode> BehaviorNodeSendSignal::instantiate(
     const YAML::Node& params) const
 {
-  return std::make_unique<BehaviorNodeWait>(*this);
+  return std::make_unique<BehaviorNodeSendSignal>(*this);
 }
 
-void BehaviorNodeWait::tick(
-    const double dt_seconds,
+void BehaviorNodeSendSignal::tick(
+    const double /*dt_seconds*/,
     ModelState& /*state*/,
     Building& /*building*/,
-    const std::vector<std::unique_ptr<Model> >& /*active_models*/,
-    const std::vector<std::string>& inbound_signals,
+    const std::vector<std::unique_ptr<Model>>& /*active_models*/,
+    const std::vector<std::string>& /*inbound_signals*/,
     std::vector<std::string>& outbound_signals)
 {
-  elapsed_seconds += dt_seconds;
+  outbound_signals.push_back(signal_name);
 }
 
-bool BehaviorNodeWait::is_complete() const
+bool BehaviorNodeSendSignal::is_complete() const
 {
-  return elapsed_seconds > seconds;
+  return true;
 }

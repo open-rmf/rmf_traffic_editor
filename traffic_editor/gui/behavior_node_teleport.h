@@ -31,7 +31,9 @@ public:
 
   BehaviorNodeTeleport(const YAML::Node& y);
   ~BehaviorNodeTeleport();
-  virtual std::unique_ptr<BehaviorNode> clone() const override;
+
+  virtual std::unique_ptr<BehaviorNode> instantiate(
+      const YAML::Node& params) const override;
 
   virtual void print() const override;
 
@@ -39,7 +41,9 @@ public:
       const double dt_seconds,
       ModelState& state,
       Building& building,
-      const std::vector<std::unique_ptr<Model> >& active_models
+      const std::vector<std::unique_ptr<Model> >& active_models,
+      const std::vector<std::string>& inbound_signals,
+      std::vector<std::string>& outbound_signals
   ) override;
 
   bool is_complete() const override;

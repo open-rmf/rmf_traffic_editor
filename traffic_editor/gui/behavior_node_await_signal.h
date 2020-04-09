@@ -15,29 +15,25 @@
  *
 */
 
-#ifndef BEHAVIOR_NODE_H
-#define BEHAVIOR_NODE_H
+#ifndef BEHAVIOR_NODE_AWAIT_SIGNAL_H
+#define BEHAVIOR_NODE_AWAIT_SIGNAL_H
 
-#include <string>
+#include "behavior_node.h"
 #include <yaml-cpp/yaml.h>
-#include <vector>
 
-#include "model_state.h"
-#include "planner_node.h"
-
-class Building;
-class Model;
-
-class BehaviorNode
+class BehaviorNodeAwaitSignal : public BehaviorNode
 {
 public:
-  BehaviorNode();
-  virtual ~BehaviorNode();
+  std::string signal_name;
+  bool signal_received = false;
+
+  BehaviorNodeAwaitSignal(const YAML::Node& y);
+  ~BehaviorNodeAwaitSignal();
 
   virtual std::unique_ptr<BehaviorNode> instantiate(
-      const YAML::Node& params) const = 0;
+      const YAML::Node& params) const override;
 
-  virtual void print() const = 0;
+  virtual void print() const;
 
   virtual void tick(
       const double dt_seconds,
@@ -45,26 +41,10 @@ public:
       Building& building,
       const std::vector<std::unique_ptr<Model>>& active_models,
       const std::vector<std::string>& inbound_signals,
-      std::vector<std::string>& outbound_signals) = 0;
+      std::vector<std::string>& outbound_signals
+  ) override;
 
-  virtual bool is_complete() const = 0;
-
-  bool populate_model_state_from_vertex_name(
-      ModelState& state,
-      const std::string vertex_name,
-      Building& building);
-
-  bool populate_planner_node_from_vertex_name(
-      planner::Node& node,
-      const std::string vertex_name,
-      Building& building);
-
-  double angle_difference(const double a, const double b) const;
-  double angle_sum(const double a, const double b) const;
-
-  std::string interpolate_string_params(
-      const std::string& s,
-      const YAML::Node& params) const;
+  bool is_complete() const override;
 };
 
 #endif

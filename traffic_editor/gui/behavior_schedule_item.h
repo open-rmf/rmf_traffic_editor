@@ -28,6 +28,7 @@ public:
   bool started = false;
   std::string model_name;
   std::string behavior_name;
+  YAML::Node behavior_params;
 
   BehaviorScheduleItem() { }
   ~BehaviorScheduleItem() { }

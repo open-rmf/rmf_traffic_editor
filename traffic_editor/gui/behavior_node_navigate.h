@@ -34,10 +34,13 @@ public:
   bool destination_found = false;
   ModelState destination_state;
   std::vector<std::shared_ptr<planner::Node>> path;
+  int nav_graph_idx;
 
   BehaviorNodeNavigate(const YAML::Node& yaml_node);
   ~BehaviorNodeNavigate();
-  virtual std::unique_ptr<BehaviorNode> clone() const override;
+
+  virtual std::unique_ptr<BehaviorNode> instantiate(
+      const YAML::Node& params) const override;
 
   virtual void print() const override;
 
@@ -45,7 +48,9 @@ public:
       const double dt_seconds,
       ModelState& state,
       Building& building,
-      const std::vector<std::unique_ptr<Model> >& active_models
+      const std::vector<std::unique_ptr<Model> >& active_models,
+      const std::vector<std::string>& inbound_signals,
+      std::vector<std::string>& outbound_signals
   ) override;
 
   bool is_complete() const override;
