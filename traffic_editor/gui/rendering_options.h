@@ -15,27 +15,14 @@
  *
 */
 
-#include "sim_thread.h"
-#include <QTimer>
+#ifndef RENDERING_OPTIONS_H
+#define RENDERING_OPTIONS_H
 
-SimThread::SimThread()
-: QThread()
+class RenderingOptions
 {
-}
+public:
+  static const int NUM_BUILDING_LANES = 10;
+  std::array<bool, NUM_BUILDING_LANES> show_building_lanes;
+};
 
-SimThread::~SimThread()
-{
-}
-
-void SimThread::run()
-{
-  printf("entering SimThread::run()\n");
-  while (true)
-  {
-    msleep(1);
-    if (isInterruptionRequested())
-      break;
-    if (project && !project->sim_is_paused)
-      project->sim_tick();
-  }
-}
+#endif

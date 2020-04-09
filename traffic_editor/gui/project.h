@@ -24,6 +24,7 @@
 #include "scenario.h"
 #include "traffic_map.h"
 
+#include <array>
 #include <memory>
 #include <string>
 #include <vector>
@@ -119,6 +120,9 @@ public:
   // simulation stuff
   void sim_reset();
   void sim_tick();
+  bool sim_is_paused = true;
+
+  RenderingOptions rendering_options;
 
 private:
   bool load_yaml_file(const std::string& _filename);

@@ -2139,6 +2139,7 @@ void Editor::sim_reset()
 void Editor::sim_play_pause()
 {
   printf("sim_play_pause()\n");
+  project->sim_is_paused = !project->sim_is_paused;
 }
 
 void Editor::record_start_stop()
@@ -2155,7 +2156,7 @@ void Editor::record_frame_to_video()
   const int w = pixmap.size().width();
   const int h = pixmap.size().height();
   QImage image(pixmap.toImage());
-  int format = static_cast<int>(image.format());
+  // int format = static_cast<int>(image.format());
   cv::Mat mat(
       h,
       w,

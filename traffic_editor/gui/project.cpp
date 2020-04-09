@@ -30,6 +30,8 @@ using std::vector;
 
 Project::Project()
 {
+  for (size_t i = 0; i < rendering_options.show_building_lanes.size(); i++)
+    rendering_options.show_building_lanes[i] = true;
 }
 
 Project::~Project()
@@ -203,7 +205,7 @@ void Project::draw(
     return;
   }
 
-  building.levels[level_idx]->draw(scene, editor_models);
+  building.levels[level_idx]->draw(scene, editor_models, rendering_options);
   building.draw_lifts(scene, level_idx);
   
   if (scenario_idx >= 0)

@@ -363,8 +363,17 @@ void BuildingLevel::calculate_scale()
 }
 
 // todo: migrate this to the TrafficMap class eventually
-void BuildingLevel::draw_lane(QGraphicsScene *scene, const Edge &edge) const
+void BuildingLevel::draw_lane(
+    QGraphicsScene *scene,
+    const Edge &edge,
+    const RenderingOptions& opts) const
 {
+  const int graph_idx = edge.get_graph_idx();
+  if (graph_idx >= 0 &&
+      graph_idx < static_cast<int>(opts.show_building_lanes.size()) &&
+      !opts.show_building_lanes[graph_idx])
+    return;  // don't render this lane
+
   const auto &v_start = vertices[edge.start_idx];
   const auto &v_end = vertices[edge.end_idx];
   const double dx = v_end.x - v_start.x;
@@ -785,7 +794,8 @@ void BuildingLevel::clear_selection()
 
 void BuildingLevel::draw(
     QGraphicsScene *scene,
-    vector<EditorModel>& editor_models) const
+    vector<EditorModel>& editor_models,
+    const RenderingOptions& rendering_options) const
 {
   if (drawing_filename.size())
   {
@@ -830,7 +840,7 @@ void BuildingLevel::draw(
   {
     switch (edge.type)
     {
-      case Edge::LANE: draw_lane(scene, edge); break;
+      case Edge::LANE: draw_lane(scene, edge, rendering_options); break;
       case Edge::WALL: draw_wall(scene, edge); break;
       case Edge::MEAS: draw_meas(scene, edge); break;
       case Edge::DOOR: draw_door(scene, edge); break;

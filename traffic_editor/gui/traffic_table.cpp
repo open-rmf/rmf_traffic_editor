@@ -38,16 +38,45 @@ TrafficTable::~TrafficTable()
 
 void TrafficTable::update(std::shared_ptr<Project> project)
 {
-  blockSignals(true);
-  setRowCount(1 + project->traffic_maps.size());
+  RenderingOptions& opts = project->rendering_options;
 
+  const size_t num_internal_lanes = opts.show_building_lanes.size();
+
+  blockSignals(true);
+  setRowCount(
+      1 +
+      num_internal_lanes +
+      project->traffic_maps.size());
+
+  // first render the 10 "internal" traffic maps stored in the building yaml
+  for (size_t i = 0; i < num_internal_lanes; i++)
+  {
+    QCheckBox *checkbox = new QCheckBox;
+    checkbox->setChecked(opts.show_building_lanes[i]);
+    setCellWidget(i, 0, checkbox);
+    connect(
+        checkbox,
+        &QAbstractButton::clicked,
+        [this, project, i](bool box_checked)
+        {
+          project->rendering_options.show_building_lanes[i] = box_checked;
+          emit redraw();
+        });
+
+
+    QTableWidgetItem *name_item =
+        new QTableWidgetItem(QString("Graph %1").arg(i));
+    setItem(i, 1, name_item);
+  }
+
+  // now the "explicitly linked" external traffic maps
   for (size_t i = 0; i < project->traffic_maps.size(); i++)
   {
     const TrafficMap& traffic_map = project->traffic_maps[i];
 
     QCheckBox *checkbox = new QCheckBox;
     checkbox->setChecked(traffic_map.visible);
-    setCellWidget(i, 0, checkbox);
+    setCellWidget(num_internal_lanes + i, 0, checkbox);
     connect(
         checkbox,
         &QAbstractButton::clicked,
@@ -63,10 +92,10 @@ void TrafficTable::update(std::shared_ptr<Project> project)
     if (static_cast<int>(i) == project->traffic_map_idx)
       name_item->setBackground(QBrush(QColor("#e0ffe0")));
 
-    setItem(i, 1, name_item);
+    setItem(num_internal_lanes + i, 1, name_item);
 
     QPushButton *edit_button = new QPushButton("Edit...", this);
-    setCellWidget(i, 2, edit_button);
+    setCellWidget(num_internal_lanes + i, 2, edit_button);
     connect(
         edit_button,
         &QAbstractButton::clicked,
@@ -80,7 +109,9 @@ void TrafficTable::update(std::shared_ptr<Project> project)
   }
 
   // we'll use the last row for the "Add" button
-  const int last_row_idx = static_cast<int>(project->scenarios.size());
+  const int last_row_idx =
+      static_cast<int>(num_internal_lanes + project->traffic_maps.size());
+
   setCellWidget(last_row_idx, 0, nullptr);
   setCellWidget(last_row_idx, 1, nullptr);
   QPushButton *add_button = new QPushButton("Add...", this);

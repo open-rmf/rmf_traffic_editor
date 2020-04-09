@@ -29,6 +29,7 @@
 #include "memory.h"
 #include "model.h"
 #include "polygon.h"
+#include "rendering_options.h"
 #include "vertex.h"
 
 #include <QPixmap>
@@ -72,14 +73,19 @@ public:
 
   void draw(
       QGraphicsScene *scene,
-      std::vector<EditorModel>& editor_models) const;
+      std::vector<EditorModel>& editor_models,
+      const RenderingOptions& rendering_options) const;
 
   void clear_scene();
 
   bool load_drawing();
 
 private:
-  void draw_lane(QGraphicsScene *scene, const Edge &edge) const;
+  void draw_lane(
+      QGraphicsScene *scene,
+      const Edge &edge,
+      const RenderingOptions& rendering_options) const;
+
   void draw_wall(QGraphicsScene *scene, const Edge &edge) const;
   void draw_meas(QGraphicsScene *scene, const Edge &edge) const;
   void draw_door(QGraphicsScene *scene, const Edge &edge) const;
