@@ -34,7 +34,7 @@ void BehaviorNodeWait::print() const
 }
 
 std::unique_ptr<BehaviorNode> BehaviorNodeWait::instantiate(
-    const YAML::Node& params) const
+    const YAML::Node& /*params*/) const
 {
   return std::make_unique<BehaviorNodeWait>(*this);
 }
@@ -44,8 +44,8 @@ void BehaviorNodeWait::tick(
     ModelState& /*state*/,
     Building& /*building*/,
     const std::vector<std::unique_ptr<Model> >& /*active_models*/,
-    const std::vector<std::string>& inbound_signals,
-    std::vector<std::string>& outbound_signals)
+    const std::vector<std::string>& /*inbound_signals*/,
+    std::vector<std::string>& /*outbound_signals*/)
 {
   elapsed_seconds += dt_seconds;
 }

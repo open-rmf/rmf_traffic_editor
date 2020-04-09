@@ -16,7 +16,10 @@
 */
 
 #include "behavior_node_send_signal.h"
+
+using std::make_unique;
 using std::string;
+
 
 BehaviorNodeSendSignal::BehaviorNodeSendSignal(const YAML::Node& y)
 : BehaviorNode()
@@ -36,7 +39,9 @@ void BehaviorNodeSendSignal::print() const
 std::unique_ptr<BehaviorNode> BehaviorNodeSendSignal::instantiate(
     const YAML::Node& params) const
 {
-  return std::make_unique<BehaviorNodeSendSignal>(*this);
+  auto b = make_unique<BehaviorNodeSendSignal>(*this);
+  b->signal_name = interpolate_string_params(signal_name, params);
+  return b;
 }
 
 void BehaviorNodeSendSignal::tick(
