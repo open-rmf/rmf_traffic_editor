@@ -92,18 +92,19 @@ public:
 
   void init_ros_node(const rclcpp::Node::SharedPtr node);
 
-  bool update(const Eigen::Isometry3d& pose, const double time,
-    double& x_target, double& yaw_target);
+  std::pair<double, double> update(const Eigen::Isometry3d& pose,
+    const std::vector<Eigen::Vector3d>& obstacle_positions,
+    const double time);
 
-  bool emergency_stop(const std::vector<Eigen::Vector3d>& obstacle_positions);
+  bool emergency_stop(const std::vector<Eigen::Vector3d>& obstacle_positions,
+    const Eigen::Vector3d& current_heading);
 
   std::array<double, 2> calculate_control_signals(const std::array<double,
-    2>& w_tire_actual,
-    const double x_target,
-    const double yaw_target,
+    2>& w_tire,
+    const std::pair<double, double>& velocities,
     const double dt) const;
 
-  void publish_robot_state(const Eigen::Isometry3d& pose, const double time);
+  void publish_robot_state(const double time);
 
 private:
   // Constants for update rate of tf2 and robot_state topic
@@ -159,10 +160,12 @@ private:
     const Eigen::Vector3d& dpos,
     double* permissive = nullptr);
 
-  void publish_tf2(const Eigen::Isometry3d& pose, const rclcpp::Time& t);
+  void publish_tf2(const rclcpp::Time& t);
 
-  void publish_state_topic(const Eigen::Isometry3d& pose,
-    const rclcpp::Time& t);
+  void publish_state_topic(const rclcpp::Time& t);
+
+  bool path_request_valid(
+    const rmf_fleet_msgs::msg::PathRequest::SharedPtr msg);
 
   void path_request_cb(const rmf_fleet_msgs::msg::PathRequest::SharedPtr msg);
 

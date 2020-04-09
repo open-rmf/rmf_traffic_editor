@@ -2,8 +2,6 @@
 
 #include <ignition/gazebo/System.hh>
 #include <ignition/gazebo/Model.hh>
-#include <ignition/gazebo/components/JointAxis.hh>
-#include <ignition/gazebo/components/JointPosition.hh>
 #include <ignition/gazebo/components/JointVelocity.hh>
 #include <ignition/gazebo/components/JointVelocityCmd.hh>
 #include <ignition/gazebo/components/Model.hh>
@@ -12,24 +10,11 @@
 #include <ignition/gazebo/components/Static.hh>
 
 #include <rclcpp/rclcpp.hpp>
-#include <tf2_ros/transform_broadcaster.h>
-
-#include <memory>
-
-#include <rmf_fleet_msgs/msg/destination_request.hpp>
-#include <geometry_msgs/msg/transform_stamped.hpp>
-#include <rmf_fleet_msgs/msg/path_request.hpp>
-#include <rmf_fleet_msgs/msg/mode_request.hpp>
-#include <rmf_fleet_msgs/msg/robot_state.hpp>
-#include <rclcpp/logger.hpp>
 
 #include <building_sim_common/utils.hpp>
 #include <building_sim_common/slotcar_common.hpp>
 
-// TODO remove this
-using namespace ignition;
-using namespace gazebo;
-using namespace systems;
+using namespace ignition::gazebo;
 
 using namespace building_sim_common;
 
@@ -55,25 +40,21 @@ private:
   rclcpp::Node::SharedPtr _ros_node;
   Entity _entity;
 
-  // TODO check if Entity is OK here
   std::array<Entity, 2> joints;
   std::unique_ptr<rclcpp::executors::MultiThreadedExecutor> executor;
 
-  // TODO check
   std::unordered_set<Entity> _infrastructure;
 
-  void send_control_signals(
-    EntityComponentManager& ecm,
-    const double x_target,
-    const double yaw_target,
+  void send_control_signals(EntityComponentManager& ecm,
+    const std::pair<double, double>& velocities,
     const double dt)
   {
-    std::array<double, 2> w_tire_actual;
+    std::array<double, 2> w_tire;
     for (std::size_t i = 0; i < 2; ++i)
-      w_tire_actual[i] =
+      w_tire[i] =
         ecm.Component<components::JointVelocity>(joints[i])->Data()[0];
-    auto joint_signals = dataPtr->calculate_control_signals(w_tire_actual,
-        x_target, yaw_target, dt);
+    auto joint_signals = dataPtr->calculate_control_signals(w_tire,
+        velocities, dt);
     for (std::size_t i = 0; i < 2; ++i)
     {
       auto vel_cmd = ecm.Component<components::JointVelocityCmd>(joints[i]);
@@ -90,7 +71,7 @@ private:
 SlotcarPlugin::SlotcarPlugin()
 : dataPtr(std::make_unique<SlotcarCommon>())
 {
-  // We do initialization only during ::Load
+  // We do initialization only during ::Configure
 }
 
 SlotcarPlugin::~SlotcarPlugin()
@@ -182,7 +163,7 @@ std::vector<Eigen::Vector3d> SlotcarPlugin::get_obstacle_positions(
     {
       // Object should not be static
       // It should not be part of infrastructure (doors / lifts)
-      // And it should be closer than the "stop" range
+      // And it should be closer than the "stop" range (checked by common)
       const auto obstacle_position = pose->Data().Pos();
       if (is_static->Data() == false &&
       _infrastructure.find(entity) == _infrastructure.end())
@@ -201,34 +182,21 @@ void SlotcarPlugin::PreUpdate(const UpdateInfo& info,
   rclcpp::spin_some(_ros_node);
   if (_infrastructure.empty())
     init_infrastructure(ecm);
-  double x_target = 0.0;
-  double yaw_target = 0.0;
 
   double dt =
     (std::chrono::duration_cast<std::chrono::nanoseconds>(info.dt).count()) *
     1e-9;
-
   double time =
     (std::chrono::duration_cast<std::chrono::nanoseconds>(info.simTime).count())
     * 1e-9;
 
   auto pose = ecm.Component<components::Pose>(_entity)->Data();
-
-  // Will return false if there is no more waypoints
-  if (!dataPtr->update(convert_pose(pose), time, x_target, yaw_target))
-    return;
-
   auto obstacle_positions = get_obstacle_positions(ecm);
 
-  bool emergency_stop = dataPtr->emergency_stop(obstacle_positions);
+  auto velocities =
+    dataPtr->update(convert_pose(pose), obstacle_positions, time);
 
-  if (emergency_stop)
-  {
-    // Allow spinning but not translating
-    x_target = 0.0;
-  }
-
-  send_control_signals(ecm, x_target, yaw_target, dt);
+  send_control_signals(ecm, velocities, dt);
 }
 
 IGNITION_ADD_PLUGIN(
