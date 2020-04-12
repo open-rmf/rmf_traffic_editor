@@ -38,11 +38,13 @@ void BehaviorNodeAwaitSignal::print() const
 }
 
 std::unique_ptr<BehaviorNode> BehaviorNodeAwaitSignal::instantiate(
-      const YAML::Node& params) const
+      const YAML::Node& params,
+      const std::string& _model_name) const
 {
   std::unique_ptr<BehaviorNodeAwaitSignal> b =
       make_unique<BehaviorNodeAwaitSignal>(*this);
   b->signal_name = interpolate_string_params(signal_name, params);
+  b->model_name = _model_name;
   return b;
 }
 

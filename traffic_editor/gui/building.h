@@ -27,6 +27,7 @@ class QGraphicsScene;
 #include <vector>
 #include <yaml-cpp/yaml.h>
 
+#include <QGraphicsLineItem>
 #include <QPointF>
 
 #include "building_level.h"
@@ -162,6 +163,35 @@ public:
       const std::string& level_name);
 
   double level_meters_per_pixel(const std::string& level_name) const;
+
+  bool request_lane_edge(
+      const std::string& level_name,
+      const planner::Edge &edge,
+      const std::string& requester_name,
+      const bool remove_all_other_reservations);
+
+  void release_lane_edge(
+      const std::string& level_name,
+      const planner::Edge &edge,
+      const std::string& requester_name);
+
+  void release_all_lane_edges_for_model(
+      const std::string& requester_name);
+
+  struct EdgeReservation
+  {
+    std::string model_name;
+    std::string level_name;
+    planner::Edge edge;
+    QGraphicsLineItem *graphics_line = nullptr;
+  };
+  std::vector<EdgeReservation> active_edges;
+  std::vector<QGraphicsLineItem *> lines_to_remove;
+  std::mutex active_edges_mutex;
+
+  void draw_active_edges(
+    QGraphicsScene *scene,
+    const int level_idx);
 };
 
 #endif

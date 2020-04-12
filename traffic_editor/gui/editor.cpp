@@ -413,6 +413,7 @@ Editor::~Editor()
 void Editor::scene_update_timer_timeout()
 {
   project->draw_scenario_models(scene, level_idx, editor_models);
+  project->draw_active_lanes(scene, level_idx);
   record_frame_to_video();
 }
 

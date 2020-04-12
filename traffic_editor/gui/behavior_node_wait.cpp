@@ -34,9 +34,13 @@ void BehaviorNodeWait::print() const
 }
 
 std::unique_ptr<BehaviorNode> BehaviorNodeWait::instantiate(
-    const YAML::Node& /*params*/) const
+    const YAML::Node& /*params*/,
+    const std::string& _model_name) const
 {
-  return std::make_unique<BehaviorNodeWait>(*this);
+  auto n = std::make_unique<BehaviorNodeWait>(*this);
+  // copy constructor already copied the 'seconds' member variable for us.
+  n->model_name = _model_name;
+  return n;
 }
 
 void BehaviorNodeWait::tick(

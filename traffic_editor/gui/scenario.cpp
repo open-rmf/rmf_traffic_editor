@@ -279,7 +279,8 @@ void Scenario::start_behavior_schedule_item(
   std::unique_ptr<Behavior> model_behavior;
   for (const auto& behavior : behaviors)
     if (behavior->name == item.behavior_name)
-      model_behavior = std::move(behavior->instantiate(item.behavior_params));
+      model_behavior =
+          std::move(behavior->instantiate(item.behavior_params, item.model_name));
 
   if (!model_behavior)
   {

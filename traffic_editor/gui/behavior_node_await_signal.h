@@ -31,7 +31,8 @@ public:
   ~BehaviorNodeAwaitSignal();
 
   virtual std::unique_ptr<BehaviorNode> instantiate(
-      const YAML::Node& params) const override;
+      const YAML::Node& params,
+      const std::string& model_name) const override;
 
   virtual void print() const;
 

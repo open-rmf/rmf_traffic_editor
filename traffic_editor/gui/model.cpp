@@ -123,6 +123,7 @@ void Model::tick(
 void Model::set_behavior(std::unique_ptr<Behavior> _behavior)
 {
   behavior = std::move(_behavior);
+  behavior->model_name = model_name;
 }
 
 void Model::draw(
@@ -150,6 +151,7 @@ void Model::draw(
     pixmap_item = scene->addPixmap(pixmap);
     pixmap_item->setOffset(-pixmap.width()/2, -pixmap.height()/2);
     pixmap_item->setScale(model_meters_per_pixel / drawing_meters_per_pixel);
+    pixmap_item->setZValue(10.0);  // just anything taller than 0
   }
 
   pixmap_item->setPos(state.x, state.y);

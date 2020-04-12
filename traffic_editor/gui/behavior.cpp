@@ -106,12 +106,15 @@ void Behavior::tick(
     active_node_idx++;
 }
 
-std::unique_ptr<Behavior> Behavior::instantiate(const YAML::Node& params) const
+std::unique_ptr<Behavior> Behavior::instantiate(
+    const YAML::Node& params,
+    const std::string& _model_name) const
 {
   std::unique_ptr<Behavior> instantiated = std::make_unique<Behavior>();
   instantiated->name = name;
+  instantiated->model_name = _model_name;
   for (const auto& node : nodes)
-    instantiated->nodes.push_back(node->instantiate(params));
+    instantiated->nodes.push_back(node->instantiate(params, _model_name));
   return instantiated;
 }
 

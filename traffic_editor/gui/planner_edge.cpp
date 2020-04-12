@@ -19,8 +19,34 @@
 using planner::Edge;
 using planner::Node;
 
-Edge::Edge(std::shared_ptr<Node> _start, std::shared_ptr<Node> _end)
+Edge::Edge()
+{
+}
+
+Edge::Edge(
+    std::shared_ptr<Node> _start,
+    std::shared_ptr<Node> _end)
 : start(_start),
   end(_end)
 {
+}
+
+bool Edge::operator==(const Edge& rhs)
+{
+  // lots of opportunity to make this go faster, if it's ever the bottleneck.
+
+  const double thresh = 0.000001;  // just to deal with floating-point rounding
+
+  const double sdx = rhs.start->x - start->x;
+  const double sdy = rhs.start->y - start->y;
+  const double sdist = sqrt(sdx * sdx + sdy * sdy);
+
+  const double edx = rhs.end->x - end->x;
+  const double edy = rhs.end->y - end->y;
+  const double edist = sqrt(edx * edx + edy * edy);
+
+  if (sdist > thresh || edist > thresh)
+    return false;
+
+  return true;
 }

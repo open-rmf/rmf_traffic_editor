@@ -31,11 +31,14 @@ class Model;
 class BehaviorNode
 {
 public:
+  std::string model_name;
+
   BehaviorNode();
   virtual ~BehaviorNode();
 
   virtual std::unique_ptr<BehaviorNode> instantiate(
-      const YAML::Node& params) const = 0;
+      const YAML::Node& params,
+      const std::string& model_name) const = 0;
 
   virtual void print() const = 0;
 

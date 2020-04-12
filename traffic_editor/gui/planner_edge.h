@@ -30,7 +30,10 @@ public:
   std::shared_ptr<Node> end;
 
   // in the future we may add things like speed limits, etc.
+  Edge();
   Edge(std::shared_ptr<Node> _start, std::shared_ptr<Node> _end);
+
+  bool operator==(const Edge& rhs);
 };
 
 }  // namespace planner

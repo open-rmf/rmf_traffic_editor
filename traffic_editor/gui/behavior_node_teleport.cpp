@@ -36,10 +36,12 @@ void BehaviorNodeTeleport::print() const
 }
 
 std::unique_ptr<BehaviorNode> BehaviorNodeTeleport::instantiate(
-    const YAML::Node& params) const
+    const YAML::Node& params,
+    const std::string& _model_name) const
 {
   auto b = make_unique<BehaviorNodeTeleport>(*this);
   b->destination_name = interpolate_string_params(destination_name, params);
+  b->model_name = _model_name;
   return b;
 }
 

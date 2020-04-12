@@ -35,6 +35,7 @@ public:
   ~Behavior();
 
   std::string name;
+  std::string model_name;
 
   std::vector<std::unique_ptr<BehaviorNode> > nodes;
   int active_node_idx = 0;
@@ -49,7 +50,9 @@ public:
       const std::vector<std::string>& inbound_signals,
       std::vector<std::string>& outbound_signals);
 
-  std::unique_ptr<Behavior> instantiate(const YAML::Node& params) const;
+  std::unique_ptr<Behavior> instantiate(
+      const YAML::Node& params,
+      const std::string& model_name) const;
 
   bool is_completed();
 };

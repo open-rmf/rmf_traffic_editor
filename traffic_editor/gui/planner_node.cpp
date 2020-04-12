@@ -44,3 +44,15 @@ void Node::print(const std::string& prefix) const
       actual_cost,
       estimated_cost);
 }
+
+bool Node::operator==(const Node& rhs)
+{
+  // lots of opportunity to make this go faster, if it's ever the bottleneck.
+
+  const double dx = rhs.x - x;
+  const double dy = rhs.y - y;
+  const double dist = sqrt(dx * dx + dy * dy);
+
+  const double thresh = 0.000001;  // just to deal with floating-point rounding
+  return dist < thresh;
+}

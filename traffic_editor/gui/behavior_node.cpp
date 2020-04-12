@@ -147,7 +147,7 @@ string BehaviorNode::interpolate_string_params(
         }
         else
         {
-          printf("looking up param [%s]\n", param_name.c_str());
+          // printf("looking up param [%s]\n", param_name.c_str());
           out += params[param_name].as<string>();
         }
       }
@@ -155,6 +155,6 @@ string BehaviorNode::interpolate_string_params(
         param_name += in[i];
     }
   }
-  printf("%s => %s\n", in.c_str(), out.c_str());
+  // printf("%s => %s\n", in.c_str(), out.c_str());
   return out;
 }

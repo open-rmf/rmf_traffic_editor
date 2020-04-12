@@ -594,6 +594,12 @@ void Building::clear_scene()
 {
   for (auto& level : levels)
     level->clear_scene();
+
+  {
+    std::lock_guard<std::mutex> guard(active_edges_mutex);
+    for (auto& active_edge : active_edges)
+      active_edge.graphics_line = nullptr;
+  }
 }
 
 shared_ptr<planner::Graph> Building::planner_graph(
@@ -636,4 +642,200 @@ double Building::level_meters_per_pixel(const string& level_name) const
     if (level->name == level_name)
       return level->drawing_meters_per_pixel;
   return 0.05;  // just a somewhat sane default
+}
+
+bool Building::request_lane_edge(
+    const std::string& level_name,
+    const planner::Edge &edge,
+    const std::string& requester_name,
+    const bool remove_all_other_reservations)
+{
+  std::lock_guard<std::mutex> guard(active_edges_mutex);
+
+  /*
+  static int req_count = 0;
+  if (++req_count > 20)
+    exit(1);
+  */
+
+  /*
+  printf(
+      "REQUEST [%s]: (%.2f, %.2f)->(%.2f, %.2f)\n",
+      requester_name.c_str(),
+      edge.start->x,
+      edge.start->y,
+      edge.end->x,
+      edge.end->y);
+
+  for (const auto& e : active_edges)
+  {
+    printf("    %s: (%.2f, %.2f)->(%.2f, %.2f)\n",
+        e.model_name.c_str(),
+        e.edge.start->x,
+        e.edge.start->y,
+        e.edge.end->x,
+        e.edge.end->y);
+  }
+  */
+
+  for (auto it = active_edges.begin(); it != active_edges.end(); ++it)
+  {
+    if (it->level_name != level_name)
+      continue;
+
+    if (it->model_name == requester_name)
+      continue;  // don't be afraid of our own reservations...
+
+    if (it->edge == edge)
+      return false;
+
+    if (*(it->edge.start) == *(edge.start) ||
+        *(it->edge.start) == *(edge.end) ||
+        *(it->edge.end) == *(edge.start) ||
+        *(it->edge.end) == *(edge.end))
+      return false;
+  }
+
+  if (remove_all_other_reservations)
+  {
+    /*
+    active_edges.erase(
+        std::remove_if(
+            active_edges.begin(),
+            active_edges.end(),
+            [requester_name](const EdgeReservation& res)
+            { 
+              return res.model_name == requester_name;
+            }),
+        active_edges.end());
+    */
+    for (auto it = active_edges.begin(); it != active_edges.end(); )
+    {
+      if (it->model_name == requester_name)
+      {
+        if (it->graphics_line)
+          lines_to_remove.push_back(it->graphics_line);
+        it = active_edges.erase(it);
+      }
+      else
+        ++it;
+    }
+  }
+
+  EdgeReservation reservation;
+  reservation.level_name = level_name;
+  reservation.edge = edge;
+  reservation.model_name = requester_name;
+
+  active_edges.push_back(reservation);
+
+  // printf("  %zu active edges\n", active_edges.size());
+  // printf("after request: %zu active edges\n", active_edges.size());
+
+  return true;
+}
+
+void Building::release_lane_edge(
+    const std::string& level_name,
+    const planner::Edge &edge,
+    const std::string& requester_name)
+{
+  std::lock_guard<std::mutex> guard(active_edges_mutex);
+
+  if (!edge.start || !edge.end)
+    return;
+
+#if 0
+  printf(
+      "RELEASE [%s]: (%.2f, %.2f)->(%.2f, %.2f)\n",
+      requester_name.c_str(),
+      edge.start->x,
+      edge.start->y,
+      edge.end->x,
+      edge.end->y);
+
+  for (const auto& e : active_edges)
+  {
+    printf("    %s: (%.2f, %.2f)->(%.2f, %.2f)\n",
+        e.model_name.c_str(),
+        e.edge.start->x,
+        e.edge.start->y,
+        e.edge.end->x,
+        e.edge.end->y);
+  }
+#endif
+
+  for (auto it = active_edges.begin(); it != active_edges.end(); ++it)
+  {
+    if (it->model_name != requester_name)
+      continue;
+
+    if (it->level_name != level_name)
+      continue;
+
+    if (it->edge == edge)
+    {
+      if (it->graphics_line)
+        lines_to_remove.push_back(it->graphics_line);
+      active_edges.erase(it);
+      break;
+    }
+  }
+
+#if 0
+  if (found)
+    printf("  found edge! released it.\n");
+  else
+    printf("  couldn't find edge to release\n");
+
+  printf("after release: %zu active edges\n", active_edges.size());
+#endif
+}
+
+void Building::draw_active_edges(QGraphicsScene *scene, const int level_idx)
+{
+  const string& level_name = levels[level_idx]->name;
+
+  std::lock_guard<std::mutex> guard(active_edges_mutex);
+
+  for (QGraphicsLineItem* line_to_remove : lines_to_remove)
+    scene->removeItem(line_to_remove);
+  lines_to_remove.clear();
+
+  for (auto& active_edge : active_edges)
+  {
+    if (active_edge.graphics_line)
+      continue;
+
+    if (active_edge.level_name != level_name)
+      continue;
+
+    // todo: draw the actual line
+    const double scale = levels[level_idx]->drawing_meters_per_pixel;
+    active_edge.graphics_line = scene->addLine(
+        active_edge.edge.start->x / scale,
+        active_edge.edge.start->y / scale,
+        active_edge.edge.end->x / scale,
+        active_edge.edge.end->y / scale,
+        QPen(
+          QBrush(QColor::fromRgbF(1.0, 1.0, 0.0, 0.5)),
+          1.0 / scale,
+          Qt::SolidLine, Qt::RoundCap));
+      
+  }
+}
+
+void Building::release_all_lane_edges_for_model(
+    const std::string& requester_name)
+{
+  // DO NOT USE...
+  std::lock_guard<std::mutex> guard(active_edges_mutex);
+  active_edges.erase(
+      std::remove_if(
+          active_edges.begin(),
+          active_edges.end(),
+          [requester_name](const EdgeReservation& res)
+          { 
+            return res.model_name == requester_name;
+          }));
 }

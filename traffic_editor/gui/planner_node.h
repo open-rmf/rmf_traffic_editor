@@ -42,6 +42,8 @@ public:
   double distance(const Node& n) const;
 
   void print(const std::string& prefix) const;
+
+  bool operator==(const Node& rhs);
 };
 
 }  // namespace planner

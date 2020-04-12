@@ -26,6 +26,7 @@
 
 #include "behavior_node.h"
 #include "model_state.h"
+#include "planner_edge.h"
 
 class BehaviorNodeNavigate : public BehaviorNode
 {
@@ -35,18 +36,29 @@ public:
   ModelState destination_state;
   std::vector<std::shared_ptr<planner::Node>> path;
   int nav_graph_idx;
+  std::shared_ptr<planner::Node> previous_node;
+  planner::Edge previous_edge;
+  bool is_first_motion = true;
+
+  enum class ControllerState
+  {
+    NAVIGATING,
+    AWAITING_LANE
+  };
+  ControllerState controller_state = ControllerState::AWAITING_LANE;
 
   BehaviorNodeNavigate(const YAML::Node& yaml_node);
   ~BehaviorNodeNavigate();
 
   virtual std::unique_ptr<BehaviorNode> instantiate(
-      const YAML::Node& params) const override;
+      const YAML::Node& params,
+      const std::string& model_name) const override;
 
   virtual void print() const override;
 
   virtual void tick(
       const double dt_seconds,
-      ModelState& state,
+      ModelState& model_state,
       Building& building,
       const std::vector<std::unique_ptr<Model> >& active_models,
       const std::vector<std::string>& inbound_signals,

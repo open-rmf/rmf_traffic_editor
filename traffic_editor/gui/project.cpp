@@ -637,3 +637,10 @@ void Project::draw_scenario_models(
       building.levels[level_idx]->drawing_meters_per_pixel,
       editor_models);
 }
+
+void Project::draw_active_lanes(QGraphicsScene *scene, const int level_idx)
+{
+  if (building.levels.empty())
+    return;
+  building.draw_active_edges(scene, level_idx);
+}

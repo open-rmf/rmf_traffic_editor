@@ -37,10 +37,12 @@ void BehaviorNodeSendSignal::print() const
 }
 
 std::unique_ptr<BehaviorNode> BehaviorNodeSendSignal::instantiate(
-    const YAML::Node& params) const
+    const YAML::Node& params,
+    const std::string& _model_name) const
 {
   auto b = make_unique<BehaviorNodeSendSignal>(*this);
   b->signal_name = interpolate_string_params(signal_name, params);
+  b->model_name = _model_name;
   return b;
 }
 
