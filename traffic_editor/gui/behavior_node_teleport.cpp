@@ -24,6 +24,10 @@ BehaviorNodeTeleport::BehaviorNodeTeleport(const YAML::Node& y)
 : BehaviorNode()
 {
   destination_name = y[1].as<string>();
+  if (y.size() > 2)
+    model_to_teleport = y[2].as<string>();
+  else
+    model_to_teleport = model_name;
 }
 
 BehaviorNodeTeleport::~BehaviorNodeTeleport()
@@ -49,15 +53,28 @@ void BehaviorNodeTeleport::tick(
     const double /*dt_seconds*/,
     ModelState& state,
     Building& building,
-    const std::vector<std::unique_ptr<Model> >& /*active_models*/,
+    const std::vector<std::unique_ptr<Model>>& active_models,
     const std::vector<std::string>& /*inbound_signals*/,
     std::vector<std::string>& /*outbound_signals*/)
 {
-  populate_model_state_from_vertex_name(
+  if (model_to_teleport == model_name)
+  {
+    populate_model_state_from_vertex_name(
         destination_state,
         destination_name,
         building);
-  state = destination_state;
+    state = destination_state;
+  }
+  else
+  {
+    // try to find the model we're looking for in the active_models vector
+    for (auto& active_model : active_models)
+      if (active_model->instance_name == model_to_teleport)
+      {
+        active_model->state = destination_state;
+        break;
+      }
+  }
 }
 
 bool BehaviorNodeTeleport::is_complete() const

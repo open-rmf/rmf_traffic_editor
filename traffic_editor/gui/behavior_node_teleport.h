@@ -25,6 +25,7 @@
 class BehaviorNodeTeleport : public BehaviorNode
 {
 public:
+  std::string model_to_teleport;
   std::string destination_name;
   bool destination_found = false;
   ModelState destination_state;
