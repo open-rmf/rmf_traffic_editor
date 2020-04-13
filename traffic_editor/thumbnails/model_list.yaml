@@ -76,7 +76,6 @@ models:
 - OpScrubs
 - ParkingTrolleyMax
 - PatientWheelchair
-- PharmaTrolley
 - pine_tree
 - Pitti
 - postbox
@@ -153,3 +152,19 @@ models:
 - gazebo
 - construction_barrel
 - construction_cone
+- AnesthesiaMachine
+- BlanketTrolley
+- BloodPressureMonitor
+- CArm
+- InstrumentCart1
+- InstrumentCart2
+- OTEquipBlue
+- OTEquipOrange
+- OTEquipWhite
+- PharmaTrolley
+- ScrubsTrolley
+- SmallTrolley
+- SurgicalTrolley
+- SurgicalTrolleyGuards
+- XRayMachine
+- XRayMachineSmall
