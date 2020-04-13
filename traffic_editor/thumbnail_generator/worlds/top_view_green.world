@@ -1,0 +1,70 @@
+<sdf version='1.5'>
+  <world name='default'>
+    <scene>
+      <ambient>0.2 0.2 0.2 1</ambient>
+      <background>0 1 0 1</background>
+      <shadows>0</shadows>
+      <grid>0</grid>
+    </scene>
+    <!--
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+    -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <gui fullscreen='0'>
+      <camera name='user_camera'>
+        <pose>0 0 5 0 1.57 0</pose>
+        <view_controller>orbit</view_controller>
+      </camera>
+    </gui>
+
+    <model name='camera'>
+      <static>true</static>
+      <pose>0 0 200 0 1.5707963267949 0</pose>
+      <link name='link'>
+        <visual name='visual'>
+          <geometry><box><size>0.1 0.1 0.1</size></box></geometry>
+        </visual>
+        <sensor name='my_camera' type='camera'>
+          <always_on>1</always_on>
+          <update_rate>10</update_rate>
+          <visualize>true</visualize>
+          <camera>
+            <horizontal_fov>0.04</horizontal_fov>
+            <image>
+              <width>2000</width>
+              <height>2000</height>
+            </image>
+            <clip>
+              <near>100</near>
+              <far>1000</far>
+            </clip>
+            <lens>
+              <type>orthographic</type>
+              <scale_to_hfov>1</scale_to_hfov>
+            </lens>
+          </camera>
+          <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+            <robotNamespace>/</robotNamespace>
+            <alwaysOn>true</alwaysOn>
+            <updateRate>0.0</updateRate>
+            <cameraName>camera</cameraName>
+            <imageTopicName>image</imageTopicName>
+            <cameraInfoTopicName>camera_info</cameraInfoTopicName>
+            <frameName>link</frameName>
+            <hackBaseline>0.07</hackBaseline>
+            <distortionK1>0.0</distortionK1>
+            <distortionK2>0.0</distortionK2>
+            <distortionK3>0.0</distortionK3>
+            <distortionT1>0.0</distortionT1>
+            <distortionT2>0.0</distortionT2>
+          </plugin>
+        </sensor>
+      </link>
+    </model>
+  </world>
+</sdf>
