@@ -644,3 +644,11 @@ void Project::draw_active_lanes(QGraphicsScene *scene, const int level_idx)
     return;
   building.draw_active_edges(scene, level_idx);
 }
+
+void Project::add_lane(
+    const int level_idx,
+    const int start_idx,
+    const int end_idx)
+{
+  building.add_lane(level_idx, start_idx, end_idx, traffic_map_idx);
+}

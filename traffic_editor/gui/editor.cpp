@@ -137,6 +137,15 @@ Editor::Editor()
       &TableList::redraw,
       [this]() { this->create_scene(); });
 
+  connect(
+      traffic_table,
+      &QTableWidget::cellClicked,
+      [=](int row, int /*col*/)
+      {
+        project->traffic_map_idx = row;
+        traffic_table->update(project);
+      });
+
   scenario_table = new ScenarioTable;
   connect(
       scenario_table,
@@ -1598,11 +1607,19 @@ void Editor::mouse_add_edge(
       return;
     }
 
-    project->building.add_edge(
-        level_idx,
-        prev_clicked_idx,
-        clicked_idx,
-        edge_type);
+    if (edge_type != Edge::LANE)
+      project->building.add_edge(
+          level_idx,
+          prev_clicked_idx,
+          clicked_idx,
+          edge_type);
+    else
+    {
+      project->add_lane(
+          level_idx,
+          prev_clicked_idx,
+          clicked_idx);
+    }
 
     if (edge_type == Edge::DOOR || edge_type == Edge::MEAS)
     {
@@ -2010,13 +2027,23 @@ void Editor::mouse_edit_polygon(
 
 void Editor::number_key_pressed(const int n)
 {
+  bool found_edge = false;
   for (auto& edge : project->building.levels[level_idx]->edges)
   {
     if (edge.selected && edge.type == Edge::LANE)
+    {
       edge.set_graph_idx(n);
+      found_edge = true;
+    }
   }
-  create_scene();
-  update_property_editor();
+  if (found_edge)
+  {
+    create_scene();
+    update_property_editor();
+  }
+
+  project->traffic_map_idx = n;
+  traffic_table->update(project);
 }
 
 bool Editor::maybe_save()

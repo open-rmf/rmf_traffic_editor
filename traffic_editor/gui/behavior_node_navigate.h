@@ -37,7 +37,7 @@ public:
   std::vector<std::shared_ptr<planner::Node>> path;
   int nav_graph_idx;
   std::shared_ptr<planner::Node> previous_node;
-  planner::Edge previous_edge;
+  planner::Edge current_edge;
   bool is_first_motion = true;
 
   enum class ControllerState

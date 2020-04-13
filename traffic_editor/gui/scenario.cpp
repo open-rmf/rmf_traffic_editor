@@ -268,19 +268,25 @@ void Scenario::start_behavior_schedule_item(
     BehaviorScheduleItem& item,
     Building& building)
 {
+  /*
   printf(
       "Scenario::start_behavior_schedule_item(%s, %s)\n",
       item.model_name.c_str(),
       item.behavior_name.c_str());
+  */
+
   item.start_seconds = sim_time_seconds;
   item.started = true;
 
   // generate the behavior instance
   std::unique_ptr<Behavior> model_behavior;
   for (const auto& behavior : behaviors)
-    if (behavior->name == item.behavior_name)
-      model_behavior =
-          std::move(behavior->instantiate(item.behavior_params, item.model_name));
+  {
+    if (behavior->name != item.behavior_name)
+      continue;
+    model_behavior = std::move(
+        behavior->instantiate(item.behavior_params, item.model_name));
+  }
 
   if (!model_behavior)
   {

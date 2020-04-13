@@ -123,7 +123,7 @@ void Model::tick(
 void Model::set_behavior(std::unique_ptr<Behavior> _behavior)
 {
   behavior = std::move(_behavior);
-  behavior->model_name = model_name;
+  behavior->model_name = instance_name;
 }
 
 void Model::draw(

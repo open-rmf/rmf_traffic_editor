@@ -21,6 +21,7 @@
 #include "behavior_node_navigate.h"
 #include "behavior_node_send_signal.h"
 #include "behavior_node_await_signal.h"
+#include "building.h"
 
 using std::string;
 using std::unique_ptr;
@@ -103,7 +104,13 @@ void Behavior::tick(
       outbound_signals);
 
   if (nodes[active_node_idx]->is_complete())
+  {
     active_node_idx++;
+    // if this is the last node in this behavior,
+    // we can release all lane reservations
+    if (active_node_idx >= static_cast<int>(nodes.size()))
+      building.release_all_lane_edges_for_model(model_name);
+  }
 }
 
 std::unique_ptr<Behavior> Behavior::instantiate(

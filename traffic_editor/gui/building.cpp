@@ -311,6 +311,25 @@ void Building::add_edge(
       Edge(start_vertex_index, end_vertex_index, edge_type));
 }
 
+void Building::add_lane(
+      const int level_index,
+      const int start_vertex_index,
+      const int end_vertex_index,
+      const int graph_idx)
+{
+  if (level_index >= static_cast<int>(levels.size()))
+    return;
+
+  printf("Building::add_lane(%d, %d, %d, graph=%d)\n",
+      level_index,
+      start_vertex_index,
+      end_vertex_index,
+      graph_idx);
+  Edge e(start_vertex_index, end_vertex_index, Edge::LANE);
+  e.set_graph_idx(graph_idx);
+  levels[level_index]->edges.push_back(e);
+}
+
 bool Building::delete_selected(const int level_index)
 {
   if (level_index >= static_cast<int>(levels.size()))
@@ -689,26 +708,22 @@ bool Building::request_lane_edge(
     if (it->edge == edge)
       return false;
 
+    // if two edges end at the same location, that will be bad... let's not
+    // let that happen.
+    if (*(it->edge.end) == *(edge.end))
+      return false;
+
+   /*
     if (*(it->edge.start) == *(edge.start) ||
         *(it->edge.start) == *(edge.end) ||
         *(it->edge.end) == *(edge.start) ||
         *(it->edge.end) == *(edge.end))
       return false;
+    */
   }
 
   if (remove_all_other_reservations)
   {
-    /*
-    active_edges.erase(
-        std::remove_if(
-            active_edges.begin(),
-            active_edges.end(),
-            [requester_name](const EdgeReservation& res)
-            { 
-              return res.model_name == requester_name;
-            }),
-        active_edges.end());
-    */
     for (auto it = active_edges.begin(); it != active_edges.end(); )
     {
       if (it->model_name == requester_name)
@@ -821,21 +836,33 @@ void Building::draw_active_edges(QGraphicsScene *scene, const int level_idx)
           QBrush(QColor::fromRgbF(1.0, 1.0, 0.0, 0.5)),
           1.0 / scale,
           Qt::SolidLine, Qt::RoundCap));
-      
   }
 }
 
 void Building::release_all_lane_edges_for_model(
     const std::string& requester_name)
 {
-  // DO NOT USE...
+  printf("releasing all lane edges for [%s]\n", requester_name.c_str());
   std::lock_guard<std::mutex> guard(active_edges_mutex);
-  active_edges.erase(
-      std::remove_if(
-          active_edges.begin(),
-          active_edges.end(),
-          [requester_name](const EdgeReservation& res)
-          { 
-            return res.model_name == requester_name;
-          }));
+
+  for (auto it = active_edges.begin(); it != active_edges.end(); )
+  {
+    if (it->model_name == requester_name)
+    {
+      if (it->graphics_line)
+        lines_to_remove.push_back(it->graphics_line);
+      it = active_edges.erase(it);
+    }
+    else
+      ++it;
+  }
+}
+
+double Building::distance_to_nearest_model_on_path(
+      const std::string& /*model_name*/,
+      const ModelState& /*model_state*/,
+      const std::vector<std::shared_ptr<planner::Node>>& /*path*/)
+{
+  // todo, if this becomes necessary to allow much higher density
+  return 42;
 }

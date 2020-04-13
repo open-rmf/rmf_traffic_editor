@@ -114,14 +114,14 @@ void BehaviorNodeNavigate::tick(
           model_name,
           is_first_motion))
     {
-      controller_state = ControllerState::NAVIGATING;
-      is_first_motion = false;
-
       building.release_lane_edge(
           model_state.level_name,
-          previous_edge,
+          current_edge,
           model_name);
-      previous_edge = next_edge;
+
+      controller_state = ControllerState::NAVIGATING;
+      is_first_motion = false;
+      current_edge = next_edge;
     }
     else
       return;  // wait until next tick to request it again
@@ -150,6 +150,18 @@ void BehaviorNodeNavigate::tick(
 
   const double max_speed = 0.5;  // SI units = meters/sec
   double speed = max_speed * ((M_PI_2 - fabs(error_yaw)) / M_PI_2);
+
+#if 0
+  // reduce speed as needed to avoid rear-ender collisions
+  double dist_to_next_model = building.distance_to_nearest_model_on_path(
+      model_name,
+      model_state,
+      path);
+  printf(
+      "%s nearest model on path: %.2f\n",
+      model_name.c_str(),
+      dist_to_next_model);
+#endif
 
   if (error_yaw == backwards_yaw_error)
     speed *= -1;

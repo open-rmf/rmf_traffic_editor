@@ -46,7 +46,7 @@ public:
   std::vector<TrafficMap> traffic_maps;
 
   int scenario_idx = -1;  // the current scenario being viewed/edited
-  int traffic_map_idx = -1;  // the current traffic map being viewed/edited
+  int traffic_map_idx = 0;  // the current traffic map being viewed/edited
 
   /////////////////////////////////
   Project();
@@ -121,6 +121,11 @@ public:
 
   Polygon *get_selected_polygon(const EditorModeId mode, const int level_idx);
 
+  void add_lane(
+      const int level_idx,
+      const int start_idx,
+      const int end_idx);
+
   // simulation stuff
   void sim_reset();
   void sim_tick();
@@ -136,6 +141,7 @@ private:
       const int level_idx,
       QGraphicsLineItem *line_item,
       const EditorModeId mode);
+
 };
 
 #endif

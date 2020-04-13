@@ -33,6 +33,7 @@ class QGraphicsScene;
 #include "building_level.h"
 #include "lift.h"
 #include "planner_graph.h"
+#include "planner_node.h"
 
 
 class Building
@@ -91,6 +92,12 @@ public:
       const int start_idx,
       const int end_idx,
       const Edge::Type edge_type);
+
+  void add_lane(
+      const int level_idx,
+      const int start_idx,
+      const int end_idx,
+      const int graph_idx);
 
   void add_model(
       const int level_idx,
@@ -192,6 +199,11 @@ public:
   void draw_active_edges(
     QGraphicsScene *scene,
     const int level_idx);
+
+  double distance_to_nearest_model_on_path(
+      const std::string& model_name,
+      const ModelState& model_state,
+      const std::vector<std::shared_ptr<planner::Node>>& path);
 };
 
 #endif

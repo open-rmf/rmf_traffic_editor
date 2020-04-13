@@ -66,6 +66,10 @@ void TrafficTable::update(std::shared_ptr<Project> project)
 
     QTableWidgetItem *name_item =
         new QTableWidgetItem(QString("Graph %1").arg(i));
+
+    if (static_cast<int>(i) == project->traffic_map_idx)
+      name_item->setBackground(QBrush(QColor("#e0ffe0")));
+
     setItem(i, 1, name_item);
   }
 
@@ -88,10 +92,6 @@ void TrafficTable::update(std::shared_ptr<Project> project)
 
     QTableWidgetItem *name_item =
         new QTableWidgetItem(QString::fromStdString(traffic_map.name));
-
-    if (static_cast<int>(i) == project->traffic_map_idx)
-      name_item->setBackground(QBrush(QColor("#e0ffe0")));
-
     setItem(num_internal_lanes + i, 1, name_item);
 
     QPushButton *edit_button = new QPushButton("Edit...", this);
