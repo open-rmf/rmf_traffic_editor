@@ -31,6 +31,7 @@ add_executable(traffic-editor
   gui/behavior_node_navigate.cpp
   gui/behavior_node_send_signal.cpp
   gui/behavior_node_await_signal.cpp
+  gui/behavior_node_await_signals.cpp
   gui/behavior_node_teleport.cpp
   gui/behavior_node_wait.cpp
   gui/behavior_schedule_item.cpp

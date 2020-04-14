@@ -65,5 +65,5 @@ void BehaviorNodeAwaitSignal::tick(
 
 bool BehaviorNodeAwaitSignal::is_complete() const
 {
-  return signal_received;
+  return signal_name.empty() || signal_received;
 }

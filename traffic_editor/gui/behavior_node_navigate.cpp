@@ -65,6 +65,11 @@ void BehaviorNodeNavigate::tick(
 
   if (!destination_found)
   {
+    printf(
+        "planning path to [%s] on level [%s]\n",
+        destination_name.c_str(),
+        model_state.level_name.c_str());
+
     destination_found = true;
     populate_model_state_from_vertex_name(
         destination_state,

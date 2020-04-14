@@ -462,8 +462,18 @@ void Project::set_selected_line_item(
   // find if any of our lanes match those vertices
   for (auto& edge : building.levels[level_idx]->edges)
   {
-    if (mode == MODE_TRAFFIC && edge.type != Edge::LANE)
-      continue;
+    if (mode == MODE_TRAFFIC)
+    {
+      if (edge.type != Edge::LANE)
+        continue;
+      if (edge.get_graph_idx() != traffic_map_idx)
+      {
+        printf("ignoring edge with graph_idx=%d since traffic_map_idx=%d\n",
+            edge.get_graph_idx(),
+            traffic_map_idx);
+        continue;
+      }
+    }
     if (mode == MODE_BUILDING && edge.type == Edge::LANE)
       continue;
 

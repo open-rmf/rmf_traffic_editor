@@ -1779,7 +1779,8 @@ void Editor::mouse_rotate(
         model.state.y - r * sin(mouse_yaw));
 
     if (mouse_motion_model)
-      mouse_motion_model->setRotation(-mouse_yaw * 180.0 / M_PI);
+      mouse_motion_model->setRotation(
+          -(mouse_yaw + M_PI / 2.0) * 180.0 / M_PI);
   }
 }
 

@@ -21,6 +21,7 @@
 #include "behavior_node_navigate.h"
 #include "behavior_node_send_signal.h"
 #include "behavior_node_await_signal.h"
+#include "behavior_node_await_signals.h"
 #include "building.h"
 
 using std::string;
@@ -63,6 +64,8 @@ Behavior::Behavior(const string &_name, const YAML::Node& yaml)
       nodes.push_back(make_unique<BehaviorNodeSendSignal>(*it));
     else if (type_name == "await_signal")
       nodes.push_back(make_unique<BehaviorNodeAwaitSignal>(*it));
+    else if (type_name == "await_signals")
+      nodes.push_back(make_unique<BehaviorNodeAwaitSignals>(*it));
     else
     {
       printf(

@@ -24,8 +24,12 @@ BehaviorNodeTeleport::BehaviorNodeTeleport(const YAML::Node& y)
 : BehaviorNode()
 {
   destination_name = y[1].as<string>();
+
   if (y.size() > 2)
-    model_to_teleport = y[2].as<string>();
+    destination_yaw_str = y[2].as<string>();
+
+  if (y.size() > 3)
+    model_to_teleport = y[3].as<string>();
   else
     model_to_teleport = model_name;
 }
@@ -46,6 +50,15 @@ std::unique_ptr<BehaviorNode> BehaviorNodeTeleport::instantiate(
   auto b = make_unique<BehaviorNodeTeleport>(*this);
   b->destination_name = interpolate_string_params(destination_name, params);
   b->model_name = _model_name;
+
+  if (!destination_yaw_str.empty())
+  {
+    b->destination_yaw_str =
+        interpolate_string_params(destination_yaw_str, params);
+    printf("instantiated yaw str: [%s]\n", b->destination_yaw_str.c_str());
+    b->destination_yaw = std::stod(b->destination_yaw_str);
+  }
+
   return b;
 }
 
@@ -57,16 +70,21 @@ void BehaviorNodeTeleport::tick(
     const std::vector<std::string>& /*inbound_signals*/,
     std::vector<std::string>& /*outbound_signals*/)
 {
-  if (model_to_teleport == model_name)
-  {
-    populate_model_state_from_vertex_name(
-        destination_state,
-        destination_name,
-        building);
-    state = destination_state;
-  }
+  populate_model_state_from_vertex_name(
+      destination_state,
+      destination_name,
+      building);
+  destination_state.yaw = destination_yaw;
+
+  if (model_to_teleport.empty())
+    state = destination_state;  // teleport ourselves
   else
   {
+    printf(
+        "teleporting [%s] to [%s]\n",
+        model_to_teleport.c_str(),
+        destination_name.c_str());
+
     // try to find the model we're looking for in the active_models vector
     for (auto& active_model : active_models)
       if (active_model->instance_name == model_to_teleport)

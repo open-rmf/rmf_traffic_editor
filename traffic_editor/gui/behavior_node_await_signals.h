@@ -15,38 +15,35 @@
  *
 */
 
-#ifndef BEHAVIOR_NODE_TELEPORT_H
-#define BEHAVIOR_NODE_TELEPORT_H
+#ifndef BEHAVIOR_NODE_AWAIT_SIGNALS_H
+#define BEHAVIOR_NODE_AWAIT_SIGNALS_H
+
+#include "behavior_node.h"
+#include <yaml-cpp/yaml.h>
 
 #include <string>
-#include <yaml-cpp/yaml.h>
-#include "behavior_node.h"
+#include <vector>
 
-class BehaviorNodeTeleport : public BehaviorNode
+class BehaviorNodeAwaitSignals : public BehaviorNode
 {
 public:
-  std::string model_to_teleport;
-  std::string destination_name;
-  bool destination_found = false;
-  ModelState destination_state;
+  std::vector<std::string> signal_names;
+  std::vector<bool> signals_received;
 
-  std::string destination_yaw_str;
-  double destination_yaw = 0.0;
-
-  BehaviorNodeTeleport(const YAML::Node& y);
-  ~BehaviorNodeTeleport();
+  BehaviorNodeAwaitSignals(const YAML::Node& y);
+  ~BehaviorNodeAwaitSignals();
 
   virtual std::unique_ptr<BehaviorNode> instantiate(
       const YAML::Node& params,
       const std::string& model_name) const override;
 
-  virtual void print() const override;
+  virtual void print() const;
 
   virtual void tick(
       const double dt_seconds,
       ModelState& state,
       Building& building,
-      const std::vector<std::unique_ptr<Model> >& active_models,
+      const std::vector<std::unique_ptr<Model>>& active_models,
       const std::vector<std::string>& inbound_signals,
       std::vector<std::string>& outbound_signals
   ) override;

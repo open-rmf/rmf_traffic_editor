@@ -54,7 +54,8 @@ void BehaviorNodeSendSignal::tick(
     const std::vector<std::string>& /*inbound_signals*/,
     std::vector<std::string>& outbound_signals)
 {
-  outbound_signals.push_back(signal_name);
+  if (!signal_name.empty())
+    outbound_signals.push_back(signal_name);
 }
 
 bool BehaviorNodeSendSignal::is_complete() const
