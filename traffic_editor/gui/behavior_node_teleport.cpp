@@ -55,7 +55,6 @@ std::unique_ptr<BehaviorNode> BehaviorNodeTeleport::instantiate(
   {
     b->destination_yaw_str =
         interpolate_string_params(destination_yaw_str, params);
-    printf("instantiated yaw str: [%s]\n", b->destination_yaw_str.c_str());
     b->destination_yaw = std::stod(b->destination_yaw_str);
   }
 

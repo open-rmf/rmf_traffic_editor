@@ -215,6 +215,13 @@ void Scenario::sim_tick(Building& building)
 
   sim_time_seconds += dt;
 
+  static int count = 0;
+  if (++count % 1000 == 0)
+  {
+    printf("sim_time = %.2f\n", sim_time_seconds);
+  }
+
+
   behavior_signals = all_outbound_signals;  // save for next tick
 
   // now that we have computed all the states, copy them into the

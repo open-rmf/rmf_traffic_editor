@@ -101,6 +101,14 @@ void Model::set_param(const std::string &name, const std::string &value)
     else
       is_static = false;
   }
+  else if (name == "name")
+  {
+    instance_name = value;
+  }
+  else
+  {
+    printf("WARNING: setting unknown model parameter: [%s]\n", name.c_str());
+  }
 }
 
 void Model::tick(

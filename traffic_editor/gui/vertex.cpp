@@ -114,7 +114,8 @@ void Vertex::draw(
 
   if (!name.empty()) {
     QGraphicsSimpleTextItem *item = scene->addSimpleText(
-        QString::fromStdString(name));
+        QString::fromStdString(name),
+        QFont("Helvetica", 6));
     item->setBrush(selected ? selected_color : color);
     item->setPos(x, y + radius);
   }
