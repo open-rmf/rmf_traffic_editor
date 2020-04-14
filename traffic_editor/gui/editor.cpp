@@ -96,7 +96,7 @@ Editor::Editor()
               p_center_scene,
               row,
               p_transformed);
-          
+
           // maintain the view scale
           const double prev_scale = map_view->transform().m11();
 
@@ -524,6 +524,20 @@ bool Editor::load_project(const QString &filename)
 void Editor::restore_previous_viewport()
 {
   QSettings settings;
+
+  if (settings.contains(preferences_keys::level_name))
+  {
+    const std::string level_name =
+        settings.value(preferences_keys::level_name).toString().toStdString();
+    for (size_t i = 0; i < project->building.levels.size(); i++)
+      if (project->building.levels[i]->name == level_name)
+      {
+        level_idx = i;
+        create_scene();
+        level_table->setCurrentCell(i, 0);
+        break;
+      }
+  }
 
   double viewport_center_x =
       settings.contains(preferences_keys::viewport_center_x) ?
@@ -2105,6 +2119,11 @@ void Editor::closeEvent(QCloseEvent *event)
   settings.setValue(preferences_keys::viewport_center_x, p_center_scene.x());
   settings.setValue(preferences_keys::viewport_center_y, p_center_scene.y());
   settings.setValue(preferences_keys::viewport_scale, scale);
+
+  if (!project->building.levels.empty())
+    settings.setValue(
+        preferences_keys::level_name,
+        QString::fromStdString(project->building.levels[level_idx]->name));
 
   if (maybe_save())
     event->accept();
