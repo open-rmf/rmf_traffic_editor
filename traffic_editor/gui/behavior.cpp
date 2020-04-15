@@ -35,7 +35,7 @@ Behavior::Behavior()
 Behavior::Behavior(const string &_name, const YAML::Node& yaml)
 : name(_name)
 {
-  printf("Behavior::from_yaml(%s)\n", name.c_str());
+  // printf("Behavior::from_yaml(%s)\n", name.c_str());
 
   if (!yaml["sequence"].IsSequence())
   {
@@ -51,7 +51,7 @@ Behavior::Behavior(const string &_name, const YAML::Node& yaml)
       return;
     }
     string type_name = (*it)[0].as<string>();
-    printf("node type name: [%s]\n", type_name.c_str());
+    // printf("node type name: [%s]\n", type_name.c_str());
 
     // i'm sure there is some hyper-elite C++ way to avoid this "if" tree...
     if (type_name == "teleport")
