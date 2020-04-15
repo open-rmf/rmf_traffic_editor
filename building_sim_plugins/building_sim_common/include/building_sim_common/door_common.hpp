@@ -73,6 +73,8 @@ private:
   double _last_pub_time;
 
   bool _initialized = false;
+  bool _all_doors_open = false;
+  bool _add_doors_close = true;
 
   std::string _left_door_joint_name;
   std::string _right_door_joint_name;

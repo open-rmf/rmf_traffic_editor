@@ -177,7 +177,7 @@ public:
     _door_common = DoorCommon::make(
       _model.Name(ecm),
       _ros_node,
-      sdf);
+      sdfClone);
 
     if (!_door_common)
       return;
@@ -198,7 +198,7 @@ public:
         return;
       }
       _doors.emplace_back(_model.Name(ecm) == "chart_lift_door",
-        left_door_joint, ecm, params);
+        left_door_joint, ecm, _door_common->params());
     }
 
     if (right_door_joint_name != "empty_joint")
@@ -214,7 +214,7 @@ public:
         return;
       }
       _doors.emplace_back(_model.Name(ecm) == "chart_lift_door",
-        right_door_joint, ecm, params, true);
+        right_door_joint, ecm, _door_common->params(), true);
     }
 
     _initialized = true;
