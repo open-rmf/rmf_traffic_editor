@@ -81,6 +81,8 @@ models:
 - postbox
 - RoboGate
 - RobotPlaceholder
+- TeleportDispenser
+- TeleportIngestor
 - RoboWarningLight
 - Saeco
 - Scrubber
