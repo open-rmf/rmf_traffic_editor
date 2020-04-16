@@ -28,106 +28,6 @@ using namespace building_sim_common;
 namespace building_sim_ign {
 
 //==============================================================================
-class Door
-{
-public:
-
-  bool _debuggable;
-
-  Door(const bool debuggable,
-    const Entity& entity,
-    EntityComponentManager& ecm,
-    const MotionParams& params,
-    const bool flip_direction = false)
-  : _debuggable(debuggable),
-    _entity(entity),
-    _params(params)
-  {
-    // Create components for joint position, velocity and velocitycmd
-    if (!ecm.EntityHasComponentType(entity,
-      components::JointPosition().TypeId()))
-      ecm.CreateComponent(entity, components::JointPosition({0}));
-    if (!ecm.EntityHasComponentType(entity,
-      components::JointVelocity().TypeId()))
-      ecm.CreateComponent(entity, components::JointVelocity({0}));
-    if (!ecm.EntityHasComponentType(entity,
-      components::JointVelocityCmd().TypeId()))
-      ecm.CreateComponent(entity, components::JointVelocityCmd({0}));
-    auto axis = ecm.Component<components::JointAxis>(entity)->Data();
-    auto lower = axis.Lower();
-    auto upper = axis.Upper();
-    if (flip_direction)
-    {
-      _closed_position = lower;
-      _open_position = upper;
-    }
-    else
-    {
-      _closed_position = upper;
-      _open_position = lower;
-    }
-  }
-
-  bool is_open(EntityComponentManager& ecm) const
-  {
-    auto pos = _get_door_position(ecm);
-    return std::abs(_open_position - pos) <= _params.dx_min;
-  }
-
-  bool is_closed(EntityComponentManager& ecm) const
-  {
-    auto pos = _get_door_position(ecm);
-    return std::abs(_closed_position - pos) <= _params.dx_min;
-  }
-
-  void open(EntityComponentManager& ecm, double dt)
-  {
-    _set_door_command(ecm, _open_position, dt);
-  }
-
-  void close(EntityComponentManager& ecm, double dt)
-  {
-    _set_door_command(ecm, _closed_position, dt);
-  }
-
-
-private:
-
-  void _set_door_command(EntityComponentManager& ecm, const double target,
-    const double dt)
-  {
-    double dx = target - _get_door_position(ecm);
-    auto vel_cmd = ecm.Component<components::JointVelocityCmd>(_entity);
-
-    if (std::abs(dx) < _params.dx_min/2.0)
-      dx = 0.0;
-
-    const double door_v = compute_desired_rate_of_change(
-      dx, _get_door_velocity(ecm), _params, dt);
-
-    vel_cmd->Data()[0] = door_v;
-    // TODO f_max in the SDF file
-    //_joint->SetParam("fmax", 0, _params.f_max);
-  }
-
-  // TODO template these two functions
-  double _get_door_position(EntityComponentManager& ecm) const
-  {
-    return ecm.Component<components::JointPosition>(_entity)->Data()[0];
-  }
-
-  double _get_door_velocity(EntityComponentManager& ecm) const
-  {
-    return ecm.Component<components::JointVelocity>(_entity)->Data()[0];
-  }
-
-  Entity _entity;
-  MotionParams _params;
-
-  double _open_position;
-  double _closed_position;
-
-};
 
 class IGNITION_GAZEBO_VISIBLE DoorPlugin
   : public System,
@@ -137,17 +37,28 @@ class IGNITION_GAZEBO_VISIBLE DoorPlugin
 private:
   rclcpp::Node::SharedPtr _ros_node;
   Model _model;
+  std::shared_ptr<Entity> _left_door_joint = nullptr;
+  std::shared_ptr<Entity> _right_door_joint = nullptr;
+
   std::shared_ptr<DoorCommon> _door_common = nullptr;
-
-  std::vector<Door> _doors;
-
-  double _last_pub_time;
 
   bool _initialized = false;
 
+  void create_entity_components(Entity entity, EntityComponentManager& ecm)
+  {
+    if (!ecm.EntityHasComponentType(entity,
+      components::JointPosition().TypeId()))
+        ecm.CreateComponent(entity, components::JointPosition({0}));
+    if (!ecm.EntityHasComponentType(entity,
+      components::JointVelocity().TypeId()))
+        ecm.CreateComponent(entity, components::JointVelocity({0}));
+    if (!ecm.EntityHasComponentType(entity,
+      components::JointVelocityCmd().TypeId()))
+        ecm.CreateComponent(entity, components::JointVelocityCmd({0}));
+  }
+
 public:
   DoorPlugin()
-  : _last_pub_time(0)
   {
     // TODO init ros node
     // Do nothing
@@ -187,25 +98,28 @@ public:
 
     if (left_door_joint_name != "empty_joint")
     {
-      const auto left_door_joint =
-        _model.JointByName(ecm, left_door_joint_name);
-      if (!left_door_joint)
+      _left_door_joint = std::make_shared<Entity>(
+        _model.JointByName(ecm, left_door_joint_name));
+      if (!_left_door_joint)
       {
         RCLCPP_ERROR(
           _ros_node->get_logger(),
           " -- Model is missing the left door joint [%s]",
           left_door_joint_name.c_str());
         return;
-      }
-      _doors.emplace_back(_model.Name(ecm) == "chart_lift_door",
-        left_door_joint, ecm, _door_common->params());
+      }      
+      create_entity_components(*_left_door_joint, ecm);
+      auto axis = ecm.Component<components::JointAxis>(*_left_door_joint)->Data();
+      _door_common->add_left_door(_model.Name(ecm) == "chart_lift_door",
+        axis.Upper(), axis.Lower());
     }
 
     if (right_door_joint_name != "empty_joint")
     {
-      const auto right_door_joint = _model.JointByName(ecm,
-          right_door_joint_name);
-      if (!right_door_joint)
+      _right_door_joint = std::make_shared<Entity>(
+        _model.JointByName(ecm,
+        right_door_joint_name));
+      if (!_right_door_joint)
       {
         RCLCPP_ERROR(
           _ros_node->get_logger(),
@@ -213,8 +127,10 @@ public:
           right_door_joint_name.c_str());
         return;
       }
-      _doors.emplace_back(_model.Name(ecm) == "chart_lift_door",
-        right_door_joint, ecm, _door_common->params(), true);
+      create_entity_components(*_right_door_joint, ecm);
+      auto axis = ecm.Component<components::JointAxis>(*_right_door_joint)->Data();
+      _door_common->add_right_door(_model.Name(ecm) == "chart_lift_door",
+        axis.Upper(), axis.Lower());
     }
 
     _initialized = true;
@@ -231,71 +147,46 @@ public:
     rclcpp::spin_some(_ros_node);
     if (!_initialized)
       return;
-    double dt =
-      (std::chrono::duration_cast<std::chrono::nanoseconds>(info.dt).count())
-      * 1e-9;
 
     double t =
       (std::chrono::duration_cast<std::chrono::nanoseconds>(info.simTime).
       count()) * 1e-9;
 
-    if (_door_common->requested_mode().value == DoorMode::MODE_OPEN)
+    DoorCommon::DoorUpdateRequest request;
+    if (_left_door_joint)
     {
-      for (auto& door : _doors)
-        door.open(ecm, dt);
+      request.left_position = std::make_shared<double>(
+        ecm.Component<components::JointPosition>(
+          *_left_door_joint)->Data()[0]);
+      request.left_velocity = std::make_shared<double>(
+        ecm.Component<components::JointVelocity>(
+          *_left_door_joint)->Data()[0]);
     }
-    else
+    if (_right_door_joint)
     {
-      for (auto& door : _doors)
-        door.close(ecm, dt);
+      request.right_position = std::make_shared<double>(
+        ecm.Component<components::JointPosition>(
+          *_right_door_joint)->Data()[0]);
+      request.right_velocity = std::make_shared<double>(
+        ecm.Component<components::JointVelocity>(
+          *_right_door_joint)->Data()[0]);
     }
 
-    if (t - _last_pub_time >= 1.0)
-    {
-      _last_pub_time = t;
-      const int32_t t_sec = static_cast<int32_t>(t);
-      const uint32_t t_nsec =
-        static_cast<uint32_t>((t-static_cast<double>(t_sec)) *1e9);
-      const rclcpp::Time now{t_sec, t_nsec, RCL_ROS_TIME};
+    auto result = _door_common->update(t, request);
 
-      if (all_doors_open(ecm))
-      {
-        _door_common->publish_state(DoorMode::MODE_OPEN, now);
-      }
-      else if (all_doors_closed(ecm))
-      {
-        _door_common->publish_state(DoorMode::MODE_CLOSED, now);
-      }
-      else
-      {
-        _door_common->publish_state(DoorMode::MODE_MOVING, now);
-      }
+    // Apply motions to the joints
+    if (_left_door_joint)
+    {
+      auto vel_cmd = ecm.Component<components::JointVelocityCmd>(*_left_door_joint);
+      vel_cmd->Data()[0] = *result.left_velocity;
+    }
+    if (_right_door_joint)
+    {
+      auto vel_cmd = ecm.Component<components::JointVelocityCmd>(*_right_door_joint);
+      vel_cmd->Data()[0] = *result.right_velocity;
     }
   }
 
-private:
-
-  bool all_doors_open(EntityComponentManager& ecm) const
-  {
-    for (const auto& door : _doors)
-    {
-      if (!door.is_open(ecm))
-        return false;
-    }
-
-    return true;
-  }
-
-  bool all_doors_closed(EntityComponentManager& ecm) const
-  {
-    for (const auto& door : _doors)
-    {
-      if (!door.is_closed(ecm))
-        return false;
-    }
-
-    return true;
-  }
 };
 
 IGNITION_ADD_PLUGIN(

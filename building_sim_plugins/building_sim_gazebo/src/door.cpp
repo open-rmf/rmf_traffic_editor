@@ -18,20 +18,15 @@ class DoorPlugin : public gazebo::ModelPlugin
 private:
   gazebo::event::ConnectionPtr _update_connection;
   gazebo::physics::ModelPtr _model;
-  std::shared_ptr<DoorCommon> _door_common = nullptr;
-
-  double _last_update_time;
-  double _last_pub_time;
-
-  bool _initialized = false;
-
   gazebo::physics::JointPtr _left_door_joint = nullptr;
   gazebo::physics::JointPtr _right_door_joint = nullptr;
 
+  std::shared_ptr<DoorCommon> _door_common = nullptr;
+
+  bool _initialized = false;
+
 public:
   DoorPlugin()
-  : _last_update_time(0),
-    _last_pub_time(0)
   {
     // Do nothing
   }
@@ -125,7 +120,7 @@ private:
 
     auto result = _door_common->update(t, request);
 
-    // Apply motion of the joints
+    // Apply motions to the joints
     if (_left_door_joint)
     {
       _left_door_joint->SetParam("vel", 0, *result.left_velocity);
