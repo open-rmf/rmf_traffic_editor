@@ -613,6 +613,7 @@ void Project::sim_tick()
   if (scenario_idx < 0 || scenario_idx >= static_cast<int>(scenarios.size()))
     return;
   scenarios[scenario_idx]->sim_tick(building);
+  scenarios[scenario_idx]->sim_log(building);
 }
 
 void Project::sim_reset()
