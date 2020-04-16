@@ -22,6 +22,40 @@ class DoorCommon
 
 public:
 
+  struct DoorUpdateRequest
+  {
+    std::shared_ptr<double> left_position;
+    std::shared_ptr<double> left_velocity;
+    std::shared_ptr<double> right_position;
+    std::shared_ptr<double> right_velocity;
+
+    DoorUpdateRequest()
+    {
+      left_position = nullptr;
+      left_velocity = nullptr;
+      right_position = nullptr;
+      right_velocity = nullptr;
+    }
+    ~DoorUpdateRequest()
+    {}
+  };
+
+  struct DoorUpdateResult
+  {
+    std::shared_ptr<double> left_velocity;
+    std::shared_ptr<double> right_velocity;
+    std::shared_ptr<double> fmax;
+    
+    DoorUpdateResult()
+    {
+      left_velocity = nullptr;
+      right_velocity = nullptr;
+      fmax = nullptr;
+    }
+    ~DoorUpdateResult()
+    {}
+  };
+
   template<typename SdfPtrT>
   static std::shared_ptr<DoorCommon> make(
     const std::string& door_name,
@@ -52,7 +86,63 @@ public:
 
   MotionParams& params();
 
+  void add_left_door(
+    const bool debuggable,
+    const double upper_limit,
+    const double lower_limit);
+
+  void add_right_door(
+    const bool debuggable,
+    const double upper_limit,
+    const double lower_limit);
+
+  bool all_doors_open();
+
+  bool all_doors_closed();
+
+  double get_door_velocity(
+    const double target,
+    const double current_position,
+    const double current_velocity,
+    const double dt);
+
+  DoorUpdateResult update(const double time,
+    const DoorUpdateRequest request);
+
 private:
+
+  struct DoorElement
+  {
+    bool debuggable;
+    double closed_position;
+    double open_position;
+    double current_position;
+    double current_velocity;
+
+    DoorElement(
+      const bool debuggable_,
+      const double upper_limit,
+      const double lower_limit,
+      const bool flip_direction = false)
+    : debuggable(debuggable_)
+    {
+      if (flip_direction)
+      {
+        closed_position = lower_limit;
+        open_position = upper_limit;
+      }
+      else
+      {
+        closed_position = upper_limit;
+        open_position = lower_limit;
+      }
+
+      current_position = 0.0;
+      current_velocity = 0.0;
+    }
+  };
+
+  using Door = std::pair<std::string, std::shared_ptr<DoorElement>>;
 
   DoorCommon(const std::string& door_name,
     rclcpp::Node::SharedPtr node,
@@ -69,15 +159,15 @@ private:
 
   MotionParams _params;
 
-  double _last_update_time;
-  double _last_pub_time;
+  double _last_update_time = 0.0;
+  double _last_pub_time = 0.0;
 
   bool _initialized = false;
   bool _all_doors_open = false;
-  bool _add_doors_close = true;
+  bool _all_doors_closed = true;
 
-  std::string _left_door_joint_name;
-  std::string _right_door_joint_name;
+  Door _left_door;
+  Door _right_door;
 
   std::mutex _mutex;
 };
