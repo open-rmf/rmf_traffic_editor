@@ -1,13 +1,9 @@
 #include <gazebo/physics/World.hh>
 #include <gazebo/physics/Model.hh>
 #include <gazebo/physics/Joint.hh>
-#include <gazebo/physics/Link.hh>
 #include <gazebo_ros/node.hpp>
 
-#include <memory>
-
 #include <gazebo/common/Plugin.hh>
-#include <rclcpp/logger.hpp>
 
 #include <building_sim_common/utils.hpp>
 #include <building_sim_common/slotcar_common.hpp>
@@ -32,26 +28,25 @@ private:
   gazebo::physics::ModelPtr _model;
 
   std::array<gazebo::physics::JointPtr, 2> joints;
-  bool emergency_stop = false;
 
   std::unordered_set<gazebo::physics::Model*> infrastructure;
 
   // Book keeping
   double last_update_time = 0.0;
-  bool initialised = false;
 
   void init_infrastructure();
 
-  void send_control_signals(
-    const double x_target,
-    const double yaw_target,
+  std::vector<Eigen::Vector3d> get_obstacle_positions(
+    const gazebo::physics::WorldPtr& world);
+
+  void send_control_signals(const std::pair<double, double>& velocities,
     const double dt)
   {
-    std::array<double, 2> w_tire_actual;
+    std::array<double, 2> w_tire;
     for (std::size_t i = 0; i < 2; ++i)
-      w_tire_actual[i] = joints[i]->GetVelocity(0);
-    auto joint_signals = dataPtr->calculate_control_signals(w_tire_actual,
-        x_target, yaw_target, dt);
+      w_tire[i] = joints[i]->GetVelocity(0);
+    auto joint_signals = dataPtr->calculate_control_signals(w_tire,
+        velocities, dt);
     for (std::size_t i = 0; i < 2; ++i)
     {
       joints[i]->SetParam("vel", 0, joint_signals[i]);
@@ -103,77 +98,49 @@ void SlotcarPlugin::init_infrastructure()
   const auto& all_models = world->Models();
   for (const auto& m : all_models)
   {
-    if (m->IsStatic())
-      continue;
-
-    if (m->GetName().find("door") != std::string::npos)
-      infrastructure.insert(m.get());
-
-    if (m->GetName().find("lift") != std::string::npos)
+    // Object should not be static and part of infrastructure
+    if (m->IsStatic() == false &&
+      (m->GetName().find("door") != std::string::npos ||
+      m->GetName().find("lift") != std::string::npos))
       infrastructure.insert(m.get());
   }
+}
+
+std::vector<Eigen::Vector3d> SlotcarPlugin::get_obstacle_positions(
+  const gazebo::physics::WorldPtr& world)
+{
+  std::vector<Eigen::Vector3d> obstacle_positions;
+
+  for (const auto& m : world->Models())
+  {
+    // Object should not be static, not part of infrastructure
+    // and close than a threshold (checked by common function)
+    const auto p_obstacle = m->WorldPose().Pos();
+    if (m->IsStatic() == false &&
+      infrastructure.find(m.get()) == infrastructure.end())
+      obstacle_positions.push_back(convert_vec(p_obstacle));
+  }
+
+  return obstacle_positions;
 }
 
 void SlotcarPlugin::OnUpdate()
 {
   const auto& world = _model->GetWorld();
-  if (initialised == false)
-  {
+  if (infrastructure.empty())
     init_infrastructure();
-    initialised = true;
-  }
-  double x_target = 0.0;
-  double yaw_target = 0.0;
 
   const double time = world->SimTime().Double();
   const double dt = time - last_update_time;
   last_update_time = time;
 
-  ignition::math::Pose3d pose = _model->WorldPose();
-  // Will return false if there is no more waypoints
-  if (!dataPtr->update(convert_pose(pose), time, x_target, yaw_target))
-    return;
+  auto pose = _model->WorldPose();
+  auto obstacle_positions = get_obstacle_positions(world);
 
-  const double current_yaw = pose.Rot().Yaw();
-  ignition::math::Vector3d current_heading{
-    std::cos(current_yaw), std::sin(current_yaw), 0.0};
+  auto velocities =
+    dataPtr->update(convert_pose(pose), obstacle_positions, time);
 
-  const ignition::math::Vector3d stop_zone =
-    pose.Pos() + dataPtr->stop_distance()*current_heading;
-
-  bool need_to_stop = false;
-  for (const auto& m : world->Models())
-  {
-    if (m->IsStatic())
-      continue;
-
-    if (infrastructure.count(m.get()) > 0)
-      continue;
-
-    const auto p_obstacle = m->WorldPose().Pos();
-    if ( (p_obstacle - stop_zone).Length() < dataPtr->stop_radius() )
-    {
-      need_to_stop = true;
-      break;
-    }
-  }
-
-  if (need_to_stop != emergency_stop)
-  {
-    emergency_stop = need_to_stop;
-    if (need_to_stop)
-      std::cout << "Stopping vehicle to avoid a collision" << std::endl;
-    else
-      std::cout << "No more obstacles; resuming course" << std::endl;
-  }
-
-  if (emergency_stop)
-  {
-    // Allow spinning but not translating
-    x_target = 0.0;
-  }
-
-  send_control_signals(x_target, yaw_target, dt);
+  send_control_signals(velocities, dt);
 }
 
 GZ_REGISTER_MODEL_PLUGIN(SlotcarPlugin)
