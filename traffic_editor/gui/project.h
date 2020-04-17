@@ -18,8 +18,8 @@
 #ifndef PROJECT_H
 #define PROJECT_H
 
-#include "building.h"
-#include "editor_model.h"
+#include "traffic_editor/building.h"
+#include "traffic_editor/editor_model.h"
 #include "editor_mode_id.h"
 #include "scenario.h"
 #include "traffic_map.h"

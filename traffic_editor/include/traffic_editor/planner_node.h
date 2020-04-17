@@ -20,7 +20,7 @@
 
 #include <memory>
 #include <vector>
-#include "vertex.h"
+#include "traffic_editor/vertex.h"
 
 namespace planner {
 

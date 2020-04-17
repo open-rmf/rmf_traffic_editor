@@ -15,8 +15,8 @@
  *
 */
 
-#include "behavior_node_navigate.h"
-#include "building.h"
+#include "traffic_editor/behavior_node_navigate.h"
+#include "traffic_editor/building.h"
 
 using std::string;
 using std::shared_ptr;

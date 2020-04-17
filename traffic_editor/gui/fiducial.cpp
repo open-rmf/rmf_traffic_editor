@@ -18,7 +18,7 @@
 #include <QGraphicsScene>
 #include <QGraphicsSimpleTextItem>
 
-#include "fiducial.h"
+#include "traffic_editor/fiducial.h"
 using std::string;
 
 Fiducial::Fiducial()

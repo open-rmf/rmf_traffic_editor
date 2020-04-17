@@ -15,10 +15,12 @@
  *
 */
 
-#include "behavior_node_teleport.h"
-#include "building.h"
+#include "traffic_editor/behavior_node_teleport.h"
+#include "traffic_editor/building.h"
+
 using std::string;
 using std::make_unique;
+
 
 BehaviorNodeTeleport::BehaviorNodeTeleport(const YAML::Node& y)
 : BehaviorNode()

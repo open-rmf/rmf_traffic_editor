@@ -15,7 +15,7 @@
  *
 */
 
-#include "planner_node.h"
+#include "traffic_editor/planner_node.h"
 using planner::Node;
 
 Node::Node()

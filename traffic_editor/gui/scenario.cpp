@@ -16,6 +16,7 @@
 */
 
 #include <fstream>
+#include <ignition/common/SystemPaths.hh>
 
 #include "scenario.h"
 #include "yaml_utils.h"
@@ -59,6 +60,48 @@ bool Scenario::load()
       l.from_yaml(it->first.as<string>(), it->second);
       levels.push_back(l);
     }
+  }
+
+  if (yaml["plugin_name"])
+  {
+    string plugin_path = yaml["plugin_path"].as<string>();
+    ignition::common::SystemPaths paths;
+    paths.AddPluginPaths(plugin_path);
+
+    const string plugin_name = yaml["plugin_name"].as<string>();
+    std::string lib_path = paths.FindSharedLibrary(plugin_name);
+    printf("FindSharedLibrary returned [%s]\n", lib_path.c_str());
+
+    ignition::plugin::Loader loader;
+    std::unordered_set<string> plugin_libs = loader.LoadLib(lib_path);
+    std::unordered_set<string> sim_libs =
+        loader.PluginsImplementing("Simulation");
+
+    for (const auto& s : plugin_libs)
+      printf("  found plugin library: [%s]\n", s.c_str());
+
+    for (const auto& s : sim_libs)
+      printf("  found simulation library: [%s]\n", s.c_str());
+
+    for (const std::string& plugin_class_name : plugin_libs)
+    {
+      if (sim_libs.find(plugin_class_name) != sim_libs.end())
+      {
+        printf(
+            "trying to instantiate [%s] from library [%s]...\n",
+            plugin_class_name.c_str(),
+            plugin_name.c_str());
+        sim_plugin = loader.Instantiate(plugin_class_name);
+
+        if (sim_plugin.IsEmpty())
+          printf("simulation plugin instantiation failed :(\n");
+        else
+          printf("success! created a simulation plugin instance!\n");
+
+        break;
+      }
+    }
+
   }
 
   behaviors.clear();
@@ -184,6 +227,13 @@ bool Scenario::delete_selected(const std::string& level_name)
 
 void Scenario::sim_tick(Building& building)
 {
+  if (!sim_plugin.IsEmpty())
+  {
+    Simulation *sim = sim_plugin->QueryInterface<Simulation>();
+    if (sim)
+      sim->tick(building);
+  }
+
   sim_tick_counter++;
 
   // see if we need to start any new model behaviors
@@ -256,6 +306,13 @@ void Scenario::sim_tick(Building& building)
 
 void Scenario::sim_reset(Building& building)
 {
+  if (!sim_plugin.IsEmpty())
+  {
+    Simulation *sim = sim_plugin->QueryInterface<Simulation>();
+    if (sim)
+      sim->reset(building);
+  }
+
   sim_time_seconds = 0.0;
   sim_tick_counter = 0;
 

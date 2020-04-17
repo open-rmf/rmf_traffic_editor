@@ -15,7 +15,7 @@
  *
 */
 
-#include "behavior_node_send_signal.h"
+#include "traffic_editor/behavior_node_send_signal.h"
 
 using std::make_unique;
 using std::string;

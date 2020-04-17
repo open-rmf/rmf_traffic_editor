@@ -18,14 +18,16 @@
 #ifndef SCENARIO_H
 #define SCENARIO_H
 
-#include "behavior.h"
-#include "behavior_schedule_item.h"
-#include "building.h"
-#include "editor_model.h"
-#include "model.h"
+#include "traffic_editor/behavior.h"
+#include "traffic_editor/behavior_schedule_item.h"
+#include "traffic_editor/building.h"
+#include "traffic_editor/editor_model.h"
+#include "traffic_editor/model.h"
 #include "scenario_level.h"
-#include "vertex.h"
+#include "traffic_editor/vertex.h"
+#include "plugins/simulation.h"
 
+#include <ignition/plugin/SpecializedPluginPtr.hh>
 #include <ignition/plugin/Loader.hh>
 
 #include <map>
@@ -94,6 +96,8 @@ public:
       Building& building);
 
   std::vector<std::string> behavior_signals;
+
+  ignition::plugin::SpecializedPluginPtr<Simulation> sim_plugin;
 };
 
 #endif

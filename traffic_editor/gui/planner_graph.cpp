@@ -17,7 +17,7 @@
 
 #include <algorithm>
 #include <vector>
-#include "planner_graph.h"
+#include "traffic_editor/planner_graph.h"
 using planner::Graph;
 using std::make_shared;
 using std::shared_ptr;

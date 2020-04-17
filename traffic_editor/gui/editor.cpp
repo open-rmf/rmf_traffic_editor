@@ -2182,7 +2182,8 @@ void Editor::update_tables()
 
 void Editor::sim_reset()
 {
-  printf("sim_reset()\n");
+  printf("TODO: sim_reset()\n");
+  // todo: signal to the sim thread to reset the project
 }
 
 void Editor::sim_play_pause()

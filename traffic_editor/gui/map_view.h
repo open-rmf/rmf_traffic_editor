@@ -21,7 +21,7 @@
 #include <QGraphicsView>
 #include <QWheelEvent>
 
-#include "building.h"
+#include "traffic_editor/building.h"
 
 
 class MapView : public QGraphicsView

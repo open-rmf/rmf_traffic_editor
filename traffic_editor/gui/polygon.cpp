@@ -15,7 +15,7 @@
  *
 */
 
-#include "polygon.h"
+#include "traffic_editor/polygon.h"
 using std::string;
 using std::vector;
 

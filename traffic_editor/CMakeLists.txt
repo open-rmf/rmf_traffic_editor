@@ -7,6 +7,7 @@ endif()
 project(traffic_editor)
 
 find_package(yaml-cpp REQUIRED)
+find_package(ament_cmake REQUIRED)
 
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
@@ -24,6 +25,10 @@ find_package(Qt5 COMPONENTS Widgets Concurrent REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(ignition-plugin1 REQUIRED COMPONENTS all)
 find_package(ignition-common3 REQUIRED)
+
+include_directories(.)
+include_directories(gui)
+include_directories(include)
 
 add_executable(traffic-editor
   gui/add_param_dialog.cpp
@@ -84,6 +89,7 @@ target_link_libraries(traffic-editor
   Qt5::Concurrent
   ignition-plugin1::core
   ignition-plugin1::loader
+  ignition-common3::core
   yaml-cpp
   ${OpenCV_LIBS})
 
@@ -92,3 +98,20 @@ install(
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
 )
+
+install(
+  DIRECTORY
+    plugins
+  DESTINATION
+    include/traffic_editor)
+
+install(
+  DIRECTORY
+    include/traffic_editor
+  DESTINATION
+    include)
+
+
+ament_export_include_directories(include)
+
+ament_package()

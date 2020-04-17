@@ -15,40 +15,18 @@
  *
 */
 
-#ifndef PLANNER_GRAPH_H
-#define PLANNER_GRAPH_H
+#ifndef PLUGINS_SIMULATION_H
+#define PLUGINS_SIMULATION_H
 
-#include <memory>
-#include <vector>
+#include "traffic_editor/building.h"
 
-#include "planner_edge.h"
-#include "planner_node.h"
-#include "vertex.h"
-
-namespace planner {
-
-class Graph
+class Simulation
 {
 public:
-  std::vector<std::shared_ptr<Node>> nodes;
-  std::vector<std::shared_ptr<Edge>> edges;
+  virtual ~Simulation() = default;
 
-  void add_edge(const Vertex& start, const Vertex& end);
-
-  int node_idx(const Node& n);
-
-  void scale_all_nodes(const double scale_factor);
-
-  void print() const;
-
-  std::vector<std::shared_ptr<Node>> plan_path(
-      const Node& start,
-      const Node& goal);
-
-  std::shared_ptr<Node> nearest_node(const double x, const double y);
+  virtual void tick(Building& building) = 0;
+  virtual void reset(Building& building) = 0;
 };
 
-}  // namespace planner
-
 #endif
-

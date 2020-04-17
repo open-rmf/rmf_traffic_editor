@@ -20,7 +20,7 @@
 #include <QGraphicsScene>
 #include <QGraphicsSimpleTextItem>
 
-#include "lift.h"
+#include "traffic_editor/lift.h"
 using std::string;
 
 

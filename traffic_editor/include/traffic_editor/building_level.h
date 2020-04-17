@@ -18,19 +18,19 @@
 #ifndef BUILDING_LEVEL_H
 #define BUILDING_LEVEL_H
 
-#include "level.h"
+#include "traffic_editor/level.h"
 
 #include <yaml-cpp/yaml.h>
 #include <string>
+#include <memory>
 
-#include "edge.h"
-#include "fiducial.h"
-#include "layer.h"
-#include "memory.h"
-#include "model.h"
-#include "polygon.h"
-#include "rendering_options.h"
-#include "vertex.h"
+#include "traffic_editor/edge.h"
+#include "traffic_editor/fiducial.h"
+#include "traffic_editor/layer.h"
+#include "traffic_editor/model.h"
+#include "traffic_editor/polygon.h"
+#include "traffic_editor/rendering_options.h"
+#include "traffic_editor/vertex.h"
 
 #include <QPixmap>
 #include <QPainterPath>

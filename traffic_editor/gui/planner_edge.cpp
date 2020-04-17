@@ -15,7 +15,7 @@
  *
 */
 
-#include "planner_edge.h"
+#include "traffic_editor/planner_edge.h"
 using planner::Edge;
 using planner::Node;
 

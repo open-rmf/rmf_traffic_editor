@@ -15,7 +15,7 @@
  *
 */
 
-#include "behavior_node_wait.h"
+#include "traffic_editor/behavior_node_wait.h"
 using std::string;
 
 BehaviorNodeWait::BehaviorNodeWait(const YAML::Node& y)

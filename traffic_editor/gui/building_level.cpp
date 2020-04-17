@@ -24,7 +24,7 @@
 #include <QImage>
 #include <QImageReader>
 
-#include "building_level.h"
+#include "traffic_editor/building_level.h"
 using std::string;
 using std::vector;
 

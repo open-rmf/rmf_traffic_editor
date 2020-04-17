@@ -27,7 +27,7 @@
 #include <QtConcurrent/QtConcurrent>
 #include <QElapsedTimer>
 
-#include "building.h"
+#include "traffic_editor/building.h"
 #include "yaml_utils.h"
 
 using std::string;

@@ -15,14 +15,14 @@
  *
 */
 
-#include "behavior.h"
-#include "behavior_node_teleport.h"
-#include "behavior_node_wait.h"
-#include "behavior_node_navigate.h"
-#include "behavior_node_send_signal.h"
-#include "behavior_node_await_signal.h"
-#include "behavior_node_await_signals.h"
-#include "building.h"
+#include "traffic_editor/behavior.h"
+#include "traffic_editor/behavior_node_teleport.h"
+#include "traffic_editor/behavior_node_wait.h"
+#include "traffic_editor/behavior_node_navigate.h"
+#include "traffic_editor/behavior_node_send_signal.h"
+#include "traffic_editor/behavior_node_await_signal.h"
+#include "traffic_editor/behavior_node_await_signals.h"
+#include "traffic_editor/building.h"
 
 using std::string;
 using std::unique_ptr;

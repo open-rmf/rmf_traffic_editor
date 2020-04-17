@@ -15,7 +15,7 @@
  *
 */
 
-#include "behavior_schedule_item.h"
+#include "traffic_editor/behavior_schedule_item.h"
 using std::string;
 
 bool BehaviorScheduleItem::from_yaml(const YAML::Node& y)

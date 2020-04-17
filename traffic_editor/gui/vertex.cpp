@@ -18,7 +18,7 @@
 #include <QGraphicsScene>
 #include <QGraphicsSimpleTextItem>
 
-#include "vertex.h"
+#include "traffic_editor/vertex.h"
 using std::string;
 using std::vector;
 using std::pair;

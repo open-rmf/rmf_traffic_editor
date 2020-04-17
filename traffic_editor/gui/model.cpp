@@ -19,7 +19,7 @@
 #include <QGraphicsPixmapItem>
 #include <QGraphicsColorizeEffect>
 
-#include "model.h"
+#include "traffic_editor/model.h"
 using std::string;
 
 

@@ -16,7 +16,7 @@
 */
 
 #include <algorithm>
-#include "behavior_node_await_signals.h"
+#include "traffic_editor/behavior_node_await_signals.h"
 
 using std::string;
 using std::make_unique;

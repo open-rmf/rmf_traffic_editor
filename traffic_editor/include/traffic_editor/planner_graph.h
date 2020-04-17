@@ -15,26 +15,40 @@
  *
 */
 
-#ifndef BUILDING_LEVEL_TABLE_H
-#define BUILDING_LEVEL_TABLE_H
+#ifndef PLANNER_GRAPH_H
+#define PLANNER_GRAPH_H
 
-#include <QTableWidget>
+#include <memory>
+#include <vector>
 
-#include "table_list.h"
-#include "traffic_editor/building.h"
+#include "planner_edge.h"
+#include "planner_node.h"
+#include "traffic_editor/vertex.h"
 
-class BuildingLevelTable : public TableList
+namespace planner {
+
+class Graph
 {
-  Q_OBJECT
-
 public:
-  BuildingLevelTable();
-  ~BuildingLevelTable();
+  std::vector<std::shared_ptr<Node>> nodes;
+  std::vector<std::shared_ptr<Edge>> edges;
 
-  void update(Building& building);
+  void add_edge(const Vertex& start, const Vertex& end);
 
-signals:
-  void redraw_scene();
+  int node_idx(const Node& n);
+
+  void scale_all_nodes(const double scale_factor);
+
+  void print() const;
+
+  std::vector<std::shared_ptr<Node>> plan_path(
+      const Node& start,
+      const Node& goal);
+
+  std::shared_ptr<Node> nearest_node(const double x, const double y);
 };
 
+}  // namespace planner
+
 #endif
+

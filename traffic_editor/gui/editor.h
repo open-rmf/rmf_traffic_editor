@@ -32,7 +32,7 @@
 #include <QSettings>
 
 #include "project.h"
-#include "editor_model.h"
+#include "traffic_editor/editor_model.h"
 #include "editor_mode_id.h"
 #include "sim_thread.h"
 

@@ -16,8 +16,8 @@
 */
 
 #include <cmath>
-#include "behavior_node.h"
-#include "building.h"
+#include "traffic_editor/behavior_node.h"
+#include "traffic_editor/building.h"
 using std::string;
 
 BehaviorNode::BehaviorNode()
