@@ -94,10 +94,20 @@ bool Scenario::load()
         sim_plugin = loader.Instantiate(plugin_class_name);
 
         if (sim_plugin.IsEmpty())
+        {
           printf("simulation plugin instantiation failed :(\n");
-        else
-          printf("success! created a simulation plugin instance!\n");
+          break;
+        }
 
+        printf("success! created a simulation plugin instance!\n");
+        Simulation *sim = sim_plugin->QueryInterface<Simulation>();
+        if (!sim)
+        {
+          printf("woah! couldn't get interface to plugin!\n");
+          break;
+        }
+
+        sim->load(yaml["plugin_config"]);
         break;
       }
     }

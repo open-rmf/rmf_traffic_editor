@@ -25,6 +25,7 @@ class Simulation
 public:
   virtual ~Simulation() = default;
 
+  virtual void load(const YAML::Node& config_data) = 0;
   virtual void tick(Building& building) = 0;
   virtual void reset(Building& building) = 0;
 };
