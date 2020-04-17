@@ -1178,7 +1178,8 @@ void Editor::populate_property_editor(const Model& model)
   property_editor_set_row(
       0,
       "name",
-      QString::fromStdString(model.instance_name));
+      QString::fromStdString(model.instance_name),
+      true);
 
   property_editor_set_row(
       1,

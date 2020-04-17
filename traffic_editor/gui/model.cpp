@@ -96,4 +96,8 @@ void Model::set_param(const std::string &name, const std::string &value)
     else
       is_static = false;
   }
+  else if (name == "name")
+  {
+    instance_name = value;
+  }
 }

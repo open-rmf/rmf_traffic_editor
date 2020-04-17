@@ -72,9 +72,17 @@ class Level:
             self.doors = self.parse_edge_sequence(yaml_node['doors'])
 
         self.models = []
+        model_counts = {}
         if 'models' in yaml_node:
             for model_yaml in yaml_node['models']:
-                self.models.append(Model(model_yaml))
+                name = model_yaml["name"]
+                if name not in model_counts:
+                    model_counts[name] = 1
+                    self.models.append(Model(name, model_yaml))
+                else:
+                    model_counts[name] += 1
+                    self.models.append(
+                            Model(f'{name}_{model_counts[name]}', model_yaml))
 
         self.floors = []
         if 'floors' in yaml_node:
