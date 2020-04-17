@@ -26,6 +26,8 @@
 #include "scenario_level.h"
 #include "vertex.h"
 
+#include <ignition/plugin/Loader.hh>
+
 #include <map>
 #include <memory>
 #include <string>

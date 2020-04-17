@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1.0)
+cmake_minimum_required(VERSION 3.10.0)
 
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 14)
@@ -21,8 +21,12 @@ if(CMAKE_VERSION VERSION_LESS "3.7.0")
 endif()
 
 find_package(Qt5 COMPONENTS Widgets Concurrent REQUIRED)
-
 find_package(OpenCV REQUIRED)
+find_package(ignition-plugin1 REQUIRED COMPONENTS all)
+find_package(ignition-common3 REQUIRED)
+# WRONG: find_package(ignition-cmake2 REQUIRED)
+
+message(hello ${ignition-cmake2_INCLUDE_DIRS})
 
 add_executable(traffic-editor
   gui/add_param_dialog.cpp
@@ -77,6 +81,12 @@ add_executable(traffic-editor
   gui/yaml_utils.cpp
   resources/resource.qrc
 )
+
+target_include_directories(traffic-editor
+  PRIVATE
+  ${ignition-plugin1_INCLUDE_DIRS}
+  ${ignition-common3_INCLUDE_DIRS}
+  ${ignition-cmake2_INCLUDE_DIRS})
 
 target_link_libraries(traffic-editor
   Qt5::Widgets
