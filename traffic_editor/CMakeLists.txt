@@ -24,9 +24,6 @@ find_package(Qt5 COMPONENTS Widgets Concurrent REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(ignition-plugin1 REQUIRED COMPONENTS all)
 find_package(ignition-common3 REQUIRED)
-# WRONG: find_package(ignition-cmake2 REQUIRED)
-
-message(hello ${ignition-cmake2_INCLUDE_DIRS})
 
 add_executable(traffic-editor
   gui/add_param_dialog.cpp
@@ -82,15 +79,11 @@ add_executable(traffic-editor
   resources/resource.qrc
 )
 
-target_include_directories(traffic-editor
-  PRIVATE
-  ${ignition-plugin1_INCLUDE_DIRS}
-  ${ignition-common3_INCLUDE_DIRS}
-  ${ignition-cmake2_INCLUDE_DIRS})
-
 target_link_libraries(traffic-editor
   Qt5::Widgets
   Qt5::Concurrent
+  ignition-plugin1::core
+  ignition-plugin1::loader
   yaml-cpp
   ${OpenCV_LIBS})
 
