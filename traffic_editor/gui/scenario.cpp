@@ -114,6 +114,7 @@ bool Scenario::load()
 
   }
 
+  /*
   behaviors.clear();
   if (yaml["behaviors"])
   {
@@ -135,6 +136,7 @@ bool Scenario::load()
         behavior_schedule.push_back(bsi);
     }
   }
+  */
 
   print();
 
@@ -175,7 +177,7 @@ void Scenario::draw(
     QGraphicsScene *scene,
     const std::string& level_name,
     const double meters_per_pixel,
-    std::vector<EditorModel>& editor_models) const
+    std::vector<EditorModel>& /*editor_models*/) const
 {
   printf("Scenario::draw(%s)\n", level_name.c_str());
   for (const ScenarioLevel& level : levels)
@@ -185,7 +187,7 @@ void Scenario::draw(
       break;
     }
 
-  draw_models(scene, level_name, meters_per_pixel, editor_models);
+  // draw_models(scene, level_name, meters_per_pixel, editor_models);
 }
 
 void Scenario::draw_models(
@@ -239,11 +241,14 @@ void Scenario::sim_tick(Building& building)
 {
   if (!sim_plugin.IsEmpty())
   {
+    std::lock_guard<std::mutex> building_guard(building.building_mutex);
     Simulation *sim = sim_plugin->QueryInterface<Simulation>();
     if (sim)
       sim->tick(building);
   }
+  return;
 
+#if 0
   sim_tick_counter++;
 
   // see if we need to start any new model behaviors
@@ -277,9 +282,6 @@ void Scenario::sim_tick(Building& building)
 
   sim_time_seconds += dt;
 
-  if (sim_tick_counter % 1000 == 0)
-    printf("sim_time = %.2f\n", sim_time_seconds);
-
   behavior_signals = all_outbound_signals;  // save for next tick
 
   // now that we have computed all the states, copy them into the
@@ -312,6 +314,7 @@ void Scenario::sim_tick(Building& building)
         schedule_item.started = false;
     }
   }
+#endif
 }
 
 void Scenario::sim_reset(Building& building)
@@ -386,8 +389,8 @@ void Scenario::sim_log(const Building& building)
 }
 
 void Scenario::start_behavior_schedule_item(
-    BehaviorScheduleItem& item,
-    Building& building)
+    BehaviorScheduleItem& /*item*/,
+    Building& /*building*/)
 {
   /*
   printf(
@@ -396,6 +399,7 @@ void Scenario::start_behavior_schedule_item(
       item.behavior_name.c_str());
   */
 
+#if 0
   item.start_seconds = sim_time_seconds;
   item.started = true;
 
@@ -442,6 +446,7 @@ void Scenario::start_behavior_schedule_item(
 
   // if we get here, we never found the model name :(
   printf("couldn't find model [%s]\n", item.model_name.c_str());
+#endif
 }
 
 void Scenario::clear_scene()

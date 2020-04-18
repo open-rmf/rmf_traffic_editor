@@ -37,7 +37,7 @@ public:
   std::string name;
   std::string model_name;
 
-  std::vector<std::unique_ptr<BehaviorNode> > nodes;
+  std::vector<std::unique_ptr<BehaviorNode>> nodes;
   int active_node_idx = 0;
 
   void print() const;
@@ -46,13 +46,8 @@ public:
       const double dt_seconds,
       ModelState& state,
       Building& building,
-      const std::vector<std::unique_ptr<Model> >& active_models,
-      const std::vector<std::string>& inbound_signals,
-      std::vector<std::string>& outbound_signals);
-
-  std::unique_ptr<Behavior> instantiate(
-      const YAML::Node& params,
-      const std::string& model_name) const;
+      const std::vector<std::string>& inbound_messages,
+      std::vector<std::string>& outbound_messages);
 
   bool is_completed();
 };

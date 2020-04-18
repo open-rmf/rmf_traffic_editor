@@ -18,6 +18,12 @@
 #include "traffic_editor/behavior_node_wait.h"
 using std::string;
 
+BehaviorNodeWait::BehaviorNodeWait(const double _seconds)
+: BehaviorNode(),
+  seconds(_seconds)
+{
+}
+
 BehaviorNodeWait::BehaviorNodeWait(const YAML::Node& y)
 : BehaviorNode()
 {
@@ -33,23 +39,12 @@ void BehaviorNodeWait::print() const
   printf("      wait: %.3f\n", seconds);
 }
 
-std::unique_ptr<BehaviorNode> BehaviorNodeWait::instantiate(
-    const YAML::Node& /*params*/,
-    const std::string& _model_name) const
-{
-  auto n = std::make_unique<BehaviorNodeWait>(*this);
-  // copy constructor already copied the 'seconds' member variable for us.
-  n->model_name = _model_name;
-  return n;
-}
-
 void BehaviorNodeWait::tick(
     const double dt_seconds,
     ModelState& /*state*/,
     Building& /*building*/,
-    const std::vector<std::unique_ptr<Model> >& /*active_models*/,
-    const std::vector<std::string>& /*inbound_signals*/,
-    std::vector<std::string>& /*outbound_signals*/)
+    const std::vector<std::string>& /*inbound_messages*/,
+    std::vector<std::string>& /*outbound_messages*/)
 {
   elapsed_seconds += dt_seconds;
 }

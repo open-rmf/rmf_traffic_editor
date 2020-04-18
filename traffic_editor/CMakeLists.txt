@@ -10,6 +10,7 @@ find_package(yaml-cpp REQUIRED)
 find_package(ament_cmake REQUIRED)
 
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
+# set(CMAKE_VERBOSE_MAKEFILE TRUE)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wshadow -Wextra")
 
@@ -35,6 +36,7 @@ add_executable(traffic-editor
   gui/behavior.cpp
   gui/behavior_node.cpp
   gui/behavior_node_navigate.cpp
+  gui/behavior_node_send_messages.cpp
   gui/behavior_node_send_signal.cpp
   gui/behavior_node_await_signal.cpp
   gui/behavior_node_await_signals.cpp
@@ -92,6 +94,8 @@ target_link_libraries(traffic-editor
   ignition-common3::core
   yaml-cpp
   ${OpenCV_LIBS})
+
+set_property(TARGET traffic-editor PROPERTY ENABLE_EXPORTS 1)
 
 install(
   TARGETS traffic-editor

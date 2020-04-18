@@ -15,43 +15,37 @@
  *
 */
 
-#include <algorithm>
-#include "traffic_editor/behavior_node_await_signal.h"
+#include "traffic_editor/behavior_node_send_messages.h"
 
-using std::string;
 using std::make_unique;
+using std::string;
+using std::vector;
 
 
-BehaviorNodeAwaitSignal::BehaviorNodeAwaitSignal(const YAML::Node& y)
+BehaviorNodeSendMessages::BehaviorNodeSendMessages(
+    const vector<string>& _messages)
 : BehaviorNode()
 {
-  signal_name = y[1].as<string>();
+  messages = _messages;
 }
 
-BehaviorNodeAwaitSignal::~BehaviorNodeAwaitSignal()
+void BehaviorNodeSendMessages::print() const
 {
+  printf("      send_messages: FOO, BAR, BAZ  TODO FIXME\n");
 }
 
-void BehaviorNodeAwaitSignal::print() const
-{
-  printf("      await_signal: %s\n", signal_name.c_str());
-}
-
-void BehaviorNodeAwaitSignal::tick(
+void BehaviorNodeSendMessages::tick(
     const double /*dt_seconds*/,
     ModelState& /*state*/,
     Building& /*building*/,
-    const std::vector<std::string>& inbound_messages,
-    std::vector<std::string>& /*outbound_messages*/)
+    const std::vector<std::string>& /*inbound_messages*/,
+    std::vector<std::string>& outbound_messages)
 {
-  if (std::find(inbound_messages.begin(),
-          inbound_messages.end(),
-          signal_name)
-      != inbound_messages.end())
-    signal_received = true;
+  for (const auto& message : messages)
+    outbound_messages.push_back(message);
 }
 
-bool BehaviorNodeAwaitSignal::is_complete() const
+bool BehaviorNodeSendMessages::is_complete() const
 {
-  return signal_name.empty() || signal_received;
+  return true;
 }

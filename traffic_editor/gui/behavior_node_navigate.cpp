@@ -25,6 +25,14 @@ using std::make_unique;
 using std::make_shared;
 
 
+BehaviorNodeNavigate::BehaviorNodeNavigate(
+      const std::string& _destination_name,
+      const int _graph_idx)
+{
+  destination_name = _destination_name;
+  nav_graph_idx = _graph_idx;
+}
+
 BehaviorNodeNavigate::BehaviorNodeNavigate(const YAML::Node& y)
 : BehaviorNode()
 {
@@ -41,24 +49,16 @@ void BehaviorNodeNavigate::print() const
   printf("      navigate: [%s]\n", destination_name.c_str());
 }
 
-std::unique_ptr<BehaviorNode> BehaviorNodeNavigate::instantiate(
-    const YAML::Node& params,
-    const std::string& _model_name) const
-{
-  auto b = make_unique<BehaviorNodeNavigate>(*this);
-  b->destination_name = interpolate_string_params(destination_name, params);
-  b->model_name = _model_name;
-  return b;
-}
-
 void BehaviorNodeNavigate::tick(
     const double dt_seconds,
     ModelState& model_state,
     Building& building,
-    const std::vector<std::unique_ptr<Model> >& /*active_models*/,
-    const std::vector<std::string>& /*inbound_signals*/,
-    std::vector<std::string>& /*outbound_signals*/)
+    const std::vector<std::string>& /*inbound_messages*/,
+    std::vector<std::string>& /*outbound_messages*/)
 {
+  if (model_name.empty())
+    printf("WARNING: BehaviorNodeNavigate::tick() with empty model_name!\n");
+
   // look up the scale of this level's drawing
   const double meters_per_pixel =
       building.level_meters_per_pixel(model_state.level_name);
@@ -79,7 +79,7 @@ void BehaviorNodeNavigate::tick(
     shared_ptr<planner::Graph> graph = building.planner_graph(
         nav_graph_idx,
         model_state.level_name);
-    // graph->print();
+    //graph->print();
 
     planner::Node goal_node;
     populate_planner_node_from_vertex_name(
@@ -93,6 +93,7 @@ void BehaviorNodeNavigate::tick(
 
     path = graph->plan_path(start_node, goal_node);
     // printf("\n");
+    printf("  path has %zu nodes\n", path.size());
   }
 
   if (path.empty())

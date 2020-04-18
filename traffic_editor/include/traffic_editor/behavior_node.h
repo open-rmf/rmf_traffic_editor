@@ -36,19 +36,14 @@ public:
   BehaviorNode();
   virtual ~BehaviorNode();
 
-  virtual std::unique_ptr<BehaviorNode> instantiate(
-      const YAML::Node& params,
-      const std::string& model_name) const = 0;
-
   virtual void print() const = 0;
 
   virtual void tick(
       const double dt_seconds,
       ModelState& state,
       Building& building,
-      const std::vector<std::unique_ptr<Model>>& active_models,
-      const std::vector<std::string>& inbound_signals,
-      std::vector<std::string>& outbound_signals) = 0;
+      const std::vector<std::string>& inbound_messages,
+      std::vector<std::string>& outbound_messages) = 0;
 
   virtual bool is_complete() const = 0;
 

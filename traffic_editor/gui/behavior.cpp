@@ -90,9 +90,8 @@ void Behavior::tick(
       const double dt_seconds,
       ModelState &state,
       Building& building,
-      const std::vector<std::unique_ptr<Model> >& active_models,
-      const std::vector<std::string>& inbound_signals,
-      std::vector<std::string>& outbound_signals)
+      const std::vector<std::string>& inbound_messages,
+      std::vector<std::string>& outbound_messages)
 {
   // printf("Behavior::tick() in behavior [%s]\n", name.c_str());
   if (active_node_idx >= static_cast<int>(nodes.size()))
@@ -102,9 +101,8 @@ void Behavior::tick(
       dt_seconds,
       state,
       building,
-      active_models,
-      inbound_signals,
-      outbound_signals);
+      inbound_messages,
+      outbound_messages);
 
   if (nodes[active_node_idx]->is_complete())
   {
@@ -114,18 +112,6 @@ void Behavior::tick(
     if (active_node_idx >= static_cast<int>(nodes.size()))
       building.release_all_lane_edges_for_model(model_name);
   }
-}
-
-std::unique_ptr<Behavior> Behavior::instantiate(
-    const YAML::Node& params,
-    const std::string& _model_name) const
-{
-  std::unique_ptr<Behavior> instantiated = std::make_unique<Behavior>();
-  instantiated->name = name;
-  instantiated->model_name = _model_name;
-  for (const auto& node : nodes)
-    instantiated->nodes.push_back(node->instantiate(params, _model_name));
-  return instantiated;
 }
 
 bool Behavior::is_completed()

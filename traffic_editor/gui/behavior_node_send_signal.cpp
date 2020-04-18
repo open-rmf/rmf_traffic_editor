@@ -36,26 +36,15 @@ void BehaviorNodeSendSignal::print() const
   printf("      send_signal: %s\n", signal_name.c_str());
 }
 
-std::unique_ptr<BehaviorNode> BehaviorNodeSendSignal::instantiate(
-    const YAML::Node& params,
-    const std::string& _model_name) const
-{
-  auto b = make_unique<BehaviorNodeSendSignal>(*this);
-  b->signal_name = interpolate_string_params(signal_name, params);
-  b->model_name = _model_name;
-  return b;
-}
-
 void BehaviorNodeSendSignal::tick(
     const double /*dt_seconds*/,
     ModelState& /*state*/,
     Building& /*building*/,
-    const std::vector<std::unique_ptr<Model>>& /*active_models*/,
-    const std::vector<std::string>& /*inbound_signals*/,
-    std::vector<std::string>& outbound_signals)
+    const std::vector<std::string>& /*inbound_messages*/,
+    std::vector<std::string>& outbound_messages)
 {
   if (!signal_name.empty())
-    outbound_signals.push_back(signal_name);
+    outbound_messages.push_back(signal_name);
 }
 
 bool BehaviorNodeSendSignal::is_complete() const

@@ -47,6 +47,8 @@ void Model::from_yaml(const YAML::Node &data, const string& level_name)
 
   model_name = data["model_name"].as<string>();
   instance_name = data["name"].as<string>();
+
+  state.level_name = level_name;
   starting_level = level_name;
 
   if (data["static"])
@@ -114,18 +116,16 @@ void Model::set_param(const std::string &name, const std::string &value)
 void Model::tick(
     const double dt_seconds,
     Building& building,
-    const std::vector<std::unique_ptr<Model> >& active_models,
-    const std::vector<std::string>& inbound_signals,
-    std::vector<std::string>& outbound_signals)
+    const std::vector<std::string>& inbound_messages,
+    std::vector<std::string>& outbound_messages)
 {
   next_state = state;
   behavior->tick(
       dt_seconds,
       next_state,
       building,
-      active_models,
-      inbound_signals,
-      outbound_signals);
+      inbound_messages,
+      outbound_messages);
 }
 
 void Model::set_behavior(std::unique_ptr<Behavior> _behavior)

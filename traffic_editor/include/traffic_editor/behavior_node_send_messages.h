@@ -15,21 +15,19 @@
  *
 */
 
-#ifndef BEHAVIOR_NODE_WAIT_H
-#define BEHAVIOR_NODE_WAIT_H
+#ifndef BEHAVIOR_NODE_SEND_MESSAGES_H
+#define BEHAVIOR_NODE_SEND_MESSAGES_H
 
 #include "behavior_node.h"
 #include <yaml-cpp/yaml.h>
 
-class BehaviorNodeWait : public BehaviorNode
+class BehaviorNodeSendMessages : public BehaviorNode
 {
 public:
-  double seconds = 0.0;
-  double elapsed_seconds = 0.0;
+  std::vector<std::string> messages;
 
-  BehaviorNodeWait(const double _seconds);
-  BehaviorNodeWait(const YAML::Node& y);
-  ~BehaviorNodeWait();
+  BehaviorNodeSendMessages(const std::vector<std::string>& _messages);
+  ~BehaviorNodeSendMessages() = default;
 
   virtual void print() const;
 

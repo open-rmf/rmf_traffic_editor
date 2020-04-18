@@ -40,45 +40,26 @@ void BehaviorNodeAwaitSignals::print() const
     printf("        %s\n", signal_name.c_str());
 }
 
-std::unique_ptr<BehaviorNode> BehaviorNodeAwaitSignals::instantiate(
-      const YAML::Node& params,
-      const std::string& _model_name) const
-{
-  std::unique_ptr<BehaviorNodeAwaitSignals> b =
-      make_unique<BehaviorNodeAwaitSignals>(*this);
-  b->model_name = _model_name;
-  b->signal_names.clear();
-  for (const auto& signal_name : signal_names)
-  {
-    b->signal_names.push_back(interpolate_string_params(signal_name, params));
-    b->signals_received.push_back(false);
-  }
-  return b;
-}
-
 void BehaviorNodeAwaitSignals::tick(
     const double /*dt_seconds*/,
     ModelState& /*state*/,
     Building& /*building*/,
-    const std::vector<std::unique_ptr<Model>>& /*active_models*/,
-    const std::vector<std::string>& inbound_signals,
-    std::vector<std::string>& /*outbound_signals*/)
+    const std::vector<std::string>& inbound_messages,
+    std::vector<std::string>& /*outbound_messages*/)
 {
   for (size_t i = 0; i < signal_names.size(); i++)
   {
     if (!signals_received[i])
     {
-      if (std::find(inbound_signals.begin(),
-              inbound_signals.end(),
+      if (std::find(inbound_messages.begin(),
+              inbound_messages.end(),
               signal_names[i])
-          != inbound_signals.end())
+          != inbound_messages.end())
       {
         printf("RECEIVED: [%s]\n", signal_names[i].c_str());
         signals_received[i] = true;
         for (size_t j = 0; j < signals_received.size(); j++)
-        {
           printf("  %zu: %d\n", j, signals_received[j] ? 1 : 0);
-        }
       }
     }
   }
