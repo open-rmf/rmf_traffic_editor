@@ -204,6 +204,8 @@ public:
       const std::string& model_name,
       const ModelState& model_state,
       const std::vector<std::shared_ptr<planner::Node>>& path);
+
+  std::shared_ptr<Model> get_model(const std::string& name);
 };
 
 #endif

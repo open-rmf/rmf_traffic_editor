@@ -58,7 +58,7 @@ public:
   double flattened_x_offset = 0.0;
   double flattened_y_offset = 0.0;
 
-  std::vector<std::unique_ptr<Model> > models;
+  std::vector<std::shared_ptr<Model>> models;
   std::vector<Fiducial> fiducials;
 
   QPixmap floorplan_pixmap;

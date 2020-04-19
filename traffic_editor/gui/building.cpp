@@ -866,3 +866,12 @@ double Building::distance_to_nearest_model_on_path(
   // todo, if this becomes necessary to allow much higher density
   return 42;
 }
+
+shared_ptr<Model> Building::get_model(const string& instance_name)
+{
+  for (const auto& level : levels)
+    for (auto& model : level->models)
+      if (model->instance_name == instance_name)
+        return model;
+  return nullptr;
+}

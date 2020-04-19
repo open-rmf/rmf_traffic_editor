@@ -104,9 +104,9 @@ bool BuildingLevel::from_yaml(
     const YAML::Node &ys = _data["models"];
     for (YAML::const_iterator it = ys.begin(); it != ys.end(); ++it)
     {
-      std::unique_ptr<Model> m = std::make_unique<Model>();
+      std::shared_ptr<Model> m = std::make_shared<Model>();
       m->from_yaml(*it, this->name);
-      models.push_back(std::move(m));
+      models.push_back(m);
     }
   }
 
