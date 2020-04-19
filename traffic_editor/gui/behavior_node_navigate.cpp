@@ -93,7 +93,7 @@ void BehaviorNodeNavigate::tick(
 
     path = graph->plan_path(start_node, goal_node);
     // printf("\n");
-    printf("  path has %zu nodes\n", path.size());
+    // printf("  path has %zu nodes\n", path.size());
   }
 
   if (path.empty())
