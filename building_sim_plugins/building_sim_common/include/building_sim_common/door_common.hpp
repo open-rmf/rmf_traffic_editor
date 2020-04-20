@@ -7,8 +7,8 @@
 
 #include "utils.hpp"
 
-#include <mutex>
 #include <vector>
+#include <unordered_map>
 
 namespace building_sim_common {
 
@@ -64,67 +64,39 @@ public:
 
   rclcpp::Logger logger() const;
 
-  // Set the name of the door
-  DoorState& door_name(const std::string door_name);
-  // Get the name of the door
-  std::string door_name() const;
-
-  // Set the current mode of the door
-  DoorState& current_mode(const DoorMode door_name);
-  // Get the current mode of the door
-  DoorMode current_mode() const;
-
-  // Get the requested mode of the door
-  DoorMode requested_mode() const;
-
   std::string left_door_joint_name() const;
   std::string right_door_joint_name() const;
 
-  void publish_state(const uint32_t door_value, const rclcpp::Time time);
+  void publish_state(const uint32_t door_value, const rclcpp::Time& time);
 
   bool is_initialized() const;
 
   MotionParams& params();
 
   void add_left_door(
-    const bool debuggable,
     const double upper_limit,
     const double lower_limit);
 
   void add_right_door(
-    const bool debuggable,
     const double upper_limit,
     const double lower_limit);
 
-  bool all_doors_open();
-
-  bool all_doors_closed();
-
-  double get_door_velocity(
-    const double target,
-    const double current_position,
-    const double current_velocity,
-    const double dt);
-
   DoorUpdateResult update(const double time,
-    const DoorUpdateRequest request);
+    const DoorUpdateRequest& request);
 
 private:
 
   struct DoorElement
   {
-    bool debuggable;
     double closed_position;
     double open_position;
     double current_position;
     double current_velocity;
 
     DoorElement(
-      const bool debuggable_,
       const double upper_limit,
       const double lower_limit,
       const bool flip_direction = false)
-    : debuggable(debuggable_)
     {
       if (flip_direction)
       {
@@ -144,11 +116,24 @@ private:
 
   using Door = std::pair<std::string, std::shared_ptr<DoorElement>>;
 
+    // Get the requested mode of the door
+  DoorMode requested_mode() const;
+
+  double calculate_target_velocity(
+    const double target,
+    const double current_position,
+    const double current_velocity,
+    const double dt);
+
   DoorCommon(const std::string& door_name,
     rclcpp::Node::SharedPtr node,
     const MotionParams& params,
     const std::string& left_door_joint_name,
     const std::string& right_door_joint_name);
+
+  bool all_doors_open();
+
+  bool all_doors_closed();
 
   rclcpp::Node::SharedPtr _ros_node;
   rclcpp::Publisher<DoorState>::SharedPtr _door_state_pub;
@@ -163,13 +148,11 @@ private:
   double _last_pub_time = 0.0;
 
   bool _initialized = false;
-  bool _all_doors_open = false;
-  bool _all_doors_closed = true;
-
+  
   Door _left_door;
   Door _right_door;
-
-  std::mutex _mutex;
+  // Map of joint_name and DoorElement
+  std::unordered_map<std::string, std::shared_ptr<DoorElement>> _doors;
 };
 
 template<typename SdfPtrT>
@@ -190,6 +173,7 @@ std::shared_ptr<DoorCommon> DoorCommon::make(
   std::string right_door_joint_name;
   std::string door_type;
 
+  // TODO get joint limits from  door_element
   if (!get_element_required(sdf, "door", door_element) ||
     !get_sdf_attribute_required<std::string>(
       door_element, "left_joint_name", left_door_joint_name) ||

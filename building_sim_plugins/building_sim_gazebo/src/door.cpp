@@ -63,8 +63,8 @@ public:
           left_door_joint_name.c_str());
         return;
       }
-      _door_common->add_left_door(_model->GetName() == "chart_lift_door",
-        _left_door_joint->UpperLimit(0), _left_door_joint->LowerLimit(0));
+      _door_common->add_left_door(_left_door_joint->UpperLimit(0),
+        _left_door_joint->LowerLimit(0));
     }
 
     if (right_door_joint_name != "empty_joint")
@@ -78,8 +78,8 @@ public:
           right_door_joint_name.c_str());
         return;
       }
-      _door_common->add_right_door(_model->GetName() == "chart_lift_door",
-        _right_door_joint->UpperLimit(0), _right_door_joint->LowerLimit(0));
+      _door_common->add_right_door(_right_door_joint->UpperLimit(0),
+        _right_door_joint->LowerLimit(0));
     }
 
     _initialized = true;

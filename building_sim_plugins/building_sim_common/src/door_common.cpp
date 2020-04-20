@@ -12,31 +12,6 @@ rclcpp::Logger DoorCommon::logger() const
   return rclcpp::get_logger("door_" + _state.door_name);
 }
 
-DoorState& DoorCommon::door_name(const std::string door_name)
-{
-  std::unique_lock<std::mutex> lock(_mutex);
-  _state.door_name = door_name;
-  return _state;
-}
-
-std::string DoorCommon::door_name() const
-{
-  return _state.door_name;
-}
-
-
-DoorState& DoorCommon::current_mode(const DoorMode door_mode)
-{
-  std::unique_lock<std::mutex> lock(_mutex);
-  _state.current_mode = door_mode;
-  return _state;
-}
-
-DoorMode DoorCommon::current_mode() const
-{
-  return _state.current_mode;
-}
-
 DoorMode DoorCommon::requested_mode() const
 {
   return _request.requested_mode;
@@ -62,12 +37,11 @@ bool DoorCommon::is_initialized() const
   return _initialized;
 }
 void DoorCommon::publish_state(const uint32_t door_value,
-  const rclcpp::Time time)
+  const rclcpp::Time& time)
 {
   if (!_initialized)
     return;
 
-  std::unique_lock<std::mutex> lock(_mutex);
   _state.current_mode.value = door_value;
   _state.door_time = time;
   _door_state_pub->publish(_state);
@@ -88,6 +62,14 @@ DoorCommon::DoorCommon(const std::string& door_name,
   _left_door.first = std::move(left_door_joint_name);
   _left_door.second = nullptr;
 
+  if (left_door_joint_name != "empty_joint")
+    _doors.insert(std::make_pair(left_door_joint_name,
+      nullptr));
+  
+  if (right_door_joint_name != "empty_joint")
+    _doors.insert(std::make_pair(left_door_joint_name,
+      nullptr));
+
   _state.door_name = door_name;
   _request.requested_mode.value = DoorMode::MODE_CLOSED;
 
@@ -100,7 +82,6 @@ DoorCommon::DoorCommon(const std::string& door_name,
     "/door_requests", rclcpp::SystemDefaultsQoS(),
     [&](DoorRequest::UniquePtr msg)
     {
-      std::unique_lock<std::mutex> lock(_mutex);
       if (msg->door_name == _state.door_name)
         _request = *msg;
     });
@@ -109,21 +90,19 @@ DoorCommon::DoorCommon(const std::string& door_name,
 }
 
 void DoorCommon::add_left_door(
-  const bool debuggable,
   const double upper_limit,
   const double lower_limit)
 {
   _left_door.second = std::make_shared<DoorCommon::DoorElement>(
-      debuggable, upper_limit, lower_limit);
+      upper_limit, lower_limit);
 }
 
 void DoorCommon::add_right_door(
-  const bool debuggable,
   const double upper_limit,
   const double lower_limit)
 {
   _right_door.second = std::make_shared<DoorCommon::DoorElement>(
-      debuggable, upper_limit, lower_limit, true);
+      upper_limit, lower_limit, true);
 }
 
 bool DoorCommon::all_doors_open()
@@ -155,7 +134,7 @@ bool DoorCommon::all_doors_closed()
   return result;
 }
 
-double DoorCommon::get_door_velocity(
+double DoorCommon::calculate_target_velocity(
   const double target,
   const double current_position,
   const double current_velocity,
@@ -172,7 +151,7 @@ double DoorCommon::get_door_velocity(
 }
 
 DoorCommon::DoorUpdateResult DoorCommon::update(
-  const double time, const DoorCommon::DoorUpdateRequest request)
+  const double time, const DoorCommon::DoorUpdateRequest& request)
 {
   double dt = time - _last_update_time;
   _last_update_time = time;
@@ -203,7 +182,7 @@ DoorCommon::DoorUpdateResult DoorCommon::update(
     if (_left_door.second)
     {
       result.left_velocity = std::make_shared<double>(
-        get_door_velocity(
+        calculate_target_velocity(
           _left_door.second->open_position,
           _left_door.second->current_position,
           _left_door.second->current_velocity,
@@ -212,7 +191,7 @@ DoorCommon::DoorUpdateResult DoorCommon::update(
     if (_right_door.second)
     {
       result.right_velocity = std::make_shared<double>(
-        get_door_velocity(
+        calculate_target_velocity(
           _right_door.second->open_position,
           _right_door.second->current_position,
           _right_door.second->current_velocity,
@@ -224,7 +203,7 @@ DoorCommon::DoorUpdateResult DoorCommon::update(
     if (_left_door.second)
     {
       result.left_velocity = std::make_shared<double>(
-        get_door_velocity(
+        calculate_target_velocity(
           _left_door.second->closed_position,
           _left_door.second->current_position,
           _left_door.second->current_velocity,
@@ -233,7 +212,7 @@ DoorCommon::DoorUpdateResult DoorCommon::update(
     if (_right_door.second)
     {
       result.right_velocity = std::make_shared<double>(
-        get_door_velocity(
+        calculate_target_velocity(
           _right_door.second->closed_position,
           _right_door.second->current_position,
           _right_door.second->current_velocity,

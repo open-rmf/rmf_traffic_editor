@@ -110,8 +110,7 @@ public:
       }      
       create_entity_components(*_left_door_joint, ecm);
       auto axis = ecm.Component<components::JointAxis>(*_left_door_joint)->Data();
-      _door_common->add_left_door(_model.Name(ecm) == "chart_lift_door",
-        axis.Upper(), axis.Lower());
+      _door_common->add_left_door(axis.Upper(), axis.Lower());
     }
 
     if (right_door_joint_name != "empty_joint")
@@ -129,8 +128,7 @@ public:
       }
       create_entity_components(*_right_door_joint, ecm);
       auto axis = ecm.Component<components::JointAxis>(*_right_door_joint)->Data();
-      _door_common->add_right_door(_model.Name(ecm) == "chart_lift_door",
-        axis.Upper(), axis.Lower());
+      _door_common->add_right_door(axis.Upper(), axis.Lower());
     }
 
     _initialized = true;
