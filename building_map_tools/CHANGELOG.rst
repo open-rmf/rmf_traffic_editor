@@ -2,5 +2,5 @@
 Changelog for package building_map_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.1 (2020-04-21)
+------------------
