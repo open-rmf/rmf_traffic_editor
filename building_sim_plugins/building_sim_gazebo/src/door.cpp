@@ -18,8 +18,7 @@ class DoorPlugin : public gazebo::ModelPlugin
 private:
   gazebo::event::ConnectionPtr _update_connection;
   gazebo::physics::ModelPtr _model;
-  gazebo::physics::JointPtr _left_door_joint = nullptr;
-  gazebo::physics::JointPtr _right_door_joint = nullptr;
+  std::unordered_map<std::string, gazebo::physics::JointPtr> _joints;
 
   std::shared_ptr<DoorCommon> _door_common = nullptr;
 
@@ -49,37 +48,17 @@ public:
     if (!_door_common)
       return;
 
-    const auto left_door_joint_name = _door_common->left_door_joint_name();
-    const auto right_door_joint_name = _door_common->right_door_joint_name();
-
-    if (left_door_joint_name != "empty_joint")
+    for (const auto& joint_name : _door_common->joint_names())
     {
-      _left_door_joint = _model->GetJoint(left_door_joint_name);
-      if (!_left_door_joint)
+      const auto joint = _model->GetJoint(joint_name);
+      if (!joint)
       {
-        RCLCPP_ERROR(
-          _ros_node->get_logger(),
-          " -- Model is missing the left door joint [%s]",
-          left_door_joint_name.c_str());
+        RCLCPP_ERROR(_ros_node->get_logger(),
+          " -- Model is missing the joint [%s]",
+          joint_name.c_str());
         return;
       }
-      _door_common->add_left_door(_left_door_joint->UpperLimit(0),
-        _left_door_joint->LowerLimit(0));
-    }
-
-    if (right_door_joint_name != "empty_joint")
-    {
-      _right_door_joint = _model->GetJoint(right_door_joint_name);
-      if (!_right_door_joint)
-      {
-        RCLCPP_ERROR(
-          _ros_node->get_logger(),
-          " -- Model is missing the right door joint [%s]",
-          right_door_joint_name.c_str());
-        return;
-      }
-      _door_common->add_right_door(_right_door_joint->UpperLimit(0),
-        _right_door_joint->LowerLimit(0));
+      _joints.insert(std::make_pair(joint_name, joint));
     }
 
     _initialized = true;
@@ -87,8 +66,7 @@ public:
     _update_connection = gazebo::event::Events::ConnectWorldUpdateBegin(
       std::bind(&DoorPlugin::on_update, this));
 
-    RCLCPP_INFO(
-      _ros_node->get_logger(),
+    RCLCPP_INFO(_ros_node->get_logger(),
       "Finished loading [%s]",
       _model->GetName().c_str());
   }
@@ -102,34 +80,26 @@ private:
 
     const double t = _model->GetWorld()->SimTime().Double();
 
-    DoorCommon::DoorUpdateRequest request;
-    if (_left_door_joint)
+    // Create DoorUpdateRequest
+    std::vector<DoorCommon::DoorUpdateRequest> requests;
+    for (const auto& joint : _joints)
     {
-      request.left_position = std::make_shared<double>(
-        _left_door_joint->Position(0));
-      request.left_velocity = std::make_shared<double>(
-        _left_door_joint->GetVelocity(0));
-    }
-    if (_right_door_joint)
-    {
-      request.right_position = std::make_shared<double>(
-        _right_door_joint->Position(0));
-      request.right_velocity = std::make_shared<double>(
-        _right_door_joint->GetVelocity(0));
+      DoorCommon::DoorUpdateRequest request;
+      request.joint_name = joint.first;
+      request.position = joint.second->Position(0);
+      request.velocity = joint.second->GetVelocity(0);
+      requests.push_back(request);
     }
 
-    auto result = _door_common->update(t, request);
+    auto results = _door_common->update(t, requests);
 
     // Apply motions to the joints
-    if (_left_door_joint)
+    for (const auto& result : results)
     {
-      _left_door_joint->SetParam("vel", 0, *result.left_velocity);
-      _left_door_joint->SetParam("fmax", 0, *result.fmax);
-    }
-    if (_right_door_joint)
-    {
-      _right_door_joint->SetParam("vel", 0, *result.right_velocity);
-      _right_door_joint->SetParam("fmax", 0, *result.fmax);
+      const auto it = _joints.find(result.joint_name);
+      assert(it != _joints.end());
+      it->second->SetParam("vel", 0, result.velocity);
+      it->second->SetParam("fmax", 0, result.fmax);
     }
   }
 

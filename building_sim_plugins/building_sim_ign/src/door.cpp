@@ -1,9 +1,3 @@
-//#include <gazebo/common/Plugin.hh>
-//#include <gazebo/physics/Model.hh>
-//#include <gazebo/physics/World.hh>
-//#include <gazebo/physics/Joint.hh>
-//#include <gazebo_ros/node.hpp>
-
 #include <ignition/plugin/Register.hh>
 
 #include <ignition/gazebo/System.hh>
@@ -37,8 +31,7 @@ class IGNITION_GAZEBO_VISIBLE DoorPlugin
 private:
   rclcpp::Node::SharedPtr _ros_node;
   Model _model;
-  std::shared_ptr<Entity> _left_door_joint = nullptr;
-  std::shared_ptr<Entity> _right_door_joint = nullptr;
+  std::unordered_map<std::string, std::shared_ptr<Entity>> _joints;
 
   std::shared_ptr<DoorCommon> _door_common = nullptr;
 
@@ -79,10 +72,10 @@ public:
     ignwarn << "Initializing plugin with name " << plugin_name << std::endl;
     _ros_node = std::make_shared<rclcpp::Node>(plugin_name);
 
-    RCLCPP_INFO(
-      _ros_node->get_logger(),
+    RCLCPP_INFO(_ros_node->get_logger(),
       "Loading DoorPlugin for [%s]",
       _model.Name(ecm).c_str());
+
     auto sdfClone = sdf->Clone();
 
     _door_common = DoorCommon::make(
@@ -93,48 +86,24 @@ public:
     if (!_door_common)
       return;
 
-    const auto left_door_joint_name = _door_common->left_door_joint_name();
-    const auto right_door_joint_name = _door_common->right_door_joint_name();
-
-    if (left_door_joint_name != "empty_joint")
+    for (const auto& joint_name : _door_common->joint_names())
     {
-      _left_door_joint = std::make_shared<Entity>(
-        _model.JointByName(ecm, left_door_joint_name));
-      if (!_left_door_joint)
+      const auto joint = std::make_shared<Entity>(
+        _model.JointByName(ecm, joint_name));
+      if (!joint)
       {
-        RCLCPP_ERROR(
-          _ros_node->get_logger(),
-          " -- Model is missing the left door joint [%s]",
-          left_door_joint_name.c_str());
-        return;
-      }      
-      create_entity_components(*_left_door_joint, ecm);
-      auto axis = ecm.Component<components::JointAxis>(*_left_door_joint)->Data();
-      _door_common->add_left_door(axis.Upper(), axis.Lower());
-    }
-
-    if (right_door_joint_name != "empty_joint")
-    {
-      _right_door_joint = std::make_shared<Entity>(
-        _model.JointByName(ecm,
-        right_door_joint_name));
-      if (!_right_door_joint)
-      {
-        RCLCPP_ERROR(
-          _ros_node->get_logger(),
-          " -- Model is missing the right door joint [%s]",
-          right_door_joint_name.c_str());
+        RCLCPP_ERROR(_ros_node->get_logger(),
+          " -- Model is missing the joint [%s]",
+          joint_name.c_str());
         return;
       }
-      create_entity_components(*_right_door_joint, ecm);
-      auto axis = ecm.Component<components::JointAxis>(*_right_door_joint)->Data();
-      _door_common->add_right_door(axis.Upper(), axis.Lower());
+      create_entity_components(*joint, ecm);
+      _joints.insert(std::make_pair(joint_name, joint));
     }
 
     _initialized = true;
 
-    RCLCPP_INFO(
-      _ros_node->get_logger(),
+    RCLCPP_INFO(_ros_node->get_logger(),
       "Finished loading [%s]",
       _model.Name(ecm).c_str());
   }
@@ -150,41 +119,32 @@ public:
       (std::chrono::duration_cast<std::chrono::nanoseconds>(info.simTime).
       count()) * 1e-9;
 
-    DoorCommon::DoorUpdateRequest request;
-    if (_left_door_joint)
+    // Create DoorUpdateRequest
+    std::vector<DoorCommon::DoorUpdateRequest> requests;
+    for (const auto& joint : _joints)
     {
-      request.left_position = std::make_shared<double>(
-        ecm.Component<components::JointPosition>(
-          *_left_door_joint)->Data()[0]);
-      request.left_velocity = std::make_shared<double>(
-        ecm.Component<components::JointVelocity>(
-          *_left_door_joint)->Data()[0]);
+      DoorCommon::DoorUpdateRequest request;
+      request.joint_name = joint.first;
+      request.position = ecm.Component<components::JointPosition>(
+          *joint.second)->Data()[0];
+      request.velocity = ecm.Component<components::JointVelocity>(
+          *joint.second)->Data()[0];
+      requests.push_back(request);
     }
-    if (_right_door_joint)
-    {
-      request.right_position = std::make_shared<double>(
-        ecm.Component<components::JointPosition>(
-          *_right_door_joint)->Data()[0]);
-      request.right_velocity = std::make_shared<double>(
-        ecm.Component<components::JointVelocity>(
-          *_right_door_joint)->Data()[0]);
-    }
-
-    auto result = _door_common->update(t, request);
+    
+    auto results = _door_common->update(t, requests);
 
     // Apply motions to the joints
-    if (_left_door_joint)
+    for (const auto& result : results)
     {
-      auto vel_cmd = ecm.Component<components::JointVelocityCmd>(*_left_door_joint);
-      vel_cmd->Data()[0] = *result.left_velocity;
-    }
-    if (_right_door_joint)
-    {
-      auto vel_cmd = ecm.Component<components::JointVelocityCmd>(*_right_door_joint);
-      vel_cmd->Data()[0] = *result.right_velocity;
+      const auto it = _joints.find(result.joint_name);
+      assert(it != _joints.end());
+      auto vel_cmd = ecm.Component<components::JointVelocityCmd>(
+        *it->second);
+      vel_cmd->Data()[0] = result.velocity;
     }
   }
-
+  
 };
 
 IGNITION_ADD_PLUGIN(

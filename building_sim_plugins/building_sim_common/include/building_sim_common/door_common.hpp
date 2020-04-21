@@ -24,36 +24,16 @@ public:
 
   struct DoorUpdateRequest
   {
-    std::shared_ptr<double> left_position;
-    std::shared_ptr<double> left_velocity;
-    std::shared_ptr<double> right_position;
-    std::shared_ptr<double> right_velocity;
-
-    DoorUpdateRequest()
-    {
-      left_position = nullptr;
-      left_velocity = nullptr;
-      right_position = nullptr;
-      right_velocity = nullptr;
-    }
-    ~DoorUpdateRequest()
-    {}
+    std::string joint_name;
+    double position;
+    double velocity;
   };
 
   struct DoorUpdateResult
   {
-    std::shared_ptr<double> left_velocity;
-    std::shared_ptr<double> right_velocity;
-    std::shared_ptr<double> fmax;
-    
-    DoorUpdateResult()
-    {
-      left_velocity = nullptr;
-      right_velocity = nullptr;
-      fmax = nullptr;
-    }
-    ~DoorUpdateResult()
-    {}
+    std::string joint_name;
+    double velocity;
+    double fmax;
   };
 
   template<typename SdfPtrT>
@@ -64,25 +44,14 @@ public:
 
   rclcpp::Logger logger() const;
 
-  std::string left_door_joint_name() const;
-  std::string right_door_joint_name() const;
-
-  void publish_state(const uint32_t door_value, const rclcpp::Time& time);
+  std::vector<std::string> joint_names() const;
 
   bool is_initialized() const;
 
   MotionParams& params();
 
-  void add_left_door(
-    const double upper_limit,
-    const double lower_limit);
-
-  void add_right_door(
-    const double upper_limit,
-    const double lower_limit);
-
-  DoorUpdateResult update(const double time,
-    const DoorUpdateRequest& request);
+  std::vector<DoorUpdateResult> update(const double time,
+    const std::vector<DoorUpdateRequest>& request);
 
 private:
 
@@ -94,8 +63,8 @@ private:
     double current_velocity;
 
     DoorElement(
-      const double upper_limit,
       const double lower_limit,
+      const double upper_limit,
       const bool flip_direction = false)
     {
       if (flip_direction)
@@ -114,10 +83,9 @@ private:
     }
   };
 
-  using Door = std::pair<std::string, std::shared_ptr<DoorElement>>;
-
-    // Get the requested mode of the door
   DoorMode requested_mode() const;
+
+  void publish_state(const uint32_t door_value, const rclcpp::Time& time);
 
   double calculate_target_velocity(
     const double target,
@@ -129,7 +97,9 @@ private:
     rclcpp::Node::SharedPtr node,
     const MotionParams& params,
     const std::string& left_door_joint_name,
-    const std::string& right_door_joint_name);
+    const std::string& right_door_joint_name,
+    const std::array<double, 2>& left_joint_limits,
+    const std::array<double, 2>& right_joint_limits);
 
   bool all_doors_open();
 
@@ -148,10 +118,8 @@ private:
   double _last_pub_time = 0.0;
 
   bool _initialized = false;
-  
-  Door _left_door;
-  Door _right_door;
-  // Map of joint_name and DoorElement
+
+  // Map of joint_name and corresponding DoorElement
   std::unordered_map<std::string, std::shared_ptr<DoorElement>> _doors;
 };
 
@@ -173,7 +141,7 @@ std::shared_ptr<DoorCommon> DoorCommon::make(
   std::string right_door_joint_name;
   std::string door_type;
 
-  // TODO get joint limits from  door_element
+    // Get the joint names and door type
   if (!get_element_required(sdf, "door", door_element) ||
     !get_sdf_attribute_required<std::string>(
       door_element, "left_joint_name", left_door_joint_name) ||
@@ -182,25 +150,95 @@ std::shared_ptr<DoorCommon> DoorCommon::make(
     !get_sdf_attribute_required<std::string>(
       door_element, "type", door_type))
   {
-    RCLCPP_ERROR(
-      node->get_logger(),
+    RCLCPP_ERROR(node->get_logger(),
       " -- Missing required parameters for [%s] plugin",
       door_name.c_str());
     return nullptr;
   }
 
-  if (left_door_joint_name == "empty_joint" &&
-    right_door_joint_name == "empty_joint")
+  if ((left_door_joint_name == "empty_joint" &&
+      right_door_joint_name == "empty_joint") ||
+      (left_door_joint_name.empty() && right_door_joint_name.empty()))
   {
-    RCLCPP_ERROR(
-      node->get_logger(),
+    RCLCPP_ERROR(node->get_logger(),
       " -- Both door joint names are missing for [%s] plugin, at least one"
       " is required", door_name.c_str());
     return nullptr;
   }
 
-  std::shared_ptr<DoorCommon> door_common(new DoorCommon(door_name,
-    node, params, left_door_joint_name, right_door_joint_name));
+    // Default values for joint limts
+  double left_joint_lower_limit = -1.57;
+  double left_joint_upper_limit = 0.0;
+  double right_joint_lower_limit = 0.0;
+  double right_joint_upper_limit = 1.57;
+
+  auto extract_limits = [&](const SdfPtrT& joint_sdf)
+  {
+    std::string joint_name;
+    get_sdf_attribute_required<std::string>(
+      joint_sdf, "name", joint_name);
+    SdfPtrT element;
+    get_element_required(joint_sdf, "axis", element);
+    get_element_required(element, "limit", element);
+    if (joint_name == left_door_joint_name)
+    {
+      get_sdf_param_if_available<double>(element, "lower", left_joint_lower_limit);
+      get_sdf_param_if_available<double>(element, "upper", left_joint_upper_limit);
+      RCLCPP_INFO(node->get_logger(),
+        "Joint [%s] lower [%f] upper [%f]",
+        joint_name.c_str(),left_joint_lower_limit, left_joint_upper_limit);
+    }
+    else if (joint_name == right_door_joint_name)
+    {
+      get_sdf_param_if_available<double>(element, "lower", right_joint_lower_limit);
+      get_sdf_param_if_available<double>(element, "upper", right_joint_upper_limit);
+      RCLCPP_INFO(node->get_logger(),
+        "Joint [%s] lower [%f] upper [%f]",
+        joint_name.c_str(),left_joint_lower_limit, left_joint_upper_limit);
+    }
+  };
+
+  // Get the joint limits from parent sdf
+  auto parent = sdf->GetParent();
+
+  // TODO Commented out as GetParent is returning nullptr with sdf used in ign
+  // The default values will be used for ign sim
+  // if (!parent)
+  // {
+  //   RCLCPP_ERROR(node->get_logger(),
+  //     "Unable to access parent sdf to retrieve joint limits");
+  //   return nullptr;
+  // }
+  if (parent)
+  {
+    auto joint_element = parent->GetElement("joint");
+    if (!joint_element)
+    {
+      RCLCPP_ERROR(node->get_logger(),
+        "Parent sdf missing required joint element");
+      return nullptr;
+    }
+
+    extract_limits(joint_element);
+    // Find next joint element if present
+    joint_element = joint_element->GetNextElement("joint");
+    if (joint_element)
+      extract_limits(joint_element);
+  }
+
+  std::array<double,2> left_joint_limits ={
+    left_joint_lower_limit, left_joint_upper_limit};
+  std::array<double,2> right_joint_limits ={
+    right_joint_lower_limit, right_joint_upper_limit};
+
+  std::shared_ptr<DoorCommon> door_common(new DoorCommon(
+      door_name,
+      node,
+      params,
+      left_door_joint_name,
+      right_door_joint_name,
+      left_joint_limits,
+      right_joint_limits));
 
   return door_common;
 

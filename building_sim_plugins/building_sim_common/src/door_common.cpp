@@ -17,14 +17,13 @@ DoorMode DoorCommon::requested_mode() const
   return _request.requested_mode;
 }
 
-std::string DoorCommon::left_door_joint_name() const
+std::vector<std::string> DoorCommon::joint_names() const
 {
-  return _left_door.first;
-}
-
-std::string DoorCommon::right_door_joint_name() const
-{
-  return _right_door.first;
+  std::vector<std::string> joint_names;
+  for (const auto& door : _doors)
+    joint_names.push_back(door.first);
+  
+  return joint_names;
 }
 
 MotionParams& DoorCommon::params()
@@ -36,6 +35,7 @@ bool DoorCommon::is_initialized() const
 {
   return _initialized;
 }
+
 void DoorCommon::publish_state(const uint32_t door_value,
   const rclcpp::Time& time)
 {
@@ -52,29 +52,25 @@ DoorCommon::DoorCommon(const std::string& door_name,
   rclcpp::Node::SharedPtr node,
   const MotionParams& params,
   const std::string& left_door_joint_name,
-  const std::string& right_door_joint_name)
+  const std::string& right_door_joint_name,
+  const std::array<double, 2>& left_joint_limits,
+  const std::array<double, 2>& right_joint_limits)
 : _ros_node(std::move(node)),
   _params(params)
 {
-
-  _right_door.first = std::move(right_door_joint_name);
-  _right_door.second = nullptr;
-  _left_door.first = std::move(left_door_joint_name);
-  _left_door.second = nullptr;
-
-  if (left_door_joint_name != "empty_joint")
+  if (!left_door_joint_name.empty() && left_door_joint_name != "empty_joint")
     _doors.insert(std::make_pair(left_door_joint_name,
-      nullptr));
+      std::make_shared<DoorCommon::DoorElement>(
+        left_joint_limits[0], left_joint_limits[1])));
   
-  if (right_door_joint_name != "empty_joint")
-    _doors.insert(std::make_pair(left_door_joint_name,
-      nullptr));
+  if (!right_door_joint_name.empty() && right_door_joint_name != "empty_joint")
+    _doors.insert(std::make_pair(right_door_joint_name,
+      std::make_shared<DoorCommon::DoorElement>(
+        right_joint_limits[0], right_joint_limits[1])));
 
   _state.door_name = door_name;
   _request.requested_mode.value = DoorMode::MODE_CLOSED;
 
-  // TODO(YV) Consider putting these statements into a start() function
-  // that can be called after checking if joint names exist in the model
   _door_state_pub = _ros_node->create_publisher<DoorState>(
     "/door_states", rclcpp::SystemDefaultsQoS());
 
@@ -89,49 +85,26 @@ DoorCommon::DoorCommon(const std::string& door_name,
   _initialized = true;
 }
 
-void DoorCommon::add_left_door(
-  const double upper_limit,
-  const double lower_limit)
-{
-  _left_door.second = std::make_shared<DoorCommon::DoorElement>(
-      upper_limit, lower_limit);
-}
-
-void DoorCommon::add_right_door(
-  const double upper_limit,
-  const double lower_limit)
-{
-  _right_door.second = std::make_shared<DoorCommon::DoorElement>(
-      upper_limit, lower_limit, true);
-}
-
 bool DoorCommon::all_doors_open()
 {
-  bool result = true;
+  for (const auto& door : _doors)
+    if (std::abs(door.second->open_position
+      - door.second->current_position) > _params.dx_min)
+      return false;
 
-  if (_left_door.second)
-    result &= std::abs(_left_door.second->open_position
-      - _left_door.second->current_position) <= _params.dx_min;
-
-  if (_right_door.second)
-    result &= std::abs(_right_door.second->open_position
-      - _right_door.second->current_position) <= _params.dx_min;
-
-  return result;
+  return true;
 }
 
 bool DoorCommon::all_doors_closed()
 {
-  bool result = true;
+  for (const auto& door : _doors)
+  {
+    if (std::abs(door.second->closed_position
+      - door.second->current_position) > _params.dx_min)
+        return false;
+  }
 
-  if (_left_door.second)
-    result &= std::abs(_left_door.second->closed_position
-      - _left_door.second->current_position) <= _params.dx_min;
-  if (_right_door.second)
-    result &= std::abs(_right_door.second->closed_position
-      - _right_door.second->current_position) <= _params.dx_min;
-  
-  return result;
+  return true;
 }
 
 double DoorCommon::calculate_target_velocity(
@@ -150,73 +123,49 @@ double DoorCommon::calculate_target_velocity(
   return door_v;
 }
 
-DoorCommon::DoorUpdateResult DoorCommon::update(
-  const double time, const DoorCommon::DoorUpdateRequest& request)
+std::vector<DoorCommon::DoorUpdateResult> DoorCommon::update(
+  const double time,
+  const std::vector<DoorCommon::DoorUpdateRequest>& requests)
 {
   double dt = time - _last_update_time;
   _last_update_time = time;
 
-  // Update state current position and velocity of each door
-  if (_left_door.second)
+  // Update simulation position and velocity of each joint and
+  // calcuate target velocity for the same
+  std::vector<DoorCommon::DoorUpdateResult> results;
+  for (const auto& request : requests)
   {
-    if (request.left_position)
-      _left_door.second->current_position = *request.left_position;
-    if (request.left_velocity)
-      _left_door.second->current_velocity = *request.left_velocity;
-  }
-
-  if (_right_door.second)
-  {
-    if (request.right_position)
-      _right_door.second->current_position = *request.right_position;
-    if (request.right_velocity)
-      _right_door.second->current_velocity = *request.right_velocity;
-  }
-
-  // Calculate velocity to apply to door joints
-
-  DoorCommon::DoorUpdateResult result;
-  result.fmax = std::make_shared<double>(_params.f_max);
-  if (requested_mode().value == DoorMode::MODE_OPEN)
-  {
-    if (_left_door.second)
+    const auto it = _doors.find(request.joint_name);
+    if (it != _doors.end())
     {
-      result.left_velocity = std::make_shared<double>(
-        calculate_target_velocity(
-          _left_door.second->open_position,
-          _left_door.second->current_position,
-          _left_door.second->current_velocity,
-          dt));
+      it->second->current_position = request.position;
+      it->second->current_velocity = request.velocity;
+      DoorCommon::DoorUpdateResult result;
+      result.joint_name = request.joint_name;
+      result.fmax = _params.f_max;
+      if (requested_mode().value == DoorMode::MODE_OPEN)
+      {
+        result.velocity = calculate_target_velocity(
+            it->second->open_position,
+            request.position,
+            request.velocity,
+            dt);
+      }
+      else
+      {
+        result.velocity = calculate_target_velocity(
+          it->second->closed_position,
+          request.position,
+          request.velocity,
+          dt);
+      }
+      results.push_back(result);
     }
-    if (_right_door.second)
+    else
     {
-      result.right_velocity = std::make_shared<double>(
-        calculate_target_velocity(
-          _right_door.second->open_position,
-          _right_door.second->current_position,
-          _right_door.second->current_velocity,
-          dt));
-    }
-  }
-  else
-  {
-    if (_left_door.second)
-    {
-      result.left_velocity = std::make_shared<double>(
-        calculate_target_velocity(
-          _left_door.second->closed_position,
-          _left_door.second->current_position,
-          _left_door.second->current_velocity,
-          dt));
-    }
-    if (_right_door.second)
-    {
-      result.right_velocity = std::make_shared<double>(
-        calculate_target_velocity(
-          _right_door.second->closed_position,
-          _right_door.second->current_position,
-          _right_door.second->current_velocity,
-          dt));
+      RCLCPP_ERROR(logger(),
+        "Received update request for uninitialized joint [%s]",
+        request.joint_name.c_str());
     }
   }
   
@@ -243,7 +192,7 @@ DoorCommon::DoorUpdateResult DoorCommon::update(
     }
   }
 
-  return result;
+  return results;
 }
 
 
