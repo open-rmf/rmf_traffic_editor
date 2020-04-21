@@ -340,54 +340,6 @@ void Scenario::sim_reset(Building& building)
   models.clear();  // this will now just be a bunch of empty unique_ptr
 }
 
-void Scenario::sim_log(const Building& building)
-{
-  if (sim_tick_counter % sim_log_decimation_rate != 0)
-    return;
-
-  if (!sim_log_file)
-  {
-    //const time_t t = time(NULL);
-    time_t t = time(NULL);
-    struct tm *t_local = localtime(&t);
-
-    char timestamp_buf[80];
-    strftime(timestamp_buf, sizeof(timestamp_buf), "%Y%m%d_%H%M%S", t_local);
-
-    char log_filename[80];
-    snprintf(
-        log_filename,
-        sizeof(log_filename),
-        "log_%s_%s.csv",
-        name.c_str(),
-        timestamp_buf);
-
-    sim_log_file = fopen(log_filename, "w");
-  }
-  for (const auto& model : models)
-  {
-    double level_meters_per_pixel = 0.05;  // sane default...
-    for (auto& level : building.levels)
-      if (level->name == model->starting_level)
-      {
-        level_meters_per_pixel = level->drawing_meters_per_pixel;
-        break;
-      }
-
-    fprintf(
-        sim_log_file,
-        "%.3f,\"%s\",\"%s\",%.6f,%.6f,%.6f,%.6f,\"%s\"\n",
-        sim_time_seconds,
-        model->instance_name.c_str(),
-        model->model_name.c_str(),
-        model->state.x * level_meters_per_pixel,
-        model->state.y * level_meters_per_pixel,
-        model->state.z,
-        model->state.yaw,
-        model->state.level_name.c_str());
-  }
-}
-
 void Scenario::start_behavior_schedule_item(
     BehaviorScheduleItem& /*item*/,
     Building& /*building*/)

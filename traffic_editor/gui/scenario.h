@@ -84,12 +84,8 @@ public:
   double sim_time_seconds = 0.0;
   int sim_tick_counter = 0;
 
-  FILE *sim_log_file = nullptr;
-  int sim_log_decimation_rate = 10;  // log every 10th tick by default
-
   void sim_tick(Building& building);
   void sim_reset(Building& building);
-  void sim_log(const Building& building);
 
   void start_behavior_schedule_item(
       BehaviorScheduleItem& item,
