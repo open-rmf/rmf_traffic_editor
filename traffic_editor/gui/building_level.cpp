@@ -744,7 +744,7 @@ void BuildingLevel::draw_polygon(
 
 void BuildingLevel::draw_polygons(QGraphicsScene *scene) const
 {
-  const QBrush floor_brush(QColor::fromRgbF(0.8, 0.8, 0.8, 0.5));
+  const QBrush floor_brush(QColor::fromRgbF(0.9, 0.9, 0.9, 0.8));
   const QBrush hole_brush(QColor::fromRgbF(0.3, 0.3, 0.3, 0.5));
 
   // first draw the floor polygons

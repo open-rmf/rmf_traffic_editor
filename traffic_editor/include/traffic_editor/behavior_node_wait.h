@@ -26,8 +26,13 @@ class BehaviorNodeWait : public BehaviorNode
 public:
   double seconds = 0.0;
   double elapsed_seconds = 0.0;
+  bool release_reservations = false;
+  bool first_tick = false;
 
-  BehaviorNodeWait(const double _seconds);
+  BehaviorNodeWait(
+      const double _seconds,
+      const bool release_reservations = false);
+
   BehaviorNodeWait(const YAML::Node& y);
   ~BehaviorNodeWait();
 

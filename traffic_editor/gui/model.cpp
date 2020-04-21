@@ -159,7 +159,7 @@ void Model::draw(
     pixmap_item = scene->addPixmap(pixmap);
     pixmap_item->setOffset(-pixmap.width()/2, -pixmap.height()/2);
     pixmap_item->setScale(model_meters_per_pixel / drawing_meters_per_pixel);
-    pixmap_item->setZValue(10.0);  // just anything taller than 0
+    pixmap_item->setZValue(100.0);  // just anything taller than 0
   }
 
   pixmap_item->setPos(state.x, state.y);

@@ -16,11 +16,15 @@
 */
 
 #include "traffic_editor/behavior_node_wait.h"
+#include "traffic_editor/building.h"
 using std::string;
 
-BehaviorNodeWait::BehaviorNodeWait(const double _seconds)
+BehaviorNodeWait::BehaviorNodeWait(
+    const double _seconds,
+    const bool _release_reservations)
 : BehaviorNode(),
-  seconds(_seconds)
+  seconds(_seconds),
+  release_reservations(_release_reservations)
 {
 }
 
@@ -42,10 +46,16 @@ void BehaviorNodeWait::print() const
 void BehaviorNodeWait::tick(
     const double dt_seconds,
     ModelState& /*state*/,
-    Building& /*building*/,
+    Building& building,
     const std::vector<std::string>& /*inbound_messages*/,
     std::vector<std::string>& /*outbound_messages*/)
 {
+  if (!first_tick)
+  {
+    first_tick = true;
+    if (release_reservations)
+      building.release_all_lane_edges_for_model(model_name);
+  }
   elapsed_seconds += dt_seconds;
 }
 
