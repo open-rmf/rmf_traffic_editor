@@ -31,11 +31,6 @@ MotionParams& DoorCommon::params()
   return _params;
 }
 
-bool DoorCommon::is_initialized() const
-{
-  return _initialized;
-}
-
 void DoorCommon::publish_state(const uint32_t door_value,
   const rclcpp::Time& time)
 {
@@ -58,16 +53,6 @@ DoorCommon::DoorCommon(const std::string& door_name,
 : _ros_node(std::move(node)),
   _params(params)
 {
-  // if (!left_door_joint_name.empty() && left_door_joint_name != "empty_joint")
-  //   _doors.insert(std::make_pair(left_door_joint_name,
-  //     std::make_shared<DoorCommon::DoorElement>(
-  //       left_joint_limits[0], left_joint_limits[1])));
-  
-  // if (!right_door_joint_name.empty() && right_door_joint_name != "empty_joint")
-  //   _doors.insert(std::make_pair(right_door_joint_name,
-  //     std::make_shared<DoorCommon::DoorElement>(
-  //       right_joint_limits[0], right_joint_limits[1])));
-
   if (!left_door_joint_name.empty() && left_door_joint_name != "empty_joint")
   {
     DoorCommon::DoorElement door_element(left_joint_limits[0], left_joint_limits[1]);
@@ -99,11 +84,6 @@ DoorCommon::DoorCommon(const std::string& door_name,
 
 bool DoorCommon::all_doors_open()
 {
-  // for (const auto& door : _doors)
-  //   if (std::abs(door.second.open_position
-  //     - door.second.current_position) > _params.dx_min)
-  //     return false;
-
   for (const auto& door : _doors)
     if (std::abs(door.second.open_position
       - door.second.current_position) > _params.dx_min)
@@ -115,11 +95,9 @@ bool DoorCommon::all_doors_open()
 bool DoorCommon::all_doors_closed()
 {
   for (const auto& door : _doors)
-  {
     if (std::abs(door.second.closed_position
       - door.second.current_position) > _params.dx_min)
         return false;
-  }
 
   return true;
 }

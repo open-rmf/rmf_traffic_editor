@@ -75,12 +75,10 @@ public:
       "Loading DoorPlugin for [%s]",
       model.Name(ecm).c_str());
 
-    auto sdfClone = sdf->Clone();
-
     _door_common = DoorCommon::make(
       model.Name(ecm),
       _ros_node,
-      sdfClone);
+      sdf);
 
     if (!_door_common)
       return;
