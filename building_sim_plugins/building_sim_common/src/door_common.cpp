@@ -58,15 +58,27 @@ DoorCommon::DoorCommon(const std::string& door_name,
 : _ros_node(std::move(node)),
   _params(params)
 {
+  // if (!left_door_joint_name.empty() && left_door_joint_name != "empty_joint")
+  //   _doors.insert(std::make_pair(left_door_joint_name,
+  //     std::make_shared<DoorCommon::DoorElement>(
+  //       left_joint_limits[0], left_joint_limits[1])));
+  
+  // if (!right_door_joint_name.empty() && right_door_joint_name != "empty_joint")
+  //   _doors.insert(std::make_pair(right_door_joint_name,
+  //     std::make_shared<DoorCommon::DoorElement>(
+  //       right_joint_limits[0], right_joint_limits[1])));
+
   if (!left_door_joint_name.empty() && left_door_joint_name != "empty_joint")
-    _doors.insert(std::make_pair(left_door_joint_name,
-      std::make_shared<DoorCommon::DoorElement>(
-        left_joint_limits[0], left_joint_limits[1])));
+  {
+    DoorCommon::DoorElement door_element(left_joint_limits[0], left_joint_limits[1]);
+    _doors.insert({left_door_joint_name, door_element});
+  }
   
   if (!right_door_joint_name.empty() && right_door_joint_name != "empty_joint")
-    _doors.insert(std::make_pair(right_door_joint_name,
-      std::make_shared<DoorCommon::DoorElement>(
-        right_joint_limits[0], right_joint_limits[1])));
+  {
+    DoorCommon::DoorElement door_element(right_joint_limits[0], right_joint_limits[1]);
+    _doors.insert({left_door_joint_name, door_element});
+  }
 
   _state.door_name = door_name;
   _request.requested_mode.value = DoorMode::MODE_CLOSED;
@@ -87,9 +99,14 @@ DoorCommon::DoorCommon(const std::string& door_name,
 
 bool DoorCommon::all_doors_open()
 {
+  // for (const auto& door : _doors)
+  //   if (std::abs(door.second.open_position
+  //     - door.second.current_position) > _params.dx_min)
+  //     return false;
+
   for (const auto& door : _doors)
-    if (std::abs(door.second->open_position
-      - door.second->current_position) > _params.dx_min)
+    if (std::abs(door.second.open_position
+      - door.second.current_position) > _params.dx_min)
       return false;
 
   return true;
@@ -99,8 +116,8 @@ bool DoorCommon::all_doors_closed()
 {
   for (const auto& door : _doors)
   {
-    if (std::abs(door.second->closed_position
-      - door.second->current_position) > _params.dx_min)
+    if (std::abs(door.second.closed_position
+      - door.second.current_position) > _params.dx_min)
         return false;
   }
 
@@ -138,15 +155,15 @@ std::vector<DoorCommon::DoorUpdateResult> DoorCommon::update(
     const auto it = _doors.find(request.joint_name);
     if (it != _doors.end())
     {
-      it->second->current_position = request.position;
-      it->second->current_velocity = request.velocity;
+      it->second.current_position = request.position;
+      it->second.current_velocity = request.velocity;
       DoorCommon::DoorUpdateResult result;
       result.joint_name = request.joint_name;
       result.fmax = _params.f_max;
       if (requested_mode().value == DoorMode::MODE_OPEN)
       {
         result.velocity = calculate_target_velocity(
-            it->second->open_position,
+            it->second.open_position,
             request.position,
             request.velocity,
             dt);
@@ -154,7 +171,7 @@ std::vector<DoorCommon::DoorUpdateResult> DoorCommon::update(
       else
       {
         result.velocity = calculate_target_velocity(
-          it->second->closed_position,
+          it->second.closed_position,
           request.position,
           request.velocity,
           dt);

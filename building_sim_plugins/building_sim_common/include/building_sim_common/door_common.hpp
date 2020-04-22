@@ -66,6 +66,8 @@ private:
       const double lower_limit,
       const double upper_limit,
       const bool flip_direction = false)
+    : current_position(0.0),
+      current_velocity(0.0)
     {
       if (flip_direction)
       {
@@ -78,8 +80,8 @@ private:
         open_position = lower_limit;
       }
 
-      current_position = 0.0;
-      current_velocity = 0.0;
+      // current_position = 0.0;
+      // current_velocity = 0.0;
     }
   };
 
@@ -120,7 +122,8 @@ private:
   bool _initialized = false;
 
   // Map of joint_name and corresponding DoorElement
-  std::unordered_map<std::string, std::shared_ptr<DoorElement>> _doors;
+  // std::unordered_map<std::string, std::shared_ptr<DoorElement>> _doors;
+  std::unordered_map<std::string, DoorElement> _doors;
 };
 
 template<typename SdfPtrT>

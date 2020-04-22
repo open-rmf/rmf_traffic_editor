@@ -30,8 +30,7 @@ class IGNITION_GAZEBO_VISIBLE DoorPlugin
 {
 private:
   rclcpp::Node::SharedPtr _ros_node;
-  Model _model;
-  std::unordered_map<std::string, std::shared_ptr<Entity>> _joints;
+  std::unordered_map<std::string, Entity> _joints;
 
   std::shared_ptr<DoorCommon> _door_common = nullptr;
 
@@ -64,22 +63,22 @@ public:
     //_ros_node = gazebo_ros::Node::Get(sdf);
     // TODO get properties from sdf instead of hardcoded (will fail for multiple instantiations)
     // TODO proper rclcpp init (only once and pass args)
-    _model = Model(entity);
+    auto model = Model(entity);
     char const** argv = NULL;
     if (!rclcpp::is_initialized())
       rclcpp::init(0, argv);
-    std::string plugin_name("plugin_" + _model.Name(ecm));
+    std::string plugin_name("plugin_" + model.Name(ecm));
     ignwarn << "Initializing plugin with name " << plugin_name << std::endl;
     _ros_node = std::make_shared<rclcpp::Node>(plugin_name);
 
     RCLCPP_INFO(_ros_node->get_logger(),
       "Loading DoorPlugin for [%s]",
-      _model.Name(ecm).c_str());
+      model.Name(ecm).c_str());
 
     auto sdfClone = sdf->Clone();
 
     _door_common = DoorCommon::make(
-      _model.Name(ecm),
+      model.Name(ecm),
       _ros_node,
       sdfClone);
 
@@ -88,8 +87,7 @@ public:
 
     for (const auto& joint_name : _door_common->joint_names())
     {
-      const auto joint = std::make_shared<Entity>(
-        _model.JointByName(ecm, joint_name));
+      const auto joint = model.JointByName(ecm, joint_name);
       if (!joint)
       {
         RCLCPP_ERROR(_ros_node->get_logger(),
@@ -97,15 +95,15 @@ public:
           joint_name.c_str());
         return;
       }
-      create_entity_components(*joint, ecm);
-      _joints.insert(std::make_pair(joint_name, joint));
+      create_entity_components(joint, ecm);
+      _joints.insert({joint_name, joint});
     }
 
     _initialized = true;
 
     RCLCPP_INFO(_ros_node->get_logger(),
       "Finished loading [%s]",
-      _model.Name(ecm).c_str());
+      model.Name(ecm).c_str());
   }
 
   void PreUpdate(const UpdateInfo& info, EntityComponentManager& ecm) override
@@ -126,9 +124,9 @@ public:
       DoorCommon::DoorUpdateRequest request;
       request.joint_name = joint.first;
       request.position = ecm.Component<components::JointPosition>(
-          *joint.second)->Data()[0];
+          joint.second)->Data()[0];
       request.velocity = ecm.Component<components::JointVelocity>(
-          *joint.second)->Data()[0];
+          joint.second)->Data()[0];
       requests.push_back(request);
     }
     
@@ -140,7 +138,7 @@ public:
       const auto it = _joints.find(result.joint_name);
       assert(it != _joints.end());
       auto vel_cmd = ecm.Component<components::JointVelocityCmd>(
-        *it->second);
+        it->second);
       vel_cmd->Data()[0] = result.velocity;
     }
   }
