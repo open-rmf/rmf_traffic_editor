@@ -9,6 +9,7 @@
 
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace building_sim_common {
 
@@ -60,6 +61,8 @@ private:
     double current_position;
     double current_velocity;
 
+    DoorElement() {}
+
     DoorElement(
       const double lower_limit,
       const double upper_limit,
@@ -80,6 +83,9 @@ private:
     }
   };
 
+  // Map joint name to its DoorElement 
+  using Doors = std::unordered_map<std::string, DoorElement>;
+
   DoorMode requested_mode() const;
 
   void publish_state(const uint32_t door_value, const rclcpp::Time& time);
@@ -93,10 +99,7 @@ private:
   DoorCommon(const std::string& door_name,
     rclcpp::Node::SharedPtr node,
     const MotionParams& params,
-    const std::string& left_door_joint_name,
-    const std::string& right_door_joint_name,
-    const std::array<double, 2>& left_joint_limits,
-    const std::array<double, 2>& right_joint_limits);
+    const Doors& doors);
 
   bool all_doors_open();
 
@@ -117,7 +120,7 @@ private:
   bool _initialized = false;
 
   // Map of joint_name and corresponding DoorElement
-  std::unordered_map<std::string, DoorElement> _doors;
+  Doors _doors;
 };
 
 template<typename SdfPtrT>
@@ -167,13 +170,15 @@ std::shared_ptr<DoorCommon> DoorCommon::make(
     return nullptr;
   }
 
-    // Default values for joint limts
-  double left_joint_lower_limit = -1.57;
-  double left_joint_upper_limit = 0.0;
-  double right_joint_lower_limit = 0.0;
-  double right_joint_upper_limit = 1.57;
+  std::unordered_set<std::string> joint_names;
+  if (!left_door_joint_name.empty() && left_door_joint_name != "empty_joint")
+    joint_names.insert(left_door_joint_name);
+  if (!right_door_joint_name.empty() && right_door_joint_name != "empty_joint")
+    joint_names.insert(right_door_joint_name);
 
-  auto extract_limits = [&](SdfPtrT& joint_sdf)
+  Doors doors;
+  
+  auto extract_door = [&](SdfPtrT& joint_sdf)
   {
     auto joint_sdf_clone = joint_sdf->Clone();
     std::string joint_name;
@@ -182,21 +187,19 @@ std::shared_ptr<DoorCommon> DoorCommon::make(
     auto element = joint_sdf_clone;
     get_element_required(joint_sdf_clone, "axis", element);
     get_element_required(element, "limit", element);
-    if (joint_name == left_door_joint_name)
+    const auto it = joint_names.find(joint_name);
+    if (it != joint_names.end())
     {
-      get_sdf_param_if_available<double>(element, "lower", left_joint_lower_limit);
-      get_sdf_param_if_available<double>(element, "upper", left_joint_upper_limit);
-      RCLCPP_INFO(node->get_logger(),
-        "Joint [%s] lower [%f] upper [%f]",
-        joint_name.c_str(),left_joint_lower_limit, left_joint_upper_limit);
-    }
-    else if (joint_name == right_door_joint_name)
-    {
-      get_sdf_param_if_available<double>(element, "lower", right_joint_lower_limit);
-      get_sdf_param_if_available<double>(element, "upper", right_joint_upper_limit);
-      RCLCPP_INFO(node->get_logger(),
-        "Joint [%s] lower [%f] upper [%f]",
-        joint_name.c_str(),left_joint_lower_limit, left_joint_upper_limit);
+      double lower_limit = -1.57;
+      double upper_limit = 0.0;
+      get_sdf_param_if_available<double>(element, "lower", lower_limit);
+      get_sdf_param_if_available<double>(element, "upper", upper_limit);
+      DoorCommon::DoorElement door_element;
+      if (joint_name == right_door_joint_name)
+        door_element = DoorCommon::DoorElement{lower_limit, upper_limit, true};
+      else
+        door_element= DoorCommon::DoorElement{lower_limit, upper_limit};
+      doors.insert({joint_name, door_element});
     }
   };
 
@@ -217,25 +220,17 @@ std::shared_ptr<DoorCommon> DoorCommon::make(
     return nullptr;
   }
 
-  extract_limits(joint_element);
+  extract_door(joint_element);
   // Find next joint element if present
   joint_element = joint_element->GetNextElement("joint");
   if (joint_element)
-    extract_limits(joint_element);
-
-  std::array<double,2> left_joint_limits ={
-    left_joint_lower_limit, left_joint_upper_limit};
-  std::array<double,2> right_joint_limits ={
-    right_joint_lower_limit, right_joint_upper_limit};
+    extract_door(joint_element);
 
   std::shared_ptr<DoorCommon> door_common(new DoorCommon(
       door_name,
       node,
       params,
-      left_door_joint_name,
-      right_door_joint_name,
-      left_joint_limits,
-      right_joint_limits));
+      doors));
 
   return door_common;
 

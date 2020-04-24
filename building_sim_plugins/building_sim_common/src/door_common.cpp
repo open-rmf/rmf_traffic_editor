@@ -46,25 +46,11 @@ void DoorCommon::publish_state(const uint32_t door_value,
 DoorCommon::DoorCommon(const std::string& door_name,
   rclcpp::Node::SharedPtr node,
   const MotionParams& params,
-  const std::string& left_door_joint_name,
-  const std::string& right_door_joint_name,
-  const std::array<double, 2>& left_joint_limits,
-  const std::array<double, 2>& right_joint_limits)
+  const Doors& doors)
 : _ros_node(std::move(node)),
-  _params(params)
+  _params(params),
+  _doors(doors)
 {
-  if (!left_door_joint_name.empty() && left_door_joint_name != "empty_joint")
-  {
-    DoorCommon::DoorElement door_element(left_joint_limits[0], left_joint_limits[1]);
-    _doors.insert({left_door_joint_name, door_element});
-  }
-  
-  if (!right_door_joint_name.empty() && right_door_joint_name != "empty_joint")
-  {
-    DoorCommon::DoorElement door_element(right_joint_limits[0], right_joint_limits[1]);
-    _doors.insert({left_door_joint_name, door_element});
-  }
-
   _state.door_name = door_name;
   _request.requested_mode.value = DoorMode::MODE_CLOSED;
 
