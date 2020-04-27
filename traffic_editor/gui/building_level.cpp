@@ -438,10 +438,11 @@ void BuildingLevel::draw_lane(
   // always draw lanes somewhat transparent
   color.setAlphaF(0.5);
 
-  scene->addLine(
+  QGraphicsLineItem *lane_item = scene->addLine(
       v_start.x, v_start.y,
       v_end.x, v_end.y,
       QPen(QBrush(color), lane_pen_width, Qt::SolidLine, Qt::RoundCap));
+  lane_item->setZValue(edge.get_graph_idx() + 1.0);
 
   // draw the orientation icon, if specified
   auto orientation_it = edge.params.find("orientation");

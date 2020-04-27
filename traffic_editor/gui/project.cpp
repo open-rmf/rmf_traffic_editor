@@ -467,12 +467,7 @@ void Project::set_selected_line_item(
       if (edge.type != Edge::LANE)
         continue;
       if (edge.get_graph_idx() != traffic_map_idx)
-      {
-        printf("ignoring edge with graph_idx=%d since traffic_map_idx=%d\n",
-            edge.get_graph_idx(),
-            traffic_map_idx);
         continue;
-      }
     }
     if (mode == MODE_BUILDING && edge.type == Edge::LANE)
       continue;
