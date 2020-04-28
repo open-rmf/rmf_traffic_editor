@@ -624,7 +624,7 @@ void SlotcarPlugin::map_cb(const building_map_msgs::msg::BuildingMap::SharedPtr 
     {
       for (const auto& vertex : graph.vertices)
       {
-        if (std::abs(compute_disp(vertex) - 0.0) < 1.0)
+        if (compute_disp(vertex) < 1.0)
         {
           _current_level_name = level.name;
           RCLCPP_INFO(logger(), "Setting slotcar level name [%s]",
