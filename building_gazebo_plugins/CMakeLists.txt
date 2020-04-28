@@ -32,6 +32,7 @@ find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(rmf_fleet_msgs REQUIRED)
 find_package(rmf_door_msgs REQUIRED)
+find_package(building_map_msgs REQUIRED)
 
 include(GNUInstallDirs)
 
@@ -53,6 +54,7 @@ target_link_libraries(slotcar
     ${gazebo_ros_LIBRARIES}
     ${geometry_msgs_LIBRARIES}
     ${tf2_ros_LIBRARIES}
+    ${building_map_msgs_LIBRARIES}
 )
 
 target_include_directories(slotcar
@@ -64,6 +66,7 @@ target_include_directories(slotcar
     ${std_msgs_INCLUDE_DIRS}
     ${rmf_fleet_msgs_INCLUDE_DIRS}
     ${tf2_ros_INCLUDE_DIRS}
+    ${building_map_msgs_INCLUDE_DIRS}
 )
 
 # These lines are taken out because of this issue: https://github.com/ament/ament_cmake/issues/158
