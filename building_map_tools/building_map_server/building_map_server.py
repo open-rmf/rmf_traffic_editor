@@ -100,8 +100,10 @@ class BuildingMapServer(Node):
                 door_msg.v1_y = level.vertices[door.start_idx].y
                 door_msg.v2_x = level.vertices[door.end_idx].x
                 door_msg.v2_y = level.vertices[door.end_idx].y
-                door_msg.motion_range = float(door.params['motion_degrees'].value)
-                door_msg.motion_direction = door.params['motion_direction'].value
+                door_msg.motion_range = float(
+                    door.params['motion_degrees'].value)
+                door_msg.motion_direction = door.params[
+                    'motion_direction'].value
                 door_type = door.params['type'].value
                 if door_type == 'sliding':
                     door_msg.door_type = door_msg.DOOR_TYPE_SINGLE_SLIDING

@@ -36,9 +36,11 @@ class BuildingMapClient(Node):
             print(f'    {len(level.places)} places')
             print(f'    {len(level.doors)} doors')
             for door in level.doors:
-                print(f'        {door.door_name}, v1: [{door.v1_x},{door.v1_y}], ' +
-                    f'v2: [{door.v2_x},{door.v2_y}], type: {door.door_type}, ' +
-                    f'range: {door.motion_range}, dir: {door.motion_direction}')
+                print(f'        {door.door_name}, ' +
+                      f'v1:[{round(door.v1_x, 1)},{round(door.v1_y,1)}], ' +
+                      f'v2:[{round(door.v2_x, 1)},{round(door.v2_y,1)}], ' +
+                      f'type:{door.door_type}, range:{door.motion_range}, ' +
+                      f'dir:{door.motion_direction}')
             print(f'    {len(level.nav_graphs)} navigation graphs')
             for nav_graph in level.nav_graphs:
                 print(f'    graph {nav_graph.name}:')
