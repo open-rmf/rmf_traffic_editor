@@ -67,7 +67,8 @@ class BuildingMapServer(Node):
         msg.name = building.name
         for _, level_data in building.levels.items():
             msg.levels.append(self.level_msg(level_data))
-        # todo: lifts
+        for _, lift_data in building.lifts.items():
+            msg.lifts.append(self.lift_msg(lift_data))
         return msg
 
     def level_msg(self, level):
@@ -140,6 +141,17 @@ class BuildingMapServer(Node):
                     ge.edge_type = GraphEdge.EDGE_TYPE_UNIDIRECTIONAL
                 graph_msg.edges.append(ge)
             msg.nav_graphs.append(graph_msg)
+        return msg
+    
+    def lift_msg(self, lift):
+        msg = Lift()
+        msg.name = lift.name
+        msg.levels = lift.level_names
+        msg.ref_x = lift.x
+        msg.ref_y = lift.y
+        msg.ref_yaw = lift.yaw
+        msg.width = lift.width
+        msg.depth = lift.depth
         return msg
 
     def get_building_map(self, request, response):

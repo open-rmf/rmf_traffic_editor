@@ -5,6 +5,7 @@ from xml.etree.ElementTree import Element, SubElement, parse
 from ament_index_python.packages import get_package_share_directory
 
 from .level import Level
+from .lift import Lift
 
 
 class Building:
@@ -18,6 +19,10 @@ class Building:
         self.levels = {}
         for level_name, level_yaml in yaml_node['levels'].items():
             self.levels[level_name] = Level(level_yaml, level_name)
+        
+        self.lifts = {}
+        for lift_name, lift_yaml in yaml_node['lifts'].items():
+            self.lifts[lift_name] = Lift(lift_yaml, lift_name)
 
         if 'reference_level_name' in yaml_node:
             self.reference_level_name = yaml_node['reference_level_name']
