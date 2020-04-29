@@ -142,7 +142,7 @@ class BuildingMapServer(Node):
                 graph_msg.edges.append(ge)
             msg.nav_graphs.append(graph_msg)
         return msg
-    
+
     def lift_msg(self, lift):
         msg = Lift()
         msg.name = lift.name
