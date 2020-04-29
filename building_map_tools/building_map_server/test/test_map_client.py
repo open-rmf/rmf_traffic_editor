@@ -27,8 +27,18 @@ class BuildingMapClient(Node):
     def map_cb(self, msg):
         print('received map!')
         print(f'building name: {msg.name}')
+        print(f'{len(msg.lifts)} lifts')
+        print(f'{len(msg.levels)} levels')
         for level in msg.levels:
             print(f'  level: {level.name}')
+            print(f'    {level.elevation} elevation')
+            print(f'    {len(level.images)} images')
+            print(f'    {len(level.places)} places')
+            print(f'    {len(level.doors)} doors')
+            for door in level.doors:
+                print(f'        {door.door_name}, v1: [{door.v1_x},{door.v1_y}], ' +
+                    f'v2: [{door.v2_x},{door.v2_y}], type: {door.door_type}, ' +
+                    f'range: {door.motion_range}, dir: {door.motion_direction}')
             print(f'    {len(level.nav_graphs)} navigation graphs')
             for nav_graph in level.nav_graphs:
                 print(f'    graph {nav_graph.name}:')
