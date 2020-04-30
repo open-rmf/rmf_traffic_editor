@@ -26,6 +26,8 @@ from building_map_msgs.msg import Lift
 
 from building_map.building import Building
 
+from building_map.transform import Transform
+
 
 class BuildingMapServer(Node):
     def __init__(self, map_path):
@@ -152,6 +154,28 @@ class BuildingMapServer(Node):
         msg.ref_yaw = lift.yaw
         msg.width = lift.width
         msg.depth = lift.depth
+        for door in lift.doors:
+            door_msg = Door()
+            door_msg.door_name = door.name
+            door_msg.door_type = door.door_type
+            # find the vertices of the lift in global frame
+            v1_x = -0.5 * door.width
+            v1_y = 0.0
+            v2_x = 0.5 * door.width
+            v2_y = 0.0
+            transform = Transform()
+            transform.set_rotation(lift.yaw + door.motion_axis_orientation)
+            transform.set_translation(lift.x + door.x, lift.y + door.y)
+            v1_x, v1_y = transform.transform_point([v1_x, v1_y])
+            v2_x, v2_y = transform.transform_point([v2_x, v2_y])
+            door_msg.v1_x = v1_x
+            door_msg.v1_y = v1_y
+            door_msg.v2_x = v2_x
+            door_msg.v2_y = v2_y
+            # todo add these fields to lift doors
+            door_msg.motion_range = 90.0
+            door_msg.motion_direction = -1
+            msg.doors.append(door_msg)
         return msg
 
     def get_building_map(self, request, response):
