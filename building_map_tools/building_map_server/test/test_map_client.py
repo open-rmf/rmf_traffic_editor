@@ -26,9 +26,9 @@ class BuildingMapClient(Node):
 
     def print_door(self, door):
         print(f'        {door.door_name}, ' +
-              f'v1:[{round(door.v1_x, 1)},{round(door.v1_y,1)}], ' +
-              f'v2:[{round(door.v2_x, 1)},{round(door.v2_y,1)}], ' +
-              f'type:{door.door_type}, range:{door.motion_range}, ' +
+              f'v1:[{round(door.v1_x, 2)},{round(door.v1_y,2)}], ' +
+              f'v2:[{round(door.v2_x, 2)},{round(door.v2_y,2)}], ' +
+              f'type:{door.door_type}, range:{round(door.motion_range, 2)}, ' +
               f'dir:{door.motion_direction}')
 
     def map_cb(self, msg):
@@ -38,10 +38,10 @@ class BuildingMapClient(Node):
         for lift in msg.lifts:
             print(f'  lift: {lift.name}')
             print(f'    {lift.levels} levels')
-            print(f'    ({round(lift.ref_x, 1)},{round(lift.ref_y, 1)},' +
-                  f'{round(lift.ref_yaw, 1)})')
-            print(f'    width:{round(lift.width, 1)} ' +
-                  f'depth:{round(lift.depth, 1)}')
+            print(f'    ({round(lift.ref_x, 2)},{round(lift.ref_y, 2)},' +
+                  f'{round(lift.ref_yaw, 2)})')
+            print(f'    width:{round(lift.width, 2)} ' +
+                  f'depth:{round(lift.depth, 2)}')
             print(f'    {len(lift.doors)} doors')
             for door in lift.doors:
                 self.print_door(door)
@@ -59,8 +59,8 @@ class BuildingMapClient(Node):
                 print(f'    graph {nav_graph.name}:')
                 print(f'      {len(nav_graph.vertices)} vertices')
                 for vertex in nav_graph.vertices:
-                    print(f'        ({round(vertex.x, 1)}, ' +
-                          f'{round(vertex.y, 1)}, "{vertex.name}")')
+                    print(f'        ({round(vertex.x, 2)}, ' +
+                          f'{round(vertex.y, 2)}, "{vertex.name}")')
 
                 print(f'      {len(nav_graph.edges)} edges')
                 for edge in nav_graph.edges:

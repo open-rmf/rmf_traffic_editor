@@ -103,8 +103,8 @@ class BuildingMapServer(Node):
                 door_msg.v1_y = level.vertices[door.start_idx].y
                 door_msg.v2_x = level.vertices[door.end_idx].x
                 door_msg.v2_y = level.vertices[door.end_idx].y
-                door_msg.motion_range = float(
-                    door.params['motion_degrees'].value)
+                door_msg.motion_range = math.pi * float(
+                    door.params['motion_degrees'].value) / 180.0
                 door_msg.motion_direction = door.params[
                     'motion_direction'].value
                 door_type = door.params['type'].value
@@ -173,7 +173,7 @@ class BuildingMapServer(Node):
             door_msg.v2_x = v2_x
             door_msg.v2_y = v2_y
             # todo add these fields to lift doors
-            door_msg.motion_range = 90.0
+            door_msg.motion_range = 1.571
             door_msg.motion_direction = -1
             msg.doors.append(door_msg)
         return msg
