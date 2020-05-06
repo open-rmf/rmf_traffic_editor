@@ -4,12 +4,13 @@ string name
 # ===========
 # single hinge doors:
 #   * hinge is located at (v1_x, v1_y)
+#   * door extends till (v2_x, v2_y)
 #   * motion_range = door swing range in DEGREES
 #   * there are two possible motions: clockwise and anti-clockwise
 #     selected by the motion_direction parameter, which is +1 or -1
 #
 # double hinge doors:
-#   * hinges are located at both (v1_x) and (v2_x)
+#   * hinges are located at both (v1_x, v1_y) and (v2_x, v2_y)
 #   * motion range = door swing ranges in DEGREES (assume symmetric)
 #   * same motion-direction selection as single hinge
 #
@@ -23,6 +24,8 @@ string name
 # single/double telescoping doors:
 #   * common in elevators; same parameters as sliding doors; they just
 #     open/close faster and take up less space inside the wall.
+
+string door_name
 
 float32 v1_x
 float32 v1_y

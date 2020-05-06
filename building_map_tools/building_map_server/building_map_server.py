@@ -26,6 +26,8 @@ from building_map_msgs.msg import Lift
 
 from building_map.building import Building
 
+from building_map.transform import Transform
+
 
 class BuildingMapServer(Node):
     def __init__(self, map_path):
@@ -67,13 +69,14 @@ class BuildingMapServer(Node):
         msg.name = building.name
         for _, level_data in building.levels.items():
             msg.levels.append(self.level_msg(level_data))
-        # todo: lifts
+        for _, lift_data in building.lifts.items():
+            msg.lifts.append(self.lift_msg(lift_data))
         return msg
 
     def level_msg(self, level):
         msg = Level()
         msg.name = level.name
-        msg.elevation = 0.0  # todo: actually capture this in traffic-editor
+        msg.elevation = level.elevation
         if level.drawing_name:
             image = AffineImage()
             image_filename = level.drawing_name
@@ -92,29 +95,87 @@ class BuildingMapServer(Node):
                 len(image.data), image_filename))
             msg.images.append(image)
 
-            # for now, nav graphs are just single-digit numbers
-            for i in range(0, 9):
-                g = level.generate_nav_graph(i, always_unidirectional=False)
-                if not g['lanes']:
-                    continue  # empty graph :(
-                graph_msg = Graph()
-                graph_msg.name = str(i)  # todo: someday, string names...
-                for v in g['vertices']:
-                    gn = GraphNode()
-                    gn.x = v[0]
-                    gn.y = v[1]
-                    gn.name = v[2]['name']
-                    graph_msg.vertices.append(gn)
-                for l in g['lanes']:
-                    ge = GraphEdge()
-                    ge.v1_idx = l[0]
-                    ge.v2_idx = l[1]
-                    if l[2]['is_bidirectional']:
-                        ge.edge_type = GraphEdge.EDGE_TYPE_BIDIRECTIONAL
-                    else:
-                        ge.edge_type = GraphEdge.EDGE_TYPE_UNIDIRECTIONAL
-                    graph_msg.edges.append(ge)
-                msg.nav_graphs.append(graph_msg)
+        if (len(level.doors)):
+            for door in level.doors:
+                door_msg = Door()
+                door_msg.door_name = door.params['name'].value
+                door_msg.v1_x = level.vertices[door.start_idx].x
+                door_msg.v1_y = level.vertices[door.start_idx].y
+                door_msg.v2_x = level.vertices[door.end_idx].x
+                door_msg.v2_y = level.vertices[door.end_idx].y
+                door_msg.motion_range = math.pi * float(
+                    door.params['motion_degrees'].value) / 180.0
+                door_msg.motion_direction = door.params[
+                    'motion_direction'].value
+                door_type = door.params['type'].value
+                if door_type == 'sliding':
+                    door_msg.door_type = door_msg.DOOR_TYPE_SINGLE_SLIDING
+                elif door_type == 'hinged':
+                    door_msg.door_type = door_msg.DOOR_TYPE_SINGLE_SWING
+                elif door_type == 'double_sliding':
+                    door_msg.door_type = door_msg.DOOR_TYPE_DOUBLE_SLIDING
+                elif door_type == 'double_hinged':
+                    door_msg.door_type = door_msg.DOOR_TYPE_DOUBLE_SWING
+                else:
+                    door_msg.door_type = door_msg.DOOR_TYPE_UNDEFINED
+                msg.doors.append(door_msg)
+
+        # for now, nav graphs are just single-digit numbers
+        for i in range(0, 9):
+            g = level.generate_nav_graph(i, always_unidirectional=False)
+            if not g['lanes']:
+                continue  # empty graph :(
+            graph_msg = Graph()
+            graph_msg.name = str(i)  # todo: someday, string names...
+            for v in g['vertices']:
+                gn = GraphNode()
+                gn.x = v[0]
+                gn.y = v[1]
+                gn.name = v[2]['name']
+                graph_msg.vertices.append(gn)
+            for l in g['lanes']:
+                ge = GraphEdge()
+                ge.v1_idx = l[0]
+                ge.v2_idx = l[1]
+                if l[2]['is_bidirectional']:
+                    ge.edge_type = GraphEdge.EDGE_TYPE_BIDIRECTIONAL
+                else:
+                    ge.edge_type = GraphEdge.EDGE_TYPE_UNIDIRECTIONAL
+                graph_msg.edges.append(ge)
+            msg.nav_graphs.append(graph_msg)
+        return msg
+
+    def lift_msg(self, lift):
+        msg = Lift()
+        msg.name = lift.name
+        msg.levels = lift.level_names
+        msg.ref_x = lift.x
+        msg.ref_y = lift.y
+        msg.ref_yaw = lift.yaw
+        msg.width = lift.width
+        msg.depth = lift.depth
+        for door in lift.doors:
+            door_msg = Door()
+            door_msg.door_name = door.name
+            door_msg.door_type = door.door_type
+            # find the vertices of the lift in global frame
+            v1_x = -0.5 * door.width
+            v1_y = 0.0
+            v2_x = 0.5 * door.width
+            v2_y = 0.0
+            transform = Transform()
+            transform.set_rotation(lift.yaw + door.motion_axis_orientation)
+            transform.set_translation(lift.x + door.x, lift.y + door.y)
+            v1_x, v1_y = transform.transform_point([v1_x, v1_y])
+            v2_x, v2_y = transform.transform_point([v2_x, v2_y])
+            door_msg.v1_x = v1_x
+            door_msg.v1_y = v1_y
+            door_msg.v2_x = v2_x
+            door_msg.v2_y = v2_y
+            # todo add these fields to lift doors
+            door_msg.motion_range = 1.571
+            door_msg.motion_direction = -1
+            msg.doors.append(door_msg)
         return msg
 
     def get_building_map(self, request, response):

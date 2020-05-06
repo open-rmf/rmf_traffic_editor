@@ -32,7 +32,7 @@ class Level:
 
         self.elevation = 0.0
         if 'elevation' in yaml_node:
-            self.elevation = yaml_node['elevation']
+            self.elevation = float(yaml_node['elevation'])
 
         self.fiducials = []
         if 'fiducials' in yaml_node:
