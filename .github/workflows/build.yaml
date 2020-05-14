@@ -3,20 +3,27 @@ on: push
 jobs:
   build:
     runs-on: ubuntu-18.04
+    container:
+      image: docker://ros:eloquent-ros-base-bionic
     
     steps:
-    - uses: actions/checkout@v1
-    - name: deps
+    - name: non-ros-deps
       run: |
         sudo apt-get update
-        sudo apt-get install cmake libyaml-cpp-dev qt5-default libopencv-dev libopencv-videoio-dev
-    - name: cmake
+        sudo apt-get install -y git cmake wget libyaml-cpp-dev qt5-default \
+          libopencv-dev libopencv-videoio-dev python3-vcstool
+    - name: ros-workspace
       run: |
-        cd traffic_editor
-        mkdir build
-        cd build
-        cmake ..
-    - name: make
+        cd /home/
+        mkdir -p rmf_demos_ws/src
+    - name: checkout
+      shell: bash
       run: |
-        cd traffic_editor/build
-        make
+        cd /home/rmf_demos_ws/src
+        git checkout "${GITHUB_REF:11}"
+    - name: build
+      shell: bash
+      run: |
+        cd /home/rmf_demos_ws/src
+        source /opt/ros/eloquent/setup.bash
+        colcon build
