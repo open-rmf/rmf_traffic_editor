@@ -10,12 +10,12 @@ jobs:
 
     - name: ros-workspace
       run: |
-        mkdir -p "${GITHUB_WORKSPACE}/ws/src"
+        mkdir -p ws/src
 
     - name: checkout
       uses: actions/checkout@v2
       with:
-        path: "${GITHUB_WORKSPACE}/ws/src/traffic_editor"
+        path: ws/src/traffic_editor
 
     - name: non-ros-deps
       run: |
@@ -26,6 +26,6 @@ jobs:
     - name: build
       shell: bash
       run: |
-        cd "${GITHUB_WORKSPACE}/ws"
+        cd ws
         source /opt/ros/eloquent/setup.bash
         colcon build
