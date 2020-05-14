@@ -21,7 +21,8 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y git cmake wget libyaml-cpp-dev qt5-default \
-          libopencv-dev libopencv-videoio-dev python3-vcstool
+          libopencv-dev libopencv-videoio-dev python3-vcstool \
+          libignition-plugin-dev libignition-common3-dev
 
     - name: build
       shell: bash
