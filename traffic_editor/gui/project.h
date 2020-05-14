@@ -72,10 +72,6 @@ public:
       const int level_idx,
       std::vector<EditorModel>& editor_models);
 
-  void draw_active_lanes(
-      QGraphicsScene *scene,
-      const int level_idx);
-
   void clear_selection(const int level_idx);
   bool delete_selected(const int level_idx);
 

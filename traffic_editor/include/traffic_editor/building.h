@@ -32,15 +32,13 @@ class QGraphicsScene;
 
 #include "building_level.h"
 #include "lift.h"
-#include "planner_graph.h"
-#include "planner_node.h"
 
 
 class Building
 {
 public:
   Building();
-  ~Building();
+  virtual ~Building();
 
   std::string name;
   std::string reference_level_name;
@@ -165,45 +163,7 @@ public:
 
   void clear_scene();
 
-  std::shared_ptr<planner::Graph> planner_graph(
-      const int graph_idx,
-      const std::string& level_name);
-
   double level_meters_per_pixel(const std::string& level_name) const;
-
-  bool request_lane_edge(
-      const std::string& level_name,
-      const planner::Edge &edge,
-      const std::string& requester_name,
-      const bool remove_all_other_reservations);
-
-  void release_lane_edge(
-      const std::string& level_name,
-      const planner::Edge &edge,
-      const std::string& requester_name);
-
-  void release_all_lane_edges_for_model(
-      const std::string& requester_name);
-
-  struct EdgeReservation
-  {
-    std::string model_name;
-    std::string level_name;
-    planner::Edge edge;
-    QGraphicsLineItem *graphics_line = nullptr;
-  };
-  std::vector<EdgeReservation> active_edges;
-  std::vector<QGraphicsLineItem *> lines_to_remove;
-  std::mutex active_edges_mutex;
-
-  void draw_active_edges(
-    QGraphicsScene *scene,
-    const int level_idx);
-
-  double distance_to_nearest_model_on_path(
-      const std::string& model_name,
-      const ModelState& model_state,
-      const std::vector<std::shared_ptr<planner::Node>>& path);
 
   std::shared_ptr<Model> get_model(const std::string& name);
 };

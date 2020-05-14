@@ -113,27 +113,6 @@ void Model::set_param(const std::string &name, const std::string &value)
   }
 }
 
-void Model::tick(
-    const double dt_seconds,
-    Building& building,
-    const std::vector<std::string>& inbound_messages,
-    std::vector<std::string>& outbound_messages)
-{
-  next_state = state;
-  behavior->tick(
-      dt_seconds,
-      next_state,
-      building,
-      inbound_messages,
-      outbound_messages);
-}
-
-void Model::set_behavior(std::unique_ptr<Behavior> _behavior)
-{
-  behavior = std::move(_behavior);
-  behavior->model_name = instance_name;
-}
-
 void Model::draw(
     QGraphicsScene *scene,
     std::vector<EditorModel>& editor_models,

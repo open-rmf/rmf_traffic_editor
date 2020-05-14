@@ -446,7 +446,8 @@ void Editor::scene_update_timer_timeout()
       
       model->draw(scene, editor_models, level_scale);
     }
-    project->draw_active_lanes(scene, level_idx);
+    // todo: call into the scenario to draw whatever it wants
+    // something like scenario->draw(scene, level_idx);
   }
 
   record_frame_to_video();

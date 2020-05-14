@@ -18,8 +18,6 @@
 #ifndef SCENARIO_H
 #define SCENARIO_H
 
-#include "traffic_editor/behavior.h"
-#include "traffic_editor/behavior_schedule_item.h"
 #include "traffic_editor/building.h"
 #include "traffic_editor/editor_model.h"
 #include "traffic_editor/model.h"
@@ -42,8 +40,6 @@ public:
   std::string name;
   std::string filename;
   std::vector<ScenarioLevel> levels;
-  std::vector<std::unique_ptr<Behavior> > behaviors;
-  std::vector<BehaviorScheduleItem> behavior_schedule;
 
   // when a model starts to become an "active participant" in a scenario,
   // it is removed from the building level and owned by the Scenario
@@ -86,10 +82,6 @@ public:
 
   void sim_tick(Building& building);
   void sim_reset(Building& building);
-
-  void start_behavior_schedule_item(
-      BehaviorScheduleItem& item,
-      Building& building);
 
   std::vector<std::string> behavior_signals;
 

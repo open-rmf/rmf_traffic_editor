@@ -25,7 +25,6 @@
  * a map.
  */
 
-#include "behavior.h"
 #include "editor_model.h"
 #include "model_state.h"
 
@@ -51,22 +50,12 @@ public:
   std::string starting_level;  // used when resetting a test scenario
   QGraphicsPixmapItem* pixmap_item = nullptr;
 
-  std::unique_ptr<Behavior> behavior;
-
   Model();
 
   YAML::Node to_yaml() const;
   void from_yaml(const YAML::Node &data, const std::string& level_name);
 
   void set_param(const std::string &name, const std::string &value);
-
-  void tick(
-      const double dt_seconds,
-      Building& building,
-      const std::vector<std::string>& inbound_messages,
-      std::vector<std::string>& outbound_messages);
-
-  void set_behavior(std::unique_ptr<Behavior> _behavior);
 
   void draw(
       QGraphicsScene *scene,

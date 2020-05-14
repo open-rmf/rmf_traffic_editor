@@ -643,13 +643,6 @@ void Project::draw_scenario_models(
       editor_models);
 }
 
-void Project::draw_active_lanes(QGraphicsScene *scene, const int level_idx)
-{
-  if (building.levels.empty())
-    return;
-  building.draw_active_edges(scene, level_idx);
-}
-
 void Project::add_lane(
     const int level_idx,
     const int start_idx,

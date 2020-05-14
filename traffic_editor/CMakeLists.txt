@@ -33,16 +33,6 @@ include_directories(include)
 
 add_executable(traffic-editor
   gui/add_param_dialog.cpp
-  gui/behavior.cpp
-  gui/behavior_node.cpp
-  gui/behavior_node_navigate.cpp
-  gui/behavior_node_send_messages.cpp
-  gui/behavior_node_send_signal.cpp
-  gui/behavior_node_await_signal.cpp
-  gui/behavior_node_await_signals.cpp
-  gui/behavior_node_teleport.cpp
-  gui/behavior_node_wait.cpp
-  gui/behavior_schedule_item.cpp
   gui/building.cpp
   gui/building_dialog.cpp
   gui/building_level.cpp
@@ -64,9 +54,6 @@ add_executable(traffic-editor
   gui/model.cpp
   gui/model_dialog.cpp
   gui/param.cpp
-  gui/planner_edge.cpp
-  gui/planner_graph.cpp
-  gui/planner_node.cpp
   gui/polygon.cpp
   gui/preferences_dialog.cpp
   gui/preferences_keys.cpp
