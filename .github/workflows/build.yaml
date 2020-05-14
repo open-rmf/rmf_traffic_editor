@@ -10,6 +10,8 @@ jobs:
     - name: osrf-repo
       shell: bash
       run: |
+        sudo apt-get update
+        sudo apt-get install wget
         echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable bionic main" > /etc/apt/sources.list.d/gazebo-stable.list
         wget https://packages.osrfoundation.org/gazebo.key -O - | apt-key add -
         sudo apt-get update
