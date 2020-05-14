@@ -28,4 +28,4 @@ jobs:
       run: |
         cd ws
         source /opt/ros/eloquent/setup.bash
-        colcon build
+        colcon build --packages-select traffic_editor
