@@ -7,6 +7,12 @@ jobs:
       image: docker://ros:eloquent-ros-base-bionic
     
     steps:
+    - name: osrf-repo
+      run: |
+        echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb-release -cs` main" > /etc/apt/sources.list.d/gazebo-stable.list
+        wget https://packages.osrfoundation.org/gazebo.key -O - | apt-key add -
+        sudo apt-get update
+        sudo apt-get install libignition-plugin-dev libignition-common3-dev
 
     - name: ros-workspace
       run: |
@@ -21,8 +27,7 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y git cmake wget libyaml-cpp-dev qt5-default \
-          libopencv-dev libopencv-videoio-dev python3-vcstool \
-          libignition-plugin-dev libignition-common3-dev
+          libopencv-dev libopencv-videoio-dev
 
     - name: build
       shell: bash
