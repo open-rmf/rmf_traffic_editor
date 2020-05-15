@@ -421,11 +421,12 @@ Editor::~Editor()
 
 void Editor::scene_update_timer_timeout()
 {
+  project->scenario_scene_update(scene, level_idx);
+
   {
     std::lock_guard<std::mutex> building_guard(
         project->building.building_mutex);
   
-    project->scenario_scene_update(scene, level_idx);
 
     // project->draw_scenario(scene, level_idx);
     //project.building.levels[level_idx]->name,
