@@ -83,6 +83,11 @@ public:
   void sim_tick(Building& building);
   void sim_reset(Building& building);
 
+  void scene_update(
+      QGraphicsScene *scene,
+      Building& building,
+      const int level_idx);
+
   std::vector<std::string> behavior_signals;
 
   ignition::plugin::SpecializedPluginPtr<Simulation> sim_plugin;

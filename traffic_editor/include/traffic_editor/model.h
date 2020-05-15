@@ -40,7 +40,6 @@ class Model
 {
 public:
   ModelState state;
-  ModelState next_state;
 
   std::string model_name;
   std::string instance_name;

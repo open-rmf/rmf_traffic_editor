@@ -72,6 +72,10 @@ public:
       const int level_idx,
       std::vector<EditorModel>& editor_models);
 
+  void scenario_scene_update(
+      QGraphicsScene *scene,
+      const int level_idx);
+
   void clear_selection(const int level_idx);
   bool delete_selected(const int level_idx);
 

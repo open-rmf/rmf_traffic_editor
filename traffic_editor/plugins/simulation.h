@@ -20,6 +20,8 @@
 
 #include "traffic_editor/building.h"
 
+class QGraphicsScene;
+
 class Simulation
 {
 public:
@@ -28,6 +30,13 @@ public:
   virtual void load(const YAML::Node& config_data) = 0;
   virtual void tick(Building& building) = 0;
   virtual void reset(Building& building) = 0;
+
+  virtual void scene_update(
+      QGraphicsScene *scene,
+      Building& building,
+      const int level_idx) = 0;
+
+  virtual void scene_clear() = 0;
 };
 
 #endif

@@ -270,4 +270,25 @@ void Scenario::clear_scene()
   printf("Scenario::clear_scene()\n");
   for (auto& model : models)
     model->clear_scene();
+
+  if (!sim_plugin.IsEmpty())
+  {
+    Simulation *sim = sim_plugin->QueryInterface<Simulation>();
+    if (sim)
+      sim->scene_clear();
+  }
+}
+
+void Scenario::scene_update(
+    QGraphicsScene *scene,
+    Building& building,
+    const int level_idx)
+{
+  if (!sim_plugin.IsEmpty())
+  {
+    std::lock_guard<std::mutex> building_guard(building.building_mutex);
+    Simulation *sim = sim_plugin->QueryInterface<Simulation>();
+    if (sim)
+      sim->scene_update(scene, building, level_idx);
+  }
 }

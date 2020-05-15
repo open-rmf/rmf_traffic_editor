@@ -650,3 +650,12 @@ void Project::add_lane(
 {
   building.add_lane(level_idx, start_idx, end_idx, traffic_map_idx);
 }
+
+void Project::scenario_scene_update(
+    QGraphicsScene *scene,
+    const int level_idx)
+{
+  if (scenario_idx < 0 || scenario_idx >= static_cast<int>(scenarios.size()))
+    return;
+  scenarios[scenario_idx]->scene_update(scene, building, level_idx);
+}

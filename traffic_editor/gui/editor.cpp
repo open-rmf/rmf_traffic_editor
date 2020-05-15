@@ -425,7 +425,9 @@ void Editor::scene_update_timer_timeout()
     std::lock_guard<std::mutex> building_guard(
         project->building.building_mutex);
   
-    //project->draw_scenario_models(scene, level_idx, editor_models);
+    project->scenario_scene_update(scene, level_idx);
+
+    // project->draw_scenario(scene, level_idx);
     //project.building.levels[level_idx]->name,
     //    building.levels[level_idx]->drawing_meters_per_pixel,
   
@@ -446,8 +448,8 @@ void Editor::scene_update_timer_timeout()
       
       model->draw(scene, editor_models, level_scale);
     }
-    // todo: call into the scenario to draw whatever it wants
-    // something like scenario->draw(scene, level_idx);
+
+    //scenario->draw(scene, level_idx);
   }
 
   record_frame_to_video();
