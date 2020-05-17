@@ -192,7 +192,7 @@ class Building:
             uri_ele = SubElement(level_include_ele, 'uri')
             uri_ele.text = f'model://{level_model_name}'
             pose_ele = SubElement(level_include_ele, 'pose')
-            pose_ele.text = f'0 0 {level.elevation/4} 0 0 0'
+            pose_ele.text = f'0 0 {level.elevation} 0 0 0'
 
         gui_ele = world.find('gui')
         c = self.center()

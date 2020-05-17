@@ -101,6 +101,7 @@ class Level:
             v = copy.deepcopy(untransformed_vertex)
             transformed = self.transform.transform_point(v.xy())
             v.x, v.y = transformed
+            v.z = self.elevation
             self.transformed_vertices.append(v)
 
     def calculate_scale_using_measurements(self):
@@ -373,13 +374,13 @@ class Level:
 
         door = None
         if door_type == 'sliding':
-            door = SlidingDoor(door_edge)
+            door = SlidingDoor(door_edge, self.elevation)
         elif door_type == 'hinged':
-            door = SwingDoor(door_edge)
+            door = SwingDoor(door_edge, self.elevation)
         elif door_type == 'double_sliding':
-            door = DoubleSlidingDoor(door_edge)
+            door = DoubleSlidingDoor(door_edge, self.elevation)
         elif door_type == 'double_hinged':
-            door = DoubleSwingDoor(door_edge)
+            door = DoubleSwingDoor(door_edge, self.elevation)
         else:
             print(f'door type {door_type} not yet implemented')
 

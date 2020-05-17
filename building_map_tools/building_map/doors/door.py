@@ -2,12 +2,13 @@ from xml.etree.ElementTree import Element, SubElement
 
 
 class Door:
-    def __init__(self, door_edge):
+    def __init__(self, door_edge, level_elevation = 0.0):
         self.name = door_edge.params['name'].value
         self.type = door_edge.params['type'].value
         self.length = door_edge.length
         self.cx = door_edge.x
         self.cy = door_edge.y
+        self.cz = level_elevation
         self.yaw = door_edge.yaw
         self.height = 2.2  # parameterize someday?
         self.thickness = 0.03  # parameterize someday?
@@ -16,7 +17,7 @@ class Door:
         self.model_ele = Element('model')
         self.model_ele.set('name', self.name)
         pose_ele = SubElement(self.model_ele, 'pose')
-        pose_ele.text = f'{self.cx} {self.cy} 0 0 0 {self.yaw}'
+        pose_ele.text = f'{self.cx} {self.cy} {self.cz} 0 0 {self.yaw}'
 
     def generate_section(self, name, width, x_offset, options):
         link_ele = SubElement(self.model_ele, 'link')
