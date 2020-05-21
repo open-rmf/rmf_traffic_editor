@@ -2,8 +2,8 @@
 Author: github.com/methylDragon
 
      (   (                 (
-     )⧹ ))⧹ ) *   )    (   )⧹ )    (  (
-    (()/(()/` )  /(    )⧹ (()/((   )⧹))(   '
+     )⧹ ))⧹ ) .   )    (   )⧹ )    (  (
+    (()/(()/` )  /(    )⧹ (()/((   )⧹))(   .
      /(_)/(_)( )(_)) (((_) /(_))⧹ ((_)()⧹ )
     (_))(_))(_(_())  )⧹___(_))((_)_(())⧹_)()
     | _ |_ _|_   _|  (/ __| _ | __⧹ ⧹((_)/ /
@@ -13,8 +13,8 @@ Author: github.com/methylDragon
      ~ take a REST, and top-up your Fuel ~
 
 Description:
-    pit_crew is an Ignition Fuel REST client and library for Gazebo that helps
-    fetch and manage your model directory for Gazebo.
+    pit_crew is an Ignition Fuel REST client and library that helps fetch and
+    manage your model directory for Gazebo.
 
 Features:
     - Cache building and updating for available models on Ignition Fuel
