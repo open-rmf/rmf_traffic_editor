@@ -349,7 +349,6 @@ def download_model(model_name, author_name, version="tip",
                                 model_name, version, model_name))
 
         metadata_dict = json.loads(metadata.text)
-        print(metadata_dict)
         model_zipfile = zipfile.ZipFile((io.BytesIO(model.content)))
 
         assert metadata.status_code == 200, \
@@ -370,7 +369,12 @@ def download_model(model_name, author_name, version="tip",
 
         # Remove pre-existing model and extract latest model
         if overwrite:
-            shutil.rmtree(extract_path)
+            # If this fails it is ok, that means the directory is either
+            # read only or doesn't exist
+            try:
+                shutil.rmtree(extract_path)
+            except Exception:
+                pass
 
         model_zipfile.extractall(path=extract_path)
 
@@ -430,7 +434,7 @@ def load_cache(cache_file_path=None):
                 tuple(x) for x in loaded_cache.get("model_cache")
             )
 
-            logger.info("Load success!")
+            logger.info("Load success!\n")
             return {'model_cache': model_cache,
                     'fuel_cache': loaded_cache.get("fuel_cache", [])}
     except Exception as e:
