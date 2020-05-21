@@ -107,6 +107,8 @@ def get_missing_models(model_names, model_path=None,
               'available': []}
 
     for model in model_names:
+        model = model.lower()
+
         if model in local_models:
             output['available'].append(model)
         elif model in fuel_models:
