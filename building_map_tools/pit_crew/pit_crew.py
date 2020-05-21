@@ -44,16 +44,16 @@ import os
 
 __all__ = [
     "get_missing_models",
-    "download_model",
+    "get_model_name_tuples",
+    "get_model_name_tuple",
     "get_author_to_model_dict",
     "get_model_to_author_dict",
     "get_fuel_authors",
     "list_fuel_models",
+    "download_model",
     "construct_license",
     "load_cache",
     "build_and_update_cache",
-    "get_model_name_tuples",
-    "get_model_name_tuple",
     "PitCrewFormatter"
 ]
 
