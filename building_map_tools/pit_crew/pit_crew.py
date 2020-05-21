@@ -73,7 +73,7 @@ def get_missing_models(model_names, model_path=None,
     Classify models as missing, downloadable, or available from a model list.
 
     Args:
-        model_names (list): List of model names to classify.
+        model_names (iterable): Iterable of model names to classify.
         model_path (str, optional): Overall path to Gazebo model directory.
             Defaults to None. If None, function will use "~/.gazebo/models".
         config_file (str, optional): Name of the config file to parse.
@@ -93,9 +93,6 @@ def get_missing_models(model_names, model_path=None,
             - Missing models are models that are not in your local directory
                 and also missing from Fuel.
     """
-    if type(model_names) is set:
-        model_names = list(model_names)
-
     if update_cache:
         cache = build_and_update_cache(cache_file_path=cache_file_path,
                                        write_to_cache=True)
@@ -472,7 +469,7 @@ def build_and_update_cache(cache_file_path=None, write_to_cache=True):
         logger.info("Cache found! Model count: %d \nUpdating cache..."
                     % len(old_cache['model_cache']))
     else:
-        old_cache = set()
+        old_cache = {'model_cache': set(), 'fuel_cache': []}
         logger.info("Cache not found! Rebuilding cache...")
 
     url_base = "https://fuel.ignitionrobotics.org/1.0/models"
