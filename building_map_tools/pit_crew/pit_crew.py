@@ -112,7 +112,7 @@ def get_missing_models(model_names, model_path=None,
         if model in local_models:
             output['available'].append(model)
         elif model in fuel_models:
-            output['downloadable'].append(model)
+            output['downloadable'].append((model, fuel_models[model]))
         else:
             output['missing'].append(model)
 
