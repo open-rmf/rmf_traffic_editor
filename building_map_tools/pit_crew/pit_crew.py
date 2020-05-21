@@ -459,10 +459,12 @@ def build_and_update_cache(cache_file_path=None, write_to_cache=True):
                        % cache_file_path)
 
     # Check if directory exists and make it otherwise
-    if not os.path.exists(os.path.dirname(cache_file_path)):
+    dir_name = os.path.dirname(cache_file_path)
+
+    if not os.path.exists(dir_name) and dir_name != "":
         logger.info("Cache directory does not exist! Creating it: %s"
-                    % os.path.dirname(cache_file_path))
-        os.makedirs(os.path.dirname(cache_file_path), exist_ok=True)
+                    % dir_name)
+        os.makedirs(dir_name, exist_ok=True)
 
     if os.path.exists(cache_file_path):
         old_cache = load_cache(cache_file_path)
@@ -532,8 +534,9 @@ class PitCrewFormatter(logging.Formatter):
     """Logging formatter for pit_crew."""
 
     FORMATS = {
-        logging.ERROR: "ERROR (%(funcName)s()): %(msg)s",
-        logging.WARNING: "WARNING (%(funcName)s()): %(msg)s",
+        logging.ERROR: "ERROR::%(module)s.%(funcName)s():%(lineno)d: %(msg)s",
+        logging.WARNING: "WARNING::%(module)s.%(funcName)s():%(lineno)d: "
+                         "%(msg)s",
         logging.DEBUG: "DBG: %(module)s: %(lineno)d: %(msg)s",
         "DEFAULT": "%(msg)s",
     }
