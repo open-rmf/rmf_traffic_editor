@@ -93,6 +93,9 @@ def get_missing_models(model_names, model_path=None,
             - Missing models are models that are not in your local directory
                 and also missing from Fuel.
     """
+    if type(model_names) is set:
+        model_names = list(model_names)
+
     if update_cache:
         cache = build_and_update_cache(cache_file_path=cache_file_path,
                                        write_to_cache=True)
