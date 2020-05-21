@@ -135,7 +135,8 @@ def get_model_name_tuples(path=None, config_file="model.config"):
 
     if path is None:
         path = os.path.expanduser("~/.gazebo/models")
-        logger.warning("No path given! Searching %s instead!" % path)
+        logger.warning("No Gazebo model path given! Using default %s instead!"
+                       % path)
     else:
         assert path.isdir(), "Path given must be a directory!"
 
@@ -453,7 +454,8 @@ def build_and_update_cache(cache_file_path=None, write_to_cache=True):
     """
     if cache_file_path is None:
         cache_file_path = os.path.expanduser("~/.pit_crew/model_cache.json")
-        logger.warning("No path given! Searching %s instead!"
+        logger.warning("No pit_crew cache path given! "
+                       "Using default %s instead!"
                        % cache_file_path)
 
     # Check if directory exists and make it otherwise
