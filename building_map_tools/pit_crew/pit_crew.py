@@ -31,6 +31,7 @@ See Also:
     Some implementation details also differ.
 """
 
+from collections import namedtuple
 import xml.etree.ElementTree as ET
 
 import requests
@@ -44,7 +45,7 @@ import os
 
 __all__ = [
     "get_missing_models",
-    "get_model_name_tuples",
+    "get_local_model_name_tuples",
     "get_model_name_tuple",
     "get_author_to_model_dict",
     "get_model_to_author_dict",
@@ -54,12 +55,15 @@ __all__ = [
     "construct_license",
     "load_cache",
     "build_and_update_cache",
-    "PitCrewFormatter"
+    "PitCrewFormatter",
+    "ModelNames"
 ]
 
 # Init logger
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
+
+ModelNames = namedtuple("ModelNames", ["model_name", "author_name"])
 
 ###############################################################################
 # MODEL PARSING
@@ -100,7 +104,7 @@ def get_missing_models(model_names, model_path=None,
         cache = load_cache(cache_file_path)
 
     fuel_models = get_model_to_author_dict(cache['model_cache'])
-    local_models = set(x[0] for x in get_model_name_tuples(model_path))
+    local_models = set(x[0] for x in get_local_model_name_tuples(model_path))
 
     output = {'missing': [],
               'downloadable': [],
@@ -119,9 +123,9 @@ def get_missing_models(model_names, model_path=None,
     return output
 
 
-def get_model_name_tuples(path=None, config_file="model.config"):
+def get_local_model_name_tuples(path=None, config_file="model.config"):
     """
-    Gets all model name tuples from a given overall model path.
+    Gets all ModelNames tuples from a given overall local model path.
 
     Args:
         path (str, optional): Overall path to Gazebo model directory.
@@ -130,7 +134,7 @@ def get_model_name_tuples(path=None, config_file="model.config"):
             Defaults to "model.config".
 
     Returns:
-        set of (str, str): Set of unique model name tuples of
+        set of (str, str): Set of unique ModelNames tuples of
             (model_name, author_name). Each name will be lowercase only.
     """
     output = set()
@@ -175,7 +179,7 @@ def get_model_name_tuple(config_file_path, config_file="model.config",
             author name was specified in the model.config file. Defualts to "".
 
     Returns:
-        (str, str): Model name tuple of (model_name, author_name). Each name
+        (str, str): ModelNames tuple of (model_name, author_name). Each name
             will be lowercase only.
 
     Warnings:
@@ -204,7 +208,7 @@ def get_model_name_tuple(config_file_path, config_file="model.config",
         logger.error("Could not parse %s file! %s"
                      % (config_file, e))
 
-    return (model_name.lower(), author_name.lower())
+    return ModelNames(model_name.lower(), author_name.lower())
 
 
 def get_author_to_model_dict(model_name_tuples):
@@ -212,15 +216,19 @@ def get_author_to_model_dict(model_name_tuples):
     Get a dictionary of author names mapped to model names.
 
     Args:
-        model_name_tuples (list or set): An iterable of model name tuples of
-            (model_name, author_name). Each name will be lowercase only.
+        model_name_tuples (iterable): An iterable of ModelNames or unnamed
+            tuples of (model_name, author_name).
 
     Returns:
-        dict: Dictionary mapping author names to model names.
+        dict: Dictionary mapping author names to model names. Output will only
+            be in lower case.
     """
     output = {}
 
     for (model_name, author_name) in model_name_tuples:
+        model_name = model_name.lower()
+        author_name = author_name.lower()
+
         if author_name in output:
             output[author_name].append(model_name)
         else:
@@ -234,15 +242,19 @@ def get_model_to_author_dict(model_name_tuples):
     Get a dictionary of model names mapped to author names.
 
     Args:
-        model_name_tuples (list or set): An iterable of model name tuples of
+        model_name_tuples (list or set): An iterable of ModelNames tuples of
             (model_name, author_name). Each name will be lowercase only.
 
     Returns:
-        dict: Dictionary mapping model names to author names.
+        dict: Dictionary mapping model names to author names. Output will only
+            be in lower case.
     """
     output = {}
 
     for (model_name, author_name) in model_name_tuples:
+        model_name = model_name.lower()
+        author_name = author_name.lower()
+
         if model_name in output:
             output[model_name].append(author_name)
         else:
@@ -367,7 +379,7 @@ def download_model(model_name, author_name, version="tip",
         else:
             extract_path = os.path.join(download_path, model_name)
 
-        # Remove pre-existing model and extract latest model
+        # Overwrite pre-existing model with latest model fetched
         if overwrite:
             # If this fails it is ok, that means the directory is either
             # read only or doesn't exist
@@ -413,7 +425,7 @@ def load_cache(cache_file_path=None):
 
     Returns:
         dict: Cache dict, with keys 'model_cache' and 'fuel_cache'.
-            model_cache will contain model name tuples of
+            model_cache will contain ModelNames tuples of
             (model_name, author_name). Each name will be lowercase only.
             Whereas fuel_cache will contain JSON responses from Fuel.
 
@@ -431,7 +443,7 @@ def load_cache(cache_file_path=None):
         with open(cache_file_path, "r") as f:
             loaded_cache = json.loads(f.read())
             model_cache = set(
-                tuple(x) for x in loaded_cache.get("model_cache")
+                ModelNames(*x) for x in loaded_cache.get("model_cache")
             )
 
             logger.info("Load success!\n")
