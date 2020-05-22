@@ -20,10 +20,6 @@ class Building:
         for level_name, level_yaml in yaml_node['levels'].items():
             self.levels[level_name] = Level(level_yaml, level_name)
 
-        self.lifts = {}
-        for lift_name, lift_yaml in yaml_node['lifts'].items():
-            self.lifts[lift_name] = Lift(lift_yaml, lift_name)
-
         if 'reference_level_name' in yaml_node:
             self.reference_level_name = yaml_node['reference_level_name']
         else:
@@ -33,6 +29,15 @@ class Building:
         self.calculate_level_offsets_and_scales()
 
         self.transform_all_vertices()
+
+        self.lifts = {}
+        for lift_name, lift_yaml in yaml_node['lifts'].items():
+            if 'reference_level_name' in lift_yaml:
+                ref_level_name = lift_yaml['reference_level_name']
+                transform = self.levels[ref_level_name].transform
+            else:
+                transform = self.ref_level.transform
+            self.lifts[lift_name] = Lift(lift_yaml, lift_name, transform)
 
     def __str__(self):
         s = ''
@@ -193,6 +198,12 @@ class Building:
             uri_ele.text = f'model://{level_model_name}'
             pose_ele = SubElement(level_include_ele, 'pose')
             pose_ele.text = f'0 0 {level.elevation} 0 0 0'
+
+
+        for lift_name, lift in self.lifts.items():
+            lift.generate_holes(world)
+            lift.generate_shaft_doors(world, options)
+            lift.generate_cabin(world)
 
         gui_ele = world.find('gui')
         c = self.center()
