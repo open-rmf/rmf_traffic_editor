@@ -37,6 +37,12 @@ model_cache = pit_crew.load_cache()
 # And then look for models in our local model directory!
 models = pit_crew.get_local_model_name_tuples(lower=False)
 
+# Or you can use the model's folder name as its name!
+path_as_name_models = pit_crew.get_local_model_name_tuples(
+    lower=False,
+    use_dir_as_name=True
+)
+
 print("Here's up to 10 models we've retrieved!")
 pprint(list(x for x in models)[:10])
 

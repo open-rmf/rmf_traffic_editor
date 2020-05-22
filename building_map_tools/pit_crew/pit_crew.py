@@ -160,7 +160,8 @@ def get_missing_models(model_names, model_path=None,
 
 
 def get_local_model_name_tuples(path=None, config_file="model.config",
-                                default_author_name="", lower=True):
+                                default_author_name="", lower=True,
+                                use_dir_as_name=False):
     """
     Gets all ModelNames tuples from a given overall local model path.
 
@@ -172,6 +173,8 @@ def get_local_model_name_tuples(path=None, config_file="model.config",
         default_author_name (str, optional): The author name to use if no
             author name was specified in the model.config file. Defualts to "".
         lower (bool, optional): Make all output names lower-case.
+        use_dir_as_name (bool, optional): If True, will use the model's folder
+            name as its model_name.
 
     Returns:
         set of (str, str): Set of unique ModelNames tuples of
@@ -189,20 +192,25 @@ def get_local_model_name_tuples(path=None, config_file="model.config",
 
     for model_path in glob.glob(path + "/*/"):
         if config_file in os.listdir(model_path):
-            name_tuple = get_model_name_tuple(os.path.join(model_path,
-                                                           config_file))
+            name_tuple = get_model_name_tuple(
+                os.path.join(model_path, config_file),
+                default_author_name=default_author_name,
+                lower=lower
+            )
 
             if name_tuple in output:  # Throw a warning if duplicate found
                 logger.warning("%s already exists! "
                                "%s seems to be a duplicate model. Ignoring"
                                % (str(name_tuple), model_path))
             else:
-                output.add(
-                    get_model_name_tuple(
-                        os.path.join(model_path, config_file),
-                        default_author_name=default_author_name,
-                        lower=lower)
-                    )
+                if use_dir_as_name:  # Use directory as name instead
+                    if model_path.endswith("/"):
+                        model_path = model_path[:-1]
+
+                    name_tuple = ModelNames(os.path.basename(model_path),
+                                            name_tuple.author_name)
+
+                output.add(name_tuple)
         else:
             logger.warning("%s does not contain a valid config_file!"
                            "Skipping..." % model_path)
