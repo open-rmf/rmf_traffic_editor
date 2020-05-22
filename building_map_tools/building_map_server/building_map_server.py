@@ -149,7 +149,7 @@ class BuildingMapServer(Node):
         msg = Lift()
         reference_floor_name = lift.reference_floor_name
         if reference_floor_name not in self.building.levels.keys():
-            return
+            return msg
 
         reference_floor = self.building.levels[reference_floor_name]
         reference_floor.calculate_scale_using_measurements()
@@ -177,7 +177,7 @@ class BuildingMapServer(Node):
             transform.set_translation(door.x, door.y)
             v1_x, v1_y = transform.transform_point([v1_x, v1_y])
             v2_x, v2_y = transform.transform_point([v2_x, v2_y])
-            # then transform to global coordinates
+            # then transform to global map frame
             transform.set_rotation(lift.yaw)
             transform.set_translation(msg.ref_x, msg.ref_y)
             v1_x, v1_y = transform.transform_point([v1_x, v1_y])
