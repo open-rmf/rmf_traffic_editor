@@ -123,10 +123,11 @@ def get_missing_models(model_names, model_path=None,
             - Missing models are models that are not in your local directory
                 and also missing from Fuel.
     """
-    if type(model_names) is ModelNames or type(model_names) is tuple:
-        assert len(model_names) == 2, "Invalid model name tuple given: %s!" \
-            % model_names
-        model_names = model_names[0]
+    for key, model_name in enumerate(model_names):
+        if type(model_name) is ModelNames or type(model_name) is tuple:
+            assert len(model_name) == 2, \
+                "Invalid model name tuple given: %s!" % model_name
+            model_names[key] = model_name[0]
 
     if update_cache:
         cache = build_and_update_cache(cache_file_path=cache_file_path,
@@ -155,7 +156,7 @@ def get_missing_models(model_names, model_path=None,
 
 
 def get_local_model_name_tuples(path=None, config_file="model.config",
-                               default_author_name="", lower=True):
+                                default_author_name="", lower=True):
     """
     Gets all ModelNames tuples from a given overall local model path.
 
@@ -359,7 +360,8 @@ def list_fuel_models(cache_file_path=None, update_cache=True, model_limit=-1):
 ###############################################################################
 
 def download_model(model_name, author_name, version="tip",
-                   download_path=None, overwrite=True, ign=False):
+                   download_path=None, overwrite=True, ign=False,
+                   dry_run=False):
     """
     Fetch and download a model from Fuel.
 
@@ -379,6 +381,8 @@ def download_model(model_name, author_name, version="tip",
             downloading. Defaults to True.
         ign (bool, optional): Use Ignition file directory structure and default
             paths. Defaults to False.
+        dry_run (bool, optional): If dry_run, does not actually download the
+            model.
 
     Returns:
         bool, (dict or None): True if successful. False otherwise. The dict
@@ -437,7 +441,8 @@ def download_model(model_name, author_name, version="tip",
             except Exception:
                 pass
 
-        model_zipfile.extractall(path=extract_path)
+        if not dry_run:
+            model_zipfile.extractall(path=extract_path)
 
         with open(os.path.join(extract_path, "LICENSE"), "w") as f:
             f.write(_construct_license(metadata_dict))
