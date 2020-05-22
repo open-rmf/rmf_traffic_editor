@@ -150,11 +150,12 @@ class BuildingMapServer(Node):
         reference_floor_name = lift.reference_floor_name
         if reference_floor_name not in self.building.levels.keys():
             return
-          
+
         reference_floor = self.building.levels[reference_floor_name]
         reference_floor.calculate_scale_using_measurements()
-        msg.ref_x, msg.ref_y = reference_floor.transform.transform_point((lift.x, -lift.y))
-        # invert y-coordinate as building coordinate system has origin at top left corner
+        msg.ref_x, msg.ref_y = reference_floor.transform.transform_point(
+            (lift.x, -lift.y))
+        # invert y-coordinate as origin is at top left corner
         msg.name = lift.name
         msg.levels = lift.level_names
 
