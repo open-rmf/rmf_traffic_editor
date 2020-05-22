@@ -1,6 +1,7 @@
 import yaml
 from xml.etree.ElementTree import ElementTree, Element, SubElement
 
+
 def generate_box(size):
     '''size: [x, y, z]'''
     [x, y, z] = size
@@ -10,13 +11,15 @@ def generate_box(size):
 
     return box_ele
 
+
 def generate_collide_bitmask(bitmask):
     surface = Element('surface')
     contact = SubElement(surface, 'contact')
     collide_bitmask = SubElement(contact, 'collide_bitmask')
-    collide_bitmask.text = '{}'.format(bitmask)
+    collide_bitmask.text = f'{bitmask}'
 
     return surface
+
 
 def generate_visual(name, pose, size, material=None):
     visual_ele = Element('visual')
@@ -33,6 +36,7 @@ def generate_visual(name, pose, size, material=None):
 
     return visual_ele
 
+
 def generate_collision(name, pose, size, bitmask=None):
     collision_ele = Element('collision')
     collision_ele.set('name', name)
@@ -48,26 +52,46 @@ def generate_collision(name, pose, size, bitmask=None):
 
     return collision_ele
 
-def generate_box_link(name, size, pose, visual=True, collision=True, material=None, bitmask=None):
+
+def generate_box_link(
+    name,
+    size,
+    pose,
+    visual=True,
+    collision=True,
+    material=None,
+    bitmask=None
+):
     link = Element('link')
     link.set('name', name)
     link.append(pose)
 
     if visual:
-        link.append(generate_visual(name + '_visual', None, size))
+        link.append(generate_visual(name+'_visual', None, size))
     if collision:
-        link.append(generate_collision(name + '_collision', None, size, bitmask))
+        link.append(
+            generate_collision(name + '_collision', None, size, bitmask))
 
     return link
 
-def generate_joint(joint_name, joint_type, parent_link, child_link, joint_axis='z',
-                       lower_limit=None, upper_limit=None, max_effort=None, pose=None):
+
+def generate_joint(
+    joint_name,
+    joint_type,
+    parent_link,
+    child_link,
+    joint_axis='z',
+    lower_limit=None,
+    upper_limit=None,
+    max_effort=None,
+    pose=None
+):
     joint = Element('joint')
     joint.set('name', joint_name)
 
     supported_joint_types = ['fixed', 'prismatic', 'revolute']
     if joint_type not in supported_joint_types:
-        raise RuntimeError('joint type {} not supported.'.format(joint_type))
+        raise RuntimeError(f'joint type {joint_type} not supported.')
     joint.set('type', joint_type)
 
     parent = SubElement(joint, 'parent')
@@ -88,18 +112,19 @@ def generate_joint(joint_name, joint_type, parent_link, child_link, joint_axis='
     elif joint_axis == 'z':
         xyz.text = '0 0 1'
     else:
-        raise RuntimeError('Axis requested is undefined, only "x", "y" and "z" available')
+        raise RuntimeError(
+            'Axis requested is undefined, only "x", "y" and "z" available')
 
     if lower_limit is not None and upper_limit is not None:
         limit = SubElement(axis, 'limit')
         lower = SubElement(limit, 'lower')
-        lower.text = '{}'.format(lower_limit)
+        lower.text = f'{lower_limit}'
         upper = SubElement(limit, 'upper')
-        upper.text = '{}'.format(upper_limit)
+        upper.text = f'{upper_limit}'
 
         if max_effort is not None:
             effort = SubElement(limit, 'effort')
-            effort.text = '{}'.format(max_effort)
+            effort.text = f'{max_effort}'
 
     if pose is not None:
         joint.append(pose)

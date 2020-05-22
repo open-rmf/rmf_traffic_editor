@@ -199,10 +199,9 @@ class Building:
             pose_ele = SubElement(level_include_ele, 'pose')
             pose_ele.text = f'0 0 {level.elevation} 0 0 0'
 
-
         for lift_name, lift in self.lifts.items():
-            lift.generate_holes(world)
-            lift.generate_shaft_doors(world, options)
+            # lift.generate_holes(world)
+            # lift.generate_shaft_doors(world, options)
             lift.generate_cabin(world)
 
         gui_ele = world.find('gui')
