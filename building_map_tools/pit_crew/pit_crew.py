@@ -105,8 +105,8 @@ def get_missing_models(model_names, model_path=None,
             (model_name, author_name)!
         model_path (str, optional): Overall path to Gazebo model directory.
             Defaults to None. If None, function will use "~/.gazebo/models".
-        config_file (str, optional): Name of the config file to parse.
-            Defaults to "model.config".
+        config_file (str, optional): Name of the config file to parse when
+            checking local models. Defaults to "model.config".
         cache_file_path (str, optional): The path to the model cache file.
             Defaults to None. If None, function will use
             "~/.pit_crew/model_cache.json".
@@ -136,7 +136,11 @@ def get_missing_models(model_names, model_path=None,
         cache = load_cache(cache_file_path)
 
     fuel_models = get_model_to_author_dict(cache['model_cache'])
-    local_models = set(x[0] for x in get_local_model_name_tuples(model_path))
+    local_models = set(
+        x[0] for x in get_local_model_name_tuples(
+            model_path, config_file=config_file
+            )
+    )
 
     output = {'missing': [],
               'downloadable': [],
