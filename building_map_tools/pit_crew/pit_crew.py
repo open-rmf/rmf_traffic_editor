@@ -188,7 +188,7 @@ def get_local_model_name_tuples(path=None, config_file="model.config",
         logger.warning("No Gazebo model path given! Using default %s instead!"
                        % path)
     else:
-        assert path.isdir(), "Path given must be a directory!"
+        assert path.isdir(), "Path given must be a directory that exists!"
 
     for model_path in glob.glob(path + "/*/"):
         if config_file in os.listdir(model_path):
@@ -411,7 +411,8 @@ def download_model(model_name, author_name, version="tip",
             logger.warning("No path given! Downloading to %s instead!"
                            % download_path)
         else:
-            assert download_path.isdir(), "Path given must be a directory!"
+            assert download_path.isdir(), "Path given must be a directory " \
+                "that exists!"
 
         url_base = "https://fuel.ignitionrobotics.org/1.0"
         metadata = requests.get("%s/%s/models/%s/%s/%s"
