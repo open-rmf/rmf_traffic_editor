@@ -44,6 +44,7 @@ import io
 import os
 
 __all__ = [
+    "swag",
     "get_missing_models",
     "get_local_model_name_tuples",
     "get_model_name_tuple",
@@ -52,7 +53,7 @@ __all__ = [
     "get_fuel_authors",
     "list_fuel_models",
     "download_model",
-    "construct_license",
+    "_construct_license",
     "load_cache",
     "build_and_update_cache",
     "PitCrewFormatter",
@@ -64,6 +65,28 @@ logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 ModelNames = namedtuple("ModelNames", ["model_name", "author_name"])
+
+
+def swag(print_swag=True):
+    """Swag!"""
+    output = ("""
+     (   (                 (
+     )⧹ ))⧹ ) .   )    (   )⧹ )    (  (
+    (()/(()/` )  /(    )⧹ (()/((   )⧹))(   .
+     /(_)/(_)( )(_)) (((_) /(_))⧹ ((_)()⧹ )
+    (_))(_))(_(_())  )⧹___(_))((_)_(())⧹_)()
+    | _ |_ _|_   _|  (/ __| _ | __⧹ ⧹((_)/ /
+    |  _/| |  | |    | (__|   | _| ⧹ ⧹/⧹/ /
+    |_| |___| |_|     ⧹___|_|_|___| ⧹_/⧹_/
+
+     ~ take a REST, and top-up your Fuel ~
+    """)
+
+    if print_swag:
+        print(output)
+
+    return output
+
 
 ###############################################################################
 # MODEL PARSING
@@ -78,6 +101,8 @@ def get_missing_models(model_names, model_path=None,
 
     Args:
         model_names (iterable): Iterable of model names to classify.
+            Also supports ModelNames tuples, or unnamed tuples of
+            (model_name, author_name)!
         model_path (str, optional): Overall path to Gazebo model directory.
             Defaults to None. If None, function will use "~/.gazebo/models".
         config_file (str, optional): Name of the config file to parse.
@@ -93,10 +118,16 @@ def get_missing_models(model_names, model_path=None,
             - Available models are models that are already in your local
                 directory.
             - Downloadable models are models that are available on Fuel
-                but are not downloaded yet.
+                but are not downloaded yet. Items in this list will have
+                elements of (model_name, [eligible_author_names])
             - Missing models are models that are not in your local directory
                 and also missing from Fuel.
     """
+    if type(model_names) is ModelNames or type(model_names) is tuple:
+        assert len(model_names) == 2, "Invalid model name tuple given: %s!" \
+            % model_names
+        model_names = model_names[0]
+
     if update_cache:
         cache = build_and_update_cache(cache_file_path=cache_file_path,
                                        write_to_cache=True)
@@ -123,7 +154,8 @@ def get_missing_models(model_names, model_path=None,
     return output
 
 
-def get_local_model_name_tuples(path=None, config_file="model.config"):
+def get_local_model_name_tuples(path=None, config_file="model.config",
+                               default_author_name="", lower=True):
     """
     Gets all ModelNames tuples from a given overall local model path.
 
@@ -132,10 +164,14 @@ def get_local_model_name_tuples(path=None, config_file="model.config"):
             Defaults to None. If None, function will use "~/.gazebo/models".
         config_file (str, optional): Name of the config file to parse.
             Defaults to "model.config".
+        default_author_name (str, optional): The author name to use if no
+            author name was specified in the model.config file. Defualts to "".
+        lower (bool, optional): Make all output names lower-case.
 
     Returns:
         set of (str, str): Set of unique ModelNames tuples of
-            (model_name, author_name). Each name will be lowercase only.
+            (model_name, author_name). Each name will be lower-case only
+            unless lower is False.
     """
     output = set()
 
@@ -157,7 +193,10 @@ def get_local_model_name_tuples(path=None, config_file="model.config"):
                                % (str(name_tuple), model_path))
             else:
                 output.add(
-                    get_model_name_tuple(os.path.join(model_path, config_file))
+                    get_model_name_tuple(
+                        os.path.join(model_path, config_file),
+                        default_author_name=default_author_name,
+                        lower=lower)
                     )
         else:
             logger.warning("%s does not contain a valid config_file!"
@@ -167,23 +206,24 @@ def get_local_model_name_tuples(path=None, config_file="model.config"):
 
 
 def get_model_name_tuple(config_file_path, config_file="model.config",
-                         default_author_name=""):
+                         default_author_name="", lower=True):
     """
     Gets model and author name for a given model.config file.
 
     Args:
-        config_file_path (str): Path to model.config file.
+        config_file_path (str): Path to model.config file or its directory.
         config_file (str, optional): Name of the config file to parse.
             Defaults to "model.config".
         default_author_name (str, optional): The author name to use if no
             author name was specified in the model.config file. Defualts to "".
+        lower (bool, optional): Make all output names lower-case.
 
     Returns:
         (str, str): ModelNames tuple of (model_name, author_name). Each name
-            will be lowercase only.
+            will be lower-case only unless lower is False.
 
     Warnings:
-        All name tuples will be lowercase!
+        All name tuples will be lower-case!
 
     Note:
         This still works if you give a model directory instead! But it will
@@ -202,13 +242,16 @@ def get_model_name_tuple(config_file_path, config_file="model.config",
         else:
             config_file = os.path.basename(config_file_path)
         tree = ET.parse(config_file_path)
-        model_name = tree.find("name").text.lower()
-        author_name = tree.find("author").find("name").text.lower()
+        model_name = tree.find("name").text
+        author_name = tree.find("author").find("name").text
     except Exception as e:
         logger.error("Could not parse %s file! %s"
                      % (config_file, e))
 
-    return ModelNames(model_name.lower(), author_name.lower())
+    if lower:
+        return ModelNames(model_name.lower(), author_name.lower())
+    else:
+        return ModelNames(model_name, author_name)
 
 
 def get_author_to_model_dict(model_name_tuples):
@@ -221,7 +264,7 @@ def get_author_to_model_dict(model_name_tuples):
 
     Returns:
         dict: Dictionary mapping author names to model names. Output will only
-            be in lower case.
+            be in lower-case.
     """
     output = {}
 
@@ -243,11 +286,11 @@ def get_model_to_author_dict(model_name_tuples):
 
     Args:
         model_name_tuples (list or set): An iterable of ModelNames tuples of
-            (model_name, author_name). Each name will be lowercase only.
+            (model_name, author_name). Each name will be lower-case only.
 
     Returns:
         dict: Dictionary mapping model names to author names. Output will only
-            be in lower case.
+            be in lower-case.
     """
     output = {}
 
@@ -268,14 +311,20 @@ def get_model_to_author_dict(model_name_tuples):
 ###############################################################################
 
 def get_fuel_authors(model_name, cache_file_path=None, update_cache=True):
-    """Get all Fuel authors/owners for a given model name."""
+    """Get Fuel authors/owners for a given model name. (Case insensitive)"""
     if update_cache:
         cache = build_and_update_cache(cache_file_path=cache_file_path,
                                        write_to_cache=True)
     else:
         cache = load_cache(cache_file_path)
 
-    return get_model_to_author_dict(cache['model_cache']).get(model_name, [])
+    if type(model_name) is ModelNames or type(model_name) is tuple:
+        assert len(model_name) == 2, "Invalid model name tuple given: %s!" \
+            % model_name
+        model_name = model_name[0]
+
+    return get_model_to_author_dict(cache['model_cache']) \
+        .get(model_name.lower(), [])
 
 
 def list_fuel_models(cache_file_path=None, update_cache=True, model_limit=-1):
@@ -391,7 +440,7 @@ def download_model(model_name, author_name, version="tip",
         model_zipfile.extractall(path=extract_path)
 
         with open(os.path.join(extract_path, "LICENSE"), "w") as f:
-            f.write(construct_license(metadata_dict))
+            f.write(_construct_license(metadata_dict))
 
         logger.info("%s downloaded to: %s" % (model_name, extract_path))
         return True, metadata_dict
@@ -400,7 +449,7 @@ def download_model(model_name, author_name, version="tip",
         return False, None
 
 
-def construct_license(fuel_metadata_dict):
+def _construct_license(fuel_metadata_dict):
     """Construct LICENSE string from an input Fuel metadata dictionary."""
     return ("License: %s\n"
             "License URL: %s\n"
@@ -426,7 +475,7 @@ def load_cache(cache_file_path=None):
     Returns:
         dict: Cache dict, with keys 'model_cache' and 'fuel_cache'.
             model_cache will contain ModelNames tuples of
-            (model_name, author_name). Each name will be lowercase only.
+            (model_name, author_name). Each name will be lower-case only.
             Whereas fuel_cache will contain JSON responses from Fuel.
 
     Notes:
