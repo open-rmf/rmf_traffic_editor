@@ -1,8 +1,6 @@
 from pprint import pprint
 
 import pit_crew
-import logging
-import sys
 import os
 
 ###############################################################################
@@ -12,11 +10,7 @@ import os
 print("Welcome to\n", pit_crew.swag(print_swag=False))
 
 # Configure Logger
-handler = logging.StreamHandler(sys.stdout)
-handler.setFormatter(pit_crew.PitCrewFormatter())
-logger = logging.getLogger()
-logger.addHandler(handler)
-logger.setLevel(logging.INFO)
+pit_crew.init_logging()
 
 ###############################################################################
 # Usage guide begin!

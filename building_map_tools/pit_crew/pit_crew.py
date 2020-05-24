@@ -40,6 +40,7 @@ import zipfile
 import shutil
 import json
 import glob
+import sys
 import io
 import os
 
@@ -56,6 +57,7 @@ __all__ = [
     "_construct_license",
     "load_cache",
     "build_and_update_cache",
+    "init_logging",
     "PitCrewFormatter",
     "ModelNames"
 ]
@@ -682,3 +684,12 @@ class PitCrewFormatter(logging.Formatter):
         log_fmt = self.FORMATS.get(record.levelno, self.FORMATS['DEFAULT'])
         formatter = logging.Formatter(log_fmt)
         return formatter.format(record)
+
+
+def init_logging():
+    """Initialise pit_crew styled logging."""
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setFormatter(PitCrewFormatter())
+    logger = logging.getLogger()
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
