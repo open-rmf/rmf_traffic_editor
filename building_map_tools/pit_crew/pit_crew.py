@@ -114,7 +114,7 @@ def get_missing_models(model_names, model_path=None,
         update_cache (bool, optional): If True, will update the cache.
             Defaults to True.
         ign (bool, optional): If True, will parse model directory as if it is
-            following Ignition's directory structure.
+            following Ignition's directory structure. Defaults to False.
 
     Returns:
         dict: A dictionary of classified model names.
@@ -180,7 +180,7 @@ def get_local_model_name_tuples(path=None, config_file="model.config",
         use_dir_as_name (bool, optional): If True, will use the model's folder
             name as its model_name.
         ign (bool, optional): If True, will parse model directory as if it is
-            following Ignition's directory structure.
+            following Ignition's directory structure. Defaults to False.
 
     Returns:
         set of (str, str): Set of unique ModelNames tuples of
@@ -543,7 +543,8 @@ def load_cache(cache_file_path=None):
                 'fuel_cache': []}
 
 
-def build_and_update_cache(cache_file_path=None, write_to_cache=True):
+def build_and_update_cache(cache_file_path=None, write_to_cache=True,
+                           rebuild=False):
     """
     Build and/or update the local Ignition Fuel model listing cache.
 
@@ -553,6 +554,8 @@ def build_and_update_cache(cache_file_path=None, write_to_cache=True):
             "~/.pit_crew/model_cache.json".
         write_to_cache (bool, optional): If True, writes to model cache.
             Defaults to True.
+        rebuild (bool, optional): If True, deletes and rebuilds the cache.
+            Defaults to False.
 
     Notes:
         The model listing cache is local and used by pit_crew only.
@@ -571,13 +574,17 @@ def build_and_update_cache(cache_file_path=None, write_to_cache=True):
                     % dir_name)
         os.makedirs(dir_name, exist_ok=True)
 
-    if os.path.exists(cache_file_path):
-        old_cache = load_cache(cache_file_path)
-        logger.info("Cache found! Model count: %d \nUpdating cache..."
-                    % len(old_cache['model_cache']))
-    else:
+    if rebuild:
         old_cache = {'model_cache': set(), 'fuel_cache': []}
-        logger.info("Cache not found! Rebuilding cache...")
+        logger.info("Rebuilding cache...")
+    else:
+        if os.path.exists(cache_file_path):
+            old_cache = load_cache(cache_file_path)
+            logger.info("Cache found! Model count: %d \nUpdating cache..."
+                        % len(old_cache['model_cache']))
+        else:
+            old_cache = {'model_cache': set(), 'fuel_cache': []}
+            logger.info("Cache not found! Rebuilding cache...")
 
     url_base = "https://fuel.ignitionrobotics.org/1.0/models"
     status = 200
