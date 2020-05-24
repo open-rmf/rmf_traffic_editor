@@ -27,13 +27,19 @@ pit_crew.ModelNames("Desk", "OpenRobotics")
 
 
 # First build or update the model_cache
-pit_crew.build_and_update_cache(cache_file_path=None, write_to_cache=True)
+# Here we also force a rebuild!
+pit_crew.build_and_update_cache(cache_file_path=None, write_to_cache=True,
+                                rebuild=True)
 
 
 # Fetch model cache (in case we want to use it)
 # But most of the functions we'll call will already load the cache during
 # their business logic, so there is no need to pass in the model_cache
 model_cache = pit_crew.load_cache()
+# Disable for case-sensitive stuff
+# Note that the default behaviour is to lowercase all names to allow for easy
+# membership searches! (Fuel's REST API is also case insensitive.)
+model_cache_caps = pit_crew.load_cache(lower=False)
 
 
 # And then look for models in our local model directory!

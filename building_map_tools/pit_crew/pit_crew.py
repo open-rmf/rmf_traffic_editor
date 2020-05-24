@@ -95,7 +95,8 @@ def swag(print_swag=True):
 
 def get_missing_models(model_names, model_path=None,
                        config_file="model.config",
-                       cache_file_path=None, update_cache=True, ign=False):
+                       cache_file_path=None, update_cache=True, lower=True,
+                       use_dir_as_name=False, ign=False):
     """
     Classify models as missing, downloadable, or available from a model list.
 
@@ -113,6 +114,10 @@ def get_missing_models(model_names, model_path=None,
             "~/.pit_crew/model_cache.json".
         update_cache (bool, optional): If True, will update the cache.
             Defaults to True.
+        lower (bool, optional): Make all output names lower-case.
+            Defaults to True.
+        use_dir_as_name (bool, optional): If True, will use the model's folder
+            name as its model_name. Defaults to False.
         ign (bool, optional): If True, will parse model directory as if it is
             following Ignition's directory structure. Defaults to False.
 
@@ -136,12 +141,13 @@ def get_missing_models(model_names, model_path=None,
         cache = build_and_update_cache(cache_file_path=cache_file_path,
                                        write_to_cache=True)
     else:
-        cache = load_cache(cache_file_path)
+        cache = load_cache(cache_file_path, lower=lower)
 
-    fuel_models = get_model_to_author_dict(cache['model_cache'])
+    fuel_models = get_model_to_author_dict(cache['model_cache'], lower=lower)
     local_models = set(
         x[0] for x in get_local_model_name_tuples(
-            model_path, config_file=config_file, ign=True
+            model_path, config_file=config_file, lower=lower,
+            use_dir_as_name=use_dir_as_name, ign=ign
             )
     )
 
@@ -150,7 +156,8 @@ def get_missing_models(model_names, model_path=None,
               'available': []}
 
     for model in model_names:
-        model = model.lower()
+        if lower:
+            model = model.lower()
 
         if model in local_models:
             output['available'].append(model)
@@ -177,8 +184,9 @@ def get_local_model_name_tuples(path=None, config_file="model.config",
         default_author_name (str, optional): The author name to use if no
             author name was specified in the model.config file. Defualts to "".
         lower (bool, optional): Make all output names lower-case.
+            Defaults to True.
         use_dir_as_name (bool, optional): If True, will use the model's folder
-            name as its model_name.
+            name as its model_name. Defaults to False.
         ign (bool, optional): If True, will parse model directory as if it is
             following Ignition's directory structure. Defaults to False.
 
@@ -250,6 +258,7 @@ def get_model_name_tuple(config_file_path, config_file="model.config",
         default_author_name (str, optional): The author name to use if no
             author name was specified in the model.config file. Defualts to "".
         lower (bool, optional): Make all output names lower-case.
+            Defaults to True.
 
     Returns:
         (str, str): ModelNames tuple of (model_name, author_name). Each name
@@ -287,13 +296,15 @@ def get_model_name_tuple(config_file_path, config_file="model.config",
         return ModelNames(model_name, author_name)
 
 
-def get_author_to_model_dict(model_name_tuples):
+def get_author_to_model_dict(model_name_tuples, lower=True):
     """
     Get a dictionary of author names mapped to model names.
 
     Args:
         model_name_tuples (iterable): An iterable of ModelNames or unnamed
             tuples of (model_name, author_name).
+        lower (bool, optional): Make all output names lower-case.
+            Defaults to True.
 
     Returns:
         dict: Dictionary mapping author names to model names. Output will only
@@ -302,8 +313,9 @@ def get_author_to_model_dict(model_name_tuples):
     output = {}
 
     for (model_name, author_name) in model_name_tuples:
-        model_name = model_name.lower()
-        author_name = author_name.lower()
+        if lower:
+            model_name = model_name.lower()
+            author_name = author_name.lower()
 
         if author_name in output:
             output[author_name].append(model_name)
@@ -313,13 +325,15 @@ def get_author_to_model_dict(model_name_tuples):
     return output
 
 
-def get_model_to_author_dict(model_name_tuples):
+def get_model_to_author_dict(model_name_tuples, lower=True):
     """
     Get a dictionary of model names mapped to author names.
 
     Args:
         model_name_tuples (list or set): An iterable of ModelNames tuples of
             (model_name, author_name). Each name will be lower-case only.
+        lower (bool, optional): Make all output names lower-case.
+            Defaults to True.
 
     Returns:
         dict: Dictionary mapping model names to author names. Output will only
@@ -328,8 +342,9 @@ def get_model_to_author_dict(model_name_tuples):
     output = {}
 
     for (model_name, author_name) in model_name_tuples:
-        model_name = model_name.lower()
-        author_name = author_name.lower()
+        if lower:
+            model_name = model_name.lower()
+            author_name = author_name.lower()
 
         if model_name in output:
             output[model_name].append(author_name)
@@ -360,16 +375,17 @@ def get_fuel_authors(model_name, cache_file_path=None, update_cache=True):
         .get(model_name.lower(), [])
 
 
-def list_fuel_models(cache_file_path=None, update_cache=True, model_limit=-1):
+def list_fuel_models(cache_file_path=None, update_cache=True, model_limit=-1,
+                     lower=False):
     """List all Fuel models."""
     if update_cache:
         cache = build_and_update_cache(cache_file_path=cache_file_path,
                                        write_to_cache=True)
     else:
-        cache = load_cache(cache_file_path)
+        cache = load_cache(cache_file_path, lower=lower)
 
     sorted_authors = list(
-        get_author_to_model_dict(cache['model_cache']).items()
+        get_author_to_model_dict(cache['model_cache'], lower=lower).items()
     )
     sorted_authors.sort()
     print("\n[Models]\n")
@@ -501,7 +517,7 @@ def _construct_license(fuel_metadata_dict):
 # CACHING
 ###############################################################################
 
-def load_cache(cache_file_path=None):
+def load_cache(cache_file_path=None, lower=True):
     """
     Read local Ignition Fuel model listing cache.
 
@@ -509,11 +525,13 @@ def load_cache(cache_file_path=None):
         cache_file_path (str, optional): The path to the model cache file.
             Defaults to None. If None, function will use
             "~/.pit_crew/model_cache.json".
+        lower (bool, optional): Make all output names lower-case.
+            Defaults to True.
 
     Returns:
         dict: Cache dict, with keys 'model_cache' and 'fuel_cache'.
             model_cache will contain ModelNames tuples of
-            (model_name, author_name). Each name will be lower-case only.
+            (model_name, author_name).
             Whereas fuel_cache will contain JSON responses from Fuel.
 
     Notes:
@@ -529,9 +547,16 @@ def load_cache(cache_file_path=None):
 
         with open(cache_file_path, "r") as f:
             loaded_cache = json.loads(f.read())
-            model_cache = set(
-                ModelNames(*x) for x in loaded_cache.get("model_cache")
-            )
+
+            if lower:
+                model_cache = set(
+                    ModelNames(*[name.lower() for name in x])
+                    for x in loaded_cache.get("model_cache")
+                )
+            else:
+                model_cache = set(
+                    ModelNames(*x) for x in loaded_cache.get("model_cache")
+                )
 
             logger.info("Load success!\n")
             return {'model_cache': model_cache,
@@ -579,7 +604,7 @@ def build_and_update_cache(cache_file_path=None, write_to_cache=True,
         logger.info("Rebuilding cache...")
     else:
         if os.path.exists(cache_file_path):
-            old_cache = load_cache(cache_file_path)
+            old_cache = load_cache(cache_file_path, lower=False)
             logger.info("Cache found! Model count: %d \nUpdating cache..."
                         % len(old_cache['model_cache']))
         else:
@@ -608,8 +633,8 @@ def build_and_update_cache(cache_file_path=None, write_to_cache=True,
 
         if status == 200:
             for model in json.loads(resp.text):
-                model_name = model.get("name", "").lower()
-                author_name = model.get("owner", "").lower()
+                model_name = model.get("name", "")
+                author_name = model.get("owner", "")
 
                 # If a cached model was found, halt
                 if (model_name, author_name) in old_cache['model_cache']:
