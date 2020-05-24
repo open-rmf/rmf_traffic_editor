@@ -77,17 +77,21 @@ def crop(green_img, white_img):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
-            '-m', '--model-list', default='../test/model_list.yaml',
-            help='Path of model_list.yaml')
+        'model_list', default='../test/model_list.yaml',
+        help='Path of model_list.yaml'
+    )
     parser.add_argument(
-            '-g', '--green-img-dir', default='../images/green/',
-            help='Directory filled with green screened model images')
+        'output_dir', default='../images/cropped/',
+        help='Directory where the cropped output images will be saved'
+    )
+    parser.add_argument(
+        '-g', '--green-img-dir', default='../images/green/',
+        help='Directory filled with green screened model images'
+    )
     parser.add_argument(
         '-w', '--white-img-dir', default='../images/white/',
-        help='Directory f   illed with white screened model images')
-    parser.add_argument(
-            '-o', '--output-dir', default='../images/cropped/',
-            help='Directory where the cropped output images will be saved')
+        help='Directory filled with white screened model images'
+    )
     args = parser.parse_args(sys.argv[1:])
 
     with open(args.model_list) as f:
