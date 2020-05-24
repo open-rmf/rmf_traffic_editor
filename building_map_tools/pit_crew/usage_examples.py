@@ -1,6 +1,8 @@
 from pprint import pprint
 
 import pit_crew
+import logging
+import sys
 import os
 
 ###############################################################################
@@ -36,6 +38,9 @@ model_cache = pit_crew.load_cache()
 
 # And then look for models in our local model directory!
 models = pit_crew.get_local_model_name_tuples(lower=False)
+
+# Or your Ignition model directory!
+ign_models = pit_crew.get_local_model_name_tuples(lower=False, ign=True)
 
 # Or you can use the model's folder name as its name!
 path_as_name_models = pit_crew.get_local_model_name_tuples(

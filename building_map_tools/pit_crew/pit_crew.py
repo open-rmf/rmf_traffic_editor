@@ -95,7 +95,7 @@ def swag(print_swag=True):
 
 def get_missing_models(model_names, model_path=None,
                        config_file="model.config",
-                       cache_file_path=None, update_cache=True):
+                       cache_file_path=None, update_cache=True, ign=False):
     """
     Classify models as missing, downloadable, or available from a model list.
 
@@ -103,8 +103,9 @@ def get_missing_models(model_names, model_path=None,
         model_names (iterable): Iterable of model names to classify.
             Also supports ModelNames tuples, or unnamed tuples of
             (model_name, author_name)!
-        model_path (str, optional): Overall path to Gazebo model directory.
-            Defaults to None. If None, function will use "~/.gazebo/models".
+        model_path (str, optional): Overall path to model directory.
+            Defaults to None. If None, function will use "~/.gazebo/models" or
+            "~/.ignition/fuel" depending on the value of ign.
         config_file (str, optional): Name of the config file to parse when
             checking local models. Defaults to "model.config".
         cache_file_path (str, optional): The path to the model cache file.
@@ -112,6 +113,8 @@ def get_missing_models(model_names, model_path=None,
             "~/.pit_crew/model_cache.json".
         update_cache (bool, optional): If True, will update the cache.
             Defaults to True.
+        ign (bool, optional): If True, will parse model directory as if it is
+            following Ignition's directory structure.
 
     Returns:
         dict: A dictionary of classified model names.
@@ -138,7 +141,7 @@ def get_missing_models(model_names, model_path=None,
     fuel_models = get_model_to_author_dict(cache['model_cache'])
     local_models = set(
         x[0] for x in get_local_model_name_tuples(
-            model_path, config_file=config_file
+            model_path, config_file=config_file, ign=True
             )
     )
 
@@ -161,13 +164,14 @@ def get_missing_models(model_names, model_path=None,
 
 def get_local_model_name_tuples(path=None, config_file="model.config",
                                 default_author_name="", lower=True,
-                                use_dir_as_name=False):
+                                use_dir_as_name=False, ign=False):
     """
     Gets all ModelNames tuples from a given overall local model path.
 
     Args:
-        path (str, optional): Overall path to Gazebo model directory.
-            Defaults to None. If None, function will use "~/.gazebo/models".
+        path (str, optional): Overall path to model directory.
+            Defaults to None. If None, function will use "~/.gazebo/models" or
+            "~/.ignition/fuel" depending on the value of ign.
         config_file (str, optional): Name of the config file to parse.
             Defaults to "model.config".
         default_author_name (str, optional): The author name to use if no
@@ -175,6 +179,8 @@ def get_local_model_name_tuples(path=None, config_file="model.config",
         lower (bool, optional): Make all output names lower-case.
         use_dir_as_name (bool, optional): If True, will use the model's folder
             name as its model_name.
+        ign (bool, optional): If True, will parse model directory as if it is
+            following Ignition's directory structure.
 
     Returns:
         set of (str, str): Set of unique ModelNames tuples of
@@ -184,17 +190,30 @@ def get_local_model_name_tuples(path=None, config_file="model.config",
     output = set()
 
     if path is None:
-        path = os.path.expanduser("~/.gazebo/models")
-        logger.warning("No Gazebo model path given! Using default %s instead!"
+        if ign:
+            path = os.path.expanduser("~/.ignition/fuel/")
+        else:
+            path = os.path.expanduser("~/.gazebo/models/")
+        logger.warning("No local model path given! Using default %s instead!"
                        % path)
     else:
         assert os.path.isdir(path), \
             "Path given must be a directory that exists!"
 
-    for model_path in glob.glob(path + "/*/"):
-        if config_file in os.listdir(model_path):
+    if ign:
+        model_dir_iter = glob.glob(path + "*/*/models/*/")
+    else:
+        model_dir_iter = glob.glob(path + "*/")
+
+    for model_path in model_dir_iter:
+        if ign:
+            latest_ver = max(dir for dir in os.listdir(model_path))
+        else:
+            latest_ver = ""
+
+        if config_file in os.listdir(os.path.join(model_path, latest_ver)):
             name_tuple = get_model_name_tuple(
-                os.path.join(model_path, config_file),
+                os.path.join(model_path, latest_ver, config_file),
                 default_author_name=default_author_name,
                 lower=lower
             )
