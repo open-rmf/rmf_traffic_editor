@@ -32,6 +32,7 @@ find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(rmf_fleet_msgs REQUIRED)
 find_package(rmf_door_msgs REQUIRED)
+find_package(rmf_lift_msgs REQUIRED)
 find_package(building_map_msgs REQUIRED)
 
 include(GNUInstallDirs)
@@ -103,6 +104,31 @@ target_include_directories(door
     ${GAZEBO_INCLUDE_DIRS}
     ${rmf_fleet_msgs_INCLUDE_DIRS}
     ${rmf_door_msgs_INCLUDE_DIRS}
+)
+
+###############################
+# lift stuff
+###############################
+
+add_library(lift SHARED src/lift_plugin.cpp)
+
+target_link_libraries(lift
+  PUBLIC
+    building_sim_utils
+    ${rmf_fleet_msgs_LIBRARIES}
+    ${rclcpp_LIBRARIES}
+    ${GAZEBO_LIBRARIES}
+    ${gazebo_ros_LIBRARIES}
+    ${rmf_lift_msgs_LIBRARIES}
+)
+
+target_include_directories(lift
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    ${GAZEBO_INCLUDE_DIRS}
+    ${rmf_fleet_msgs_INCLUDE_DIRS}
+    ${rmf_lift_msgs_INCLUDE_DIRS}
 )
 
 ###############################
