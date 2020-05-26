@@ -262,7 +262,7 @@ class Lift:
 
         # for lift_door in self.doors:
         #     lift_door.generate(lift_cabin_model)
-        
+
         # TODO: Plugin
 
         model_pose = SubElement(lift_cabin_model, 'pose')
