@@ -57,7 +57,7 @@ Similarly, the folder `images/white/` will have been populated when the script f
 The contours of the models are then extracted from the green-screened images using OpenCV to generate a transparency mask, used for cropping the white-background images, so that it stays centered and is as small as possible. This can be done by calling,
 
 ```bash
-./scripts/crop.py test/model_list.yaml images/cropped -g images/green -w images/white
+./scripts/crop.py test/model_list.yaml -o images/cropped -g images/green -w images/white
 ```
 
 The generated thumbnails in `images/cropped` can then be added to `traffic_editor/thumbnails/images/`, while the model names need to be updated to `traffic_editor/thumbnails/model_list.yaml`.
