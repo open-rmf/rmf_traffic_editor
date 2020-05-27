@@ -110,11 +110,30 @@ target_include_directories(door
 # lift stuff
 ###############################
 
-add_library(lift SHARED src/lift_plugin.cpp)
+add_library(lift SHARED src/lift.cpp)
 
 target_link_libraries(lift
   PUBLIC
     building_sim_utils
+    door
+    ${rclcpp_LIBRARIES}
+    ${GAZEBO_LIBRARIES}
+)
+
+target_include_directories(lift
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    ${GAZEBO_INCLUDE_DIRS}
+)
+
+add_library(lift_plugin SHARED src/lift_plugin.cpp)
+
+target_link_libraries(lift_plugin
+  PUBLIC
+    building_sim_utils
+    door
+    lift
     ${rmf_fleet_msgs_LIBRARIES}
     ${rclcpp_LIBRARIES}
     ${GAZEBO_LIBRARIES}
@@ -122,7 +141,7 @@ target_link_libraries(lift
     ${rmf_lift_msgs_LIBRARIES}
 )
 
-target_include_directories(lift
+target_include_directories(lift_plugin
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
@@ -153,7 +172,7 @@ target_link_libraries(toggle_floors
 ###############################
 
 install(
-  TARGETS building_sim_utils slotcar door toggle_floors
+  TARGETS building_sim_utils slotcar door lift lift_plugin toggle_floors
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

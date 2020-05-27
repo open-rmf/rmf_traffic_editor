@@ -47,7 +47,7 @@ bool Lift::_load_lift_parameters(const sdf::ElementPtr& sdf)
   std::cout << "Loading lift name, cabin joint, cabin motion and door motion parameters: "
     << std::endl;
   // load lift name
-  if (!get_sdf_param_required<std::string>(_sdf, "lift_name", lift_name_))
+  if (!get_sdf_param_required<std::string>(sdf, "lift_name", _lift_name))
     return false;
 
   // load main lift cabin joint
