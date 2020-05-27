@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.1.0)
 project(traffic_editor)
 
 find_package(yaml-cpp REQUIRED)
+include(ExternalProject)
 
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
@@ -59,7 +60,23 @@ add_executable(traffic-editor
 
 target_link_libraries(traffic-editor
   Qt5::Widgets
-  yaml-cpp)
+  yaml-cpp
+)
+
+# Create assets folder directory, and clone it from git
+
+file(MAKE_DIRECTORY "$ENV{HOME}/.traffic_editor/")
+
+ExternalProject_Add(thumbnails_repo
+  GIT_REPOSITORY  https://github.com/osrf/traffic_editor_assets.git
+  GIT_TAG         master
+  INSTALL_COMMAND ""
+  BUILD_COMMAND ""
+  CONFIGURE_COMMAND ""
+  SOURCE_DIR "$ENV{HOME}/.traffic_editor/assets"
+)
+
+add_dependencies(traffic-editor thumbnails_repo)
 
 
 install(
