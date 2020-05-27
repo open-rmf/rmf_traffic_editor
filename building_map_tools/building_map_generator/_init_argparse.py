@@ -16,7 +16,7 @@ sim_parser.add_argument("OUTPUT_WORLD", type=str,
                         help="Name of the .world file to output")
 sim_parser.add_argument("OUTPUT_MODEL_DIR", type=str,
                         help="Path to output the map model files")
-sim_parser.add_argument("-o", "--options", type=str, nargs='*',
+sim_parser.add_argument("-o", "--options", type=str, nargs='*', default=[],
                         help="Generator options")
 
 # Create subparsers for Gazebo, Ignition, and Nav generation

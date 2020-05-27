@@ -1,7 +1,7 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 from building_map.generator import Generator
-from _init_argparse import parser
+from building_map_generator._init_argparse import parser
 
 import pit_crew
 import logging

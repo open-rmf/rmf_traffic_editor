@@ -10,7 +10,7 @@ setup(
         'building_map',
         'building_map.doors',
         'building_map_server',
-        'building_map_generators',
+        'building_map_generator',
         'pit_crew'],
     py_modules=[],
     data_files=[
@@ -23,7 +23,7 @@ setup(
         ),
         (
             'share/' + package_name + '/textures',
-            glob('building_map_generators/textures/*.png')
+            glob('building_map_generator/textures/*.png')
         ),
     ],
     install_requires=['setuptools', 'shapely', 'pyyaml'],
