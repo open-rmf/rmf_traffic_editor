@@ -129,7 +129,7 @@ private:
       _state.destination_floor = _lift->get_destination_floor();
       _state.door_state = static_cast<uint8_t>(_lift->get_overall_door_state());
       _state.motion_state = static_cast<uint8_t>(_lift->get_cabin_state());
-      //TODO: add lift mode
+      // TODO: add lift mode
       _state.current_mode = 1;
 
       _lift_state_pub->publish(_state);

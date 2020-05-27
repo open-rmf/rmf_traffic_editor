@@ -110,6 +110,7 @@ target_include_directories(door
 # lift stuff
 ###############################
 
+# lift class
 add_library(lift SHARED src/lift.cpp)
 
 target_link_libraries(lift
@@ -127,6 +128,7 @@ target_include_directories(lift
     ${GAZEBO_INCLUDE_DIRS}
 )
 
+# lift plugin
 add_library(lift_plugin SHARED src/lift_plugin.cpp)
 
 target_link_libraries(lift_plugin
@@ -147,6 +149,21 @@ target_include_directories(lift_plugin
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     ${GAZEBO_INCLUDE_DIRS}
     ${rmf_fleet_msgs_INCLUDE_DIRS}
+    ${rmf_lift_msgs_INCLUDE_DIRS}
+)
+
+# lift_requestor
+add_executable(request_lift src/request_lift.cpp)
+target_link_libraries(request_lift
+  PUBLIC
+    ${rclcpp_LIBRARIES}
+    ${rmf_lift_msgs_LIBRARIES}
+)
+
+target_include_directories(request_lift
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     ${rmf_lift_msgs_INCLUDE_DIRS}
 )
 
@@ -175,6 +192,11 @@ install(
   TARGETS building_sim_utils slotcar door lift lift_plugin toggle_floors
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+
+install(
+  TARGETS request_lift
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 ament_package()
