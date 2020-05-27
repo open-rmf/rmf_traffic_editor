@@ -82,7 +82,7 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         '-o', '--output_dir',
-        default='~/.traffic_editor/assets/thumbnails/images/cropped/',
+        default='../images/cropped/',
         help='Directory where the cropped output images will be saved'
     )
     parser.add_argument(
@@ -98,17 +98,35 @@ if __name__ == '__main__':
     with open(args.model_list) as f:
         y = yaml.load(f)
 
+    dirs = [os.path.expanduser(args.output_dir),
+            os.path.expanduser(args.green_img_dir),
+            os.path.expanduser(args.white_img_dir)]
+
+    # Make dirs if they dont exist
+    for dir in dirs:
+        try:
+            os.makedirs(dir)
+            print("Made diretory: {}".format(dir))
+        except Exception:
+            pass
+
     for model_name in y['models']:
-        green_img = cv2.imread(
-            os.path.join(args.green_img_dir, '{}.png'.format(model_name))
+        green_img = cv2.imread(os.path.join(
+            os.path.expanduser(args.green_img_dir),
+            '{}.png'.format(model_name)
+            )
         )
-        white_img = cv2.imread(
-            os.path.join(args.white_img_dir, '{}.png'.format(model_name))
+        white_img = cv2.imread(os.path.join(
+            os.path.expanduser(args.white_img_dir),
+            '{}.png'.format(model_name)
+            )
         )
 
         output_filepath = os.path.join(
-            os.path.expanduser(args.output_dir), '{}.png'.format(model_name)
+            os.path.expanduser(args.output_dir),
+            '{}.png'.format(model_name)
         )
+
         print('generating {}'.format(output_filepath))
 
         white_img_cropped = crop(green_img, white_img)
