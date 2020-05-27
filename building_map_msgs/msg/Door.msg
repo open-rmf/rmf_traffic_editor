@@ -25,8 +25,6 @@ string name
 #   * common in elevators; same parameters as sliding doors; they just
 #     open/close faster and take up less space inside the wall.
 
-string door_name
-
 float32 v1_x
 float32 v1_y
 

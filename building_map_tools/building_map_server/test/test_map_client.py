@@ -25,7 +25,7 @@ class BuildingMapClient(Node):
             BuildingMap, 'map', self.map_cb, qos_profile=qos)
 
     def print_door(self, door):
-        print(f'        {door.door_name}, ' +
+        print(f'        {door.name}, ' +
               f'v1:[{round(door.v1_x, 2)},{round(door.v1_y,2)}], ' +
               f'v2:[{round(door.v2_x, 2)},{round(door.v2_y,2)}], ' +
               f'type:{door.door_type}, range:{round(door.motion_range, 2)}, ' +
