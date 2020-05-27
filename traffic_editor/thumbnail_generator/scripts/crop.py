@@ -81,7 +81,8 @@ if __name__ == '__main__':
         help='Path of model_list.yaml'
     )
     parser.add_argument(
-        'output_dir', default='../images/cropped/',
+        '-o', '--output_dir',
+        default='~/.traffic_editor/assets/thumbnails/images/cropped/',
         help='Directory where the cropped output images will be saved'
     )
     parser.add_argument(
@@ -99,12 +100,15 @@ if __name__ == '__main__':
 
     for model_name in y['models']:
         green_img = cv2.imread(
-                os.path.join(args.green_img_dir, '{}.png'.format(model_name)))
+            os.path.join(args.green_img_dir, '{}.png'.format(model_name))
+        )
         white_img = cv2.imread(
-                os.path.join(args.white_img_dir, '{}.png'.format(model_name)))
+            os.path.join(args.white_img_dir, '{}.png'.format(model_name))
+        )
 
         output_filepath = os.path.join(
-                args.output_dir, '{}.png'.format(model_name))
+            os.path.expanduser(args.output_dir), '{}.png'.format(model_name)
+        )
         print('generating {}'.format(output_filepath))
 
         white_img_cropped = crop(green_img, white_img)
