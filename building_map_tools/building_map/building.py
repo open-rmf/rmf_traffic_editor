@@ -38,11 +38,12 @@ class Building:
             else:
                 transform = self.ref_level.transform
             self.lifts[lift_name] = Lift(lift_yaml, lift_name, transform)
-        
+
         for lift_name, lift in self.lifts.items():
             for level_name in lift.level_doors:
                 elevation = self.levels[level_name].elevation
-                lift.level_doors[level_name] = (elevation, lift.level_doors[level_name])
+                lift.level_doors[level_name] = \
+                    (elevation, lift.level_doors[level_name])
 
     def __str__(self):
         s = ''

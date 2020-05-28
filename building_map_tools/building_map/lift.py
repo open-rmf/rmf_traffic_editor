@@ -266,7 +266,7 @@ class Lift:
         front_left_wall_name = 'front_left_wall'
         front_left_wall_pose = Element('pose')
         front_left_wall_pose.text = \
-            f'{self.cabin_depth / 2 - 0.025} {self.cabin_width * 3 / 8} 1.25 0 0 0'
+            f'{self.cabin_depth/2 - 0.025} {self.cabin_width*3/8} 1.25 0 0 0'
         platform.append(
             generate_visual(
                 front_left_wall_name,
@@ -283,7 +283,7 @@ class Lift:
         front_right_wall_name = 'front_right_wall'
         front_right_wall_pose = Element('pose')
         front_right_wall_pose.text = \
-            f'{self.cabin_depth / 2 - 0.025} {-self.cabin_width * 3 / 8} 1.25 0 0 0'
+            f'{self.cabin_depth/2 - 0.025} {-self.cabin_width*3/8} 1.25 0 0 0'
         platform.append(
             generate_visual(
                 front_right_wall_name,
@@ -311,7 +311,7 @@ class Lift:
         door_size = [0.03, self.cabin_width / 4, 2.5]
         left_door_pose = Element('pose')
         left_door_pose.text = \
-            f'{self.cabin_depth / 2 - 0.025} {self.cabin_width / 8} 1.25 0 0 0'
+            f'{self.cabin_depth/2 - 0.025} {self.cabin_width/8} 1.25 0 0 0'
         lift_model.append(
             generate_box_link(
                 'left_door',
@@ -331,7 +331,7 @@ class Lift:
 
         right_door_pose = Element('pose')
         right_door_pose.text = \
-            f'{self.cabin_depth / 2 - 0.025} {-self.cabin_width / 8} 1.25 0 0 0'
+            f'{self.cabin_depth/2 - 0.025} {-self.cabin_width/8} 1.25 0 0 0'
         lift_model.append(
             generate_box_link(
                 'right_door',
@@ -349,7 +349,7 @@ class Lift:
                 lower_limit=f'{-self.cabin_width/4}',
                 upper_limit='0'))
 
-        # TODO: Automatically generate cabin door according to drawing    
+        # TODO: Automatically generate cabin door according to drawing
         # for lift_door in self.doors:
         #     lift_door.generate(lift_cabin_model)
 
