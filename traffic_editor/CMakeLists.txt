@@ -78,6 +78,7 @@ ExternalProject_Add(thumbnails_repo
 
 add_dependencies(traffic-editor thumbnails_repo)
 
+
 install(
   TARGETS traffic-editor
   LIBRARY DESTINATION lib
