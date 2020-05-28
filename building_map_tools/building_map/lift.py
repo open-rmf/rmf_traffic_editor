@@ -20,9 +20,9 @@ class LiftDoor:
         self.width = float(yaml_node['width'])
 
     def generate_cabin_door(self, model_ele):
-        door_size = [0.03, self.width / 4, 2.5]
+        door_size = [0.03, self.width / 2, 2.5]
         left_door_pose = Element('pose')
-        left_door_pose.text = f'{self.y-0.025} {self.width/8} 1.25 0 0 0'
+        left_door_pose.text = f'{self.y-0.025} {self.width/4} 1.25 0 0 0'
 
         model_ele.append(
             generate_box_link(
@@ -38,10 +38,10 @@ class LiftDoor:
                 self.name+'_left_door',
                 joint_axis='y',
                 lower_limit='0',
-                upper_limit=f'{self.width / 4}'))
+                upper_limit=f'{self.width / 2}'))
 
         right_door_pose = Element('pose')
-        right_door_pose.text = f'{self.y-0.025} {-self.width/8} 1.25 0 0 0'
+        right_door_pose.text = f'{self.y-0.025} {-self.width/4} 1.25 0 0 0'
 
         model_ele.append(
             generate_box_link(
@@ -56,7 +56,7 @@ class LiftDoor:
                 'platform',
                 self.name+'_right_door',
                 joint_axis='y',
-                lower_limit=f'{-self.width / 4}',
+                lower_limit=f'{-self.width / 2}',
                 upper_limit='0'))
 
     def generate_shaft_door(self, world_ele, x, y, z, yaw, suffix):
@@ -66,12 +66,12 @@ class LiftDoor:
         # tranformation
         x_new = x + self.x * np.cos(yaw) - self.y * np.sin(yaw)
         y_new = y + self.x * np.sin(yaw) + self.y * np.cos(yaw)
-        door_pose.text = \
-            f'{x_new} {y_new} {z} 0 0 {yaw}'
+        yaw_new = yaw + self.motion_axis_orientation + 1.571
+        door_pose.text = f'{x_new} {y_new} {z} 0 0 {yaw_new}'
 
-        door_size = [0.03, self.width / 4, 2.5]
+        door_size = [0.03, self.width / 2, 2.5]
         left_door_pose = Element('pose')
-        left_door_pose.text = f'0 {self.width/8} 1.25 0 0 0'
+        left_door_pose.text = f'0 {self.width / 4} 1.25 0 0 0'
 
         model_ele.append(
             generate_box_link(
@@ -87,10 +87,10 @@ class LiftDoor:
                 'left_door',
                 joint_axis='y',
                 lower_limit='0',
-                upper_limit=f'{self.width / 4}'))
+                upper_limit=f'{self.width / 2}'))
 
         right_door_pose = Element('pose')
-        right_door_pose.text = f'0 {-self.width/8} 1.25 0 0 0'
+        right_door_pose.text = f'0 {-self.width / 4} 1.25 0 0 0'
 
         model_ele.append(
             generate_box_link(
@@ -105,7 +105,7 @@ class LiftDoor:
                 'world',
                 'right_door',
                 joint_axis='y',
-                lower_limit=f'{-self.width / 4}',
+                lower_limit=f'{-self.width / 2}',
                 upper_limit='0'))
 
         ramp_size = [0.06, self.width, 0.05]
@@ -137,8 +137,8 @@ class Lift:
         self.yaw = float(yaml_node['yaw'])
         raw_pos = (float(yaml_node['x']), -float(yaml_node['y']))
         self.x, self.y = transform.transform_point(raw_pos)
-        self.cabin_depth = self.depth - 0.06
-        self.cabin_width = self.width - 0.06
+        self.cabin_depth = self.depth - 0.1
+        self.cabin_width = self.width - 0.1
 
         # default params
         self.cabin_mass = 800
@@ -306,7 +306,8 @@ class Lift:
                 'platform',
                 joint_axis='z'))
 
-        # lift door links and joints
+        # cabin door links and joints
+        # HARDCODED FOR NOW!
         door_size = [0.03, self.cabin_width / 4, 2.5]
         left_door_pose = Element('pose')
         left_door_pose.text = \
@@ -348,6 +349,7 @@ class Lift:
                 lower_limit=f'{-self.cabin_width/4}',
                 upper_limit='0'))
 
+        # TODO: Automatically generate cabin door according to drawing    
         # for lift_door in self.doors:
         #     lift_door.generate(lift_cabin_model)
 
