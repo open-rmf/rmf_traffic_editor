@@ -23,5 +23,5 @@ The `building_map_tools` package requires the following Python 3 dependencies
 to generate worlds:
 
 ```
-sudo apt install python3-shapely python3-yaml
+sudo apt install python3-shapely python3-yaml python3-requests
 ```
