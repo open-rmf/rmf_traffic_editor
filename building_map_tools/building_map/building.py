@@ -38,6 +38,11 @@ class Building:
             else:
                 transform = self.ref_level.transform
             self.lifts[lift_name] = Lift(lift_yaml, lift_name, transform)
+        
+        for lift_name, lift in self.lifts.items():
+            for level_name in lift.level_doors:
+                elevation = self.levels[level_name].elevation
+                lift.level_doors[level_name] = (elevation, lift.level_doors[level_name])
 
     def __str__(self):
         s = ''
@@ -201,7 +206,7 @@ class Building:
 
         for lift_name, lift in self.lifts.items():
             # lift.generate_holes(world)
-            # lift.generate_shaft_doors(world, options)
+            lift.generate_shaft_doors(world)
             lift.generate_cabin(world)
 
         gui_ele = world.find('gui')

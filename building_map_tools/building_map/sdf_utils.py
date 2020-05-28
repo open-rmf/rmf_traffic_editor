@@ -80,7 +80,7 @@ def generate_joint(
     joint_type,
     parent_link,
     child_link,
-    joint_axis='z',
+    joint_axis=None,
     lower_limit=None,
     upper_limit=None,
     max_effort=None,

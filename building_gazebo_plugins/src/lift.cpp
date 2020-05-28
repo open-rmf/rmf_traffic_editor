@@ -95,8 +95,8 @@ bool Lift::_load_lift_parameters(const sdf::ElementPtr& sdf)
       !get_sdf_attribute_required<std::string>(cabin_door_element, "right_joint_name", _cabin_door_joint_names[1]))
     return false;
   _cabin_doors.clear();
-  _cabin_doors.emplace_back(false, _model->GetJoint(_cabin_door_joint_names[0]), _cabin_door_motion_params);
-  _cabin_doors.emplace_back(false, _model->GetJoint(_cabin_door_joint_names[1]), _cabin_door_motion_params, true);
+  _cabin_doors.emplace_back(false, _model->GetJoint(_cabin_door_joint_names[0]), _cabin_door_motion_params, true);
+  _cabin_doors.emplace_back(false, _model->GetJoint(_cabin_door_joint_names[1]), _cabin_door_motion_params);
 
   return true;
 }
@@ -164,9 +164,9 @@ bool Lift::_load_all_lift_shaft_doors(const sdf::ElementPtr& sdf)
       return false;
     _lift_shaft_doors[floor_name] = std::vector<Door>();
     _lift_shaft_doors[floor_name].emplace_back(false, shaft_door_model_ptr->GetJoint(left_joint_name),
-                                                 _cabin_door_motion_params);
-    _lift_shaft_doors[floor_name].emplace_back(false, shaft_door_model_ptr->GetJoint(right_joint_name),
                                                  _cabin_door_motion_params, true);
+    _lift_shaft_doors[floor_name].emplace_back(false, shaft_door_model_ptr->GetJoint(right_joint_name),
+                                                 _cabin_door_motion_params);
 
     floor_element = floor_element->GetNextElement("floor");
   }
