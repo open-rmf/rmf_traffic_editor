@@ -292,6 +292,9 @@ def get_model_name_tuple(config_file_path, config_file="model.config",
         logger.error("Could not parse %s file! %s"
                      % (config_file, e))
 
+    if author_name is None:
+        author_name = default_author_name
+
     if lower:
         return ModelNames(model_name.lower(), author_name.lower())
     else:
