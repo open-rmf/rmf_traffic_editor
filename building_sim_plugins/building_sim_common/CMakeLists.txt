@@ -33,14 +33,6 @@ find_package(building_map_msgs REQUIRED)
 
 include(GNUInstallDirs)
 
-#add_library(building_sim_utils SHARED src/utils.cpp)
-
-#target_include_directories(building_sim_utils
-#  PUBLIC
-#    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-#    ${GAZEBO_INCLUDE_DIRS}
-#)
-
 add_library(slotcar_common SHARED ${PROJECT_SOURCE_DIR}/src/slotcar_common.cpp)
 
 target_link_libraries(slotcar_common
@@ -66,17 +58,6 @@ target_include_directories(slotcar_common
     ${tf2_ros_INCLUDE_DIRS}
 )
 
-# These lines are taken out because of this issue: https://github.com/ament/ament_cmake/issues/158
-#ament_target_dependencies(slotcar
-#  building_sim_utils
-#  "rmf_fleet_msgs"
-#  "rclcpp"
-#  "gazebo_dev"
-#  "gazebo_ros"
-#  "geometry_msgs"
-#  "tf2_ros"
-#)
-
 ###############################
 # door stuff
 ###############################
@@ -97,23 +78,6 @@ target_include_directories(door_common
    ${rmf_fleet_msgs_INCLUDE_DIRS}
    ${rmf_door_msgs_INCLUDE_DIRS}
 )
-
-###############################
-# toggle floor stuff
-###############################
-
-#add_library(toggle_floors SHARED src/toggle_floors.cpp)
-
-#target_include_directories(toggle_floors
-#  PUBLIC
-#    ${GAZEBO_INCLUDE_DIRS}
-#    ${Qt5Core_INCLUDE_DIRS}
-#)
-
-#target_link_libraries(toggle_floors
-#  PUBLIC
-#    Qt5::Widgets
-#)
 
 ###############################
 # install stuff

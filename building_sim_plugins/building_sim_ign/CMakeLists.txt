@@ -42,24 +42,10 @@ find_package(building_sim_common REQUIRED)
 
 include(GNUInstallDirs)
 
-#add_library(rmf_sim_utils SHARED src/utils.cpp)
-
-#target_include_directories(rmf_sim_utils
-#  PUBLIC
-#    ${sdformat9_INCLUDE_DIRS}
-#)
-
-#target_link_libraries(rmf_sim_utils
-#PUBLIC
-#ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
-#${sdformat9_LIBRARIES}
-#)
-
 add_library(slotcar SHARED ${PROJECT_SOURCE_DIR}/src/slotcar.cpp)
 
 target_link_libraries(slotcar
   PUBLIC
-  #rmf_sim_utils
     ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
     ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
     ${building_sim_common_LIBRARIES}
@@ -82,17 +68,6 @@ target_include_directories(slotcar
     ${tf2_ros_INCLUDE_DIRS}
 )
 
-# These lines are taken out because of this issue: https://github.com/ament/ament_cmake/issues/158
-#ament_target_dependencies(slotcar
-#  rmf_sim_utils
-#  "rmf_fleet_msgs"
-#  "rclcpp"
-#  "gazebo_dev"
-#  "gazebo_ros"
-#  "geometry_msgs"
-#  "tf2_ros"
-#)
-
 ###############################
 # door stuff
 ###############################
@@ -109,7 +84,6 @@ target_include_directories(door
 
 target_link_libraries(door
   PUBLIC
-  #rmf_sim_utils
     ${rclcpp_LIBRARIES}
     ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
     ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
@@ -119,15 +93,6 @@ target_link_libraries(door
     #${geometry_msgs_LIBRARIES}
     #${tf2_ros_LIBRARIES}
 )
-
-#ament_target_dependencies(door
-#  "rmf_fleet_msgs"
-#  "rclcpp"
-#  "ignition-gazebo${IGN_GAZEBO_VER}"
-#  #"gazebo_dev"
-#  #"gazebo_ros"
-#  "rmf_door_msgs"
-#)
 
 ###############################
 # install stuff
