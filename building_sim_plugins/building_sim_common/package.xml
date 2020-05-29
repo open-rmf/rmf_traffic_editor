@@ -14,11 +14,7 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <!-- TODO check dependencies -->
   <depend>rclcpp</depend>
-  <depend>gazebo_ros</depend>
-  <depend>gazebo_msgs</depend>
-  <depend>gazebo_dev</depend>
   <depend>rmf_fleet_msgs</depend>
   <depend>rmf_door_msgs</depend>
   <depend>building_map_msgs</depend>
