@@ -355,16 +355,19 @@ Editor::Editor()
       "Reset",
       this,
       &Editor::sim_reset);
+  sim_reset_action->setVisible(false);
 
   sim_play_pause_action = toolbar->addAction(
       "Play",
       this,
       &Editor::sim_play_pause);
+  sim_play_pause_action->setVisible(false);
 
   record_start_stop_action = toolbar->addAction(
       "Record",
       this,
       &Editor::record_start_stop);
+  record_start_stop_action->setVisible(false);
 
   toolbar->setStyleSheet("QToolBar {background-color: #404040; border: none; spacing: 5px} QToolButton {background-color: #c0c0c0; color: blue; border: 1px solid black;} QToolButton:checked {background-color: #808080; color: red; border: 1px solid black;}");
   addToolBar(Qt::TopToolBarArea, toolbar);
@@ -542,6 +545,16 @@ bool Editor::load_project(const QString &filename)
   create_scene();
 
   update_tables();
+
+  if (project->has_sim_plugin())
+  {
+    printf("project has a sim plugin\n");
+    sim_reset_action->setVisible(true);
+    sim_play_pause_action->setVisible(true);
+    record_start_stop_action->setVisible(true);
+  }
+  else
+    printf("project does not have a sim plugin\n");
 
   QSettings settings;
   settings.setValue(preferences_keys::previous_project_path, filename);

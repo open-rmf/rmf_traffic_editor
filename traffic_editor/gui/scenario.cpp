@@ -111,32 +111,7 @@ bool Scenario::load()
         break;
       }
     }
-
   }
-
-  /*
-  behaviors.clear();
-  if (yaml["behaviors"])
-  {
-    const YAML::Node yb = yaml["behaviors"];
-    for (YAML::const_iterator it = yb.begin(); it != yb.end(); ++it)
-      behaviors.push_back(
-          unique_ptr<Behavior>(
-              new Behavior(it->first.as<string>(), it->second)));
-  }
-
-  behavior_schedule.clear();
-  if (yaml["behavior_schedule"])
-  {
-    const YAML::Node yb = yaml["behavior_schedule"];
-    for (YAML::const_iterator it = yb.begin(); it != yb.end(); ++it)
-    {
-      BehaviorScheduleItem bsi;
-      if (bsi.from_yaml(*it))
-        behavior_schedule.push_back(bsi);
-    }
-  }
-  */
 
   print();
 

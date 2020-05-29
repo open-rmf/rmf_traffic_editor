@@ -133,6 +133,8 @@ public:
 
   RenderingOptions rendering_options;
 
+  bool has_sim_plugin();
+
 private:
   bool load_yaml_file(const std::string& _filename);
   bool save_yaml_file() const;

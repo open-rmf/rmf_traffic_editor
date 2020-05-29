@@ -659,3 +659,11 @@ void Project::scenario_scene_update(
     return;
   scenarios[scenario_idx]->scene_update(scene, building, level_idx);
 }
+
+bool Project::has_sim_plugin()
+{
+  for (const auto& scenario : scenarios)
+    if (scenario->sim_plugin)
+      return true;
+  return false;
+}
