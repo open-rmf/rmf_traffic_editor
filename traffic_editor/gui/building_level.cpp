@@ -570,7 +570,7 @@ void BuildingLevel::draw_door(QGraphicsScene *scene, const Edge &edge) const
       const double hinge_x = door_axis == "start" ? v_start.x : v_end.x;
       const double hinge_y = door_axis == "start" ? v_start.y : v_end.y;
       const double angle_offset = door_axis == "start" ? 0.0 : M_PI;
-      
+
       add_door_swing_path(
           door_motion_path,
           hinge_x,
@@ -784,7 +784,7 @@ void BuildingLevel::clear_selection()
 
 void BuildingLevel::draw(
     QGraphicsScene *scene,
-    vector<EditorModel>& editor_models) const
+    vector<EditorModel>& editor_models)
 {
   if (drawing_filename.size())
   {
@@ -853,11 +853,11 @@ void BuildingLevel::draw(
 
           printf("[WARNING] Thumbnail %1$s not found, "
                  "substituting %2$s instead!\n"
-                 "(%1$s will be saved as %2$s!)\n",
+                 "(%1$s will be saved as %2$s!)\n\n",
                  model.model_name.c_str(), editor_model.name.c_str());
 
           // And reassign it!
-          model.model_name = std::string(editor_model.name);
+          model.model_name = editor_model.name;
           break;
         }
       }

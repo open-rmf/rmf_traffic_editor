@@ -71,7 +71,7 @@ public:
 
   void draw(
       QGraphicsScene *scene,
-      std::vector<EditorModel>& editor_models) const;
+      std::vector<EditorModel>& editor_models);
 
   bool load_drawing();
 
