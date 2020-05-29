@@ -837,23 +837,40 @@ void BuildingLevel::draw(
         break;
       }
     }
-    if (pixmap.isNull()) {
+    if (pixmap.isNull())
+    {
       // BACKWARDS COMPATIBILITY PATCH: Try again, but...
-      // Use the first namespaced thumbnail for a specified non-namespaced
-      // model with a warning instead. (Also modifies the model name inplace!)
+      // Use the first matching namespaced thumbnail for a
+      // specified non-namespaced model, with warnings.
 
+      // (Also modifies the model name inplace!)
       for (auto &editor_model : editor_models)
       {
-        // Check if non-namespaced name is a substring of namespaced name
-        // If yes, use it!
-        if (editor_model.name.find(model.model_name) != std::string::npos)
+        // Get ending token
+        std::string ending_token;
+        size_t delimiter_index = editor_model.name.find("/");
+
+        if (delimiter_index != std::string::npos)
         {
+          ending_token = editor_model.name
+            .substr(delimiter_index + 1, editor_model.name.length());
+        }
+        else
+        {
+          ending_token = editor_model.name;
+        }
+
+        // Check if non-namespaced model_name the name we are looking for
+        if (ending_token == model.model_name)
+        {
+          if (model.model_name == editor_model.name) continue;
+
           pixmap = editor_model.get_pixmap();
           model_meters_per_pixel = editor_model.meters_per_pixel;
 
-          printf("[WARNING] Thumbnail %1$s not found, "
+          printf("\n[WARNING] Thumbnail %1$s not found, "
                  "substituting %2$s instead!\n"
-                 "(%1$s will be saved as %2$s!)\n\n",
+                 "(%1$s will be saved as %2$s)\n\n",
                  model.model_name.c_str(), editor_model.name.c_str());
 
           // And reassign it!
@@ -864,7 +881,7 @@ void BuildingLevel::draw(
 
       // Check again for pixmap find status
       if (pixmap.isNull()) {
-        printf("[ERROR] Could not display thumbnail: %s\n",
+        printf("[ERROR] No thumbnail found: %s\n",
                model.model_name.c_str());
         continue;  // couldn't load the pixmap; ignore it.
       }
