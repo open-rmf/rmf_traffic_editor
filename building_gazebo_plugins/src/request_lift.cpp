@@ -16,8 +16,8 @@ void print_instructions()
   std::cout << "Invalid number of arguments, please pass in lift_name, desired level and door state"
             << " after the binary in that order, only supports 'open' or 'closed'." << std::endl;
   std::cout << "For example, \n"
-            << "  ./RequestLift 1 L open\n"
-            << "  ./RequestLift lab 4 closed\n" << std::endl;
+            << "  request_lift Lift1 L1 open\n"
+            << "  request_lift Lift2 L4 closed\n" << std::endl;
 }
 
 int main(int argc, char* argv[])
@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
   rclcpp::init(argc, argv);
 
   using LiftRequest = rmf_lift_msgs::msg::LiftRequest;
-  auto node = rclcpp::Node::make_shared("lift_resuestor");
+  auto node = rclcpp::Node::make_shared("lift_resuest_publisher");
   auto publisher = node->create_publisher<LiftRequest>("/lift_requests", rclcpp::SystemDefaultsQoS());
   auto msg = std::make_shared<LiftRequest>();
 

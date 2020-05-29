@@ -89,3 +89,22 @@ value of pixels-per-meter from all supplied measurements.
 Currently you need to re-load the document (closing the editor and re-opening)
 to re-compute the scale. This is not ideal, but is hopefully not a
 frequently-used feature. Typically the scale of a map is only set one time.
+
+### Adding lifts
+
+Click the "Add..." button in the "lifts" tab on the far right side of the
+main editor window. This will pop up a dialog where you can create a new
+lift. You can specify the name, position, size, and reference floor in the
+dialog.
+
+I addition, you need to add a lift door. Click the "Add..." button below the
+box showing the lift. Set Door type to "Double sliding" (The only supported
+type for now!), and align the door to the edge of the lift (represented by the
+green box). After that, select which door you want to use on each floor by
+simply checking the boxes on the left.
+
+**Note**: Currently only the shaft doors (doors attached to each floor) will be
+automatically generated. The cabin door is still hardcoded and will be placed
+at the middle of the cabin wall to the right. Do note that you also need to
+manually create holes on the floor for the lift to get through. You can use the
+polygon tool to do this.
