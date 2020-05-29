@@ -860,9 +860,10 @@ void BuildingLevel::draw(
           ending_token = editor_model.name;
         }
 
-        // Check if non-namespaced model_name the name we are looking for
+        // Check if namespaced model_name is the name we are looking for
         if (ending_token == model.model_name)
         {
+          // Skip rematches from previous for loop
           if (model.model_name == editor_model.name) continue;
 
           pixmap = editor_model.get_pixmap();
