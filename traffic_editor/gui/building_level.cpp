@@ -823,7 +823,7 @@ void BuildingLevel::draw(
   }
 
   // now draw all the models
-  for (const auto &model : models)
+  for (auto &model : models)
   {
     // find the pixmap we need for this model
     QPixmap pixmap;
@@ -837,8 +837,38 @@ void BuildingLevel::draw(
         break;
       }
     }
-    if (pixmap.isNull())
-      continue;  // couldn't load the pixmap; ignore it.
+    if (pixmap.isNull()) {
+      // BACKWARDS COMPATIBILITY PATCH: Try again, but...
+      // Use the first namespaced thumbnail for a specified non-namespaced
+      // model with a warning instead. (Also modifies the model name inplace!)
+
+      for (auto &editor_model : editor_models)
+      {
+        // Check if non-namespaced name is a substring of namespaced name
+        // If yes, use it!
+        if (editor_model.name.find(model.model_name) != std::string::npos)
+        {
+          pixmap = editor_model.get_pixmap();
+          model_meters_per_pixel = editor_model.meters_per_pixel;
+
+          printf("[WARNING] Thumbnail %1$s not found, "
+                 "substituting %2$s instead!\n"
+                 "(%1$s will be saved as %2$s!)\n",
+                 model.model_name.c_str(), editor_model.name.c_str());
+
+          // And reassign it!
+          model.model_name = std::string(editor_model.name);
+          break;
+        }
+      }
+
+      // Check again for pixmap find status
+      if (pixmap.isNull()) {
+        printf("[ERROR] Could not display thumbnail: %s\n",
+               model.model_name.c_str());
+        continue;  // couldn't load the pixmap; ignore it.
+      }
+    }
 
     QGraphicsPixmapItem *item = scene->addPixmap(pixmap);
     item->setOffset(-pixmap.width()/2, -pixmap.height()/2);
