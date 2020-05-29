@@ -59,6 +59,14 @@ void SlotcarCommon::init_ros_node(const rclcpp::Node::SharedPtr node)
     _ros_node->create_publisher<rmf_fleet_msgs::msg::RobotState>(
     "/robot_state", 10);
 
+  auto qos_profile = rclcpp::QoS(10);
+  qos_profile.transient_local();
+  _building_map_sub =
+    _ros_node->create_subscription<building_map_msgs::msg::BuildingMap>(
+        "/map",
+        qos_profile,
+        std::bind(&SlotcarCommon::map_cb, this, std::placeholders::_1));
+
   _traj_sub = _ros_node->create_subscription<rmf_fleet_msgs::msg::PathRequest>(
     "/robot_path_requests",
     10,
@@ -179,6 +187,10 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
 
   if (trajectory.empty())
     return velocities;
+
+  if (_remaining_path.size() != 0)
+    _current_level_name = _remaining_path[0].level_name;
+
 
   Eigen::Vector3d current_heading = compute_heading(_pose);
 
@@ -376,6 +388,7 @@ void SlotcarCommon::publish_state_topic(const rclcpp::Time& t)
   robot_state_msg.location.y = _pose.translation()[1];
   robot_state_msg.location.yaw = compute_yaw(_pose);
   robot_state_msg.location.t = t;
+  robot_state_msg.location.level_name = _current_level_name;
 
   robot_state_msg.task_id = _current_task_id;
   robot_state_msg.path = _remaining_path;
@@ -388,4 +401,54 @@ void SlotcarCommon::mode_request_cb(
   const rmf_fleet_msgs::msg::ModeRequest::SharedPtr msg)
 {
   _current_mode = msg->mode;
+}
+
+void SlotcarCommon::map_cb(const building_map_msgs::msg::BuildingMap::SharedPtr msg)
+{
+  if (!_current_level_name.empty())
+    return;
+
+  if (_model_name.size() == 0)
+  {
+    RCLCPP_ERROR(logger(), "Received map before model was initialized");
+    return;
+  }
+
+  if (msg->levels.empty())
+  {
+    RCLCPP_ERROR(logger(), "Received empty building map");
+    return;
+  }
+
+  RCLCPP_INFO(logger(), "Received building map with %d levels", msg->levels.size());
+  const double x = _pose.translation()[0];
+  const double y = _pose.translation()[1];
+
+  auto compute_disp = [&](const building_map_msgs::msg::GraphNode& v) -> double
+  {
+    return std::sqrt(
+        std::pow(x - v.x, 2) +
+        std::pow(y - v.y, 2));
+  };
+
+  // TODO be smarter about this search
+  // Check if robot is 1m from a waypoint in a level and if so set
+  // _current_level_name to that level.name
+  for (const auto& level : msg->levels)
+  {
+    for (const auto& graph : level.nav_graphs)
+    {
+      for (const auto& vertex : graph.vertices)
+      {
+        if (std::abs(compute_disp(vertex) - 0.0) < 1.0)
+        {
+          _current_level_name = level.name;
+          RCLCPP_INFO(logger(), "Setting slotcar level name [%s]",
+            level.name.c_str());
+          return;
+        }
+      }
+    }
+  }
+
 }

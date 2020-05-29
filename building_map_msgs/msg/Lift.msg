@@ -8,3 +8,7 @@ Graph wall_graph
 float32 ref_x
 float32 ref_y
 float32 ref_yaw
+
+# width and depth of the cabin
+float32 width
+float32 depth

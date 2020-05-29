@@ -3,8 +3,8 @@ from .door import Door
 
 
 class DoubleSwingDoor(Door):
-    def __init__(self, door_edge):
-        super().__init__(door_edge)
+    def __init__(self, door_edge, level_elevation):
+        super().__init__(door_edge, level_elevation)
         motion_degrees = door_edge.params['motion_degrees'].value
         self.motion_radians = 3.14 * motion_degrees / 180.0
         self.motion_direction = door_edge.params['motion_direction'].value

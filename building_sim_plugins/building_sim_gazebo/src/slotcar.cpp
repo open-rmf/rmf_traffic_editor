@@ -17,8 +17,6 @@ public:
   ~SlotcarPlugin();
 
   void Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf) override;
-  void path_request_cb(const rmf_fleet_msgs::msg::PathRequest::SharedPtr msg);
-  void mode_request_cb(const rmf_fleet_msgs::msg::ModeRequest::SharedPtr msg);
   void OnUpdate();
 
 private:

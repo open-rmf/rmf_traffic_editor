@@ -32,6 +32,7 @@ find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(rmf_fleet_msgs REQUIRED)
 find_package(rmf_door_msgs REQUIRED)
+find_package(building_map_msgs REQUIRED)
 find_package(building_sim_common REQUIRED)
 
 # TODO this is a dependency of building_sim_common, it shouldn't be needed
@@ -40,8 +41,6 @@ find_package(Eigen3 REQUIRED)
 include(GNUInstallDirs)
 
 add_library(slotcar SHARED ${PROJECT_SOURCE_DIR}/src/slotcar.cpp)
-
-message("${building_sim_common_LIBRARIES}")
 
 target_link_libraries(slotcar
   PUBLIC
@@ -54,6 +53,7 @@ target_link_libraries(slotcar
     ${gazebo_ros_LIBRARIES}
     ${geometry_msgs_LIBRARIES}
     ${tf2_ros_LIBRARIES}
+    ${building_map_msgs_LIBRARIES}
 )
 
 target_include_directories(slotcar
@@ -65,7 +65,9 @@ target_include_directories(slotcar
     ${geometry_msgs_INCLUDE_DIRS}
     ${std_msgs_INCLUDE_DIRS}
     ${rmf_fleet_msgs_INCLUDE_DIRS}
+    ${building_map_msgs_INCLUDE_DIRS}
     ${tf2_ros_INCLUDE_DIRS}
+    ${building_map_msgs_INCLUDE_DIRS}
 )
 
 # These lines are taken out because of this issue: https://github.com/ament/ament_cmake/issues/158

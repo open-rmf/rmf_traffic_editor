@@ -23,17 +23,13 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(Eigen3 REQUIRED)
-#find_package(sdformat9 REQUIRED)
-#find_package(gazebo REQUIRED)
-#find_package(gazebo_ros REQUIRED)
-#find_package(gazebo_dev REQUIRED)
-#find_package(gazebo_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(rmf_fleet_msgs REQUIRED)
 find_package(rmf_door_msgs REQUIRED)
+find_package(building_map_msgs REQUIRED)
 
 include(GNUInstallDirs)
 
@@ -51,6 +47,7 @@ target_link_libraries(slotcar_common
   PUBLIC
     Eigen3::Eigen
     ${rmf_fleet_msgs_LIBRARIES}
+    ${building_map_msgs_LIBRARIES}
     ${rclcpp_LIBRARIES}
     ${geometry_msgs_LIBRARIES}
     ${tf2_ros_LIBRARIES}
@@ -65,6 +62,7 @@ target_include_directories(slotcar_common
     ${geometry_msgs_INCLUDE_DIRS}
     ${std_msgs_INCLUDE_DIRS}
     ${rmf_fleet_msgs_INCLUDE_DIRS}
+    ${building_map_msgs_INCLUDE_DIRS}
     ${tf2_ros_INCLUDE_DIRS}
 )
 

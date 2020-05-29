@@ -9,6 +9,7 @@
 #include <rmf_fleet_msgs/msg/robot_state.hpp>
 #include <rmf_fleet_msgs/msg/path_request.hpp>
 #include <rmf_fleet_msgs/msg/mode_request.hpp>
+#include <building_map_msgs/msg/building_map.hpp>
 
 namespace building_sim_common {
 
@@ -124,6 +125,7 @@ private:
 
   std::string _model_name;
   Eigen::Isometry3d _pose;
+  std::string _current_level_name;
   bool _emergency_stop = false;
 
   std::shared_ptr<tf2_ros::TransformBroadcaster> _tf2_broadcaster;
@@ -131,6 +133,7 @@ private:
 
   rclcpp::Subscription<rmf_fleet_msgs::msg::PathRequest>::SharedPtr _traj_sub;
   rclcpp::Subscription<rmf_fleet_msgs::msg::ModeRequest>::SharedPtr _mode_sub;
+  rclcpp::Subscription<building_map_msgs::msg::BuildingMap>::SharedPtr _building_map_sub;
 
   rmf_fleet_msgs::msg::RobotMode _current_mode;
 
@@ -170,6 +173,8 @@ private:
   void path_request_cb(const rmf_fleet_msgs::msg::PathRequest::SharedPtr msg);
 
   void mode_request_cb(const rmf_fleet_msgs::msg::ModeRequest::SharedPtr msg);
+
+  void map_cb(const building_map_msgs::msg::BuildingMap::SharedPtr msg);
 };
 
 template<typename SdfPtrT>
