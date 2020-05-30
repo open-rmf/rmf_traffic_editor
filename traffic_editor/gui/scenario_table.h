@@ -19,7 +19,6 @@
 #define SCENARIO_TABLE_H
 
 #include <QTableWidget>
-#include <memory>
 
 #include "table_list.h"
 #include "project.h"
@@ -30,7 +29,7 @@ public:
   ScenarioTable();
   ~ScenarioTable();
 
-  void update(std::shared_ptr<Project> project);
+  void update(Project& project);
 };
 
 #endif

@@ -16,7 +16,6 @@
 */
 
 #include <algorithm>
-#include <memory>
 
 #include <QGraphicsOpacityEffect>
 #include <QGraphicsPixmapItem>
@@ -104,8 +103,8 @@ bool BuildingLevel::from_yaml(
     const YAML::Node &ys = _data["models"];
     for (YAML::const_iterator it = ys.begin(); it != ys.end(); ++it)
     {
-      std::shared_ptr<Model> m = std::make_shared<Model>();
-      m->from_yaml(*it, this->name);
+      Model m;
+      m.from_yaml(*it, this->name);
       models.push_back(m);
     }
   }
@@ -228,7 +227,7 @@ YAML::Node BuildingLevel::to_yaml() const
   }
 
   for (const auto& model : models)
-    y["models"].push_back(model->to_yaml());
+    y["models"].push_back(model.to_yaml());
 
   for (const auto& polygon : polygons)
   {
@@ -267,7 +266,7 @@ bool BuildingLevel::delete_selected()
       std::remove_if(
           models.begin(),
           models.end(),
-          [](const auto& model) { return model->selected; }),
+          [](const auto& model) { return model.selected; }),
       models.end());
 
   fiducials.erase(
@@ -784,7 +783,7 @@ void BuildingLevel::clear_selection()
     edge.selected = false;
 
   for (auto& model : models)
-    model->selected = false;
+    model.selected = false;
 
   for (auto& polygon : polygons)
     polygon.selected = false;
@@ -796,7 +795,7 @@ void BuildingLevel::clear_selection()
 void BuildingLevel::draw(
     QGraphicsScene *scene,
     vector<EditorModel>& editor_models,
-    const RenderingOptions& rendering_options) const
+    const RenderingOptions& rendering_options)
 {
   if (drawing_filename.size())
   {
@@ -834,10 +833,10 @@ void BuildingLevel::draw(
     item->setGraphicsEffect(opacity_effect);
   }
 
-  for (const auto &model : models)
-    model->draw(scene, editor_models, drawing_meters_per_pixel);
+  for (Model& model : models)
+    model.draw(scene, editor_models, drawing_meters_per_pixel);
 
-  for (const auto &edge : edges)
+  for (const auto& edge : edges)
   {
     switch (edge.type)
     {
@@ -852,7 +851,7 @@ void BuildingLevel::draw(
     }
   }
 
-  for (const auto &v : vertices)
+  for (const auto& v : vertices)
     v.draw(
         scene,
         vertex_radius / drawing_meters_per_pixel,
@@ -865,5 +864,5 @@ void BuildingLevel::draw(
 void BuildingLevel::clear_scene()
 {
   for (auto& model : models)
-    model->clear_scene();
+    model.clear_scene();
 }

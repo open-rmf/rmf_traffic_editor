@@ -42,7 +42,7 @@ public:
 
   std::string name;
   std::string reference_level_name;
-  std::vector<std::unique_ptr<BuildingLevel>> levels;
+  std::vector<BuildingLevel> levels;
   std::vector<Lift> lifts;
   std::mutex building_mutex;
 
@@ -52,7 +52,7 @@ public:
   bool save_yaml_file();
   void clear();  // clear all internal data structures
 
-  void add_level(std::unique_ptr<BuildingLevel> level);
+  void add_level(const BuildingLevel& level);
 
   void add_vertex(int level_index, double x, double y);
   void add_fiducial(int level_index, double x, double y);
@@ -165,7 +165,7 @@ public:
 
   double level_meters_per_pixel(const std::string& level_name) const;
 
-  std::shared_ptr<Model> get_model(const std::string& name);
+  bool get_model(const std::string& name, Model&& model);
 };
 
 #endif

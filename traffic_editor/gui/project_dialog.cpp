@@ -19,7 +19,7 @@
 #include <QtWidgets>
 
 
-ProjectDialog::ProjectDialog(std::shared_ptr<Project> _project)
+ProjectDialog::ProjectDialog(Project& _project)
 : QDialog(),
   project(_project)
 {
@@ -29,12 +29,12 @@ ProjectDialog::ProjectDialog(std::shared_ptr<Project> _project)
 
   QHBoxLayout *name_hbox = new QHBoxLayout;
   name_hbox->addWidget(new QLabel("Project name:"));
-  name_line_edit = new QLineEdit(QString::fromStdString(project->name));
+  name_line_edit = new QLineEdit(QString::fromStdString(project.name));
   name_hbox->addWidget(name_line_edit);
 
   QHBoxLayout *building_hbox = new QHBoxLayout;
   building_path_line_edit = new QLineEdit(
-      QString::fromStdString(project->building.filename));
+      QString::fromStdString(project.building.filename));
   QPushButton *building_path_button = new QPushButton("Find...");
   connect(
       building_path_button,
@@ -75,13 +75,13 @@ ProjectDialog::~ProjectDialog()
 
 void ProjectDialog::ok_button_clicked()
 {
-  project->name = name_line_edit->text().toStdString();
+  project.name = name_line_edit->text().toStdString();
 
   // if the building filename has changed, load it.
-  const std::string previous_building_filename = project->building.filename;
-  project->building.filename = building_path_line_edit->text().toStdString();
-  if (project->building.filename != previous_building_filename)
-    project->building.load_yaml_file();
+  const std::string previous_building_filename = project.building.filename;
+  project.building.filename = building_path_line_edit->text().toStdString();
+  if (project.building.filename != previous_building_filename)
+    project.building.load_yaml_file();
 
   accept();
 }

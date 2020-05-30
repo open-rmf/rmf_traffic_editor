@@ -17,6 +17,7 @@
 
 #include "sim_thread.h"
 #include <QTimer>
+#include "editor.h"
 
 SimThread::SimThread()
 : QThread()
@@ -32,10 +33,9 @@ void SimThread::run()
   printf("entering SimThread::run()\n");
   while (true)
   {
-    usleep(100);
+    usleep(100);  // todo: user-editable parameter here from GUI...
     if (isInterruptionRequested())
       break;
-    if (project && !project->sim_is_paused)
-      project->sim_tick();
+    Editor::get_instance()->sim_tick();
   }
 }

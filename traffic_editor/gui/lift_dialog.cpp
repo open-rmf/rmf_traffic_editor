@@ -26,7 +26,7 @@ LiftDialog::LiftDialog(Lift& lift, const Building& building)
 {
   setWindowTitle("Lift Properties");
   for (const auto& level : building.levels)
-    _level_names.push_back(QString::fromStdString(level->name));
+    _level_names.push_back(QString::fromStdString(level.name));
 
   QHBoxLayout *bottom_buttons_hbox = new QHBoxLayout;
   _ok_button = new QPushButton("OK", this);  // first button = [enter] button

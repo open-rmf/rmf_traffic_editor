@@ -155,19 +155,6 @@ void Scenario::draw(
       level.draw(scene, meters_per_pixel);
       break;
     }
-
-  // draw_models(scene, level_name, meters_per_pixel, editor_models);
-}
-
-void Scenario::draw_models(
-    QGraphicsScene *scene,
-    const std::string& level_name,
-    const double meters_per_pixel,
-    std::vector<EditorModel>& editor_models) const
-{
-  for (const auto& model : models)
-    if (model->state.level_name == level_name)
-      model->draw(scene, editor_models, meters_per_pixel);
 }
 
 void Scenario::add_vertex(
@@ -228,23 +215,11 @@ void Scenario::sim_reset(Building& building)
 
   sim_time_seconds = 0.0;
   sim_tick_counter = 0;
-
-  // reset all our models and restore ownership to their building levels
-  for (auto& model : models)
-    for (auto& level : building.levels)
-      if (level->name == model->starting_level)
-      {
-        level->models.push_back(std::move(model));
-        break;
-      }
-  models.clear();  // this will now just be a bunch of empty unique_ptr
 }
 
 void Scenario::clear_scene()
 {
   printf("Scenario::clear_scene()\n");
-  for (auto& model : models)
-    model->clear_scene();
 
   if (!sim_plugin.IsEmpty())
   {

@@ -19,7 +19,6 @@
 #define EDITOR_H
 
 #include <map>
-#include <memory>
 #include <string>
 #include <vector>
 
@@ -157,7 +156,7 @@ private:
 /////////////////////////////
   static Editor *instance;  // there will only be one instance
 
-  std::shared_ptr<Project> project;
+  Project project;
   int level_idx = 0;  // level that we are currently editing
   int clicked_idx = -1;  // point most recently clicked
   //int polygon_idx = -1;  // currently selected polygon
@@ -230,6 +229,11 @@ private:
   void sim_reset();
   void sim_play_pause();
   SimThread sim_thread;
+
+public:
+  void sim_tick();  // called by SimThread
+
+private:
 
 #ifdef HAS_OPENCV
   QAction *record_start_stop_action;

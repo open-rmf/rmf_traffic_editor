@@ -18,7 +18,6 @@
 #include "traffic_table.h"
 #include "traffic_map_dialog.h"
 #include <QtWidgets>
-using std::shared_ptr;
 
 
 TrafficTable::TrafficTable()
@@ -36,9 +35,9 @@ TrafficTable::~TrafficTable()
 {
 }
 
-void TrafficTable::update(std::shared_ptr<Project> project)
+void TrafficTable::update(Project& project)
 {
-  RenderingOptions& opts = project->rendering_options;
+  RenderingOptions& opts = project.rendering_options;
 
   const size_t num_internal_lanes = opts.show_building_lanes.size();
 
@@ -46,7 +45,7 @@ void TrafficTable::update(std::shared_ptr<Project> project)
   setRowCount(
       1 +
       num_internal_lanes +
-      project->traffic_maps.size());
+      project.traffic_maps.size());
 
   // first render the 10 "internal" traffic maps stored in the building yaml
   for (size_t i = 0; i < num_internal_lanes; i++)
@@ -57,9 +56,9 @@ void TrafficTable::update(std::shared_ptr<Project> project)
     connect(
         checkbox,
         &QAbstractButton::clicked,
-        [this, project, i](bool box_checked)
+        [this, &project, i](bool box_checked)
         {
-          project->rendering_options.show_building_lanes[i] = box_checked;
+          project.rendering_options.show_building_lanes[i] = box_checked;
           emit redraw();
         });
 
@@ -67,16 +66,16 @@ void TrafficTable::update(std::shared_ptr<Project> project)
     QTableWidgetItem *name_item =
         new QTableWidgetItem(QString("Graph %1").arg(i));
 
-    if (static_cast<int>(i) == project->traffic_map_idx)
+    if (static_cast<int>(i) == project.traffic_map_idx)
       name_item->setBackground(QBrush(QColor("#e0ffe0")));
 
     setItem(i, 1, name_item);
   }
 
   // now the "explicitly linked" external traffic maps
-  for (size_t i = 0; i < project->traffic_maps.size(); i++)
+  for (size_t i = 0; i < project.traffic_maps.size(); i++)
   {
-    const TrafficMap& traffic_map = project->traffic_maps[i];
+    const TrafficMap& traffic_map = project.traffic_maps[i];
 
     QCheckBox *checkbox = new QCheckBox;
     checkbox->setChecked(traffic_map.visible);
@@ -84,9 +83,9 @@ void TrafficTable::update(std::shared_ptr<Project> project)
     connect(
         checkbox,
         &QAbstractButton::clicked,
-        [this, project, i](bool box_checked)
+        [this, &project, i](bool box_checked)
         {
-          project->traffic_maps[i].visible = box_checked;
+          project.traffic_maps[i].visible = box_checked;
           emit redraw();
         });
 
@@ -99,9 +98,9 @@ void TrafficTable::update(std::shared_ptr<Project> project)
     connect(
         edit_button,
         &QAbstractButton::clicked,
-        [this, project, i]()
+        [this, &project, i]()
         {
-          TrafficMapDialog dialog(project->traffic_maps[i]);
+          TrafficMapDialog dialog(project.traffic_maps[i]);
           dialog.exec();
           update(project);
           emit redraw();
@@ -110,7 +109,7 @@ void TrafficTable::update(std::shared_ptr<Project> project)
 
   // we'll use the last row for the "Add" button
   const int last_row_idx =
-      static_cast<int>(num_internal_lanes + project->traffic_maps.size());
+      static_cast<int>(num_internal_lanes + project.traffic_maps.size());
 
   setCellWidget(last_row_idx, 0, nullptr);
   setCellWidget(last_row_idx, 1, nullptr);
@@ -119,13 +118,13 @@ void TrafficTable::update(std::shared_ptr<Project> project)
   connect(
       add_button,
       &QAbstractButton::clicked,
-      [this, project]()
+      [this, &project]()
       {
         TrafficMap traffic_map;
         TrafficMapDialog dialog(traffic_map);
         if (dialog.exec() == QDialog::Accepted)
         {
-          project->traffic_maps.push_back(traffic_map);
+          project.traffic_maps.push_back(traffic_map);
           update(project);
           emit redraw();
         }

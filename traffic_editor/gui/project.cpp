@@ -178,7 +178,7 @@ void Project::add_scenario_vertex(
   printf("add_scenario_vertex(%d, %.3f, %.3f)\n", level_idx, x, y);
   if (scenario_idx < 0 || scenario_idx >= static_cast<int>(scenarios.size()))
     return;
-  scenarios[scenario_idx]->add_vertex(building.levels[level_idx]->name, x, y);
+  scenarios[scenario_idx]->add_vertex(building.levels[level_idx].name, x, y);
 }
 
 void Project::scenario_row_clicked(const int row)
@@ -205,14 +205,14 @@ void Project::draw(
     return;
   }
 
-  building.levels[level_idx]->draw(scene, editor_models, rendering_options);
+  building.levels[level_idx].draw(scene, editor_models, rendering_options);
   building.draw_lifts(scene, level_idx);
   
   if (scenario_idx >= 0)
     scenarios[scenario_idx]->draw(
         scene,
-        building.levels[level_idx]->name,
-        building.levels[level_idx]->drawing_meters_per_pixel,
+        building.levels[level_idx].name,
+        building.levels[level_idx].drawing_meters_per_pixel,
         editor_models);
 }
 
@@ -220,10 +220,10 @@ void Project::clear_selection(const int level_idx)
 {
   if (building.levels.empty())
     return;
-  building.levels[level_idx]->clear_selection();
+  building.levels[level_idx].clear_selection();
 
   if (scenario_idx >= 0)
-    scenarios[scenario_idx]->clear_selection(building.levels[level_idx]->name);
+    scenarios[scenario_idx]->clear_selection(building.levels[level_idx].name);
 }
 
 bool Project::delete_selected(const int level_idx)
@@ -232,7 +232,7 @@ bool Project::delete_selected(const int level_idx)
     return false;
   if (!building.delete_selected(level_idx))
     return false;
-  const std::string level_name = building.levels[level_idx]->name;
+  const std::string level_name = building.levels[level_idx].name;
   if (scenario_idx >= 0 &&
       !scenarios[scenario_idx]->delete_selected(level_name))
       return false;
@@ -249,7 +249,7 @@ Project::NearestItem Project::nearest_items(
 
   if (level_index >= static_cast<int>(building.levels.size()))
     return ni;
-  const BuildingLevel& building_level = *building.levels[level_index];
+  const BuildingLevel& building_level = building.levels[level_index];
 
   if (mode == MODE_BUILDING)
   {
@@ -281,7 +281,7 @@ Project::NearestItem Project::nearest_items(
   
     for (size_t i = 0; i < building_level.models.size(); i++)
     {
-      const Model& m = *building_level.models[i];
+      const Model& m = building_level.models[i];
       const double dx = x - m.state.x;
       const double dy = y - m.state.y;
       const double dist = sqrt(dx*dx + dy*dy);  // no need for sqrt each time
@@ -326,7 +326,7 @@ ScenarioLevel *Project::scenario_level(const int building_level_idx)
 {
   if (building_level_idx >= static_cast<int>(building.levels.size()))
     return nullptr;
-  const BuildingLevel& building_level = *building.levels[building_level_idx];
+  const BuildingLevel& building_level = building.levels[building_level_idx];
 
   if (scenario_idx < 0 ||
       scenario_idx >= static_cast<int>(scenarios.size()))
@@ -352,21 +352,21 @@ void Project::mouse_select_press(
   const NearestItem ni = nearest_items(mode, level_idx, x, y);
 
   const double vertex_dist_thresh =
-      building.levels[level_idx]->vertex_radius /
-      building.levels[level_idx]->drawing_meters_per_pixel;
+      building.levels[level_idx].vertex_radius /
+      building.levels[level_idx].drawing_meters_per_pixel;
 
   if (mode == MODE_BUILDING)
   {
     // todo: use QGraphics stuff to see if we clicked a model pixmap...
     const double model_dist_thresh = 0.5 /
-        building.levels[level_idx]->drawing_meters_per_pixel;
+        building.levels[level_idx].drawing_meters_per_pixel;
 
     if (ni.model_idx >= 0 && ni.model_dist < model_dist_thresh)
-      building.levels[level_idx]->models[ni.model_idx]->selected = true;
+      building.levels[level_idx].models[ni.model_idx].selected = true;
     else if (ni.vertex_idx >= 0 && ni.vertex_dist < vertex_dist_thresh)
-      building.levels[level_idx]->vertices[ni.vertex_idx].selected = true;
+      building.levels[level_idx].vertices[ni.vertex_idx].selected = true;
     else if (ni.fiducial_idx >= 0 && ni.fiducial_dist < 10.0)
-      building.levels[level_idx]->fiducials[ni.fiducial_idx].selected = true;
+      building.levels[level_idx].fiducials[ni.fiducial_idx].selected = true;
     else
     {
       // use the QGraphics stuff to see if it's an edge segment or polygon
@@ -399,7 +399,7 @@ void Project::mouse_select_press(
     // for now, they're using the same vertex list.
 
     if (ni.vertex_idx >= 0 && ni.vertex_dist < vertex_dist_thresh)
-      building.levels[level_idx]->vertices[ni.vertex_idx].selected = true;
+      building.levels[level_idx].vertices[ni.vertex_idx].selected = true;
     else
     {
       // use the QGraphics stuff to see if it's an edge segment or polygon
@@ -460,7 +460,7 @@ void Project::set_selected_line_item(
     return;
 
   // find if any of our lanes match those vertices
-  for (auto& edge : building.levels[level_idx]->edges)
+  for (auto& edge : building.levels[level_idx].edges)
   {
     if (mode == MODE_TRAFFIC)
     {
@@ -478,8 +478,8 @@ void Project::set_selected_line_item(
     const double x2 = line_item->line().x2();
     const double y2 = line_item->line().y2();
 
-    const auto& v_start = building.levels[level_idx]->vertices[edge.start_idx];
-    const auto& v_end = building.levels[level_idx]->vertices[edge.end_idx];
+    const auto& v_start = building.levels[level_idx].vertices[edge.start_idx];
+    const auto& v_end = building.levels[level_idx].vertices[edge.end_idx];
 
     // calculate distances
     const double dx1 = v_start.x - x1;
@@ -511,7 +511,7 @@ Polygon::EdgeDragPolygon Project::polygon_edge_drag_press(
     return edp;  // oh no
 
   if (mode == MODE_BUILDING)
-    return building.levels[level_idx]->polygon_edge_drag_press(polygon, x, y);
+    return building.levels[level_idx].polygon_edge_drag_press(polygon, x, y);
   else if (mode == MODE_SCENARIO)
   {
     ScenarioLevel *slevel = scenario_level(level_idx);
@@ -529,9 +529,9 @@ Polygon *Project::get_selected_polygon(
 {
   if (mode == MODE_BUILDING)
   {
-    for (size_t i = 0; i < building.levels[level_idx]->polygons.size(); i++)
-      if (building.levels[level_idx]->polygons[i].selected)
-        return &building.levels[level_idx]->polygons[i];  // abomination
+    for (size_t i = 0; i < building.levels[level_idx].polygons.size(); i++)
+      if (building.levels[level_idx].polygons[i].selected)
+        return &building.levels[level_idx].polygons[i];  // abomination
   }
   else if (mode == MODE_SCENARIO)
   {
@@ -554,7 +554,7 @@ void Project::set_selected_containing_polygon(
 {
   Level *level = nullptr;
   if (mode == MODE_BUILDING)
-    level = building.levels[level_idx].get();
+    level = &building.levels[level_idx];
   else if (mode == MODE_SCENARIO)
     level = scenario_level(level_idx);
 
@@ -623,24 +623,6 @@ void Project::clear_scene()
 
   for (auto& scenario : scenarios)
     scenario->clear_scene();
-}
-
-void Project::draw_scenario_models(
-    QGraphicsScene *scene,
-    const int level_idx,
-    std::vector<EditorModel>& editor_models)
-{
-  if (building.levels.empty())
-    return;
-
-  if (scenario_idx < 0 || scenario_idx >= static_cast<int>(scenarios.size()))
-    return;
-
-  scenarios[scenario_idx]->draw_models(
-      scene,
-      building.levels[level_idx]->name,
-      building.levels[level_idx]->drawing_meters_per_pixel,
-      editor_models);
 }
 
 void Project::add_lane(

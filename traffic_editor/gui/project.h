@@ -67,11 +67,6 @@ public:
       const int level_idx,
       std::vector<EditorModel>& editor_models);
 
-  void draw_scenario_models(
-      QGraphicsScene *scene,
-      const int level_idx,
-      std::vector<EditorModel>& editor_models);
-
   void scenario_scene_update(
       QGraphicsScene *scene,
       const int level_idx);

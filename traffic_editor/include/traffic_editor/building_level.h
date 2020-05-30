@@ -22,9 +22,9 @@
 
 #include <yaml-cpp/yaml.h>
 #include <string>
-#include <memory>
 
 #include "traffic_editor/edge.h"
+#include "traffic_editor/editor_model.h"
 #include "traffic_editor/fiducial.h"
 #include "traffic_editor/layer.h"
 #include "traffic_editor/model.h"
@@ -58,7 +58,7 @@ public:
   double flattened_x_offset = 0.0;
   double flattened_y_offset = 0.0;
 
-  std::vector<std::shared_ptr<Model>> models;
+  std::vector<Model> models;
   std::vector<Fiducial> fiducials;
 
   QPixmap floorplan_pixmap;
@@ -74,7 +74,7 @@ public:
   void draw(
       QGraphicsScene *scene,
       std::vector<EditorModel>& editor_models,
-      const RenderingOptions& rendering_options) const;
+      const RenderingOptions& rendering_options);
 
   void clear_scene();
 

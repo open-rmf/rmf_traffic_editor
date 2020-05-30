@@ -41,10 +41,6 @@ public:
   std::string filename;
   std::vector<ScenarioLevel> levels;
 
-  // when a model starts to become an "active participant" in a scenario,
-  // it is removed from the building level and owned by the Scenario
-  std::vector<std::unique_ptr<Model>> models;
-
   /////////////////////////////////
   Scenario();
   ~Scenario();
@@ -55,12 +51,6 @@ public:
   void clear_scene();
 
   void draw(
-      QGraphicsScene *scene,
-      const std::string& level_name,
-      const double meters_per_pixel,
-      std::vector<EditorModel>& editor_models) const;
-
-  void draw_models(
       QGraphicsScene *scene,
       const std::string& level_name,
       const double meters_per_pixel,
