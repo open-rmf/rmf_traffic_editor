@@ -43,9 +43,11 @@ class LiftTable;
 class ScenarioTable;
 class TrafficTable;
 
+#ifdef HAS_OPENCV
 namespace cv {
   class VideoWriter;
 }
+#endif
 
 QT_BEGIN_NAMESPACE
 class QAction;
@@ -229,11 +231,13 @@ private:
   void sim_play_pause();
   SimThread sim_thread;
 
+#ifdef HAS_OPENCV
   QAction *record_start_stop_action;
   bool is_recording = false;
   void record_start_stop();
   void record_frame_to_video();
   cv::VideoWriter *video_writer = nullptr;
+#endif
 
   std::vector<EditorModel> editor_models;
   EditorModel *mouse_motion_editor_model = nullptr;

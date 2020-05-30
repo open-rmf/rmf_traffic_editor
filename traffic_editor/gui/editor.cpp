@@ -26,9 +26,11 @@
 #include <QListWidget>
 #include <QToolBar>
 
+#ifdef HAS_OPENCV
 #include <opencv2/core/core.hpp>
 #include <opencv2/videoio.hpp>
 #include <opencv2/imgproc.hpp>
+#endif
 
 #include <yaml-cpp/yaml.h>
 
@@ -363,11 +365,13 @@ Editor::Editor()
       &Editor::sim_play_pause);
   sim_play_pause_action->setVisible(false);
 
+#ifdef HAS_OPENCV
   record_start_stop_action = toolbar->addAction(
       "Record",
       this,
       &Editor::record_start_stop);
   record_start_stop_action->setVisible(false);
+#endif
 
   toolbar->setStyleSheet("QToolBar {background-color: #404040; border: none; spacing: 5px} QToolButton {background-color: #c0c0c0; color: blue; border: 1px solid black;} QToolButton:checked {background-color: #808080; color: red; border: 1px solid black;}");
   addToolBar(Qt::TopToolBarArea, toolbar);
@@ -415,11 +419,13 @@ Editor::Editor()
 
 Editor::~Editor()
 {
+#ifdef HAS_OPENCV
   if (video_writer)
   {
     delete video_writer;
     video_writer = nullptr;
   }
+#endif
 }
 
 void Editor::scene_update_timer_timeout()
@@ -456,7 +462,9 @@ void Editor::scene_update_timer_timeout()
     //scenario->draw(scene, level_idx);
   }
 
+#ifdef HAS_OPENCV
   record_frame_to_video();
+#endif
 }
 
 void Editor::load_model_names()
@@ -551,7 +559,9 @@ bool Editor::load_project(const QString &filename)
     printf("project has a sim plugin\n");
     sim_reset_action->setVisible(true);
     sim_play_pause_action->setVisible(true);
+#ifdef HAS_OPENCV
     record_start_stop_action->setVisible(true);
+#endif
   }
   else
     printf("project does not have a sim plugin\n");
@@ -2235,6 +2245,7 @@ void Editor::sim_play_pause()
   project->sim_is_paused = !project->sim_is_paused;
 }
 
+#ifdef HAS_OPENCV
 void Editor::record_start_stop()
 {
   is_recording = !is_recording;
@@ -2272,3 +2283,4 @@ void Editor::record_frame_to_video()
 
   video_writer->write(mat_rgb_swap);
 }
+#endif

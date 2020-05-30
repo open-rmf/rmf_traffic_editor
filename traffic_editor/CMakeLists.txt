@@ -23,9 +23,12 @@ if(CMAKE_VERSION VERSION_LESS "3.7.0")
 endif()
 
 find_package(Qt5 COMPONENTS Widgets Concurrent REQUIRED)
-find_package(OpenCV REQUIRED)
 find_package(ignition-plugin1 REQUIRED COMPONENTS all)
 find_package(ignition-common3 REQUIRED)
+
+# OpenCV is an optional dependency, only needed if you want to make videos
+# which is only really needed if you're using a process simulation plugin
+find_package(OpenCV QUIET)
 
 include_directories(.)
 include_directories(gui)
@@ -81,6 +84,10 @@ target_link_libraries(traffic-editor
   ignition-common3::core
   yaml-cpp
   ${OpenCV_LIBS})
+
+if (OpenCV_VERSION)
+  target_compile_definitions(traffic-editor PUBLIC "HAS_OPENCV")
+endif()
 
 set_property(TARGET traffic-editor PROPERTY ENABLE_EXPORTS 1)
 
