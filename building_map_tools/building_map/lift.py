@@ -3,7 +3,7 @@ import numpy as np
 from .transform import Transform
 from xml.etree.ElementTree import ElementTree, Element, SubElement
 
-from .sdf_utils import *
+from .lift_utils import *
 
 from .doors.double_sliding_door import DoubleSlidingDoor
 
@@ -356,7 +356,7 @@ class Lift:
         # lift cabin plugin
         plugin_ele = SubElement(lift_model, 'plugin')
         plugin_ele.set('name', f'{self.name}_plugin')
-        plugin_ele.set('filename', 'liblift_plugin.so')
+        plugin_ele.set('filename', 'liblift.so')
 
         lift_name_ele = SubElement(plugin_ele, 'lift_name')
         lift_name_ele.text = f'{self.name}'
