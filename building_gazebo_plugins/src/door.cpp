@@ -10,65 +10,80 @@
 #include <rmf_door_msgs/msg/door_request.hpp>
 
 #include "utils.hpp"
-#include "door.hpp"
 
 namespace building_gazebo_plugins {
 
 //==============================================================================
-Door::Door(const bool debuggable,
+class Door
+{
+public:
+
+  bool _debuggable;
+
+  Door(const bool debuggable,
       const gazebo::physics::JointPtr& joint,
-      const MotionParams& params,
-      const bool flip_direction)
-: _debuggable(debuggable),
-  _joint(joint),
-  _params(params)
-{
-  if (flip_direction)
+       const MotionParams& params,
+       const bool flip_direction = false)
+  : _debuggable(debuggable),
+    _joint(joint),
+    _params(params)
   {
-    _closed_position = _joint->LowerLimit(0);
-    _open_position = _joint->UpperLimit(0);
+    if (flip_direction)
+    {
+      _closed_position = _joint->LowerLimit(0);
+      _open_position = _joint->UpperLimit(0);
+    }
+    else
+    {
+      _closed_position = _joint->UpperLimit(0);
+      _open_position = _joint->LowerLimit(0);
+    }
   }
-  else
+
+  bool is_open() const
   {
-    _closed_position = _joint->UpperLimit(0);
-    _open_position = _joint->LowerLimit(0);
+    return std::abs(_open_position - _joint->Position(0)) <= _params.dx_min;
   }
-}
 
-bool Door::is_open() const
-{
-  return std::abs(_open_position - _joint->Position(0)) <= _params.dx_min;
-}
+  bool is_closed() const
+  {
+    return std::abs(_closed_position - _joint->Position(0)) <= _params.dx_min;
+  }
 
-bool Door::is_closed() const
-{
-  return std::abs(_closed_position - _joint->Position(0)) <= _params.dx_min;
-}
+  void open(double dt)
+  {
+    _set_door_command(_open_position, dt);
+  }
 
-void Door::open(double dt)
-{
-  _set_door_command(_open_position, dt);
-}
+  void close(double dt)
+  {
+    _set_door_command(_closed_position, dt);
+  }
 
-void Door::close(double dt)
-{
-  _set_door_command(_closed_position, dt);
-}
 
-void Door::_set_door_command(const double target, const double dt)
-{
-  double dx = target - _joint->Position(0);
+private:
 
-  if (std::abs(dx) < _params.dx_min/2.0)
-    dx = 0.0;
+  void _set_door_command(const double target, const double dt)
+  {
+    double dx = target - _joint->Position(0);
 
-  const double door_v = compute_desired_rate_of_change(
-        dx, _joint->GetVelocity(0), _params, dt);
+    if (std::abs(dx) < _params.dx_min/2.0)
+      dx = 0.0;
 
-  _joint->SetParam("vel", 0, door_v);
-  _joint->SetParam("fmax", 0, _params.f_max);
-}
+    const double door_v = compute_desired_rate_of_change(
+          dx, _joint->GetVelocity(0), _params, dt);
 
+    _joint->SetParam("vel", 0, door_v);
+    _joint->SetParam("fmax", 0, _params.f_max);
+  }
+
+  gazebo::physics::JointPtr _joint;
+  MotionParams _params;
+
+  double _open_position;
+  double _closed_position;
+
+};
 
 class DoorPlugin : public gazebo::ModelPlugin
 {
