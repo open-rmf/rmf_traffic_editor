@@ -116,12 +116,12 @@ add_library(lift SHARED src/lift.cpp)
 target_link_libraries(lift
   PUBLIC
     building_sim_utils
-    door
     ${rmf_fleet_msgs_LIBRARIES}
     ${rclcpp_LIBRARIES}
     ${GAZEBO_LIBRARIES}
     ${gazebo_ros_LIBRARIES}
     ${rmf_lift_msgs_LIBRARIES}
+    ${rmf_door_msgs_LIBRARIES}
 )
 
 target_include_directories(lift
@@ -131,6 +131,7 @@ target_include_directories(lift
     ${GAZEBO_INCLUDE_DIRS}
     ${rmf_fleet_msgs_INCLUDE_DIRS}
     ${rmf_lift_msgs_INCLUDE_DIRS}
+    ${rmf_door_msgs_INCLUDE_DIRS}
 )
 
 # lift_requestor

@@ -9,12 +9,15 @@
 // stl
 #include <utility>
 #include <unordered_map>
+#include <queue>
 
 // msgs
 #include <rmf_lift_msgs/msg/lift_state.hpp>
 #include <rmf_lift_msgs/msg/lift_request.hpp>
+#include <rmf_door_msgs/msg/door_mode.hpp>
+#include <rmf_door_msgs/msg/door_state.hpp>
+#include <rmf_door_msgs/msg/door_request.hpp>
 
-#include "door.cpp"
 #include "utils.hpp"
 
 namespace building_gazebo_plugins {
@@ -33,10 +36,11 @@ enum class DoorStateEnum : uint8_t
   Open = 2
 };
 
-const std::string DoubleSlidingDoorTypeString = "DoubleSlidingDoor";
-
 class Lift
 {
+  using DoorRequest = rmf_door_msgs::msg::DoorRequest;
+  using DoorState = rmf_door_msgs::msg::DoorState;
+
 private:
   gazebo::physics::ModelPtr _model;
   std::string _lift_name;
@@ -46,18 +50,18 @@ private:
   gazebo::physics::JointPtr _cabin_joint_ptr;
   MotionParams _cabin_motion_params;
 
-  std::array<std::string, 2> _cabin_door_joint_names = {"left_door_joint", "right_door_joint"};
-  std::vector<Door> _cabin_doors;
-  MotionParams _cabin_door_motion_params;
-
   std::vector<std::string> _floor_names;
   std::unordered_map<std::string, double> _floor_name_to_elevation;
-  std::unordered_map<std::string, std::vector<Door>> _lift_shaft_doors;
+  std::unordered_map<std::string, std::vector<std::string>> _floor_name_to_shaft_door_name;
+  std::unordered_map<std::string, std::vector<std::string>> _floor_name_to_cabin_door_name;
+  std::unordered_map<std::string, DoorStateEnum> _shaft_door_states;
+  std::unordered_map<std::string, DoorStateEnum> _cabin_door_states;
 
   std::string _current_floor_name;
   LiftCabinState _current_cabin_state;
   DoorStateEnum _current_door_state;
   std::pair<std::string, DoorStateEnum> _lift_request;
+  std::queue<DoorRequest> _door_request_queue;
 
   bool _load_lift_parameters(const sdf::ElementPtr& sdf)
   {
@@ -69,10 +73,7 @@ private:
 
     // load main lift cabin joint
     sdf::ElementPtr cabin_element;
-    sdf::ElementPtr cabin_joint_element;
-    if (!get_element_required(sdf, "cabin", cabin_element) ||
-        !get_element_required(cabin_element, "cabin_joint", cabin_joint_element) ||
-        !get_sdf_attribute_required<std::string>(cabin_joint_element, "name", _cabin_joint_name))
+    if (!get_sdf_param_required<std::string>(sdf, "cabin_joint_name", _cabin_joint_name))
       return false;
 
     _cabin_joint_ptr = _model->GetJoint(_cabin_joint_name);
@@ -88,32 +89,6 @@ private:
     get_sdf_param_if_available<double>(sdf, "a_nom_cabin", _cabin_motion_params.a_nom);
     get_sdf_param_if_available<double>(sdf, "dx_min_cabin", _cabin_motion_params.dx_min);
     get_sdf_param_if_available<double>(sdf, "f_max_cabin", _cabin_motion_params.f_max);
-
-    // load all lift door motion parameters
-    get_sdf_param_if_available<double>(sdf, "v_max_door", _cabin_door_motion_params.v_max);
-    get_sdf_param_if_available<double>(sdf, "a_max_door", _cabin_door_motion_params.a_max);
-    get_sdf_param_if_available<double>(sdf, "a_nom_door", _cabin_door_motion_params.a_nom);
-    get_sdf_param_if_available<double>(sdf, "dx_min_door", _cabin_door_motion_params.dx_min);
-    get_sdf_param_if_available<double>(sdf, "f_max_door", _cabin_door_motion_params.f_max);
-
-    // load lift cabin doors
-    sdf::ElementPtr cabin_door_element;
-    std::string cabin_door_type;
-    if (!get_element_required(cabin_element, "door", cabin_door_element) ||
-        !get_sdf_attribute_required<std::string>(cabin_door_element, "type", cabin_door_type))
-      return false;
-    if (cabin_door_type != DoubleSlidingDoorTypeString && cabin_door_type != "double")
-    {
-      gzerr << "non-" << DoubleSlidingDoorTypeString << " type cabin doors [" << cabin_door_type
-            << "] are currently not supported.\n";
-      return false;
-    }
-    if (!get_sdf_attribute_required<std::string>(cabin_door_element, "left_joint_name", _cabin_door_joint_names[0]) ||
-        !get_sdf_attribute_required<std::string>(cabin_door_element, "right_joint_name", _cabin_door_joint_names[1]))
-      return false;
-    _cabin_doors.clear();
-    _cabin_doors.emplace_back(false, _model->GetJoint(_cabin_door_joint_names[0]), _cabin_door_motion_params, true);
-    _cabin_doors.emplace_back(false, _model->GetJoint(_cabin_door_joint_names[1]), _cabin_door_motion_params);
 
     return true;
   }
@@ -139,52 +114,39 @@ private:
     return true;
   }
 
-  bool _load_all_lift_shaft_doors(const sdf::ElementPtr& sdf)
+  bool _load_lift_door_names(const sdf::ElementPtr& sdf)
   {
-    std::cout << "Loading all lift floors' shaft doors' parameters: " << std::endl;
-    // for each allocated floor, load lift shaft doors
-    _lift_shaft_doors.clear();
-    gazebo::physics::WorldPtr world = _model->GetWorld();
+    std::cout << "Loading all lift door names: " << std::endl;
+    // for each allocated floor, load lift door names
     sdf::ElementPtr floor_element;
     if (!get_element_required(sdf, "floor", floor_element))
       return false;
     while (floor_element)
     {
       std::string floor_name;
-      sdf::ElementPtr shaft_door_element;
-      std::string shaft_door_model_name;
-      if (!get_sdf_attribute_required<std::string>(floor_element, "name", floor_name) ||
-          !get_element_required(floor_element, "door", shaft_door_element) ||
-          !get_sdf_attribute_required<std::string>(shaft_door_element, "name", shaft_door_model_name))
+      if (!get_sdf_attribute_required<std::string>(floor_element, "name", floor_name))
         return false;
 
-      gazebo::physics::ModelPtr shaft_door_model_ptr = world->ModelByName(shaft_door_model_name);
-      if (!shaft_door_model_ptr)
+      _floor_name_to_cabin_door_name[floor_name] = std::vector<std::string>();
+      _floor_name_to_shaft_door_name[floor_name] = std::vector<std::string>();
+
+      sdf::ElementPtr door_pair_element;
+      if (!get_element_required(floor_element, "door_pair", door_pair_element))
+        continue;
+      while (door_pair_element)
       {
-        gzerr << "couldn't find door model: " << shaft_door_model_name << std::endl;
-        return false;
-      }
+        std::string shaft_door_name;
+        std::string cabin_door_name;
+        if (!get_sdf_attribute_required<std::string>(door_pair_element, "cabin_door", cabin_door_name) ||
+            !get_sdf_attribute_required<std::string>(door_pair_element, "shaft_door", shaft_door_name))
+          return false;
+        _floor_name_to_cabin_door_name[floor_name].push_back(cabin_door_name);
+        _floor_name_to_shaft_door_name[floor_name].push_back(shaft_door_name);
+        _cabin_door_states[cabin_door_name] = DoorStateEnum::Closed;
+        _shaft_door_states[shaft_door_name] = DoorStateEnum::Closed;
 
-      std::string shaft_door_type;
-      if (!get_sdf_attribute_required<std::string>(shaft_door_element, "type", shaft_door_type))
-        return false;
-      if (shaft_door_type != DoubleSlidingDoorTypeString && shaft_door_type != "double")
-      {
-        gzerr << "non-" << DoubleSlidingDoorTypeString << " type cabin doors [" << shaft_door_type
-              << "] are currently not supported.\n";
-        return false;
+        door_pair_element = door_pair_element->GetNextElement("door_pair");
       }
-      std::string left_joint_name;
-      std::string right_joint_name;
-      if (!get_sdf_attribute_required<std::string>(shaft_door_element, "left_joint_name", left_joint_name) ||
-          !get_sdf_attribute_required<std::string>(shaft_door_element, "right_joint_name", right_joint_name))
-        return false;
-      _lift_shaft_doors[floor_name] = std::vector<Door>();
-      _lift_shaft_doors[floor_name].emplace_back(false, shaft_door_model_ptr->GetJoint(left_joint_name),
-                                                  _cabin_door_motion_params, true);
-      _lift_shaft_doors[floor_name].emplace_back(false, shaft_door_model_ptr->GetJoint(right_joint_name),
-                                                  _cabin_door_motion_params);
-
       floor_element = floor_element->GetNextElement("floor");
     }
     return true;
@@ -207,6 +169,15 @@ private:
     return closest_floor_name;
   }
 
+  DoorRequest _build_door_request(std::string door_name, DoorStateEnum door_state)
+  {
+    DoorRequest request;
+    request.requester_id = get_name();
+    request.door_name = door_name;
+    request.requested_mode.value = static_cast<uint32_t>(door_state);
+    return request;
+  }
+
 public:
   Lift(const gazebo::physics::ModelPtr& model_ptr, const sdf::ElementPtr& sdf)
   {
@@ -214,7 +185,7 @@ public:
 
     // loading all relevant information for this lift unit
     if (!_load_lift_parameters(sdf) || !_load_floor_parameters(sdf) ||
-      !_load_all_lift_shaft_doors(sdf))
+      !_load_lift_door_names(sdf))
     {
       gzerr << "failed to load either lift parameters, floor parameters or lift shaft doors.\n";
       _load_complete = false;
@@ -246,28 +217,27 @@ public:
   void update(double dt)
   {
     update_cabin_state();
-    update_door_state();
 
     std::string desired_floor_name = _lift_request.first;
-    DoorStateEnum desired_door_state = static_cast<DoorStateEnum>(_lift_request.second);
+    DoorStateEnum desired_door_state = _lift_request.second;
 
     // Lift control state machine
     if (_current_floor_name != desired_floor_name)
     {
       if (_current_door_state != DoorStateEnum::Closed)
       {
-        close_doors(dt);
+        close_doors();
         return;
       }
       move_cabin(dt);
-      close_doors(dt);
+      close_doors();
     }
     else
     {
       if (_current_cabin_state != LiftCabinState::Stopped)
       {
         move_cabin(dt);
-        close_doors(dt);
+        close_doors();
         return;
       }
       else
@@ -275,11 +245,11 @@ public:
         stop_cabin();
         if (desired_door_state == DoorStateEnum::Open)
         {
-          open_doors(dt);
+          open_doors();
         }
         else if (desired_door_state == DoorStateEnum::Closed)
         {
-          close_doors(dt);
+          close_doors();
         }
         return;
       }
@@ -329,43 +299,88 @@ public:
 
   //===========================================================================
   // functions in this section need to be updated to support multiple shaft/cabin doors on one level
-  void open_doors(double dt)
+  void open_doors()
   {
-    _cabin_doors[0].open(dt);
-    _cabin_doors[1].open(dt);
-    for (auto& shaft_door : _lift_shaft_doors)
+    std::vector<std::string> cabin_door_names = _floor_name_to_cabin_door_name[_current_floor_name];
+    for (auto& cabin_door : _cabin_door_states)
     {
-      if (shaft_door.first == _current_floor_name)
+      std::string name = cabin_door.first;
+      DoorStateEnum current_state = cabin_door.second;
+      if (std::find(cabin_door_names.begin(), cabin_door_names.end(), name) != cabin_door_names.end())
       {
-        shaft_door.second[0].open(dt);
-        shaft_door.second[1].open(dt);
+        if (current_state != DoorStateEnum::Open)
+        {
+          _door_request_queue.push(_build_door_request(name, DoorStateEnum::Open));
+        }
       }
       else
       {
-        shaft_door.second[0].close(dt);
-        shaft_door.second[1].close(dt);
+        if (current_state != DoorStateEnum::Closed)
+        {
+          _door_request_queue.push(_build_door_request(name, DoorStateEnum::Closed));
+        }
+      }
+    }
+    std::vector<std::string> shaft_door_names = _floor_name_to_shaft_door_name[_current_floor_name];
+    for (auto& shaft_door : _shaft_door_states)
+    {
+      std::string name = shaft_door.first;
+      DoorStateEnum current_state = shaft_door.second;
+      if (std::find(shaft_door_names.begin(), shaft_door_names.end(), name) != shaft_door_names.end())
+      {
+        if (current_state != DoorStateEnum::Open)
+        {
+          _door_request_queue.push(_build_door_request(name, DoorStateEnum::Open));
+        }
+      }
+      else
+      {
+        if (current_state != DoorStateEnum::Closed)
+        {
+          _door_request_queue.push(_build_door_request(name, DoorStateEnum::Closed));
+        }
       }
     }
   }
 
-  void close_doors(double dt)
+  void close_doors()
   {
-    _cabin_doors[0].close(dt);
-    _cabin_doors[1].close(dt);
-    for (auto& shaft_door : _lift_shaft_doors)
+    for (auto& cabin_door : _cabin_door_states)
     {
-      shaft_door.second[0].close(dt);
-      shaft_door.second[1].close(dt);
+      if (cabin_door.second != DoorStateEnum::Closed)
+      {
+        _door_request_queue.push(_build_door_request(cabin_door.first, DoorStateEnum::Closed));
+      }
+    }
+    for (auto& shaft_door : _shaft_door_states)
+    {
+      if (shaft_door.second != DoorStateEnum::Closed)
+      {
+        _door_request_queue.push(_build_door_request(shaft_door.first, DoorStateEnum::Closed));
+      }
     }
   }
 
   DoorStateEnum get_cabin_door_state()
   {
-    if (_cabin_doors[0].is_open() && _cabin_doors[1].is_open())
+    int open_count = 0; int closed_count = 0;
+    int num = _floor_name_to_cabin_door_name[_current_floor_name].size();
+    for (std::string cabin_door_name : _floor_name_to_cabin_door_name[_current_floor_name])
+    {
+      if (_cabin_door_states[cabin_door_name] == DoorStateEnum::Closed)
+      {
+        closed_count++;
+      }
+      else if (_cabin_door_states[cabin_door_name] == DoorStateEnum::Open)
+      {
+        open_count++;
+      }
+    }
+    if (open_count == num)
     {
       return DoorStateEnum::Open;
     }
-    else if (_cabin_doors[0].is_closed() && _cabin_doors[1].is_closed())
+    else if (closed_count == num)
     {
       return DoorStateEnum::Closed;
     }
@@ -374,28 +389,50 @@ public:
 
   DoorStateEnum get_shaft_door_state()
   {
-    Door& left_door = _lift_shaft_doors[_current_floor_name][0];
-    Door& right_door = _lift_shaft_doors[_current_floor_name][1];
-    if (left_door.is_open() && right_door.is_open())
+    int open_count = 0; int closed_count = 0;
+    int num = _floor_name_to_shaft_door_name[_current_floor_name].size();
+    for (std::string shaft_door_name : _floor_name_to_shaft_door_name[_current_floor_name])
+    {
+      if (_shaft_door_states[shaft_door_name] == DoorStateEnum::Closed)
+      {
+        closed_count++;
+      }
+      else if (_shaft_door_states[shaft_door_name] == DoorStateEnum::Open)
+      {
+        open_count++;
+      }
+    }
+    if (open_count == num)
     {
       return DoorStateEnum::Open;
     }
-    else if (left_door.is_closed() && right_door.is_closed())
+    else if (closed_count == num)
     {
       return DoorStateEnum::Closed;
     }
     return DoorStateEnum::Moving;
   }
 
-  void update_door_state()
+  void update_door_states(DoorState& door_state)
   {
+    std::string name = door_state.door_name;
+    DoorStateEnum state = static_cast<DoorStateEnum>(door_state.current_mode.value);
+    if (_cabin_door_states.count(name) > 0)
+    {
+      _cabin_door_states[name] = state;
+    }
+    else if (_shaft_door_states.count(name) > 0)
+    {
+      _shaft_door_states[name] = state;
+    }
+
     DoorStateEnum cabin_door_state = get_cabin_door_state();
     DoorStateEnum shaft_door_state = get_shaft_door_state();
-    if (cabin_door_state == DoorStateEnum::Open && shaft_door_state == DoorStateEnum::Open)
+    if ((cabin_door_state == DoorStateEnum::Open) && (shaft_door_state == DoorStateEnum::Open))
     {
       _current_door_state = DoorStateEnum::Open;
     }
-    else if (cabin_door_state == DoorStateEnum::Closed && shaft_door_state == DoorStateEnum::Closed)
+    else if ((cabin_door_state == DoorStateEnum::Closed) && (shaft_door_state == DoorStateEnum::Closed))
     {
       _current_door_state = DoorStateEnum::Closed;
     }
@@ -406,7 +443,7 @@ public:
   }
 
   //===========================================================================
-  void set_lift_request(const std::string& desired_floor, const DoorStateEnum desired_door_state)
+  void set_lift_request(const std::string& desired_floor, const uint8_t desired_door_state)
   {
     auto it = _floor_name_to_elevation.find(desired_floor);
     if (it == _floor_name_to_elevation.end())
@@ -414,7 +451,18 @@ public:
       std::cout << "Received invalid floor name: " << desired_floor << ", ignoring..." << std::endl;
       return;
     }
-    _lift_request = std::make_pair(desired_floor, desired_door_state);
+    _lift_request = std::make_pair(desired_floor, static_cast<DoorStateEnum>(desired_door_state));
+  }
+
+  bool get_door_request(DoorRequest& request)
+  {
+    if (_door_request_queue.empty())
+    {
+      return false;
+    }
+    request = _door_request_queue.front();
+    _door_request_queue.pop();
+    return true;
   }
 
   std::string get_current_floor()
@@ -460,12 +508,20 @@ private:
   // ROS items
   using LiftState = rmf_lift_msgs::msg::LiftState;
   using LiftRequest = rmf_lift_msgs::msg::LiftRequest;
+  using DoorRequest = rmf_door_msgs::msg::DoorRequest;
+  using DoorState = rmf_door_msgs::msg::DoorState;
+  using DoorMode = rmf_door_msgs::msg::DoorMode;
   gazebo_ros::Node::SharedPtr _ros_node;
   rclcpp::Publisher<LiftState>::SharedPtr _lift_state_pub;
+  rclcpp::Publisher<DoorRequest>::SharedPtr _door_request_pub;
   rclcpp::Subscription<LiftRequest>::SharedPtr _lift_request_sub;
+  rclcpp::Subscription<DoorState>::SharedPtr _door_state_sub;
 
-  LiftState _state;
-  LiftRequest _request;
+  LiftState _lift_state;
+  LiftRequest _lift_request;
+  DoorState _door_state;
+  DoorRequest _door_request;
+  friend bool Lift::get_door_request(DoorRequest& request);
 
   // Runtime items
   bool _load_complete;
@@ -498,20 +554,30 @@ public:
     _lift_state_pub = _ros_node->create_publisher<LiftState>(
           "/lift_states", rclcpp::SystemDefaultsQoS());
 
+    _door_request_pub = _ros_node->create_publisher<DoorRequest>(
+          "/door_requests", rclcpp::SystemDefaultsQoS());
+
     _lift_request_sub = _ros_node->create_subscription<LiftRequest>(
           "/lift_requests", rclcpp::SystemDefaultsQoS(),
           [&](LiftRequest::UniquePtr msg)
     {
-      if (msg->lift_name == _state.lift_name)
-        _request = *msg;
+      if (msg->lift_name == _lift_state.lift_name)
+        _lift_request = *msg;
+    });
+
+    _door_state_sub = _ros_node->create_subscription<DoorState>(
+          "/door_states", rclcpp::SystemDefaultsQoS(),
+          [&](DoorState::UniquePtr msg)
+    {
+      _door_state = *msg;
     });
 
     // initialize _state
-    _state.lift_name = model->GetName();
-    _state.available_floors.clear();
+    _lift_state.lift_name = model->GetName();
+    _lift_state.available_floors.clear();
     for (const std::string& floor_name : _lift->get_floor_names())
     {
-      _state.available_floors.push_back(floor_name);
+      _lift_state.available_floors.push_back(floor_name);
     }
 
     _last_update_time = _model->GetWorld()->SimTime().Double();
@@ -546,24 +612,33 @@ private:
     const double dt = t - _last_update_time;
     _last_update_time = t;
 
-    if (_request.lift_name == _lift->get_name())
+    _lift->update_door_states(_door_state);
+
+    if (_lift_request.lift_name == _lift->get_name())
     {
-      _lift->set_lift_request(_request.destination_floor, static_cast<DoorStateEnum>(_request.door_state));
+      _lift->set_lift_request(_lift_request.destination_floor, _lift_request.door_state);
     }
+
+    if (_lift->get_door_request(_door_request))
+    {
+      _door_request.request_time = rclcpp::Time(t);
+      _door_request_pub->publish(_door_request);
+    }
+
     // at 1 Hz, publish lift state
     if (t - _last_pub_time > 1)
     {
       _last_pub_time = t;
 
-      _state.lift_time = rclcpp::Time(t);
-      _state.current_floor = _lift->get_current_floor();
-      _state.destination_floor = _lift->get_destination_floor();
-      _state.door_state = static_cast<uint8_t>(_lift->get_overall_door_state());
-      _state.motion_state = static_cast<uint8_t>(_lift->get_cabin_state());
+      _lift_state.lift_time = rclcpp::Time(t);
+      _lift_state.current_floor = _lift->get_current_floor();
+      _lift_state.destination_floor = _lift->get_destination_floor();
+      _lift_state.door_state = static_cast<uint8_t>(_lift->get_overall_door_state());
+      _lift_state.motion_state = static_cast<uint8_t>(_lift->get_cabin_state());
       // TODO: add lift modes
-      _state.current_mode = 1;
+      _lift_state.current_mode = 1;
 
-      _lift_state_pub->publish(_state);
+      _lift_state_pub->publish(_lift_state);
     }
 
     // at 1000 Hz, update lift controllers
