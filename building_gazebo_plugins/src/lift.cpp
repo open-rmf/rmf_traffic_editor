@@ -519,7 +519,7 @@ private:
 
   LiftState _lift_state;
   LiftRequest _lift_request;
-  DoorState _door_state;
+  std::queue<DoorState> _door_state_queue;
   DoorRequest _door_request;
   friend bool Lift::get_door_request(DoorRequest& request);
 
@@ -555,7 +555,7 @@ public:
           "/lift_states", rclcpp::SystemDefaultsQoS());
 
     _door_request_pub = _ros_node->create_publisher<DoorRequest>(
-          "/door_requests", rclcpp::SystemDefaultsQoS());
+          "/adapter_door_requests", rclcpp::SystemDefaultsQoS());
 
     _lift_request_sub = _ros_node->create_subscription<LiftRequest>(
           "/lift_requests", rclcpp::SystemDefaultsQoS(),
@@ -569,7 +569,7 @@ public:
           "/door_states", rclcpp::SystemDefaultsQoS(),
           [&](DoorState::UniquePtr msg)
     {
-      _door_state = *msg;
+      _door_state_queue.push(*msg);
     });
 
     // initialize _state
@@ -612,14 +612,18 @@ private:
     const double dt = t - _last_update_time;
     _last_update_time = t;
 
-    _lift->update_door_states(_door_state);
+    while (!_door_state_queue.empty())
+    {
+      _lift->update_door_states(_door_state_queue.front());
+      _door_state_queue.pop();
+    }
 
     if (_lift_request.lift_name == _lift->get_name())
     {
       _lift->set_lift_request(_lift_request.destination_floor, _lift_request.door_state);
     }
 
-    if (_lift->get_door_request(_door_request))
+    while (_lift->get_door_request(_door_request))
     {
       _door_request.request_time = rclcpp::Time(t);
       _door_request_pub->publish(_door_request);
