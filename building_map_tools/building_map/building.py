@@ -37,7 +37,8 @@ class Building:
                 transform = self.levels[ref_level_name].transform
             else:
                 transform = self.ref_level.transform
-            self.lifts[lift_name] = Lift(lift_yaml, lift_name, transform, self.levels)
+            self.lifts[lift_name] = \
+                Lift(lift_yaml, lift_name, transform, self.levels)
 
     def __str__(self):
         s = ''
