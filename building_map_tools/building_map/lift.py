@@ -9,7 +9,7 @@ from .doors.double_sliding_door import DoubleSlidingDoor
 
 
 class LiftDoor:
-    def __init__(self, yaml_node, name):
+    def __init__(self, yaml_node, name, lift_dims):
         self.name = name
         self.door_type = yaml_node['door_type']
         # x & y coordinates are with respect to the centre of the cabin
@@ -24,22 +24,32 @@ class LiftDoor:
                        'dx_min_door': 1e-06,
                        'f_max_door': 200.0}
 
+        x_diff = abs(abs(self.x) - lift_dims[0] / 2)
+        y_diff = abs(abs(self.y) - lift_dims[1] / 2)
+        if x_diff <= y_diff:
+            if self.x > 0:
+                self.side = ('right', self.y-self.width/2, self.y+self.width/2)
+                self.shaft_door_pose = (lift_dims[0]/2, self.y)
+                self.cabin_door_pose = (lift_dims[0]/2 - 0.075, self.y)
+            else:
+                self.side = ('left', self.y-self.width/2, self.y+self.width/2)
+                self.shaft_door_pose = (-lift_dims[0]/2, self.y)
+                self.cabin_door_pose = (-lift_dims[0]/2 + 0.075, self.y)
+        else:
+            if self.y > 0:
+                self.side = ('front', self.x-self.width/2, self.x+self.width/2)
+                self.shaft_door_pose = (self.x, lift_dims[1]/2)
+                self.cabin_door_pose = (self.x, lift_dims[1]/2 - 0.075)
+            else:
+                self.side = ('back', self.x-self.width/2, self.x+self.width/2)
+                self.shaft_door_pose = (self.x, -lift_dims[1]/2)
+                self.cabin_door_pose = (self.x, -lift_dims[1]/2 + 0.075)
+
     def generate_cabin_door(self, lift_model_ele, name):
         door_model_ele = SubElement(lift_model_ele, 'model')
         door_model_ele.set('name', name)
         door_pose = SubElement(door_model_ele, 'pose')
-        if abs(self.x) >= abs(self.y):
-            y = self.y
-            if self.x > 0:
-                x = self.x - 0.05
-            else:
-                x = self.x + 0.05
-        else:
-            x = self.x
-            if self.y > 0:
-                y = self.y - 0.05
-            else:
-                y = self.y + 0.05
+        (x, y) = self.cabin_door_pose
         door_pose.text = f'{x} {y} 0 0 0 {self.motion_axis_orientation+1.571}'
 
         self.generate_door_link_and_joint(door_model_ele, parent='platform')
@@ -51,14 +61,15 @@ class LiftDoor:
         model_ele.set('name', name)
         door_pose = SubElement(model_ele, 'pose')
         # tranformation
-        x_new = x + self.x * np.cos(yaw) - self.y * np.sin(yaw)
-        y_new = y + self.x * np.sin(yaw) + self.y * np.cos(yaw)
+        (door_x, door_y) = self.shaft_door_pose
+        x_new = x + door_x * np.cos(yaw) - door_y * np.sin(yaw)
+        y_new = y + door_x * np.sin(yaw) + door_y * np.cos(yaw)
         yaw_new = yaw + self.motion_axis_orientation + 1.571
         door_pose.text = f'{x_new} {y_new} {z} 0 0 {yaw_new}'
 
         self.generate_door_link_and_joint(model_ele)
 
-        ramp_size = [0.06, self.width, 0.05]
+        ramp_size = [0.08, self.width, 0.05]
         ramp_pose = Element('pose')
         ramp_pose.text = '0 0 -0.025 0 0 0'
         model_ele.append(
@@ -154,17 +165,30 @@ class Lift:
         if 'doors' in yaml_node:
             self.doors = self.parse_lift_doors(yaml_node['doors'])
 
+        # for wall generation
+        self.vertices = \
+            {'front': [-self.cabin_width/2, self.cabin_width/2],
+             'back': [-self.cabin_width/2, self.cabin_width/2],
+             'left': [-self.cabin_depth/2 + 0.05, self.cabin_depth/2 - 0.05],
+             'right': [-self.cabin_depth/2 + 0.05, self.cabin_depth/2 - 0.05]}
+
+        for door in self.doors:
+            side, left, right = door.side
+            self.vertices[side] += [left, right]
+            self.vertices[side].sort()
+
     def parse_lift_doors(self, yaml_node):
         doors = []
         for lift_door_name, lift_door_yaml in yaml_node.items():
             # check if door is aligned to the edges
-            x_diff = abs(float(lift_door_yaml['x']) - self.width/2)
-            y_diff = abs(float(lift_door_yaml['y']) - self.depth/2)
-            yaw_diff = float(lift_door_yaml['motion_axis_orientation']) % 1.571
-            assert (x_diff <= 0.05 or y_diff <= 0.5)
-            assert (yaw_diff <= 0.05 or yaw_diff >= 1.52)
+            # x_diff = abs(float(lift_door_yaml['x']) - self.width/2)
+            # y_diff = abs(float(lift_door_yaml['y']) - self.depth/2)
+            # yaw_diff = float(lift_door_yaml['motion_axis_orientation'])%1.571
+            # assert (x_diff <= 0.05 or y_diff <= 0.5)
+            # assert (yaw_diff <= 0.05 or yaw_diff >= 1.52)
 
-            doors.append(LiftDoor(lift_door_yaml, lift_door_name))
+            doors.append(LiftDoor(
+                lift_door_yaml, lift_door_name, (self.width, self.depth)))
         return doors
 
     def generate_shaft_doors(self, world_ele):
@@ -175,6 +199,25 @@ class Lift:
                     elevation = self.level_elevation[level_name]
                     door.generate_shaft_door(
                         world_ele, self.x, self.y, elevation, self.yaw, name)
+
+    def generate_wall(self, side, pair, name, platform):
+        dims = [pair[1]-pair[0], 0.05, 2.5]
+        mid = (pair[0] + pair[1]) / 2
+        if side == 'front':
+            x, y, yaw = mid, self.cabin_depth/2 - 0.025, 0
+        elif side == 'back':
+            x, y, yaw = mid, -self.cabin_depth/2 + 0.025, 0
+        elif side == 'left':
+            x, y, yaw = -self.cabin_width/2 + 0.025, mid, 1.571
+        elif side == 'right':
+            x, y, yaw = self.cabin_width/2 - 0.025, mid, 1.571
+        else:
+            return
+
+        pose = Element('pose')
+        pose.text = f'{x} {y} 1.25 0 0 {yaw}'
+        platform.append(generate_visual(name, pose, dims))
+        platform.append(generate_collision(name, pose, dims))
 
     def generate_cabin(self, world_ele):
         # materials missing for now
@@ -207,88 +250,13 @@ class Lift:
                 floor_pose,
                 floor_dims))
 
-        # TODO: Wall generation
-        '''back_wall_name = 'back_wall'
-        back_wall_dims = [0.05, self.cabin_width, 2.5]
-        back_wall_pose = Element('pose')
-        back_wall_pose.text = f'{-self.cabin_depth / 2 + 0.025} 0 1.25 0 0 0'
-        platform.append(
-            generate_visual(
-                back_wall_name,
-                back_wall_pose,
-                back_wall_dims))
-
-        platform.append(
-            generate_collision(
-                back_wall_name,
-                back_wall_pose,
-                back_wall_dims))
-
-        side_wall_dims = [self.cabin_depth - 0.1, 0.05, 2.5]
-        left_wall_name = 'left_wall'
-        left_wall_pose = Element('pose')
-        left_wall_pose.text = f'0 {self.cabin_width / 2 - 0.025} 1.25 0 0 0'
-        platform.append(
-            generate_visual(
-                left_wall_name,
-                left_wall_pose,
-                side_wall_dims))
-
-        platform.append(
-            generate_collision(
-                left_wall_name,
-                left_wall_pose,
-                side_wall_dims))
-
-        right_wall_name = 'right_wall'
-        right_wall_pose = Element('pose')
-        right_wall_pose.text = f'0 {-self.cabin_width / 2 + 0.025} 1.25 0 0 0'
-        platform.append(
-            generate_visual(
-                right_wall_name,
-                right_wall_pose,
-                side_wall_dims))
-
-        platform.append(
-            generate_collision(
-                right_wall_name,
-                right_wall_pose,
-                side_wall_dims))
-
-        front_wall_dims = [0.05, self.cabin_width / 4, 2.5]
-        front_left_wall_name = 'front_left_wall'
-        front_left_wall_pose = Element('pose')
-        front_left_wall_pose.text = \
-            f'{self.cabin_depth/2 - 0.025} {self.cabin_width*3/8} 1.25 0 0 0'
-        platform.append(
-            generate_visual(
-                front_left_wall_name,
-                front_left_wall_pose,
-                front_wall_dims))
-
-        platform.append(
-            generate_collision(
-                front_left_wall_name,
-                front_left_wall_pose,
-                front_wall_dims,
-                bitmask='0x01'))
-
-        front_right_wall_name = 'front_right_wall'
-        front_right_wall_pose = Element('pose')
-        front_right_wall_pose.text = \
-            f'{self.cabin_depth/2 - 0.025} {-self.cabin_width*3/8} 1.25 0 0 0'
-        platform.append(
-            generate_visual(
-                front_right_wall_name,
-                front_right_wall_pose,
-                front_wall_dims))
-
-        platform.append(
-            generate_collision(
-                front_right_wall_name,
-                front_right_wall_pose,
-                front_wall_dims,
-                bitmask='0x01'))'''
+        # Wall generation
+        for side, vertices in self.vertices.items():
+            assert len(vertices) % 2 == 0
+            for i in range(0, len(vertices), 2):
+                pair = vertices[i: i+2]
+                name = f'{side}wall{i/2+1}'
+                self.generate_wall(side, pair, name, platform)
 
         # lift cabin actuation joint
         lift_model_ele.append(
