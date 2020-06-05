@@ -50,7 +50,7 @@ class LiftDoor:
         door_model_ele.set('name', name)
         door_pose = SubElement(door_model_ele, 'pose')
         (x, y) = self.cabin_door_pose
-        door_pose.text = f'{x} {y} 0 0 0 {self.motion_axis_orientation+1.571}'
+        door_pose.text = f'{x} {y} 0 0 0 {self.motion_axis_orientation+1.5708}'
 
         self.generate_door_link_and_joint(door_model_ele, parent='platform')
 
@@ -64,7 +64,7 @@ class LiftDoor:
         (door_x, door_y) = self.shaft_door_pose
         x_new = x + door_x * np.cos(yaw) - door_y * np.sin(yaw)
         y_new = y + door_x * np.sin(yaw) + door_y * np.cos(yaw)
-        yaw_new = yaw + self.motion_axis_orientation + 1.571
+        yaw_new = yaw + self.motion_axis_orientation + 1.5708
         door_pose.text = f'{x_new} {y_new} {z} 0 0 {yaw_new}'
 
         self.generate_door_link_and_joint(model_ele)
@@ -208,9 +208,9 @@ class Lift:
         elif side == 'back':
             x, y, yaw = mid, -self.cabin_depth/2 + 0.025, 0
         elif side == 'left':
-            x, y, yaw = -self.cabin_width/2 + 0.025, mid, 1.571
+            x, y, yaw = -self.cabin_width/2 + 0.025, mid, 1.5708
         elif side == 'right':
-            x, y, yaw = self.cabin_width/2 - 0.025, mid, 1.571
+            x, y, yaw = self.cabin_width/2 - 0.025, mid, 1.5708
         else:
             return
 
@@ -234,7 +234,7 @@ class Lift:
         mass.text = f'{self.cabin_mass}'
 
         # visuals and collisions for floor and walls of cabin
-        floor_dims = [self.cabin_depth, self.cabin_width, 0.05]
+        floor_dims = [self.cabin_width, self.cabin_depth, 0.05]
         floor_name = 'floor'
         floor_pose = Element('pose')
         floor_pose.text = '0 0 -0.025 0 0 0'
@@ -255,7 +255,7 @@ class Lift:
             assert len(vertices) % 2 == 0
             for i in range(0, len(vertices), 2):
                 pair = vertices[i: i+2]
-                name = f'{side}wall{i/2+1}'
+                name = f'{side}wall{i//2+1}'
                 self.generate_wall(side, pair, name, platform)
 
         # lift cabin actuation joint
