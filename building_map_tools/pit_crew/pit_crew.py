@@ -201,14 +201,19 @@ def get_local_model_name_tuples(path=None, config_file="model.config",
 
     if path is None:
         if ign:
-            path = os.path.expanduser("~/.ignition/fuel/")
+            path = "~/.ignition/fuel/"
         else:
-            path = os.path.expanduser("~/.gazebo/models/")
+            path = "~/.gazebo/models/"
         logger.warning("No local model path given! Using default %s instead!"
                        % path)
-    else:
-        assert os.path.isdir(path), \
-            "Path given must be a directory that exists!"
+
+    path = os.path.expanduser(path)
+
+    if not path.endswith("/"):
+        path += "/"
+
+    assert os.path.isdir(path), \
+        "Path given must be a directory that exists!"
 
     if ign:
         model_dir_iter = glob.glob(path + "*/*/models/*/")
@@ -242,7 +247,7 @@ def get_local_model_name_tuples(path=None, config_file="model.config",
 
                 output.add(name_tuple)
         else:
-            logger.warning("%s does not contain a valid config_file!"
+            logger.warning("%s does not contain a valid config_file! "
                            "Skipping..." % model_path)
 
     return output
@@ -452,6 +457,7 @@ def download_model(model_name, author_name, version="tip",
             logger.warning("No path given! Downloading to %s instead!"
                            % download_path)
         else:
+            download_path = os.path.expanduser(download_path)
             assert os.path.isdir(download_path), \
                 "Path given must be a directory that exists!"
 
@@ -544,11 +550,11 @@ def load_cache(cache_file_path=None, lower=True):
     """
     try:
         if cache_file_path is None:
-            cache_file_path = os.path.expanduser(
-                "~/.pit_crew/model_cache.json"
-            )
+            cache_file_path = "~/.pit_crew/model_cache.json"
             logger.warning("No path given! Using %s instead!"
                            % cache_file_path)
+
+        cache_file_path = os.path.expanduser(cache_file_path)
 
         with open(cache_file_path, "r") as f:
             loaded_cache = json.loads(f.read())
@@ -591,10 +597,12 @@ def build_and_update_cache(cache_file_path=None, write_to_cache=True,
         The model listing cache is local and used by pit_crew only.
     """
     if cache_file_path is None:
-        cache_file_path = os.path.expanduser("~/.pit_crew/model_cache.json")
+        cache_file_path = "~/.pit_crew/model_cache.json"
         logger.warning("No pit_crew cache path given! "
                        "Using default %s instead!"
                        % cache_file_path)
+
+    cache_file_path = os.path.expanduser(cache_file_path)
 
     # Check if directory exists and make it otherwise
     dir_name = os.path.dirname(cache_file_path)
