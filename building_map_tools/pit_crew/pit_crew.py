@@ -137,7 +137,6 @@ def get_missing_models(model_names, model_path=None,
         if type(model_name) is ModelNames or type(model_name) is tuple:
             assert len(model_name) == 2, \
                 "Invalid model name tuple given: %s!" % model_name
-            model_names[key] = model_name[0]
 
     if update_cache:
         cache = build_and_update_cache(cache_file_path=cache_file_path,
@@ -146,27 +145,56 @@ def get_missing_models(model_names, model_path=None,
         cache = load_cache(cache_file_path, lower=lower)
 
     fuel_models = get_model_to_author_dict(cache['model_cache'], lower=lower)
-    local_models = set(
-        x[0] for x in get_local_model_name_tuples(
-            model_path, config_file=config_file, lower=lower,
-            use_dir_as_name=use_dir_as_name, ign=ign
-            )
-    )
+    local_models = {}
+
+    for local_model in get_local_model_name_tuples(
+        model_path, config_file=config_file, lower=lower,
+        use_dir_as_name=use_dir_as_name, ign=ign
+    ):
+        if local_model[0] in local_models:
+            local_models[local_model[0]].append(local_model[1])
+        else:
+            local_models[local_model[0]] = [local_model[1]]
 
     output = {'missing': [],
               'downloadable': [],
               'available': []}
 
     for model in model_names:
-        if lower:
-            model = model.lower()
+        # Obtain model and author names
+        if type(model) is str:
+            model_name = model
+            author_name = ""
+        elif type(model) is tuple:
+            model_name = model[0]
+            author_name = model[1]
+        elif type(model) is ModelNames:
+            model_name = model.model_name
+            author_name = model.author_name
 
-        if model in local_models:
-            output['available'].append(model)
-        elif model in fuel_models:
-            output['downloadable'].append((model, fuel_models[model]))
+        if lower:
+            model_name = model_name.lower()
+            author_name = author_name.lower()
+
+        if model_name in local_models:
+            output['available'].append(model_name)
+
+            if author_name:
+                if author_name not in local_models[model_name]:
+                    logger.warning("Model %s in local model directory is not "
+                                   "by the requested author %s!"
+                                   % (model_name, author_name))
+        elif model_name in fuel_models:
+            output['downloadable'].append((model_name,
+                                          fuel_models[model_name]))
+
+            if author_name:
+                if author_name not in fuel_models[model_name]:
+                    logger.warning("No models %s in Fuel are "
+                                   "by the requested author %s!"
+                                   % (model_name, author_name))
         else:
-            output['missing'].append(model)
+            output['missing'].append(model_name)
 
     return output
 
