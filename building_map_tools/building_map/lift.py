@@ -294,8 +294,8 @@ class Lift:
                         'shaft_door',
                         f'ShaftDoor_{self.name}_{level_name}_{door.name}')
 
-        default_floor_ele = SubElement(plugin_ele, 'default_floor')
-        default_floor_ele.text = f'{self.reference_floor_name}'
+        reference_floor_ele = SubElement(plugin_ele, 'reference_floor')
+        reference_floor_ele.text = f'{self.reference_floor_name}'
         for param_name, param_value in self.params.items():
             ele = SubElement(plugin_ele, param_name)
             ele.text = f'{param_value}'

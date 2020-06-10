@@ -63,7 +63,7 @@ private:
   std::pair<std::string, DoorStateEnum> _lift_request;
   std::queue<DoorRequest> _door_request_queue;
 
-  bool _load_lift_parameters(const sdf::ElementPtr& sdf)
+  bool load_lift_parameters(const sdf::ElementPtr& sdf)
   {
     std::cout << "Loading lift name, cabin joint, cabin motion and door motion parameters: "
       << std::endl;
@@ -93,7 +93,7 @@ private:
     return true;
   }
 
-  bool _load_floor_parameters(const sdf::ElementPtr& sdf)
+  bool load_floor_parameters(const sdf::ElementPtr& sdf)
   {
     std::cout << "Loading lift floors' parameters: " << std::endl;
     // for each allocated floor, load the floor name and elevation
@@ -114,7 +114,7 @@ private:
     return true;
   }
 
-  bool _load_lift_door_names(const sdf::ElementPtr& sdf)
+  bool load_lift_door_names(const sdf::ElementPtr& sdf)
   {
     std::cout << "Loading all lift door names: " << std::endl;
     // for each allocated floor, load lift door names
@@ -152,7 +152,7 @@ private:
     return true;
   }
 
-  std::string _find_current_closest_floor_name()
+  std::string find_current_closest_floor_name()
   {
     double current_elevation = _cabin_joint_ptr->Position(0);
     double smallest_error = std::numeric_limits<double>::max();
@@ -169,7 +169,7 @@ private:
     return closest_floor_name;
   }
 
-  DoorRequest _build_door_request(std::string door_name, DoorStateEnum door_state)
+  DoorRequest build_door_request(std::string door_name, DoorStateEnum door_state)
   {
     DoorRequest request;
     request.requester_id = get_name();
@@ -184,8 +184,8 @@ public:
     _model = model_ptr;
 
     // loading all relevant information for this lift unit
-    if (!_load_lift_parameters(sdf) || !_load_floor_parameters(sdf) ||
-      !_load_lift_door_names(sdf))
+    if (!load_lift_parameters(sdf) || !load_floor_parameters(sdf) ||
+      !load_lift_door_names(sdf))
     {
       gzerr << "failed to load either lift parameters, floor parameters or lift shaft doors.\n";
       _load_complete = false;
@@ -203,13 +203,13 @@ public:
 
     // setting initial idle position
     std::string init_floor_name = _floor_names[0];
-    get_sdf_param_if_available<std::string>(sdf, "default_floor", init_floor_name);
+    get_sdf_param_if_available<std::string>(sdf, "reference_floor", init_floor_name);
     _lift_request = std::make_pair(init_floor_name, DoorStateEnum::Closed);
     _current_cabin_state = LiftCabinState::Stopped;
     _load_complete = true;
   }
 
-  bool load_successful()
+  bool load_complete()
   {
     return _load_complete;
   }
@@ -280,7 +280,7 @@ public:
   }
 
   void update_cabin_state(){
-    _current_floor_name = _find_current_closest_floor_name();
+    _current_floor_name = find_current_closest_floor_name();
 
     double cabin_speed = _cabin_joint_ptr->GetVelocity(0);
     if (abs(cabin_speed) < 0.01)
@@ -310,14 +310,14 @@ public:
       {
         if (current_state != DoorStateEnum::Open)
         {
-          _door_request_queue.push(_build_door_request(name, DoorStateEnum::Open));
+          _door_request_queue.push(build_door_request(name, DoorStateEnum::Open));
         }
       }
       else
       {
         if (current_state != DoorStateEnum::Closed)
         {
-          _door_request_queue.push(_build_door_request(name, DoorStateEnum::Closed));
+          _door_request_queue.push(build_door_request(name, DoorStateEnum::Closed));
         }
       }
     }
@@ -330,14 +330,14 @@ public:
       {
         if (current_state != DoorStateEnum::Open)
         {
-          _door_request_queue.push(_build_door_request(name, DoorStateEnum::Open));
+          _door_request_queue.push(build_door_request(name, DoorStateEnum::Open));
         }
       }
       else
       {
         if (current_state != DoorStateEnum::Closed)
         {
-          _door_request_queue.push(_build_door_request(name, DoorStateEnum::Closed));
+          _door_request_queue.push(build_door_request(name, DoorStateEnum::Closed));
         }
       }
     }
@@ -349,14 +349,14 @@ public:
     {
       if (cabin_door.second != DoorStateEnum::Closed)
       {
-        _door_request_queue.push(_build_door_request(cabin_door.first, DoorStateEnum::Closed));
+        _door_request_queue.push(build_door_request(cabin_door.first, DoorStateEnum::Closed));
       }
     }
     for (auto& shaft_door : _shaft_door_states)
     {
       if (shaft_door.second != DoorStateEnum::Closed)
       {
-        _door_request_queue.push(_build_door_request(shaft_door.first, DoorStateEnum::Closed));
+        _door_request_queue.push(build_door_request(shaft_door.first, DoorStateEnum::Closed));
       }
     }
   }
@@ -548,7 +548,7 @@ public:
 
     // load Lift object
     _lift = std::make_unique<Lift>(_model, sdf);
-    _load_complete = _lift->load_successful();
+    _load_complete = _lift->load_complete();
 
     // initialize pub & sub
     _lift_state_pub = _ros_node->create_publisher<LiftState>(
