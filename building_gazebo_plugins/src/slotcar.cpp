@@ -70,6 +70,7 @@ private:
   std::string name;
   std::string current_task_id;
   std::string _current_level_name;
+  bool adapter_error = false;
 
   // Vehicle dynamic constants
   // TODO(MXG): Consider fetching these values from model data
@@ -353,6 +354,12 @@ void SlotcarPlugin::OnUpdate()
     robot_state_msg.path = remaining_path;
     robot_state_msg.mode = current_mode;
 
+    if (adapter_error)
+    {
+      robot_state_msg.mode.mode =
+          rmf_fleet_msgs::msg::RobotMode::MODE_ADAPTER_ERROR;
+    }
+
     robot_state_pub->publish(robot_state_msg);
   }
 
@@ -446,6 +453,7 @@ void SlotcarPlugin::OnUpdate()
 
   bool need_to_stop = false;
   const auto& all_models = world->Models();
+  std::string avoiding_name;
   for (const auto& m : all_models)
   {
     if (m->IsStatic())
@@ -457,6 +465,7 @@ void SlotcarPlugin::OnUpdate()
     const auto p_obstacle = m->WorldPose().Pos();
     if ( (p_obstacle - stop_zone).Length() < stop_radius )
     {
+      avoiding_name = m->GetName();
       need_to_stop = true;
       break;
     }
@@ -466,9 +475,9 @@ void SlotcarPlugin::OnUpdate()
   {
     emergency_stop = need_to_stop;
     if (need_to_stop)
-      std::cout << "Stopping vehicle to avoid a collision" << std::endl;
+      std::cout << "Stopping [" << name << "] to avoid a collision with [" << avoiding_name << "]" << std::endl;
     else
-      std::cout << "No more obstacles; resuming course" << std::endl;
+      std::cout << "No more obstacles; resuming course for [" << name << "]" << std::endl;
   }
 
   if (emergency_stop)
@@ -561,11 +570,12 @@ void SlotcarPlugin::path_request_cb(const rmf_fleet_msgs::msg::PathRequest::Shar
   goal_yaw_tolerance = 0.1; // TODO: Clarify this placeholder tolerance
 
   current_task_id = msg->task_id;
+  adapter_error = false;
 
   std::cout << path_str << std::endl;
 
   const double initial_dist = compute_dpos(traj.front(), initial_pose).Length();
-  if (initial_dist > 0.5)
+  if (initial_dist > 1.0)
   {
     RCLCPP_ERROR(
           _ros_node->get_logger(),
@@ -574,10 +584,10 @@ void SlotcarPlugin::path_request_cb(const rmf_fleet_msgs::msg::PathRequest::Shar
 //          logger(),
 //          "Ignoring path request and stopping because it begins too far from "
 //          "where we are: " + std::to_string(initial_dist));
-//    traj.clear();
-//    traj.push_back(initial_pose);
-//    start_time = _ros_node->now();
-//    current_task_id = "IGNORE";
+    traj.clear();
+    traj.push_back(initial_pose);
+    start_time = _ros_node->now();
+    adapter_error = true;
   }
 }
 
