@@ -1,81 +1,98 @@
 import yaml
 from xml.etree.ElementTree import ElementTree, Element, SubElement
 
+def lift_material():
+    material = Element('material')
+    ambient = SubElement(material, 'ambient')
+    diffuse = SubElement(material, 'diffuse')
+    specular = SubElement(material, 'specular')
+    emissive = SubElement(material, 'emissive')
+    # Might need to pick a better colour?
+    ambient.text = '0.5 0.5 0.5 1'
+    diffuse.text = '0.7 0.7 0.7 1'
+    specular.text = '0.6 0.6 0.6 1'
+    emissive.text = '0.1 0.1 0.1 1'
+    return material
 
-def generate_box(size):
+def door_material(options):
+        material_ele = Element('material')
+        # blue-green glass as a default, so it's easy to see
+        ambient_ele = SubElement(material_ele, 'ambient')
+        ambient_ele.text = '{} {} {} {}'.format(120, 60, 0, 0.6)
+        diffuse_ele = SubElement(material_ele, 'diffuse')
+        diffuse_ele.text = '{} {} {} {}'.format(120, 60, 0, 0.6)
+        if 'ignition' in options:
+            pbr_ele = SubElement(material_ele, 'pbr')
+            metal_ele = SubElement(pbr_ele, 'metal')
+            metalness_ele = SubElement(metal_ele, 'metalness')
+            metalness_ele.text = '0.0'
+        return material_ele
+
+def box(size):
     '''size: [x, y, z]'''
     [x, y, z] = size
     box_ele = Element('box')
     size_ele = SubElement(box_ele, 'size')
     size_ele.text = f'{x} {y} {z}'
-
     return box_ele
 
 
-def generate_collide_bitmask(bitmask):
+def collide_bitmask(bitmask):
     surface = Element('surface')
     contact = SubElement(surface, 'contact')
     collide_bitmask = SubElement(contact, 'collide_bitmask')
     collide_bitmask.text = f'{bitmask}'
-
     return surface
 
 
-def generate_visual(name, pose, size, material=None):
+def visual(name, pose, size, material=None):
     visual_ele = Element('visual')
     visual_ele.set('name', name)
-
     if pose is not None:
         visual_ele.append(pose)
 
     visual_geometry_ele = SubElement(visual_ele, 'geometry')
-    visual_geometry_ele.append(generate_box(size))
-
+    visual_geometry_ele.append(box(size))
     if material:
         visual_ele.append(material)
 
     return visual_ele
 
 
-def generate_collision(name, pose, size, bitmask=None):
+def collision(name, pose, size, bitmask=None):
     collision_ele = Element('collision')
     collision_ele.set('name', name)
-
     if pose is not None:
         collision_ele.append(pose)
 
     collision_geometry_ele = SubElement(collision_ele, 'geometry')
-    collision_geometry_ele.append(generate_box(size))
-
+    collision_geometry_ele.append(box(size))
     if bitmask:
-        collision_ele.append(generate_collide_bitmask(bitmask))
+        collision_ele.append(collide_bitmask(bitmask))
 
     return collision_ele
 
 
-def generate_box_link(
+def box_link(
     name,
     size,
     pose,
-    visual=True,
-    collision=True,
+    with_visual=True,
+    with_collision=True,
     material=None,
     bitmask=None
 ):
     link = Element('link')
     link.set('name', name)
     link.append(pose)
-
-    if visual:
-        link.append(generate_visual(name+'_visual', None, size))
-    if collision:
-        link.append(
-            generate_collision(name + '_collision', None, size, bitmask))
-
+    if with_visual:
+        link.append(visual(f'{name}_visual', None, size, material))
+    if with_collision:
+        link.append(collision(f'{name}_collision', None, size, bitmask))
     return link
 
 
-def generate_joint(
+def joint(
     joint_name,
     joint_type,
     parent_link,
