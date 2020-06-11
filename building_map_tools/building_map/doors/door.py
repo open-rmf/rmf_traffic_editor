@@ -1,6 +1,7 @@
 from xml.etree.ElementTree import Element, SubElement
 from..utils import door_material, box_link, joint
 
+
 class Door:
     def __init__(self, door_edge, level_elevation=0.0):
         self.name = door_edge.params['name'].value
@@ -22,7 +23,7 @@ class Door:
     def generate_section(self, name, width, x_offset, options):
         pose_ele = Element('pose')
         pose_ele.text = f'{x_offset} 0 {self.height/2+0.01} 0 0 0'
-        size = [width, self.thickness, self.height] 
+        size = [width, self.thickness, self.height]
         link_ele = box_link(name,
                             size,
                             pose_ele,

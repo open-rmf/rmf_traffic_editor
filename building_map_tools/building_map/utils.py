@@ -1,6 +1,7 @@
 import yaml
 from xml.etree.ElementTree import ElementTree, Element, SubElement
 
+
 def lift_material():
     material = Element('material')
     ambient = SubElement(material, 'ambient')
@@ -13,6 +14,7 @@ def lift_material():
     specular.text = '0.6 0.6 0.6 1'
     emissive.text = '0.1 0.1 0.1 1'
     return material
+
 
 def door_material(options):
         material_ele = Element('material')
@@ -27,6 +29,7 @@ def door_material(options):
             metalness_ele = SubElement(metal_ele, 'metalness')
             metalness_ele.text = '0.0'
         return material_ele
+
 
 def box(size):
     '''size: [x, y, z]'''

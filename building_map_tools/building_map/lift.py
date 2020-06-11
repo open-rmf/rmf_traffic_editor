@@ -18,7 +18,7 @@ class LiftDoor:
         self.width = float(yaml_node['width'])
         self.height = lift_size[2]
         self.thickness = 0.03
-        self.gap = gap    #gap between cabin_door and shaft_door
+        self.gap = gap    # gap between cabin_door and shaft_door
         self.params = {'v_max_door': 0.3,
                        'a_max_door': 0.15,
                        'a_nom_door': 0.12,
@@ -73,7 +73,7 @@ class LiftDoor:
         self.generate_door_link_and_joint(model_ele)
 
         floor_thickness = 0.05
-        ramp_depth = self.gap * 2 - 0.01 # leave a gap to avoid collision
+        ramp_depth = self.gap * 2 - 0.01    # leave a gap to avoid collision
         ramp_size = [ramp_depth, self.width, floor_thickness]
         ramp_pose = Element('pose')
         ramp_pose.text = f'0 0 {-floor_thickness / 2} 0 0 0'
