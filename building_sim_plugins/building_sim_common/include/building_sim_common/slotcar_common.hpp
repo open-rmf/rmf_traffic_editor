@@ -112,6 +112,9 @@ private:
   static constexpr float TF2_RATE = 100.0;
   static constexpr float STATE_TOPIC_RATE = 10.0;
 
+  // Initial distance threshold over which a fleet adapter error is reported
+  static constexpr float INITIAL_DISTANCE_THRESHOLD = 1.0;
+
   rclcpp::Node::SharedPtr _ros_node;
 
   double _last_update_time = 0.0;
@@ -127,6 +130,7 @@ private:
   Eigen::Isometry3d _pose;
   std::string _current_level_name;
   bool _emergency_stop = false;
+  bool _adapter_error = false;
 
   std::shared_ptr<tf2_ros::TransformBroadcaster> _tf2_broadcaster;
   rclcpp::Publisher<rmf_fleet_msgs::msg::RobotState>::SharedPtr _robot_state_pub;

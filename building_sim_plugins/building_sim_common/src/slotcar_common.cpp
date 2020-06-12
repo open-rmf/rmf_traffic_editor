@@ -143,6 +143,17 @@ void SlotcarCommon::path_request_cb(
   _traj_wp_idx = 0;
 
   _current_task_id = msg->task_id;
+  _adapter_error = false;
+  
+  const double initial_dist = compute_dpos(trajectory.front(), _pose).norm();
+
+  if (initial_dist > INITIAL_DISTANCE_THRESHOLD)
+  {
+    trajectory.clear();
+    trajectory.push_back(_pose);
+
+    _adapter_error = true;
+  }
 }
 
 std::array<double, 2> SlotcarCommon::calculate_control_signals(
@@ -300,10 +311,13 @@ bool SlotcarCommon::emergency_stop(
   {
     _emergency_stop = need_to_stop;
     // TODO flush logger here
+    // TODO get collision object name
     if (need_to_stop)
-      RCLCPP_INFO(logger(), "Stopping vehicle to avoid a collision");
+      RCLCPP_INFO_STREAM(logger(), "Stopping [" << _model_name <<
+          "] to avoid a collision");
     else
-      RCLCPP_INFO(logger(), "No more obstacles; resuming course");
+      RCLCPP_INFO_STREAM(logger(), "No more obstacles; resuming course for [" <<
+          _model_name << "]");
   }
 
   return _emergency_stop;
@@ -393,6 +407,12 @@ void SlotcarCommon::publish_state_topic(const rclcpp::Time& t)
   robot_state_msg.task_id = _current_task_id;
   robot_state_msg.path = _remaining_path;
   robot_state_msg.mode = _current_mode;
+
+  if (_adapter_error)
+  {
+    robot_state_msg.mode.mode = 
+      rmf_fleet_msgs::msg::RobotMode::MODE_ADAPTER_ERROR;
+  }
 
   _robot_state_pub->publish(robot_state_msg);
 }
