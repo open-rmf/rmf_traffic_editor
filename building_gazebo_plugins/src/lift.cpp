@@ -287,10 +287,11 @@ public:
         _lift_request = nullptr;
       }
       else if ((_lift_state.current_floor == desired_floor) &&
-        (_lift_state.door_state == desired_door_state))
+        (_lift_state.door_state == desired_door_state) &&
+        (_lift_state.motion_state == LiftState::MOTION_STOPPED))
       {
-        std::cout << "Reached floor: " << desired_floor
-          << " with doors" << desired_door_state << std::endl;
+        std::cout << "Reached floor: " << desired_floor << " with doors " <<
+          (desired_door_state==0 ? "closed" : "open") << std::endl;
         _lift_request = nullptr;
       }
       else
@@ -304,6 +305,10 @@ public:
           if (_lift_state.door_state != LiftState::DOOR_CLOSED)
           {
             close_doors(time);
+            if (_lift_state.motion_state != LiftState::MOTION_STOPPED)
+            {
+              result.velocity = get_step_velocity(dt, position, velocity);
+            }
           }
           else
           {
