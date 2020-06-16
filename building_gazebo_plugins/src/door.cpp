@@ -71,7 +71,7 @@ private:
       dx = 0.0;
 
     const double door_v = compute_desired_rate_of_change(
-          dx, _joint->GetVelocity(0), _params, dt);
+      dx, _joint->GetVelocity(0), _params, dt);
 
     _joint->SetParam("vel", 0, door_v);
     _joint->SetParam("fmax", 0, _params.f_max);
@@ -211,6 +211,9 @@ public:
 
     // Set the mode to closed by default
     _request.requested_mode.value = DoorMode::MODE_CLOSED;
+
+    // random start time offset to prevent state message crossfire
+    _last_pub_time = ((double) std::rand()) / ((double) (RAND_MAX));
 
     _initialized = true;
 

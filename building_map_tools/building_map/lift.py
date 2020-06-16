@@ -73,7 +73,7 @@ class LiftDoor:
         self.generate_door_link_and_joint(model_ele)
 
         floor_thickness = 0.05
-        ramp_depth = self.gap * 2 - 0.01    # leave a gap to avoid collision
+        ramp_depth = self.gap * 2
         ramp_size = [ramp_depth, self.width, floor_thickness]
         ramp_pose = Element('pose')
         ramp_pose.text = f'0 0 {-floor_thickness / 2} 0 0 0'

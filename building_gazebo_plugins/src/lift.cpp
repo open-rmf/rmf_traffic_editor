@@ -52,7 +52,8 @@ private:
   LiftRequest::UniquePtr _lift_request;
 
   double _last_update_time = 0.0;
-  double _last_pub_time = 0.0;
+  // random start time offset to prevent state message crossfire
+  double _last_pub_time = ((double) std::rand()) / ((double) (RAND_MAX));
 
   void publish_door_request(const double time, std::string door_name, uint32_t door_state)
   {
