@@ -135,7 +135,7 @@ if __name__ == '__main__':
         )
 
         output_filepath = os.path.join(
-            os.path.abspath(args.output_dir),
+            os.path.expanduser(args.output_dir),
             '{}.png'.format(model_name)
         )
 
