@@ -430,32 +430,34 @@ Editor::~Editor()
 
 void Editor::scene_update_timer_timeout()
 {
+  if (project.building.levels.empty())
+    return;  // let's not crash...
+
   project.scenario_scene_update(scene, level_idx);
 
   {
     std::lock_guard<std::mutex> building_guard(
         project.building.building_mutex);
-  
 
     // project->draw_scenario(scene, level_idx);
     //project.building.levels[level_idx]->name,
     //    building.levels[level_idx]->drawing_meters_per_pixel,
-  
+
     const BuildingLevel& level = project.building.levels[level_idx];
-  
+
     const std::string& level_name = level.name;
     const double level_scale = level.drawing_meters_per_pixel;
-  
+
     // for now, we're not dealing with models changing levels from their
     // starting level. we'll need to do that in the future at some point.
     for (auto& model : project.building.levels[level_idx].models)
     {
       if (!model.is_active)
         continue;
-  
+
       if (model.state.level_name != level_name)
         continue;
-      
+
       model.draw(scene, editor_models, level_scale);
     }
 
