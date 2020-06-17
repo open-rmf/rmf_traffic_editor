@@ -10,7 +10,8 @@ setup(
         'building_map',
         'building_map.doors',
         'building_map_server',
-        'building_map_generators'],
+        'building_map_generator',
+        'pit_crew'],
     py_modules=[],
     data_files=[
         ('share/ament_index/resource_index/packages',
@@ -22,7 +23,7 @@ setup(
         ),
         (
             'share/' + package_name + '/textures',
-            glob('building_map_generators/textures/*.png')
+            glob('building_map_generator/textures/*.png')
         ),
     ],
     install_requires=['setuptools', 'shapely', 'pyyaml'],
@@ -46,11 +47,8 @@ setup(
         'console_scripts': [
             'building_map_server = '
             'building_map_server.building_map_server:main',
-            'building_map_gazebo = '
-            'building_map_generators.building_map_gazebo:main',
-            'building_map_ignition = '
-            'building_map_generators.building_map_ignition:main',
-            'building_map_nav = building_map_generators.building_map_nav:main'
+            'building_map_generator = '
+            'building_map_generator.building_map_generator:main',
         ],
     },
 )

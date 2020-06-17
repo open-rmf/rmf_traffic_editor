@@ -3,8 +3,8 @@ from .door import Door
 
 
 class DoubleSlidingDoor(Door):
-    def __init__(self, door_edge):
-        super().__init__(door_edge)
+    def __init__(self, door_edge, level_elevation):
+        super().__init__(door_edge, level_elevation)
 
     def generate(self, world_ele, options):
         self.generate_sliding_section(

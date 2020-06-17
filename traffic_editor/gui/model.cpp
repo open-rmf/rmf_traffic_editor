@@ -134,7 +134,7 @@ void Model::draw(
     }
     if (pixmap.isNull())
       return;  // couldn't load the pixmap; ignore it.
-  
+
     pixmap_item = scene->addPixmap(pixmap);
     pixmap_item->setOffset(-pixmap.width()/2, -pixmap.height()/2);
     pixmap_item->setScale(model_meters_per_pixel / drawing_meters_per_pixel);

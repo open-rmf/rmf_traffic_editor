@@ -22,11 +22,12 @@ import argparse
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-s', '--source', help='Source list of models.')
     parser.add_argument(
-            '-d', '--destination',
-            help='Destination list of models which the source will be '
-            'merged into.')
+        'destination',
+        help='Destination list of models which the source will be '
+        'merged into.'
+    )
+    parser.add_argument('-s', '--source', help='Source list of models.')
     args = parser.parse_args(sys.argv[1:])
 
     if not os.path.exists(args.source):

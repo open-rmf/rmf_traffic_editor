@@ -77,31 +77,76 @@ def crop(green_img, white_img):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
-            '-m', '--model-list', default='../test/model_list.yaml',
-            help='Path of model_list.yaml')
+        'model_list', default='../test/model_list.yaml',
+        help='Path of model_list.yaml'
+    )
     parser.add_argument(
-            '-g', '--green-img-dir', default='../images/green/',
-            help='Directory filled with green screened model images')
+        '-o', '--output_dir',
+        default='../images/cropped/',
+        help='Directory where the cropped output images will be saved'
+    )
+    parser.add_argument(
+        '-g', '--green-img-dir', default='../images/green/',
+        help='Directory filled with green screened model images'
+    )
     parser.add_argument(
         '-w', '--white-img-dir', default='../images/white/',
-        help='Directory f   illed with white screened model images')
-    parser.add_argument(
-            '-o', '--output-dir', default='../images/cropped/',
-            help='Directory where the cropped output images will be saved')
+        help='Directory filled with white screened model images'
+    )
     args = parser.parse_args(sys.argv[1:])
 
     with open(args.model_list) as f:
         y = yaml.load(f)
 
+    dirs = [os.path.expanduser(args.output_dir),
+            os.path.expanduser(args.green_img_dir),
+            os.path.expanduser(args.white_img_dir)]
+
+    # Make dirs if they dont exist
+    for dir in dirs:
+        try:
+            os.makedirs(dir)
+            print("Made diretory: {}".format(dir))
+        except Exception:
+            pass
+
     for model_name in y['models']:
-        green_img = cv2.imread(
-                os.path.join(args.green_img_dir, '{}.png'.format(model_name)))
-        white_img = cv2.imread(
-                os.path.join(args.white_img_dir, '{}.png'.format(model_name)))
+        if "/" in model_name:
+            # There is an author name; a new folder should be created
+            author_name = model_name.split("/")[0]
+        else:
+            author_name = ""
+
+        try:
+            if author_name:
+                os.makedirs(
+                    os.path.join(
+                        os.path.expanduser(args.output_dir),
+                        author_name
+                    )
+                )
+        except Exception as e:
+            pass
+
+        green_img = cv2.imread(os.path.join(
+            os.path.expanduser(args.green_img_dir),
+            '{}.png'.format(model_name)
+            )
+        )
+        white_img = cv2.imread(os.path.join(
+            os.path.expanduser(args.white_img_dir),
+            '{}.png'.format(model_name)
+            )
+        )
 
         output_filepath = os.path.join(
-                args.output_dir, '{}.png'.format(model_name))
+            os.path.expanduser(args.output_dir),
+            '{}.png'.format(model_name)
+        )
+
         print('generating {}'.format(output_filepath))
 
         white_img_cropped = crop(green_img, white_img)
-        cv2.imwrite(output_filepath, white_img_cropped)
+        # check if we save the image properly
+        if not cv2.imwrite(output_filepath, white_img_cropped):
+            print('Failed to crop {}'.format(output_filepath))

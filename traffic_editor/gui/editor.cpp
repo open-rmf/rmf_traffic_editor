@@ -18,6 +18,9 @@
 #include <algorithm>
 #include <cmath>
 #include <string>
+#include <unistd.h>
+#include <sys/types.h>
+#include <pwd.h>
 
 #include <QtWidgets>
 
@@ -59,7 +62,7 @@ Editor::Editor()
 : QMainWindow()
 {
   instance = this;
-  
+
   setWindowTitle("Traffic Editor[*]");
 
   QSettings settings;
@@ -471,12 +474,20 @@ void Editor::load_model_names()
       settings.value(preferences_keys::thumbnail_path).toString());
   if (thumbnail_path.isEmpty())
   {
+    std::string homedir;
+
+    // Get home directory
+    homedir = getenv("HOME");
+    if ((homedir.c_str()) == NULL) {
+        homedir = getpwuid(getuid())->pw_dir;
+    }
     // Currently not sure how to do this the "right" way. For now assume
     // everybody is building from source, I guess (?).
     // todo: figure out something better in the future for binary installs
     thumbnail_path =
         QDir::cleanPath(
-            QDir(QApplication::applicationDirPath()).filePath("../thumbnails")
+            QDir(QApplication::applicationDirPath()).filePath((homedir
+              + "/.traffic_editor/assets/thumbnails").c_str())
         );
     settings.setValue(preferences_keys::thumbnail_path, thumbnail_path);
   }
@@ -671,7 +682,7 @@ void Editor::project_open()
 
   if (file_dialog.exec() != QDialog::Accepted)
     return;
-  
+
   QFileInfo file_info(file_dialog.selectedFiles().first());
   if (!file_info.exists()) {
     QMessageBox::critical(
@@ -1253,7 +1264,7 @@ void Editor::populate_property_editor(const Vertex& vertex)
 {
   const BuildingLevel& level = project.building.levels[level_idx];
   const double scale = level.drawing_meters_per_pixel;
- 
+
   property_editor->blockSignals(true);  // otherwise we get tons of callbacks
   property_editor->setRowCount(5 + vertex.params.size());
 
@@ -1314,7 +1325,7 @@ void Editor::populate_property_editor(const Model& model)
       1,
       "model_name",
       QString::fromStdString(model.model_name));
-      
+
   property_editor_set_row(
       2,
       "elevation",
@@ -1408,7 +1419,7 @@ void Editor::property_editor_cell_changed(int row, int column)
     setWindowModified(true);
     return;  // stop after finding the first one
   }
-  
+
   for (auto& m : project.building.levels[level_idx].models)
   {
     if (!m.selected)
@@ -1442,15 +1453,15 @@ void Editor::draw_mouse_motion_line_item(
   switch (tool_id) {
     case TOOL_ADD_LANE:
       pen_width = 20;
-      color = QColor::fromRgbF(0, 0, 1, 0.5); 
+      color = QColor::fromRgbF(0, 0, 1, 0.5);
       break;
     case TOOL_ADD_WALL:
       pen_width = 5;
-      color = QColor::fromRgbF(0, 0, 1, 0.5); 
+      color = QColor::fromRgbF(0, 0, 1, 0.5);
       break;
     case TOOL_ADD_MEAS:
       pen_width = 5;
-      color = QColor::fromRgbF(1, 0, 1, 0.5); 
+      color = QColor::fromRgbF(1, 0, 1, 0.5);
       break;
     default:
       break;
@@ -1790,7 +1801,6 @@ void Editor::mouse_rotate(
         project.building.levels[level_idx].models[clicked_idx];
     mouse_motion_model = get_closest_pixmap_item(
         QPointF(model.state.x, model.state.y));
-  
     QPen pen(Qt::red);
     pen.setWidth(4);
     const double r = static_cast<double>(ROTATION_INDICATOR_RADIUS);
@@ -1951,7 +1961,7 @@ void Editor::mouse_add_polygon(
     // first, remove the previous polygon
     scene->removeItem(mouse_motion_polygon);
     delete mouse_motion_polygon;
- 
+
     // now, make the updated polygon
     QVector<QPointF> polygon_vertices;
     for (const auto &vertex_idx: mouse_motion_polygon_vertices)
@@ -1965,7 +1975,7 @@ void Editor::mouse_add_polygon(
       polygon_vertices.append(QPointF(v->x, v->y));
     }
     polygon_vertices.append(QPointF(p.x(), p.y()));
- 
+
     // insert the updated polygon into the scene
     QPolygonF polygon(polygon_vertices);
     mouse_motion_polygon = scene->addPolygon(
@@ -2029,13 +2039,13 @@ void Editor::mouse_edit_polygon(
               p.y());
       if (mouse_edge_drag_polygon.movable_vertex < 0)
         return;
-    
+
       if (mouse_motion_polygon != nullptr)
       {
         qWarning("edit_polygon_release() without null mouse_motion_polygon!");
         return;
       }
-    
+
       mouse_motion_polygon = scene->addPolygon(
           mouse_edge_drag_polygon.polygon,
           QPen(Qt::black),
@@ -2054,7 +2064,7 @@ void Editor::mouse_edit_polygon(
     scene->removeItem(mouse_motion_polygon);
     delete mouse_motion_polygon;
     mouse_motion_polygon = nullptr;
-  
+
     const Project::NearestItem ni = project.nearest_items(
         mode, level_idx, p.x(), p.y());
 
@@ -2062,18 +2072,18 @@ void Editor::mouse_edit_polygon(
       return;  // nothing to do; didn't release near a vertex
 
     const int release_vertex_idx = ni.vertex_idx;
-  
+
     if (std::find(
         selected_polygon->vertices.begin(),
         selected_polygon->vertices.end(),
         release_vertex_idx) != selected_polygon->vertices.end())
       return;  // Release vertex is already in the polygon. Don't do anything.
-  
+
     selected_polygon->vertices.insert(
         selected_polygon->vertices.begin() +
             mouse_edge_drag_polygon.movable_vertex,
         release_vertex_idx);
-  
+
     setWindowModified(true);
     create_scene();
   }

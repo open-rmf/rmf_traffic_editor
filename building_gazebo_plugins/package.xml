@@ -25,6 +25,7 @@
   <depend>geometry_msgs</depend>
   <depend>std_msgs</depend>
   <depend>std_srvs</depend>
+  <depend>building_map_msgs</depend>
 
   <export>
     <build_type>ament_cmake</build_type>

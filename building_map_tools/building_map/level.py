@@ -32,7 +32,7 @@ class Level:
 
         self.elevation = 0.0
         if 'elevation' in yaml_node:
-            self.elevation = yaml_node['elevation']
+            self.elevation = float(yaml_node['elevation'])
 
         self.fiducials = []
         if 'fiducials' in yaml_node:
@@ -72,9 +72,17 @@ class Level:
             self.doors = self.parse_edge_sequence(yaml_node['doors'])
 
         self.models = []
+        model_counts = {}
         if 'models' in yaml_node:
             for model_yaml in yaml_node['models']:
-                self.models.append(Model(model_yaml))
+                name = model_yaml["name"]
+                if name not in model_counts:
+                    model_counts[name] = 1
+                    self.models.append(Model(name, model_yaml))
+                else:
+                    model_counts[name] += 1
+                    self.models.append(
+                            Model(f'{name}_{model_counts[name]}', model_yaml))
 
         self.floors = []
         if 'floors' in yaml_node:
@@ -93,6 +101,7 @@ class Level:
             v = copy.deepcopy(untransformed_vertex)
             transformed = self.transform.transform_point(v.xy())
             v.x, v.y = transformed
+            v.z = self.elevation
             self.transformed_vertices.append(v)
 
     def calculate_scale_using_measurements(self):
@@ -365,13 +374,13 @@ class Level:
 
         door = None
         if door_type == 'sliding':
-            door = SlidingDoor(door_edge)
+            door = SlidingDoor(door_edge, self.elevation)
         elif door_type == 'hinged':
-            door = SwingDoor(door_edge)
+            door = SwingDoor(door_edge, self.elevation)
         elif door_type == 'double_sliding':
-            door = DoubleSlidingDoor(door_edge)
+            door = DoubleSlidingDoor(door_edge, self.elevation)
         elif door_type == 'double_hinged':
-            door = DoubleSwingDoor(door_edge)
+            door = DoubleSwingDoor(door_edge, self.elevation)
         else:
             print(f'door type {door_type} not yet implemented')
 

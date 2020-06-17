@@ -16,6 +16,8 @@
 #include <rmf_fleet_msgs/msg/robot_state.hpp>
 #include <rclcpp/logger.hpp>
 
+#include <building_map_msgs/msg/building_map.hpp>
+
 #include "utils.hpp"
 
 using namespace building_gazebo_plugins;
@@ -29,6 +31,8 @@ public:
   void Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf) override;
   void path_request_cb(const rmf_fleet_msgs::msg::PathRequest::SharedPtr msg);
   void mode_request_cb(const rmf_fleet_msgs::msg::ModeRequest::SharedPtr msg);
+  void map_cb(const building_map_msgs::msg::BuildingMap::SharedPtr msg);
+
   void OnUpdate();
 
 private:
@@ -41,6 +45,8 @@ private:
   rclcpp::Subscription<rmf_fleet_msgs::msg::PathRequest>::SharedPtr traj_sub;
   rclcpp::Subscription<rmf_fleet_msgs::msg::ModeRequest>::SharedPtr mode_sub;
   rclcpp::Publisher<rmf_fleet_msgs::msg::RobotState>::SharedPtr robot_state_pub;
+  rclcpp::Subscription<building_map_msgs::msg::BuildingMap>::SharedPtr _building_map_sub;
+
   rmf_fleet_msgs::msg::RobotState robot_state_msg;
 
   std::array<gazebo::physics::JointPtr, 2> joints;
@@ -63,6 +69,8 @@ private:
   int update_count = 0;
   std::string name;
   std::string current_task_id;
+  std::string _current_level_name;
+  bool adapter_error = false;
 
   // Vehicle dynamic constants
   // TODO(MXG): Consider fetching these values from model data
@@ -218,6 +226,15 @@ void SlotcarPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf)
   robot_state_pub = _ros_node->create_publisher<rmf_fleet_msgs::msg::RobotState>(
       "/robot_state", 10);
 
+  // Subscription to /map
+  auto qos_profile = rclcpp::QoS(10);
+  qos_profile.transient_local();
+  _building_map_sub =
+    _ros_node->create_subscription<building_map_msgs::msg::BuildingMap>(
+        "/map",
+        qos_profile,
+        std::bind(&SlotcarPlugin::map_cb, this, std::placeholders::_1));
+
   joints[0] = _model->GetJoint("joint_tire_left");
   if (!joints[0])
     RCLCPP_ERROR(logger(), "Could not find tire for [joint_tire_left]");
@@ -331,16 +348,26 @@ void SlotcarPlugin::OnUpdate()
     robot_state_msg.location.y = wp.Pos().Y();
     robot_state_msg.location.yaw = wp.Rot().Yaw();
     robot_state_msg.location.t = now;
+    robot_state_msg.location.level_name = _current_level_name;
 
     robot_state_msg.task_id = current_task_id;
     robot_state_msg.path = remaining_path;
     robot_state_msg.mode = current_mode;
+
+    if (adapter_error)
+    {
+      robot_state_msg.mode.mode =
+          rmf_fleet_msgs::msg::RobotMode::MODE_ADAPTER_ERROR;
+    }
 
     robot_state_pub->publish(robot_state_msg);
   }
 
   if (traj.empty())
     return;
+
+  if (remaining_path.size() != 0)
+    _current_level_name = remaining_path[0].level_name;
 
   double x_target = 0.0;
   double yaw_target = 0.0;
@@ -426,6 +453,7 @@ void SlotcarPlugin::OnUpdate()
 
   bool need_to_stop = false;
   const auto& all_models = world->Models();
+  std::string avoiding_name;
   for (const auto& m : all_models)
   {
     if (m->IsStatic())
@@ -437,6 +465,7 @@ void SlotcarPlugin::OnUpdate()
     const auto p_obstacle = m->WorldPose().Pos();
     if ( (p_obstacle - stop_zone).Length() < stop_radius )
     {
+      avoiding_name = m->GetName();
       need_to_stop = true;
       break;
     }
@@ -446,9 +475,9 @@ void SlotcarPlugin::OnUpdate()
   {
     emergency_stop = need_to_stop;
     if (need_to_stop)
-      std::cout << "Stopping vehicle to avoid a collision" << std::endl;
+      std::cout << "Stopping [" << name << "] to avoid a collision with [" << avoiding_name << "]" << std::endl;
     else
-      std::cout << "No more obstacles; resuming course" << std::endl;
+      std::cout << "No more obstacles; resuming course for [" << name << "]" << std::endl;
   }
 
   if (emergency_stop)
@@ -541,11 +570,12 @@ void SlotcarPlugin::path_request_cb(const rmf_fleet_msgs::msg::PathRequest::Shar
   goal_yaw_tolerance = 0.1; // TODO: Clarify this placeholder tolerance
 
   current_task_id = msg->task_id;
+  adapter_error = false;
 
   std::cout << path_str << std::endl;
 
   const double initial_dist = compute_dpos(traj.front(), initial_pose).Length();
-  if (initial_dist > 0.5)
+  if (initial_dist > 1.0)
   {
     RCLCPP_ERROR(
           _ros_node->get_logger(),
@@ -554,16 +584,67 @@ void SlotcarPlugin::path_request_cb(const rmf_fleet_msgs::msg::PathRequest::Shar
 //          logger(),
 //          "Ignoring path request and stopping because it begins too far from "
 //          "where we are: " + std::to_string(initial_dist));
-//    traj.clear();
-//    traj.push_back(initial_pose);
-//    start_time = _ros_node->now();
-//    current_task_id = "IGNORE";
+    traj.clear();
+    traj.push_back(initial_pose);
+    start_time = _ros_node->now();
+    adapter_error = true;
   }
 }
 
 void SlotcarPlugin::mode_request_cb(const rmf_fleet_msgs::msg::ModeRequest::SharedPtr msg)
 {
   current_mode = msg->mode;
+}
+
+void SlotcarPlugin::map_cb(const building_map_msgs::msg::BuildingMap::SharedPtr msg)
+{
+  if (!_current_level_name.empty())
+    return;
+
+  if (!_model)
+  {
+    RCLCPP_ERROR(logger(), "Received map before model was initialized");
+    return;
+  }
+
+  if (msg->levels.empty())
+  {
+    RCLCPP_ERROR(logger(), "Received empty building map");
+    return;
+  }
+
+  RCLCPP_INFO(logger(), "Received building map with %d levels", msg->levels.size());
+  const auto initial_pose = _model->WorldPose();
+  const double x = initial_pose.Pos().X();
+  const double y = initial_pose.Pos().Y();
+
+  auto compute_disp = [&](const building_map_msgs::msg::GraphNode& v) -> double
+  {
+    return std::sqrt(
+        std::pow(x - v.x, 2) +
+        std::pow(y - v.y, 2));
+  };
+
+  // TODO be smarter about this search
+  // Check if robot is 1m from a waypoint in a level and if so set
+  // _current_level_name to that level.name
+  for (const auto& level : msg->levels)
+  {
+    for (const auto& graph : level.nav_graphs)
+    {
+      for (const auto& vertex : graph.vertices)
+      {
+        if (compute_disp(vertex) < 1.0)
+        {
+          _current_level_name = level.name;
+          RCLCPP_INFO(logger(), "Setting slotcar level name [%s]",
+            level.name.c_str());
+          return;
+        }
+      }
+    }
+  }
+
 }
 
 GZ_REGISTER_MODEL_PLUGIN(SlotcarPlugin)
