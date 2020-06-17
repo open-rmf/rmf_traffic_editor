@@ -18,7 +18,6 @@
 #include "building_level_table.h"
 #include "building_level_dialog.h"
 #include <QtWidgets>
-using std::unique_ptr;
 
 BuildingLevelTable::BuildingLevelTable()
 : TableList(6)
