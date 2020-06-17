@@ -119,7 +119,12 @@ if __name__ == '__main__':
 
         try:
             if author_name:
-                os.makedirs(os.path.join(os.path.expanduser(args.output_dir), author_name))
+                os.makedirs(
+                    os.path.join(
+                        os.path.expanduser(args.output_dir),
+                        author_name
+                    )
+                )
         except Exception as e:
             pass
 
