@@ -42,10 +42,10 @@ class TopViewGenerator:
     def __init__(self, argv=sys.argv):
         parser = argparse.ArgumentParser()
         parser.add_argument(
-                '-m', '--model-list', default='../test/model_list.yaml',
+                'model_list', default='../test/model_list.yaml',
                 help='Path of model_list.yaml')
         parser.add_argument(
-                '-o', '--output-dir',
+                'output_dir',
                 help='Directory where the output images will be saved')
         args = parser.parse_args(argv[1:])
 
@@ -72,12 +72,28 @@ class TopViewGenerator:
 
     def run(self):
         for model_name in self.yaml['models']:
+            # WARNING: Does not deal with the edge case of authorless
+            # model with a "/" in the model name. Very rare though.
+            if "/" in model_name:
+                # Remove author name because model path won't be structured
+                # that way
+                model_xml = xml.format("/".join(model_name.split("/")[1:]))
+                author_name = model_name.split("/")[0]
+            else:
+                model_xml = xml.format(model_name)
+                author_name = ""
+
+            try:
+                if author_name:
+                    os.makedirs(os.path.join(self.output_dir, author_name))
+            except Exception as e:
+                pass
+
             file_path = os.path.join(self.output_dir,
                                      '{}.png'.format(model_name))
             if os.path.exists(file_path):
                 continue
 
-            model_xml = xml.format(model_name)
             pose = Pose()
             pose.orientation.w = 1.0
             print('spawning {}'.format(model_name))
@@ -93,7 +109,7 @@ class TopViewGenerator:
 
             # for unknown reasons occasionally the 'delete' command doesn't
             # work so let's send it a few times
-            for x in xrange(0, 4):
+            for x in range(0, 4):
                 self.delete(model_name='model')
                 rospy.sleep(0.5)
 

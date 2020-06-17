@@ -98,11 +98,11 @@ class BuildingMapServer(Node):
         if (len(level.doors)):
             for door in level.doors:
                 door_msg = Door()
-                door_msg.door_name = door.params['name'].value
-                door_msg.v1_x = level.vertices[door.start_idx].x
-                door_msg.v1_y = level.vertices[door.start_idx].y
-                door_msg.v2_x = level.vertices[door.end_idx].x
-                door_msg.v2_y = level.vertices[door.end_idx].y
+                door_msg.name = door.params['name'].value
+                door_msg.v1_x = level.transformed_vertices[door.start_idx].x
+                door_msg.v1_y = level.transformed_vertices[door.start_idx].y
+                door_msg.v2_x = level.transformed_vertices[door.end_idx].x
+                door_msg.v2_y = level.transformed_vertices[door.end_idx].y
                 door_msg.motion_range = math.pi * float(
                     door.params['motion_degrees'].value) / 180.0
                 door_msg.motion_direction = door.params[
@@ -147,32 +147,45 @@ class BuildingMapServer(Node):
 
     def lift_msg(self, lift):
         msg = Lift()
+        reference_floor_name = lift.reference_floor_name
+        if reference_floor_name not in self.building.levels.keys():
+            return msg
+
+        reference_floor = self.building.levels[reference_floor_name]
+        reference_floor.calculate_scale_using_measurements()
+        msg.ref_x, msg.ref_y = reference_floor.transform.transform_point(
+            (lift.x, -lift.y))
+        # invert y-coordinate as origin is at top left corner
         msg.name = lift.name
         msg.levels = lift.level_names
-        msg.ref_x = lift.x
-        msg.ref_y = lift.y
+
         msg.ref_yaw = lift.yaw
         msg.width = lift.width
         msg.depth = lift.depth
         for door in lift.doors:
             door_msg = Door()
-            door_msg.door_name = door.name
+            door_msg.name = door.name
             door_msg.door_type = door.door_type
-            # find the vertices of the lift in global frame
-            v1_x = -0.5 * door.width
+            # door hinge vertices in cabin frame coordinates
+            v1_x = -0.5*door.width
             v1_y = 0.0
-            v2_x = 0.5 * door.width
+            v2_x = 0.5*door.width
             v2_y = 0.0
             transform = Transform()
-            transform.set_rotation(lift.yaw + door.motion_axis_orientation)
-            transform.set_translation(lift.x + door.x, lift.y + door.y)
+            # first transform within the lift cabin
+            transform.set_rotation(door.motion_axis_orientation)
+            transform.set_translation(door.x, door.y)
+            v1_x, v1_y = transform.transform_point([v1_x, v1_y])
+            v2_x, v2_y = transform.transform_point([v2_x, v2_y])
+            # then transform to global map frame
+            transform.set_rotation(lift.yaw)
+            transform.set_translation(msg.ref_x, msg.ref_y)
             v1_x, v1_y = transform.transform_point([v1_x, v1_y])
             v2_x, v2_y = transform.transform_point([v2_x, v2_y])
             door_msg.v1_x = v1_x
             door_msg.v1_y = v1_y
             door_msg.v2_x = v2_x
             door_msg.v2_y = v2_y
-            # todo add these fields to lift doors
             door_msg.motion_range = 1.571
             door_msg.motion_direction = -1
             msg.doors.append(door_msg)
