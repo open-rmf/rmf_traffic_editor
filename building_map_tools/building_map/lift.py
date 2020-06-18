@@ -20,10 +20,10 @@ class LiftDoor:
         self.thickness = 0.03
         self.gap = gap    # gap between cabin_door and shaft_door
         self.params = {'v_max_door': 0.3,
-                       'a_max_door': 0.15,
-                       'a_nom_door': 0.12,
-                       'dx_min_door': 1e-06,
-                       'f_max_door': 200.0}
+                       'a_max_door': 0.2,
+                       'a_nom_door': 0.1,
+                       'dx_min_door': 1e-4,
+                       'f_max_door': 35.0}
 
         x_diff = abs(abs(self.x) - lift_size[0] / 2)
         y_diff = abs(abs(self.y) - lift_size[1] / 2)
