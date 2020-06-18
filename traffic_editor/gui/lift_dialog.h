@@ -23,8 +23,8 @@
 #include <QDialog>
 #include <QObject>
 
-#include "lift.h"
-#include "building.h"
+#include "traffic_editor/lift.h"
+#include "traffic_editor/building.h"
 
 class QLineEdit;
 class QLabel;

@@ -20,7 +20,8 @@
 
 
 ProjectDialog::ProjectDialog(Project& _project)
-: QDialog(), project(_project)
+: QDialog(),
+  project(_project)
 {
   setWindowTitle("Project Properties");
   ok_button = new QPushButton("OK", this);  // first button = [enter] button

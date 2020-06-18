@@ -18,17 +18,19 @@
 #ifndef BUILDING_LEVEL_H
 #define BUILDING_LEVEL_H
 
-#include "level.h"
+#include "traffic_editor/level.h"
 
 #include <yaml-cpp/yaml.h>
 #include <string>
 
-#include "edge.h"
-#include "fiducial.h"
-#include "layer.h"
-#include "model.h"
-#include "polygon.h"
-#include "vertex.h"
+#include "traffic_editor/edge.h"
+#include "traffic_editor/editor_model.h"
+#include "traffic_editor/fiducial.h"
+#include "traffic_editor/layer.h"
+#include "traffic_editor/model.h"
+#include "traffic_editor/polygon.h"
+#include "traffic_editor/rendering_options.h"
+#include "traffic_editor/vertex.h"
 
 #include <QPixmap>
 #include <QPainterPath>
@@ -71,12 +73,19 @@ public:
 
   void draw(
       QGraphicsScene *scene,
-      std::vector<EditorModel>& editor_models) const;
+      std::vector<EditorModel>& editor_models,
+      const RenderingOptions& rendering_options);
+
+  void clear_scene();
 
   bool load_drawing();
 
 private:
-  void draw_lane(QGraphicsScene *scene, const Edge &edge) const;
+  void draw_lane(
+      QGraphicsScene *scene,
+      const Edge &edge,
+      const RenderingOptions& rendering_options) const;
+
   void draw_wall(QGraphicsScene *scene, const Edge &edge) const;
   void draw_meas(QGraphicsScene *scene, const Edge &edge) const;
   void draw_door(QGraphicsScene *scene, const Edge &edge) const;

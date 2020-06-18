@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Open Source Robotics Foundation
+ * Copyright (C) 2019-2020 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,31 +15,29 @@
  *
 */
 
-#ifndef MAP_VIEW_H
-#define MAP_VIEW_H
+#ifndef TRAFFIC_MAP_H
+#define TRAFFIC_MAP_H
 
-#include <QGraphicsView>
-#include <QWheelEvent>
+#include <string>
+#include <yaml-cpp/yaml.h>
 
-#include "traffic_editor/building.h"
-
-
-class MapView : public QGraphicsView
+class TrafficMap
 {
-  Q_OBJECT
-
 public:
-  MapView(QWidget *parent = nullptr);
-  void zoom_fit(const Building& building, int level_index);
+  std::string name;
+  std::string filename;
+  double x_offset = 0;
+  double y_offset = 0;
+  bool visible = true;
 
-protected:
-  void wheelEvent(QWheelEvent *event);
-  void mouseMoveEvent(QMouseEvent *e);
-  void mousePressEvent(QMouseEvent *e);
-  void mouseReleaseEvent(QMouseEvent *e);
+  /////////////////////////////////
+  TrafficMap();
+  ~TrafficMap();
 
-  bool is_panning;
-  int pan_start_x, pan_start_y;
+  bool from_project_yaml(const std::string& name, const YAML::Node& data);
+  YAML::Node to_project_yaml() const;
+
+  bool load_file();
 };
 
 #endif

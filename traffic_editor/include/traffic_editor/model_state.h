@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Open Source Robotics Foundation
+ * Copyright (C) 2019-2020 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,31 +15,19 @@
  *
 */
 
-#ifndef MAP_VIEW_H
-#define MAP_VIEW_H
+#ifndef MODEL_STATE_H
+#define MODEL_STATE_H
 
-#include <QGraphicsView>
-#include <QWheelEvent>
+#include <string>
 
-#include "traffic_editor/building.h"
-
-
-class MapView : public QGraphicsView
+class ModelState
 {
-  Q_OBJECT
-
 public:
-  MapView(QWidget *parent = nullptr);
-  void zoom_fit(const Building& building, int level_index);
-
-protected:
-  void wheelEvent(QWheelEvent *event);
-  void mouseMoveEvent(QMouseEvent *e);
-  void mousePressEvent(QMouseEvent *e);
-  void mouseReleaseEvent(QMouseEvent *e);
-
-  bool is_panning;
-  int pan_start_x, pan_start_y;
+  double x = 0.0;
+  double y = 0.0;
+  double z = 0.0;
+  double yaw = 0.0;
+  std::string level_name;
 };
 
 #endif

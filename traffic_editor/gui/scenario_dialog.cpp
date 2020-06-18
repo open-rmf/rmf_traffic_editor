@@ -17,10 +17,13 @@
 
 #include "scenario_dialog.h"
 #include <QtWidgets>
+#include <utility>
+using std::unique_ptr;
 
 
 ScenarioDialog::ScenarioDialog(Scenario& _scenario)
-: QDialog(), scenario(_scenario)
+: QDialog(),
+  scenario(_scenario)
 {
   setWindowTitle("Scenario Properties");
   ok_button = new QPushButton("OK", this);  // first button = [enter] button

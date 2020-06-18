@@ -21,7 +21,7 @@
 #include <QTableWidget>
 
 #include "table_list.h"
-#include "building.h"
+#include "project.h"
 
 class TrafficTable : public TableList
 {
@@ -29,7 +29,7 @@ public:
   TrafficTable();
   ~TrafficTable();
 
-  void update(Building& building);
+  void update(Project& project);
 };
 
 #endif

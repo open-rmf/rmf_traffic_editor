@@ -20,8 +20,8 @@
 
 #include <QDialog>
 #include <QObject>
-#include "model.h"
-#include "editor_model.h"
+#include "traffic_editor/model.h"
+#include "traffic_editor/editor_model.h"
 #include <vector>
 class QLineEdit;
 class QListWidget;

@@ -31,8 +31,9 @@
 #include <QSettings>
 
 #include "project.h"
-#include "editor_model.h"
+#include "traffic_editor/editor_model.h"
 #include "editor_mode_id.h"
+#include "sim_thread.h"
 
 class BuildingLevelTable;
 class MapView;
@@ -40,6 +41,12 @@ class Level;
 class LiftTable;
 class ScenarioTable;
 class TrafficTable;
+
+#ifdef HAS_OPENCV
+namespace cv {
+  class VideoWriter;
+}
+#endif
 
 QT_BEGIN_NAMESPACE
 class QAction;
@@ -56,6 +63,7 @@ class QPushButton;
 class QTableWidget;
 class QTableWidgetItem;
 class QTabWidget;
+class QTimer;
 class QToolButton;
 QT_END_NAMESPACE
 
@@ -66,6 +74,7 @@ class Editor : public QMainWindow
 
 public:
   Editor();
+  ~Editor();
 
   static Editor *get_instance();
 
@@ -85,6 +94,7 @@ protected:
   void mouseMoveEvent(QMouseEvent *e);
   void keyPressEvent(QKeyEvent *event);
   void closeEvent(QCloseEvent *event);
+  void showEvent(QShowEvent *event) override;
 
 private:
   EditorModeId mode = MODE_BUILDING;
@@ -132,7 +142,6 @@ private:
 
   void help_about();
 
-
   bool is_mouse_event_in_map(QMouseEvent *e, QPointF &p_scene);
 
   QToolBar *toolbar;
@@ -168,6 +177,7 @@ private:
   QTabWidget *right_tab_widget;
 
   QTableWidget *create_tabbed_table();
+  void update_tables();
 
   QTableWidget *layers_table;
   void populate_layers_table();
@@ -213,6 +223,25 @@ private:
   QPushButton *add_param_button, *delete_param_button;
   void add_param_button_clicked();
   void delete_param_button_clicked();
+
+  QAction *sim_reset_action;
+  QAction *sim_play_pause_action;
+  void sim_reset();
+  void sim_play_pause();
+  SimThread sim_thread;
+
+public:
+  void sim_tick();  // called by SimThread
+
+private:
+
+#ifdef HAS_OPENCV
+  QAction *record_start_stop_action;
+  bool is_recording = false;
+  void record_start_stop();
+  void record_frame_to_video();
+  cv::VideoWriter *video_writer = nullptr;
+#endif
 
   std::vector<EditorModel> editor_models;
   EditorModel *mouse_motion_editor_model = nullptr;
@@ -282,6 +311,9 @@ private:
   void mouse_edit_polygon(const MouseType t, QMouseEvent *e, const QPointF &p);
 
   QPointF previous_mouse_point;
+
+  QTimer* scene_update_timer;
+  void scene_update_timer_timeout();
 };
 
 #endif

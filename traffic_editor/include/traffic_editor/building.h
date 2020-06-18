@@ -21,10 +21,13 @@
 
 class QGraphicsScene;
 
+#include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 #include <yaml-cpp/yaml.h>
 
+#include <QGraphicsLineItem>
 #include <QPointF>
 
 #include "building_level.h"
@@ -35,12 +38,13 @@ class Building
 {
 public:
   Building();
-  ~Building();
+  virtual ~Building();
 
   std::string name;
   std::string reference_level_name;
   std::vector<BuildingLevel> levels;
   std::vector<Lift> lifts;
+  std::mutex building_mutex;
 
   std::string filename;
 
@@ -48,7 +52,7 @@ public:
   bool save_yaml_file();
   void clear();  // clear all internal data structures
 
-  void add_level(const BuildingLevel &level);
+  void add_level(const BuildingLevel& level);
 
   void add_vertex(int level_index, double x, double y);
   void add_fiducial(int level_index, double x, double y);
@@ -86,6 +90,12 @@ public:
       const int start_idx,
       const int end_idx,
       const Edge::Type edge_type);
+
+  void add_lane(
+      const int level_idx,
+      const int start_idx,
+      const int end_idx,
+      const int graph_idx);
 
   void add_model(
       const int level_idx,
@@ -150,6 +160,12 @@ public:
   void calculate_all_transforms();
 
   int get_reference_level_idx();
+
+  void clear_scene();
+
+  double level_meters_per_pixel(const std::string& level_name) const;
+
+  bool get_model(const std::string& name, Model&& model);
 };
 
 #endif

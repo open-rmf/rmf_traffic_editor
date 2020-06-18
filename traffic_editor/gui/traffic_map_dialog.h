@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Open Source Robotics Foundation
+ * Copyright (C) 2019-2020 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,33 +15,32 @@
  *
 */
 
-#ifndef ADD_PARAM_DIALOG_H
-#define ADD_PARAM_DIALOG_H
+#ifndef TRAFFIC_MAP_DIALOG_H
+#define TRAFFIC_MAP_DIALOG_H
 
-#include <vector>
 #include <QDialog>
-#include "traffic_editor/param.h"
+#include "project.h"
+#include "traffic_map.h"
+class QLineEdit;
 class QComboBox;
 
 
-class AddParamDialog : public QDialog
+class TrafficMapDialog : public QDialog
 {
 public:
-  AddParamDialog(
-      QWidget *parent,
-      const std::vector<std::pair<std::string, Param::Type> >& param_names);
-  ~AddParamDialog();
-
-  std::string get_param_name() const;
-  Param::Type get_param_type() const;
+  TrafficMapDialog(TrafficMap& _scenario);
+  ~TrafficMapDialog();
  
 private:
-  QComboBox *name_combo_box;
+  TrafficMap& traffic_map;
+
+  QLineEdit *name_line_edit;
+  QLineEdit *path_line_edit;
   QPushButton *ok_button, *cancel_button;
-  const std::vector<std::pair<std::string, Param::Type> >& param_names;
 
 private slots:
   void ok_button_clicked();
+  void path_button_clicked();
 };
 
 #endif
