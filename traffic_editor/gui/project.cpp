@@ -464,8 +464,10 @@ Polygon *Project::get_selected_polygon(
   if (mode == MODE_BUILDING)
   {
     for (size_t i = 0; i < building.levels[level_idx].polygons.size(); i++)
+    {
       if (building.levels[level_idx].polygons[i].selected)
         return &building.levels[level_idx].polygons[i];  // abomination
+    }
   }
   else if (mode == MODE_SCENARIO)
   {
@@ -473,8 +475,10 @@ Polygon *Project::get_selected_polygon(
     if (slevel)
     {
       for (size_t i = 0; i < slevel->polygons.size(); i++)
+      {
         if (slevel->polygons[i].selected)
           return &slevel->polygons[i];  // abomination
+      }
     }
   }
   return nullptr;
