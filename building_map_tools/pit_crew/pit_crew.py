@@ -495,7 +495,8 @@ def download_model(model_name, author_name, version="tip",
                                    model_name, version, model_name))
 
         assert metadata.status_code == 200, \
-            "Model %s does not exist!" % model_name
+            "Model '%s' by requested author '%s' does not exist on Fuel!" \
+            % (model_name, author_name)
 
         model = requests.get("%s/%s/models/%s/%s/%s.zip"
                              % (url_base, author_name,
@@ -538,7 +539,7 @@ def download_model(model_name, author_name, version="tip",
         logger.info("%s downloaded to: %s" % (model_name, extract_path))
         return True, metadata_dict
     except Exception as e:
-        logger.error("Could not download %s! %s" % (model_name, e))
+        logger.error("Could not download model '%s'! %s" % (model_name, e))
         return False, None
 
 
