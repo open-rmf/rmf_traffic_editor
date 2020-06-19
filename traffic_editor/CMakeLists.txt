@@ -26,6 +26,7 @@ endif()
 find_package(Qt5 COMPONENTS Widgets Concurrent REQUIRED)
 find_package(ignition-plugin1 REQUIRED COMPONENTS all)
 find_package(ignition-common3 REQUIRED)
+find_package(ament_index_cpp REQUIRED)
 
 # OpenCV is an optional dependency, only needed if you want to make videos
 # which is only really needed if you're using a process simulation plugin
@@ -34,6 +35,7 @@ find_package(OpenCV QUIET)
 include_directories(.)
 include_directories(gui)
 include_directories(include)
+include_directories(${ament_index_cpp_INCLUDE_DIRS})
 
 add_executable(traffic-editor
   gui/add_param_dialog.cpp
@@ -84,7 +86,9 @@ target_link_libraries(traffic-editor
   ignition-plugin1::loader
   ignition-common3::core
   yaml-cpp
-  ${OpenCV_LIBS})
+  ${ament_index_cpp_LIBRARIES}
+  ${OpenCV_LIBS}
+)
 
 if (OpenCV_VERSION)
   target_compile_definitions(traffic-editor PUBLIC "HAS_OPENCV")
