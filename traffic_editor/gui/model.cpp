@@ -22,6 +22,15 @@
 #include "traffic_editor/model.h"
 using std::string;
 
+// String comparison helper
+bool iequals(const string& a, const string& b)
+{
+    return std::equal(a.begin(), a.end(),
+                      b.begin(), b.end(),
+                      [](char _a, char _b) {
+                          return tolower(_a) == tolower(_b);
+                      });
+}
 
 Model::Model()
 {
@@ -133,7 +142,59 @@ void Model::draw(
       }
     }
     if (pixmap.isNull())
-      return;  // couldn't load the pixmap; ignore it.
+    {
+      // BACKWARDS COMPATIBILITY PATCH: Try again, but...
+      // Use the first matching namespaced thumbnail for a
+      // specified non-namespaced model, with warnings.
+
+      // (Also modifies the model name inplace!)
+      for (auto &editor_model : editor_models)
+      {
+        // Get ending token
+        std::string ending_token;
+        size_t delimiter_index = editor_model.name.find("/");
+
+        if (delimiter_index != std::string::npos)
+        {
+          ending_token = editor_model.name
+            .substr(delimiter_index + 1, editor_model.name.length());
+        }
+        else
+        {
+          ending_token = editor_model.name;
+        }
+
+        // Check if namespaced model_name is the name we are looking for
+        // Match mismatched cases
+        if (ending_token == model_name)
+        // if (iequals(ending_token, model_name))
+        {
+          // Skip rematches from previous for loop
+          if (model_name == editor_model.name) continue;
+
+          pixmap = editor_model.get_pixmap();
+          model_meters_per_pixel = editor_model.meters_per_pixel;
+
+          printf("\n[WARNING] Thumbnail %1$s not found, "
+                 "substituting %2$s instead!\n"
+                 "(%1$s will be saved as %2$s)\n\n",
+                 model_name.c_str(), editor_model.name.c_str());
+
+          // And reassign it!
+          model_name = editor_model.name;
+          break;
+        }
+      }
+
+      // Check again for pixmap find status
+      if (pixmap.isNull()) {
+        if (!error_printed) {
+          printf("[ERROR] No thumbnail found: %s\n", model_name.c_str());
+          error_printed = true;
+        }
+        return;  // couldn't load the pixmap; ignore it.
+      }
+    }
 
     pixmap_item = scene->addPixmap(pixmap);
     pixmap_item->setOffset(-pixmap.width()/2, -pixmap.height()/2);
