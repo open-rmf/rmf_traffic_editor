@@ -19,7 +19,7 @@
 #define BUILDING_DIALOG_H
 
 #include <QDialog>
-#include "building.h"
+#include "traffic_editor/building.h"
 class QLineEdit;
 class QComboBox;
 

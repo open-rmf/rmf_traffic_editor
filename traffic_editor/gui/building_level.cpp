@@ -23,7 +23,7 @@
 #include <QImage>
 #include <QImageReader>
 
-#include "building_level.h"
+#include "traffic_editor/building_level.h"
 using std::string;
 using std::vector;
 
@@ -53,8 +53,10 @@ bool BuildingLevel::from_yaml(
     if (!drawing_data["filename"])
       throw std::runtime_error("level " + name + " drawing invalid");
     drawing_filename = drawing_data["filename"].as<string>();
+    /*
     if (!load_drawing())
       return false;
+    */
   }
   else if (_data["x_meters"] && _data["y_meters"])
   {
@@ -102,7 +104,7 @@ bool BuildingLevel::from_yaml(
     for (YAML::const_iterator it = ys.begin(); it != ys.end(); ++it)
     {
       Model m;
-      m.from_yaml(*it);
+      m.from_yaml(*it, this->name);
       models.push_back(m);
     }
   }
@@ -143,7 +145,6 @@ bool BuildingLevel::from_yaml(
     }
   }
 
-  calculate_scale();
   return true;
 }
 
@@ -258,21 +259,21 @@ bool BuildingLevel::delete_selected()
       std::remove_if(
           edges.begin(),
           edges.end(),
-          [](Edge edge) { return edge.selected; }),
+          [](const Edge& edge) { return edge.selected; }),
       edges.end());
 
   models.erase(
       std::remove_if(
           models.begin(),
           models.end(),
-          [](Model model) { return model.selected; }),
+          [](const auto& model) { return model.selected; }),
       models.end());
 
   fiducials.erase(
       std::remove_if(
           fiducials.begin(),
           fiducials.end(),
-          [](Fiducial fiducial) { return fiducial.selected; }),
+          [](const Fiducial& fiducial) { return fiducial.selected; }),
       fiducials.end());
 
   // Vertices take a lot more care, because we have to check if a vertex
@@ -360,8 +361,18 @@ void BuildingLevel::calculate_scale()
   }
 }
 
-void BuildingLevel::draw_lane(QGraphicsScene *scene, const Edge &edge) const
+// todo: migrate this to the TrafficMap class eventually
+void BuildingLevel::draw_lane(
+    QGraphicsScene *scene,
+    const Edge &edge,
+    const RenderingOptions& opts) const
 {
+  const int graph_idx = edge.get_graph_idx();
+  if (graph_idx >= 0 &&
+      graph_idx < static_cast<int>(opts.show_building_lanes.size()) &&
+      !opts.show_building_lanes[graph_idx])
+    return;  // don't render this lane
+
   const auto &v_start = vertices[edge.start_idx];
   const auto &v_end = vertices[edge.end_idx];
   const double dx = v_end.x - v_start.x;
@@ -382,30 +393,28 @@ void BuildingLevel::draw_lane(QGraphicsScene *scene, const Edge &edge) const
   const double norm_x = dx / len;
   const double norm_y = dy / len;
 
-  for (double d = 0.0; d < len; d += arrow_spacing)
-  {
-    // first calculate the center vertex of this arrowhead
-    const double cx = v_start.x + d * norm_x;
-    const double cy = v_start.y + d * norm_y;
-    // one edge vertex of arrowhead
-    const double e1x = cx - arrow_w * norm_y;
-    const double e1y = cy + arrow_w * norm_x;
-    // another edge vertex of arrowhead
-    const double e2x = cx + arrow_w * norm_y;
-    const double e2y = cy - arrow_w * norm_x;
-    // tip of arrowhead
-    const double tx = cx + arrow_l * norm_x;
-    const double ty = cy + arrow_l * norm_y;
-    // now add arrowhead lines
-    scene->addLine(e1x, e1y, tx, ty, arrow_pen);
-    scene->addLine(e2x, e2y, tx, ty, arrow_pen);
+  // only draw arrows if it's a unidirectional lane. We used to draw
+  // arrows in both directions for bidirectional, but it was messy.
 
-    if (d > 0.0 && edge.is_bidirectional())
+  if (!edge.is_bidirectional())
+  {
+    for (double d = 0.0; d < len; d += arrow_spacing)
     {
-      const double back_tx = cx - arrow_l * norm_x;
-      const double back_ty = cy - arrow_l * norm_y;
-      scene->addLine(e1x, e1y, back_tx, back_ty, arrow_pen);
-      scene->addLine(e2x, e2y, back_tx, back_ty, arrow_pen);
+      // first calculate the center vertex of this arrowhead
+      const double cx = v_start.x + d * norm_x;
+      const double cy = v_start.y + d * norm_y;
+      // one edge vertex of arrowhead
+      const double e1x = cx - arrow_w * norm_y;
+      const double e1y = cy + arrow_w * norm_x;
+      // another edge vertex of arrowhead
+      const double e2x = cx + arrow_w * norm_y;
+      const double e2y = cy - arrow_w * norm_x;
+      // tip of arrowhead
+      const double tx = cx + arrow_l * norm_x;
+      const double ty = cy + arrow_l * norm_y;
+      // now add arrowhead lines
+      scene->addLine(e1x, e1y, tx, ty, arrow_pen);
+      scene->addLine(e2x, e2y, tx, ty, arrow_pen);
     }
   }
 
@@ -417,7 +426,7 @@ void BuildingLevel::draw_lane(QGraphicsScene *scene, const Edge &edge) const
     case 2: color.setRgbF(0.0, 0.5, 0.5); break;
     case 3: color.setRgbF(0.5, 0.5, 0.0); break;
     case 4: color.setRgbF(0.5, 0.0, 0.5); break;
-    case 5: color.setRgbF(0.5, 0.5, 0.5); break;
+    case 5: color.setRgbF(0.8, 0.0, 0.0); break;
     default: break;  // will render as dark grey
   }
 
@@ -428,10 +437,11 @@ void BuildingLevel::draw_lane(QGraphicsScene *scene, const Edge &edge) const
   // always draw lanes somewhat transparent
   color.setAlphaF(0.5);
 
-  scene->addLine(
+  QGraphicsLineItem *lane_item = scene->addLine(
       v_start.x, v_start.y,
       v_end.x, v_end.y,
       QPen(QBrush(color), lane_pen_width, Qt::SolidLine, Qt::RoundCap));
+  lane_item->setZValue(edge.get_graph_idx() + 1.0);
 
   // draw the orientation icon, if specified
   auto orientation_it = edge.params.find("orientation");
@@ -734,7 +744,7 @@ void BuildingLevel::draw_polygon(
 
 void BuildingLevel::draw_polygons(QGraphicsScene *scene) const
 {
-  const QBrush floor_brush(QColor::fromRgbF(0.8, 0.8, 0.8, 0.5));
+  const QBrush floor_brush(QColor::fromRgbF(0.9, 0.9, 0.9, 0.8));
   const QBrush hole_brush(QColor::fromRgbF(0.3, 0.3, 0.3, 0.5));
 
   // first draw the floor polygons
@@ -784,7 +794,8 @@ void BuildingLevel::clear_selection()
 
 void BuildingLevel::draw(
     QGraphicsScene *scene,
-    vector<EditorModel>& editor_models)
+    vector<EditorModel>& editor_models,
+    const RenderingOptions& rendering_options)
 {
   if (drawing_filename.size())
   {
@@ -822,93 +833,14 @@ void BuildingLevel::draw(
     item->setGraphicsEffect(opacity_effect);
   }
 
-  // now draw all the models
-  for (auto &model : models)
-  {
-    // find the pixmap we need for this model
-    QPixmap pixmap;
-    double model_meters_per_pixel = 1.0;  // will get overridden
-    for (auto &editor_model : editor_models)
-    {
-      if (editor_model.name == model.model_name)
-      {
-        pixmap = editor_model.get_pixmap();
-        model_meters_per_pixel = editor_model.meters_per_pixel;
-        break;
-      }
-    }
-    if (pixmap.isNull())
-    {
-      // BACKWARDS COMPATIBILITY PATCH: Try again, but...
-      // Use the first matching namespaced thumbnail for a
-      // specified non-namespaced model, with warnings.
+  for (Model& model : models)
+    model.draw(scene, editor_models, drawing_meters_per_pixel);
 
-      // (Also modifies the model name inplace!)
-      for (auto &editor_model : editor_models)
-      {
-        // Get ending token
-        std::string ending_token;
-        size_t delimiter_index = editor_model.name.find("/");
-
-        if (delimiter_index != std::string::npos)
-        {
-          ending_token = editor_model.name
-            .substr(delimiter_index + 1, editor_model.name.length());
-        }
-        else
-        {
-          ending_token = editor_model.name;
-        }
-
-        // Check if namespaced model_name is the name we are looking for
-        if (ending_token == model.model_name)
-        {
-          // Skip rematches from previous for loop
-          if (model.model_name == editor_model.name) continue;
-
-          pixmap = editor_model.get_pixmap();
-          model_meters_per_pixel = editor_model.meters_per_pixel;
-
-          printf("\n[WARNING] Thumbnail %1$s not found, "
-                 "substituting %2$s instead!\n"
-                 "(%1$s will be saved as %2$s)\n\n",
-                 model.model_name.c_str(), editor_model.name.c_str());
-
-          // And reassign it!
-          model.model_name = editor_model.name;
-          break;
-        }
-      }
-
-      // Check again for pixmap find status
-      if (pixmap.isNull()) {
-        printf("[ERROR] No thumbnail found: %s\n",
-               model.model_name.c_str());
-        continue;  // couldn't load the pixmap; ignore it.
-      }
-    }
-
-    QGraphicsPixmapItem *item = scene->addPixmap(pixmap);
-    item->setOffset(-pixmap.width()/2, -pixmap.height()/2);
-    item->setScale(model_meters_per_pixel / drawing_meters_per_pixel);
-    item->setPos(model.x, model.y);
-    item->setRotation(-model.yaw * 180.0 / M_PI);
-
-    // make the model "glow" if it is selected
-    if (model.selected)
-    {
-      QGraphicsColorizeEffect *colorize = new QGraphicsColorizeEffect;
-      colorize->setColor(QColor::fromRgbF(1.0, 0.2, 0.0, 1.0));
-      colorize->setStrength(1.0);
-      item->setGraphicsEffect(colorize);
-    }
-  }
-
-  for (const auto &edge : edges)
+  for (const auto& edge : edges)
   {
     switch (edge.type)
     {
-      case Edge::LANE: draw_lane(scene, edge); break;
+      case Edge::LANE: draw_lane(scene, edge, rendering_options); break;
       case Edge::WALL: draw_wall(scene, edge); break;
       case Edge::MEAS: draw_meas(scene, edge); break;
       case Edge::DOOR: draw_door(scene, edge); break;
@@ -919,12 +851,18 @@ void BuildingLevel::draw(
     }
   }
 
-  for (const auto &v : vertices)
+  for (const auto& v : vertices)
     v.draw(
         scene,
         vertex_radius / drawing_meters_per_pixel,
-        QColor::fromRgbF(0.0, 1.0, 0.0));
+        QColor::fromRgbF(0.0, 0.5, 0.0));
 
   for (const auto &f : fiducials)
     f.draw(scene, drawing_meters_per_pixel);
+}
+
+void BuildingLevel::clear_scene()
+{
+  for (auto& model : models)
+    model.clear_scene();
 }

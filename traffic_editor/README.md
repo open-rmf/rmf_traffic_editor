@@ -13,22 +13,34 @@ This program is developed and tested on
 [`yaml-cpp`](https://github.com/jbeder/yaml-cpp).
 
 ## Compiling Instructions
-Configuring and compiling can be sequenced using `colcon` or using
-vanilla CMake:
+Traffic Editor is now structured as a Colcon package. After installing
+ROS 2 Eloquent, the following command sequence will create a colcon
+workspace in `~/colcon_workspace` and build `traffic-editor` there:
+
 ```
 sudo apt update
-sudo apt install git cmake libyaml-cpp-dev qt5-default
+sudo apt install libyaml-cpp-dev qt5-default \
+  libopencv-dev libopencv-videoio-dev \
+  libignition-plugin-dev libignition-common3-dev
+mkdir -p ~/colcon_workspace/src
+cd ~/colcon_workspace/src
 git clone https://github.com/osrf/traffic_editor
-cd traffic_editor/traffic_editor
-mkdir build
-cd build
-cmake ..
-make
+cd ~/colcon_workspace
+source /opt/ros/eloquent/setup.bash
+colcon build --packages-select traffic_editor
+```
+
+Then you should be able to run `traffic-editor` by sourcing the install
+space of that workspace, in a new "clean" terminal:
+```
+source ~/colcon_workspace/install/setup.bash
+traffic-editor
 ```
 
 # Quick Start
 
-If it's the first time you are running it, starting the editor with `./traffic-editor` should bring up a blank window.
+If it's the first time you are running it, starting the editor with
+`traffic-editor` should bring up a blank window.
 
 First, you'll need to make sure that `traffic-editor` knows where the model thumbnails are found. Depending on how `traffic-editor` is built, it may not find it automatically. The thumbnails are top-view renderings of various art assets that can be added to the environments, such as chairs. 
 

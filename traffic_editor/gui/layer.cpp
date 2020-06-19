@@ -16,7 +16,7 @@
 */
 
 #include <QImageReader>
-#include "layer.h"
+#include "traffic_editor/layer.h"
 using std::string;
 using std::vector;
 

@@ -18,6 +18,8 @@
 #include "scenario_dialog.h"
 #include "scenario_table.h"
 #include <QtWidgets>
+using std::unique_ptr;
+
 
 ScenarioTable::ScenarioTable()
 : TableList(2)
@@ -36,7 +38,7 @@ void ScenarioTable::update(Project& project)
   setRowCount(1 + project.scenarios.size());
   for (size_t i = 0; i < project.scenarios.size(); i++)
   {
-    const Scenario& scenario = project.scenarios[i];
+    const Scenario& scenario = *project.scenarios[i];
 
     QTableWidgetItem *name_item =
         new QTableWidgetItem(QString::fromStdString(scenario.name));
@@ -53,7 +55,7 @@ void ScenarioTable::update(Project& project)
         &QAbstractButton::clicked,
         [this, &project, i]()
         {
-          ScenarioDialog dialog(project.scenarios[i]);
+          ScenarioDialog dialog(*project.scenarios[i]);
           dialog.exec();
           update(project);
           emit redraw();
@@ -68,14 +70,16 @@ void ScenarioTable::update(Project& project)
   connect(
       add_button, &QAbstractButton::clicked,
       [this, &project]() {
-        Scenario scenario;
-        ScenarioDialog scenario_dialog(scenario);
+        unique_ptr<Scenario> scenario = std::make_unique<Scenario>();
+        ScenarioDialog scenario_dialog(*scenario);
         if (scenario_dialog.exec() == QDialog::Accepted)
         {
-          project.scenarios.push_back(scenario);
+          project.scenarios.push_back(std::move(scenario));
           update(project);
           emit redraw();
         }
+        else
+          scenario.release();
       });
 
   blockSignals(false);

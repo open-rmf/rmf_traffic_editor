@@ -16,11 +16,13 @@
 */
 
 #include <fstream>
+#include <ignition/common/SystemPaths.hh>
 
 #include "scenario.h"
 #include "yaml_utils.h"
 
 using std::string;
+using std::unique_ptr;
 
 
 Scenario::Scenario()
@@ -33,6 +35,7 @@ Scenario::~Scenario()
 
 bool Scenario::load()
 {
+  printf("Scenario::load(%s)\n", filename.c_str());
   YAML::Node yaml;
   try
   {
@@ -48,15 +51,77 @@ bool Scenario::load()
     name = yaml["name"].as<string>();
 
   levels.clear();
-  const YAML::Node yl = yaml["levels"];
-  for (YAML::const_iterator it = yl.begin(); it != yl.end(); ++it)
+  if (yaml["levels"])
   {
-    ScenarioLevel l;
-    l.from_yaml(it->first.as<string>(), it->second);
-    levels.push_back(l);
+    const YAML::Node yl = yaml["levels"];
+    for (YAML::const_iterator it = yl.begin(); it != yl.end(); ++it)
+    {
+      ScenarioLevel l;
+      l.from_yaml(it->first.as<string>(), it->second);
+      levels.push_back(l);
+    }
   }
 
+  if (yaml["plugin_name"])
+  {
+    string plugin_path = yaml["plugin_path"].as<string>();
+    ignition::common::SystemPaths paths;
+    paths.AddPluginPaths(plugin_path);
+
+    const string plugin_name = yaml["plugin_name"].as<string>();
+    std::string lib_path = paths.FindSharedLibrary(plugin_name);
+    printf("FindSharedLibrary returned [%s]\n", lib_path.c_str());
+
+    ignition::plugin::Loader loader;
+    std::unordered_set<string> plugin_libs = loader.LoadLib(lib_path);
+    std::unordered_set<string> sim_libs =
+        loader.PluginsImplementing("Simulation");
+
+    for (const auto& s : plugin_libs)
+      printf("  found plugin library: [%s]\n", s.c_str());
+
+    for (const auto& s : sim_libs)
+      printf("  found simulation library: [%s]\n", s.c_str());
+
+    for (const std::string& plugin_class_name : plugin_libs)
+    {
+      if (sim_libs.find(plugin_class_name) != sim_libs.end())
+      {
+        printf(
+            "trying to instantiate [%s] from library [%s]...\n",
+            plugin_class_name.c_str(),
+            plugin_name.c_str());
+        sim_plugin = loader.Instantiate(plugin_class_name);
+
+        if (sim_plugin.IsEmpty())
+        {
+          printf("simulation plugin instantiation failed :(\n");
+          break;
+        }
+
+        printf("success! created a simulation plugin instance!\n");
+        Simulation *sim = sim_plugin->QueryInterface<Simulation>();
+        if (!sim)
+        {
+          printf("woah! couldn't get interface to plugin!\n");
+          break;
+        }
+
+        sim->load(yaml["plugin_config"]);
+        break;
+      }
+    }
+  }
+
+  print();
+
   return true;
+}
+
+void Scenario::print() const
+{
+  printf("scenario: [%s]\n", name.c_str());
+  printf("  filename: [%s]\n", filename.c_str());
 }
 
 bool Scenario::save() const
@@ -80,7 +145,8 @@ bool Scenario::save() const
 void Scenario::draw(
     QGraphicsScene *scene,
     const std::string& level_name,
-    const double meters_per_pixel) const
+    const double meters_per_pixel,
+    std::vector<EditorModel>& /*editor_models*/) const
 {
   printf("Scenario::draw(%s)\n", level_name.c_str());
   for (const ScenarioLevel& level : levels)
@@ -125,4 +191,54 @@ bool Scenario::delete_selected(const std::string& level_name)
     if (level.name == level_name)
       return level.delete_selected();
   return true;
+}
+
+void Scenario::sim_tick(Building& building)
+{
+  if (!sim_plugin.IsEmpty())
+  {
+    std::lock_guard<std::mutex> building_guard(building.building_mutex);
+    Simulation *sim = sim_plugin->QueryInterface<Simulation>();
+    if (sim)
+      sim->tick(building);
+  }
+}
+
+void Scenario::sim_reset(Building& building)
+{
+  if (!sim_plugin.IsEmpty())
+  {
+    Simulation *sim = sim_plugin->QueryInterface<Simulation>();
+    if (sim)
+      sim->reset(building);
+  }
+
+  sim_time_seconds = 0.0;
+  sim_tick_counter = 0;
+}
+
+void Scenario::clear_scene()
+{
+  printf("Scenario::clear_scene()\n");
+
+  if (!sim_plugin.IsEmpty())
+  {
+    Simulation *sim = sim_plugin->QueryInterface<Simulation>();
+    if (sim)
+      sim->scene_clear();
+  }
+}
+
+void Scenario::scene_update(
+    QGraphicsScene *scene,
+    Building& building,
+    const int level_idx)
+{
+  if (!sim_plugin.IsEmpty())
+  {
+    std::lock_guard<std::mutex> building_guard(building.building_mutex);
+    Simulation *sim = sim_plugin->QueryInterface<Simulation>();
+    if (sim)
+      sim->scene_update(scene, building, level_idx);
+  }
 }

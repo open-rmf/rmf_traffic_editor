@@ -24,7 +24,7 @@ TableList::TableList(const int num_cols)
       "QTableWidget { background-color: #e0e0e0; color: black; } "
       "QHeaderView::section { color: white; } "
       "QLineEdit { background:white; } "
-      "QCheckBox { padding-left: 5px; background:white; } "
+      "QCheckBox { padding-left: 5px; background-color: #e0e0e0; } "
       "QPushButton { margin: 5px; background-color: #c0c0c0; border: 1px solid black; } "
       "QPushButton:pressed { background-color: #808080; }";
   setStyleSheet(style);
