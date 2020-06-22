@@ -200,6 +200,21 @@ class Lift:
                                   self.gap))
         return doors
 
+    def parse_lift_vertices(self):
+        # parse lift shaft cavity corner vertices
+        vertices = []
+        d = self.depth / 2 + self.gap
+        w = self.width / 2 + self.gap
+        vertices.append((self.x - d * np.sin(self.yaw) - w * np.cos(self.yaw),
+                         self.y + d * np.cos(self.yaw) - w * np.sin(self.yaw)))
+        vertices.append((self.x + d * np.sin(self.yaw) - w * np.cos(self.yaw),
+                         self.y - d * np.cos(self.yaw) - w * np.sin(self.yaw)))
+        vertices.append((self.x + d * np.sin(self.yaw) + w * np.cos(self.yaw),
+                         self.y - d * np.cos(self.yaw) + w * np.sin(self.yaw)))
+        vertices.append((self.x - d * np.sin(self.yaw) + w * np.cos(self.yaw),
+                         self.y + d * np.cos(self.yaw) + w * np.sin(self.yaw)))
+        return vertices
+
     def generate_shaft_doors(self, world_ele):
         for level_name, door_names in self.level_doors.items():
             for door in self.doors:

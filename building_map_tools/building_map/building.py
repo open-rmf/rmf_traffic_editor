@@ -40,11 +40,21 @@ class Building:
             self.lifts[lift_name] = \
                 Lift(lift_yaml, lift_name, transform, self.levels)
 
+        self.set_lift_vert_lists()
+
     def __str__(self):
         s = ''
         for level_name, level in self.levels.items():
             s += f'{level_name}: ({len(level.vertices)} vertices) '
         return s
+
+    def set_lift_vert_lists(self):
+        lift_vert_lists = []
+        for lift_name, lift in self.lifts.items():
+            lift_vert_lists.append(lift.parse_lift_vertices())
+
+        for level_name, level in self.levels.items():
+            level.set_lift_vert_lists(lift_vert_lists)
 
     def transform_all_vertices(self):
         """ Transform all vertices on all levels to a unified system """
@@ -201,7 +211,6 @@ class Building:
             pose_ele.text = f'0 0 {level.elevation} 0 0 0'
 
         for lift_name, lift in self.lifts.items():
-            # lift.generate_holes(world)
             lift.generate_shaft_doors(world)
             lift.generate_cabin(world)
 
