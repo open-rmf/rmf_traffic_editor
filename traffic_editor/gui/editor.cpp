@@ -38,6 +38,7 @@
 #include <yaml-cpp/yaml.h>
 
 #include "ament_index_cpp/get_package_share_directory.hpp"
+#include "ament_index_cpp/get_package_prefix.hpp"
 #include "ament_index_cpp/get_resource.hpp"
 
 #include "add_param_dialog.h"
@@ -482,12 +483,18 @@ void Editor::load_model_names()
     std::string assets_dir;
     std::string share_dir;
 
-    share_dir =
-        ament_index_cpp::get_package_share_directory("traffic_editor_assets");
+    try {
+      share_dir =
+          ament_index_cpp::get_package_share_directory("traffic_editor_assets");
 
-    ament_index_cpp::get_resource("traffic_editor_assets",
-                                  "assets",
-                                  assets_dir);
+      ament_index_cpp::get_resource("traffic_editor_assets",
+                                    "assets",
+                                    assets_dir);
+    } catch (const ament_index_cpp::PackageNotFoundError& e) {
+      qWarning("Could not load default thumbnail directory! "
+               "traffic_editor_assets package not found in workspace!");
+      return;
+    }
 
     // Strip newlines from assets_dir
     assets_dir.erase(std::remove(assets_dir.begin(), assets_dir.end(), '\n'),
