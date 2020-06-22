@@ -30,6 +30,8 @@ using std::vector;
 
 Project::Project()
 {
+  for (size_t i = 0; i < rendering_options.show_building_lanes.size(); i++)
+    rendering_options.show_building_lanes[i] = true;
 }
 
 Project::~Project()
@@ -86,17 +88,28 @@ bool Project::load_yaml_file(const std::string& _filename)
         scenario_node != yaml["scenarios"].end();
         ++scenario_node)
     {
-      Scenario scenario;
-      scenario.filename = (*scenario_node)["filename"].as<string>();
-      if (!scenario.load())
+      std::unique_ptr<Scenario> scenario(new Scenario);
+      scenario->filename = (*scenario_node)["filename"].as<string>();
+      if (!scenario->load())
       {
-        printf("couldn't load [%s]\n", scenario.filename.c_str());
+        printf("couldn't load [%s]\n", scenario->filename.c_str());
         //return false;
       }
-      scenarios.push_back(scenario);
+      scenarios.push_back(std::move(scenario));
     }
     if (!scenarios.empty())
       scenario_idx = 0;
+  }
+
+  if (yaml["traffic_maps"] && yaml["traffic_maps"].IsMap())
+  {
+    const YAML::Node& ytm = yaml["traffic_maps"];
+    for (YAML::const_iterator it = ytm.begin(); it != ytm.end(); ++it)
+    {
+      TrafficMap tm;
+      tm.from_project_yaml(it->first.as<string>(), it->second);
+      traffic_maps.push_back(tm);
+    }
   }
 
   return true;
@@ -117,9 +130,13 @@ bool Project::save_yaml_file() const
   {
     printf("saving scenario\n");
     YAML::Node scenario_node;
-    scenario_node["filename"] = scenario.filename;
+    scenario_node["filename"] = scenario->filename;
     y["scenarios"].push_back(scenario_node);
   }
+
+  y["traffic_maps"] = YAML::Node(YAML::NodeType::Map);
+  for (const auto& traffic_map : traffic_maps)
+    y["traffic_maps"][traffic_map.name] = traffic_map.to_project_yaml();
 
   YAML::Emitter emitter;
   yaml_utils::write_node(y, emitter);
@@ -136,9 +153,13 @@ bool Project::save()
 
   building.save_yaml_file();
 
+  /*
+  // TODO: currently the scenarios are not fully parsed, so we
+  // can't save them back to disk without data loss
   for (const auto& scenario : scenarios)
-    if (!scenario.save())
+    if (!scenario->save())
       return false;
+  */
 
   return true;
 }
@@ -157,7 +178,7 @@ void Project::add_scenario_vertex(
   printf("add_scenario_vertex(%d, %.3f, %.3f)\n", level_idx, x, y);
   if (scenario_idx < 0 || scenario_idx >= static_cast<int>(scenarios.size()))
     return;
-  scenarios[scenario_idx].add_vertex(building.levels[level_idx].name, x, y);
+  scenarios[scenario_idx]->add_vertex(building.levels[level_idx].name, x, y);
 }
 
 void Project::scenario_row_clicked(const int row)
@@ -176,20 +197,23 @@ void Project::draw(
     const int level_idx,
     std::vector<EditorModel>& editor_models)
 {
+  std::lock_guard<std::mutex> building_guard(building.building_mutex);
+
   if (building.levels.empty())
   {
     printf("nothing to draw!\n");
     return;
   }
 
-  building.levels[level_idx].draw(scene, editor_models);
+  building.levels[level_idx].draw(scene, editor_models, rendering_options);
   building.draw_lifts(scene, level_idx);
   
   if (scenario_idx >= 0)
-    scenarios[scenario_idx].draw(
+    scenarios[scenario_idx]->draw(
         scene,
         building.levels[level_idx].name,
-        building.levels[level_idx].drawing_meters_per_pixel);
+        building.levels[level_idx].drawing_meters_per_pixel,
+        editor_models);
 }
 
 void Project::clear_selection(const int level_idx)
@@ -199,7 +223,7 @@ void Project::clear_selection(const int level_idx)
   building.levels[level_idx].clear_selection();
 
   if (scenario_idx >= 0)
-    scenarios[scenario_idx].clear_selection(building.levels[level_idx].name);
+    scenarios[scenario_idx]->clear_selection(building.levels[level_idx].name);
 }
 
 bool Project::delete_selected(const int level_idx)
@@ -210,7 +234,7 @@ bool Project::delete_selected(const int level_idx)
     return false;
   const std::string level_name = building.levels[level_idx].name;
   if (scenario_idx >= 0 &&
-      !scenarios[scenario_idx].delete_selected(level_name))
+      !scenarios[scenario_idx]->delete_selected(level_name))
       return false;
   return true;
 }
@@ -258,8 +282,8 @@ Project::NearestItem Project::nearest_items(
     for (size_t i = 0; i < building_level.models.size(); i++)
     {
       const Model& m = building_level.models[i];
-      const double dx = x - m.x;
-      const double dy = y - m.y;
+      const double dx = x - m.state.x;
+      const double dy = y - m.state.y;
       const double dist = sqrt(dx*dx + dy*dy);  // no need for sqrt each time
       if (dist < ni.model_dist)
       {
@@ -273,7 +297,7 @@ Project::NearestItem Project::nearest_items(
     if (scenario_idx < 0 ||
         scenario_idx >= static_cast<int>(scenarios.size()))
       return ni;
-    const Scenario& scenario = scenarios[scenario_idx];
+    const Scenario& scenario = *scenarios[scenario_idx];
 
     for (const ScenarioLevel& scenario_level : scenario.levels)
     {
@@ -307,7 +331,8 @@ ScenarioLevel *Project::scenario_level(const int building_level_idx)
   if (scenario_idx < 0 ||
       scenario_idx >= static_cast<int>(scenarios.size()))
     return nullptr;
-  Scenario& scenario = scenarios[scenario_idx];
+  // I'm sure this is a horrific abomination. Fix someday.
+  Scenario& scenario = *scenarios[scenario_idx];
   for (size_t i = 0; i < scenario.levels.size(); i++)
   {
     if (scenario.levels[i].name == building_level.name)
@@ -326,12 +351,12 @@ void Project::mouse_select_press(
   clear_selection(level_idx);
   const NearestItem ni = nearest_items(mode, level_idx, x, y);
 
+  const double vertex_dist_thresh =
+      building.levels[level_idx].vertex_radius /
+      building.levels[level_idx].drawing_meters_per_pixel;
+
   if (mode == MODE_BUILDING)
   {
-    const double vertex_dist_thresh =
-        building.levels[level_idx].vertex_radius /
-        building.levels[level_idx].drawing_meters_per_pixel;
-
     // todo: use QGraphics stuff to see if we clicked a model pixmap...
     const double model_dist_thresh = 0.5 /
         building.levels[level_idx].drawing_meters_per_pixel;
@@ -352,13 +377,43 @@ void Project::mouse_select_press(
           case QGraphicsLineItem::Type:
             set_selected_line_item(
                 level_idx,
-                qgraphicsitem_cast<QGraphicsLineItem *>(graphics_item));
+                qgraphicsitem_cast<QGraphicsLineItem *>(graphics_item),
+                mode);
             break;
     
           case QGraphicsPolygonItem::Type:
             set_selected_containing_polygon(mode, level_idx, x, y);
             break;
     
+          default:
+            printf("clicked unhandled type: %d\n",
+                static_cast<int>(graphics_item->type()));
+            break;
+        }
+      }
+    }
+  }
+  else if (mode == MODE_TRAFFIC)
+  {
+    // todo: keep traffic-map vertices separate from building vertices
+    // for now, they're using the same vertex list.
+
+    if (ni.vertex_idx >= 0 && ni.vertex_dist < vertex_dist_thresh)
+      building.levels[level_idx].vertices[ni.vertex_idx].selected = true;
+    else
+    {
+      // use the QGraphics stuff to see if it's an edge segment or polygon
+      if (graphics_item)
+      {
+        switch (graphics_item->type())
+        {
+          case QGraphicsLineItem::Type:
+            set_selected_line_item(
+                level_idx,
+                qgraphicsitem_cast<QGraphicsLineItem *>(graphics_item),
+                mode);
+            break;
+   
           default:
             printf("clicked unhandled type: %d\n",
                 static_cast<int>(graphics_item->type()));
@@ -396,7 +451,8 @@ void Project::mouse_select_press(
 
 void Project::set_selected_line_item(
     const int level_idx,
-    QGraphicsLineItem *line_item)
+    QGraphicsLineItem *line_item,
+    const EditorModeId mode)
 {
   clear_selection(level_idx);
 
@@ -406,6 +462,16 @@ void Project::set_selected_line_item(
   // find if any of our lanes match those vertices
   for (auto& edge : building.levels[level_idx].edges)
   {
+    if (mode == MODE_TRAFFIC)
+    {
+      if (edge.type != Edge::LANE)
+        continue;
+      if (edge.get_graph_idx() != traffic_map_idx)
+        continue;
+    }
+    if (mode == MODE_BUILDING && edge.type == Edge::LANE)
+      continue;
+
     // look up the line's vertices
     const double x1 = line_item->line().x1();
     const double y1 = line_item->line().y1();
@@ -464,8 +530,10 @@ Polygon *Project::get_selected_polygon(
   if (mode == MODE_BUILDING)
   {
     for (size_t i = 0; i < building.levels[level_idx].polygons.size(); i++)
+    {
       if (building.levels[level_idx].polygons[i].selected)
         return &building.levels[level_idx].polygons[i];  // abomination
+    }
   }
   else if (mode == MODE_SCENARIO)
   {
@@ -473,8 +541,10 @@ Polygon *Project::get_selected_polygon(
     if (slevel)
     {
       for (size_t i = 0; i < slevel->polygons.size(); i++)
+      {
         if (slevel->polygons[i].selected)
           return &slevel->polygons[i];  // abomination
+      }
     }
   }
   return nullptr;
@@ -535,4 +605,51 @@ void Project::clear()
   filename.clear();
   scenarios.clear();
   scenario_idx = -1;
+}
+
+void Project::sim_tick()
+{
+  if (scenario_idx < 0 || scenario_idx >= static_cast<int>(scenarios.size()))
+    return;
+  scenarios[scenario_idx]->sim_tick(building);
+}
+
+void Project::sim_reset()
+{
+  if (scenario_idx < 0 || scenario_idx >= static_cast<int>(scenarios.size()))
+    return;
+  scenarios[scenario_idx]->sim_reset(building);
+}
+
+void Project::clear_scene()
+{
+  building.clear_scene();
+
+  for (auto& scenario : scenarios)
+    scenario->clear_scene();
+}
+
+void Project::add_lane(
+    const int level_idx,
+    const int start_idx,
+    const int end_idx)
+{
+  building.add_lane(level_idx, start_idx, end_idx, traffic_map_idx);
+}
+
+void Project::scenario_scene_update(
+    QGraphicsScene *scene,
+    const int level_idx)
+{
+  if (scenario_idx < 0 || scenario_idx >= static_cast<int>(scenarios.size()))
+    return;
+  scenarios[scenario_idx]->scene_update(scene, building, level_idx);
+}
+
+bool Project::has_sim_plugin()
+{
+  for (const auto& scenario : scenarios)
+    if (scenario->sim_plugin)
+      return true;
+  return false;
 }

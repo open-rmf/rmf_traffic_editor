@@ -15,37 +15,47 @@
  *
 */
 
-#ifndef MODEL_H
-#define MODEL_H
+#ifndef VERTEX_H
+#define VERTEX_H
 
-/*
- * This class represents an instance of a model on a navigation map
- * The pixmap for visualization is stored in the EditorModel class; this
- * class instead represents the _placement_ of a Model reference on
- * a map.
- */
-
+#include <map>
 #include <string>
+#include <vector>
 #include <yaml-cpp/yaml.h>
 
-class Model
+#include <QColor>
+
+#include "param.h"
+
+class QGraphicsScene;
+
+
+class Vertex
 {
 public:
-  double x = 0.0;
-  double y = 0.0;
-  double z = 0.0;
-  double yaw = 0.0;
-  std::string model_name;
-  std::string instance_name;
-  bool selected = false;  // only for visualization, not saved to YAML
-  bool is_static = true;
+  double x;
+  double y;
+  std::string name;
 
-  Model();
+  bool selected;
 
-  YAML::Node to_yaml() const;
+  std::map<std::string, Param> params;
+
+  Vertex();
+  Vertex(double _x, double _y, const std::string &_name = std::string());
+
   void from_yaml(const YAML::Node &data);
+  YAML::Node to_yaml() const;
 
-  void set_param(const std::string &name, const std::string &value);
+  void set_param(const std::string& name, const std::string& value);
+
+  void draw(
+      QGraphicsScene *scene,
+      const double radius,
+      const QColor& color) const;
+
+  ////////////////////////////////////////////////////////////
+  static const std::vector<std::pair<std::string, Param::Type> > allowed_params;
 };
 
 #endif

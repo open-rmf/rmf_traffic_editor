@@ -18,7 +18,7 @@
 #include <QGraphicsScene>
 #include <QGraphicsSimpleTextItem>
 
-#include "vertex.h"
+#include "traffic_editor/vertex.h"
 using std::string;
 using std::vector;
 using std::pair;
@@ -114,8 +114,9 @@ void Vertex::draw(
 
   if (!name.empty()) {
     QGraphicsSimpleTextItem *item = scene->addSimpleText(
-        QString::fromStdString(name));
-    item->setBrush(color);  // QColor(255, 0, 0, 255));
+        QString::fromStdString(name),
+        QFont("Helvetica", 6));
+    item->setBrush(selected ? selected_color : color);
     item->setPos(x, y + radius);
   }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Open Source Robotics Foundation
+ * Copyright (C) 2019-2020 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,31 +15,28 @@
  *
 */
 
-#ifndef MAP_VIEW_H
-#define MAP_VIEW_H
-
-#include <QGraphicsView>
-#include <QWheelEvent>
+#ifndef PLUGINS_SIMULATION_H
+#define PLUGINS_SIMULATION_H
 
 #include "traffic_editor/building.h"
 
+class QGraphicsScene;
 
-class MapView : public QGraphicsView
+class Simulation
 {
-  Q_OBJECT
-
 public:
-  MapView(QWidget *parent = nullptr);
-  void zoom_fit(const Building& building, int level_index);
+  virtual ~Simulation() = default;
 
-protected:
-  void wheelEvent(QWheelEvent *event);
-  void mouseMoveEvent(QMouseEvent *e);
-  void mousePressEvent(QMouseEvent *e);
-  void mouseReleaseEvent(QMouseEvent *e);
+  virtual void load(const YAML::Node& config_data) = 0;
+  virtual void tick(Building& building) = 0;
+  virtual void reset(Building& building) = 0;
 
-  bool is_panning;
-  int pan_start_x, pan_start_y;
+  virtual void scene_update(
+      QGraphicsScene *scene,
+      Building& building,
+      const int level_idx) = 0;
+
+  virtual void scene_clear() = 0;
 };
 
 #endif

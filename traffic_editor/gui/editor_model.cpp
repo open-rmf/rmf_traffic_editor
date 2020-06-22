@@ -22,7 +22,7 @@
 #include <QImageReader>
 #include <QSettings>
 
-#include "editor_model.h"
+#include "traffic_editor/editor_model.h"
 
 using std::string;
 

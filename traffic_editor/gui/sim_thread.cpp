@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Open Source Robotics Foundation
+ * Copyright (C) 2019-2020 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,31 +15,27 @@
  *
 */
 
-#ifndef MAP_VIEW_H
-#define MAP_VIEW_H
+#include "sim_thread.h"
+#include <QTimer>
+#include "editor.h"
 
-#include <QGraphicsView>
-#include <QWheelEvent>
-
-#include "traffic_editor/building.h"
-
-
-class MapView : public QGraphicsView
+SimThread::SimThread()
+: QThread()
 {
-  Q_OBJECT
+}
 
-public:
-  MapView(QWidget *parent = nullptr);
-  void zoom_fit(const Building& building, int level_index);
+SimThread::~SimThread()
+{
+}
 
-protected:
-  void wheelEvent(QWheelEvent *event);
-  void mouseMoveEvent(QMouseEvent *e);
-  void mousePressEvent(QMouseEvent *e);
-  void mouseReleaseEvent(QMouseEvent *e);
-
-  bool is_panning;
-  int pan_start_x, pan_start_y;
-};
-
-#endif
+void SimThread::run()
+{
+  printf("entering SimThread::run()\n");
+  while (true)
+  {
+    usleep(100);  // todo: user-editable parameter here from GUI...
+    if (isInterruptionRequested())
+      break;
+    Editor::get_instance()->sim_tick();
+  }
+}

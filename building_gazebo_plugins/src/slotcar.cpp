@@ -64,19 +64,21 @@ private:
   double goal_yaw_tolerance = 2 * M_PI;
   int traj_wp_idx = 0;
   double last_update_time = 0.0;
+  double _last_pub_time = 0.0;
   bool load_complete = false;
   bool arrived_at_goal = false;
   int update_count = 0;
   std::string name;
   std::string current_task_id;
-  std::string _current_level_name;
+  std::unordered_map<std::string, double> _level_to_elevation;
+  bool _initialized_levels = false;
   bool adapter_error = false;
 
   // Vehicle dynamic constants
   // TODO(MXG): Consider fetching these values from model data
   // Radius of a tire
   double tire_radius = 0.1;
-  // Distance of a tire from the origin
+  // min_Distance of a tire from the origin
   double base_width = 0.52;
 
   double nominal_drive_speed = 0.5;         // nominal robot velocity (m/s)
@@ -88,7 +90,7 @@ private:
 
   double max_turn_acceleration = M_PI; // maximum robot turning acceleration (rad/s^2)
 
-  double stop_distance = 1.0;
+  double stop_min_distance = 1.0;
   double stop_radius = 1.0;
 
   std::pair<double, double> transform_coordinates(double x_target, double y_target)
@@ -189,6 +191,25 @@ private:
     return d_yaw;
   }
 
+  std::string get_level_name(const double z)
+  {
+    std::string level_name = "";
+    if (!_initialized_levels)
+      return level_name;
+    auto min_distance = std::numeric_limits<double>::max();
+    for (auto it = _level_to_elevation.begin(); it != _level_to_elevation.end();
+      ++it)
+    {
+      const double disp = std::abs(it->second - z);
+      if (disp < min_distance)
+      {
+        min_distance = disp;
+        level_name = it->first;
+      }
+    }
+    return level_name;
+  }
+
 };
 
 SlotcarPlugin::SlotcarPlugin()
@@ -267,9 +288,9 @@ void SlotcarPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf)
     max_turn_acceleration = sdf->Get<double>("max_turn_acceleration");
   RCLCPP_INFO(logger(), "Setting max turn acceleration to:" + std::to_string(max_turn_acceleration));
 
-  if (sdf->HasElement("stop_distance"))
-    stop_distance = sdf->Get<double>("stop_distance");
-  RCLCPP_INFO(logger(), "Setting stop distance to:" + std::to_string(stop_distance));
+  if (sdf->HasElement("stop_min_distance"))
+    stop_min_distance = sdf->Get<double>("stop_min_distance");
+  RCLCPP_INFO(logger(), "Setting stop min_distance to:" + std::to_string(stop_min_distance));
 
   if (sdf->HasElement("stop_radius"))
     stop_radius = sdf->Get<double>("stop_radius");
@@ -340,7 +361,7 @@ void SlotcarPlugin::OnUpdate()
       static_cast<uint32_t>((time-static_cast<double>(t_sec)) *1e9);
   const rclcpp::Time now{t_sec, t_nsec, RCL_ROS_TIME};
 
-  if (update_count % 100 == 0) // todo: be smarter, use elapsed sim time
+  if (time - _last_pub_time > 0.5) // publish at 2Hz
   {
     robot_state_msg.name = _model->GetName();
 
@@ -348,7 +369,7 @@ void SlotcarPlugin::OnUpdate()
     robot_state_msg.location.y = wp.Pos().Y();
     robot_state_msg.location.yaw = wp.Rot().Yaw();
     robot_state_msg.location.t = now;
-    robot_state_msg.location.level_name = _current_level_name;
+    robot_state_msg.location.level_name = get_level_name(wp.Pos().Z());
 
     robot_state_msg.task_id = current_task_id;
     robot_state_msg.path = remaining_path;
@@ -361,13 +382,11 @@ void SlotcarPlugin::OnUpdate()
     }
 
     robot_state_pub->publish(robot_state_msg);
+    _last_pub_time = time;
   }
 
   if (traj.empty())
     return;
-
-  if (remaining_path.size() != 0)
-    _current_level_name = remaining_path[0].level_name;
 
   double x_target = 0.0;
   double yaw_target = 0.0;
@@ -449,7 +468,7 @@ void SlotcarPlugin::OnUpdate()
   }
 
   const ignition::math::Vector3d stop_zone =
-      wp.Pos() + stop_distance*current_heading;
+      wp.Pos() + stop_min_distance*current_heading;
 
   bool need_to_stop = false;
   const auto& all_models = world->Models();
@@ -579,7 +598,7 @@ void SlotcarPlugin::path_request_cb(const rmf_fleet_msgs::msg::PathRequest::Shar
   {
     RCLCPP_ERROR(
           _ros_node->get_logger(),
-          "BIG ERROR IN INITIAL DISTANCE: " + std::to_string(initial_dist));
+          "BIG ERROR IN INITIAL min_DISTANCE: " + std::to_string(initial_dist));
 //    RCLCPP_ERROR(
 //          logger(),
 //          "Ignoring path request and stopping because it begins too far from "
@@ -598,53 +617,19 @@ void SlotcarPlugin::mode_request_cb(const rmf_fleet_msgs::msg::ModeRequest::Shar
 
 void SlotcarPlugin::map_cb(const building_map_msgs::msg::BuildingMap::SharedPtr msg)
 {
-  if (!_current_level_name.empty())
-    return;
-
-  if (!_model)
-  {
-    RCLCPP_ERROR(logger(), "Received map before model was initialized");
-    return;
-  }
-
   if (msg->levels.empty())
   {
     RCLCPP_ERROR(logger(), "Received empty building map");
     return;
   }
 
-  RCLCPP_INFO(logger(), "Received building map with %d levels", msg->levels.size());
-  const auto initial_pose = _model->WorldPose();
-  const double x = initial_pose.Pos().X();
-  const double y = initial_pose.Pos().Y();
+  RCLCPP_INFO(logger(),
+    "Received building map with %d levels", msg->levels.size());
 
-  auto compute_disp = [&](const building_map_msgs::msg::GraphNode& v) -> double
-  {
-    return std::sqrt(
-        std::pow(x - v.x, 2) +
-        std::pow(y - v.y, 2));
-  };
-
-  // TODO be smarter about this search
-  // Check if robot is 1m from a waypoint in a level and if so set
-  // _current_level_name to that level.name
   for (const auto& level : msg->levels)
-  {
-    for (const auto& graph : level.nav_graphs)
-    {
-      for (const auto& vertex : graph.vertices)
-      {
-        if (compute_disp(vertex) < 1.0)
-        {
-          _current_level_name = level.name;
-          RCLCPP_INFO(logger(), "Setting slotcar level name [%s]",
-            level.name.c_str());
-          return;
-        }
-      }
-    }
-  }
+    _level_to_elevation.insert({level.name, level.elevation});
 
+  _initialized_levels = true;
 }
 
 GZ_REGISTER_MODEL_PLUGIN(SlotcarPlugin)
