@@ -8,7 +8,6 @@ project(traffic_editor)
 
 find_package(yaml-cpp REQUIRED)
 find_package(ament_cmake REQUIRED)
-include(ExternalProject)
 
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
 # set(CMAKE_VERBOSE_MAKEFILE TRUE)
