@@ -37,6 +37,10 @@
 
 #include <yaml-cpp/yaml.h>
 
+#include "ament_index_cpp/get_package_share_directory.hpp"
+#include "ament_index_cpp/get_package_prefix.hpp"
+#include "ament_index_cpp/get_resource.hpp"
+
 #include "add_param_dialog.h"
 #include "building_dialog.h"
 #include "building_level_dialog.h"
@@ -476,20 +480,32 @@ void Editor::load_model_names()
       settings.value(preferences_keys::thumbnail_path).toString());
   if (thumbnail_path.isEmpty())
   {
-    std::string homedir;
+    std::string assets_dir;
+    std::string share_dir;
 
-    // Get home directory
-    homedir = getenv("HOME");
-    if ((homedir.c_str()) == NULL) {
-        homedir = getpwuid(getuid())->pw_dir;
+    try {
+      share_dir =
+          ament_index_cpp::get_package_share_directory("traffic_editor_assets");
+
+      ament_index_cpp::get_resource("traffic_editor_assets",
+                                    "assets",
+                                    assets_dir);
+    } catch (const ament_index_cpp::PackageNotFoundError& e) {
+      qWarning("Could not load default thumbnail directory! "
+               "traffic_editor_assets package not found in workspace!");
+      return;
     }
-    // Currently not sure how to do this the "right" way. For now assume
-    // everybody is building from source, I guess (?).
-    // todo: figure out something better in the future for binary installs
+
+    // Strip newlines from assets_dir
+    assets_dir.erase(std::remove(assets_dir.begin(), assets_dir.end(), '\n'),
+                     assets_dir.end());
+
+    // Obtain thumbnail path from traffic_editor_assets ament package
     thumbnail_path =
         QDir::cleanPath(
-            QDir(QApplication::applicationDirPath()).filePath((homedir
-              + "/.traffic_editor/assets/thumbnails").c_str())
+            QDir(QApplication::applicationDirPath()).filePath(
+                (share_dir + "/" + assets_dir + "/thumbnails").c_str()
+            )
         );
     settings.setValue(preferences_keys::thumbnail_path, thumbnail_path);
   }
