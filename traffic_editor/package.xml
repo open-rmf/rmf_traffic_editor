@@ -12,7 +12,9 @@
   <build_depend>traffic_editor_assets</build_depend>
   <build_depend>libignition-plugin-dev</build_depend>
   <build_depend>libignition-common3</build_depend>
-  
+
+    <exec_depend>traffic_editor_assets</exec_depend>
+    
   <export>
     <build_type>ament_cmake</build_type>
   </export>
