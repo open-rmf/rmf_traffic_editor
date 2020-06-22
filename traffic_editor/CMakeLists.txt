@@ -96,21 +96,6 @@ endif()
 
 set_property(TARGET traffic-editor PROPERTY ENABLE_EXPORTS 1)
 
-# Create assets folder directory, and clone it from git
-
-file(MAKE_DIRECTORY "$ENV{HOME}/.traffic_editor/")
-
-ExternalProject_Add(thumbnails_repo
-  GIT_REPOSITORY  https://github.com/osrf/traffic_editor_assets.git
-  GIT_TAG         master
-  INSTALL_COMMAND ""
-  BUILD_COMMAND ""
-  CONFIGURE_COMMAND ""
-  SOURCE_DIR "$ENV{HOME}/.traffic_editor/assets"
-)
-
-add_dependencies(traffic-editor thumbnails_repo)
-
 install(
   TARGETS traffic-editor
   LIBRARY DESTINATION lib
