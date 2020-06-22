@@ -155,7 +155,11 @@ class Floor:
         print(f'hole vertices: {hole_vert_lists}')
         print(f'lift vertices: {lift_vert_lists}')
 
-        self.polygon = shapely.geometry.Polygon(vert_list, hole_vert_lists)
+        self.polygon = shapely.geometry.Polygon(vert_list)
+
+        for hole_vert_list in hole_vert_lists:
+            hole_polygon = shapely.geometry.Polygon(hole_vert_list)
+            self.polygon = self.polygon.difference(hole_polygon)
 
         for lift_vert_list in lift_vert_lists:
             lift_polygon = shapely.geometry.Polygon(lift_vert_list)
