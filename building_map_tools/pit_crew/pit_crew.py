@@ -549,6 +549,7 @@ def download_model(model_name, author_name, version="tip",
 
                 if old_name != model_name:
                     sdf.attrib['name'] = model_name
+                    tree.write(os.path.join(extract_path, "model.sdf"))
                     logger.warning("Synced SDF name for %s! "
                                    "Changed from %s to %s"
                                    % (model_name, old_name, model_name))
