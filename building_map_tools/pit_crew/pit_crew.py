@@ -591,8 +591,12 @@ def download_model(model_name, author_name, version="tip",
                 # standpoint where it should more or less never occur.
                 for uri in tree.findall('.//uri'):
                     old_text = uri.text
+                    regex_search_exp = re.sub("[ _]",
+                                              "[ _]",
+                                              old_name)
+
                     replace_str = re.sub(
-                        "model://%s/" % old_name.replace(" ", "[ _]"),
+                        "model://%s/" % regex_search_exp,
                         "model://%s/" % model_name,
                         uri.text,
                         flags=re.IGNORECASE
