@@ -558,7 +558,8 @@ def download_model(model_name, author_name, version="tip",
                         old_text = uri.text
                         replace_str = re.sub("model://%s/" % old_name,
                                              "model://%s/" % model_name,
-                                             uri.text)
+                                             uri.text,
+                                             flags=re.IGNORECASE)
 
                         if old_text != replace_str:
                             uri.text = replace_str
@@ -570,7 +571,39 @@ def download_model(model_name, author_name, version="tip",
                     logger.warning("Synced SDF names for %s! "
                                    "Changed from %s to %s"
                                    % (model_name, old_name, model_name))
-                    tree.write(os.path.join(extract_path, "model.sdf"))
+
+                # NOTE(CH3): Sanitise malformed SDFs
+                # Replaces 'close-enough' names with the appropriate folder
+                # name. Eg. If folder name is Lamp Post, but internal reference
+                # uses lamp_post, replaces those with Lamp Post.
+                # NOTE(CH3): Introduces the edge case where Lamp Post
+                # is interdependent on another model called lamp_post. But
+                # that case should be so rare, and so bad in a coding standard
+                # standpoint where it should more or less never occur.
+                for uri in tree.findall('.//uri'):
+                    old_text = uri.text
+                    replace_str = re.sub(
+                        "model://%s/" % old_name.replace(" ", "[ _]"),
+                        "model://%s/" % model_name,
+                        uri.text,
+                        flags=re.IGNORECASE
+                    )
+
+                    if old_text != replace_str:
+                        uri.text = replace_str
+                        logger.warning("Sanitising name reference for %s. "
+                                       "Changed from %s to %s"
+                                       % (model_name,
+                                          old_text,
+                                          replace_str))
+
+                if old_name != model_name:
+                    logger.warning("Synced SDF names for %s! "
+                                   "Changed from %s to %s"
+                                   % (model_name, old_name, model_name))
+                tree.write(os.path.join(extract_path, "model.sdf"))
+
+
         except Exception as e:
             logger.error("Syncing of names for %s failed! %s"
                          % (model_name, e))
