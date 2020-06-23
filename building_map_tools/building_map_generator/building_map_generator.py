@@ -74,7 +74,7 @@ def main():
                                "using first valid author '%s'" %
                                (model_name, author_name))
 
-            pit_crew.download_model(model_name, author_name,
+            pit_crew.download_model(model_name, author_name, sync_names=True,
                                     download_path=args.model_path)
 
         if missing_models['missing']:

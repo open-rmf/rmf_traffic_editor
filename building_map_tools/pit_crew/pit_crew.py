@@ -446,7 +446,8 @@ def list_fuel_models(cache_file_path=None, update_cache=True, model_limit=-1,
 ###############################################################################
 
 def download_model(model_name, author_name, version="tip",
-                   download_path=None, overwrite=True, ign=False,
+                   download_path=None, overwrite=True, sync_names=False,
+                   ign=False,
                    dry_run=False):
     """
     Fetch and download a model from Fuel.
@@ -463,6 +464,8 @@ def download_model(model_name, author_name, version="tip",
             and unzipping the models into. Defaults to None. If None, function
             will use "~/.ignition/fuel/fuel.ignitionrobotics.org" or
             "~/.gazebo/models" depending on the state of the ign argument.
+        sync_names (bool, optional): Change downloaded model.sdf model name to
+            match folder name. Defaults to False.
         overwrite (bool, optional): Overwrite existing model files when
             downloading. Defaults to True.
         ign (bool, optional): Use Ignition file directory structure and default
@@ -537,6 +540,24 @@ def download_model(model_name, author_name, version="tip",
             f.write(_construct_license(metadata_dict))
 
         logger.info("%s downloaded to: %s" % (model_name, extract_path))
+
+        try:
+            if sync_names:
+                tree = ET.parse(os.path.join(extract_path, "model.sdf"))
+                sdf = tree.findall("model")[0]
+                old_name = sdf.attrib.get("name")
+
+                if old_name != model_name:
+                    sdf.attrib['name'] = model_name
+                    logger.warning("Synced SDF name for %s! "
+                                   "Changed from %s to %s"
+                                   % (model_name, old_name, model_name))
+        except Exception as e:
+            logger.error("Syncing of names for %s failed! %s"
+                         % (model_name, e))
+
+
+
         return True, metadata_dict
     except Exception as e:
         logger.error("Could not download model '%s'! %s" % (model_name, e))
