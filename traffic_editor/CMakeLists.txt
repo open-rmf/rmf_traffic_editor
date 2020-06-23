@@ -8,7 +8,6 @@ project(traffic_editor)
 
 find_package(yaml-cpp REQUIRED)
 find_package(ament_cmake REQUIRED)
-include(ExternalProject)
 
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
 # set(CMAKE_VERBOSE_MAKEFILE TRUE)
@@ -26,6 +25,7 @@ endif()
 find_package(Qt5 COMPONENTS Widgets Concurrent REQUIRED)
 find_package(ignition-plugin1 REQUIRED COMPONENTS all)
 find_package(ignition-common3 REQUIRED)
+find_package(ament_index_cpp REQUIRED)
 
 # OpenCV is an optional dependency, only needed if you want to make videos
 # which is only really needed if you're using a process simulation plugin
@@ -34,6 +34,7 @@ find_package(OpenCV QUIET)
 include_directories(.)
 include_directories(gui)
 include_directories(include)
+include_directories(${ament_index_cpp_INCLUDE_DIRS})
 
 add_executable(traffic-editor
   gui/add_param_dialog.cpp
@@ -84,28 +85,15 @@ target_link_libraries(traffic-editor
   ignition-plugin1::loader
   ignition-common3::core
   yaml-cpp
-  ${OpenCV_LIBS})
+  ${ament_index_cpp_LIBRARIES}
+  ${OpenCV_LIBS}
+)
 
 if (OpenCV_VERSION)
   target_compile_definitions(traffic-editor PUBLIC "HAS_OPENCV")
 endif()
 
 set_property(TARGET traffic-editor PROPERTY ENABLE_EXPORTS 1)
-
-# Create assets folder directory, and clone it from git
-
-file(MAKE_DIRECTORY "$ENV{HOME}/.traffic_editor/")
-
-ExternalProject_Add(thumbnails_repo
-  GIT_REPOSITORY  https://github.com/osrf/traffic_editor_assets.git
-  GIT_TAG         master
-  INSTALL_COMMAND ""
-  BUILD_COMMAND ""
-  CONFIGURE_COMMAND ""
-  SOURCE_DIR "$ENV{HOME}/.traffic_editor/assets"
-)
-
-add_dependencies(traffic-editor thumbnails_repo)
 
 install(
   TARGETS traffic-editor

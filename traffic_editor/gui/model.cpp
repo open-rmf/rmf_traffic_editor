@@ -203,7 +203,7 @@ void Model::draw(
   }
 
   pixmap_item->setPos(state.x, state.y);
-  pixmap_item->setRotation(-(state.yaw + M_PI / 2.0) * 180.0 / M_PI);
+  pixmap_item->setRotation(-state.yaw * 180.0 / M_PI);
 
   // make the model "glow" if it is selected
   if (selected)
