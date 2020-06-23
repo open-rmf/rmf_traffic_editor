@@ -574,8 +574,17 @@ def download_model(model_name, author_name, version="tip",
 
                 # NOTE(CH3): Sanitise malformed SDFs
                 # Replaces 'close-enough' names with the appropriate folder
-                # name. Eg. If folder name is Lamp Post, but internal reference
-                # uses lamp_post, replaces those with Lamp Post.
+                # name.
+                #
+                # E.g.: If folder name is Lamp Post, but internal reference
+                #       uses lamp_post, replaces those with Lamp Post.
+                #
+                # This catches cases where the internal reference is not
+                # replaced because it is simply not the same as the sdf model
+                # name.
+                #
+                # (Usually in the case of http://models.gazebosim.org/ models)
+
                 # NOTE(CH3): Introduces the edge case where Lamp Post
                 # is interdependent on another model called lamp_post. But
                 # that case should be so rare, and so bad in a coding standard
