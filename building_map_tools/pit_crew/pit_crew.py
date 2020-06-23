@@ -43,6 +43,7 @@ import glob
 import sys
 import io
 import os
+import re
 
 __all__ = [
     "swag",
@@ -542,17 +543,34 @@ def download_model(model_name, author_name, version="tip",
         logger.info("%s downloaded to: %s" % (model_name, extract_path))
 
         try:
+            # Sync all instances of the model name in sdf to the folder name
             if sync_names:
                 tree = ET.parse(os.path.join(extract_path, "model.sdf"))
                 sdf = tree.findall("model")[0]
                 old_name = sdf.attrib.get("name")
 
                 if old_name != model_name:
+                    # Sync name attribute
                     sdf.attrib['name'] = model_name
-                    tree.write(os.path.join(extract_path, "model.sdf"))
-                    logger.warning("Synced SDF name for %s! "
+
+                    # Sync instances of name in child tags
+                    for uri in tree.findall('.//uri'):
+                        old_text = uri.text
+                        replace_str = re.sub("model://%s/" % old_name,
+                                             "model://%s/" % model_name,
+                                             uri.text)
+
+                        if old_text != replace_str:
+                            uri.text = replace_str
+                            logger.warning("Internal name reference for %s "
+                                           "changed from %s to %s"
+                                           % (model_name,
+                                              old_text,
+                                              replace_str))
+                    logger.warning("Synced SDF names for %s! "
                                    "Changed from %s to %s"
                                    % (model_name, old_name, model_name))
+                    tree.write(os.path.join(extract_path, "model.sdf"))
         except Exception as e:
             logger.error("Syncing of names for %s failed! %s"
                          % (model_name, e))
