@@ -612,12 +612,9 @@ def download_model(model_name, author_name, version="tip",
                                    % (model_name, old_name, model_name))
                 tree.write(os.path.join(extract_path, "model.sdf"))
 
-
         except Exception as e:
             logger.error("Syncing of names for %s failed! %s"
                          % (model_name, e))
-
-
 
         return True, metadata_dict
     except Exception as e:
