@@ -166,8 +166,7 @@ void Model::draw(
 
         // Check if namespaced model_name is the name we are looking for
         // Match mismatched cases
-        if (ending_token == model_name)
-        // if (iequals(ending_token, model_name))
+        if (iequals(ending_token, model_name))
         {
           // Skip rematches from previous for loop
           if (model_name == editor_model.name) continue;
