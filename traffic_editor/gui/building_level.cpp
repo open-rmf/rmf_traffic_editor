@@ -580,7 +580,7 @@ void BuildingLevel::draw_door(QGraphicsScene *scene, const Edge &edge) const
       const double hinge_x = door_axis == "start" ? v_start.x : v_end.x;
       const double hinge_y = door_axis == "start" ? v_start.y : v_end.y;
       const double angle_offset = door_axis == "start" ? 0.0 : M_PI;
-      
+
       add_door_swing_path(
           door_motion_path,
           hinge_x,

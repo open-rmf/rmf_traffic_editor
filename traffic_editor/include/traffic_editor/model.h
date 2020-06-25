@@ -29,6 +29,7 @@
 #include "model_state.h"
 
 #include <string>
+#include <algorithm>
 #include <yaml-cpp/yaml.h>
 #include <QGraphicsScene>
 
@@ -46,6 +47,7 @@ public:
   bool selected = false;  // only for visualization, not saved to YAML
   bool is_static = true;
   bool is_active = false;
+  bool error_printed = false;
   std::string starting_level;  // used when resetting a test scenario
   QGraphicsPixmapItem* pixmap_item = nullptr;
 
