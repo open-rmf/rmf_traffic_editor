@@ -78,3 +78,11 @@ Click `Project->Save` or press `Ctrl+S` to save the project and building map.
 To set the scale of the drawing, click the `add measurement` tool (or press `M`) and drag from one vertex to another to add a real-world measurement line, which should show up as a pink line. Then click the `select` tool (or press `Esc`) and click on the line with the left button. This should populate the property-editor in the lower-right pane of the editor window. You can then specify the real-world length of the measurement line in meters. If you set more than one measurement line on a drawing, the editor will compute an average value of pixels-per-meter from all supplied measurements.
 
 Currently you need to re-load the document (closing the editor and re-opening) to re-compute the scale. This is not ideal, but is hopefully not a frequently-used feature. Typically the scale of a map is only set one time.
+
+### Adding lifts
+
+Click the "Add..." button in the "lifts" tab on the far right side of the main editor window. This will pop up a dialog where you can create a new lift. You can specify the name, position, size, and reference floor in the dialog.
+
+*Note: Do include the keywork "lift" in the lift name as for now this is how slotcars recognize lift models.*
+
+You can add lift doors by lick the "Add..." button below the box showing the lift. Set Door type to "Double sliding" (The only supported type for now!), and align the doors to the edge of the lift (represented by the green box). After that, select which door you want to use on each floor by simply checking the boxes on the left.
