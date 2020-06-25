@@ -42,3 +42,6 @@ models:
 - OpenRobotics/WhiteCabinet
 - OpenRobotics/WhiteChipChair
 - OpenRobotics/MiniSofa
+- OpenRobotics/RobotPlaceholder
+- OpenRobotics/TeleportDispenser
+- OpenRobotics/TeleportIngestor
