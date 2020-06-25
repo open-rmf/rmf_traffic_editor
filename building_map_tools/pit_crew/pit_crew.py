@@ -43,6 +43,7 @@ import glob
 import sys
 import io
 import os
+import re
 
 __all__ = [
     "swag",
@@ -137,7 +138,6 @@ def get_missing_models(model_names, model_path=None,
         if type(model_name) is ModelNames or type(model_name) is tuple:
             assert len(model_name) == 2, \
                 "Invalid model name tuple given: %s!" % model_name
-            model_names[key] = model_name[0]
 
     if update_cache:
         cache = build_and_update_cache(cache_file_path=cache_file_path,
@@ -146,27 +146,56 @@ def get_missing_models(model_names, model_path=None,
         cache = load_cache(cache_file_path, lower=lower)
 
     fuel_models = get_model_to_author_dict(cache['model_cache'], lower=lower)
-    local_models = set(
-        x[0] for x in get_local_model_name_tuples(
-            model_path, config_file=config_file, lower=lower,
-            use_dir_as_name=use_dir_as_name, ign=ign
-            )
-    )
+    local_models = {}
+
+    for local_model in get_local_model_name_tuples(
+        model_path, config_file=config_file, lower=lower,
+        use_dir_as_name=use_dir_as_name, ign=ign
+    ):
+        if local_model[0] in local_models:
+            local_models[local_model[0]].append(local_model[1])
+        else:
+            local_models[local_model[0]] = [local_model[1]]
 
     output = {'missing': [],
               'downloadable': [],
               'available': []}
 
     for model in model_names:
-        if lower:
-            model = model.lower()
+        # Obtain model and author names
+        if type(model) is str:
+            model_name = model
+            author_name = ""
+        elif type(model) is tuple:
+            model_name = model[0]
+            author_name = model[1]
+        elif type(model) is ModelNames:
+            model_name = model.model_name
+            author_name = model.author_name
 
-        if model in local_models:
-            output['available'].append(model)
-        elif model in fuel_models:
-            output['downloadable'].append((model, fuel_models[model]))
+        if lower:
+            model_name = model_name.lower()
+            author_name = author_name.lower()
+
+        if model_name in local_models:
+            output['available'].append(model_name)
+
+            if author_name:
+                if author_name not in local_models[model_name]:
+                    logger.warning("Model %s in local model directory is not "
+                                   "by the requested author %s!"
+                                   % (model_name, author_name))
+        elif model_name in fuel_models:
+            output['downloadable'].append((model_name,
+                                          fuel_models[model_name]))
+
+            if author_name:
+                if author_name not in fuel_models[model_name]:
+                    logger.warning("No models %s in Fuel are "
+                                   "by the requested author %s!"
+                                   % (model_name, author_name))
         else:
-            output['missing'].append(model)
+            output['missing'].append(model_name)
 
     return output
 
@@ -201,14 +230,19 @@ def get_local_model_name_tuples(path=None, config_file="model.config",
 
     if path is None:
         if ign:
-            path = os.path.expanduser("~/.ignition/fuel/")
+            path = "~/.ignition/fuel/"
         else:
-            path = os.path.expanduser("~/.gazebo/models/")
+            path = "~/.gazebo/models/"
         logger.warning("No local model path given! Using default %s instead!"
                        % path)
-    else:
-        assert os.path.isdir(path), \
-            "Path given must be a directory that exists!"
+
+    path = os.path.expanduser(path)
+
+    if not path.endswith("/"):
+        path += "/"
+
+    assert os.path.isdir(path), \
+        "Path given must be a directory that exists!"
 
     if ign:
         model_dir_iter = glob.glob(path + "*/*/models/*/")
@@ -242,7 +276,7 @@ def get_local_model_name_tuples(path=None, config_file="model.config",
 
                 output.add(name_tuple)
         else:
-            logger.warning("%s does not contain a valid config_file!"
+            logger.warning("%s does not contain a valid config_file! "
                            "Skipping..." % model_path)
 
     return output
@@ -413,7 +447,8 @@ def list_fuel_models(cache_file_path=None, update_cache=True, model_limit=-1,
 ###############################################################################
 
 def download_model(model_name, author_name, version="tip",
-                   download_path=None, overwrite=True, ign=False,
+                   download_path=None, overwrite=True, sync_names=False,
+                   ign=False,
                    dry_run=False):
     """
     Fetch and download a model from Fuel.
@@ -430,6 +465,8 @@ def download_model(model_name, author_name, version="tip",
             and unzipping the models into. Defaults to None. If None, function
             will use "~/.ignition/fuel/fuel.ignitionrobotics.org" or
             "~/.gazebo/models" depending on the state of the ign argument.
+        sync_names (bool, optional): Change downloaded model.sdf model name to
+            match folder name. Defaults to False.
         overwrite (bool, optional): Overwrite existing model files when
             downloading. Defaults to True.
         ign (bool, optional): Use Ignition file directory structure and default
@@ -452,6 +489,7 @@ def download_model(model_name, author_name, version="tip",
             logger.warning("No path given! Downloading to %s instead!"
                            % download_path)
         else:
+            download_path = os.path.expanduser(download_path)
             assert os.path.isdir(download_path), \
                 "Path given must be a directory that exists!"
 
@@ -461,7 +499,8 @@ def download_model(model_name, author_name, version="tip",
                                    model_name, version, model_name))
 
         assert metadata.status_code == 200, \
-            "Model %s does not exist!" % model_name
+            "Model '%s' by requested author '%s' does not exist on Fuel!" \
+            % (model_name, author_name)
 
         model = requests.get("%s/%s/models/%s/%s/%s.zip"
                              % (url_base, author_name,
@@ -502,9 +541,88 @@ def download_model(model_name, author_name, version="tip",
             f.write(_construct_license(metadata_dict))
 
         logger.info("%s downloaded to: %s" % (model_name, extract_path))
+
+        try:
+            # Sync all instances of the model name in sdf to the folder name
+            if sync_names:
+                tree = ET.parse(os.path.join(extract_path, "model.sdf"))
+                sdf = tree.findall("model")[0]
+                old_name = sdf.attrib.get("name")
+
+                if old_name != model_name:
+                    # Sync name attribute
+                    sdf.attrib['name'] = model_name
+
+                    # Sync instances of name in child tags
+                    for uri in tree.findall('.//uri'):
+                        old_text = uri.text
+                        replace_str = re.sub("model://%s/" % old_name,
+                                             "model://%s/" % model_name,
+                                             uri.text,
+                                             flags=re.IGNORECASE)
+
+                        if old_text != replace_str:
+                            uri.text = replace_str
+                            logger.warning("Internal name reference for %s "
+                                           "changed from %s to %s"
+                                           % (model_name,
+                                              old_text,
+                                              replace_str))
+                    logger.warning("Synced SDF names for %s! "
+                                   "Changed from %s to %s"
+                                   % (model_name, old_name, model_name))
+
+                # NOTE(CH3): Sanitise malformed SDFs
+                # Replaces 'close-enough' names with the appropriate folder
+                # name.
+                #
+                # E.g.: If folder name is Lamp Post, but internal reference
+                #       uses lamp_post, replaces those with Lamp Post.
+                #
+                # This catches cases where the internal reference is not
+                # replaced because it is simply not the same as the sdf model
+                # name.
+                #
+                # (Usually in the case of http://models.gazebosim.org/ models)
+
+                # NOTE(CH3): Introduces the edge case where Lamp Post
+                # is interdependent on another model called lamp_post. But
+                # that case should be so rare, and so bad in a coding standard
+                # standpoint where it should more or less never occur.
+                for uri in tree.findall('.//uri'):
+                    old_text = uri.text
+                    regex_search_exp = re.sub("[ _]",
+                                              "[ _]",
+                                              old_name)
+
+                    replace_str = re.sub(
+                        "model://%s/" % regex_search_exp,
+                        "model://%s/" % model_name,
+                        uri.text,
+                        flags=re.IGNORECASE
+                    )
+
+                    if old_text != replace_str:
+                        uri.text = replace_str
+                        logger.warning("Sanitising name reference for %s. "
+                                       "Changed from %s to %s"
+                                       % (model_name,
+                                          old_text,
+                                          replace_str))
+
+                if old_name != model_name:
+                    logger.warning("Synced SDF names for %s! "
+                                   "Changed from %s to %s"
+                                   % (model_name, old_name, model_name))
+                tree.write(os.path.join(extract_path, "model.sdf"))
+
+        except Exception as e:
+            logger.error("Syncing of names for %s failed! %s"
+                         % (model_name, e))
+
         return True, metadata_dict
     except Exception as e:
-        logger.error("Could not download %s! %s" % (model_name, e))
+        logger.error("Could not download model '%s'! %s" % (model_name, e))
         return False, None
 
 
@@ -544,11 +662,11 @@ def load_cache(cache_file_path=None, lower=True):
     """
     try:
         if cache_file_path is None:
-            cache_file_path = os.path.expanduser(
-                "~/.pit_crew/model_cache.json"
-            )
+            cache_file_path = "~/.pit_crew/model_cache.json"
             logger.warning("No path given! Using %s instead!"
                            % cache_file_path)
+
+        cache_file_path = os.path.expanduser(cache_file_path)
 
         with open(cache_file_path, "r") as f:
             loaded_cache = json.loads(f.read())
@@ -591,10 +709,12 @@ def build_and_update_cache(cache_file_path=None, write_to_cache=True,
         The model listing cache is local and used by pit_crew only.
     """
     if cache_file_path is None:
-        cache_file_path = os.path.expanduser("~/.pit_crew/model_cache.json")
+        cache_file_path = "~/.pit_crew/model_cache.json"
         logger.warning("No pit_crew cache path given! "
                        "Using default %s instead!"
                        % cache_file_path)
+
+    cache_file_path = os.path.expanduser(cache_file_path)
 
     # Check if directory exists and make it otherwise
     dir_name = os.path.dirname(cache_file_path)
