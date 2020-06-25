@@ -44,12 +44,16 @@ def main():
                     else:
                         model_set.add(model.model_name)
 
-        missing_models = pit_crew.get_missing_models(
-            model_set,
-            model_path=args.model_path,
-            cache_file_path=args.cache,
-            lower=True
-        )
+            missing_models = pit_crew.get_missing_models(
+                model_set,
+                model_path=args.model_path,
+                cache_file_path=args.cache,
+                lower=True
+            )
+        else:
+            missing_models = {'available': [],
+                              'downloadable': [],
+                              'missing': []}
 
         logger.info("\n== REQUESTED MODEL REPORT ==")
         pprint(missing_models)
@@ -58,7 +62,7 @@ def main():
         pprint(stringent_dict)
         print()
 
-        for downloadable_model in missing_models['downloadable']:
+        for downloadable_model in missing_models.get('downloadable', []):
             model_name, author_names = downloadable_model
 
             if model_name in stringent_dict:
@@ -77,8 +81,8 @@ def main():
             pit_crew.download_model(model_name, author_name, sync_names=True,
                                     download_path=args.model_path)
 
-        if missing_models['missing']:
-            logger.warning("\n\Missing models (not in local or Fuel):")
+        if missing_models.get('missing', []):
+            logger.warning("\nMissing models (not in local or Fuel):")
             pprint(missing_models['missing'])
 
         g.generate_gazebo_sdf(
