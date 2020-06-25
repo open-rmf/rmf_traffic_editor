@@ -7,17 +7,10 @@ Forthcoming
 
 1.0.0 (2020-06-22)
 ------------------
-* Merge pull request `#5 <https://github.com/osrf/traffic_editor_assets/issues/5>`_ from methylDragon/ch3/ament-package-wrap
-  Wrap assets as ament package, and expose assets path as ament resource
-* Shift thumbnails to assets directory
-* Wrap assets as ament package, and expose assets path as ament resource
-* Merge pull request `#4 <https://github.com/osrf/traffic_editor_assets/issues/4>`_ from osrf/fix/thumbnail-name-orientation
-  Fix/thumbnail name orientation
-* Renamed Table to the correct lowercase table.png thumbnail
-* Fixed table name, PotatoChipChair thumbnail orientation
-* Merge pull request `#2 <https://github.com/osrf/traffic_editor_assets/issues/2>`_ from methylDragon/ch3/migrate-traffic-editor-thumbnails
-  Migrate thumbnails from traffic_editor repo
-* Implement author namespaced thumbnails
-* Migrate thumbnails from traffic_editor repo
-* Initial commit
+Added
+=====
+* `assets` directory populated with thumbnail assets. https://github.com/osrf/traffic_editor_assets/commit/897e0eac29a184336f25bad3337eab908874ba29
+* Package wrapped as ament package, with assets exposed as ament resource. https://github.com/osrf/traffic_editor_assets/commit/38ddd5be8948743cc0684fbb24611f384a426354
+* Thumbnails namespaced by Fuel owner. https://github.com/osrf/traffic_editor_assets/commit/45af187042183f4530173ae40226bf6a874b16f7
+* Thumbnails migrated from `traffic_editor` repo. https://github.com/osrf/traffic_editor_assets/commit/372e6260fd1e77c8a83dc0f671f65b36eb797ea7
 * Contributors: Aaron Chong, Morgan Quigley, methylDragon
