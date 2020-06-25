@@ -322,10 +322,15 @@ void SlotcarPlugin::OnUpdate()
       if (m->IsStatic())
         continue;
 
-      if (m->GetName().find("door") != std::string::npos)
+      std::string name = m->GetName();
+      std::for_each(name.begin(), name.end(), [](char& c){
+        c = ::tolower(c);
+      });
+
+      if (name.find("door") != std::string::npos)
         infrastructure.insert(m.get());
 
-      if (m->GetName().find("lift") != std::string::npos)
+      if (name.find("lift") != std::string::npos)
         infrastructure.insert(m.get());
     }
   }
