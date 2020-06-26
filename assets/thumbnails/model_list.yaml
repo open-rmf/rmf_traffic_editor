@@ -47,3 +47,15 @@ models:
 - OpenRobotics/TeleportIngestor
 - OpenRobotics/TruckBox
 - OpenRobotics/TruckDelivery
+- OpenRobotics/AnesthesiaMachine
+- OpenRobotics/ArmoredPillars
+- OpenRobotics/BMWCart
+- OpenRobotics/CArm
+- OpenRobotics/InstrumentCart1
+- OpenRobotics/InstrumentCart2
+- OpenRobotics/MiR100
+- OpenRobotics/StorageRackCovered
+- OpenRobotics/SurgicalTrolleyMed
+- OpenRobotics/TrolleyBedPatient
+- OpenRobotics/TrolleyBox1
+- OpenRobotics/TrolleyBox2
