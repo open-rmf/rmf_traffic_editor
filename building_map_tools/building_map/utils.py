@@ -3,32 +3,32 @@ from xml.etree.ElementTree import ElementTree, Element, SubElement
 
 
 def lift_material():
-    material = Element('material')
-    ambient = SubElement(material, 'ambient')
-    diffuse = SubElement(material, 'diffuse')
-    specular = SubElement(material, 'specular')
-    emissive = SubElement(material, 'emissive')
+    material_ele = Element('material')
+    ambient_ele = SubElement(material_ele, 'ambient')
+    diffuse_ele = SubElement(material_ele, 'diffuse')
+    specular_ele = SubElement(material_ele, 'specular')
+    emissive_ele = SubElement(material_ele, 'emissive')
     # Might need to pick a better colour?
-    ambient.text = '0.5 0.5 0.5 1'
-    diffuse.text = '0.7 0.7 0.7 1'
-    specular.text = '0.6 0.6 0.6 1'
-    emissive.text = '0.1 0.1 0.1 1'
-    return material
+    ambient_ele.text = '0.5 0.5 0.5 1'
+    diffuse_ele.text = '0.7 0.7 0.7 1'
+    specular_ele.text = '0.6 0.6 0.6 1'
+    emissive_ele.text = '0.1 0.1 0.1 1'
+    return material_ele
 
 
 def door_material(options):
-        material_ele = Element('material')
-        # blue-green glass as a default, so it's easy to see
-        ambient_ele = SubElement(material_ele, 'ambient')
-        ambient_ele.text = '{} {} {} {}'.format(120, 60, 0, 0.6)
-        diffuse_ele = SubElement(material_ele, 'diffuse')
-        diffuse_ele.text = '{} {} {} {}'.format(120, 60, 0, 0.6)
-        if 'ignition' in options:
-            pbr_ele = SubElement(material_ele, 'pbr')
-            metal_ele = SubElement(pbr_ele, 'metal')
-            metalness_ele = SubElement(metal_ele, 'metalness')
-            metalness_ele.text = '0.0'
-        return material_ele
+    material_ele = Element('material')
+    # blue-green glass as a default, so it's easy to see
+    ambient_ele = SubElement(material_ele, 'ambient')
+    ambient_ele.text = '{} {} {} {}'.format(120, 60, 0, 0.6)
+    diffuse_ele = SubElement(material_ele, 'diffuse')
+    diffuse_ele.text = '{} {} {} {}'.format(120, 60, 0, 0.6)
+    if 'ignition' in options:
+        pbr_ele = SubElement(material_ele, 'pbr')
+        metal_ele = SubElement(pbr_ele, 'metal')
+        metalness_ele = SubElement(metal_ele, 'metalness')
+        metalness_ele.text = '0.0'
+    return material_ele
 
 
 def box(size):

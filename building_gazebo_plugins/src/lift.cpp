@@ -9,6 +9,7 @@
 // stl
 #include <utility>
 #include <unordered_map>
+#include <unordered_set>
 
 // msgs
 #include <rmf_lift_msgs/msg/lift_state.hpp>
@@ -31,16 +32,17 @@ class Lift
 
 private:
   std::string _lift_name;
-  std::string _cabin_joint_name = "cabin_joint";
+  std::string _cabin_joint_name;
   MotionParams _cabin_motion_params;
+
   bool _load_complete;
 
   std::vector<std::string> _floor_names;
   std::unordered_map<std::string, double> _floor_name_to_elevation;
   std::unordered_map<std::string, std::vector<std::string>> _floor_name_to_shaft_door_name;
   std::unordered_map<std::string, std::vector<std::string>> _floor_name_to_cabin_door_name;
-  std::unordered_map<std::string, DoorState::UniquePtr> _shaft_door_states;
-  std::unordered_map<std::string, DoorState::UniquePtr> _cabin_door_states;
+  std::unordered_map<std::string, DoorState::SharedPtr> _shaft_door_states;
+  std::unordered_map<std::string, DoorState::SharedPtr> _cabin_door_states;
 
   rclcpp::Node::SharedPtr _ros_node;
   rclcpp::Publisher<LiftState>::SharedPtr _lift_state_pub;
@@ -67,36 +69,32 @@ private:
   }
 
   Lift(const std::string& lift_name,
+    const std::string& joint_name,
     rclcpp::Node::SharedPtr node,
     const MotionParams& cabin_motion_params,
-    std::vector<std::string> floor_names,
-    std::unordered_map<std::string, double> floor_name_to_elevation,
+    const std::vector<std::string>& floor_names,
+    const std::unordered_map<std::string, double>& floor_name_to_elevation,
     std::unordered_map<std::string, std::vector<std::string>> floor_name_to_shaft_door_name,
     std::unordered_map<std::string, std::vector<std::string>> floor_name_to_cabin_door_name,
-    std::vector<std::string> shaft_door_names,  // Changed from passing the hashmap directly to
-    std::vector<std::string> cabin_door_names,  // passing vector of names to avoid UniquePtr issues
-    std::string init_floor_name)
+    std::unordered_map<std::string, DoorState::SharedPtr> shaft_door_states,
+    std::unordered_map<std::string, DoorState::SharedPtr> cabin_door_states,
+    const std::string reference_floor_name)
   : _lift_name(lift_name),
+    _cabin_joint_name(joint_name),
     _ros_node(node),
     _cabin_motion_params(cabin_motion_params),
     _floor_names(floor_names),
     _floor_name_to_elevation(floor_name_to_elevation),
     _floor_name_to_shaft_door_name(floor_name_to_shaft_door_name),
-    _floor_name_to_cabin_door_name(floor_name_to_cabin_door_name)
+    _floor_name_to_cabin_door_name(floor_name_to_cabin_door_name),
+    _shaft_door_states(shaft_door_states),
+    _cabin_door_states(cabin_door_states)
   {
-    for (std::string cabin_door_name : cabin_door_names)
-      _cabin_door_states[cabin_door_name] = nullptr;
-    for (std::string shaft_door_name : shaft_door_names)
-      _shaft_door_states[shaft_door_name] = nullptr;
-
     // prints out available floors for this lift
     std::cout << "Loaded lift: " << _lift_name << std::endl;
     std::cout << "Names  |  Elevations" << std::endl;
     for (const auto& it : _floor_name_to_elevation)
-    {
-      std::cout << it.first << "  |  " << _floor_name_to_elevation[it.first] << std::endl;
-    }
-    std::cout << std::endl;
+      std::cout << it.first << "  |  " << it.second << std::endl;
 
     // initialize pub & sub
     _lift_state_pub = _ros_node->create_publisher<LiftState>(
@@ -108,43 +106,55 @@ private:
     _lift_request_sub = _ros_node->create_subscription<LiftRequest>(
       "/lift_requests", rclcpp::SystemDefaultsQoS(),
       [&](LiftRequest::UniquePtr msg)
-    {
-      std::cout << "Incoming lift request!" << std::endl;
-      if (msg->lift_name == _lift_name)
       {
-        if (_lift_request)    // Check if previous request is finished
+        if (msg->lift_name != _lift_name)
+        return;
+
+        if (_floor_name_to_elevation.find(msg->destination_floor) ==
+            _floor_name_to_elevation.end())
+        {
+          RCLCPP_INFO(_ros_node->get_logger(),
+            "Received request for unavailable floor [%s]",
+            msg->destination_floor.c_str());
+          return;
+        }
+
+        if (_lift_request)  // Lift is still processing a previous request
         {
           RCLCPP_INFO(_ros_node->get_logger(),
             "Failed to request: [%s] is busy at the moment",
             _lift_name.c_str());
           return;
         }
+
         _lift_request = std::move(msg);
-        std::cout << "Update lift request successfull!" << std::endl;
-      }
-    });
+        RCLCPP_INFO(_ros_node->get_logger(),
+          "Lift [%s] requested at level [%s]",
+          _lift_name.c_str(), _lift_request->destination_floor.c_str());
+      });
 
     _door_state_sub = _ros_node->create_subscription<DoorState>(
       "/door_states", rclcpp::SystemDefaultsQoS(),
-      [&](DoorState::UniquePtr msg)
-    {
-      std::string name = msg->door_name;
-      if (_cabin_door_states.count(name) > 0)
-        _cabin_door_states[name] = std::move(msg);
-      else if (_shaft_door_states.count(name) > 0)
-        _shaft_door_states[name] = std::move(msg);
-    });
+      [&](DoorState::SharedPtr msg)
+      {
+        std::string name = msg->door_name;
+        if (_cabin_door_states.find(name) != _cabin_door_states.end())
+          _cabin_door_states[name] = std::move(msg);
+        else if (_shaft_door_states.find(name) != _shaft_door_states.end())
+          _shaft_door_states[name] = std::move(msg);
+      });
 
     // Initial request to move lift to the initial floor
-    _lift_request.reset(new LiftRequest);
+    _lift_request = std::make_unique<LiftRequest>();
     _lift_request->lift_name = _lift_name;
-    _lift_request->destination_floor = init_floor_name;
+    _lift_request->destination_floor = reference_floor_name;
     _lift_request->door_state = LiftRequest::DOOR_CLOSED;
 
     // Initial lift state
     _lift_state.lift_name = _lift_name;
+    // TODO ensure lift spawns at reference_floor_name 
     _lift_state.current_floor = _floor_names[0];
-    _lift_state.destination_floor = init_floor_name;
+    _lift_state.destination_floor = reference_floor_name;
     _lift_state.door_state = LiftState::DOOR_CLOSED;
     _lift_state.motion_state = LiftState::MOTION_STOPPED;
     _lift_state.available_floors.clear();
@@ -168,27 +178,36 @@ public:
     SdfPtrT& sdf)
   {
     MotionParams cabin_motion_params;
+    std::string joint_name;
     std::vector<std::string> floor_names;
     std::unordered_map<std::string, double> floor_name_to_elevation;
-    std::unordered_map<std::string, std::vector<std::string>> floor_name_to_shaft_door_name;
-    std::unordered_map<std::string, std::vector<std::string>> floor_name_to_cabin_door_name;
-    std::vector<std::string> shaft_door_names;
-    std::vector<std::string> cabin_door_names;
+    std::unordered_map<std::string,
+      std::vector<std::string>> floor_name_to_shaft_door_name;
+    std::unordered_map<std::string,
+      std::vector<std::string>> floor_name_to_cabin_door_name;
+    std::unordered_map<std::string, std::string> cabin_to_shaft_door;
+    std::unordered_map<std::string, DoorState::SharedPtr> shaft_door_states;
+    std::unordered_map<std::string, DoorState::SharedPtr> cabin_door_states;
+
 
     auto sdf_clone = sdf->Clone();
 
-    std::cout << "Loading lift cabin motion parameters: "
-      << std::endl;
-
     // load lift cabin motion parameters
-    get_sdf_param_if_available<double>(sdf_clone, "v_max_cabin", cabin_motion_params.v_max);
-    get_sdf_param_if_available<double>(sdf_clone, "a_max_cabin", cabin_motion_params.a_max);
-    get_sdf_param_if_available<double>(sdf_clone, "a_nom_cabin", cabin_motion_params.a_nom);
-    get_sdf_param_if_available<double>(sdf_clone, "dx_min_cabin", cabin_motion_params.dx_min);
-    get_sdf_param_if_available<double>(sdf_clone, "f_max_cabin", cabin_motion_params.f_max);
+    get_sdf_param_if_available<double>(sdf_clone, "v_max_cabin",
+      cabin_motion_params.v_max);
+    get_sdf_param_if_available<double>(sdf_clone, "a_max_cabin",
+      cabin_motion_params.a_max);
+    get_sdf_param_if_available<double>(sdf_clone, "a_nom_cabin",
+      cabin_motion_params.a_nom);
+    get_sdf_param_if_available<double>(sdf_clone, "dx_min_cabin",
+      cabin_motion_params.dx_min);
+    get_sdf_param_if_available<double>(sdf_clone, "f_max_cabin",
+      cabin_motion_params.f_max);
+    if (!get_sdf_param_required(sdf_clone, "cabin_joint_name",
+      joint_name))
+      return nullptr;
 
-    std::cout << "Loading lift floors' parameters: " << std::endl;
-    // for each allocated floor, load the floor name and elevation
+    // load the floor name and elevation for each floor
     sdf::ElementPtr floor_element;
     if (!get_element_required(sdf, "floor", floor_element))
     {
@@ -211,52 +230,51 @@ public:
         return nullptr;
       }
       floor_names.push_back(floor_name);
-      floor_name_to_elevation[floor_name] = floor_elevation;
-
-      floor_name_to_cabin_door_name[floor_name] = std::vector<std::string>();
-      floor_name_to_shaft_door_name[floor_name] = std::vector<std::string>();
+      floor_name_to_elevation.insert({floor_name, floor_elevation});
 
       sdf::ElementPtr door_pair_element;
-      if (!get_element_required(floor_element, "door_pair", door_pair_element))
-        continue;
-      while (door_pair_element)
+      if (get_element_required(floor_element, "door_pair", door_pair_element))
       {
-        std::string shaft_door_name;
-        std::string cabin_door_name;
-        if (!get_sdf_attribute_required<std::string>(door_pair_element, "cabin_door", cabin_door_name) ||
-            !get_sdf_attribute_required<std::string>(door_pair_element, "shaft_door", shaft_door_name))
+        while (door_pair_element)
         {
-          RCLCPP_ERROR(node->get_logger(),
-            " -- Missing required lift door attributes for [%s] plugin",
-            lift_name.c_str());
-          return nullptr;
-        }
-        floor_name_to_cabin_door_name[floor_name].push_back(cabin_door_name);
-        floor_name_to_shaft_door_name[floor_name].push_back(shaft_door_name);
-        if (std::count(cabin_door_names.begin(), cabin_door_names.end(), cabin_door_name))
-          cabin_door_names.push_back(cabin_door_name);
-        if (std::count(shaft_door_names.begin(), shaft_door_names.end(), shaft_door_name))
-          shaft_door_names.push_back(shaft_door_name);
+          std::string shaft_door_name;
+          std::string cabin_door_name;
+          if (!get_sdf_attribute_required<std::string>(door_pair_element, "cabin_door", cabin_door_name) ||
+              !get_sdf_attribute_required<std::string>(door_pair_element, "shaft_door", shaft_door_name))
+          {
+            RCLCPP_ERROR(node->get_logger(),
+              " -- Missing required lift door attributes for [%s] plugin",
+              lift_name.c_str());
+            return nullptr;
+          }
+          floor_name_to_cabin_door_name.insert({floor_name,{cabin_door_name}});
+          cabin_to_shaft_door.insert({cabin_door_name, shaft_door_name});
+          floor_name_to_shaft_door_name[floor_name].push_back(shaft_door_name);
+          shaft_door_states.insert({shaft_door_name, nullptr});
+          cabin_door_states.insert({cabin_door_name, nullptr});
 
-        door_pair_element = door_pair_element->GetNextElement("door_pair");
+          door_pair_element = door_pair_element->GetNextElement("door_pair");
+        }
       }
       floor_element = floor_element->GetNextElement("floor");
     }
 
-    std::string init_floor_name = floor_names[0];
-    get_sdf_param_if_available<std::string>(sdf_clone, "reference_floor", init_floor_name);
+    assert(!floor_names.empty());
+    std::string& reference_floor_name = floor_names[0];
+    get_sdf_param_if_available<std::string>(sdf_clone, "reference_floor", reference_floor_name);
 
     std::shared_ptr<Lift> lift(new Lift(
       lift_name,
+      joint_name,
       node,
       cabin_motion_params,
       floor_names,
       floor_name_to_elevation,
       floor_name_to_shaft_door_name,
       floor_name_to_cabin_door_name,
-      cabin_door_names,
-      shaft_door_names,
-      init_floor_name));
+      shaft_door_states,
+      cabin_door_states,
+      reference_floor_name));
 
     return lift;
   }
@@ -268,7 +286,7 @@ public:
     
     // Update lift state
     update_cabin_state(position, velocity);
-    update_door_state();
+    update_lift_door_state();
 
     // Construct LiftUpdateResult
     LiftUpdateResult result;
@@ -280,19 +298,14 @@ public:
     {
       std::string desired_floor = _lift_request->destination_floor;
       uint8_t desired_door_state = _lift_request->door_state;
-      auto it = _floor_name_to_elevation.find(desired_floor);
-      if (it == _floor_name_to_elevation.end())
-      {
-        std::cout << "Received invalid floor name: " << desired_floor
-          << ", ignoring..." << std::endl;
-        _lift_request = nullptr;
-      }
-      else if ((_lift_state.current_floor == desired_floor) &&
+
+      if ((_lift_state.current_floor == desired_floor) &&
         (_lift_state.door_state == desired_door_state) &&
         (_lift_state.motion_state == LiftState::MOTION_STOPPED))
       {
-        std::cout << "Reached floor: " << desired_floor << " with doors " <<
-          (desired_door_state==0 ? "closed" : "open") << std::endl;
+        RCLCPP_INFO(_ros_node->get_logger(),
+          "Reached floor %s with doors %s",
+          desired_floor.c_str(), desired_door_state==0 ? "closed" : "open");
         _lift_request = nullptr;
       }
       else
@@ -306,10 +319,10 @@ public:
           if (_lift_state.door_state != LiftState::DOOR_CLOSED)
           {
             close_doors(time);
-            if (_lift_state.motion_state != LiftState::MOTION_STOPPED)
-            {
-              result.velocity = get_step_velocity(dt, position, velocity);
-            }
+            // if (_lift_state.motion_state != LiftState::MOTION_STOPPED)
+            // {
+            //   result.velocity = get_step_velocity(dt, position, velocity);
+            // }
           }
           else
           {
@@ -325,7 +338,7 @@ public:
           else
           {
             if (desired_door_state == LiftState::DOOR_OPEN)
-            {;
+            {
               open_doors(time);
             }
             else if (desired_door_state == LiftState::DOOR_CLOSED)
@@ -363,7 +376,7 @@ public:
 
   void update_cabin_state(const double position, const double velocity)
   {
-    // Find closest floor and set to current floor
+    // TODO update current_floor only when lift reaches its destination
     double smallest_error = std::numeric_limits<double>::max();
     std::string closest_floor_name;
     for (const auto& floor : _floor_name_to_elevation)
@@ -441,18 +454,23 @@ public:
     }
   }
 
-  uint32_t get_cabin_door_state()
+  uint32_t get_door_state(
+    const std::unordered_map<std::string, std::vector<std::string>>& floor_to_door_map,
+    const std::unordered_map<std::string, DoorState::SharedPtr>& door_states)
   {
-    int open_count = 0; int closed_count = 0;
-    int num = _floor_name_to_cabin_door_name[_lift_state.current_floor].size();
-    for (std::string cabin_door : _floor_name_to_cabin_door_name[_lift_state.current_floor])
+    std::size_t open_count = 0; std::size_t closed_count = 0;
+    const auto doors = floor_to_door_map.find(
+      _lift_state.current_floor)->second;
+    const std::size_t num = doors.size();
+    for (std::string door : doors)
     {
-      if ((_cabin_door_states[cabin_door]) &&
-        (_cabin_door_states[cabin_door]->current_mode.value == DoorMode::MODE_CLOSED))
+      const auto& door_state = door_states.find(door)->second;
+      if ((door_state) &&
+        (door_state->current_mode.value == DoorMode::MODE_CLOSED))
         closed_count++;
 
-      else if ((_cabin_door_states[cabin_door]) &&
-        (_cabin_door_states[cabin_door]->current_mode.value == DoorMode::MODE_OPEN))
+      else if ((door_state) &&
+        (door_state->current_mode.value == DoorMode::MODE_OPEN))
         open_count++;
     }
 
@@ -466,35 +484,12 @@ public:
       return DoorMode::MODE_MOVING;
   }
 
-  uint32_t get_shaft_door_state()
+  void update_lift_door_state()
   {
-    int open_count = 0; int closed_count = 0;
-    int num = _floor_name_to_shaft_door_name[_lift_state.current_floor].size();
-    for (std::string shaft_door : _floor_name_to_shaft_door_name[_lift_state.current_floor])
-    {
-      if ((_shaft_door_states[shaft_door]) &&
-        (_shaft_door_states[shaft_door]->current_mode.value == DoorMode::MODE_CLOSED))
-        closed_count++;
-      
-      else if ((_shaft_door_states[shaft_door]) &&
-        (_shaft_door_states[shaft_door]->current_mode.value == DoorMode::MODE_OPEN))
-        open_count++;
-    }
-
-    if (open_count == num)
-      return DoorMode::MODE_OPEN;
-
-    else if (closed_count == num)
-      return DoorMode::MODE_CLOSED;
-
-    else
-      return DoorMode::MODE_MOVING;
-  }
-
-  void update_door_state()
-  {
-    uint32_t cabin_door_state = get_cabin_door_state();
-    uint32_t shaft_door_state = get_shaft_door_state();
+    uint32_t cabin_door_state = get_door_state(
+      _floor_name_to_cabin_door_name, _cabin_door_states);
+    uint32_t shaft_door_state = get_door_state(
+      _floor_name_to_shaft_door_name, _shaft_door_states);
 
     if ((cabin_door_state == DoorMode::MODE_OPEN) && (shaft_door_state == DoorMode::MODE_OPEN))
       _lift_state.door_state = LiftState::DOOR_OPEN;
@@ -512,10 +507,6 @@ public:
     return _cabin_joint_name;
   }
 
-  bool load_complete()
-  {
-    return _load_complete;
-  }
 };
 
 
@@ -530,12 +521,12 @@ private:
   
   std::shared_ptr<Lift> _lift;
   
-  bool _load_complete;
+  bool _initialized;
 
 public:
   LiftPlugin()
   {
-    _load_complete = false;
+    _initialized = false;
   }
 
   void Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf) override
@@ -550,33 +541,36 @@ public:
     // load Lift object
     _lift = Lift::make(_model->GetName(), _ros_node, sdf);
     if (!_lift)
-      return;
-
-    _cabin_joint_ptr = _model->GetJoint(_lift->get_joint_name());
-    _load_complete = _lift->load_complete();
-
-    // link to Gazebo world if everything is completely loaded
-    if (!_load_complete)
     {
       RCLCPP_ERROR(_ros_node->get_logger(),
         "Failed when loading [%s]",
         _model->GetName().c_str());
+      return;
     }
-    else
+     
+    _cabin_joint_ptr = _model->GetJoint(_lift->get_joint_name());
+    if (!_cabin_joint_ptr)
     {
-      _update_connection = gazebo::event::Events::ConnectWorldUpdateBegin(
-        std::bind(&LiftPlugin::on_update, this));
-
-      RCLCPP_INFO(_ros_node->get_logger(),
-        "Finished loading [%s]",
-        _model->GetName().c_str());
+      RCLCPP_ERROR(_ros_node->get_logger(),
+        " -- Model is missing the joint [%s]",
+        _lift->get_joint_name().c_str());
+      return;
     }
+
+    _update_connection = gazebo::event::Events::ConnectWorldUpdateBegin(
+      std::bind(&LiftPlugin::on_update, this));
+
+    RCLCPP_INFO(_ros_node->get_logger(),
+      "Finished loading [%s]",
+      _model->GetName().c_str());
+    
+    _initialized = true;
   }
 
 private:
   void on_update()
   {
-    if (!_load_complete)
+    if (!_initialized)
       return;
     
     const double t = _model->GetWorld()->SimTime().Double();
