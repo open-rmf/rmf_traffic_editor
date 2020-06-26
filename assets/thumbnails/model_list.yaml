@@ -57,3 +57,5 @@ models:
 - OpenRobotics/StorageRackCovered
 - OpenRobotics/SurgicalTrolleyMed
 - OpenRobotics/TrolleyBedPatient
+- OpenRobotics/TrolleyBox1
+- OpenRobotics/TrolleyBox2
