@@ -45,3 +45,5 @@ models:
 - OpenRobotics/RobotPlaceholder
 - OpenRobotics/TeleportDispenser
 - OpenRobotics/TeleportIngestor
+- OpenRobotics/TruckBox
+- OpenRobotics/TruckDelivery
