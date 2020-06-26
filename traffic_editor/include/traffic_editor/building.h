@@ -166,6 +166,8 @@ public:
   double level_meters_per_pixel(const std::string& level_name) const;
 
   bool get_model(const std::string& name, Model&& model);
+
+  void rotate_all_models(const double rotation);
 };
 
 #endif

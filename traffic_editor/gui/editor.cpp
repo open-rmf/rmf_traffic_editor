@@ -55,6 +55,7 @@
 #include "project_dialog.h"
 #include "scenario_table.h"
 #include "traffic_table.h"
+#include "ui_transform_dialog.h"
 
 using std::string;
 using std::isnan;
@@ -268,6 +269,11 @@ Editor::Editor()
       "&Project properties...",
       this,
       &Editor::edit_project_properties);
+  edit_menu->addSeparator();
+  edit_menu->addAction(
+      "&Transform...",
+      this,
+      &Editor::edit_transform);
   edit_menu->addSeparator();
   edit_menu->addAction("&Preferences...", this, &Editor::edit_preferences);
 
@@ -744,6 +750,21 @@ void Editor::edit_project_properties()
   ProjectDialog project_dialog(project);
   if (project_dialog.exec() == QDialog::Accepted)
     setWindowModified(true);
+}
+
+void Editor::edit_transform()
+{
+  QDialog dialog;
+  Ui::TransformDialog dialog_ui;
+  dialog_ui.setupUi(&dialog);
+  if (dialog.exec() != QDialog::Accepted)
+    return;
+
+  const double rotation =
+      dialog_ui.rotate_all_models_line_edit->text().toDouble();
+  project.building.rotate_all_models(rotation);
+  create_scene();
+  setWindowModified(true);
 }
 
 void Editor::zoom_fit()
@@ -1875,7 +1896,7 @@ void Editor::mouse_rotate(
 
     if (mouse_motion_model)
       mouse_motion_model->setRotation(
-          -(mouse_yaw + M_PI / 2.0) * 180.0 / M_PI);
+          (-mouse_yaw + M_PI / 2.0) * 180.0 / M_PI);
   }
 }
 
