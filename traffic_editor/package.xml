@@ -10,7 +10,7 @@
   <build_depend>ament_cmake</build_depend>
   <build_depend>ament_index_cpp</build_depend>
   <build_depend>libignition-plugin-dev</build_depend>
-  <build_depend>libignition-common3</build_depend>
+  <build_depend>libignition-common3-dev</build_depend>
     
   <export>
     <build_type>ament_cmake</build_type>
