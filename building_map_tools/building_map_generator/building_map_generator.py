@@ -78,7 +78,7 @@ def main():
                                     download_path=args.model_path)
 
         if missing_models['missing']:
-            logger.warning("\n\Missing models (not in local or Fuel):")
+            logger.warning("\nMissing models (not in local or Fuel):")
             pprint(missing_models['missing'])
 
         g.generate_gazebo_sdf(

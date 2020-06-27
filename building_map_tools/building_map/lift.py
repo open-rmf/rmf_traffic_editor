@@ -177,7 +177,7 @@ class Lift:
             self.doors = self.parse_lift_doors(yaml_node['doors'])
 
         # for wall generation
-        # self.end_points stoes 1-dimensional positions of endpoints of walls
+        # self.end_points stores 1-dimensional positions of endpoints of walls
         # on each side of the cabin in sorted arrays
         self.end_points = {'front': [-self.width/2, self.width/2],
                            'back': [-self.width/2, self.width/2],
@@ -200,7 +200,7 @@ class Lift:
                                   self.gap))
         return doors
 
-    def parse_lift_vertices(self):
+    def get_lift_vertices(self):
         # parse lift shaft cavity corner vertices
         vertices = []
         d = self.depth / 2 + self.gap
