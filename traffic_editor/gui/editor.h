@@ -133,6 +133,7 @@ private:
   void edit_preferences();
   void edit_building_properties();
   void edit_project_properties();
+  void edit_transform();
 
   void level_add();
   void level_edit();

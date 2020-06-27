@@ -641,3 +641,10 @@ bool Building::get_model(const string& instance_name, Model&& _model)
       }
   return false;
 }
+
+void Building::rotate_all_models(const double rotation)
+{
+  for (auto& level : levels)
+    for (auto& model : level.models)
+      model.state.yaw += rotation;
+}
