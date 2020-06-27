@@ -20,10 +20,6 @@ class Building:
         for level_name, level_yaml in yaml_node['levels'].items():
             self.levels[level_name] = Level(level_yaml, level_name)
 
-        self.lifts = {}
-        for lift_name, lift_yaml in yaml_node['lifts'].items():
-            self.lifts[lift_name] = Lift(lift_yaml, lift_name)
-
         if 'reference_level_name' in yaml_node:
             self.reference_level_name = yaml_node['reference_level_name']
         else:
@@ -34,11 +30,31 @@ class Building:
 
         self.transform_all_vertices()
 
+        self.lifts = {}
+        for lift_name, lift_yaml in yaml_node['lifts'].items():
+            if 'reference_level_name' in lift_yaml:
+                ref_level_name = lift_yaml['reference_level_name']
+                transform = self.levels[ref_level_name].transform
+            else:
+                transform = self.ref_level.transform
+            self.lifts[lift_name] = \
+                Lift(lift_yaml, lift_name, transform, self.levels)
+
+        self.set_lift_vert_lists()
+
     def __str__(self):
         s = ''
         for level_name, level in self.levels.items():
             s += f'{level_name}: ({len(level.vertices)} vertices) '
         return s
+
+    def set_lift_vert_lists(self):
+        lift_vert_lists = []
+        for lift_name, lift in self.lifts.items():
+            lift_vert_lists.append(lift.get_lift_vertices())
+
+        for level_name, level in self.levels.items():
+            level.set_lift_vert_lists(lift_vert_lists)
 
     def transform_all_vertices(self):
         """ Transform all vertices on all levels to a unified system """
@@ -193,6 +209,10 @@ class Building:
             uri_ele.text = f'model://{level_model_name}'
             pose_ele = SubElement(level_include_ele, 'pose')
             pose_ele.text = f'0 0 {level.elevation} 0 0 0'
+
+        for lift_name, lift in self.lifts.items():
+            lift.generate_shaft_doors(world)
+            lift.generate_cabin(world)
 
         gui_ele = world.find('gui')
         c = self.center()

@@ -133,7 +133,8 @@ class Floor:
         model_name,
         model_path,
         transformed_vertices,
-        holes
+        holes,
+        lift_vert_lists
     ):
         print(f'generating floor polygon {floor_cnt} on floor {model_name}')
 
@@ -152,8 +153,17 @@ class Floor:
                 hole_vertices.append((vx, vy))
             hole_vert_lists.append(hole_vertices)
         print(f'hole vertices: {hole_vert_lists}')
+        print(f'lift vertices: {lift_vert_lists}')
 
-        self.polygon = shapely.geometry.Polygon(vert_list, hole_vert_lists)
+        self.polygon = shapely.geometry.Polygon(vert_list)
+
+        for hole_vert_list in hole_vert_lists:
+            hole_polygon = shapely.geometry.Polygon(hole_vert_list)
+            self.polygon = self.polygon.difference(hole_polygon)
+
+        for lift_vert_list in lift_vert_lists:
+            lift_polygon = shapely.geometry.Polygon(lift_vert_list)
+            self.polygon = self.polygon.difference(lift_polygon)
 
         link_ele = SubElement(model_ele, 'link')
         link_ele.set('name', f'floor_{floor_cnt}')

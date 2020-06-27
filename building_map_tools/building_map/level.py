@@ -53,6 +53,8 @@ class Level:
 
         self.transformed_vertices = []  # will be calculated in a later pass
 
+        self.lift_vert_lists = []  # will be calculated in a later pass
+
         self.meas = []
         if 'measurements' in yaml_node:
             self.meas = self.parse_edge_sequence(yaml_node['measurements'])
@@ -103,6 +105,9 @@ class Level:
             v.x, v.y = transformed
             v.z = self.elevation
             self.transformed_vertices.append(v)
+
+    def set_lift_vert_lists(self, lift_vert_lists):
+        self.lift_vert_lists = lift_vert_lists
 
     def calculate_scale_using_measurements(self):
         # use the measurements to estimate scale for this level
@@ -420,7 +425,8 @@ class Level:
                 model_name,
                 model_path,
                 self.transformed_vertices,
-                self.holes)
+                self.holes,
+                self.lift_vert_lists)
 
     def write_sdf(self, model_name, model_path):
         sdf_ele = Element('sdf', {'version': '1.6'})
