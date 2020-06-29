@@ -9,6 +9,7 @@
   <author>Roselle Carmen</author>
   <author>Aaron Chong</author>
   <author>Brandon Ong</author>
+  <author>Kevin Ma</author>
   <maintainer email="morgan@openrobotics.org">Morgan Quigley</maintainer>
   <license>Apache 2.0</license>
 
@@ -17,6 +18,7 @@
   <depend>rclcpp</depend>
   <depend>rmf_fleet_msgs</depend>
   <depend>rmf_door_msgs</depend>
+  <depend>rmf_lift_msgs</depend>
   <depend>building_map_msgs</depend>
   <depend>tf2_ros</depend>
   <depend>geometry_msgs</depend>

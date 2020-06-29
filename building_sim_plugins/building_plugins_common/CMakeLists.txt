@@ -29,6 +29,7 @@ find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(rmf_fleet_msgs REQUIRED)
 find_package(rmf_door_msgs REQUIRED)
+find_package(rmf_lift_msgs REQUIRED)
 find_package(building_map_msgs REQUIRED)
 
 include(GNUInstallDirs)
@@ -80,16 +81,40 @@ target_include_directories(door_common
 )
 
 ###############################
+# lift stuff
+###############################
+
+add_library(lift_common SHARED src/lift_common.cpp)
+
+target_link_libraries(lift_common
+ PUBLIC
+   ${rmf_fleet_msgs_LIBRARIES}
+   ${rclcpp_LIBRARIES}
+   ${rmf_door_msgs_LIBRARIES}
+   ${rmf_lift_msgs_LIBRARIES}
+)
+
+target_include_directories(lift_common
+ PUBLIC
+   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+   ${rmf_fleet_msgs_INCLUDE_DIRS}
+   ${rmf_door_msgs_INCLUDE_DIRS}
+   ${rmf_lift_msgs_INCLUDE_DIRS}
+)
+
+###############################
 # install stuff
 ###############################
 ament_export_dependencies(Eigen3)
 ament_export_include_directories(include)
 ament_export_libraries(slotcar_common)
 ament_export_libraries(door_common)
+ament_export_libraries(lift_common)
 
 
 install(
-  TARGETS slotcar_common door_common #building_sim_utils slotcar door toggle_floors
+  TARGETS slotcar_common door_common lift_common #building_sim_utils slotcar door toggle_floors
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
