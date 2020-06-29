@@ -241,8 +241,10 @@ def get_local_model_name_tuples(path=None, config_file="model.config",
     if not path.endswith("/"):
         path += "/"
 
-    assert os.path.isdir(path), \
-        "Path given must be a directory that exists!"
+    if not os.path.isdir(path):
+        logger.warning("Model directory specified does not exist! "
+                       "Returning empty model set.")
+        return output
 
     if ign:
         model_dir_iter = glob.glob(path + "*/*/models/*/")
@@ -490,8 +492,12 @@ def download_model(model_name, author_name, version="tip",
                            % download_path)
         else:
             download_path = os.path.expanduser(download_path)
-            assert os.path.isdir(download_path), \
-                "Path given must be a directory that exists!"
+
+        # Make directory if missing
+        if not os.path.isdir(download_path):
+            os.makedirs(download_path, exist_ok=True)
+            logger.warning("Download path does not exist! Created: %s"
+                           % download_path)
 
         url_base = "https://fuel.ignitionrobotics.org/1.0"
         metadata = requests.get("%s/%s/models/%s/%s/%s"
