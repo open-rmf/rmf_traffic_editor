@@ -95,7 +95,6 @@ def swag(print_swag=True):
 # MODEL PARSING
 ###############################################################################
 
-
 def get_missing_models(model_names, model_path=None,
                        config_file="model.config",
                        cache_file_path=None, update_cache=True, lower=True,
