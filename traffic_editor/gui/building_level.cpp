@@ -16,6 +16,7 @@
 */
 
 #include <algorithm>
+#include <cmath>
 
 #include <QGraphicsOpacityEffect>
 #include <QGraphicsPixmapItem>
@@ -337,7 +338,7 @@ void BuildingLevel::calculate_scale()
       scale_count++;
       const double dx = vertices[edge.start_idx].x - vertices[edge.end_idx].x;
       const double dy = vertices[edge.start_idx].y - vertices[edge.end_idx].y;
-      const double distance_pixels = sqrt(dx*dx + dy*dy);
+      const double distance_pixels = std::sqrt(dx*dx + dy*dy);
       // todo: a clean, strongly-typed parameter API for edges
       const double distance_meters =
           edge.params[std::string("distance")].value_double;
@@ -377,7 +378,7 @@ void BuildingLevel::draw_lane(
   const auto &v_end = vertices[edge.end_idx];
   const double dx = v_end.x - v_start.x;
   const double dy = v_end.y - v_start.y;
-  const double len = sqrt(dx*dx + dy*dy);
+  const double len = std::sqrt(dx*dx + dy*dy);
 
   const double lane_pen_width = 1.0 / drawing_meters_per_pixel;
 
@@ -449,7 +450,7 @@ void BuildingLevel::draw_lane(
     // draw robot-outline box midway down this lane
     const double mx = (v_start.x + v_end.x) / 2.0;
     const double my = (v_start.y + v_end.y) / 2.0;
-    const double yaw = atan2(norm_y, norm_x);
+    const double yaw = std::atan2(norm_y, norm_x);
 
     // robot-box half-dimensions in meters
     const double rw = 0.4 / drawing_meters_per_pixel;
@@ -460,26 +461,26 @@ void BuildingLevel::draw_lane(
     // front-left
     // |mx| + |cos -sin| | rl|
     // |my|   |sin  cos| | rw|
-    const double flx = mx + rl * cos(yaw) - rw * sin(yaw);
-    const double fly = my + rl * sin(yaw) + rw * cos(yaw);
+    const double flx = mx + rl * std::cos(yaw) - rw * std::sin(yaw);
+    const double fly = my + rl * std::sin(yaw) + rw * std::cos(yaw);
 
     // front-right
     // |mx| + |cos -sin| | rl|
     // |my|   |sin  cos| |-rw|
-    const double frx = mx + rl * cos(yaw) + rw * sin(yaw);
-    const double fry = my + rl * sin(yaw) - rw * cos(yaw);
+    const double frx = mx + rl * std::cos(yaw) + rw * std::sin(yaw);
+    const double fry = my + rl * std::sin(yaw) - rw * std::cos(yaw);
 
     // back-left
     // |mx| + |cos -sin| |-rl|
     // |my|   |sin  cos| | rw|
-    const double blx = mx - rl * cos(yaw) - rw * sin(yaw);
-    const double bly = my - rl * sin(yaw) + rw * cos(yaw);
+    const double blx = mx - rl * std::cos(yaw) - rw * std::sin(yaw);
+    const double bly = my - rl * std::sin(yaw) + rw * std::cos(yaw);
 
     // back-right
     // |mx| + |cos -sin| |-rl|
     // |my|   |sin  cos| |-rw|
-    const double brx = mx - rl * cos(yaw) + rw * sin(yaw);
-    const double bry = my - rl * sin(yaw) - rw * cos(yaw);
+    const double brx = mx - rl * std::cos(yaw) + rw * std::sin(yaw);
+    const double bry = my - rl * std::sin(yaw) - rw * std::cos(yaw);
 
     QPainterPath pp;
     pp.moveTo(QPointF(flx, fly));
@@ -566,8 +567,8 @@ void BuildingLevel::draw_door(QGraphicsScene *scene, const Edge &edge) const
 
   const double door_dx = v_end.x - v_start.x;
   const double door_dy = v_end.y - v_start.y;
-  const double door_length = sqrt(door_dx * door_dx + door_dy * door_dy);
-  const double door_angle = atan2(door_dy, door_dx);
+  const double door_length = std::sqrt(door_dx * door_dx + door_dy * door_dy);
+  const double door_angle = std::atan2(door_dy, door_dx);
 
   auto door_type_it = edge.params.find("type");
   if (door_type_it != edge.params.end())
@@ -662,8 +663,8 @@ void BuildingLevel::add_door_slide_path(
   // first draw the door as a thin line
   path.moveTo(hinge_x, hinge_y);
   path.lineTo(
-      hinge_x + door_length * cos(door_angle),
-      hinge_y + door_length * sin(door_angle));
+      hinge_x + door_length * std::cos(door_angle),
+      hinge_y + door_length * std::sin(door_angle));
 
   // now draw a box around where it slides (in the wall, usually)
   const double th = door_angle;  // makes expressions below single-line...
@@ -671,20 +672,20 @@ void BuildingLevel::add_door_slide_path(
   const double s = 0.15 / drawing_meters_per_pixel;  // sliding panel thickness
 
   const QPointF p1(
-      hinge_x - s * cos(th + pi_2),
-      hinge_y - s * sin(th + pi_2));
+      hinge_x - s * std::cos(th + pi_2),
+      hinge_y - s * std::sin(th + pi_2));
 
   const QPointF p2(
-      hinge_x - s * cos(th + pi_2) - door_length * cos(th),
-      hinge_y - s * sin(th + pi_2) - door_length * sin(th));
+      hinge_x - s * std::cos(th + pi_2) - door_length * std::cos(th),
+      hinge_y - s * std::sin(th + pi_2) - door_length * std::sin(th));
 
   const QPointF p3(
-      hinge_x + s * cos(th + pi_2) - door_length * cos(th),
-      hinge_y + s * sin(th + pi_2) - door_length * sin(th));
+      hinge_x + s * std::cos(th + pi_2) - door_length * std::cos(th),
+      hinge_y + s * std::sin(th + pi_2) - door_length * std::sin(th));
 
   const QPointF p4(
-      hinge_x + s * cos(th + pi_2),
-      hinge_y + s * sin(th + pi_2));
+      hinge_x + s * std::cos(th + pi_2),
+      hinge_y + s * std::sin(th + pi_2));
 
 
   path.moveTo(p1);
@@ -704,8 +705,8 @@ void BuildingLevel::add_door_swing_path(
 {
   path.moveTo(hinge_x, hinge_y);
   path.lineTo(
-      hinge_x + door_length * cos(start_angle),
-      hinge_y + door_length * sin(start_angle));
+      hinge_x + door_length * std::cos(start_angle),
+      hinge_y + door_length * std::sin(start_angle));
 
   const int NUM_MOTION_STEPS = 10;
   const double angle_inc = (end_angle - start_angle) / (NUM_MOTION_STEPS-1);
@@ -715,8 +716,8 @@ void BuildingLevel::add_door_swing_path(
     const double a = start_angle + i * angle_inc;
 
     path.lineTo(
-        hinge_x + door_length * cos(a),
-        hinge_y + door_length * sin(a));
+        hinge_x + door_length * std::cos(a),
+        hinge_y + door_length * std::sin(a));
   }
 
   path.lineTo(hinge_x, hinge_y);

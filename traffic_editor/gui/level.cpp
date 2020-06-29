@@ -16,6 +16,7 @@
 */
 
 #include <algorithm>
+#include <cmath>
 
 #include <QGraphicsScene>
 #include <QImage>
@@ -78,7 +79,7 @@ double Level::point_to_line_segment_distance(
   const double dx_proj = x - x_proj;
   const double dy_proj = y - y_proj;
 
-  const double dist = sqrt(dx_proj * dx_proj + dy_proj * dy_proj);
+  const double dist = std::sqrt(dx_proj * dx_proj + dy_proj * dy_proj);
 
   /*
   printf("   p=(%.1f, %.1f) p0=(%.1f, %.1f) p1=(%.1f, %.1f) t=%.3f proj=(%.1f, %.1f) dist=%.3f\n",

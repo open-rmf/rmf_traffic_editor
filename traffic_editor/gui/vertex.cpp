@@ -15,6 +15,8 @@
  *
 */
 
+#include <cmath>
+
 #include <QGraphicsScene>
 #include <QGraphicsSimpleTextItem>
 
@@ -74,8 +76,8 @@ YAML::Node Vertex::to_yaml() const
 
   YAML::Node vertex_node;
   vertex_node.SetStyle(YAML::EmitterStyle::Flow);
-  vertex_node.push_back(round(x * 1000.0) / 1000.0);
-  vertex_node.push_back(round(y * 1000.0) / 1000.0);
+  vertex_node.push_back(std::round(x * 1000.0) / 1000.0);
+  vertex_node.push_back(std::round(y * 1000.0) / 1000.0);
   vertex_node.push_back(0.0);  // placeholder for Z offsets in the future
   vertex_node.push_back(name);
 
