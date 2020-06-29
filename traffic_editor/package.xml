@@ -12,6 +12,8 @@
   <build_depend>libignition-plugin-dev</build_depend>
   <build_depend>libignition-common3-dev</build_depend>
   <build_depend>yaml-cpp</build_depend>
+  <build_depend>libqt5-concurrent</build_depend>
+  <build_depend>libqt5-widgets</build_depend>
     
   <export>
     <build_type>ament_cmake</build_type>
