@@ -97,10 +97,16 @@ void SlotcarPlugin::init_infrastructure()
   for (const auto& m : all_models)
   {
     // Object should not be static and part of infrastructure
-    if (m->IsStatic() == false &&
-      (m->GetName().find("door") != std::string::npos ||
-      m->GetName().find("lift") != std::string::npos))
-      infrastructure.insert(m.get());
+    if (!m->IsStatic())
+    {
+      std::string name = m->GetName();
+      std::for_each(name.begin(), name.end(), [](char& c){
+        c = ::tolower(c);
+      });
+      if (name.find("door") != std::string::npos ||
+          name.find("lift") != std::string::npos)
+        infrastructure.insert(m.get());
+    }
   }
 }
 

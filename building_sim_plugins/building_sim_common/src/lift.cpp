@@ -345,7 +345,7 @@ public:
       return nullptr;
 
     // load the floor name and elevation for each floor
-    sdf::ElementPtr floor_element;
+    SdfPtrT& floor_element;
     if (!get_element_required(sdf, "floor", floor_element))
     {
       RCLCPP_ERROR(node->get_logger(),
@@ -372,7 +372,7 @@ public:
       floor_names.push_back(floor_name);
       floor_name_to_elevation.insert({floor_name, floor_elevation});
 
-      sdf::ElementPtr door_pair_element;
+      SdfPtrT& door_pair_element;
       if (get_element_required(floor_element, "door_pair", door_pair_element))
       {
         while (door_pair_element)
