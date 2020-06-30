@@ -16,6 +16,7 @@
 */
 
 #include <algorithm>
+#include <cmath>
 
 #include <QGraphicsScene>
 #include <QGraphicsSimpleTextItem>
@@ -77,13 +78,13 @@ YAML::Node Lift::to_yaml() const
   // with more than 1/1000 precision inside a single pixel.
 
   YAML::Node n;
-  n["x"] = round(x * 1000.0) / 1000.0;
-  n["y"] = round(y * 1000.0) / 1000.0;
+  n["x"] = std::round(x * 1000.0) / 1000.0;
+  n["y"] = std::round(y * 1000.0) / 1000.0;
   // let's give yaw another decimal place because, I don't know, reasons (?)
-  n["yaw"] = round(yaw * 10000.0) / 10000.0;
+  n["yaw"] = std::round(yaw * 10000.0) / 10000.0;
   n["reference_floor_name"] = reference_floor_name;
-  n["width"] = round(width * 1000.0) / 1000.0;
-  n["depth"] = round(depth * 1000.0) / 1000.0;
+  n["width"] = std::round(width * 1000.0) / 1000.0;
+  n["depth"] = std::round(depth * 1000.0) / 1000.0;
 
   n["doors"] = YAML::Node(YAML::NodeType::Map);
   for (const auto& door : doors)

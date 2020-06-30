@@ -15,6 +15,8 @@
  *
 */
 
+#include <cmath>
+
 #include "traffic_editor/lift_door.h"
 
 YAML::Node LiftDoor::to_yaml() const
@@ -23,13 +25,13 @@ YAML::Node LiftDoor::to_yaml() const
   // with more than 1/1000 precision inside a single pixel.
 
   YAML::Node n;
-  n["x"] = round(x * 1000.0) / 1000.0;
-  n["y"] = round(y * 1000.0) / 1000.0;
-  n["width"] = round(width * 1000.0) / 1000.0;
+  n["x"] = std::round(x * 1000.0) / 1000.0;
+  n["y"] = std::round(y * 1000.0) / 1000.0;
+  n["width"] = std::round(width * 1000.0) / 1000.0;
   n["door_type"] = static_cast<int>(door_type);
   // let's give yaw another decimal place because, I don't know, reasons (?)
   n["motion_axis_orientation"] =
-      round(motion_axis_orientation * 10000.0) / 10000.0;
+      std::round(motion_axis_orientation * 10000.0) / 10000.0;
   return n;
 }
 

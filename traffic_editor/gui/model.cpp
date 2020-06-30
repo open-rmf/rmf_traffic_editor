@@ -15,6 +15,8 @@
  *
 */
 
+#include <cmath>
+
 #include <QtGlobal>
 #include <QGraphicsPixmapItem>
 #include <QGraphicsColorizeEffect>
@@ -73,11 +75,11 @@ YAML::Node Model::to_yaml() const
 
   YAML::Node n;
   n.SetStyle(YAML::EmitterStyle::Flow);
-  n["x"] = round(state.x * 1000.0) / 1000.0;
-  n["y"] = round(state.y * 1000.0) / 1000.0;
-  n["z"] = round(state.z * 1000.0) / 1000.0;
+  n["x"] = std::round(state.x * 1000.0) / 1000.0;
+  n["y"] = std::round(state.y * 1000.0) / 1000.0;
+  n["z"] = std::round(state.z * 1000.0) / 1000.0;
   // let's give yaw another decimal place because, I don't know, reasons (?)
-  n["yaw"] = round(state.yaw * 10000.0) / 10000.0;
+  n["yaw"] = std::round(state.yaw * 10000.0) / 10000.0;
   n["name"] = instance_name;
   n["model_name"] = model_name;
   n["static"] = is_static;

@@ -15,6 +15,8 @@
  *
 */
 
+#include <algorithm>
+
 #include "yaml_utils.h"
 
 #include <string>

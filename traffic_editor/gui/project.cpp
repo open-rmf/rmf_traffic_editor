@@ -15,6 +15,7 @@
  *
 */
 
+#include <cmath>
 #include <fstream>
 
 #include "project.h"
@@ -258,7 +259,7 @@ Project::NearestItem Project::nearest_items(
       const Vertex& p = building_level.vertices[i];
       const double dx = x - p.x;
       const double dy = y - p.y;
-      const double dist = sqrt(dx*dx + dy*dy);
+      const double dist = std::sqrt(dx*dx + dy*dy);
       if (dist < ni.vertex_dist)
       {
         ni.vertex_dist = dist;
@@ -271,7 +272,7 @@ Project::NearestItem Project::nearest_items(
       const Fiducial& f = building_level.fiducials[i];
       const double dx = x - f.x;
       const double dy = y - f.y;
-      const double dist = sqrt(dx*dx + dy*dy);
+      const double dist = std::sqrt(dx*dx + dy*dy);
       if (dist < ni.fiducial_dist)
       {
         ni.fiducial_dist = dist;
@@ -284,7 +285,7 @@ Project::NearestItem Project::nearest_items(
       const Model& m = building_level.models[i];
       const double dx = x - m.state.x;
       const double dy = y - m.state.y;
-      const double dist = sqrt(dx*dx + dy*dy);  // no need for sqrt each time
+      const double dist = std::sqrt(dx*dx + dy*dy);  // no need for sqrt each time
       if (dist < ni.model_dist)
       {
         ni.model_dist = dist;
@@ -309,7 +310,7 @@ Project::NearestItem Project::nearest_items(
         const Vertex& p = scenario_level.vertices[i];
         const double dx = x - p.x;
         const double dy = y - p.y;
-        const double dist = sqrt(dx*dx + dy*dy);
+        const double dist = std::sqrt(dx*dx + dy*dy);
         if (dist < ni.vertex_dist)
         {
           ni.vertex_dist = dist;
@@ -486,8 +487,8 @@ void Project::set_selected_line_item(
     const double dy1 = v_start.y - y1;
     const double dx2 = v_end.x - x2;
     const double dy2 = v_end.y - y2;
-    const double v1_dist = sqrt(dx1*dx1 + dy1*dy1);
-    const double v2_dist = sqrt(dx2*dx2 + dy2*dy2);
+    const double v1_dist = std::sqrt(dx1*dx1 + dy1*dy1);
+    const double v2_dist = std::sqrt(dx2*dx2 + dy2*dy2);
 
     const double thresh = 10.0;  // it should be really tiny if it matches
     if (v1_dist < thresh && v2_dist < thresh)

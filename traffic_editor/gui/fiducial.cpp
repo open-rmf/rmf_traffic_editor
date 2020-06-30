@@ -15,6 +15,8 @@
  *
 */
 
+#include <cmath>
+
 #include <QGraphicsScene>
 #include <QGraphicsSimpleTextItem>
 
@@ -45,8 +47,8 @@ YAML::Node Fiducial::to_yaml() const
   // with more than 1/1000 precision inside a single pixel.
   YAML::Node node;
   node.SetStyle(YAML::EmitterStyle::Flow);
-  node.push_back(round(x * 1000.0) / 1000.0);
-  node.push_back(round(y * 1000.0) / 1000.0);
+  node.push_back(std::round(x * 1000.0) / 1000.0);
+  node.push_back(std::round(y * 1000.0) / 1000.0);
   node.push_back(name);
   return node;
 }
@@ -84,5 +86,5 @@ double Fiducial::distance(const Fiducial& f)
 {
   const double dx = f.x - x;
   const double dy = f.y - y;
-  return sqrt(dx*dx + dy*dy);
+  return std::sqrt(dx*dx + dy*dy);
 }
