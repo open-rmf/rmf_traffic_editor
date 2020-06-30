@@ -135,7 +135,8 @@ private:
   MotionParams _params;
 
   double _last_update_time = 0.0;
-  double _last_pub_time = 0.0;
+  // random start time offset to prevent state message crossfire
+  double _last_pub_time = ((double) std::rand()) / ((double) (RAND_MAX));
 
   bool _initialized = false;
 
