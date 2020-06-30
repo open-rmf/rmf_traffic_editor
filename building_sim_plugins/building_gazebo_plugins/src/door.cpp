@@ -10,7 +10,7 @@
 
 using namespace building_sim_common;
 
-namespace building_sim_gazebo {
+namespace building_gazebo_plugins {
 //==============================================================================
 
 class DoorPlugin : public gazebo::ModelPlugin
@@ -107,4 +107,4 @@ private:
 
 GZ_REGISTER_MODEL_PLUGIN(DoorPlugin)
 
-} // namespace building_sim_gazebo
+} // namespace building_gazebo_plugins

@@ -19,7 +19,7 @@ using namespace systems;
 
 using namespace building_sim_common;
 
-namespace building_sim_ign {
+namespace building_ignition_plugins {
 
 //==============================================================================
 
@@ -152,4 +152,4 @@ IGNITION_ADD_PLUGIN(
 // TODO would prefer namespaced
 IGNITION_ADD_PLUGIN_ALIAS(DoorPlugin, "door")
 
-} // namespace building_sim_ign
+} // namespace building_ignition_plugins
