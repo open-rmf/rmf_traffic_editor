@@ -65,18 +65,21 @@ public:
     // TODO proper rclcpp init (only once and pass args)
     auto model = Model(entity);
     char const** argv = NULL;
+    std::string name;
+    auto door_ele = sdf->GetElementImpl("door");
+    get_sdf_attribute_required<std::string>(door_ele, "name", name);
     if (!rclcpp::is_initialized())
       rclcpp::init(0, argv);
-    std::string plugin_name("plugin_" + model.Name(ecm));
+    std::string plugin_name("plugin_" + name);
     ignwarn << "Initializing plugin with name " << plugin_name << std::endl;
     _ros_node = std::make_shared<rclcpp::Node>(plugin_name);
 
     RCLCPP_INFO(_ros_node->get_logger(),
       "Loading DoorPlugin for [%s]",
-      model.Name(ecm).c_str());
+      name.c_str());
 
     _door_common = DoorCommon::make(
-      model.Name(ecm),
+      name,
       _ros_node,
       sdf);
 
@@ -101,7 +104,7 @@ public:
 
     RCLCPP_INFO(_ros_node->get_logger(),
       "Finished loading [%s]",
-      model.Name(ecm).c_str());
+      name.c_str());
   }
 
   void PreUpdate(const UpdateInfo& info, EntityComponentManager& ecm) override
