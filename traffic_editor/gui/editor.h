@@ -294,6 +294,7 @@ private:
 
   QGraphicsPixmapItem *get_closest_pixmap_item(const QPointF &p);
   double discretize_angle(const double &angle);
+  void align_point(const QPointF &start, QPointF &end);
 
   void mouse_select(const MouseType t, QMouseEvent *e, const QPointF &p);
   void mouse_move(const MouseType t, QMouseEvent *e, const QPointF &p);
