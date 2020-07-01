@@ -630,18 +630,6 @@ double Building::level_meters_per_pixel(const string& level_name) const
   return 0.05;  // just a somewhat sane default
 }
 
-bool Building::get_model(const string& instance_name, Model&& _model)
-{
-  for (const auto& level : levels)
-    for (auto& model : level.models)
-      if (model.instance_name == instance_name)
-      {
-        _model = model;
-        return true;
-      }
-  return false;
-}
-
 void Building::rotate_all_models(const double rotation)
 {
   for (auto& level : levels)
