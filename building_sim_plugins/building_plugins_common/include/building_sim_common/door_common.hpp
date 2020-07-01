@@ -205,12 +205,12 @@ std::shared_ptr<DoorCommon> DoorCommon::make(
     std::string joint_name;
     get_sdf_attribute_required<std::string>(
       joint_sdf_clone, "name", joint_name);
-    auto element = joint_sdf_clone;
-    get_element_required(joint_sdf_clone, "axis", element);
-    get_element_required(element, "limit", element);
     const auto it = joint_names.find(joint_name);
     if (it != joint_names.end())
     {
+      auto element = joint_sdf_clone;
+      get_element_required(joint_sdf_clone, "axis", element);
+      get_element_required(element, "limit", element);
       double lower_limit = -1.57;
       double upper_limit = 0.0;
       get_sdf_param_if_available<double>(element, "lower", lower_limit);
@@ -218,7 +218,7 @@ std::shared_ptr<DoorCommon> DoorCommon::make(
       DoorCommon::DoorElement door_element;
       if (joint_name == right_door_joint_name)
         door_element = DoorCommon::DoorElement{lower_limit, upper_limit, true};
-      else
+      else if (joint_name == left_door_joint_name)
         door_element= DoorCommon::DoorElement{lower_limit, upper_limit};
       doors.insert({joint_name, door_element});
     }
@@ -243,9 +243,11 @@ std::shared_ptr<DoorCommon> DoorCommon::make(
 
   extract_door(joint_element);
   // Find next joint element if present
-  joint_element = joint_element->GetNextElement("joint");
-  if (joint_element)
+  while (joint_element)
+  {
     extract_door(joint_element);
+    joint_element = joint_element->GetNextElement("joint");
+  }
 
   std::shared_ptr<DoorCommon> door_common(new DoorCommon(
       door_name,
