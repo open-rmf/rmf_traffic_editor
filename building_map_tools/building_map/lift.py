@@ -145,7 +145,7 @@ class LiftDoor:
         left_x = x - np.cos(yaw) * self.width/4
         right_y = y + np.sin(yaw) * self.width/4
         left_y = y - np.sin(yaw) * self.width/4
-        
+
         door_size = [self.width / 2, self.thickness, self.height]
         right_door_pose = Element('pose')
         right_door_pose.text = \
