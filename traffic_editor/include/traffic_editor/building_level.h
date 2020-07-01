@@ -63,7 +63,7 @@ public:
 
   QPixmap floorplan_pixmap;
 
-  bool from_yaml(const std::string &name, const YAML::Node &data);
+  bool from_yaml(const std::string& name, const YAML::Node& data);
   YAML::Node to_yaml() const;
 
   bool delete_selected();
@@ -72,9 +72,9 @@ public:
   void clear_selection();
 
   void draw(
-      QGraphicsScene *scene,
-      std::vector<EditorModel>& editor_models,
-      const RenderingOptions& rendering_options);
+    QGraphicsScene* scene,
+    std::vector<EditorModel>& editor_models,
+    const RenderingOptions& rendering_options);
 
   void clear_scene();
 
@@ -82,36 +82,36 @@ public:
 
 private:
   void draw_lane(
-      QGraphicsScene *scene,
-      const Edge &edge,
-      const RenderingOptions& rendering_options) const;
+    QGraphicsScene* scene,
+    const Edge& edge,
+    const RenderingOptions& rendering_options) const;
 
-  void draw_wall(QGraphicsScene *scene, const Edge &edge) const;
-  void draw_meas(QGraphicsScene *scene, const Edge &edge) const;
-  void draw_door(QGraphicsScene *scene, const Edge &edge) const;
-  void draw_fiducials(QGraphicsScene *scene) const;
-  void draw_polygons(QGraphicsScene *scene) const;
+  void draw_wall(QGraphicsScene* scene, const Edge& edge) const;
+  void draw_meas(QGraphicsScene* scene, const Edge& edge) const;
+  void draw_door(QGraphicsScene* scene, const Edge& edge) const;
+  void draw_fiducials(QGraphicsScene* scene) const;
+  void draw_polygons(QGraphicsScene* scene) const;
 
   // helper function
   void draw_polygon(
-      QGraphicsScene *scene,
-      const QBrush& brush,
-      const Polygon& polygon) const;
+    QGraphicsScene* scene,
+    const QBrush& brush,
+    const Polygon& polygon) const;
 
   void add_door_swing_path(
-      QPainterPath &path,
-      double hinge_x,
-      double hinge_y,
-      double door_length,
-      double start_angle,
-      double end_angle) const;
+    QPainterPath& path,
+    double hinge_x,
+    double hinge_y,
+    double door_length,
+    double start_angle,
+    double end_angle) const;
 
   void add_door_slide_path(
-      QPainterPath &path,
-      double hinge_x,
-      double hinge_y,
-      double door_length,
-      double door_angle) const;
+    QPainterPath& path,
+    double hinge_x,
+    double hinge_y,
+    double door_length,
+    double door_angle) const;
 };
 
 #endif

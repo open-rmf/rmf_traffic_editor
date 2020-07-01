@@ -26,80 +26,80 @@ BuildingLevelDialog::BuildingLevelDialog(BuildingLevel& _level)
   cancel_button = new QPushButton("Cancel", this);
 
   name_line_edit = new QLineEdit(
-      QString::fromStdString(building_level.name), this);
-  QHBoxLayout *name_hbox = new QHBoxLayout;
+    QString::fromStdString(building_level.name), this);
+  QHBoxLayout* name_hbox = new QHBoxLayout;
   name_hbox->addWidget(new QLabel("name:"));
   name_hbox->addWidget(name_line_edit);
 
   elevation_line_edit = new QLineEdit(
-      QString::number(building_level.elevation));
-  QHBoxLayout *elevation_hbox = new QHBoxLayout;
+    QString::number(building_level.elevation));
+  QHBoxLayout* elevation_hbox = new QHBoxLayout;
   elevation_hbox->addWidget(new QLabel("elevation:"));
   elevation_hbox->addWidget(elevation_line_edit);
 
   drawing_filename_line_edit = new QLineEdit(
-      QString::fromStdString(building_level.drawing_filename),
-      this);
+    QString::fromStdString(building_level.drawing_filename),
+    this);
   drawing_filename_button = new QPushButton("Find...", this);
-  QHBoxLayout *drawing_filename_hbox = new QHBoxLayout;
+  QHBoxLayout* drawing_filename_hbox = new QHBoxLayout;
   drawing_filename_hbox->addWidget(new QLabel("drawing:"));
   drawing_filename_hbox->addWidget(drawing_filename_line_edit);
   drawing_filename_hbox->addWidget(drawing_filename_button);
   connect(
-      drawing_filename_button,
-      &QAbstractButton::clicked,
-      this,
-      &BuildingLevelDialog::drawing_filename_button_clicked);
+    drawing_filename_button,
+    &QAbstractButton::clicked,
+    this,
+    &BuildingLevelDialog::drawing_filename_button_clicked);
   connect(
-      drawing_filename_line_edit,
-      &QLineEdit::textEdited,
-      this,
-      &BuildingLevelDialog::drawing_filename_line_edited);
+    drawing_filename_line_edit,
+    &QLineEdit::textEdited,
+    this,
+    &BuildingLevelDialog::drawing_filename_line_edited);
 
-  QHBoxLayout *instr_hbox = new QHBoxLayout;
+  QHBoxLayout* instr_hbox = new QHBoxLayout;
   instr_hbox->addWidget(
-      new QLabel(
-          "Explicit dimensions are only needed if drawing is not provided:"));
+    new QLabel(
+      "Explicit dimensions are only needed if drawing is not provided:"));
 
-  QHBoxLayout *x_hbox = new QHBoxLayout;
+  QHBoxLayout* x_hbox = new QHBoxLayout;
   x_line_edit = new QLineEdit(QString::number(building_level.x_meters), this);
   x_hbox->addWidget(new QLabel("x dimension (meters):"));
   x_hbox->addWidget(x_line_edit);
 
-  QHBoxLayout *y_hbox = new QHBoxLayout;
+  QHBoxLayout* y_hbox = new QHBoxLayout;
   y_line_edit = new QLineEdit(QString::number(building_level.y_meters), this);
   y_hbox->addWidget(new QLabel("y dimension (meters):"));
   y_hbox->addWidget(y_line_edit);
 
   flattened_x_offset_line_edit =
-      new QLineEdit(QString::number(building_level.flattened_x_offset));
-  QHBoxLayout *flattened_x_offset_hbox = new QHBoxLayout;
+    new QLineEdit(QString::number(building_level.flattened_x_offset));
+  QHBoxLayout* flattened_x_offset_hbox = new QHBoxLayout;
   flattened_x_offset_hbox->addWidget(
-      new QLabel("flattened x offset (meters)"));
+    new QLabel("flattened x offset (meters)"));
   flattened_x_offset_hbox->addWidget(flattened_x_offset_line_edit);
 
   flattened_y_offset_line_edit =
-      new QLineEdit(QString::number(building_level.flattened_y_offset));
-  QHBoxLayout *flattened_y_offset_hbox = new QHBoxLayout;
+    new QLineEdit(QString::number(building_level.flattened_y_offset));
+  QHBoxLayout* flattened_y_offset_hbox = new QHBoxLayout;
   flattened_y_offset_hbox->addWidget(
-      new QLabel("flattened y offset (meters)"));
+    new QLabel("flattened y offset (meters)"));
   flattened_y_offset_hbox->addWidget(flattened_y_offset_line_edit);
 
-  QHBoxLayout *bottom_buttons_hbox = new QHBoxLayout;
+  QHBoxLayout* bottom_buttons_hbox = new QHBoxLayout;
   bottom_buttons_hbox->addWidget(cancel_button);
   bottom_buttons_hbox->addWidget(ok_button);
   connect(
-      ok_button,
-      &QAbstractButton::clicked,
-      this,
-      &BuildingLevelDialog::ok_button_clicked);
+    ok_button,
+    &QAbstractButton::clicked,
+    this,
+    &BuildingLevelDialog::ok_button_clicked);
   connect(
-      cancel_button,
-      &QAbstractButton::clicked,
-      this,
-      &QDialog::reject);
+    cancel_button,
+    &QAbstractButton::clicked,
+    this,
+    &QDialog::reject);
 
-  QVBoxLayout *top_vbox = new QVBoxLayout;
+  QVBoxLayout* top_vbox = new QVBoxLayout;
   top_vbox->addLayout(name_hbox);
   top_vbox->addLayout(elevation_hbox);
   top_vbox->addLayout(drawing_filename_hbox);
@@ -135,15 +135,15 @@ void BuildingLevelDialog::drawing_filename_button_clicked()
   if (!QFileInfo(filename).exists())
   {
     QMessageBox::critical(
-        this,
-        "Drawing file does not exist",
-        "File does not exist.");
+      this,
+      "Drawing file does not exist",
+      "File does not exist.");
     if (drawing_filename_line_edit->text().isEmpty())
       enable_dimensions(true);
     return;
   }
   drawing_filename_line_edit->setText(
-      QDir::current().relativeFilePath(filename));
+    QDir::current().relativeFilePath(filename));
   enable_dimensions(false);
 }
 
@@ -155,9 +155,9 @@ void BuildingLevelDialog::ok_button_clicked()
     if (!QFileInfo(drawing_filename_line_edit->text()).exists())
     {
       QMessageBox::critical(
-          this,
-          "If supplied, drawing filename must exist",
-          "If supplied, drawing filename must exist");
+        this,
+        "If supplied, drawing filename must exist",
+        "If supplied, drawing filename must exist");
       return;
     }
   }
@@ -172,17 +172,18 @@ void BuildingLevelDialog::ok_button_clicked()
     return;
   }
   */
-  if (name_line_edit->text().isEmpty()) {
+  if (name_line_edit->text().isEmpty())
+  {
     QMessageBox::critical(
-        this,
-        "Name must not be empty",
-        "Name must not be empty");
+      this,
+      "Name must not be empty",
+      "Name must not be empty");
     return;
   }
   building_level.name = name_line_edit->text().toStdString();
   building_level.elevation = elevation_line_edit->text().toDouble();
   building_level.drawing_filename =
-      drawing_filename_line_edit->text().toStdString();
+    drawing_filename_line_edit->text().toStdString();
   if (building_level.drawing_filename.empty())
   {
     building_level.x_meters = x_line_edit->text().toDouble();
@@ -195,9 +196,9 @@ void BuildingLevelDialog::ok_button_clicked()
   }
 
   building_level.flattened_x_offset =
-      flattened_x_offset_line_edit->text().toDouble();
+    flattened_x_offset_line_edit->text().toDouble();
   building_level.flattened_y_offset =
-      flattened_y_offset_line_edit->text().toDouble();
+    flattened_y_offset_line_edit->text().toDouble();
 
   building_level.calculate_scale();
   accept();
@@ -219,7 +220,7 @@ void BuildingLevelDialog::enable_dimensions(const bool enable)
   }
 }
 
-void BuildingLevelDialog::drawing_filename_line_edited(const QString &text)
+void BuildingLevelDialog::drawing_filename_line_edited(const QString& text)
 {
   enable_dimensions(text.isEmpty());
 }

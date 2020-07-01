@@ -86,8 +86,8 @@ bool Project::load_yaml_file(const std::string& _filename)
   if (yaml["scenarios"] && yaml["scenarios"].IsSequence())
   {
     for (YAML::const_iterator scenario_node = yaml["scenarios"].begin();
-        scenario_node != yaml["scenarios"].end();
-        ++scenario_node)
+      scenario_node != yaml["scenarios"].end();
+      ++scenario_node)
     {
       std::unique_ptr<Scenario> scenario(new Scenario);
       scenario->filename = (*scenario_node)["filename"].as<string>();
@@ -172,9 +172,9 @@ bool Project::load(const std::string& _filename)
 }
 
 void Project::add_scenario_vertex(
-    const int level_idx,
-    const double x,
-    const double y)
+  const int level_idx,
+  const double x,
+  const double y)
 {
   printf("add_scenario_vertex(%d, %.3f, %.3f)\n", level_idx, x, y);
   if (scenario_idx < 0 || scenario_idx >= static_cast<int>(scenarios.size()))
@@ -194,9 +194,9 @@ void Project::scenario_row_clicked(const int row)
 }
 
 void Project::draw(
-    QGraphicsScene *scene,
-    const int level_idx,
-    std::vector<EditorModel>& editor_models)
+  QGraphicsScene* scene,
+  const int level_idx,
+  std::vector<EditorModel>& editor_models)
 {
   std::lock_guard<std::mutex> building_guard(building.building_mutex);
 
@@ -208,13 +208,13 @@ void Project::draw(
 
   building.levels[level_idx].draw(scene, editor_models, rendering_options);
   building.draw_lifts(scene, level_idx);
-  
+
   if (scenario_idx >= 0)
     scenarios[scenario_idx]->draw(
-        scene,
-        building.levels[level_idx].name,
-        building.levels[level_idx].drawing_meters_per_pixel,
-        editor_models);
+      scene,
+      building.levels[level_idx].name,
+      building.levels[level_idx].drawing_meters_per_pixel,
+      editor_models);
 }
 
 void Project::clear_selection(const int level_idx)
@@ -235,16 +235,16 @@ bool Project::delete_selected(const int level_idx)
     return false;
   const std::string level_name = building.levels[level_idx].name;
   if (scenario_idx >= 0 &&
-      !scenarios[scenario_idx]->delete_selected(level_name))
-      return false;
+    !scenarios[scenario_idx]->delete_selected(level_name))
+    return false;
   return true;
 }
 
 Project::NearestItem Project::nearest_items(
-      EditorModeId mode,
-      const int level_index,
-      const double x,
-      const double y)
+  EditorModeId mode,
+  const int level_index,
+  const double x,
+  const double y)
 {
   NearestItem ni;
 
@@ -266,7 +266,7 @@ Project::NearestItem Project::nearest_items(
         ni.vertex_idx = i;
       }
     }
-  
+
     for (size_t i = 0; i < building_level.fiducials.size(); i++)
     {
       const Fiducial& f = building_level.fiducials[i];
@@ -279,7 +279,7 @@ Project::NearestItem Project::nearest_items(
         ni.fiducial_idx = i;
       }
     }
-  
+
     for (size_t i = 0; i < building_level.models.size(); i++)
     {
       const Model& m = building_level.models[i];
@@ -296,7 +296,7 @@ Project::NearestItem Project::nearest_items(
   else if (mode == MODE_SCENARIO)
   {
     if (scenario_idx < 0 ||
-        scenario_idx >= static_cast<int>(scenarios.size()))
+      scenario_idx >= static_cast<int>(scenarios.size()))
       return ni;
     const Scenario& scenario = *scenarios[scenario_idx];
 
@@ -323,14 +323,14 @@ Project::NearestItem Project::nearest_items(
   return ni;
 }
 
-ScenarioLevel *Project::scenario_level(const int building_level_idx)
+ScenarioLevel* Project::scenario_level(const int building_level_idx)
 {
   if (building_level_idx >= static_cast<int>(building.levels.size()))
     return nullptr;
   const BuildingLevel& building_level = building.levels[building_level_idx];
 
   if (scenario_idx < 0 ||
-      scenario_idx >= static_cast<int>(scenarios.size()))
+    scenario_idx >= static_cast<int>(scenarios.size()))
     return nullptr;
   // I'm sure this is a horrific abomination. Fix someday.
   Scenario& scenario = *scenarios[scenario_idx];
@@ -343,24 +343,24 @@ ScenarioLevel *Project::scenario_level(const int building_level_idx)
 }
 
 void Project::mouse_select_press(
-    const EditorModeId mode,
-    const int level_idx,
-    const double x,
-    const double y,
-    QGraphicsItem *graphics_item)
+  const EditorModeId mode,
+  const int level_idx,
+  const double x,
+  const double y,
+  QGraphicsItem* graphics_item)
 {
   clear_selection(level_idx);
   const NearestItem ni = nearest_items(mode, level_idx, x, y);
 
   const double vertex_dist_thresh =
-      building.levels[level_idx].vertex_radius /
-      building.levels[level_idx].drawing_meters_per_pixel;
+    building.levels[level_idx].vertex_radius /
+    building.levels[level_idx].drawing_meters_per_pixel;
 
   if (mode == MODE_BUILDING)
   {
     // todo: use QGraphics stuff to see if we clicked a model pixmap...
     const double model_dist_thresh = 0.5 /
-        building.levels[level_idx].drawing_meters_per_pixel;
+      building.levels[level_idx].drawing_meters_per_pixel;
 
     if (ni.model_idx >= 0 && ni.model_dist < model_dist_thresh)
       building.levels[level_idx].models[ni.model_idx].selected = true;
@@ -377,18 +377,18 @@ void Project::mouse_select_press(
         {
           case QGraphicsLineItem::Type:
             set_selected_line_item(
-                level_idx,
-                qgraphicsitem_cast<QGraphicsLineItem *>(graphics_item),
-                mode);
+              level_idx,
+              qgraphicsitem_cast<QGraphicsLineItem*>(graphics_item),
+              mode);
             break;
-    
+
           case QGraphicsPolygonItem::Type:
             set_selected_containing_polygon(mode, level_idx, x, y);
             break;
-    
+
           default:
             printf("clicked unhandled type: %d\n",
-                static_cast<int>(graphics_item->type()));
+              static_cast<int>(graphics_item->type()));
             break;
         }
       }
@@ -410,14 +410,14 @@ void Project::mouse_select_press(
         {
           case QGraphicsLineItem::Type:
             set_selected_line_item(
-                level_idx,
-                qgraphicsitem_cast<QGraphicsLineItem *>(graphics_item),
-                mode);
+              level_idx,
+              qgraphicsitem_cast<QGraphicsLineItem*>(graphics_item),
+              mode);
             break;
-   
+
           default:
             printf("clicked unhandled type: %d\n",
-                static_cast<int>(graphics_item->type()));
+              static_cast<int>(graphics_item->type()));
             break;
         }
       }
@@ -438,10 +438,10 @@ void Project::mouse_select_press(
           case QGraphicsPolygonItem::Type:
             set_selected_containing_polygon(mode, level_idx, x, y);
             break;
-    
+
           default:
             printf("clicked unhandled type: %d\n",
-                static_cast<int>(graphics_item->type()));
+              static_cast<int>(graphics_item->type()));
             break;
         }
       }
@@ -451,9 +451,9 @@ void Project::mouse_select_press(
 }
 
 void Project::set_selected_line_item(
-    const int level_idx,
-    QGraphicsLineItem *line_item,
-    const EditorModeId mode)
+  const int level_idx,
+  QGraphicsLineItem* line_item,
+  const EditorModeId mode)
 {
   clear_selection(level_idx);
 
@@ -500,40 +500,40 @@ void Project::set_selected_line_item(
 }
 
 Polygon::EdgeDragPolygon Project::polygon_edge_drag_press(
-    const EditorModeId mode,
-    const int level_idx,
-    const Polygon *polygon,
-    const double x,
-    const double y)
+  const EditorModeId mode,
+  const int level_idx,
+  const Polygon* polygon,
+  const double x,
+  const double y)
 {
   Polygon::EdgeDragPolygon edp;
 
   if (level_idx < 0 || level_idx > static_cast<int>(building.levels.size()))
-    return edp;  // oh no
+    return edp;// oh no
 
   if (mode == MODE_BUILDING)
     return building.levels[level_idx].polygon_edge_drag_press(polygon, x, y);
   else if (mode == MODE_SCENARIO)
   {
-    ScenarioLevel *slevel = scenario_level(level_idx);
+    ScenarioLevel* slevel = scenario_level(level_idx);
     if (slevel == nullptr)
       return edp;
     return slevel->polygon_edge_drag_press(polygon, x, y);
   }
-  
+
   return edp;
 }
 
-Polygon *Project::get_selected_polygon(
-    const EditorModeId mode,
-    const int level_idx)
+Polygon* Project::get_selected_polygon(
+  const EditorModeId mode,
+  const int level_idx)
 {
   if (mode == MODE_BUILDING)
   {
     for (size_t i = 0; i < building.levels[level_idx].polygons.size(); i++)
     {
       if (building.levels[level_idx].polygons[i].selected)
-        return &building.levels[level_idx].polygons[i];  // abomination
+        return &building.levels[level_idx].polygons[i];// abomination
     }
   }
   else if (mode == MODE_SCENARIO)
@@ -544,7 +544,7 @@ Polygon *Project::get_selected_polygon(
       for (size_t i = 0; i < slevel->polygons.size(); i++)
       {
         if (slevel->polygons[i].selected)
-          return &slevel->polygons[i];  // abomination
+          return &slevel->polygons[i];// abomination
       }
     }
   }
@@ -552,12 +552,12 @@ Polygon *Project::get_selected_polygon(
 }
 
 void Project::set_selected_containing_polygon(
-    const EditorModeId mode,
-    const int level_idx,
-    const double x,
-    const double y)
+  const EditorModeId mode,
+  const int level_idx,
+  const double x,
+  const double y)
 {
-  Level *level = nullptr;
+  Level* level = nullptr;
   if (mode == MODE_BUILDING)
     level = &building.levels[level_idx];
   else if (mode == MODE_SCENARIO)
@@ -568,7 +568,7 @@ void Project::set_selected_containing_polygon(
 
   // holes are "higher" in our Z-stack (to make them clickable), so first
   // we need to make a list of all polygons that contain this point.
-  vector<Polygon *> containing_polygons;
+  vector<Polygon*> containing_polygons;
   for (size_t i = 0; i < level->polygons.size(); i++)
   {
     Polygon& polygon = level->polygons[i];
@@ -631,16 +631,16 @@ void Project::clear_scene()
 }
 
 void Project::add_lane(
-    const int level_idx,
-    const int start_idx,
-    const int end_idx)
+  const int level_idx,
+  const int start_idx,
+  const int end_idx)
 {
   building.add_lane(level_idx, start_idx, end_idx, traffic_map_idx);
 }
 
 void Project::scenario_scene_update(
-    QGraphicsScene *scene,
-    const int level_idx)
+  QGraphicsScene* scene,
+  const int level_idx)
 {
   if (scenario_idx < 0 || scenario_idx >= static_cast<int>(scenarios.size()))
     return;
@@ -652,5 +652,8 @@ bool Project::has_sim_plugin()
   for (const auto& scenario : scenarios)
     if (scenario->sim_plugin)
       return true;
+
+
+
   return false;
 }

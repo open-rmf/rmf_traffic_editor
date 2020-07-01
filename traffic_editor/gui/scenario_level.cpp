@@ -38,8 +38,8 @@ ScenarioLevel::~ScenarioLevel()
 }
 
 bool ScenarioLevel::from_yaml(
-    const std::string &_name,
-    const YAML::Node &yaml_node)
+  const std::string& _name,
+  const YAML::Node& yaml_node)
 {
   printf("parsing scenario level [%s]\n", _name.c_str());
 
@@ -52,7 +52,7 @@ bool ScenarioLevel::from_yaml(
 
   if (yaml_node["roi"] && yaml_node["roi"].IsSequence())
   {
-    const YAML::Node &y_roi = yaml_node["roi"];
+    const YAML::Node& y_roi = yaml_node["roi"];
     for (YAML::const_iterator it = y_roi.begin(); it != y_roi.end(); ++it)
     {
       Polygon p;
@@ -66,19 +66,19 @@ bool ScenarioLevel::from_yaml(
 YAML::Node ScenarioLevel::to_yaml() const
 {
   YAML::Node y;
-  for (const auto &v : vertices)
+  for (const auto& v : vertices)
     y["vertices"].push_back(v.to_yaml());
 
   for (const auto& polygon : polygons)
   {
-    switch(polygon.type)
+    switch (polygon.type)
     {
       case Polygon::ROI:
         y["roi"].push_back(polygon.to_yaml());
         break;
       default:
         printf("tried to save an unknown polygon type: %d\n",
-            static_cast<int>(polygon.type));
+          static_cast<int>(polygon.type));
         break;
     }
   }
@@ -109,8 +109,11 @@ bool ScenarioLevel::delete_selected()
       for (const int& vertex_idx : polygon.vertices)
         if (vertex_idx == selected_vertex_idx)
           vertex_used = true;
+
+
+
     if (vertex_used)
-      return false;  // don't try to delete a vertex used in a shape
+      return false;// don't try to delete a vertex used in a shape
 
     // the vertex is not currently being used, so let's erase it
     vertices.erase(vertices.begin() + selected_vertex_idx);
@@ -119,28 +122,31 @@ bool ScenarioLevel::delete_selected()
       for (int i = 0; i < static_cast<int>(polygon.vertices.size()); i++)
         if (polygon.vertices[i] > selected_vertex_idx)
           polygon.vertices[i]--;
+
+
+
   }
   return true;
 }
 
-void ScenarioLevel::draw_polygons(QGraphicsScene *scene) const
+void ScenarioLevel::draw_polygons(QGraphicsScene* scene) const
 {
   QBrush polygon_brush(QColor::fromRgbF(0.8, 0.8, 0.0, 0.2));
   QBrush selected_polygon_brush(QColor::fromRgbF(1.0, 0.0, 0.0, 0.5));
 
-  for (const auto &polygon : polygons)
+  for (const auto& polygon : polygons)
   {
     // now draw the polygons
     QVector<QPointF> polygon_vertices;
-    for (const auto &vertex_idx: polygon.vertices)
+    for (const auto& vertex_idx: polygon.vertices)
     {
-      const Vertex &v = vertices[vertex_idx];
+      const Vertex& v = vertices[vertex_idx];
       polygon_vertices.append(QPointF(v.x, v.y));
     }
     scene->addPolygon(
-        QPolygonF(polygon_vertices),
-        QPen(Qt::black),
-        polygon.selected ? selected_polygon_brush : polygon_brush);
+      QPolygonF(polygon_vertices),
+      QPen(Qt::black),
+      polygon.selected ? selected_polygon_brush : polygon_brush);
   }
 }
 
@@ -154,11 +160,11 @@ void ScenarioLevel::clear_selection()
 }
 
 void ScenarioLevel::draw(
-    QGraphicsScene *scene,
-    const double meters_per_pixel) const
+  QGraphicsScene* scene,
+  const double meters_per_pixel) const
 {
   draw_polygons(scene);
 
-  for (const auto &v : vertices)
+  for (const auto& v : vertices)
     v.draw(scene, 0.1 / meters_per_pixel, QColor::fromRgbF(1.0, 1.0, 0.0));
 }

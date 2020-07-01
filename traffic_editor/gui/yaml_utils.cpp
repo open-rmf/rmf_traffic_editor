@@ -26,8 +26,8 @@ using std::string;
 // Recursive function to write YAML ordered maps. Credit: Dave Hershberger
 // posted to this GitHub issue: https://github.com/jbeder/yaml-cpp/issues/169
 void yaml_utils::write_node(
-    const YAML::Node& node,
-    YAML::Emitter& emitter)
+  const YAML::Node& node,
+  YAML::Emitter& emitter)
 {
   switch (node.Style())
   {

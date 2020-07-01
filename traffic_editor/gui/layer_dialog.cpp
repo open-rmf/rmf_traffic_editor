@@ -19,18 +19,18 @@
 #include <QtWidgets>
 
 
-LayerDialog::LayerDialog(QWidget *parent, Layer &_layer, bool edit_mode)
+LayerDialog::LayerDialog(QWidget* parent, Layer& _layer, bool edit_mode)
 : QDialog(parent),
   layer(_layer),
   _edit_mode(edit_mode)
 {
   setWindowTitle("Layer Properties");
-  QHBoxLayout *bottom_buttons_layout = new QHBoxLayout;
+  QHBoxLayout* bottom_buttons_layout = new QHBoxLayout;
   ok_button = new QPushButton("OK", this);  // first button = [enter] button
   bottom_buttons_layout->addWidget(ok_button);
   connect(
-      ok_button, &QAbstractButton::clicked,
-      this, &LayerDialog::ok_button_clicked);
+    ok_button, &QAbstractButton::clicked,
+    this, &LayerDialog::ok_button_clicked);
 
   // When using this dialog in "edit mode," it is modeless and instantly
   // updating, so there is no "cancel" function.
@@ -43,56 +43,56 @@ LayerDialog::LayerDialog(QWidget *parent, Layer &_layer, bool edit_mode)
       this, &QDialog::reject);
   }
 
-  QHBoxLayout *name_hbox_layout = new QHBoxLayout;
+  QHBoxLayout* name_hbox_layout = new QHBoxLayout;
   name_line_edit = new QLineEdit(QString::fromStdString(layer.name), this);
   name_hbox_layout->addWidget(new QLabel("name:"));
   name_hbox_layout->addWidget(name_line_edit);
 
-  QHBoxLayout *filename_layout = new QHBoxLayout;
+  QHBoxLayout* filename_layout = new QHBoxLayout;
   filename_line_edit = new QLineEdit(
-      QString::fromStdString(layer.filename), this);
+    QString::fromStdString(layer.filename), this);
   filename_button = new QPushButton("Find...", this);
   filename_layout->addWidget(new QLabel("image:"));
   filename_layout->addWidget(filename_line_edit);
   filename_layout->addWidget(filename_button);
   connect(
-      filename_button, &QAbstractButton::clicked,
-      this, &LayerDialog::filename_button_clicked);
+    filename_button, &QAbstractButton::clicked,
+    this, &LayerDialog::filename_button_clicked);
   connect(
-      filename_line_edit,
-      &QLineEdit::textEdited,
-      this,
-      &LayerDialog::filename_line_edited);
+    filename_line_edit,
+    &QLineEdit::textEdited,
+    this,
+    &LayerDialog::filename_line_edited);
 
-  QHBoxLayout *scale_hbox_layout = new QHBoxLayout;
+  QHBoxLayout* scale_hbox_layout = new QHBoxLayout;
   scale_hbox_layout->addWidget(new QLabel("Meters per pixel:"));
   scale_line_edit = new QLineEdit(
-      QString::number(layer.meters_per_pixel),
-      this);
+    QString::number(layer.meters_per_pixel),
+    this);
   scale_hbox_layout->addWidget(scale_line_edit);
 
-  QHBoxLayout *translation_x_hbox_layout = new QHBoxLayout;
+  QHBoxLayout* translation_x_hbox_layout = new QHBoxLayout;
   translation_x_hbox_layout->addWidget(new QLabel("X translation (meters):"));
   translation_x_line_edit = new QLineEdit(
-      QString::number(layer.translation_x),
-      this);
+    QString::number(layer.translation_x),
+    this);
   translation_x_hbox_layout->addWidget(translation_x_line_edit);
 
-  QHBoxLayout *translation_y_hbox_layout = new QHBoxLayout;
+  QHBoxLayout* translation_y_hbox_layout = new QHBoxLayout;
   translation_y_hbox_layout->addWidget(new QLabel("Y translation (meters):"));
   translation_y_line_edit = new QLineEdit(
-      QString::number(layer.translation_y),
-      this);
+    QString::number(layer.translation_y),
+    this);
   translation_y_hbox_layout->addWidget(translation_y_line_edit);
 
-  QHBoxLayout *rotation_hbox_layout = new QHBoxLayout;
+  QHBoxLayout* rotation_hbox_layout = new QHBoxLayout;
   rotation_hbox_layout->addWidget(new QLabel("Rotation (radians):"));
   rotation_line_edit = new QLineEdit(
-      QString::number(layer.rotation),
-      this);
+    QString::number(layer.rotation),
+    this);
   rotation_hbox_layout->addWidget(rotation_line_edit);
 
-  QVBoxLayout *vbox_layout = new QVBoxLayout;
+  QVBoxLayout* vbox_layout = new QVBoxLayout;
   vbox_layout->addLayout(name_hbox_layout);
   vbox_layout->addLayout(filename_layout);
   vbox_layout->addLayout(scale_hbox_layout);
@@ -103,34 +103,34 @@ LayerDialog::LayerDialog(QWidget *parent, Layer &_layer, bool edit_mode)
   vbox_layout->addLayout(bottom_buttons_layout);
 
   connect(
-      filename_line_edit,
-      &QLineEdit::textEdited,
-      this,
-      &LayerDialog::update_layer);
+    filename_line_edit,
+    &QLineEdit::textEdited,
+    this,
+    &LayerDialog::update_layer);
 
   connect(
-      scale_line_edit,
-      &QLineEdit::textEdited,
-      this,
-      &LayerDialog::update_layer);
+    scale_line_edit,
+    &QLineEdit::textEdited,
+    this,
+    &LayerDialog::update_layer);
 
   connect(
-      translation_x_line_edit,
-      &QLineEdit::textEdited,
-      this,
-      &LayerDialog::update_layer);
+    translation_x_line_edit,
+    &QLineEdit::textEdited,
+    this,
+    &LayerDialog::update_layer);
 
   connect(
-      translation_y_line_edit,
-      &QLineEdit::textEdited,
-      this,
-      &LayerDialog::update_layer);
+    translation_y_line_edit,
+    &QLineEdit::textEdited,
+    this,
+    &LayerDialog::update_layer);
 
   connect(
-      rotation_line_edit,
-      &QLineEdit::textEdited,
-      this,
-      &LayerDialog::update_layer);
+    rotation_line_edit,
+    &QLineEdit::textEdited,
+    this,
+    &LayerDialog::update_layer);
 
   setLayout(vbox_layout);
 }
@@ -144,30 +144,34 @@ void LayerDialog::filename_button_clicked()
   QFileDialog file_dialog(this, "Find Image");
   file_dialog.setFileMode(QFileDialog::ExistingFile);
   file_dialog.setNameFilter("*.png");
-  if (file_dialog.exec() != QDialog::Accepted) {
+  if (file_dialog.exec() != QDialog::Accepted)
+  {
     return;  // user clicked 'cancel'
   }
   const QString filename = file_dialog.selectedFiles().first();
-  if (!QFileInfo(filename).exists()) {
+  if (!QFileInfo(filename).exists())
+  {
     QMessageBox::critical(
-        this,
-        "Image file does not exist",
-        "File does not exist.");
+      this,
+      "Image file does not exist",
+      "File does not exist.");
     return;
   }
   filename_line_edit->setText(
-      QDir::current().relativeFilePath(filename));
+    QDir::current().relativeFilePath(filename));
 }
 
 void LayerDialog::ok_button_clicked()
 {
-  if (!filename_line_edit->text().isEmpty()) {
+  if (!filename_line_edit->text().isEmpty())
+  {
     // make sure the drawing file exists
-    if (!QFileInfo(filename_line_edit->text()).exists()) {
+    if (!QFileInfo(filename_line_edit->text()).exists())
+    {
       QMessageBox::critical(
-          this,
-          "Image file must exist",
-          "Image file must exist");
+        this,
+        "Image file must exist",
+        "Image file must exist");
       return;
     }
   }
@@ -182,11 +186,12 @@ void LayerDialog::ok_button_clicked()
     return;
   }
   */
-  if (name_line_edit->text().isEmpty()) {
+  if (name_line_edit->text().isEmpty())
+  {
     QMessageBox::critical(
-        this,
-        "Name must not be empty",
-        "Name must not be empty");
+      this,
+      "Name must not be empty",
+      "Name must not be empty");
     return;
   }
   update_layer();
@@ -194,7 +199,7 @@ void LayerDialog::ok_button_clicked()
   accept();
 }
 
-void LayerDialog::filename_line_edited(const QString &/*text*/)
+void LayerDialog::filename_line_edited(const QString& /*text*/)
 {
   // todo: render on parent if file exists?
 }

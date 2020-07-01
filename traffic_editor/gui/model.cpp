@@ -27,18 +27,19 @@ using std::string;
 // String comparison helper
 bool iequals(const string& a, const string& b)
 {
-    return std::equal(a.begin(), a.end(),
-                      b.begin(), b.end(),
-                      [](char _a, char _b) {
-                          return tolower(_a) == tolower(_b);
-                      });
+  return std::equal(a.begin(), a.end(),
+      b.begin(), b.end(),
+      [](char _a, char _b)
+      {
+        return tolower(_a) == tolower(_b);
+      });
 }
 
 Model::Model()
 {
 }
 
-void Model::from_yaml(const YAML::Node &data, const string& level_name)
+void Model::from_yaml(const YAML::Node& data, const string& level_name)
 {
   if (!data.IsMap())
     throw std::runtime_error("Model::from_yaml() expected a map");
@@ -51,7 +52,7 @@ void Model::from_yaml(const YAML::Node &data, const string& level_name)
   else
   {
     qWarning(
-        "parsed a deprecated .building.yaml, models should have z defined.");
+      "parsed a deprecated .building.yaml, models should have z defined.");
     state.z = 0.0;
   }
   state.yaw = data["yaw"].as<double>();
@@ -86,7 +87,7 @@ YAML::Node Model::to_yaml() const
   return n;
 }
 
-void Model::set_param(const std::string &name, const std::string &value)
+void Model::set_param(const std::string& name, const std::string& value)
 {
   if (name == "elevation")
   {
@@ -94,7 +95,7 @@ void Model::set_param(const std::string &name, const std::string &value)
     {
       state.z = std::stod(value);
     }
-    catch(const std::exception& e)
+    catch (const std::exception& e)
     {
       qWarning("[elevation] field can only be a double/float.");
     }
@@ -104,10 +105,10 @@ void Model::set_param(const std::string &name, const std::string &value)
     // not sure if there is a super elite way to parse 'true' in STL
     string lowercase(value);
     std::transform(
-        lowercase.begin(),
-        lowercase.end(),
-        lowercase.begin(),
-        [](char c) { return std::tolower(c); });
+      lowercase.begin(),
+      lowercase.end(),
+      lowercase.begin(),
+      [](char c) { return std::tolower(c); });
 
     if (value == "true")
       is_static = true;
@@ -125,16 +126,16 @@ void Model::set_param(const std::string &name, const std::string &value)
 }
 
 void Model::draw(
-    QGraphicsScene *scene,
-    std::vector<EditorModel>& editor_models,
-    const double drawing_meters_per_pixel)
+  QGraphicsScene* scene,
+  std::vector<EditorModel>& editor_models,
+  const double drawing_meters_per_pixel)
 {
   if (pixmap_item == nullptr)
   {
     // find the pixmap we need for this model
     QPixmap pixmap;
     double model_meters_per_pixel = 1.0;  // will get overridden
-    for (auto &editor_model : editor_models)
+    for (auto& editor_model : editor_models)
     {
       if (editor_model.name == model_name)
       {
@@ -150,7 +151,7 @@ void Model::draw(
       // specified non-namespaced model, with warnings.
 
       // (Also modifies the model name inplace!)
-      for (auto &editor_model : editor_models)
+      for (auto& editor_model : editor_models)
       {
         // Get ending token
         std::string ending_token;
@@ -171,15 +172,16 @@ void Model::draw(
         if (iequals(ending_token, model_name))
         {
           // Skip rematches from previous for loop
-          if (model_name == editor_model.name) continue;
+          if (model_name == editor_model.name)
+            continue;
 
           pixmap = editor_model.get_pixmap();
           model_meters_per_pixel = editor_model.meters_per_pixel;
 
           printf("\n[WARNING] Thumbnail %1$s not found, "
-                 "substituting %2$s instead!\n"
-                 "(%1$s will be saved as %2$s)\n\n",
-                 model_name.c_str(), editor_model.name.c_str());
+            "substituting %2$s instead!\n"
+            "(%1$s will be saved as %2$s)\n\n",
+            model_name.c_str(), editor_model.name.c_str());
 
           // And reassign it!
           model_name = editor_model.name;
@@ -188,8 +190,10 @@ void Model::draw(
       }
 
       // Check again for pixmap find status
-      if (pixmap.isNull()) {
-        if (!error_printed) {
+      if (pixmap.isNull())
+      {
+        if (!error_printed)
+        {
           printf("[ERROR] No thumbnail found: %s\n", model_name.c_str());
           error_printed = true;
         }
@@ -209,7 +213,7 @@ void Model::draw(
   // make the model "glow" if it is selected
   if (selected)
   {
-    QGraphicsColorizeEffect *colorize = new QGraphicsColorizeEffect;
+    QGraphicsColorizeEffect* colorize = new QGraphicsColorizeEffect;
     colorize->setColor(QColor::fromRgbF(1.0, 0.2, 0.0, 1.0));
     colorize->setStrength(1.0);
     pixmap_item->setGraphicsEffect(colorize);

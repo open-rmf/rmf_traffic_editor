@@ -42,7 +42,7 @@ public:
   std::string filename;
 
   Building building;
-  std::vector<std::unique_ptr<Scenario> > scenarios;
+  std::vector<std::unique_ptr<Scenario>> scenarios;
   std::vector<TrafficMap> traffic_maps;
 
   int scenario_idx = -1;  // the current scenario being viewed/edited
@@ -63,13 +63,13 @@ public:
   void clear_scene();
 
   void draw(
-      QGraphicsScene *scene,
-      const int level_idx,
-      std::vector<EditorModel>& editor_models);
+    QGraphicsScene* scene,
+    const int level_idx,
+    std::vector<EditorModel>& editor_models);
 
   void scenario_scene_update(
-      QGraphicsScene *scene,
-      const int level_idx);
+    QGraphicsScene* scene,
+    const int level_idx);
 
   void clear_selection(const int level_idx);
   bool delete_selected(const int level_idx);
@@ -87,39 +87,39 @@ public:
   };
 
   NearestItem nearest_items(
-      EditorModeId mode,
-      const int level_index,
-      const double x,
-      const double y);
+    EditorModeId mode,
+    const int level_index,
+    const double x,
+    const double y);
 
-  ScenarioLevel *scenario_level(const int building_level_idx);
+  ScenarioLevel* scenario_level(const int building_level_idx);
 
   void set_selected_containing_polygon(
-      const EditorModeId mode,
-      const int level_idx,
-      const double x,
-      const double y);
+    const EditorModeId mode,
+    const int level_idx,
+    const double x,
+    const double y);
 
   void mouse_select_press(
-      const EditorModeId mode,
-      const int level_idx,
-      const double x,
-      const double y,
-      QGraphicsItem *graphics_item);
+    const EditorModeId mode,
+    const int level_idx,
+    const double x,
+    const double y,
+    QGraphicsItem* graphics_item);
 
   Polygon::EdgeDragPolygon polygon_edge_drag_press(
-      const EditorModeId mode,
-      const int level_idx,
-      const Polygon *polygon,
-      const double x,
-      const double y);
+    const EditorModeId mode,
+    const int level_idx,
+    const Polygon* polygon,
+    const double x,
+    const double y);
 
-  Polygon *get_selected_polygon(const EditorModeId mode, const int level_idx);
+  Polygon* get_selected_polygon(const EditorModeId mode, const int level_idx);
 
   void add_lane(
-      const int level_idx,
-      const int start_idx,
-      const int end_idx);
+    const int level_idx,
+    const int start_idx,
+    const int end_idx);
 
   // simulation stuff
   void sim_reset();
@@ -135,9 +135,9 @@ private:
   bool save_yaml_file() const;
 
   void set_selected_line_item(
-      const int level_idx,
-      QGraphicsLineItem *line_item,
-      const EditorModeId mode);
+    const int level_idx,
+    QGraphicsLineItem* line_item,
+    const EditorModeId mode);
 
 };
 

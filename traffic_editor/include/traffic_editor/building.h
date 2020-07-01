@@ -58,7 +58,7 @@ public:
   void add_fiducial(int level_index, double x, double y);
 
   int find_nearest_vertex_index(
-      int level_index, double x, double y, double &distance);
+    int level_index, double x, double y, double& distance);
 
   enum ItemType { VERTEX=1, MODEL, FIDUCIAL };
   struct NearestItem
@@ -74,57 +74,57 @@ public:
   };
 
   NearestItem nearest_items(
-      const int level_index,
-      const double x,
-      const double y);
+    const int level_index,
+    const double x,
+    const double y);
 
   int nearest_item_index_if_within_distance(
-      const int level_index,
-      const double x,
-      const double y,
-      const double distance_threshold,
-      const ItemType item_type);
+    const int level_index,
+    const double x,
+    const double y,
+    const double distance_threshold,
+    const ItemType item_type);
 
   void add_edge(
-      const int level_idx,
-      const int start_idx,
-      const int end_idx,
-      const Edge::Type edge_type);
+    const int level_idx,
+    const int start_idx,
+    const int end_idx,
+    const Edge::Type edge_type);
 
   void add_lane(
-      const int level_idx,
-      const int start_idx,
-      const int end_idx,
-      const int graph_idx);
+    const int level_idx,
+    const int start_idx,
+    const int end_idx,
+    const int graph_idx);
 
   void add_model(
-      const int level_idx,
-      const double x,
-      const double y,
-      const double z,
-      const double yaw,
-      const std::string &model_name);
+    const int level_idx,
+    const double x,
+    const double y,
+    const double z,
+    const double yaw,
+    const std::string& model_name);
 
   bool delete_selected(const int level_index);
 
   void set_model_yaw(
-      const int level_idx,
-      const int model_idx,
-      const double yaw);
+    const int level_idx,
+    const int model_idx,
+    const double yaw);
 
-  void draw_lifts(QGraphicsScene *scene, const int level_idx);
-
-  bool transform_between_levels(
-      const std::string& from_level_name,
-      const QPointF& from_point,
-      const std::string& to_level_name,
-      QPointF& to_point);
+  void draw_lifts(QGraphicsScene* scene, const int level_idx);
 
   bool transform_between_levels(
-      const int from_level_idx,
-      const QPointF& from_point,
-      const int to_level_idx,
-      QPointF& to_point);
+    const std::string& from_level_name,
+    const QPointF& from_point,
+    const std::string& to_level_name,
+    QPointF& to_point);
+
+  bool transform_between_levels(
+    const int from_level_idx,
+    const QPointF& from_point,
+    const int to_level_idx,
+    QPointF& to_point);
 
   void clear_transform_cache();
 
@@ -150,12 +150,12 @@ public:
   TransformMap transforms;
 
   Transform compute_transform(
-      const int from_level_idx,
-      const int to_level_idx);
+    const int from_level_idx,
+    const int to_level_idx);
 
   Transform get_transform(
-      const int from_level_idx,
-      const int to_level_idx);
+    const int from_level_idx,
+    const int to_level_idx);
 
   void calculate_all_transforms();
 

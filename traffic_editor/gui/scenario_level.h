@@ -34,7 +34,7 @@ public:
   ScenarioLevel();
   ~ScenarioLevel();
 
-  bool from_yaml(const std::string &_name, const YAML::Node& yaml_node);
+  bool from_yaml(const std::string& _name, const YAML::Node& yaml_node);
   YAML::Node to_yaml() const;
 
   bool delete_selected();
@@ -42,10 +42,10 @@ public:
   void clear_selection();
 
   void draw(
-      QGraphicsScene *scene,
-      const double meters_per_pixel) const;
+    QGraphicsScene* scene,
+    const double meters_per_pixel) const;
 
-  void draw_polygons(QGraphicsScene *scene) const;
+  void draw_polygons(QGraphicsScene* scene) const;
 };
 
 #endif

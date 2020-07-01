@@ -133,7 +133,7 @@ bool Building::save_yaml_file()
     y["reference_level_name"] = reference_level_name;
 
   y["levels"] = YAML::Node(YAML::NodeType::Map);
-  for (const auto &level : levels)
+  for (const auto& level : levels)
     y["levels"][level.name] = level.to_yaml();
 
   y["lifts"] = YAML::Node(YAML::NodeType::Map);
@@ -163,20 +163,21 @@ void Building::add_fiducial(int level_index, double x, double y)
 }
 
 int Building::find_nearest_vertex_index(
-    int level_index,
-    double x,
-    double y,
-    double &distance)
+  int level_index,
+  double x,
+  double y,
+  double& distance)
 {
   double min_dist = 1e100;
   int min_index = -1;
   for (size_t i = 0; i < levels[level_index].vertices.size(); i++)
   {
-    const Vertex &v = levels[level_index].vertices[i];
+    const Vertex& v = levels[level_index].vertices[i];
     const double dx = x - v.x;
     const double dy = y - v.y;
     const double dist2 = dx*dx + dy*dy;  // no need for sqrt each time
-    if (dist2 < min_dist) {
+    if (dist2 < min_dist)
+    {
       min_dist = dist2;
       min_index = i;
     }
@@ -186,9 +187,9 @@ int Building::find_nearest_vertex_index(
 }
 
 Building::NearestItem Building::nearest_items(
-      const int level_index,
-      const double x,
-      const double y)
+  const int level_index,
+  const double x,
+  const double y)
 {
   NearestItem ni;
   if (level_index >= static_cast<int>(levels.size()))
@@ -238,11 +239,11 @@ Building::NearestItem Building::nearest_items(
 }
 
 int Building::nearest_item_index_if_within_distance(
-    const int level_index,
-    const double x,
-    const double y,
-    const double distance_threshold,
-    const ItemType item_type)
+  const int level_index,
+  const double x,
+  const double y,
+  const double distance_threshold,
+  const ItemType item_type)
 {
   if (level_index >= static_cast<int>(levels.size()))
     return -1;
@@ -300,38 +301,38 @@ int Building::nearest_item_index_if_within_distance(
 }
 
 void Building::add_edge(
-    const int level_index,
-    const int start_vertex_index,
-    const int end_vertex_index,
-    const Edge::Type edge_type)
+  const int level_index,
+  const int start_vertex_index,
+  const int end_vertex_index,
+  const Edge::Type edge_type)
 {
   if (level_index >= static_cast<int>(levels.size()))
     return;
 
   printf("Building::add_edge(%d, %d, %d, %d)\n",
-      level_index,
-      start_vertex_index,
-      end_vertex_index,
-      static_cast<int>(edge_type));
+    level_index,
+    start_vertex_index,
+    end_vertex_index,
+    static_cast<int>(edge_type));
 
   levels[level_index].edges.push_back(
-      Edge(start_vertex_index, end_vertex_index, edge_type));
+    Edge(start_vertex_index, end_vertex_index, edge_type));
 }
 
 void Building::add_lane(
-    const int level_index,
-    const int start_vertex_index,
-    const int end_vertex_index,
-    const int graph_idx)
+  const int level_index,
+  const int start_vertex_index,
+  const int end_vertex_index,
+  const int graph_idx)
 {
   if (level_index >= static_cast<int>(levels.size()))
     return;
 
   printf("Building::add_lane(%d, %d, %d, graph=%d)\n",
-      level_index,
-      start_vertex_index,
-      end_vertex_index,
-      graph_idx);
+    level_index,
+    start_vertex_index,
+    end_vertex_index,
+    graph_idx);
   Edge e(start_vertex_index, end_vertex_index, Edge::LANE);
   e.set_graph_idx(graph_idx);
   levels[level_index].edges.push_back(e);
@@ -350,18 +351,18 @@ bool Building::delete_selected(const int level_index)
 }
 
 void Building::add_model(
-    const int level_idx,
-    const double x,
-    const double y,
-    const double z,
-    const double yaw,
-    const std::string &model_name)
+  const int level_idx,
+  const double x,
+  const double y,
+  const double z,
+  const double yaw,
+  const std::string& model_name)
 {
   if (level_idx >= static_cast<int>(levels.size()))
     return;
 
   printf("Building::add_model(%d, %.1f, %.1f, %.1f, %.2f, %s)\n",
-      level_idx, x, y, z, yaw, model_name.c_str());
+    level_idx, x, y, z, yaw, model_name.c_str());
   Model m;
   m.state.x = x;
   m.state.y = y;
@@ -374,9 +375,9 @@ void Building::add_model(
 }
 
 void Building::set_model_yaw(
-    const int level_idx,
-    const int model_idx,
-    const double yaw)
+  const int level_idx,
+  const int model_idx,
+  const double yaw)
 {
   if (level_idx >= static_cast<int>(levels.size()))
     return;
@@ -396,16 +397,19 @@ void Building::clear()
 void Building::add_level(const BuildingLevel& new_level)
 {
   // make sure we don't have this level already
-  for (const auto &level : levels)
+  for (const auto& level : levels)
     if (level.name == new_level.name)
       return;
+
+
+
   levels.push_back(new_level);
 }
 
-void Building::draw_lifts(QGraphicsScene *scene, const int level_idx)
+void Building::draw_lifts(QGraphicsScene* scene, const int level_idx)
 {
   const BuildingLevel& level = levels[level_idx];
-  for (const auto &lift : lifts)
+  for (const auto& lift : lifts)
   {
     // find the level index referenced by the lift
     int reference_floor_idx = -1;
@@ -421,21 +425,21 @@ void Building::draw_lifts(QGraphicsScene *scene, const int level_idx)
       t = get_transform(reference_floor_idx, level_idx);
 
     lift.draw(
-        scene,
-        level.drawing_meters_per_pixel,
-        level.name,
-        true,
-        t.scale,
-        t.dx,
-        t.dy);
+      scene,
+      level.drawing_meters_per_pixel,
+      level.name,
+      true,
+      t.scale,
+      t.dx,
+      t.dy);
   }
 }
 
 bool Building::transform_between_levels(
-    const std::string& from_level_name,
-    const QPointF& from_point,
-    const std::string& to_level_name,
-    QPointF& to_point)
+  const std::string& from_level_name,
+  const QPointF& from_point,
+  const std::string& to_level_name,
+  QPointF& to_point)
 {
   int from_level_idx = -1;
   int to_level_idx = -1;
@@ -452,23 +456,23 @@ bool Building::transform_between_levels(
     return false;
   }
   return transform_between_levels(
-      from_level_idx,
-      from_point,
-      to_level_idx,
-      to_point);
+    from_level_idx,
+    from_point,
+    to_level_idx,
+    to_point);
 }
 
 bool Building::transform_between_levels(
-    const int from_level_idx,
-    const QPointF& from_point,
-    const int to_level_idx,
-    QPointF& to_point)
+  const int from_level_idx,
+  const QPointF& from_point,
+  const int to_level_idx,
+  QPointF& to_point)
 {
 
   if (from_level_idx < 0 ||
-      from_level_idx >= static_cast<int>(levels.size()) ||
-      to_level_idx < 0 ||
-      to_level_idx >= static_cast<int>(levels.size()))
+    from_level_idx >= static_cast<int>(levels.size()) ||
+    to_level_idx < 0 ||
+    to_level_idx >= static_cast<int>(levels.size()))
   {
     to_point = from_point;
     return false;
@@ -487,8 +491,8 @@ void Building::clear_transform_cache()
 }
 
 Building::Transform Building::compute_transform(
-    const int from_level_idx,
-    const int to_level_idx)
+  const int from_level_idx,
+  const int to_level_idx)
 {
   // short-circuit if it's the same level
   if (from_level_idx == to_level_idx)
@@ -505,7 +509,7 @@ Building::Transform Building::compute_transform(
   const BuildingLevel& to_level = levels[to_level_idx];
 
   // assemble a vector of fudicials in common to these levels
-  vector< std::pair<Fiducial, Fiducial> > fiducials;
+  vector<std::pair<Fiducial, Fiducial>> fiducials;
   for (const Fiducial& f0 : from_level.fiducials)
     for (const Fiducial& f1 : to_level.fiducials)
       if (f0.name == f1.name)
@@ -514,14 +518,18 @@ Building::Transform Building::compute_transform(
         break;
       }
 
+
+
   // calculate the distances between each fiducial on their levels
-  vector< std::pair <double, double > > distances;
+  vector<std::pair<double, double>> distances;
   for (size_t f0_idx = 0; f0_idx < fiducials.size(); f0_idx++)
     for (size_t f1_idx = f0_idx + 1; f1_idx < fiducials.size(); f1_idx++)
       distances.push_back(
-          make_pair(
-              fiducials[f0_idx].first.distance(fiducials[f1_idx].first),
-              fiducials[f0_idx].second.distance(fiducials[f1_idx].second)));
+        make_pair(
+          fiducials[f0_idx].first.distance(fiducials[f1_idx].first),
+          fiducials[f0_idx].second.distance(fiducials[f1_idx].second)));
+
+
 
   // for now, we'll just compute the mean of the relative scale estimates.
   // we can do fancier statistics later, if needed.
@@ -548,18 +556,18 @@ Building::Transform Building::compute_transform(
   t.dy = trans_y;
 
   printf("transform %d->%d: scale = %.5f translation = (%.2f, %.2f)\n",
-      from_level_idx,
-      to_level_idx,
-      t.scale,
-      t.dx,
-      t.dy);
+    from_level_idx,
+    to_level_idx,
+    t.scale,
+    t.dx,
+    t.dy);
 
   return t;
 }
 
 Building::Transform Building::get_transform(
-      const int from_level_idx,
-      const int to_level_idx)
+  const int from_level_idx,
+  const int to_level_idx)
 {
   // this operation is a bit "heavy" so we'll cache the transformations
   // as they are computed
@@ -585,12 +593,14 @@ Building::Transform Building::get_transform(
 void Building::calculate_all_transforms()
 {
   if (levels.empty())
-    return;  // let's not crash
+    return;// let's not crash
 
   clear_transform_cache();
   for (size_t i = 0; i < levels.size(); i++)
     for (size_t j = 0; j < levels.size(); j++)
       get_transform(i, j);
+
+
 
   // set drawing scale using this data
   const int ref_idx = get_reference_level_idx();
@@ -613,6 +623,9 @@ int Building::get_reference_level_idx()
   for (size_t i = 0; i < levels.size(); i++)
     if (levels[i].name == reference_level_name)
       return static_cast<int>(i);
+
+
+
   return 0;
 }
 
@@ -627,6 +640,9 @@ double Building::level_meters_per_pixel(const string& level_name) const
   for (const auto& level : levels)
     if (level.name == level_name)
       return level.drawing_meters_per_pixel;
+
+
+
   return 0.05;  // just a somewhat sane default
 }
 
@@ -639,6 +655,9 @@ bool Building::get_model(const string& instance_name, Model&& _model)
         _model = model;
         return true;
       }
+
+
+
   return false;
 }
 
@@ -647,4 +666,7 @@ void Building::rotate_all_models(const double rotation)
   for (auto& level : levels)
     for (auto& model : level.models)
       model.state.yaw += rotation;
+
+
+
 }

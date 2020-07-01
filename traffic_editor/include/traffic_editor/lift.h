@@ -67,20 +67,20 @@ public:
   Lift();
 
   YAML::Node to_yaml() const;
-  void from_yaml(const std::string& _name, const YAML::Node &data);
+  void from_yaml(const std::string& _name, const YAML::Node& data);
 
   void draw(
-      QGraphicsScene *scene,
-      const double meters_per_pixel,
-      const std::string& level_name,
-      const bool apply_transformation = true,
-      const double scale = 1.0,
-      const double translate_x = 0.0,
-      const double translate_y = 0.0) const;
+    QGraphicsScene* scene,
+    const double meters_per_pixel,
+    const std::string& level_name,
+    const bool apply_transformation = true,
+    const double scale = 1.0,
+    const double translate_x = 0.0,
+    const double translate_y = 0.0) const;
 
   bool level_door_opens(
-      const std::string& level_name,
-      const std::string& door_name) const;
+    const std::string& level_name,
+    const std::string& door_name) const;
 };
 
 #endif

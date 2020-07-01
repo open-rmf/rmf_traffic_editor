@@ -18,7 +18,7 @@
 #include "map_view.h"
 #include <QScrollBar>
 
-MapView::MapView(QWidget *parent)
+MapView::MapView(QWidget* parent)
 : QGraphicsView(parent),
   is_panning(false),
   pan_start_x(0),
@@ -29,7 +29,7 @@ MapView::MapView(QWidget *parent)
   setTransformationAnchor(QGraphicsView::NoAnchor);
 }
 
-void MapView::wheelEvent(QWheelEvent *e)
+void MapView::wheelEvent(QWheelEvent* e)
 {
   // calculate the map position before we scale things
   const QPointF p_start = mapToScene(e->pos());
@@ -48,7 +48,7 @@ void MapView::wheelEvent(QWheelEvent *e)
   translate(diff.x(), diff.y());
 }
 
-void MapView::mousePressEvent(QMouseEvent *e)
+void MapView::mousePressEvent(QMouseEvent* e)
 {
   if (e->button() == Qt::MiddleButton)
   {
@@ -62,7 +62,7 @@ void MapView::mousePressEvent(QMouseEvent *e)
   e->ignore();
 }
 
-void MapView::mouseReleaseEvent(QMouseEvent *e)
+void MapView::mouseReleaseEvent(QMouseEvent* e)
 {
   if (e->button() == Qt::MiddleButton)
   {
@@ -73,7 +73,7 @@ void MapView::mouseReleaseEvent(QMouseEvent *e)
   e->ignore();
 }
 
-void MapView::mouseMoveEvent(QMouseEvent *e)
+void MapView::mouseMoveEvent(QMouseEvent* e)
 {
   if (is_panning)
   {
