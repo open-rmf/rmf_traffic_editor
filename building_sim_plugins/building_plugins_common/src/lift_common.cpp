@@ -338,7 +338,11 @@ LiftCommon::LiftUpdateResult LiftCommon::update(const double time,
   if (time - _last_pub_time >= 1.0)
   {
     _last_pub_time = time;
-    _lift_state.lift_time = rclcpp::Time(time);
+    const int32_t t_sec = static_cast<int32_t>(time);
+    const uint32_t t_nsec =
+      static_cast<uint32_t>((time-static_cast<double>(t_sec)) *1e9);
+    const rclcpp::Time now{t_sec, t_nsec, RCL_ROS_TIME};
+    _lift_state.lift_time = now;
     _lift_state_pub->publish(_lift_state);
   }
   return result;
