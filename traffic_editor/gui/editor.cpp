@@ -299,6 +299,11 @@ Editor::Editor()
 
   // VIEW MENU
   QMenu *view_menu = menuBar()->addMenu("&View");
+  view_models_action =
+      view_menu->addAction("&Models", this, &Editor::view_models);
+  view_models_action->setCheckable(true);
+  view_models_action->setChecked(true);
+  view_menu->addSeparator();
 
   zoom_fit_action =
       view_menu->addAction("&Fit to Window", this, &Editor::zoom_fit);
@@ -765,6 +770,12 @@ void Editor::edit_transform()
   project.building.rotate_all_models(rotation);
   create_scene();
   setWindowModified(true);
+}
+
+void Editor::view_models()
+{
+  project.rendering_options.show_models = view_models_action->isChecked();
+  create_scene();
 }
 
 void Editor::zoom_fit()
