@@ -834,8 +834,11 @@ void BuildingLevel::draw(
     item->setGraphicsEffect(opacity_effect);
   }
 
-  for (Model& model : models)
-    model.draw(scene, editor_models, drawing_meters_per_pixel);
+  if (rendering_options.show_models)
+  {
+    for (Model& model : models)
+      model.draw(scene, editor_models, drawing_meters_per_pixel);
+  }
 
   for (const auto& edge : edges)
   {

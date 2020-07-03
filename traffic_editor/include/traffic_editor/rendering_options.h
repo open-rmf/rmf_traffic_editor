@@ -23,6 +23,8 @@ class RenderingOptions
 public:
   static const int NUM_BUILDING_LANES = 10;
   std::array<bool, NUM_BUILDING_LANES> show_building_lanes;
+
+  bool show_models = true;
 };
 
 #endif

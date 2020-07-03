@@ -208,7 +208,7 @@ void Project::draw(
 
   building.levels[level_idx].draw(scene, editor_models, rendering_options);
   building.draw_lifts(scene, level_idx);
-  
+
   if (scenario_idx >= 0)
     scenarios[scenario_idx]->draw(
         scene,
@@ -362,7 +362,9 @@ void Project::mouse_select_press(
     const double model_dist_thresh = 0.5 /
         building.levels[level_idx].drawing_meters_per_pixel;
 
-    if (ni.model_idx >= 0 && ni.model_dist < model_dist_thresh)
+    if (rendering_options.show_models &&
+        ni.model_idx >= 0 &&
+        ni.model_dist < model_dist_thresh)
       building.levels[level_idx].models[ni.model_idx].selected = true;
     else if (ni.vertex_idx >= 0 && ni.vertex_dist < vertex_dist_thresh)
       building.levels[level_idx].vertices[ni.vertex_idx].selected = true;
@@ -381,11 +383,11 @@ void Project::mouse_select_press(
                 qgraphicsitem_cast<QGraphicsLineItem *>(graphics_item),
                 mode);
             break;
-    
+
           case QGraphicsPolygonItem::Type:
             set_selected_containing_polygon(mode, level_idx, x, y);
             break;
-    
+
           default:
             printf("clicked unhandled type: %d\n",
                 static_cast<int>(graphics_item->type()));
@@ -414,7 +416,7 @@ void Project::mouse_select_press(
                 qgraphicsitem_cast<QGraphicsLineItem *>(graphics_item),
                 mode);
             break;
-   
+
           default:
             printf("clicked unhandled type: %d\n",
                 static_cast<int>(graphics_item->type()));
@@ -438,7 +440,7 @@ void Project::mouse_select_press(
           case QGraphicsPolygonItem::Type:
             set_selected_containing_polygon(mode, level_idx, x, y);
             break;
-    
+
           default:
             printf("clicked unhandled type: %d\n",
                 static_cast<int>(graphics_item->type()));

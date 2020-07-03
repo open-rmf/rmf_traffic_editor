@@ -140,6 +140,7 @@ private:
   void update_level_buttons();
 
   void zoom_fit();
+  void view_models();
 
   void help_about();
 
@@ -171,6 +172,7 @@ private:
   QAction *save_action;
   QAction *zoom_in_action, *zoom_out_action;
   QAction *zoom_normal_action, *zoom_fit_action;
+  QAction *view_models_action;
 
   const QString tool_id_to_string(const int id);
   QButtonGroup *tool_button_group;
