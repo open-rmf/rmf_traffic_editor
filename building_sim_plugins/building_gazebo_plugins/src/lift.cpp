@@ -67,6 +67,8 @@ public:
       "Finished loading [%s]",
       _model->GetName().c_str());
 
+    _cabin_joint_ptr->SetPosition(0, _lift_common->get_elevation());
+
     _initialized = true;
   }
 

@@ -32,6 +32,11 @@ std::string LiftCommon::get_joint_name()
   return _cabin_joint_name;
 }
 
+const double LiftCommon::get_elevation()
+{
+  return _floor_name_to_elevation[_lift_state.destination_floor];
+}
+
 void LiftCommon::publish_door_request(const double time, std::string door_name,
   uint32_t door_state)
 {
@@ -250,12 +255,6 @@ LiftCommon::LiftCommon(rclcpp::Node::SharedPtr node,
       else if (_shaft_door_states.find(name) != _shaft_door_states.end())
         _shaft_door_states[name] = std::move(msg);
     });
-
-  // Initial request to move lift to the initial floor
-  _lift_request = std::make_unique<LiftRequest>();
-  _lift_request->lift_name = _lift_name;
-  _lift_request->destination_floor = reference_floor_name;
-  _lift_request->door_state = LiftRequest::DOOR_CLOSED;
 
   // Initial lift state
   _lift_state.lift_name = _lift_name;

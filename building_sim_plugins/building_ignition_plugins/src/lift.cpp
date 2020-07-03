@@ -6,6 +6,7 @@
 #include <ignition/gazebo/components/JointPosition.hh>
 #include <ignition/gazebo/components/JointVelocity.hh>
 #include <ignition/gazebo/components/JointVelocityCmd.hh>
+#include <ignition/gazebo/components/JointPositionReset.hh>
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -41,6 +42,9 @@ private:
     if (!ecm.EntityHasComponentType(entity,
       components::JointPosition().TypeId()))
         ecm.CreateComponent(entity, components::JointPosition({0}));
+    if (!ecm.EntityHasComponentType(entity,
+      components::JointPositionReset().TypeId()))
+        ecm.CreateComponent(entity, components::JointPositionReset({0}));
     if (!ecm.EntityHasComponentType(entity,
       components::JointVelocity().TypeId()))
         ecm.CreateComponent(entity, components::JointVelocity({0}));
@@ -93,6 +97,11 @@ public:
     }
     create_entity_components(joint, ecm);
     _cabin_joint = joint;
+
+    //_cabin_joint.SetPosition(0, _lift_common->get_elevation());
+    auto position_cmd = ecm.Component<components::JointPositionReset>(
+      _cabin_joint);
+    position_cmd->Data()[0] = _lift_common->get_elevation();
 
     _initialized = true;
 

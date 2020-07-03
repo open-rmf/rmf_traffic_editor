@@ -66,6 +66,8 @@ public:
 
   std::string get_joint_name();
 
+  const double get_elevation();
+
 private:
 
   rclcpp::Node::SharedPtr _ros_node;
