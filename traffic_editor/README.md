@@ -15,8 +15,7 @@ This program is developed and tested on
 ## Compiling Instructions
 Traffic Editor is now structured as a Colcon package. After installing
 ROS 2 Eloquent, the following command sequence will create a colcon
-workspace in `~/colcon_workspace` and build `traffic-editor`, together
-with its `traffic_editor_assets` assets repo there:
+workspace in `~/colcon_workspace` and build `traffic-editor` there:
 
 ```
 sudo apt update
