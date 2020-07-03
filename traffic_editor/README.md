@@ -30,6 +30,17 @@ source /opt/ros/eloquent/setup.bash
 colcon build --packages-select traffic_editor
 ```
 
+You are also **highly recommended** to also install the companion `traffic_editor_assets`
+package, which contains a nifty bunch of useful assets to use with `traffic_editor`.
+
+```
+cd ~/colcon_workspace/src
+git clone https://github.com/osrf/traffic_editor_assets
+cd ~/colcon_workspace
+source /opt/ros/eloquent/setup.bash
+colcon build --packages-select traffic_editor_assets
+```
+
 Then you should be able to run `traffic-editor` by sourcing the install
 space of that workspace, in a new "clean" terminal:
 ```
@@ -42,11 +53,17 @@ traffic-editor
 If it's the first time you are running it, starting the editor with
 `traffic-editor` should bring up a blank window.
 
-First, you'll need to make sure that `traffic-editor` knows where the model thumbnails are found. Depending on how `traffic-editor` is built, it may not find it automatically. The thumbnails are top-view renderings of various art assets that can be added to the environments, such as chairs. 
+First, you'll need to make sure that `traffic-editor` knows where the
+model thumbnails are found. If you installed `traffic_editor_assets`,
+`traffic_editor` should find it automatically. The thumbnails are
+top-view renderings of various art assets that can be added to the
+environments, such as chairs.
 
 Click `Edit->Preferences...` and see if the path provided in the "Thumbnail Path" box looks reasonable. 
 
-If necessary, the "Find..." button can be used to browse the filesystem to point to the default "~/.traffic_editor/assets/thumbnails" directory in the `traffic_editor_assets` repository that was cloned during the build build of `traffic_editor`earlier.
+If necessary, the "Find..." button can be used to browse the filesystem to point to any desired thumbnail directory.
+
+(If you installed the recommended `traffic_editor_assets` package, you will find its thumbnail directory in its install space at `<workspace_dir>/install/traffic_editor_assets/share/assets/thumbnails`.)
 
 ### Creating a new Project and an empty Building Map
 
