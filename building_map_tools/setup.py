@@ -11,6 +11,7 @@ setup(
         'building_map.doors',
         'building_map_server',
         'building_map_generator',
+        'building_map_model_downloader',
         'pit_crew'],
     py_modules=[],
     data_files=[
@@ -49,6 +50,8 @@ setup(
             'building_map_server.building_map_server:main',
             'building_map_generator = '
             'building_map_generator.building_map_generator:main',
+            'building_map_model_downloader = '
+            'building_map_model_downloader.building_map_model_downloader:main',
         ],
     },
 )
