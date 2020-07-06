@@ -21,7 +21,7 @@
 #include <string>
 #include <QSettings>
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   QApplication app(argc, argv);
   app.setOrganizationName("open-robotics");
@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
   QSettings settings;
 
   const bool load_previous = settings.value(
-      preferences_keys::open_previous_project, QVariant(true)).toBool();
+    preferences_keys::open_previous_project, QVariant(true)).toBool();
 
   if (load_previous && parser.positionalArguments().isEmpty())
     editor.load_previous_project();

@@ -29,7 +29,7 @@ Lift::Lift()
 {
 }
 
-void Lift::from_yaml(const std::string& _name, const YAML::Node &data)
+void Lift::from_yaml(const std::string& _name, const YAML::Node& data)
 {
   if (!data.IsMap())
     throw std::runtime_error("Lift::from_yaml() expected a map");
@@ -92,13 +92,13 @@ YAML::Node Lift::to_yaml() const
 
   n["level_doors"] = YAML::Node(YAML::NodeType::Map);
   for (LevelDoorMap::const_iterator level_it = level_doors.begin();
-       level_it != level_doors.end();
-       ++level_it)
+    level_it != level_doors.end();
+    ++level_it)
   {
     const DoorNameList& dlist = level_it->second;
     for (DoorNameList::const_iterator door_it = dlist.begin();
-         door_it != dlist.end();
-         ++door_it)
+      door_it != dlist.end();
+      ++door_it)
     {
       n["level_doors"][level_it->first].push_back(*door_it);
       n["level_doors"][level_it->first].SetStyle(YAML::EmitterStyle::Flow);
@@ -111,36 +111,37 @@ YAML::Node Lift::to_yaml() const
 /// doors, since many lifts have more than one set of doors, which open on
 /// some but not all floors. It's not being used (yet).
 void Lift::draw(
-    QGraphicsScene *scene,
-    const double meters_per_pixel,
-    const string& /*level_name*/,
-    const bool apply_transformation,
-    const double scale,
-    const double translate_x,
-    const double translate_y) const
+  QGraphicsScene* scene,
+  const double meters_per_pixel,
+  const string& /*level_name*/,
+  const bool apply_transformation,
+  const double scale,
+  const double translate_x,
+  const double translate_y) const
 {
   const double cabin_w = width / meters_per_pixel;
   const double cabin_d = depth / meters_per_pixel;
   QPen cabin_pen(Qt::black);
   cabin_pen.setWidth(0.05 / meters_per_pixel);
 
-  QGraphicsRectItem *cabin_rect = new QGraphicsRectItem(
-      -cabin_w / 2.0,
-      -cabin_d / 2.0,
-      cabin_w,
-      cabin_d);
+  QGraphicsRectItem* cabin_rect = new QGraphicsRectItem(
+    -cabin_w / 2.0,
+    -cabin_d / 2.0,
+    cabin_w,
+    cabin_d);
   cabin_rect->setPen(cabin_pen);
   cabin_rect->setBrush(QBrush(QColor::fromRgbF(0.5, 1.0, 0.5, 0.5)));
   scene->addItem(cabin_rect);
 
-  QList<QGraphicsItem *> items;
+  QList<QGraphicsItem*> items;
   items.append(cabin_rect);
 
-  if (!name.empty()) {
+  if (!name.empty())
+  {
     QFont font("Helvetica");
     font.setPointSize(0.2 / meters_per_pixel);
-    QGraphicsSimpleTextItem *text_item = scene->addSimpleText(
-        QString::fromStdString(name), font);
+    QGraphicsSimpleTextItem* text_item = scene->addSimpleText(
+      QString::fromStdString(name), font);
     text_item->setBrush(QColor(255, 0, 0, 255));
     text_item->setPos(-cabin_w / 3.0, 0.0);
 
@@ -155,11 +156,11 @@ void Lift::draw(
     const double door_y = -door.y / meters_per_pixel;
     const double door_w = door.width / meters_per_pixel;
     const double door_thickness = 0.2 / meters_per_pixel;
-    QGraphicsRectItem *door_item = new QGraphicsRectItem(
-        -door_w / 2.0,
-        -door_thickness / 2.0,
-        door_w,
-        door_thickness);
+    QGraphicsRectItem* door_item = new QGraphicsRectItem(
+      -door_w / 2.0,
+      -door_thickness / 2.0,
+      door_w,
+      door_thickness);
     door_item->setRotation(-180.0 / 3.1415926 * door.motion_axis_orientation);
     door_item->setPos(door_x, door_y);
 
@@ -171,7 +172,7 @@ void Lift::draw(
     items.append(door_item);
   }
 
-  QGraphicsItemGroup *group = scene->createItemGroup(items);
+  QGraphicsItemGroup* group = scene->createItemGroup(items);
 
   if (apply_transformation)
   {
@@ -181,8 +182,8 @@ void Lift::draw(
 }
 
 bool Lift::level_door_opens(
-      const std::string& level_name,
-      const std::string& door_name) const
+  const std::string& level_name,
+  const std::string& door_name) const
 {
   LevelDoorMap::const_iterator level_it = level_doors.find(level_name);
   if (level_it == level_doors.end())

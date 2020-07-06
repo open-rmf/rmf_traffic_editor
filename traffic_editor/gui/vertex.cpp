@@ -25,7 +25,7 @@ using std::string;
 using std::vector;
 using std::pair;
 
-const vector<pair<string, Param::Type> > Vertex::allowed_params
+const vector<pair<string, Param::Type>> Vertex::allowed_params
 {
   { "is_parking_spot", Param::Type::BOOL },
   { "is_charger", Param::Type::BOOL},
@@ -41,25 +41,26 @@ Vertex::Vertex()
 {
 }
 
-Vertex::Vertex(double _x, double _y, const string &_name)
+Vertex::Vertex(double _x, double _y, const string& _name)
 : x(_x), y(_y), name(_name), selected(false)
 {
 }
 
-void Vertex::from_yaml(const YAML::Node &data)
+void Vertex::from_yaml(const YAML::Node& data)
 {
   if (!data.IsSequence())
     throw std::runtime_error("Vertex::from_yaml expected a sequence");
   x = data[0].as<double>();
   y = data[1].as<double>();
   if (data.size() < 4)
-    return;  // todo: remove... intended only during format transition
+    return;// todo: remove... intended only during format transition
   // skip the z-offset in data[2] for now
   name = data[3].as<string>();
 
   // load the parameters, all of which (including the params map) are
   // optional at the moment.
-  if (data.size() >= 4) {
+  if (data.size() >= 4)
+  {
     for (YAML::const_iterator it = data[4].begin(); it != data[4].end(); ++it)
     {
       Param p;
@@ -84,7 +85,7 @@ YAML::Node Vertex::to_yaml() const
   if (!params.empty())
   {
     YAML::Node params_node(YAML::NodeType::Map);
-    for (const auto &param : params)
+    for (const auto& param : params)
       params_node[param.first] = param.second.to_yaml();
     vertex_node.push_back(params_node);
   }
@@ -92,9 +93,9 @@ YAML::Node Vertex::to_yaml() const
 }
 
 void Vertex::draw(
-    QGraphicsScene *scene,
-    const double radius,
-    const QColor& color) const
+  QGraphicsScene* scene,
+  const double radius,
+  const QColor& color) const
 {
   QPen vertex_pen(Qt::black);
   vertex_pen.setWidthF(radius / 2.0);
@@ -107,26 +108,28 @@ void Vertex::draw(
   QColor selected_color = QColor::fromRgbF(1.0, 0.0, 0.0, a);
 
   scene->addEllipse(
-      x - radius,
-      y - radius,
-      2 * radius,
-      2 * radius,
-      vertex_pen,
-      selected ? QBrush(selected_color) : QBrush(nonselected_color));
+    x - radius,
+    y - radius,
+    2 * radius,
+    2 * radius,
+    vertex_pen,
+    selected ? QBrush(selected_color) : QBrush(nonselected_color));
 
-  if (!name.empty()) {
-    QGraphicsSimpleTextItem *item = scene->addSimpleText(
-        QString::fromStdString(name),
-        QFont("Helvetica", 6));
+  if (!name.empty())
+  {
+    QGraphicsSimpleTextItem* item = scene->addSimpleText(
+      QString::fromStdString(name),
+      QFont("Helvetica", 6));
     item->setBrush(selected ? selected_color : color);
     item->setPos(x, y + radius);
   }
 }
 
-void Vertex::set_param(const std::string &param_name, const std::string& value)
+void Vertex::set_param(const std::string& param_name, const std::string& value)
 {
   auto it = params.find(param_name);
-  if (it == params.end()) {
+  if (it == params.end())
+  {
     printf("tried to set unknown parameter [%s]\n", param_name.c_str());
     return;  // unknown parameter
   }

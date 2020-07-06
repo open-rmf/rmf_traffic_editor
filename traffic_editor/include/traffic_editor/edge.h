@@ -32,7 +32,8 @@ class Edge
 public:
   int start_idx, end_idx;
 
-  enum Type {
+  enum Type
+  {
     UNDEFINED = 0,
     LANE,
     WALL,
@@ -48,20 +49,20 @@ public:
 
   std::map<std::string, Param> params;
 
-  void from_yaml(const YAML::Node &data, const Type edge_type);
+  void from_yaml(const YAML::Node& data, const Type edge_type);
   YAML::Node to_yaml() const;
 
-  void set_param(const std::string &name, const std::string &value);
+  void set_param(const std::string& name, const std::string& value);
 
   bool is_bidirectional() const;
 
   void create_required_parameters();
 
-  template <typename T>
+  template<typename T>
   void create_param_if_needed(
-      const std::string &name,
-      const Param::Type &param_type,
-      const T &param_value);
+    const std::string& name,
+    const Param::Type& param_type,
+    const T& param_value);
 
   std::string type_to_string() const;
   QString type_to_qstring() const;

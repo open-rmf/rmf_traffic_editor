@@ -28,17 +28,17 @@ class AddParamDialog : public QDialog
 {
 public:
   AddParamDialog(
-      QWidget *parent,
-      const std::vector<std::pair<std::string, Param::Type> >& param_names);
+    QWidget* parent,
+    const std::vector<std::pair<std::string, Param::Type>>& param_names);
   ~AddParamDialog();
 
   std::string get_param_name() const;
   Param::Type get_param_type() const;
- 
+
 private:
-  QComboBox *name_combo_box;
-  QPushButton *ok_button, *cancel_button;
-  const std::vector<std::pair<std::string, Param::Type> >& param_names;
+  QComboBox* name_combo_box;
+  QPushButton* ok_button, * cancel_button;
+  const std::vector<std::pair<std::string, Param::Type>>& param_names;
 
 private slots:
   void ok_button_clicked();

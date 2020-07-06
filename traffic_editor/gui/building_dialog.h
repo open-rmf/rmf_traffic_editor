@@ -29,13 +29,13 @@ class BuildingDialog : public QDialog
 public:
   BuildingDialog(Building& building);
   ~BuildingDialog();
- 
+
 private:
   Building& _building;
 
-  QLineEdit *_building_name_line_edit;
-  QComboBox *_reference_floor_combo_box;
-  QPushButton *_ok_button, *_cancel_button;
+  QLineEdit* _building_name_line_edit;
+  QComboBox* _reference_floor_combo_box;
+  QPushButton* _ok_button, * _cancel_button;
 
 private slots:
   void ok_button_clicked();

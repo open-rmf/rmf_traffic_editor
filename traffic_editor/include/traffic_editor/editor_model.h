@@ -34,7 +34,7 @@ public:
   std::string name, name_lowercase;
   QPixmap pixmap;
   double meters_per_pixel;
-  
+
   QPixmap get_pixmap();  // will load if needed
 };
 

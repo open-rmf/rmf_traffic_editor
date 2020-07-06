@@ -42,7 +42,7 @@ public:
 
   QPixmap pixmap;
 
-  bool from_yaml(const std::string &name, const YAML::Node &data);
+  bool from_yaml(const std::string& name, const YAML::Node& data);
   YAML::Node to_yaml() const;
 };
 

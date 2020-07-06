@@ -54,14 +54,14 @@ public:
   Model();
 
   YAML::Node to_yaml() const;
-  void from_yaml(const YAML::Node &data, const std::string& level_name);
+  void from_yaml(const YAML::Node& data, const std::string& level_name);
 
-  void set_param(const std::string &name, const std::string &value);
+  void set_param(const std::string& name, const std::string& value);
 
   void draw(
-      QGraphicsScene *scene,
-      std::vector<EditorModel>& editor_models,
-      const double meters_per_pixel);
+    QGraphicsScene* scene,
+    std::vector<EditorModel>& editor_models,
+    const double meters_per_pixel);
 
   void clear_scene();
 };

@@ -36,12 +36,12 @@ public:
   bool selected = false;
 
   Fiducial();
-  Fiducial(double _x, double _y, const std::string &_name = std::string());
+  Fiducial(double _x, double _y, const std::string& _name = std::string());
 
-  void from_yaml(const YAML::Node &data);
+  void from_yaml(const YAML::Node& data);
   YAML::Node to_yaml() const;
 
-  void draw(QGraphicsScene *, const double meters_per_pixel) const;
+  void draw(QGraphicsScene*, const double meters_per_pixel) const;
 
   double distance(const Fiducial& f);
 };
