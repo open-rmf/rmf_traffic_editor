@@ -28,7 +28,7 @@ def crop(green_img, white_img):
     print('green image size: {}x{}'.format(
             green_img.shape[1], green_img.shape[0]))
     mask = cv2.bitwise_not(cv2.inRange(green_img, (0, 200, 0), (30, 255, 30)))
-    _, contours, _ = cv2.findContours(
+    contours, _ = cv2.findContours(
             mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
     # now, apply that mask to the white image to avoid green-fringe effects
