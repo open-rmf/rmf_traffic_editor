@@ -45,7 +45,8 @@ private:
   rclcpp::Subscription<rmf_fleet_msgs::msg::PathRequest>::SharedPtr traj_sub;
   rclcpp::Subscription<rmf_fleet_msgs::msg::ModeRequest>::SharedPtr mode_sub;
   rclcpp::Publisher<rmf_fleet_msgs::msg::RobotState>::SharedPtr robot_state_pub;
-  rclcpp::Subscription<building_map_msgs::msg::BuildingMap>::SharedPtr _building_map_sub;
+  rclcpp::Subscription<building_map_msgs::msg::BuildingMap>::SharedPtr
+    _building_map_sub;
 
   rmf_fleet_msgs::msg::RobotState robot_state_msg;
 
@@ -78,7 +79,7 @@ private:
   // TODO(MXG): Consider fetching these values from model data
   // Radius of a tire
   double tire_radius = 0.1;
-  // min_Distance of a tire from the origin
+  // Distance of a tire from the origin
   double base_width = 0.52;
 
   double nominal_drive_speed = 0.5;         // nominal robot velocity (m/s)
@@ -90,10 +91,11 @@ private:
 
   double max_turn_acceleration = M_PI; // maximum robot turning acceleration (rad/s^2)
 
-  double stop_min_distance = 1.0;
+  double stop_distance = 1.0;
   double stop_radius = 1.0;
 
-  std::pair<double, double> transform_coordinates(double x_target, double y_target)
+  std::pair<double, double> transform_coordinates(double x_target,
+    double y_target)
   {
     // implement 2d transformation from traffic-editor coordinates to slotcar coordinates
     std::pair<double, double> x;
@@ -103,45 +105,49 @@ private:
   }
 
   void send_control_signals(
-      const double x_target,
-      const double yaw_target,
-      const double dt)
+    const double x_target,
+    const double yaw_target,
+    const double dt)
   {
     std::array<double, 2> w_tire_actual;
     for (std::size_t i = 0; i < 2; ++i)
       w_tire_actual[i] = joints[i]->GetVelocity(0);
-    const double v_actual = (w_tire_actual[0] + w_tire_actual[1]) * tire_radius / 2.0;
-    const double w_actual = (w_tire_actual[1] - w_tire_actual[0]) * tire_radius / base_width;
+    const double v_actual = (w_tire_actual[0] + w_tire_actual[1]) *
+      tire_radius / 2.0;
+    const double w_actual = (w_tire_actual[1] - w_tire_actual[0]) *
+      tire_radius / base_width;
 
     const double v_target = compute_ds(x_target, v_actual, nominal_drive_speed,
-                                       nominal_drive_acceleration, max_drive_acceleration, dt);
+        nominal_drive_acceleration, max_drive_acceleration, dt);
 
     const double w_target = compute_ds(yaw_target, w_actual, nominal_turn_speed,
-                                       nominal_turn_acceleration, max_turn_acceleration, dt);
+        nominal_turn_acceleration, max_turn_acceleration, dt);
     for (std::size_t i = 0; i < 2; ++i)
     {
       const double yaw_sign = i == 0 ? -1.0 : 1.0;
       joints[i]->SetParam(
-          "vel", 0, v_target / tire_radius + yaw_sign * w_target * base_width / (2.0 * tire_radius));
+        "vel", 0,
+        v_target / tire_radius + yaw_sign * w_target * base_width /
+        (2.0 * tire_radius));
       joints[i]->SetParam("fmax", 0, 10000000.0); // TODO(MXG): Replace with realistic torque limit
     }
   }
 
   // private:
   // Helper functions
-  static double compute_heading(const ignition::math::Vector3d &dpos)
+  static double compute_heading(const ignition::math::Vector3d& dpos)
   {
     return std::atan2(dpos.Y(), dpos.X());
   }
 
   static ignition::math::Vector3d compute_dpos(
-      const ignition::math::Pose3d &target,
-      const ignition::math::Pose3d &actual)
+    const ignition::math::Pose3d& target,
+    const ignition::math::Pose3d& actual)
   {
     return ignition::math::Vector3d(
-        target.Pos().X() - actual.Pos().X(),
-        target.Pos().Y() - actual.Pos().Y(),
-        0.0);
+      target.Pos().X() - actual.Pos().X(),
+      target.Pos().Y() - actual.Pos().Y(),
+      0.0);
   }
 
   static double clamp(const double value, const double limit)
@@ -154,9 +160,9 @@ private:
   }
 
   static double compute_change_in_rotation(
-      const double actual_heading,
-      const ignition::math::Vector3d& dpos,
-      double* permissive = nullptr)
+    const double actual_heading,
+    const ignition::math::Vector3d& dpos,
+    double* permissive = nullptr)
   {
     if (dpos.Length() < 1e-3)
     {
@@ -166,9 +172,9 @@ private:
     }
 
     ignition::math::Vector3d heading_vec(
-        std::cos(actual_heading),
-        std::sin(actual_heading),
-        0.0);
+      std::cos(actual_heading),
+      std::sin(actual_heading),
+      0.0);
 
     // Flip the heading vector if the dot product is less than zero. That way,
     // the robot will turn towards the heading that's closer.
@@ -236,25 +242,28 @@ void SlotcarPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf)
   RCLCPP_INFO(logger(), "hello i am " + model->GetName());
 
   _update_connection = gazebo::event::Events::ConnectWorldUpdateBegin(
-      std::bind(&SlotcarPlugin::OnUpdate, this));
+    std::bind(&SlotcarPlugin::OnUpdate, this));
 
   traj_sub = _ros_node->create_subscription<rmf_fleet_msgs::msg::PathRequest>(
-      "/robot_path_requests", 10, std::bind(&SlotcarPlugin::path_request_cb, this, std::placeholders::_1));
+    "/robot_path_requests", 10,
+    std::bind(&SlotcarPlugin::path_request_cb, this, std::placeholders::_1));
 
   mode_sub = _ros_node->create_subscription<rmf_fleet_msgs::msg::ModeRequest>(
-      "/robot_mode_requests", 10, std::bind(&SlotcarPlugin::mode_request_cb, this, std::placeholders::_1));
+    "/robot_mode_requests", 10,
+    std::bind(&SlotcarPlugin::mode_request_cb, this, std::placeholders::_1));
 
-  robot_state_pub = _ros_node->create_publisher<rmf_fleet_msgs::msg::RobotState>(
-      "/robot_state", 10);
+  robot_state_pub =
+    _ros_node->create_publisher<rmf_fleet_msgs::msg::RobotState>(
+    "/robot_state", 10);
 
   // Subscription to /map
   auto qos_profile = rclcpp::QoS(10);
   qos_profile.transient_local();
   _building_map_sub =
     _ros_node->create_subscription<building_map_msgs::msg::BuildingMap>(
-        "/map",
-        qos_profile,
-        std::bind(&SlotcarPlugin::map_cb, this, std::placeholders::_1));
+    "/map",
+    qos_profile,
+    std::bind(&SlotcarPlugin::map_cb, this, std::placeholders::_1));
 
   joints[0] = _model->GetJoint("joint_tire_left");
   if (!joints[0])
@@ -266,39 +275,52 @@ void SlotcarPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf)
 
   if (sdf->HasElement("nominal_drive_speed"))
     nominal_drive_speed = sdf->Get<double>("nominal_drive_speed");
-  RCLCPP_INFO(logger(), "Setting nominal drive speed to: " + std::to_string(nominal_drive_speed));
+  RCLCPP_INFO(logger(),
+    "Setting nominal drive speed to: " + std::to_string(nominal_drive_speed));
 
   if (sdf->HasElement("nominal_drive_acceleration"))
     nominal_drive_acceleration = sdf->Get<double>("nominal_drive_acceleration");
-  RCLCPP_INFO(logger(), "Setting nominal drive acceleration to: " + std::to_string(nominal_drive_acceleration));
+  RCLCPP_INFO(
+    logger(),
+    "Setting nominal drive acceleration to: " + std::to_string(
+      nominal_drive_acceleration));
 
   if (sdf->HasElement("max_drive_acceleration"))
     max_drive_acceleration = sdf->Get<double>("max_drive_acceleration");
-  RCLCPP_INFO(logger(), "Setting max drive acceleration to: " + std::to_string(max_drive_acceleration));
+  RCLCPP_INFO(logger(),
+    "Setting max drive acceleration to: " + std::to_string(
+      max_drive_acceleration));
 
   if (sdf->HasElement("nominal_turn_speed"))
     nominal_turn_speed = sdf->Get<double>("nominal_turn_speed");
-  RCLCPP_INFO(logger(), "Setting nominal turn speed to:" + std::to_string(nominal_turn_speed));
+  RCLCPP_INFO(logger(),
+    "Setting nominal turn speed to:" + std::to_string(nominal_turn_speed));
 
   if (sdf->HasElement("nominal_turn_acceleration"))
     nominal_turn_acceleration = sdf->Get<double>("nominal_turn_acceleration");
-  RCLCPP_INFO(logger(), "Setting nominal turn acceleration to:" + std::to_string(nominal_turn_acceleration));
+  RCLCPP_INFO(logger(), "Setting nominal turn acceleration to:" + std::to_string(
+      nominal_turn_acceleration));
 
   if (sdf->HasElement("max_turn_acceleration"))
     max_turn_acceleration = sdf->Get<double>("max_turn_acceleration");
-  RCLCPP_INFO(logger(), "Setting max turn acceleration to:" + std::to_string(max_turn_acceleration));
+  RCLCPP_INFO(logger(),
+    "Setting max turn acceleration to:" +
+    std::to_string(max_turn_acceleration));
 
-  if (sdf->HasElement("stop_min_distance"))
-    stop_min_distance = sdf->Get<double>("stop_min_distance");
-  RCLCPP_INFO(logger(), "Setting stop min_distance to:" + std::to_string(stop_min_distance));
+  if (sdf->HasElement("stop_distance"))
+    stop_distance = sdf->Get<double>("stop_distance");
+  RCLCPP_INFO(logger(),
+    "Setting stop distance to:" + std::to_string(stop_distance));
 
   if (sdf->HasElement("stop_radius"))
     stop_radius = sdf->Get<double>("stop_radius");
-  RCLCPP_INFO(logger(), "Setting stop radius to:" + std::to_string(stop_radius));
+  RCLCPP_INFO(logger(),
+    "Setting stop radius to:" + std::to_string(stop_radius));
 
   if (sdf->HasElement("tire_radius"))
     tire_radius = sdf->Get<double>("tire_radius");
-  RCLCPP_INFO(logger(), "Setting tire radius to:" + std::to_string(tire_radius));
+  RCLCPP_INFO(logger(),
+    "Setting tire radius to:" + std::to_string(tire_radius));
 
   if (sdf->HasElement("base_width"))
     base_width = sdf->Get<double>("base_width");
@@ -323,9 +345,10 @@ void SlotcarPlugin::OnUpdate()
         continue;
 
       std::string name = m->GetName();
-      std::for_each(name.begin(), name.end(), [](char& c){
-        c = ::tolower(c);
-      });
+      std::for_each(name.begin(), name.end(), [](char& c)
+        {
+          c = ::tolower(c);
+        });
 
       if (name.find("door") != std::string::npos)
         infrastructure.insert(m.get());
@@ -363,7 +386,7 @@ void SlotcarPlugin::OnUpdate()
   const double time = world->SimTime().Double();
   const int32_t t_sec = static_cast<int32_t>(time);
   const uint32_t t_nsec =
-      static_cast<uint32_t>((time-static_cast<double>(t_sec)) *1e9);
+    static_cast<uint32_t>((time-static_cast<double>(t_sec)) *1e9);
   const rclcpp::Time now{t_sec, t_nsec, RCL_ROS_TIME};
 
   if (time - _last_pub_time > 0.5) // publish at 2Hz
@@ -383,7 +406,7 @@ void SlotcarPlugin::OnUpdate()
     if (adapter_error)
     {
       robot_state_msg.mode.mode =
-          rmf_fleet_msgs::msg::RobotMode::MODE_ADAPTER_ERROR;
+        rmf_fleet_msgs::msg::RobotMode::MODE_ADAPTER_ERROR;
     }
 
     robot_state_pub->publish(robot_state_msg);
@@ -402,7 +425,7 @@ void SlotcarPlugin::OnUpdate()
   if ((unsigned int)traj_wp_idx < traj.size())
   {
     const ignition::math::Vector3d dpos = compute_dpos(
-          traj[traj_wp_idx], wp);
+      traj[traj_wp_idx], wp);
 
     auto dpos_mag = dpos.Length();
     const auto hold_time = hold_times[traj_wp_idx];
@@ -414,10 +437,10 @@ void SlotcarPlugin::OnUpdate()
     {
       const double goal_yaw = traj[traj_wp_idx].Rot().Yaw();
       const ignition::math::Vector3d goal_heading{
-            std::cos(goal_yaw), std::sin(goal_yaw), 0.0};
+        std::cos(goal_yaw), std::sin(goal_yaw), 0.0};
 
       yaw_target = compute_change_in_rotation(
-            pose.Rot().Euler().Z(), goal_heading);
+        pose.Rot().Euler().Z(), goal_heading);
     }
     else if (close_enough)
     {
@@ -427,16 +450,16 @@ void SlotcarPlugin::OnUpdate()
 
       remaining_path.erase(remaining_path.begin());
       RCLCPP_INFO(logger(),
-                  "%s reached waypoint %d/%d",
-                  _model->GetName().c_str(),
-                  traj_wp_idx,
-                  (int)traj.size());
+        "%s reached waypoint %d/%d",
+        _model->GetName().c_str(),
+        traj_wp_idx,
+        (int)traj.size());
       if ((unsigned int)traj_wp_idx == traj.size())
       {
         RCLCPP_INFO(
-            logger(),
-            "%s reached goal -- rotating to face target",
-            _model->GetName().c_str());
+          logger(),
+          "%s reached goal -- rotating to face target",
+          _model->GetName().c_str());
       }
     }
 
@@ -459,8 +482,8 @@ void SlotcarPlugin::OnUpdate()
   {
     const double goal_yaw = traj.back().Rot().Yaw();
     yaw_target = compute_change_in_rotation(
-        current_yaw,
-        ignition::math::Vector3d(cos(goal_yaw), sin(goal_yaw), 0.0));
+      current_yaw,
+      ignition::math::Vector3d(cos(goal_yaw), sin(goal_yaw), 0.0));
 
     // Put in a deadzone if yaw is small enough. This essentially locks the
     // tires. COMMENTED OUT as it breaks rotations for some reason...
@@ -473,7 +496,7 @@ void SlotcarPlugin::OnUpdate()
   }
 
   const ignition::math::Vector3d stop_zone =
-      wp.Pos() + stop_min_distance*current_heading;
+    wp.Pos() + stop_distance*current_heading;
 
   bool need_to_stop = false;
   const auto& all_models = world->Models();
@@ -487,7 +510,7 @@ void SlotcarPlugin::OnUpdate()
       continue;
 
     const auto p_obstacle = m->WorldPose().Pos();
-    if ( (p_obstacle - stop_zone).Length() < stop_radius )
+    if ( (p_obstacle - stop_zone).Length() < stop_radius)
     {
       avoiding_name = m->GetName();
       need_to_stop = true;
@@ -499,9 +522,11 @@ void SlotcarPlugin::OnUpdate()
   {
     emergency_stop = need_to_stop;
     if (need_to_stop)
-      std::cout << "Stopping [" << name << "] to avoid a collision with [" << avoiding_name << "]" << std::endl;
+      std::cout << "Stopping [" << name << "] to avoid a collision with [" <<
+        avoiding_name << "]" << std::endl;
     else
-      std::cout << "No more obstacles; resuming course for [" << name << "]" << std::endl;
+      std::cout << "No more obstacles; resuming course for [" << name << "]" <<
+        std::endl;
   }
 
   if (emergency_stop)
@@ -513,23 +538,24 @@ void SlotcarPlugin::OnUpdate()
   send_control_signals(x_target, yaw_target, dt);
 }
 
-void SlotcarPlugin::path_request_cb(const rmf_fleet_msgs::msg::PathRequest::SharedPtr msg)
+void SlotcarPlugin::path_request_cb(
+  const rmf_fleet_msgs::msg::PathRequest::SharedPtr msg)
 {
   if (msg->robot_name != name)
   {
     RCLCPP_INFO(
-          logger(),
-          "Ignoring path request for ["
-          + msg->robot_name + "]");
+      logger(),
+      "Ignoring path request for ["
+      + msg->robot_name + "]");
     return;
   }
 
   if (msg->task_id == current_task_id)
   {
     RCLCPP_INFO(
-          logger(),
-          "Already received task [" + current_task_id
-          + "] -- continuing as normal");
+      logger(),
+      "Already received task [" + current_task_id
+      + "] -- continuing as normal");
     return;
   }
 
@@ -540,20 +566,20 @@ void SlotcarPlugin::path_request_cb(const rmf_fleet_msgs::msg::PathRequest::Shar
   }
 
   RCLCPP_INFO(
-      logger(),
-      "greetings. got a path with %d waypoints",
-      (int)msg->path.size());
+    logger(),
+    "greetings. got a path with %d waypoints",
+    (int)msg->path.size());
 
   auto l_to_str = [](const ignition::math::Pose3d& p)
-  {
-    return std::to_string(p.Pos().X()) + ", "
+    {
+      return std::to_string(p.Pos().X()) + ", "
         + std::to_string(p.Pos().Y()) + ", "
         + std::to_string(p.Rot().Yaw());
-  };
+    };
 
   const auto initial_pose = _model->WorldPose();
   std::string path_str = "Path for [" + _model->GetName() + "] starting from ("
-      + l_to_str(initial_pose) + ") | [" + msg->task_id + "]:";
+    + l_to_str(initial_pose) + ") | [" + msg->task_id + "]:";
 
   // Reset this if we aren't at the final waypoint
   arrived_at_goal = false;
@@ -562,18 +588,19 @@ void SlotcarPlugin::path_request_cb(const rmf_fleet_msgs::msg::PathRequest::Shar
   for (size_t i = 0; i < msg->path.size(); ++i)
   {
     std::pair<double, double> local_coordinates =
-        transform_coordinates(msg->path[i].x, msg->path[i].y);
+      transform_coordinates(msg->path[i].x, msg->path[i].y);
     ignition::math::Vector3<double> v3(
-        local_coordinates.first,
-        local_coordinates.second,
-        0);
+      local_coordinates.first,
+      local_coordinates.second,
+      0);
 
     ignition::math::Vector3<double> yaw_euler(
-        0,
-        0,
-        msg->path[i].yaw);
+      0,
+      0,
+      msg->path[i].yaw);
 
-    ignition::math::Quaternion<double> quat = ignition::math::Quaternion<double>::EulerToQuaternion(yaw_euler);
+    ignition::math::Quaternion<double> quat =
+      ignition::math::Quaternion<double>::EulerToQuaternion(yaw_euler);
     traj[i] = ignition::math::Pose3d(v3, quat);
 
     hold_times[i] = msg->path[i].t;
@@ -582,8 +609,8 @@ void SlotcarPlugin::path_request_cb(const rmf_fleet_msgs::msg::PathRequest::Shar
     const uint64_t minutes = static_cast<uint64_t>(s/60.0);
     const double s_remainder = s - static_cast<double>(minutes)*60.0;
     path_str += "\n -- (" + std::to_string(minutes) + ":"
-        + std::to_string(s_remainder) + ") [" + std::to_string(s) + "] "
-        + l_to_str(traj[i]);
+      + std::to_string(s_remainder) + ") [" + std::to_string(s) + "] "
+      + l_to_str(traj[i]);
   }
   remaining_path = msg->path;
   traj_wp_idx = 0;
@@ -602,8 +629,8 @@ void SlotcarPlugin::path_request_cb(const rmf_fleet_msgs::msg::PathRequest::Shar
   if (initial_dist > 1.0)
   {
     RCLCPP_ERROR(
-          _ros_node->get_logger(),
-          "BIG ERROR IN INITIAL min_DISTANCE: " + std::to_string(initial_dist));
+      _ros_node->get_logger(),
+      "BIG ERROR IN INITIAL DISTANCE: " + std::to_string(initial_dist));
 //    RCLCPP_ERROR(
 //          logger(),
 //          "Ignoring path request and stopping because it begins too far from "
@@ -615,12 +642,14 @@ void SlotcarPlugin::path_request_cb(const rmf_fleet_msgs::msg::PathRequest::Shar
   }
 }
 
-void SlotcarPlugin::mode_request_cb(const rmf_fleet_msgs::msg::ModeRequest::SharedPtr msg)
+void SlotcarPlugin::mode_request_cb(
+  const rmf_fleet_msgs::msg::ModeRequest::SharedPtr msg)
 {
   current_mode = msg->mode;
 }
 
-void SlotcarPlugin::map_cb(const building_map_msgs::msg::BuildingMap::SharedPtr msg)
+void SlotcarPlugin::map_cb(
+  const building_map_msgs::msg::BuildingMap::SharedPtr msg)
 {
   if (msg->levels.empty())
   {
