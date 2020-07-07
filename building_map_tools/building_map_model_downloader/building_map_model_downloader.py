@@ -15,11 +15,12 @@ logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
 
-# Init overall parser and subparser
+# Init overall parser
 parser = argparse.ArgumentParser(
-    prog="building_map_generator",
-    description="Generate .world files, map models, and navigation maps"
-                "for running in Gazebo or Ignition!"
+    prog="building_map_model_downloader",
+    description="Parse traffic_editor building files to find missing models "
+                "and download them from Fuel using pit_crew. "
+                "Necessary only if you are using Gazebo with Fuel models."
 )
 parser.add_argument("INPUT", type=str,
                     help="Input building.yaml file to process")
