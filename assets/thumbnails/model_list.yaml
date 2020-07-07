@@ -12,6 +12,7 @@ models:
 - OpenRobotics/Cafe
 - OpenRobotics/Cafe table
 - OpenRobotics/CArm
+- OpenRobotics/CGMClassic
 - OpenRobotics/CGMVanguard
 - OpenRobotics/Chair
 - OpenRobotics/Coke
@@ -51,8 +52,11 @@ models:
 - OpenRobotics/OfficeChairBlue
 - OpenRobotics/OfficeChairGrey
 - OpenRobotics/OpScrubs
+- OpenRobotics/OpScrubs
 - OpenRobotics/ParkingTrolleyMax
+- OpenRobotics/ParkingTrolleyMin
 - OpenRobotics/PatientFSit
+- OpenRobotics/PatientWheelChair
 - OpenRobotics/Pine Tree
 - OpenRobotics/Playground
 - OpenRobotics/PotatoChipChair
