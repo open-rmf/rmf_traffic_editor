@@ -25,16 +25,6 @@ gazebo_parser = subparsers.add_parser(
     help='Generate .world file and map model.sdf for Gazebo',
     parents=[shared_parser]
 )
-gazebo_parser.add_argument("-n", "--no_download", default=False,
-                           const=True, action="store_const",
-                           help="Do not download missing models from Fuel")
-gazebo_parser.add_argument("-m", "--model_path", type=str,
-                           default="~/.gazebo/models/",
-                           help="Gazebo model path to check for models")
-gazebo_parser.add_argument("-c", "--cache", type=str,
-                           default="~/.pit_crew/model_cache.json",
-                           help="Path to pit_crew model cache")
-
 
 ignition_parser = subparsers.add_parser(
     'ignition',
