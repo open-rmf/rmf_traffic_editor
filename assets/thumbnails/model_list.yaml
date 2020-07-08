@@ -1,61 +1,88 @@
 meters_per_pixel: 0.004
 models:
-- OpenRobotics/Chair
-- OpenRobotics/Construction Cone
-- OpenRobotics/Lamp Post
-- OpenRobotics/Oak tree
-- OpenRobotics/Pine Tree
-- OpenRobotics/Standing person
+- OpenRobotics/AdjTable
+- OpenRobotics/AnesthesiaMachine
+- OpenRobotics/ArmoredPillars
+- OpenRobotics/BathroomSink
+- OpenRobotics/BedsideTable
+- OpenRobotics/BedTable
+- OpenRobotics/BigCubicle
+- OpenRobotics/BMWCart
 - OpenRobotics/Bookshelf
 - OpenRobotics/Cafe
 - OpenRobotics/Cafe table
-- OpenRobotics/Fountain
-- OpenRobotics/Gazebo
-- OpenRobotics/Playground
-- OpenRobotics/SUV
-- OpenRobotics/Table
+- OpenRobotics/CArm
+- OpenRobotics/CGMClassic
+- OpenRobotics/CGMVanguard
+- OpenRobotics/Chair
 - OpenRobotics/Coke
-- OpenRobotics/ElectronicsRecycling
-- OpenRobotics/KitchenCountertop
-- OpenRobotics/KitchenSink
-- OpenRobotics/LampAndStand
-- OpenRobotics/MopCart3
-- OpenRobotics/ParkingTrolleyMax
-- OpenRobotics/AdjTable
-- OpenRobotics/BigCubicle
 - OpenRobotics/ConfTable
-- OpenRobotics/Fridge
-- OpenRobotics/RecTable
-- OpenRobotics/SmallCubicle
+- OpenRobotics/Construction Cone
 - OpenRobotics/Drawer
+- OpenRobotics/ElderLadyPatient
+- OpenRobotics/ElderMalePatient
+- OpenRobotics/ElectronicsRecycling
 - OpenRobotics/FemaleVisitor
 - OpenRobotics/FemaleVisitorSit
+- OpenRobotics/Fountain
+- OpenRobotics/Fridge
+- OpenRobotics/Gazebo
+- OpenRobotics/InstrumentCart1
+- OpenRobotics/InstrumentCart2
+- OpenRobotics/KitchenCountertop
+- OpenRobotics/KitchenSink
+- OpenRobotics/Lamp Post
+- OpenRobotics/LampAndStand
 - OpenRobotics/MainTable
+- OpenRobotics/MalePatientBed
+- OpenRobotics/MaleVisitorOnPhone
 - OpenRobotics/MaleVisitorSit
+- OpenRobotics/MiniSofa
+- OpenRobotics/MiR100
+- OpenRobotics/MiRCart
+- OpenRobotics/MopCart1
+- OpenRobotics/MopCart2
+- OpenRobotics/MopCart3
+- OpenRobotics/MopCart4
+- OpenRobotics/NormalBed
+- OpenRobotics/Nurse
+- OpenRobotics/NurseTable
+- OpenRobotics/Oak tree
 - OpenRobotics/OfficeChairBlack
 - OpenRobotics/OfficeChairBlue
 - OpenRobotics/OfficeChairGrey
+- OpenRobotics/OpScrubs
+- OpenRobotics/OpScrubs
+- OpenRobotics/ParkingTrolleyMax
+- OpenRobotics/ParkingTrolleyMin
+- OpenRobotics/PatientFSit
+- OpenRobotics/PatientWheelChair
+- OpenRobotics/Pine Tree
+- OpenRobotics/Playground
 - OpenRobotics/PotatoChipChair
-- OpenRobotics/SquareShelf
-- OpenRobotics/StorageRack
-- OpenRobotics/VisitorKidSit
-- OpenRobotics/WhiteCabinet
-- OpenRobotics/WhiteChipChair
-- OpenRobotics/MiniSofa
+- OpenRobotics/RecTable
 - OpenRobotics/RobotPlaceholder
+- OpenRobotics/Scrubs
+- OpenRobotics/Shower
+- OpenRobotics/SmallCubicle
+- OpenRobotics/SquareShelf
+- OpenRobotics/Standing person
+- OpenRobotics/StorageRack
+- OpenRobotics/StorageRackCovered
+- OpenRobotics/StorageRackCoverOpen
+- OpenRobotics/SurgicalTrolleyMed
+- OpenRobotics/SUV
+- OpenRobotics/Table
 - OpenRobotics/TeleportDispenser
 - OpenRobotics/TeleportIngestor
-- OpenRobotics/TruckBox
-- OpenRobotics/TruckDelivery
-- OpenRobotics/AnesthesiaMachine
-- OpenRobotics/ArmoredPillars
-- OpenRobotics/BMWCart
-- OpenRobotics/CArm
-- OpenRobotics/InstrumentCart1
-- OpenRobotics/InstrumentCart2
-- OpenRobotics/MiR100
-- OpenRobotics/StorageRackCovered
-- OpenRobotics/SurgicalTrolleyMed
+- OpenRobotics/Toilet
+- OpenRobotics/TrolleyBed
 - OpenRobotics/TrolleyBedPatient
 - OpenRobotics/TrolleyBox1
 - OpenRobotics/TrolleyBox2
+- OpenRobotics/TruckBox
+- OpenRobotics/TruckDelivery
+- OpenRobotics/VendingMachine
+- OpenRobotics/VisitorKidSit
+- OpenRobotics/WhiteCabinet
+- OpenRobotics/WhiteChipChair
