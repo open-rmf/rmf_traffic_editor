@@ -79,7 +79,7 @@ def main():
             logger.info(f"\n== STARTING: Downloading models for {name} ==\n")
             download_models(map_dict[name], args.model_path, args.cache)
             logger.info(f"\n== COMPLETE: Downloaded models for {name} ==\n")
-    else:  # Download models all maps in package
+    else:  # Download models for all maps in package
         for name, yaml_path in map_dict.items():
             logger.info(f"\n== STARTING: Downloading models for {name} ==\n")
             download_models(yaml_path, args.model_path, args.cache)
