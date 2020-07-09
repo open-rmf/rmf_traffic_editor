@@ -8,12 +8,17 @@ import argparse
 import logging
 import sys
 
+__all__ = [
+    "download_models"
+]
+
 handler = logging.StreamHandler(sys.stdout)
 handler.setFormatter(pit_crew.PitCrewFormatter())
 logger = logging.getLogger()
 logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
+g = Generator()
 
 # Init overall parser
 parser = argparse.ArgumentParser(
@@ -22,25 +27,23 @@ parser = argparse.ArgumentParser(
                 "and download them from Fuel using pit_crew. "
                 "Necessary only if you are using Gazebo with Fuel models."
 )
-parser.add_argument("INPUT", type=str,
+parser.add_argument("INPUT_YAML", type=str,
                     help="Input building.yaml file to process")
-parser.add_argument("-m", "--model_path", type=str,
+parser.add_argument("-m", "--model-path", type=str,
                     default="~/.gazebo/models/",
-                    help="Path to check model from and download models to")
+                    help="Path to check models from and download models to")
 parser.add_argument("-c", "--cache", type=str,
                     default="~/.pit_crew/model_cache.json",
                     help="Path to pit_crew model cache")
 
 
-def main():
-    args = parser.parse_args()
-    g = Generator()
-
+def download_models(input_yaml, model_path=None, cache=None):
+    """Download models for a given input building yaml."""
     # Construct model set
     model_set = set()
     stringent_dict = {}  # Dict to tighten download scope
 
-    building = g.parse_editor_yaml(args.INPUT)
+    building = g.parse_editor_yaml(input_yaml)
 
     for _, level in building.levels.items():
         for model in level.models:
@@ -56,8 +59,8 @@ def main():
 
     missing_models = pit_crew.get_missing_models(
         model_set,
-        model_path=args.model_path,
-        cache_file_path=args.cache,
+        model_path=model_path,
+        cache_file_path=cache,
         lower=True
     )
 
@@ -85,11 +88,16 @@ def main():
                            (model_name, author_name))
 
         pit_crew.download_model(model_name, author_name, sync_names=True,
-                                download_path=args.model_path)
+                                download_path=model_path)
 
     if missing_models.get('missing', []):
         logger.warning("\nMissing models (not in local or Fuel):")
         pprint(missing_models['missing'])
+
+
+def main():
+    args = parser.parse_args()
+    download_models(args.INPUT_YAML, args.model_path, args.cache)
 
 
 if __name__ == "__main__":
