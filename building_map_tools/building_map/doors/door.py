@@ -1,4 +1,5 @@
 from xml.etree.ElementTree import Element, SubElement
+from..utils import door_material, box_link, joint
 
 
 class Door:
@@ -20,24 +21,14 @@ class Door:
         pose_ele.text = f'{self.cx} {self.cy} {self.cz} 0 0 {self.yaw}'
 
     def generate_section(self, name, width, x_offset, options):
-        link_ele = SubElement(self.model_ele, 'link')
-        link_ele.set('name', name)
-        pose_ele = SubElement(link_ele, 'pose')
+        pose_ele = Element('pose')
         pose_ele.text = f'{x_offset} 0 {self.height/2+0.01} 0 0 0'
-
-        visual_ele = SubElement(link_ele, 'visual')
-        visual_ele.set('name', name)
-        visual_ele.append(self.material(options))
-        visual_geometry_ele = SubElement(visual_ele, 'geometry')
-        visual_geometry_ele.append(
-            self.box(width, self.thickness, self.height))
-
-        collision_ele = SubElement(link_ele, 'collision')
-        collision_ele.set('name', name)
-        collision_ele.append(self.collide_bitmask())
-        collision_geometry_ele = SubElement(collision_ele, 'geometry')
-        collision_geometry_ele.append(
-            self.box(width, self.thickness, self.height))
+        size = [width, self.thickness, self.height]
+        link_ele = box_link(name,
+                            size,
+                            pose_ele,
+                            material=door_material(options),
+                            bitmask='0x02')
 
         mass = 50.0
         inertial_ele = SubElement(link_ele, 'inertial')
@@ -51,34 +42,20 @@ class Door:
         SubElement(inertia_ele, 'izz').text = \
             str(mass/12.0*(self.thickness**2 + width**2))
 
+        self.model_ele.append(link_ele)
         return link_ele
 
     def generate_sliding_section(self, name, width, x_offset, bounds, options):
         self.generate_section(name, width, x_offset, options)
 
-        # now, the joint for this link
-        joint_ele = SubElement(self.model_ele, 'joint')
-        joint_ele.set('name', f'{name}_joint')
-        joint_ele.set('type', 'prismatic')
-
-        parent_ele = SubElement(joint_ele, 'parent')
-        parent_ele.text = 'world'
-
-        child_ele = SubElement(joint_ele, 'child')
-        child_ele.text = name
-
-        axis_ele = SubElement(joint_ele, 'axis')
-
-        xyz_ele = SubElement(axis_ele, 'xyz')
-        xyz_ele.text = '1 0 0'
-
-        limit_ele = SubElement(axis_ele, 'limit')
-        lower_ele = SubElement(limit_ele, 'lower')
-        lower_ele.text = str(bounds[0])
-        upper_ele = SubElement(limit_ele, 'upper')
-        upper_ele.text = str(bounds[1])
-        effort_ele = SubElement(limit_ele, 'effort')
-        effort_ele.text = str(500.0)
+        self.model_ele.append(joint(f'{name}_joint',
+                                    'prismatic',
+                                    'world',
+                                    name,
+                                    joint_axis='x',
+                                    lower_limit=bounds[0],
+                                    upper_limit=bounds[1],
+                                    max_effort=500.0))
 
     '''Generate a single swing section/panel of a door.
 
@@ -100,54 +77,13 @@ class Door:
     ):
         self.generate_section(name, width, x_offset, options)
 
-        # now, the joint for this link
-        joint_ele = SubElement(self.model_ele, 'joint')
-        joint_ele.set('name', f'{name}_joint')
-        joint_ele.set('type', 'revolute')
-
-        parent_ele = SubElement(joint_ele, 'parent')
-        parent_ele.text = 'world'
-
-        child_ele = SubElement(joint_ele, 'child')
-        child_ele.text = name
-
-        axis_ele = SubElement(joint_ele, 'axis')
-
-        xyz_ele = SubElement(axis_ele, 'xyz')
-        xyz_ele.text = '0 0 1'
-
-        limit_ele = SubElement(axis_ele, 'limit')
-        lower_ele = SubElement(limit_ele, 'lower')
-        lower_ele.text = str(bounds[0])
-        upper_ele = SubElement(limit_ele, 'upper')
-        upper_ele.text = str(bounds[1])
-
-        pose_ele = SubElement(joint_ele, 'pose')
+        pose_ele = Element('pose')
         pose_ele.text = f'{axis[0]} {axis[1]} {axis[2]} 0 0 0'
-
-    def collide_bitmask(self):
-        surface_ele = Element('surface')
-        contact_ele = SubElement(surface_ele, 'contact')
-        collide_bitmask_ele = SubElement(contact_ele, 'collide_bitmask')
-        collide_bitmask_ele.text = '0x02'
-        return surface_ele
-
-    def box(self, x, y, z):
-        box_ele = Element('box')
-        size_ele = SubElement(box_ele, 'size')
-        size_ele.text = f'{x} {y} {z}'
-        return box_ele
-
-    def material(self, options):
-        material_ele = Element('material')
-        # blue-green glass as a default, so it's easy to see
-        ambient_ele = SubElement(material_ele, 'ambient')
-        ambient_ele.text = '{} {} {} {}'.format(120, 60, 0, 0.6)
-        diffuse_ele = SubElement(material_ele, 'diffuse')
-        diffuse_ele.text = '{} {} {} {}'.format(120, 60, 0, 0.6)
-        if 'ignition' in options:
-            pbr_ele = SubElement(material_ele, 'pbr')
-            metal_ele = SubElement(pbr_ele, 'metal')
-            metalness_ele = SubElement(metal_ele, 'metalness')
-            metalness_ele.text = '0.0'
-        return material_ele
+        self.model_ele.append(joint(f'{name}_joint',
+                                    'revolute',
+                                    'world',
+                                    name,
+                                    joint_axis='z',
+                                    lower_limit=bounds[0],
+                                    upper_limit=bounds[1],
+                                    pose=pose_ele))

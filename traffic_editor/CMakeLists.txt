@@ -1,11 +1,16 @@
-cmake_minimum_required(VERSION 3.1.0)
+cmake_minimum_required(VERSION 3.10.0)
+
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
 
 project(traffic_editor)
 
 find_package(yaml-cpp REQUIRED)
-include(ExternalProject)
+find_package(ament_cmake REQUIRED)
 
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
+# set(CMAKE_VERBOSE_MAKEFILE TRUE)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wshadow -Wextra")
 
@@ -17,7 +22,19 @@ if(CMAKE_VERSION VERSION_LESS "3.7.0")
   set(CMAKE_INCLUDE_CURRENT_DIR ON)
 endif()
 
-find_package(Qt5 COMPONENTS Widgets REQUIRED)
+find_package(Qt5 COMPONENTS Widgets Concurrent REQUIRED)
+find_package(ignition-plugin1 REQUIRED COMPONENTS all)
+find_package(ignition-common3 REQUIRED)
+find_package(ament_index_cpp REQUIRED)
+
+# OpenCV is an optional dependency, only needed if you want to make videos
+# which is only really needed if you're using a process simulation plugin
+find_package(OpenCV QUIET)
+
+include_directories(.)
+include_directories(gui)
+include_directories(include)
+include_directories(${ament_index_cpp_INCLUDE_DIRS})
 
 add_executable(traffic-editor
   gui/add_param_dialog.cpp
@@ -51,8 +68,11 @@ add_executable(traffic-editor
   gui/scenario_dialog.cpp
   gui/scenario_level.cpp
   gui/scenario_table.cpp
+  gui/sim_thread.cpp
   gui/table_list.cpp
   gui/traffic_table.cpp
+  gui/traffic_map.cpp
+  gui/traffic_map_dialog.cpp
   gui/vertex.cpp
   gui/yaml_utils.cpp
   resources/resource.qrc
@@ -60,27 +80,40 @@ add_executable(traffic-editor
 
 target_link_libraries(traffic-editor
   Qt5::Widgets
+  Qt5::Concurrent
+  ignition-plugin1::core
+  ignition-plugin1::loader
+  ignition-common3::core
   yaml-cpp
+  ${ament_index_cpp_LIBRARIES}
+  ${OpenCV_LIBS}
 )
 
-# Create assets folder directory, and clone it from git
+if (OpenCV_VERSION)
+  target_compile_definitions(traffic-editor PUBLIC "HAS_OPENCV")
+endif()
 
-file(MAKE_DIRECTORY "$ENV{HOME}/.traffic_editor/")
-
-ExternalProject_Add(thumbnails_repo
-  GIT_REPOSITORY  https://github.com/osrf/traffic_editor_assets.git
-  GIT_TAG         master
-  INSTALL_COMMAND ""
-  BUILD_COMMAND ""
-  CONFIGURE_COMMAND ""
-  SOURCE_DIR "$ENV{HOME}/.traffic_editor/assets"
-)
-
-add_dependencies(traffic-editor thumbnails_repo)
-
+set_property(TARGET traffic-editor PROPERTY ENABLE_EXPORTS 1)
 
 install(
   TARGETS traffic-editor
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
 )
+
+install(
+  DIRECTORY
+    plugins
+  DESTINATION
+    include/traffic_editor)
+
+install(
+  DIRECTORY
+    include/traffic_editor
+  DESTINATION
+    include)
+
+
+ament_export_include_directories(include)
+
+ament_package()

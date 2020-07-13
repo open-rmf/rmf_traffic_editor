@@ -147,15 +147,8 @@ class BuildingMapServer(Node):
 
     def lift_msg(self, lift):
         msg = Lift()
-        reference_floor_name = lift.reference_floor_name
-        if reference_floor_name not in self.building.levels.keys():
-            return msg
-
-        reference_floor = self.building.levels[reference_floor_name]
-        reference_floor.calculate_scale_using_measurements()
-        msg.ref_x, msg.ref_y = reference_floor.transform.transform_point(
-            (lift.x, -lift.y))
-        # invert y-coordinate as origin is at top left corner
+        # transformation is already done in Lift class
+        msg.ref_x, msg.ref_y = lift.x, lift.y
         msg.name = lift.name
         msg.levels = lift.level_names
 

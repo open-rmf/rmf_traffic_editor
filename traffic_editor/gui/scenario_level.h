@@ -18,7 +18,7 @@
 #ifndef SCENARIO_LEVEL_H
 #define SCENARIO_LEVEL_H
 
-#include "level.h"
+#include "traffic_editor/level.h"
 
 #include <yaml-cpp/yaml.h>
 #include <string>

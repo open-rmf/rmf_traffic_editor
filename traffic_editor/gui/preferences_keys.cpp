@@ -17,3 +17,4 @@ const QString preferences_keys::window_top("editor/window_top");
 const QString preferences_keys::viewport_center_x("editor/viewport_center_x");
 const QString preferences_keys::viewport_center_y("editor/viewport_center_y");
 const QString preferences_keys::viewport_scale("editor/viewport_scale");
+const QString preferences_keys::level_name("editor/level_name");

@@ -25,27 +25,45 @@
  * a map.
  */
 
+#include "editor_model.h"
+#include "model_state.h"
+
 #include <string>
+#include <algorithm>
 #include <yaml-cpp/yaml.h>
+#include <QGraphicsScene>
+
+class Building;
+class QGraphicsPixmapItem;
+
 
 class Model
 {
 public:
-  double x = 0.0;
-  double y = 0.0;
-  double z = 0.0;
-  double yaw = 0.0;
+  ModelState state;
+
   std::string model_name;
   std::string instance_name;
   bool selected = false;  // only for visualization, not saved to YAML
   bool is_static = true;
+  bool is_active = false;
+  bool error_printed = false;
+  std::string starting_level;  // used when resetting a test scenario
+  QGraphicsPixmapItem* pixmap_item = nullptr;
 
   Model();
 
   YAML::Node to_yaml() const;
-  void from_yaml(const YAML::Node &data);
+  void from_yaml(const YAML::Node &data, const std::string& level_name);
 
   void set_param(const std::string &name, const std::string &value);
+
+  void draw(
+      QGraphicsScene *scene,
+      std::vector<EditorModel>& editor_models,
+      const double meters_per_pixel);
+
+  void clear_scene();
 };
 
 #endif

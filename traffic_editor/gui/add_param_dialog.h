@@ -20,7 +20,7 @@
 
 #include <vector>
 #include <QDialog>
-#include "param.h"
+#include "traffic_editor/param.h"
 class QComboBox;
 
 

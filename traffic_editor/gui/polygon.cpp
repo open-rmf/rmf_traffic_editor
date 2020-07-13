@@ -15,7 +15,7 @@
  *
 */
 
-#include "polygon.h"
+#include "traffic_editor/polygon.h"
 using std::string;
 using std::vector;
 
@@ -35,7 +35,8 @@ void Polygon::from_yaml(const YAML::Node &data, const Type polygon_type)
     throw std::runtime_error("Polygon::from_yaml() expected a map");
   type = polygon_type;
   for (YAML::const_iterator it = data["vertices"].begin();
-      it != data["vertices"].end(); ++it) {
+      it != data["vertices"].end(); ++it)
+  {
     vertices.push_back(it->as<int>());
   }
 

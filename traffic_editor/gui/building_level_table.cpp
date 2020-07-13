@@ -72,7 +72,8 @@ void BuildingLevelTable::update(Building& building)
     edit_button->setStyleSheet("QTableWidgetItem { background-color: red; }");
 
     connect(
-        edit_button, &QAbstractButton::clicked,
+        edit_button,
+        &QAbstractButton::clicked,
         [this, &building, i]()
         {
           BuildingLevelDialog level_dialog(building.levels[i]);

@@ -111,6 +111,23 @@ if __name__ == '__main__':
             pass
 
     for model_name in y['models']:
+        if "/" in model_name:
+            # There is an author name; a new folder should be created
+            author_name = model_name.split("/")[0]
+        else:
+            author_name = ""
+
+        try:
+            if author_name:
+                os.makedirs(
+                    os.path.join(
+                        os.path.expanduser(args.output_dir),
+                        author_name
+                    )
+                )
+        except Exception as e:
+            pass
+
         green_img = cv2.imread(os.path.join(
             os.path.expanduser(args.green_img_dir),
             '{}.png'.format(model_name)
@@ -130,4 +147,6 @@ if __name__ == '__main__':
         print('generating {}'.format(output_filepath))
 
         white_img_cropped = crop(green_img, white_img)
-        cv2.imwrite(output_filepath, white_img_cropped)
+        # check if we save the image properly
+        if not cv2.imwrite(output_filepath, white_img_cropped):
+            print('Failed to crop {}'.format(output_filepath))

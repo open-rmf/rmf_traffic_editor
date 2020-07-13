@@ -16,19 +16,25 @@
 */
 
 #include <algorithm>
-#include <iostream>
 #include <fstream>
+#include <iostream>
+#include <memory>
 #include <yaml-cpp/yaml.h>
 
 #include <QFileInfo>
 #include <QDir>
+#include <QThread>
+#include <QtConcurrent/QtConcurrent>
+#include <QElapsedTimer>
 
-#include "building.h"
+#include "traffic_editor/building.h"
 #include "yaml_utils.h"
 
 using std::string;
 using std::vector;
 using std::make_pair;
+using std::unique_ptr;
+using std::shared_ptr;
 
 
 Building::Building()
@@ -62,6 +68,7 @@ bool Building::load_yaml_file()
   // relative paths recorded in the file
 
   // TODO: save previous directory and restore it when leaving this function
+  // in case the building file is in a different path from the project file
   QString dir(QFileInfo(QString::fromStdString(filename)).absolutePath());
   qDebug("changing directory to [%s]", qUtf8Printable(dir));
   if (!QDir::setCurrent(dir))
@@ -86,10 +93,19 @@ bool Building::load_yaml_file()
   const YAML::Node yl = y["levels"];
   for (YAML::const_iterator it = yl.begin(); it != yl.end(); ++it)
   {
-    BuildingLevel l;
-    l.from_yaml(it->first.as<string>(), it->second);
-    levels.push_back(l);
+    BuildingLevel level;
+    level.from_yaml(it->first.as<string>(), it->second);
+    levels.push_back(level);
   }
+
+  QtConcurrent::blockingMap(
+    levels,
+    [&](auto& level) { level.load_drawing(); });
+
+  // now that all images are loaded, we can calculate scale for annotated
+  // measurement lanes
+  for (auto& level : levels)
+    level.calculate_scale();
 
   if (y["lifts"] && y["lifts"].IsMap())
   {
@@ -147,11 +163,15 @@ void Building::add_fiducial(int level_index, double x, double y)
 }
 
 int Building::find_nearest_vertex_index(
-    int level_index, double x, double y, double &distance)
+    int level_index,
+    double x,
+    double y,
+    double &distance)
 {
   double min_dist = 1e100;
   int min_index = -1;
-  for (size_t i = 0; i < levels[level_index].vertices.size(); i++) {
+  for (size_t i = 0; i < levels[level_index].vertices.size(); i++)
+  {
     const Vertex &v = levels[level_index].vertices[i];
     const double dx = x - v.x;
     const double dy = y - v.y;
@@ -204,8 +224,8 @@ Building::NearestItem Building::nearest_items(
   for (size_t i = 0; i < level.models.size(); i++)
   {
     const Model& m = level.models[i];
-    const double dx = x - m.x;
-    const double dy = y - m.y;
+    const double dx = x - m.state.x;
+    const double dy = y - m.state.y;
     const double dist = sqrt(dx*dx + dy*dy);  // no need for sqrt each time
     if (dist < ni.model_dist)
     {
@@ -218,11 +238,11 @@ Building::NearestItem Building::nearest_items(
 }
 
 int Building::nearest_item_index_if_within_distance(
-      const int level_index,
-      const double x,
-      const double y,
-      const double distance_threshold,
-      const ItemType item_type)
+    const int level_index,
+    const double x,
+    const double y,
+    const double distance_threshold,
+    const ItemType item_type)
 {
   if (level_index >= static_cast<int>(levels.size()))
     return -1;
@@ -264,8 +284,8 @@ int Building::nearest_item_index_if_within_distance(
     for (size_t i = 0; i < levels[level_index].models.size(); i++)
     {
       const Model& m = levels[level_index].models[i];
-      const double dx = x - m.x;
-      const double dy = y - m.y;
+      const double dx = x - m.state.x;
+      const double dy = y - m.state.y;
       const double dist2 = dx*dx + dy*dy;  // no need for sqrt each time
       if (dist2 < min_dist)
       {
@@ -280,19 +300,41 @@ int Building::nearest_item_index_if_within_distance(
 }
 
 void Building::add_edge(
-      const int level_index,
-      const int start_vertex_index,
-      const int end_vertex_index,
-      const Edge::Type edge_type)
+    const int level_index,
+    const int start_vertex_index,
+    const int end_vertex_index,
+    const Edge::Type edge_type)
 {
   if (level_index >= static_cast<int>(levels.size()))
     return;
 
   printf("Building::add_edge(%d, %d, %d, %d)\n",
-      level_index, start_vertex_index, end_vertex_index,
+      level_index,
+      start_vertex_index,
+      end_vertex_index,
       static_cast<int>(edge_type));
+
   levels[level_index].edges.push_back(
       Edge(start_vertex_index, end_vertex_index, edge_type));
+}
+
+void Building::add_lane(
+    const int level_index,
+    const int start_vertex_index,
+    const int end_vertex_index,
+    const int graph_idx)
+{
+  if (level_index >= static_cast<int>(levels.size()))
+    return;
+
+  printf("Building::add_lane(%d, %d, %d, graph=%d)\n",
+      level_index,
+      start_vertex_index,
+      end_vertex_index,
+      graph_idx);
+  Edge e(start_vertex_index, end_vertex_index, Edge::LANE);
+  e.set_graph_idx(graph_idx);
+  levels[level_index].edges.push_back(e);
 }
 
 bool Building::delete_selected(const int level_index)
@@ -321,10 +363,10 @@ void Building::add_model(
   printf("Building::add_model(%d, %.1f, %.1f, %.1f, %.2f, %s)\n",
       level_idx, x, y, z, yaw, model_name.c_str());
   Model m;
-  m.x = x;
-  m.y = y;
-  m.z = z;
-  m.yaw = yaw;
+  m.state.x = x;
+  m.state.y = y;
+  m.state.z = z;
+  m.state.yaw = yaw;
   m.model_name = model_name;
   m.instance_name = model_name;  // todo: add unique numeric suffix?
   m.is_static = true;
@@ -339,7 +381,7 @@ void Building::set_model_yaw(
   if (level_idx >= static_cast<int>(levels.size()))
     return;
 
-  levels[level_idx].models[model_idx].yaw = yaw;
+  levels[level_idx].models[model_idx].state.yaw = yaw;
 }
 
 void Building::clear()
@@ -572,4 +614,25 @@ int Building::get_reference_level_idx()
     if (levels[i].name == reference_level_name)
       return static_cast<int>(i);
   return 0;
+}
+
+void Building::clear_scene()
+{
+  for (auto& level : levels)
+    level.clear_scene();
+}
+
+double Building::level_meters_per_pixel(const string& level_name) const
+{
+  for (const auto& level : levels)
+    if (level.name == level_name)
+      return level.drawing_meters_per_pixel;
+  return 0.05;  // just a somewhat sane default
+}
+
+void Building::rotate_all_models(const double rotation)
+{
+  for (auto& level : levels)
+    for (auto& model : level.models)
+      model.state.yaw += rotation;
 }

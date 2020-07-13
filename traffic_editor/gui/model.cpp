@@ -15,35 +15,53 @@
  *
 */
 
-#include <QtGlobal>
+#include <cmath>
 
-#include "model.h"
+#include <QtGlobal>
+#include <QGraphicsPixmapItem>
+#include <QGraphicsColorizeEffect>
+
+#include "traffic_editor/model.h"
 using std::string;
 
+// String comparison helper
+bool iequals(const string& a, const string& b)
+{
+    return std::equal(a.begin(), a.end(),
+                      b.begin(), b.end(),
+                      [](char _a, char _b) {
+                          return tolower(_a) == tolower(_b);
+                      });
+}
 
 Model::Model()
 {
 }
 
-void Model::from_yaml(const YAML::Node &data)
+void Model::from_yaml(const YAML::Node &data, const string& level_name)
 {
   if (!data.IsMap())
     throw std::runtime_error("Model::from_yaml() expected a map");
-  x = data["x"].as<double>();
-  y = data["y"].as<double>();
+  state.x = data["x"].as<double>();
+  state.y = data["y"].as<double>();
   if (data["z"])
   {
-    z = data["z"].as<double>();
+    state.z = data["z"].as<double>();
   }
   else
   {
     qWarning(
         "parsed a deprecated .building.yaml, models should have z defined.");
-    z = 0.0;
+    state.z = 0.0;
   }
-  yaw = data["yaw"].as<double>();
+  state.yaw = data["yaw"].as<double>();
+
   model_name = data["model_name"].as<string>();
   instance_name = data["name"].as<string>();
+
+  state.level_name = level_name;
+  starting_level = level_name;
+
   if (data["static"])
     is_static = data["static"].as<bool>();
   else
@@ -57,11 +75,11 @@ YAML::Node Model::to_yaml() const
 
   YAML::Node n;
   n.SetStyle(YAML::EmitterStyle::Flow);
-  n["x"] = round(x * 1000.0) / 1000.0;
-  n["y"] = round(y * 1000.0) / 1000.0;
-  n["z"] = round(z * 1000.0) / 1000.0;
+  n["x"] = std::round(state.x * 1000.0) / 1000.0;
+  n["y"] = std::round(state.y * 1000.0) / 1000.0;
+  n["z"] = std::round(state.z * 1000.0) / 1000.0;
   // let's give yaw another decimal place because, I don't know, reasons (?)
-  n["yaw"] = round(yaw * 10000.0) / 10000.0;
+  n["yaw"] = std::round(state.yaw * 10000.0) / 10000.0;
   n["name"] = instance_name;
   n["model_name"] = model_name;
   n["static"] = is_static;
@@ -74,7 +92,7 @@ void Model::set_param(const std::string &name, const std::string &value)
   {
     try
     {
-      z = std::stod(value);
+      state.z = std::stod(value);
     }
     catch(const std::exception& e)
     {
@@ -100,4 +118,105 @@ void Model::set_param(const std::string &name, const std::string &value)
   {
     instance_name = value;
   }
+  else
+  {
+    printf("WARNING: setting unknown model parameter: [%s]\n", name.c_str());
+  }
+}
+
+void Model::draw(
+    QGraphicsScene *scene,
+    std::vector<EditorModel>& editor_models,
+    const double drawing_meters_per_pixel)
+{
+  if (pixmap_item == nullptr)
+  {
+    // find the pixmap we need for this model
+    QPixmap pixmap;
+    double model_meters_per_pixel = 1.0;  // will get overridden
+    for (auto &editor_model : editor_models)
+    {
+      if (editor_model.name == model_name)
+      {
+        pixmap = editor_model.get_pixmap();
+        model_meters_per_pixel = editor_model.meters_per_pixel;
+        break;
+      }
+    }
+    if (pixmap.isNull())
+    {
+      // BACKWARDS COMPATIBILITY PATCH: Try again, but...
+      // Use the first matching namespaced thumbnail for a
+      // specified non-namespaced model, with warnings.
+
+      // (Also modifies the model name inplace!)
+      for (auto &editor_model : editor_models)
+      {
+        // Get ending token
+        std::string ending_token;
+        size_t delimiter_index = editor_model.name.find("/");
+
+        if (delimiter_index != std::string::npos)
+        {
+          ending_token = editor_model.name
+            .substr(delimiter_index + 1, editor_model.name.length());
+        }
+        else
+        {
+          ending_token = editor_model.name;
+        }
+
+        // Check if namespaced model_name is the name we are looking for
+        // Match mismatched cases
+        if (iequals(ending_token, model_name))
+        {
+          // Skip rematches from previous for loop
+          if (model_name == editor_model.name) continue;
+
+          pixmap = editor_model.get_pixmap();
+          model_meters_per_pixel = editor_model.meters_per_pixel;
+
+          printf("\n[WARNING] Thumbnail %1$s not found, "
+                 "substituting %2$s instead!\n"
+                 "(%1$s will be saved as %2$s)\n\n",
+                 model_name.c_str(), editor_model.name.c_str());
+
+          // And reassign it!
+          model_name = editor_model.name;
+          break;
+        }
+      }
+
+      // Check again for pixmap find status
+      if (pixmap.isNull()) {
+        if (!error_printed) {
+          printf("[ERROR] No thumbnail found: %s\n", model_name.c_str());
+          error_printed = true;
+        }
+        return;  // couldn't load the pixmap; ignore it.
+      }
+    }
+
+    pixmap_item = scene->addPixmap(pixmap);
+    pixmap_item->setOffset(-pixmap.width()/2, -pixmap.height()/2);
+    pixmap_item->setScale(model_meters_per_pixel / drawing_meters_per_pixel);
+    pixmap_item->setZValue(100.0);  // just anything taller than 0
+  }
+
+  pixmap_item->setPos(state.x, state.y);
+  pixmap_item->setRotation((-state.yaw + M_PI / 2.0) * 180.0 / M_PI);
+
+  // make the model "glow" if it is selected
+  if (selected)
+  {
+    QGraphicsColorizeEffect *colorize = new QGraphicsColorizeEffect;
+    colorize->setColor(QColor::fromRgbF(1.0, 0.2, 0.0, 1.0));
+    colorize->setStrength(1.0);
+    pixmap_item->setGraphicsEffect(colorize);
+  }
+}
+
+void Model::clear_scene()
+{
+  pixmap_item = nullptr;
 }

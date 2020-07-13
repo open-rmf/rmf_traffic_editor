@@ -16,6 +16,7 @@
 */
 
 #include <algorithm>
+#include <cmath>
 
 #include <QGraphicsOpacityEffect>
 #include <QGraphicsPixmapItem>
@@ -23,7 +24,7 @@
 #include <QImage>
 #include <QImageReader>
 
-#include "building_level.h"
+#include "traffic_editor/building_level.h"
 using std::string;
 using std::vector;
 
@@ -53,8 +54,10 @@ bool BuildingLevel::from_yaml(
     if (!drawing_data["filename"])
       throw std::runtime_error("level " + name + " drawing invalid");
     drawing_filename = drawing_data["filename"].as<string>();
+    /*
     if (!load_drawing())
       return false;
+    */
   }
   else if (_data["x_meters"] && _data["y_meters"])
   {
@@ -102,7 +105,7 @@ bool BuildingLevel::from_yaml(
     for (YAML::const_iterator it = ys.begin(); it != ys.end(); ++it)
     {
       Model m;
-      m.from_yaml(*it);
+      m.from_yaml(*it, this->name);
       models.push_back(m);
     }
   }
@@ -143,7 +146,6 @@ bool BuildingLevel::from_yaml(
     }
   }
 
-  calculate_scale();
   return true;
 }
 
@@ -258,21 +260,21 @@ bool BuildingLevel::delete_selected()
       std::remove_if(
           edges.begin(),
           edges.end(),
-          [](Edge edge) { return edge.selected; }),
+          [](const Edge& edge) { return edge.selected; }),
       edges.end());
 
   models.erase(
       std::remove_if(
           models.begin(),
           models.end(),
-          [](Model model) { return model.selected; }),
+          [](const auto& model) { return model.selected; }),
       models.end());
 
   fiducials.erase(
       std::remove_if(
           fiducials.begin(),
           fiducials.end(),
-          [](Fiducial fiducial) { return fiducial.selected; }),
+          [](const Fiducial& fiducial) { return fiducial.selected; }),
       fiducials.end());
 
   // Vertices take a lot more care, because we have to check if a vertex
@@ -336,7 +338,7 @@ void BuildingLevel::calculate_scale()
       scale_count++;
       const double dx = vertices[edge.start_idx].x - vertices[edge.end_idx].x;
       const double dy = vertices[edge.start_idx].y - vertices[edge.end_idx].y;
-      const double distance_pixels = sqrt(dx*dx + dy*dy);
+      const double distance_pixels = std::sqrt(dx*dx + dy*dy);
       // todo: a clean, strongly-typed parameter API for edges
       const double distance_meters =
           edge.params[std::string("distance")].value_double;
@@ -360,13 +362,23 @@ void BuildingLevel::calculate_scale()
   }
 }
 
-void BuildingLevel::draw_lane(QGraphicsScene *scene, const Edge &edge) const
+// todo: migrate this to the TrafficMap class eventually
+void BuildingLevel::draw_lane(
+    QGraphicsScene *scene,
+    const Edge &edge,
+    const RenderingOptions& opts) const
 {
+  const int graph_idx = edge.get_graph_idx();
+  if (graph_idx >= 0 &&
+      graph_idx < static_cast<int>(opts.show_building_lanes.size()) &&
+      !opts.show_building_lanes[graph_idx])
+    return;  // don't render this lane
+
   const auto &v_start = vertices[edge.start_idx];
   const auto &v_end = vertices[edge.end_idx];
   const double dx = v_end.x - v_start.x;
   const double dy = v_end.y - v_start.y;
-  const double len = sqrt(dx*dx + dy*dy);
+  const double len = std::sqrt(dx*dx + dy*dy);
 
   const double lane_pen_width = 1.0 / drawing_meters_per_pixel;
 
@@ -382,30 +394,28 @@ void BuildingLevel::draw_lane(QGraphicsScene *scene, const Edge &edge) const
   const double norm_x = dx / len;
   const double norm_y = dy / len;
 
-  for (double d = 0.0; d < len; d += arrow_spacing)
-  {
-    // first calculate the center vertex of this arrowhead
-    const double cx = v_start.x + d * norm_x;
-    const double cy = v_start.y + d * norm_y;
-    // one edge vertex of arrowhead
-    const double e1x = cx - arrow_w * norm_y;
-    const double e1y = cy + arrow_w * norm_x;
-    // another edge vertex of arrowhead
-    const double e2x = cx + arrow_w * norm_y;
-    const double e2y = cy - arrow_w * norm_x;
-    // tip of arrowhead
-    const double tx = cx + arrow_l * norm_x;
-    const double ty = cy + arrow_l * norm_y;
-    // now add arrowhead lines
-    scene->addLine(e1x, e1y, tx, ty, arrow_pen);
-    scene->addLine(e2x, e2y, tx, ty, arrow_pen);
+  // only draw arrows if it's a unidirectional lane. We used to draw
+  // arrows in both directions for bidirectional, but it was messy.
 
-    if (d > 0.0 && edge.is_bidirectional())
+  if (!edge.is_bidirectional())
+  {
+    for (double d = 0.0; d < len; d += arrow_spacing)
     {
-      const double back_tx = cx - arrow_l * norm_x;
-      const double back_ty = cy - arrow_l * norm_y;
-      scene->addLine(e1x, e1y, back_tx, back_ty, arrow_pen);
-      scene->addLine(e2x, e2y, back_tx, back_ty, arrow_pen);
+      // first calculate the center vertex of this arrowhead
+      const double cx = v_start.x + d * norm_x;
+      const double cy = v_start.y + d * norm_y;
+      // one edge vertex of arrowhead
+      const double e1x = cx - arrow_w * norm_y;
+      const double e1y = cy + arrow_w * norm_x;
+      // another edge vertex of arrowhead
+      const double e2x = cx + arrow_w * norm_y;
+      const double e2y = cy - arrow_w * norm_x;
+      // tip of arrowhead
+      const double tx = cx + arrow_l * norm_x;
+      const double ty = cy + arrow_l * norm_y;
+      // now add arrowhead lines
+      scene->addLine(e1x, e1y, tx, ty, arrow_pen);
+      scene->addLine(e2x, e2y, tx, ty, arrow_pen);
     }
   }
 
@@ -417,7 +427,7 @@ void BuildingLevel::draw_lane(QGraphicsScene *scene, const Edge &edge) const
     case 2: color.setRgbF(0.0, 0.5, 0.5); break;
     case 3: color.setRgbF(0.5, 0.5, 0.0); break;
     case 4: color.setRgbF(0.5, 0.0, 0.5); break;
-    case 5: color.setRgbF(0.5, 0.5, 0.5); break;
+    case 5: color.setRgbF(0.8, 0.0, 0.0); break;
     default: break;  // will render as dark grey
   }
 
@@ -428,10 +438,11 @@ void BuildingLevel::draw_lane(QGraphicsScene *scene, const Edge &edge) const
   // always draw lanes somewhat transparent
   color.setAlphaF(0.5);
 
-  scene->addLine(
+  QGraphicsLineItem *lane_item = scene->addLine(
       v_start.x, v_start.y,
       v_end.x, v_end.y,
       QPen(QBrush(color), lane_pen_width, Qt::SolidLine, Qt::RoundCap));
+  lane_item->setZValue(edge.get_graph_idx() + 1.0);
 
   // draw the orientation icon, if specified
   auto orientation_it = edge.params.find("orientation");
@@ -439,7 +450,7 @@ void BuildingLevel::draw_lane(QGraphicsScene *scene, const Edge &edge) const
     // draw robot-outline box midway down this lane
     const double mx = (v_start.x + v_end.x) / 2.0;
     const double my = (v_start.y + v_end.y) / 2.0;
-    const double yaw = atan2(norm_y, norm_x);
+    const double yaw = std::atan2(norm_y, norm_x);
 
     // robot-box half-dimensions in meters
     const double rw = 0.4 / drawing_meters_per_pixel;
@@ -450,26 +461,26 @@ void BuildingLevel::draw_lane(QGraphicsScene *scene, const Edge &edge) const
     // front-left
     // |mx| + |cos -sin| | rl|
     // |my|   |sin  cos| | rw|
-    const double flx = mx + rl * cos(yaw) - rw * sin(yaw);
-    const double fly = my + rl * sin(yaw) + rw * cos(yaw);
+    const double flx = mx + rl * std::cos(yaw) - rw * std::sin(yaw);
+    const double fly = my + rl * std::sin(yaw) + rw * std::cos(yaw);
 
     // front-right
     // |mx| + |cos -sin| | rl|
     // |my|   |sin  cos| |-rw|
-    const double frx = mx + rl * cos(yaw) + rw * sin(yaw);
-    const double fry = my + rl * sin(yaw) - rw * cos(yaw);
+    const double frx = mx + rl * std::cos(yaw) + rw * std::sin(yaw);
+    const double fry = my + rl * std::sin(yaw) - rw * std::cos(yaw);
 
     // back-left
     // |mx| + |cos -sin| |-rl|
     // |my|   |sin  cos| | rw|
-    const double blx = mx - rl * cos(yaw) - rw * sin(yaw);
-    const double bly = my - rl * sin(yaw) + rw * cos(yaw);
+    const double blx = mx - rl * std::cos(yaw) - rw * std::sin(yaw);
+    const double bly = my - rl * std::sin(yaw) + rw * std::cos(yaw);
 
     // back-right
     // |mx| + |cos -sin| |-rl|
     // |my|   |sin  cos| |-rw|
-    const double brx = mx - rl * cos(yaw) + rw * sin(yaw);
-    const double bry = my - rl * sin(yaw) - rw * cos(yaw);
+    const double brx = mx - rl * std::cos(yaw) + rw * std::sin(yaw);
+    const double bry = my - rl * std::sin(yaw) - rw * std::cos(yaw);
 
     QPainterPath pp;
     pp.moveTo(QPointF(flx, fly));
@@ -556,8 +567,8 @@ void BuildingLevel::draw_door(QGraphicsScene *scene, const Edge &edge) const
 
   const double door_dx = v_end.x - v_start.x;
   const double door_dy = v_end.y - v_start.y;
-  const double door_length = sqrt(door_dx * door_dx + door_dy * door_dy);
-  const double door_angle = atan2(door_dy, door_dx);
+  const double door_length = std::sqrt(door_dx * door_dx + door_dy * door_dy);
+  const double door_angle = std::atan2(door_dy, door_dx);
 
   auto door_type_it = edge.params.find("type");
   if (door_type_it != edge.params.end())
@@ -570,7 +581,7 @@ void BuildingLevel::draw_door(QGraphicsScene *scene, const Edge &edge) const
       const double hinge_x = door_axis == "start" ? v_start.x : v_end.x;
       const double hinge_y = door_axis == "start" ? v_start.y : v_end.y;
       const double angle_offset = door_axis == "start" ? 0.0 : M_PI;
-      
+
       add_door_swing_path(
           door_motion_path,
           hinge_x,
@@ -652,8 +663,8 @@ void BuildingLevel::add_door_slide_path(
   // first draw the door as a thin line
   path.moveTo(hinge_x, hinge_y);
   path.lineTo(
-      hinge_x + door_length * cos(door_angle),
-      hinge_y + door_length * sin(door_angle));
+      hinge_x + door_length * std::cos(door_angle),
+      hinge_y + door_length * std::sin(door_angle));
 
   // now draw a box around where it slides (in the wall, usually)
   const double th = door_angle;  // makes expressions below single-line...
@@ -661,20 +672,20 @@ void BuildingLevel::add_door_slide_path(
   const double s = 0.15 / drawing_meters_per_pixel;  // sliding panel thickness
 
   const QPointF p1(
-      hinge_x - s * cos(th + pi_2),
-      hinge_y - s * sin(th + pi_2));
+      hinge_x - s * std::cos(th + pi_2),
+      hinge_y - s * std::sin(th + pi_2));
 
   const QPointF p2(
-      hinge_x - s * cos(th + pi_2) - door_length * cos(th),
-      hinge_y - s * sin(th + pi_2) - door_length * sin(th));
+      hinge_x - s * std::cos(th + pi_2) - door_length * std::cos(th),
+      hinge_y - s * std::sin(th + pi_2) - door_length * std::sin(th));
 
   const QPointF p3(
-      hinge_x + s * cos(th + pi_2) - door_length * cos(th),
-      hinge_y + s * sin(th + pi_2) - door_length * sin(th));
+      hinge_x + s * std::cos(th + pi_2) - door_length * std::cos(th),
+      hinge_y + s * std::sin(th + pi_2) - door_length * std::sin(th));
 
   const QPointF p4(
-      hinge_x + s * cos(th + pi_2),
-      hinge_y + s * sin(th + pi_2));
+      hinge_x + s * std::cos(th + pi_2),
+      hinge_y + s * std::sin(th + pi_2));
 
 
   path.moveTo(p1);
@@ -694,8 +705,8 @@ void BuildingLevel::add_door_swing_path(
 {
   path.moveTo(hinge_x, hinge_y);
   path.lineTo(
-      hinge_x + door_length * cos(start_angle),
-      hinge_y + door_length * sin(start_angle));
+      hinge_x + door_length * std::cos(start_angle),
+      hinge_y + door_length * std::sin(start_angle));
 
   const int NUM_MOTION_STEPS = 10;
   const double angle_inc = (end_angle - start_angle) / (NUM_MOTION_STEPS-1);
@@ -705,8 +716,8 @@ void BuildingLevel::add_door_swing_path(
     const double a = start_angle + i * angle_inc;
 
     path.lineTo(
-        hinge_x + door_length * cos(a),
-        hinge_y + door_length * sin(a));
+        hinge_x + door_length * std::cos(a),
+        hinge_y + door_length * std::sin(a));
   }
 
   path.lineTo(hinge_x, hinge_y);
@@ -734,7 +745,7 @@ void BuildingLevel::draw_polygon(
 
 void BuildingLevel::draw_polygons(QGraphicsScene *scene) const
 {
-  const QBrush floor_brush(QColor::fromRgbF(0.8, 0.8, 0.8, 0.5));
+  const QBrush floor_brush(QColor::fromRgbF(0.9, 0.9, 0.9, 0.8));
   const QBrush hole_brush(QColor::fromRgbF(0.3, 0.3, 0.3, 0.5));
 
   // first draw the floor polygons
@@ -784,7 +795,8 @@ void BuildingLevel::clear_selection()
 
 void BuildingLevel::draw(
     QGraphicsScene *scene,
-    vector<EditorModel>& editor_models) const
+    vector<EditorModel>& editor_models,
+    const RenderingOptions& rendering_options)
 {
   if (drawing_filename.size())
   {
@@ -822,45 +834,17 @@ void BuildingLevel::draw(
     item->setGraphicsEffect(opacity_effect);
   }
 
-  // now draw all the models
-  for (const auto &model : models)
+  if (rendering_options.show_models)
   {
-    // find the pixmap we need for this model
-    QPixmap pixmap;
-    double model_meters_per_pixel = 1.0;  // will get overridden
-    for (auto &editor_model : editor_models)
-    {
-      if (editor_model.name == model.model_name)
-      {
-        pixmap = editor_model.get_pixmap();
-        model_meters_per_pixel = editor_model.meters_per_pixel;
-        break;
-      }
-    }
-    if (pixmap.isNull())
-      continue;  // couldn't load the pixmap; ignore it.
-
-    QGraphicsPixmapItem *item = scene->addPixmap(pixmap);
-    item->setOffset(-pixmap.width()/2, -pixmap.height()/2);
-    item->setScale(model_meters_per_pixel / drawing_meters_per_pixel);
-    item->setPos(model.x, model.y);
-    item->setRotation(-model.yaw * 180.0 / M_PI);
-
-    // make the model "glow" if it is selected
-    if (model.selected)
-    {
-      QGraphicsColorizeEffect *colorize = new QGraphicsColorizeEffect;
-      colorize->setColor(QColor::fromRgbF(1.0, 0.2, 0.0, 1.0));
-      colorize->setStrength(1.0);
-      item->setGraphicsEffect(colorize);
-    }
+    for (Model& model : models)
+      model.draw(scene, editor_models, drawing_meters_per_pixel);
   }
 
-  for (const auto &edge : edges)
+  for (const auto& edge : edges)
   {
     switch (edge.type)
     {
-      case Edge::LANE: draw_lane(scene, edge); break;
+      case Edge::LANE: draw_lane(scene, edge, rendering_options); break;
       case Edge::WALL: draw_wall(scene, edge); break;
       case Edge::MEAS: draw_meas(scene, edge); break;
       case Edge::DOOR: draw_door(scene, edge); break;
@@ -871,12 +855,18 @@ void BuildingLevel::draw(
     }
   }
 
-  for (const auto &v : vertices)
+  for (const auto& v : vertices)
     v.draw(
         scene,
         vertex_radius / drawing_meters_per_pixel,
-        QColor::fromRgbF(0.0, 1.0, 0.0));
+        QColor::fromRgbF(0.0, 0.5, 0.0));
 
   for (const auto &f : fiducials)
     f.draw(scene, drawing_meters_per_pixel);
+}
+
+void BuildingLevel::clear_scene()
+{
+  for (auto& model : models)
+    model.clear_scene();
 }

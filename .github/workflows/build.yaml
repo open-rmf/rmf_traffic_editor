@@ -3,20 +3,38 @@ on: push
 jobs:
   build:
     runs-on: ubuntu-18.04
+    container:
+      image: docker://ros:eloquent-ros-base-bionic
     
     steps:
-    - uses: actions/checkout@v1
-    - name: deps
+    - name: osrf-repo
+      shell: bash
       run: |
         sudo apt-get update
-        sudo apt-get install cmake libyaml-cpp-dev qt5-default
-    - name: cmake
+        sudo apt-get install -y wget
+        echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable bionic main" > /etc/apt/sources.list.d/gazebo-stable.list
+        wget https://packages.osrfoundation.org/gazebo.key -O - | apt-key add -
+        sudo apt-get update
+        sudo apt-get install -y libignition-plugin-dev libignition-common3-dev
+
+    - name: ros-workspace
       run: |
-        cd traffic_editor
-        mkdir build
-        cd build
-        cmake ..
-    - name: make
+        mkdir -p ws/src
+
+    - name: checkout
+      uses: actions/checkout@v2
+      with:
+        path: ws/src/traffic_editor
+
+    - name: non-ros-deps
       run: |
-        cd traffic_editor/build
-        make
+        sudo apt-get update
+        sudo apt-get install -y git cmake wget libyaml-cpp-dev qt5-default \
+          libopencv-dev libopencv-videoio-dev
+
+    - name: build
+      shell: bash
+      run: |
+        cd ws
+        source /opt/ros/eloquent/setup.bash
+        colcon build --packages-select traffic_editor --cmake-args -DNO_DOWNLOAD_MODELS=True

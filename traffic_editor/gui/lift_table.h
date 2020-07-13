@@ -21,7 +21,7 @@
 #include <QTableWidget>
 
 #include "table_list.h"
-#include "building.h"
+#include "traffic_editor/building.h"
 
 class LiftTable : public TableList
 {

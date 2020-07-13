@@ -95,7 +95,7 @@ double compute_desired_rate_of_change(
     }
   }
 
-  // Flip the sign the to correct direction before returning the value
+  // Flip the sign to the correct direction before returning the value
   return sign * v_next;
 }
 

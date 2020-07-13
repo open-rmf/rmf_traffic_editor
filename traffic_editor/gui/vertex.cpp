@@ -15,10 +15,12 @@
  *
 */
 
+#include <cmath>
+
 #include <QGraphicsScene>
 #include <QGraphicsSimpleTextItem>
 
-#include "vertex.h"
+#include "traffic_editor/vertex.h"
 using std::string;
 using std::vector;
 using std::pair;
@@ -74,8 +76,8 @@ YAML::Node Vertex::to_yaml() const
 
   YAML::Node vertex_node;
   vertex_node.SetStyle(YAML::EmitterStyle::Flow);
-  vertex_node.push_back(round(x * 1000.0) / 1000.0);
-  vertex_node.push_back(round(y * 1000.0) / 1000.0);
+  vertex_node.push_back(std::round(x * 1000.0) / 1000.0);
+  vertex_node.push_back(std::round(y * 1000.0) / 1000.0);
   vertex_node.push_back(0.0);  // placeholder for Z offsets in the future
   vertex_node.push_back(name);
 
@@ -114,8 +116,9 @@ void Vertex::draw(
 
   if (!name.empty()) {
     QGraphicsSimpleTextItem *item = scene->addSimpleText(
-        QString::fromStdString(name));
-    item->setBrush(color);  // QColor(255, 0, 0, 255));
+        QString::fromStdString(name),
+        QFont("Helvetica", 6));
+    item->setBrush(selected ? selected_color : color);
     item->setPos(x, y + radius);
   }
 }

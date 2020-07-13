@@ -15,6 +15,7 @@ extern const QString window_top;
 extern const QString viewport_center_x;
 extern const QString viewport_center_y;
 extern const QString viewport_scale;
+extern const QString level_name;
 };
 
 #endif

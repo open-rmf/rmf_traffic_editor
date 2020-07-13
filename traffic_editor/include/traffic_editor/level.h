@@ -22,7 +22,6 @@
 #include <string>
 
 #include "edge.h"
-#include "editor_model.h"
 #include "fiducial.h"
 #include "layer.h"
 #include "model.h"
