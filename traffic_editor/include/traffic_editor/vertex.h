@@ -42,20 +42,20 @@ public:
   std::map<std::string, Param> params;
 
   Vertex();
-  Vertex(double _x, double _y, const std::string &_name = std::string());
+  Vertex(double _x, double _y, const std::string& _name = std::string());
 
-  void from_yaml(const YAML::Node &data);
+  void from_yaml(const YAML::Node& data);
   YAML::Node to_yaml() const;
 
   void set_param(const std::string& name, const std::string& value);
 
   void draw(
-      QGraphicsScene *scene,
-      const double radius,
-      const QColor& color) const;
+    QGraphicsScene* scene,
+    const double radius,
+    const QColor& color) const;
 
   ////////////////////////////////////////////////////////////
-  static const std::vector<std::pair<std::string, Param::Type> > allowed_params;
+  static const std::vector<std::pair<std::string, Param::Type>> allowed_params;
 };
 
 #endif

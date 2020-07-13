@@ -75,7 +75,7 @@ bool Scenario::load()
     ignition::plugin::Loader loader;
     std::unordered_set<string> plugin_libs = loader.LoadLib(lib_path);
     std::unordered_set<string> sim_libs =
-        loader.PluginsImplementing("Simulation");
+      loader.PluginsImplementing("Simulation");
 
     for (const auto& s : plugin_libs)
       printf("  found plugin library: [%s]\n", s.c_str());
@@ -88,9 +88,9 @@ bool Scenario::load()
       if (sim_libs.find(plugin_class_name) != sim_libs.end())
       {
         printf(
-            "trying to instantiate [%s] from library [%s]...\n",
-            plugin_class_name.c_str(),
-            plugin_name.c_str());
+          "trying to instantiate [%s] from library [%s]...\n",
+          plugin_class_name.c_str(),
+          plugin_name.c_str());
         sim_plugin = loader.Instantiate(plugin_class_name);
 
         if (sim_plugin.IsEmpty())
@@ -100,7 +100,7 @@ bool Scenario::load()
         }
 
         printf("success! created a simulation plugin instance!\n");
-        Simulation *sim = sim_plugin->QueryInterface<Simulation>();
+        Simulation* sim = sim_plugin->QueryInterface<Simulation>();
         if (!sim)
         {
           printf("woah! couldn't get interface to plugin!\n");
@@ -143,32 +143,36 @@ bool Scenario::save() const
 }
 
 void Scenario::draw(
-    QGraphicsScene *scene,
-    const std::string& level_name,
-    const double meters_per_pixel,
-    std::vector<EditorModel>& /*editor_models*/) const
+  QGraphicsScene* scene,
+  const std::string& level_name,
+  const double meters_per_pixel,
+  std::vector<EditorModel>& /*editor_models*/) const
 {
   printf("Scenario::draw(%s)\n", level_name.c_str());
   for (const ScenarioLevel& level : levels)
+  {
     if (level.name == level_name)
     {
       level.draw(scene, meters_per_pixel);
       break;
     }
+  }
 }
 
 void Scenario::add_vertex(
-    const std::string& level_name,
-    const double x,
-    const double y)
+  const std::string& level_name,
+  const double x,
+  const double y)
 {
   printf("Scenario::add_vertex(%s, %.1f, %.1f)\n", level_name.c_str(), x, y);
   for (ScenarioLevel& level : levels)
+  {
     if (level.name == level_name)
     {
       level.add_vertex(x, y);
       return;
     }
+  }
   // if we get here, we didn't find a ScenarioLevel for this level name,
   // so we have to add it now.
   printf("adding level [%s] to scenario\n", level_name.c_str());
@@ -181,15 +185,19 @@ void Scenario::add_vertex(
 void Scenario::clear_selection(const std::string& level_name)
 {
   for (ScenarioLevel& level : levels)
+  {
     if (level.name == level_name)
       level.clear_selection();
+  }
 }
 
 bool Scenario::delete_selected(const std::string& level_name)
 {
   for (ScenarioLevel& level : levels)
+  {
     if (level.name == level_name)
       return level.delete_selected();
+  }
   return true;
 }
 
@@ -198,7 +206,7 @@ void Scenario::sim_tick(Building& building)
   if (!sim_plugin.IsEmpty())
   {
     std::lock_guard<std::mutex> building_guard(building.building_mutex);
-    Simulation *sim = sim_plugin->QueryInterface<Simulation>();
+    Simulation* sim = sim_plugin->QueryInterface<Simulation>();
     if (sim)
       sim->tick(building);
   }
@@ -208,7 +216,7 @@ void Scenario::sim_reset(Building& building)
 {
   if (!sim_plugin.IsEmpty())
   {
-    Simulation *sim = sim_plugin->QueryInterface<Simulation>();
+    Simulation* sim = sim_plugin->QueryInterface<Simulation>();
     if (sim)
       sim->reset(building);
   }
@@ -223,21 +231,21 @@ void Scenario::clear_scene()
 
   if (!sim_plugin.IsEmpty())
   {
-    Simulation *sim = sim_plugin->QueryInterface<Simulation>();
+    Simulation* sim = sim_plugin->QueryInterface<Simulation>();
     if (sim)
       sim->scene_clear();
   }
 }
 
 void Scenario::scene_update(
-    QGraphicsScene *scene,
-    Building& building,
-    const int level_idx)
+  QGraphicsScene* scene,
+  Building& building,
+  const int level_idx)
 {
   if (!sim_plugin.IsEmpty())
   {
     std::lock_guard<std::mutex> building_guard(building.building_mutex);
-    Simulation *sim = sim_plugin->QueryInterface<Simulation>();
+    Simulation* sim = sim_plugin->QueryInterface<Simulation>();
     if (sim)
       sim->scene_update(scene, building, level_idx);
   }

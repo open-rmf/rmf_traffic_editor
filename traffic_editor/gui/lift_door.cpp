@@ -31,11 +31,11 @@ YAML::Node LiftDoor::to_yaml() const
   n["door_type"] = static_cast<int>(door_type);
   // let's give yaw another decimal place because, I don't know, reasons (?)
   n["motion_axis_orientation"] =
-      std::round(motion_axis_orientation * 10000.0) / 10000.0;
+    std::round(motion_axis_orientation * 10000.0) / 10000.0;
   return n;
 }
 
-void LiftDoor::from_yaml(const std::string& _name, const YAML::Node &data)
+void LiftDoor::from_yaml(const std::string& _name, const YAML::Node& data)
 {
   if (!data.IsMap())
     throw std::runtime_error("LiftDoor::from_yaml() expected a map");

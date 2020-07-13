@@ -51,15 +51,15 @@ public:
   double polygon_edge_proj_x = 0.0;
   double polygon_edge_proj_y = 0.0;
 
-  virtual bool from_yaml(const std::string &name, const YAML::Node &data) = 0;
+  virtual bool from_yaml(const std::string& name, const YAML::Node& data) = 0;
   virtual YAML::Node to_yaml() const = 0;
 
   virtual bool delete_selected() = 0;
 
   Polygon::EdgeDragPolygon polygon_edge_drag_press(
-      const Polygon *polygon,
-      const double x,
-      const double y);
+    const Polygon* polygon,
+    const double x,
+    const double y);
 
   virtual void clear_selection() = 0;
 
@@ -67,21 +67,21 @@ public:
 
 protected:
   double point_to_line_segment_distance(
-      const double x,
-      const double y,
-      const double x0,
-      const double y0,
-      const double x1,
-      const double y1,
-      double &x_proj,
-      double &y_proj);
+    const double x,
+    const double y,
+    const double x0,
+    const double y0,
+    const double x1,
+    const double y1,
+    double& x_proj,
+    double& y_proj);
 
   void load_yaml_edge_sequence(
-      const YAML::Node &data,
-      const char *sequence_name,
-      const Edge::Type type);
+    const YAML::Node& data,
+    const char* sequence_name,
+    const Edge::Type type);
 
-  bool parse_vertices(const YAML::Node &_data);
+  bool parse_vertices(const YAML::Node& _data);
 };
 
 #endif

@@ -29,29 +29,29 @@ class LayerDialog : public QDialog
   Q_OBJECT
 
 public:
-  LayerDialog(QWidget *parent, Layer &_layer, bool edit_mode=true);
+  LayerDialog(QWidget* parent, Layer& _layer, bool edit_mode = true);
   ~LayerDialog();
- 
+
 private:
-  Layer &layer;
+  Layer& layer;
   bool _edit_mode = true;
 
-  QLineEdit *name_line_edit;
-  QLineEdit *filename_line_edit;
-  QLineEdit *scale_line_edit;
-  QLineEdit *translation_x_line_edit;
-  QLineEdit *translation_y_line_edit;
-  QLineEdit *rotation_line_edit;
+  QLineEdit* name_line_edit;
+  QLineEdit* filename_line_edit;
+  QLineEdit* scale_line_edit;
+  QLineEdit* translation_x_line_edit;
+  QLineEdit* translation_y_line_edit;
+  QLineEdit* rotation_line_edit;
 
-  QPushButton *filename_button;
-  QPushButton *ok_button, *cancel_button;
+  QPushButton* filename_button;
+  QPushButton* ok_button, * cancel_button;
 
   void update_layer();
 
 private slots:
   void filename_button_clicked();
   void ok_button_clicked();
-  void filename_line_edited(const QString &text);
+  void filename_line_edited(const QString& text);
 
 signals:
   void redraw();

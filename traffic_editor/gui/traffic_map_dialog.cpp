@@ -27,40 +27,40 @@ TrafficMapDialog::TrafficMapDialog(TrafficMap& _traffic_map)
   ok_button = new QPushButton("OK", this);  // first button = [enter] button
   cancel_button = new QPushButton("Cancel", this);
 
-  QHBoxLayout *name_hbox = new QHBoxLayout;
+  QHBoxLayout* name_hbox = new QHBoxLayout;
   name_hbox->addWidget(new QLabel("Traffic map name:"));
   name_line_edit = new QLineEdit(QString::fromStdString(traffic_map.name));
   name_hbox->addWidget(name_line_edit);
 
-  QHBoxLayout *path_hbox = new QHBoxLayout;
+  QHBoxLayout* path_hbox = new QHBoxLayout;
   path_line_edit =
-      new QLineEdit(QString::fromStdString(traffic_map.filename));
-  QPushButton *path_button = new QPushButton("Find...");
+    new QLineEdit(QString::fromStdString(traffic_map.filename));
+  QPushButton* path_button = new QPushButton("Find...");
   connect(
-      path_button,
-      &QAbstractButton::clicked,
-      this,
-      &TrafficMapDialog::path_button_clicked);
+    path_button,
+    &QAbstractButton::clicked,
+    this,
+    &TrafficMapDialog::path_button_clicked);
 
   path_hbox->addWidget(new QLabel("Traffic map path:"));
   path_hbox->addWidget(path_line_edit);
   path_hbox->addWidget(path_button);
 
-  QHBoxLayout *bottom_buttons_hbox = new QHBoxLayout;
+  QHBoxLayout* bottom_buttons_hbox = new QHBoxLayout;
   bottom_buttons_hbox->addWidget(cancel_button);
   bottom_buttons_hbox->addWidget(ok_button);
   connect(
-      ok_button,
-      &QAbstractButton::clicked,
-      this,
-      &TrafficMapDialog::ok_button_clicked);
+    ok_button,
+    &QAbstractButton::clicked,
+    this,
+    &TrafficMapDialog::ok_button_clicked);
   connect(
-      cancel_button,
-      &QAbstractButton::clicked,
-      this,
-      &QDialog::reject);
+    cancel_button,
+    &QAbstractButton::clicked,
+    this,
+    &QDialog::reject);
 
-  QVBoxLayout *top_vbox = new QVBoxLayout;
+  QVBoxLayout* top_vbox = new QVBoxLayout;
   top_vbox->addLayout(name_hbox);
   top_vbox->addLayout(path_hbox);
   // todo: some sort of separator (?)
@@ -80,18 +80,18 @@ void TrafficMapDialog::ok_button_clicked()
   if (path_line_edit->text().isEmpty())
   {
     QMessageBox::critical(
-        this,
-        "Filename not provided",
-        "Filename must be defined. Otherwise click [Cancel].");
+      this,
+      "Filename not provided",
+      "Filename must be defined. Otherwise click [Cancel].");
     return;
   }
 
   if (!path_line_edit->text().endsWith(".traffic_map.yaml"))
   {
     QMessageBox::critical(
-        this,
-        "Bad filename",
-        "Filename must end in .traffic_map.yaml");
+      this,
+      "Bad filename",
+      "Filename must end in .traffic_map.yaml");
     return;
   }
 
@@ -106,7 +106,7 @@ void TrafficMapDialog::path_button_clicked()
   //file_dialog.setFileMode(QFileDialog::ExistingFile);
   file_dialog.setNameFilter("*.traffic_map.yaml");
   if (file_dialog.exec() != QDialog::Accepted)
-    return;  // user clicked 'cancel' in the QFileDialog
+    return;// user clicked 'cancel' in the QFileDialog
   const QString filename = file_dialog.selectedFiles().first();
 
   // if the filename has changed, load it.
@@ -121,9 +121,9 @@ void TrafficMapDialog::path_button_clicked()
     if (QFileInfo(filename).exists() && !traffic_map.load_file())
     {
       QMessageBox::critical(
-          this,
-          "Unable to load file",
-          "Unable to load file. Check filename?");
+        this,
+        "Unable to load file",
+        "Unable to load file. Check filename?");
     }
   }
 }

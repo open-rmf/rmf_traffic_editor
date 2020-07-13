@@ -26,34 +26,34 @@ BuildingDialog::BuildingDialog(Building& building)
   _ok_button = new QPushButton("OK", this);  // first button = [enter] button
   _cancel_button = new QPushButton("Cancel", this);
 
-  QHBoxLayout *building_name_hbox = new QHBoxLayout;
+  QHBoxLayout* building_name_hbox = new QHBoxLayout;
   building_name_hbox->addWidget(new QLabel("Building name:"));
   _building_name_line_edit = new QLineEdit(
-      QString::fromStdString(building.name),
-      this);
+    QString::fromStdString(building.name),
+    this);
   building_name_hbox->addWidget(_building_name_line_edit);
 
-  QHBoxLayout *reference_level_hbox = new QHBoxLayout;
+  QHBoxLayout* reference_level_hbox = new QHBoxLayout;
   reference_level_hbox->addWidget(new QLabel("Reference level:"));
   _reference_floor_combo_box = new QComboBox;
   for (const auto& level : building.levels)
     _reference_floor_combo_box->addItem(QString::fromStdString(level.name));
   if (!building.levels.empty() && !building.reference_level_name.empty())
     _reference_floor_combo_box->setCurrentText(
-        QString::fromStdString(building.reference_level_name));
+      QString::fromStdString(building.reference_level_name));
   reference_level_hbox->addWidget(_reference_floor_combo_box);
 
-  QHBoxLayout *bottom_buttons_hbox = new QHBoxLayout;
+  QHBoxLayout* bottom_buttons_hbox = new QHBoxLayout;
   bottom_buttons_hbox->addWidget(_cancel_button);
   bottom_buttons_hbox->addWidget(_ok_button);
   connect(
-      _ok_button, &QAbstractButton::clicked,
-      this, &BuildingDialog::ok_button_clicked);
+    _ok_button, &QAbstractButton::clicked,
+    this, &BuildingDialog::ok_button_clicked);
   connect(
-      _cancel_button, &QAbstractButton::clicked,
-      this, &QDialog::reject);
+    _cancel_button, &QAbstractButton::clicked,
+    this, &QDialog::reject);
 
-  QVBoxLayout *top_vbox = new QVBoxLayout;
+  QVBoxLayout* top_vbox = new QVBoxLayout;
 
   top_vbox->addLayout(building_name_hbox);
   top_vbox->addLayout(reference_level_hbox);
@@ -71,6 +71,6 @@ void BuildingDialog::ok_button_clicked()
 {
   _building.name = _building_name_line_edit->text().toStdString();
   _building.reference_level_name =
-      _reference_floor_combo_box->currentText().toStdString();
+    _reference_floor_combo_box->currentText().toStdString();
   accept();
 }

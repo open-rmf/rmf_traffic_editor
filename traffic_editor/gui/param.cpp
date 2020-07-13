@@ -29,7 +29,7 @@ Param::Param(const Type& t)
 {
 }
 
-Param::Param(const std::string &s)
+Param::Param(const std::string& s)
 : type(STRING),
   value_int(0),
   value_double(0.0),
@@ -38,17 +38,17 @@ Param::Param(const std::string &s)
 {
 }
 
-Param::Param(const int &i)
+Param::Param(const int& i)
 : type(INT), value_int(i), value_double(0.0), value_bool(false)
 {
 }
 
-Param::Param(const double &d)
+Param::Param(const double& d)
 : type(DOUBLE), value_int(0), value_double(d), value_bool(false)
 {
 }
 
-Param::Param(const bool &b)
+Param::Param(const bool& b)
 : type(BOOL), value_int(0), value_double(0.0), value_bool(b)
 {
 }
@@ -57,7 +57,7 @@ Param::~Param()
 {
 }
 
-void Param::from_yaml(const YAML::Node &data)
+void Param::from_yaml(const YAML::Node& data)
 {
   if (!data.IsSequence())
     throw std::runtime_error("Param::from_yaml expected a YAML sequence");
@@ -94,7 +94,7 @@ YAML::Node Param::to_yaml() const
   return y;
 }
 
-void Param::set(const std::string &value)
+void Param::set(const std::string& value)
 {
   if (type == INT)
     value_int = stoi(value);
