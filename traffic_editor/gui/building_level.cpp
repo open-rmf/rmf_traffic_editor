@@ -277,6 +277,13 @@ bool BuildingLevel::delete_selected()
       [](const Fiducial& fiducial) { return fiducial.selected; }),
     fiducials.end());
 
+  polygons.erase(
+    std::remove_if(
+      polygons.begin(),
+      polygons.end(),
+      [](const Polygon& polygon) { return polygon.selected; }),
+    polygons.end());
+
   // Vertices take a lot more care, because we have to check if a vertex
   // is used in an edge or a polygon before deleting it, and update all
   // higher-index vertex indices in the edges and polygon vertex lists.
