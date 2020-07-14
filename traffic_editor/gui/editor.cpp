@@ -2038,6 +2038,7 @@ void Editor::mouse_add_polygon(
       {
         Polygon polygon;
         polygon.type = polygon_type;
+        polygon.create_required_parameters();
         for (const auto& i : mouse_motion_polygon_vertices)
         {
           polygon.vertices.push_back(i);
