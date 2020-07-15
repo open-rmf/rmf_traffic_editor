@@ -33,7 +33,7 @@ private:
   rclcpp::Node::SharedPtr _ros_node;
   Entity _cabin_joint;
 
-  std::shared_ptr<LiftCommon> _lift_common = nullptr;
+  std::unique_ptr<LiftCommon> _lift_common = nullptr;
 
   bool _initialized = false;
 
@@ -62,7 +62,7 @@ public:
 
   void Configure(const Entity& entity,
     const std::shared_ptr<const sdf::Element>& sdf,
-    EntityComponentManager& ecm, EventManager& _eventMgr) override
+    EntityComponentManager& ecm, EventManager& /*_eventMgr*/) override
   {
     //_ros_node = gazebo_ros::Node::Get(sdf);
     // TODO get properties from sdf instead of hardcoded (will fail for multiple instantiations)
@@ -76,7 +76,7 @@ public:
     _ros_node = std::make_shared<rclcpp::Node>(plugin_name);
 
     RCLCPP_INFO(_ros_node->get_logger(),
-      "Loading DoorPlugin for [%s]",
+      "Loading LiftPlugin for [%s]",
       model.Name(ecm).c_str());
 
     _lift_common = LiftCommon::make(
@@ -98,7 +98,6 @@ public:
     create_entity_components(joint, ecm);
     _cabin_joint = joint;
 
-    //_cabin_joint.SetPosition(0, _lift_common->get_elevation());
     auto position_cmd = ecm.Component<components::JointPositionReset>(
       _cabin_joint);
     position_cmd->Data()[0] = _lift_common->get_elevation();

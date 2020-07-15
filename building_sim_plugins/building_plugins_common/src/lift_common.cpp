@@ -27,14 +27,14 @@ rclcpp::Logger LiftCommon::logger() const
   return rclcpp::get_logger("lift_" + _lift_state.lift_name);
 }
 
-std::string LiftCommon::get_joint_name()
+std::string LiftCommon::get_joint_name() const
 {
   return _cabin_joint_name;
 }
 
-const double LiftCommon::get_elevation()
+double LiftCommon::get_elevation() const
 {
-  return _floor_name_to_elevation[_lift_state.destination_floor];
+  return _floor_name_to_elevation.at(_lift_state.destination_floor);
 }
 
 void LiftCommon::publish_door_request(const double time, std::string door_name,
@@ -89,7 +89,7 @@ void LiftCommon::update_cabin_state(const double position,
     _lift_state.motion_state = LiftState::MOTION_DOWN;
 }
 
-void LiftCommon::open_doors(const double time)
+void LiftCommon::move_doors(const double time, uint32_t door_mode)
 {
   auto cabin_door_names =
     _floor_name_to_cabin_door_name[_lift_state.current_floor];
@@ -98,8 +98,8 @@ void LiftCommon::open_doors(const double time)
     const auto it = _cabin_door_states.find(cabin_door);
     if (it == _cabin_door_states.end())
       continue;
-    if (it->second && it->second->current_mode.value != DoorMode::MODE_OPEN)
-      publish_door_request(time, cabin_door, DoorMode::MODE_OPEN);
+    if (it->second && it->second->current_mode.value != door_mode)
+      publish_door_request(time, cabin_door, door_mode);
   }
   auto shaft_door_names =
     _floor_name_to_shaft_door_name[_lift_state.current_floor];
@@ -108,25 +108,19 @@ void LiftCommon::open_doors(const double time)
     const auto it = _shaft_door_states.find(shaft_door);
     if (it == _shaft_door_states.end())
       continue;
-    if (it->second && it->second->current_mode.value != DoorMode::MODE_OPEN)
-      publish_door_request(time, shaft_door, DoorMode::MODE_OPEN);
+    if (it->second && it->second->current_mode.value != door_mode)
+      publish_door_request(time, shaft_door, door_mode);
   }
+}
+
+void LiftCommon::open_doors(const double time)
+{
+  move_doors(time, DoorMode::MODE_OPEN);
 }
 
 void LiftCommon::close_doors(const double time)
 {
-  for (auto& cabin_door : _cabin_door_states)
-  {
-    if ((!cabin_door.second) ||
-      (cabin_door.second->current_mode.value != DoorMode::MODE_CLOSED))
-      publish_door_request(time, cabin_door.first, DoorMode::MODE_CLOSED);
-  }
-  for (auto& shaft_door : _shaft_door_states)
-  {
-    if ((!shaft_door.second) ||
-      (shaft_door.second->current_mode.value != DoorMode::MODE_CLOSED))
-      publish_door_request(time, shaft_door.first, DoorMode::MODE_CLOSED);
-  }
+  move_doors(time, DoorMode::MODE_CLOSED);
 }
 
 uint32_t LiftCommon::get_door_state(
@@ -134,7 +128,8 @@ uint32_t LiftCommon::get_door_state(
   std::vector<std::string>>& floor_to_door_map,
   const std::unordered_map<std::string, DoorState::SharedPtr>& door_states)
 {
-  std::size_t open_count = 0; std::size_t closed_count = 0;
+  std::size_t open_count = 0;
+  std::size_t closed_count = 0;
   const auto doors = floor_to_door_map.find(
     _lift_state.current_floor)->second;
   const std::size_t num = doors.size();
@@ -166,16 +161,8 @@ void LiftCommon::update_lift_door_state()
   uint32_t shaft_door_state = get_door_state(
     _floor_name_to_shaft_door_name, _shaft_door_states);
 
-  if ((cabin_door_state == DoorMode::MODE_OPEN) &&
-    (shaft_door_state == DoorMode::MODE_OPEN))
-    _lift_state.door_state = LiftState::DOOR_OPEN;
-
-  else if ((cabin_door_state == DoorMode::MODE_CLOSED) &&
-    (shaft_door_state == DoorMode::MODE_CLOSED))
-    _lift_state.door_state = LiftState::DOOR_CLOSED;
-
-  else
-    _lift_state.door_state = LiftState::DOOR_MOVING;
+  _lift_state.door_state = (cabin_door_state == shaft_door_state) ?
+    cabin_door_state : LiftState::DOOR_MOVING;
 }
 
 LiftCommon::LiftCommon(rclcpp::Node::SharedPtr node,
@@ -258,14 +245,23 @@ LiftCommon::LiftCommon(rclcpp::Node::SharedPtr node,
 
   // Initial lift state
   _lift_state.lift_name = _lift_name;
-  // TODO ensure lift spawns at reference_floor_name
   _lift_state.current_floor = _floor_names[0];
   _lift_state.destination_floor = reference_floor_name;
   _lift_state.door_state = LiftState::DOOR_CLOSED;
   _lift_state.motion_state = LiftState::MOTION_STOPPED;
-  _lift_state.available_floors.clear();
   for (const std::string& floor_name : _floor_names)
     _lift_state.available_floors.push_back(floor_name);
+}
+
+void LiftCommon::pub_lift_state(const double time)
+{
+  _last_pub_time = time;
+  const int32_t t_sec = static_cast<int32_t>(time);
+  const uint32_t t_nsec =
+    static_cast<uint32_t>((time-static_cast<double>(t_sec)) *1e9);
+  const rclcpp::Time now{t_sec, t_nsec, RCL_ROS_TIME};
+  _lift_state.lift_time = now;
+  _lift_state_pub->publish(_lift_state);
 }
 
 LiftCommon::LiftUpdateResult LiftCommon::update(const double time,
@@ -335,15 +331,8 @@ LiftCommon::LiftUpdateResult LiftCommon::update(const double time,
   }
   // Publish lift state at 1 Hz
   if (time - _last_pub_time >= 1.0)
-  {
-    _last_pub_time = time;
-    const int32_t t_sec = static_cast<int32_t>(time);
-    const uint32_t t_nsec =
-      static_cast<uint32_t>((time-static_cast<double>(t_sec)) *1e9);
-    const rclcpp::Time now{t_sec, t_nsec, RCL_ROS_TIME};
-    _lift_state.lift_time = now;
-    _lift_state_pub->publish(_lift_state);
-  }
+    pub_lift_state(time);
+
   return result;
 }
 

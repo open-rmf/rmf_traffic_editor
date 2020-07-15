@@ -54,7 +54,7 @@ public:
   };
 
   template<typename SdfPtrT>
-  static std::shared_ptr<LiftCommon> make(
+  static std::unique_ptr<LiftCommon> make(
     const std::string& lift_name,
     rclcpp::Node::SharedPtr node,
     SdfPtrT& sdf);
@@ -64,9 +64,9 @@ public:
   LiftUpdateResult update(const double time, const double position,
     const double velocity);
 
-  std::string get_joint_name();
+  std::string get_joint_name() const;
 
-  const double get_elevation();
+  double get_elevation() const;
 
 private:
 
@@ -118,6 +118,8 @@ private:
     const double velocity);
 
   void update_cabin_state(const double position, const double velocity);
+
+  void move_doors(const double time, uint32_t door_mode);
   
   void open_doors(const double time);
 
@@ -128,12 +130,14 @@ private:
     std::vector<std::string>>& floor_to_door_map,
     const std::unordered_map<std::string, DoorState::SharedPtr>& door_states);
   
+  void pub_lift_state(const double time);
+
   void update_lift_door_state();
 
 };
 
 template<typename SdfPtrT>
-std::shared_ptr<LiftCommon> LiftCommon::make(
+std::unique_ptr<LiftCommon> LiftCommon::make(
   const std::string& lift_name,
   rclcpp::Node::SharedPtr node,
   SdfPtrT& sdf)
@@ -227,7 +231,7 @@ std::shared_ptr<LiftCommon> LiftCommon::make(
   get_sdf_param_if_available<std::string>(sdf_clone, "reference_floor",
     reference_floor_name);
 
-  std::shared_ptr<LiftCommon> lift(new LiftCommon(
+  std::unique_ptr<LiftCommon> lift(new LiftCommon(
       node,
       lift_name,
       joint_name,

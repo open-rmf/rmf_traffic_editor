@@ -8,7 +8,7 @@ endif()
 
 # Default to C++14
 if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 14)
+  set(CMAKE_CXX_STANDARD 17)
 endif()
 
 
@@ -28,7 +28,7 @@ endif()
 ign_find_package(ignition-gazebo4 QUIET)
 if (NOT ignition-gazebo4_FOUND)
   message("Wrong ignition-gazebo version found. Plugins require ignition-gazebo4 (dome)")
-#  return()
+  return()
 endif()
 set(IGN_GAZEBO_VER 4)
 ign_find_package(ignition-plugin1 REQUIRED COMPONENTS register)
@@ -69,7 +69,6 @@ target_include_directories(slotcar
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     ${building_sim_common_INCLUDE_DIRS}
-    ${GAZEBO_INCLUDE_DIRS}
     ${geometry_msgs_INCLUDE_DIRS}
     ${std_msgs_INCLUDE_DIRS}
     ${rmf_fleet_msgs_INCLUDE_DIRS}
@@ -85,7 +84,6 @@ add_library(door SHARED src/door.cpp)
 
 target_include_directories(door
   PUBLIC
-    ${GAZEBO_INCLUDE_DIRS}
     ${building_sim_common_INCLUDE_DIRS}
     ${geometry_msgs_INCLUDE_DIRS}
     ${rmf_door_msgs_INCLUDE_DIRS}
@@ -111,7 +109,6 @@ add_library(lift SHARED src/lift.cpp)
 
 target_include_directories(lift
   PUBLIC
-    ${GAZEBO_INCLUDE_DIRS}
     ${building_sim_common_INCLUDE_DIRS}
     ${geometry_msgs_INCLUDE_DIRS}
     ${rmf_door_msgs_INCLUDE_DIRS}

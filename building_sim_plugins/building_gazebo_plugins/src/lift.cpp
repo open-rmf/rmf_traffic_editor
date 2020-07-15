@@ -22,7 +22,7 @@ private:
   gazebo::physics::JointPtr _cabin_joint_ptr;
   gazebo_ros::Node::SharedPtr _ros_node;
 
-  std::shared_ptr<LiftCommon> _lift_common = nullptr;
+  std::unique_ptr<LiftCommon> _lift_common = nullptr;
 
   bool _initialized;
 

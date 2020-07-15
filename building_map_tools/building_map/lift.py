@@ -135,6 +135,7 @@ class LiftDoor:
         door_ele.set('right_joint_name', 'right_joint')
         door_ele.set('type', 'DoubleSlidingDoor')
 
+    # TODO: remove this function once nesting model is supported in ignition.
     def generate_cabin_door_ign(self, lift_model_ele, name):
         # This is for cabin door generation for ignition gazebo as it doesn't
         # support nested models yet. Once ignition gazebo supports nested
@@ -346,6 +347,8 @@ class Lift:
                                     joint_axis='z'))
 
         # cabin doors
+        # TODO: remove the if statement here once nesting model is supported
+        # in ignition.
         if 'ignition' in options:
             for lift_door in self.doors:
                 lift_door.generate_cabin_door_ign(
