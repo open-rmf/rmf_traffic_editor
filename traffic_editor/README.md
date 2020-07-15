@@ -17,7 +17,7 @@ Traffic Editor is now structured as a Colcon package. After installing
 ROS 2 Eloquent, the following command sequence will create a colcon
 workspace in `~/colcon_workspace` and build `traffic-editor` there:
 
-```
+```bash
 sudo apt update
 sudo apt install libyaml-cpp-dev qt5-default \
   libopencv-dev libopencv-videoio-dev \
@@ -33,7 +33,7 @@ colcon build --packages-select traffic_editor
 You are also **highly recommended** to also install the companion `traffic_editor_assets`
 package, which contains a nifty bunch of useful assets to use with `traffic_editor`.
 
-```
+```bash
 cd ~/colcon_workspace/src
 git clone https://github.com/osrf/traffic_editor_assets
 cd ~/colcon_workspace
@@ -43,7 +43,7 @@ colcon build --packages-select traffic_editor_assets
 
 Then you should be able to run `traffic-editor` by sourcing the install
 space of that workspace, in a new "clean" terminal:
-```
+```bash
 source ~/colcon_workspace/install/setup.bash
 traffic-editor
 ```
@@ -103,3 +103,12 @@ Click the "Add..." button in the "lifts" tab on the far right side of the main e
 *Note: Do include the keywork "lift" in the lift name as for now this is how slotcars recognize lift models.*
 
 You can add lift doors by lick the "Add..." button below the box showing the lift. Set Door type to "Double sliding" (The only supported type for now!), and align the doors to the edge of the lift (represented by the green box). After that, select which door you want to use on each floor by simply checking the boxes on the left.
+
+### Generating Custom Thumbnails
+
+Model thumbnails are used in `traffic_editor`. To generate a thumbnail, a simple working example is shown here to generate a `SUV`:
+```bash
+# Run as gz plugin, require last 2 args: [input_sdf_model_path] [output_path]
+gzserver -s libthumbnail_generator.so empty.world ~/.gazebo/models/SUV/model.sdf .
+```
+After execution, you will notice a newly created `SUV.png` in your current working directory. This can be further placed into `traffic_editor_assets/assets/thumbnails`.
