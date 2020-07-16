@@ -53,7 +53,7 @@ class Level:
 
         self.transformed_vertices = []  # will be calculated in a later pass
 
-        self.lift_vert_lists = []  # will be calculated in a later pass
+        self.lift_vert_lists = {}  # will be calculated in a later pass
 
         self.meas = []
         if 'measurements' in yaml_node:
@@ -505,6 +505,23 @@ class Level:
             x1, y1, x2, y2, x3, y3, x4, y4))
         return True
 
+    def is_in_lift(self, p, lift_vert_list):
+        # checks if a point is in 
+        verts = np.array(lift_vert_list)
+        # array of vectors from the point to four rectangle vertices
+        a = verts - np.array(p)
+        # array of vectors for the four sides of the rectangle
+        b = []
+        for i in range(4):
+            b.append(verts[i-1] - verts[i])
+        # cross products of the four pairs of vectors. If the four cross
+        # products have the same sign, then the point is inside the rectangle
+        cross = np.cross(a, np.array(b))
+        if np.all(cross >= 0) or np.all(cross <= 0):
+            return True
+        else:
+            return False
+
     def generate_nav_graph(self, graph_idx, always_unidirectional=True):
         """ Generate a graph without unnecessary (non-lane) vertices """
         # first remap the vertices. Store both directions; we'll need them
@@ -533,6 +550,10 @@ class Level:
             p = {'name': v.name}
             for param_name, param_value in v.params.items():
                 p[param_name] = param_value.value
+            for lift_name, lift_vert_list in self.lift_vert_lists.items():
+                if self.is_in_lift([v.x, v.y], lift_vert_list):
+                    p['lift'] = lift_name
+                    break
             nav_data['vertices'].append([v.x, v.y, p])
 
         nav_data['lanes'] = []

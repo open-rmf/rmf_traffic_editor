@@ -49,9 +49,9 @@ class Building:
         return s
 
     def set_lift_vert_lists(self):
-        lift_vert_lists = []
+        lift_vert_lists = {}
         for lift_name, lift in self.lifts.items():
-            lift_vert_lists.append(lift.get_lift_vertices())
+            lift_vert_lists[lift_name] = lift.get_lift_vertices()
 
         for level_name, level in self.levels.items():
             level.set_lift_vert_lists(lift_vert_lists)
