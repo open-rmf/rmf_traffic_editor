@@ -74,8 +74,11 @@ DoorCommon::DoorCommon(const std::string& door_name,
   _door_state_pub = _ros_node->create_publisher<DoorState>(
     "/door_states", rclcpp::SystemDefaultsQoS());
 
+  // Increase queue size
+  auto request_qos = rclcpp::SystemDefaultsQoS();
+  request_qos.keep_last(REQUEST_QUEUE_SIZE);
   _door_request_sub = _ros_node->create_subscription<DoorRequest>(
-    "/door_requests", rclcpp::SystemDefaultsQoS(),
+    "/door_requests", request_qos,
     [&](DoorRequest::UniquePtr msg)
     {
       if (msg->door_name == _state.door_name)
