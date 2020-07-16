@@ -27,6 +27,10 @@
 #include "gazebo/rendering/rendering.hh"
 #include "gazebo/util/system.hh"
 
+#define IMG_SIZE 4000
+#define CAM_HFOV 0.08
+#define CAM_HEIGHT 200
+
 using namespace gazebo;
 
 class GZ_PLUGIN_VISIBLE ThumbnailGenerator : public SystemPlugin
@@ -56,7 +60,6 @@ public:
     std::cout << " - Input Model Path: " << model_path << std::endl;
     std::cout << " - Output Directory: " << output_dir << std::endl;
 
-    // folder and files management
     _output_path = boost::filesystem::path(output_dir);
     if (!boost::filesystem::exists(_output_path))
       boost::filesystem::create_directories(_output_path);
@@ -159,9 +162,9 @@ public:
       this->_camera->SetCaptureData(true);
       this->_camera->Load(cameraSDF);
       this->_camera->Init();
-      this->_camera->SetHFOV(static_cast<ignition::math::Angle>(0.04));
-      this->_camera->SetImageWidth(2000);
-      this->_camera->SetImageHeight(2000);
+      this->_camera->SetHFOV(static_cast<ignition::math::Angle>(CAM_HFOV));
+      this->_camera->SetImageWidth(IMG_SIZE);
+      this->_camera->SetImageHeight(IMG_SIZE);
       this->_camera->CreateRenderTexture("RenderTex");
       this->_camera->SetClipDist(100, 1000);
 
@@ -175,32 +178,41 @@ public:
       printf(" Generating Thumbnail for %s \n", this->_model_name.c_str());
       event::Events::preRender();
 
-      // todo: green fringe?? can add white background easily here
-      // green background
+      unsigned char* img_ptr;
+      cv::Mat mask;
+
+      // Render scene with green background
       this->_scene->SetAmbientColor(ignition::math::Color(1, 1, 1, 1));
       this->_scene->SetBackgroundColor(ignition::math::Color(0, 1, 0, 1));
       this->_scene->SetShadowsEnabled(false);
       this->RenderCameraVisual();
 
+      // Create Mask acording from image with green background
       // Get Image data from camera in scene
-      const unsigned char* img_data_ptr = this->_camera->ImageData();
-      unsigned char* img_ptr;
-      img_ptr = (unsigned char*)img_data_ptr;
-      cv::Mat green_img(cv::Size(2000, 2000), CV_8UC3, img_ptr);
-      cv::cvtColor(green_img, green_img, cv::COLOR_BGR2RGB);
+      img_ptr = (unsigned char*)this->_camera->ImageData();
+      cv::Mat green_img(cv::Size(IMG_SIZE, IMG_SIZE), CV_8UC3, img_ptr);
+      cv::inRange(green_img, cv::Scalar(0, 245, 0),
+        cv::Scalar(5, 255, 5), mask);
+      cv::bitwise_not(mask, mask);
 
-      // Create Mask acording to green background
-      cv::Mat green_mask;
-      cv::inRange(green_img, cv::Scalar(0, 230, 0),
-        cv::Scalar(10, 255, 10), green_mask);
-      cv::bitwise_not(green_mask, green_mask);
+      // Render scene with white background
+      // then apply "green" mask to white image to avoid green-fringe effects
+      this->_scene->SetAmbientColor(ignition::math::Color(1, 1, 1, 1));
+      this->_scene->SetBackgroundColor(ignition::math::Color(1, 1, 1, 1));
+      this->_scene->SetShadowsEnabled(false);
+      this->RenderCameraVisual();
+
+      // Get Image data from camera in scene
+      img_ptr = (unsigned char*)this->_camera->ImageData();
+      cv::Mat white_img(cv::Size(IMG_SIZE, IMG_SIZE), CV_8UC3, img_ptr);
+      cv::cvtColor(white_img, white_img, cv::COLOR_BGR2RGB);
 
       // Created masked img with alpha val, then crop it!
-      cv::Mat masked_img(cv::Size(2000, 2000), CV_8UC4);
-      cv::cvtColor(green_img, masked_img, cv::COLOR_RGB2RGBA);
+      cv::Mat masked_img(cv::Size(IMG_SIZE, IMG_SIZE), CV_8UC4);
+      cv::cvtColor(white_img, masked_img, cv::COLOR_RGB2RGBA);
       std::vector<cv::Mat> channels;
-      cv::split(green_img, channels);
-      channels.push_back(green_mask);
+      cv::split(white_img, channels);
+      channels.push_back(mask);
       cv::merge(channels, masked_img);
       cv::Rect r = cv::boundingRect(channels[3]);
 
@@ -225,7 +237,7 @@ public:
 
     // Generate Top view PNG Img
     ignition::math::Pose3d pose;
-    pose.Pos().Set(0, 0, 200);
+    pose.Pos().Set(0, 0, CAM_HEIGHT);
     pose.Rot().Euler(0, IGN_DTOR(90), 0);
     this->_camera->SetWorldPose(pose);
     this->_camera->Update();
@@ -255,8 +267,8 @@ private:
   rendering::ScenePtr _scene;
   rendering::CameraPtr _camera;
   sdf::SDFPtr _sdf_model;
-  bool _exit_flag;
 
+  bool _exit_flag;
   std::string _model_name;
   boost::filesystem::path _output_path;
 };

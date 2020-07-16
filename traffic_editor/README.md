@@ -112,3 +112,8 @@ Model thumbnails are used in `traffic_editor`. To generate a thumbnail, a simple
 gzserver -s libthumbnail_generator.so empty.world ~/.gazebo/models/SUV/model.sdf .
 ```
 After execution, you will notice a newly created `SUV.png` in your current working directory. This can be further placed into `traffic_editor_assets/assets/thumbnails`.
+
+To generate multiple model thumbnails listed in `model_list.yaml`, run this:
+```bash
+./scripts/generate_thumbnails.py ~/.gazebo/models/ thumbnail_generator/test/model_list.yaml ~/output
+```
