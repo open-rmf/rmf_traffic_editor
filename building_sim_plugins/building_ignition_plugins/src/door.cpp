@@ -58,7 +58,7 @@ public:
 
   void Configure(const Entity& entity,
     const std::shared_ptr<const sdf::Element>& sdf,
-    EntityComponentManager& ecm, EventManager& _eventMgr) override
+    EntityComponentManager& ecm, EventManager& /*_eventMgr*/) override
   {
     //_ros_node = gazebo_ros::Node::Get(sdf);
     // TODO get properties from sdf instead of hardcoded (will fail for multiple instantiations)
