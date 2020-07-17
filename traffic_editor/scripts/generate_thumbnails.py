@@ -30,12 +30,25 @@ class ThumbnailsGenerator:
                 'model_list', default='../test/model_list.yaml',
                 help='Path of model_list.yaml')
         parser.add_argument(
-                'output_dir',
+                'output_dir', default='.',
                 help='Directory where the output images will be saved')
+        # Optional arguments
+        parser.add_argument(
+                '--size', dest='img_size', default=4000,
+                help='Output thumbnail Image pixel size')
+        parser.add_argument(
+                '--height', dest='cam_height', default=200,
+                help='Scene camara height')
+        parser.add_argument(
+                '--hfov', dest='cam_hfov', default=0.08,
+                help='Scene camera horizontal FOV')
         args = parser.parse_args(argv[1:])
 
         self.output_dir = args.output_dir
         self.models_dir = args.models_dir
+        self.img_size = args.img_size
+        self.cam_height = args.cam_height
+        self.cam_hfov = args.cam_hfov
 
         self.yaml = None
         with open(args.model_list) as f:
@@ -52,8 +65,11 @@ class ThumbnailsGenerator:
                 continue
 
             command = "gzserver -s libthumbnail_generator.so \
-                    empty.world '{}' {}".format(
-                    sdf_path, self.output_dir)
+                    empty.world --input '{}' --output '{}' \
+                    --img-size {} --cam-height {} --cam-hfov {} ".format(
+                    sdf_path, self.output_dir, self.img_size,
+                    self.cam_height, self.cam_hfov)
+            print("------------------------------------------------------")
             os.system(command)
 
 

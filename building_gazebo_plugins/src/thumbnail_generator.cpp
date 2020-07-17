@@ -16,7 +16,9 @@
 */
 
 #include <string>
+#include <iostream>
 #include <functional>
+#include <boost/program_options.hpp>
 #include <ignition/transport/Node.hh>
 #include <opencv2/opencv.hpp>
 
@@ -27,11 +29,8 @@
 #include "gazebo/rendering/rendering.hh"
 #include "gazebo/util/system.hh"
 
-#define IMG_SIZE 4000
-#define CAM_HFOV 0.08
-#define CAM_HEIGHT 200
-
 using namespace gazebo;
+namespace po = boost::program_options;
 
 class GZ_PLUGIN_VISIBLE ThumbnailGenerator : public SystemPlugin
 {
@@ -46,28 +45,60 @@ public:
   /////////////////////////////////////////////
   void Load(int _argc, char** _argv)
   {
-    if (_argc != 6)
+    // System arguments Parser
+    try
     {
-      std::cerr << " Error: Invalid Number of Arguments\n";
+      po::options_description option{"Options"};
+      po::options_description config("Optional Configs");
+      po::options_description all_options{"Allowed Options"};
+
+      option.add_options()
+        ("input", po::value<std::string>(),
+        "Path of input sdf model")
+        ("output", po::value<std::string>(),
+        "Path of output directory");
+
+      config.add_options()
+        ("img-size", po::value<int>()->default_value(4000),
+        "Output thumbnail Image pixel size")
+        ("cam-height", po::value<double>()->default_value(200),
+        "Scene camara height")
+        ("cam-hfov", po::value<double>()->default_value(0.08),
+        "Scene camera horizontal FOV");
+
+      all_options.add(option).add(config);
+      _print_options_stream << all_options;
+
+      po::variables_map vm;
+      po::store(po::command_line_parser(_argc, _argv).options(
+          all_options).allow_unregistered().run(), vm);
+      po::notify(vm);
+
+      _model_path = vm["input"].as<std::string>();
+      _output_path = boost::filesystem::path(vm["output"].as<std::string>());
+      _img_size = vm["img-size"].as<int>();
+      _cam_height = vm["cam-height"].as<double>();
+      _cam_hfov = vm["cam-hfov"].as<double>();
+
+      printf(" - input model: %s \n", _model_path.c_str());
+      printf(" - output dir: %s \n", _output_path.c_str());
+      printf(" - configs: %d, %f, %f \n", _img_size, _cam_height, _cam_hfov);
+    }
+    catch (boost::exception& _e)
+    {
+      std::cerr << "\nError: Invalid arguments\n"<<std::endl;
       this->PrintHelp();
       _exit_flag = true;
       return;
     }
 
-    // load directory path from arg
-    std::string model_path = _argv[_argc - 2];
-    std::string output_dir = _argv[_argc - 1];
-    std::cout << " - Input Model Path: " << model_path << std::endl;
-    std::cout << " - Output Directory: " << output_dir << std::endl;
-
-    _output_path = boost::filesystem::path(output_dir);
     if (!boost::filesystem::exists(_output_path))
       boost::filesystem::create_directories(_output_path);
 
-    std::ifstream ifs(model_path.c_str());
+    std::ifstream ifs(_model_path.c_str());
     if (!ifs)
     {
-      std::cerr << "Error: Unable to open file[" << model_path << "]\n";
+      std::cerr << "Error: Unable to open file[" << _model_path << "]\n";
       this->PrintHelp();
       _exit_flag = true;
       return;
@@ -82,7 +113,7 @@ public:
       return;
     }
 
-    if (!sdf::readFile(model_path, this->_sdf_model))
+    if (!sdf::readFile(_model_path, this->_sdf_model))
     {
       std::cerr << "Error: SDF parsing the xml failed\n";
       this->PrintHelp();
@@ -162,9 +193,9 @@ public:
       this->_camera->SetCaptureData(true);
       this->_camera->Load(cameraSDF);
       this->_camera->Init();
-      this->_camera->SetHFOV(static_cast<ignition::math::Angle>(CAM_HFOV));
-      this->_camera->SetImageWidth(IMG_SIZE);
-      this->_camera->SetImageHeight(IMG_SIZE);
+      this->_camera->SetHFOV(static_cast<ignition::math::Angle>(_cam_hfov));
+      this->_camera->SetImageWidth(_img_size);
+      this->_camera->SetImageHeight(_img_size);
       this->_camera->CreateRenderTexture("RenderTex");
       this->_camera->SetClipDist(100, 1000);
 
@@ -190,7 +221,7 @@ public:
       // Create Mask acording from image with green background
       // Get Image data from camera in scene
       img_ptr = (unsigned char*)this->_camera->ImageData();
-      cv::Mat green_img(cv::Size(IMG_SIZE, IMG_SIZE), CV_8UC3, img_ptr);
+      cv::Mat green_img(cv::Size(_img_size, _img_size), CV_8UC3, img_ptr);
       cv::inRange(green_img, cv::Scalar(0, 245, 0),
         cv::Scalar(5, 255, 5), mask);
       cv::bitwise_not(mask, mask);
@@ -204,11 +235,11 @@ public:
 
       // Get Image data from camera in scene
       img_ptr = (unsigned char*)this->_camera->ImageData();
-      cv::Mat white_img(cv::Size(IMG_SIZE, IMG_SIZE), CV_8UC3, img_ptr);
+      cv::Mat white_img(cv::Size(_img_size, _img_size), CV_8UC3, img_ptr);
       cv::cvtColor(white_img, white_img, cv::COLOR_BGR2RGB);
 
       // Created masked img with alpha val, then crop it!
-      cv::Mat masked_img(cv::Size(IMG_SIZE, IMG_SIZE), CV_8UC4);
+      cv::Mat masked_img(cv::Size(_img_size, _img_size), CV_8UC4);
       cv::cvtColor(white_img, masked_img, cv::COLOR_RGB2RGBA);
       std::vector<cv::Mat> channels;
       cv::split(white_img, channels);
@@ -237,7 +268,7 @@ public:
 
     // Generate Top view PNG Img
     ignition::math::Pose3d pose;
-    pose.Pos().Set(0, 0, CAM_HEIGHT);
+    pose.Pos().Set(0, 0, _cam_height);
     pose.Rot().Euler(0, IGN_DTOR(90), 0);
     this->_camera->SetWorldPose(pose);
     this->_camera->Update();
@@ -249,13 +280,9 @@ public:
   void PrintHelp()
   {
     std::cout << "Usage: gzserver -s libthumbnail_gen.so empty.world "
-              << "${INPUT_SDF_FILE} ${OUTPUT_FOLDER} \n"
+              << "[Options] [Optional Configs] \n"
               << std::endl;
-    std::cout << "  arg: INPUT_SDF_FILE: "
-              << "path to a model's sdf file" << std::endl;
-    std::cout << "  arg: OUTPUT_FOLDER:  "
-              << "path to ouput the cropped thumbnail \n"
-              << std::endl;
+    std::cout << _print_options_stream.str() << std::endl;
   }
 
 private:
@@ -269,8 +296,15 @@ private:
   sdf::SDFPtr _sdf_model;
 
   bool _exit_flag;
+  std::stringstream _print_options_stream;
   std::string _model_name;
+  std::string _model_path;
   boost::filesystem::path _output_path;
+
+  // Optional Configs
+  int _img_size;
+  double _cam_hfov;
+  double _cam_height;
 };
 
 // Register this plugin with the simulator
