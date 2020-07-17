@@ -117,3 +117,20 @@ To generate multiple model thumbnails listed in `model_list.yaml`, run this:
 ```bash
 ./scripts/generate_thumbnails.py ~/.gazebo/models/ thumbnail_generator/test/model_list.yaml ~/output
 ```
+
+Similarly, the generated thumbnails in `~/output` can then be added to `traffic_editor_assets/assets/thumbnails`, while also append `model_list.yaml`.
+
+### Utilities
+
+A new model list `.yaml` file can be generated using the utility script, where an optional blacklisted model names can be added, to avoid creating moving models or agents,
+
+```bash
+# e.g. MODEL_DIR = '~/.gazebo/models'
+./scripts/generate_model_list.py output_model_list.yaml -d MODEL_DIR -b test/model_blacklist.yaml
+```
+
+In the event that merging multiple model lists is required, a different utility script can be used,
+
+```bash
+./scripts/merge_model_lists.py output_model_list.yaml -s test/model_list.yaml
+```
