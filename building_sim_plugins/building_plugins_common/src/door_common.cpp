@@ -39,7 +39,7 @@ std::vector<std::string> DoorCommon::joint_names() const
   std::vector<std::string> joint_names;
   for (const auto& door : _doors)
     joint_names.push_back(door.first);
-  
+
   return joint_names;
 }
 
@@ -92,6 +92,8 @@ bool DoorCommon::all_doors_open()
       - door.second.current_position) > _params.dx_min)
       return false;
 
+
+
   return true;
 }
 
@@ -100,7 +102,9 @@ bool DoorCommon::all_doors_closed()
   for (const auto& door : _doors)
     if (std::abs(door.second.closed_position
       - door.second.current_position) > _params.dx_min)
-        return false;
+      return false;
+
+
 
   return true;
 }
@@ -117,7 +121,7 @@ double DoorCommon::calculate_target_velocity(
 
   double door_v = compute_desired_rate_of_change(
     dx, current_velocity, _params, dt);
-  
+
   return door_v;
 }
 
@@ -144,10 +148,10 @@ std::vector<DoorCommon::DoorUpdateResult> DoorCommon::update(
       if (requested_mode().value == DoorMode::MODE_OPEN)
       {
         result.velocity = calculate_target_velocity(
-            it->second.open_position,
-            request.position,
-            request.velocity,
-            dt);
+          it->second.open_position,
+          request.position,
+          request.velocity,
+          dt);
       }
       else
       {
@@ -166,7 +170,7 @@ std::vector<DoorCommon::DoorUpdateResult> DoorCommon::update(
         request.joint_name.c_str());
     }
   }
-  
+
   // Publishing door states
   if (time - _last_pub_time >= 1.0)
   {

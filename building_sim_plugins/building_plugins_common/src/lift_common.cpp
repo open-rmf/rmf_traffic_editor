@@ -213,23 +213,23 @@ LiftCommon::LiftCommon(rclcpp::Node::SharedPtr node,
         msg->destination_floor) == _floor_name_to_elevation.end())
       {
         RCLCPP_INFO(logger(),
-          "Received request for unavailable floor [%s]",
-          msg->destination_floor.c_str());
+        "Received request for unavailable floor [%s]",
+        msg->destination_floor.c_str());
         return;
       }
 
       if (_lift_request)  // Lift is still processing a previous request
       {
         RCLCPP_INFO(logger(),
-          "Failed to request: [%s] is busy at the moment",
-          _lift_name.c_str());
+        "Failed to request: [%s] is busy at the moment",
+        _lift_name.c_str());
         return;
       }
 
       _lift_request = std::move(msg);
       RCLCPP_INFO(logger(),
-        "Lift [%s] requested at level [%s]",
-        _lift_name.c_str(), _lift_request->destination_floor.c_str());
+      "Lift [%s] requested at level [%s]",
+      _lift_name.c_str(), _lift_request->destination_floor.c_str());
     });
 
   _door_state_sub = _ros_node->create_subscription<DoorState>(

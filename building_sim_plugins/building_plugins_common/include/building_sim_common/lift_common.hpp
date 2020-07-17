@@ -99,7 +99,7 @@ private:
 
   void publish_door_request(const double time, std::string door_name,
     uint32_t door_state);
-  
+
   LiftCommon(rclcpp::Node::SharedPtr node,
     const std::string& lift_name,
     const std::string& joint_name,
@@ -120,7 +120,7 @@ private:
   void update_cabin_state(const double position, const double velocity);
 
   void move_doors(const double time, uint32_t door_mode);
-  
+
   void open_doors(const double time);
 
   void close_doors(const double time);
@@ -129,7 +129,7 @@ private:
     const std::unordered_map<std::string,
     std::vector<std::string>>& floor_to_door_map,
     const std::unordered_map<std::string, DoorState::SharedPtr>& door_states);
-  
+
   void pub_lift_state(const double time);
 
   void update_lift_door_state();
@@ -190,7 +190,8 @@ std::unique_ptr<LiftCommon> LiftCommon::make(
       !get_sdf_attribute_required<double>(floor_element, "elevation",
       floor_elevation))
     {
-      RCLCPP_ERROR(node->get_logger(),
+      RCLCPP_ERROR(
+        node->get_logger(),
         " -- Missing required floor name or elevation attributes for [%s] plugin",
         lift_name.c_str());
       return nullptr;

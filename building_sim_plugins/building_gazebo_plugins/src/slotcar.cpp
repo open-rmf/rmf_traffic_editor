@@ -100,11 +100,12 @@ void SlotcarPlugin::init_infrastructure()
     if (!m->IsStatic())
     {
       std::string name = m->GetName();
-      std::for_each(name.begin(), name.end(), [](char& c){
-        c = ::tolower(c);
-      });
+      std::for_each(name.begin(), name.end(), [](char& c)
+        {
+          c = ::tolower(c);
+        });
       if (name.find("door") != std::string::npos ||
-          name.find("lift") != std::string::npos)
+        name.find("lift") != std::string::npos)
         infrastructure.insert(m.get());
     }
   }

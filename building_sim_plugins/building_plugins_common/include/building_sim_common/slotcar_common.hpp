@@ -139,7 +139,8 @@ private:
 
   rclcpp::Subscription<rmf_fleet_msgs::msg::PathRequest>::SharedPtr _traj_sub;
   rclcpp::Subscription<rmf_fleet_msgs::msg::ModeRequest>::SharedPtr _mode_sub;
-  rclcpp::Subscription<building_map_msgs::msg::BuildingMap>::SharedPtr _building_map_sub;
+  rclcpp::Subscription<building_map_msgs::msg::BuildingMap>::SharedPtr
+    _building_map_sub;
 
   rmf_fleet_msgs::msg::RobotMode _current_mode;
 

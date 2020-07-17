@@ -103,7 +103,7 @@ private:
     }
   };
 
-  // Map joint name to its DoorElement 
+  // Map joint name to its DoorElement
   using Doors = std::unordered_map<std::string, DoorElement>;
 
   DoorMode requested_mode() const;
@@ -166,7 +166,7 @@ std::shared_ptr<DoorCommon> DoorCommon::make(
   std::string right_door_joint_name;
   std::string door_type;
 
-    // Get the joint names and door type
+  // Get the joint names and door type
   if (!get_element_required(sdf_clone, "door", door_element) ||
     !get_sdf_attribute_required<std::string>(
       door_element, "left_joint_name", left_door_joint_name) ||
@@ -182,8 +182,8 @@ std::shared_ptr<DoorCommon> DoorCommon::make(
   }
 
   if ((left_door_joint_name == "empty_joint" &&
-      right_door_joint_name == "empty_joint") ||
-      (left_door_joint_name.empty() && right_door_joint_name.empty()))
+    right_door_joint_name == "empty_joint") ||
+    (left_door_joint_name.empty() && right_door_joint_name.empty()))
   {
     RCLCPP_ERROR(node->get_logger(),
       " -- Both door joint names are missing for [%s] plugin, at least one"
@@ -200,29 +200,30 @@ std::shared_ptr<DoorCommon> DoorCommon::make(
   Doors doors;
 
   auto extract_door = [&](SdfPtrT& joint_sdf)
-  {
-    auto joint_sdf_clone = joint_sdf->Clone();
-    std::string joint_name;
-    get_sdf_attribute_required<std::string>(
-      joint_sdf_clone, "name", joint_name);
-    const auto it = joint_names.find(joint_name);
-    if (it != joint_names.end())
     {
-      auto element = joint_sdf_clone;
-      get_element_required(joint_sdf_clone, "axis", element);
-      get_element_required(element, "limit", element);
-      double lower_limit = -1.57;
-      double upper_limit = 0.0;
-      get_sdf_param_if_available<double>(element, "lower", lower_limit);
-      get_sdf_param_if_available<double>(element, "upper", upper_limit);
-      DoorCommon::DoorElement door_element;
-      if (joint_name == right_door_joint_name)
-        door_element = DoorCommon::DoorElement{lower_limit, upper_limit, true};
-      else if (joint_name == left_door_joint_name)
-        door_element= DoorCommon::DoorElement{lower_limit, upper_limit};
-      doors.insert({joint_name, door_element});
-    }
-  };
+      auto joint_sdf_clone = joint_sdf->Clone();
+      std::string joint_name;
+      get_sdf_attribute_required<std::string>(
+        joint_sdf_clone, "name", joint_name);
+      const auto it = joint_names.find(joint_name);
+      if (it != joint_names.end())
+      {
+        auto element = joint_sdf_clone;
+        get_element_required(joint_sdf_clone, "axis", element);
+        get_element_required(element, "limit", element);
+        double lower_limit = -1.57;
+        double upper_limit = 0.0;
+        get_sdf_param_if_available<double>(element, "lower", lower_limit);
+        get_sdf_param_if_available<double>(element, "upper", upper_limit);
+        DoorCommon::DoorElement door_element;
+        if (joint_name == right_door_joint_name)
+          door_element =
+            DoorCommon::DoorElement{lower_limit, upper_limit, true};
+        else if (joint_name == left_door_joint_name)
+          door_element = DoorCommon::DoorElement{lower_limit, upper_limit};
+        doors.insert({joint_name, door_element});
+      }
+    };
 
   // Get the joint limits from parent sdf
   auto parent = sdf->GetParent();

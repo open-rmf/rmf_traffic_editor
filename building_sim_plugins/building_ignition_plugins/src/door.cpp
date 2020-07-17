@@ -40,13 +40,13 @@ private:
   {
     if (!ecm.EntityHasComponentType(entity,
       components::JointPosition().TypeId()))
-        ecm.CreateComponent(entity, components::JointPosition({0}));
+      ecm.CreateComponent(entity, components::JointPosition({0}));
     if (!ecm.EntityHasComponentType(entity,
       components::JointVelocity().TypeId()))
-        ecm.CreateComponent(entity, components::JointVelocity({0}));
+      ecm.CreateComponent(entity, components::JointVelocity({0}));
     if (!ecm.EntityHasComponentType(entity,
       components::JointVelocityCmd().TypeId()))
-        ecm.CreateComponent(entity, components::JointVelocityCmd({0}));
+      ecm.CreateComponent(entity, components::JointVelocityCmd({0}));
   }
 
 public:
@@ -125,12 +125,12 @@ public:
       DoorCommon::DoorUpdateRequest request;
       request.joint_name = joint.first;
       request.position = ecm.Component<components::JointPosition>(
-          joint.second)->Data()[0];
+        joint.second)->Data()[0];
       request.velocity = ecm.Component<components::JointVelocity>(
-          joint.second)->Data()[0];
+        joint.second)->Data()[0];
       requests.push_back(request);
     }
-    
+
     auto results = _door_common->update(t, requests);
 
     // Apply motions to the joints
@@ -143,7 +143,7 @@ public:
       vel_cmd->Data()[0] = result.velocity;
     }
   }
-  
+
 };
 
 IGNITION_ADD_PLUGIN(

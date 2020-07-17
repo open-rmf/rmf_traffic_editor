@@ -63,9 +63,9 @@ void SlotcarCommon::init_ros_node(const rclcpp::Node::SharedPtr node)
   qos_profile.transient_local();
   _building_map_sub =
     _ros_node->create_subscription<building_map_msgs::msg::BuildingMap>(
-        "/map",
-        qos_profile,
-        std::bind(&SlotcarCommon::map_cb, this, std::placeholders::_1));
+    "/map",
+    qos_profile,
+    std::bind(&SlotcarCommon::map_cb, this, std::placeholders::_1));
 
   _traj_sub = _ros_node->create_subscription<rmf_fleet_msgs::msg::PathRequest>(
     "/robot_path_requests",
@@ -144,7 +144,7 @@ void SlotcarCommon::path_request_cb(
 
   _current_task_id = msg->task_id;
   _adapter_error = false;
-  
+
   const double initial_dist = compute_dpos(trajectory.front(), _pose).norm();
 
   if (initial_dist > INITIAL_DISTANCE_THRESHOLD)
@@ -321,21 +321,21 @@ bool SlotcarCommon::emergency_stop(
 
 std::string SlotcarCommon::get_level_name(const double z)
 {
-    std::string level_name = "";
-    if (!_initialized_levels)
-      return level_name;
-    auto min_distance = std::numeric_limits<double>::max();
-    for (auto it = _level_to_elevation.begin(); it != _level_to_elevation.end();
-      ++it)
-    {
-      const double disp = std::abs(it->second - z);
-      if (disp < min_distance)
-      {
-        min_distance = disp;
-        level_name = it->first;
-      }
-    }
+  std::string level_name = "";
+  if (!_initialized_levels)
     return level_name;
+  auto min_distance = std::numeric_limits<double>::max();
+  for (auto it = _level_to_elevation.begin(); it != _level_to_elevation.end();
+    ++it)
+  {
+    const double disp = std::abs(it->second - z);
+    if (disp < min_distance)
+    {
+      min_distance = disp;
+      level_name = it->first;
+    }
+  }
+  return level_name;
 }
 
 double SlotcarCommon::compute_change_in_rotation(
@@ -425,7 +425,7 @@ void SlotcarCommon::publish_state_topic(const rclcpp::Time& t)
 
   if (_adapter_error)
   {
-    robot_state_msg.mode.mode = 
+    robot_state_msg.mode.mode =
       rmf_fleet_msgs::msg::RobotMode::MODE_ADAPTER_ERROR;
   }
 
@@ -438,7 +438,8 @@ void SlotcarCommon::mode_request_cb(
   _current_mode = msg->mode;
 }
 
-void SlotcarCommon::map_cb(const building_map_msgs::msg::BuildingMap::SharedPtr msg)
+void SlotcarCommon::map_cb(
+  const building_map_msgs::msg::BuildingMap::SharedPtr msg)
 {
   if (msg->levels.empty())
   {

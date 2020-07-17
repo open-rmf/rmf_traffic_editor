@@ -41,16 +41,16 @@ private:
   {
     if (!ecm.EntityHasComponentType(entity,
       components::JointPosition().TypeId()))
-        ecm.CreateComponent(entity, components::JointPosition({0}));
+      ecm.CreateComponent(entity, components::JointPosition({0}));
     if (!ecm.EntityHasComponentType(entity,
       components::JointPositionReset().TypeId()))
-        ecm.CreateComponent(entity, components::JointPositionReset({0}));
+      ecm.CreateComponent(entity, components::JointPositionReset({0}));
     if (!ecm.EntityHasComponentType(entity,
       components::JointVelocity().TypeId()))
-        ecm.CreateComponent(entity, components::JointVelocity({0}));
+      ecm.CreateComponent(entity, components::JointVelocity({0}));
     if (!ecm.EntityHasComponentType(entity,
       components::JointVelocityCmd().TypeId()))
-        ecm.CreateComponent(entity, components::JointVelocityCmd({0}));
+      ecm.CreateComponent(entity, components::JointVelocityCmd({0}));
   }
 
 public:
@@ -90,10 +90,10 @@ public:
     const auto joint = model.JointByName(ecm, _lift_common->get_joint_name());
     if (!joint)
     {
-    RCLCPP_ERROR(_ros_node->get_logger(),
+      RCLCPP_ERROR(_ros_node->get_logger(),
         " -- Model is missing the joint [%s]",
         _lift_common->get_joint_name().c_str());
-    return;
+      return;
     }
     create_entity_components(joint, ecm);
     _cabin_joint = joint;
