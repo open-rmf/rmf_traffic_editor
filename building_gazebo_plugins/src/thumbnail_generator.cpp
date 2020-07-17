@@ -52,18 +52,15 @@ public:
       po::options_description config("Optional Configs");
       po::options_description all_options{"Allowed Options"};
 
-      option.add_options()
-        ("input", po::value<std::string>(),
-        "Path of input sdf model")
-        ("output", po::value<std::string>(),
+      option.add_options()("input", po::value<std::string>(),
+        "Path of input sdf model")("output", po::value<std::string>(),
         "Path of output directory");
 
-      config.add_options()
-        ("img-size", po::value<int>()->default_value(4000),
-        "Output thumbnail Image pixel size")
-        ("cam-height", po::value<double>()->default_value(200),
-        "Scene camara height")
-        ("cam-hfov", po::value<double>()->default_value(0.08),
+      config.add_options()("img-size", po::value<int>()->default_value(4000),
+        "Output thumbnail Image pixel size")("cam-height",
+        po::value<double>()->default_value(200),
+        "Scene camara height")("cam-hfov",
+        po::value<double>()->default_value(0.08),
         "Scene camera horizontal FOV");
 
       all_options.add(option).add(config);
