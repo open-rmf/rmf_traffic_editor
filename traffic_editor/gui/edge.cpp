@@ -40,7 +40,7 @@ Edge::~Edge()
 {
 }
 
-void Edge::from_yaml(const YAML::Node &data, const Type edge_type)
+void Edge::from_yaml(const YAML::Node& data, const Type edge_type)
 {
   if (!data.IsSequence())
     throw std::runtime_error("Edge::from_yaml expected a sequence");
@@ -48,7 +48,8 @@ void Edge::from_yaml(const YAML::Node &data, const Type edge_type)
   end_idx = data[1].as<double>();
   type = edge_type;
   // load the parameters
-  if (data.size() >= 2) {
+  if (data.size() >= 2)
+  {
     for (YAML::const_iterator it = data[2].begin(); it != data[2].end(); ++it)
     {
       Param p;
@@ -67,7 +68,7 @@ YAML::Node Edge::to_yaml() const
   y.push_back(end_idx);
 
   YAML::Node params_node(YAML::NodeType::Map);
-  for (const auto &param : params)
+  for (const auto& param : params)
     params_node[param.first] = param.second.to_yaml();
   y.push_back(params_node);
   y.SetStyle(YAML::EmitterStyle::Flow);
@@ -82,21 +83,22 @@ bool Edge::is_bidirectional() const
   return it->second.value_bool;
 }
 
-void Edge::set_param(const std::string &name, const std::string &value)
+void Edge::set_param(const std::string& name, const std::string& value)
 {
   auto it = params.find(name);
-  if (it == params.end()) {
+  if (it == params.end())
+  {
     printf("tried to set unknown parameter [%s]\n", name.c_str());
     return;  // unknown parameter
   }
   it->second.set(value);
 }
 
-template <typename T>
+template<typename T>
 void Edge::create_param_if_needed(
-    const std::string &name,
-    const Param::Type &param_type,
-    const T &param_value)
+  const std::string& name,
+  const Param::Type& param_type,
+  const T& param_value)
 {
   auto it = params.find(name);
   if (it == params.end() || it->second.type != param_type)
@@ -106,19 +108,23 @@ void Edge::create_param_if_needed(
 void Edge::create_required_parameters()
 {
   // create required parameters if they don't exist yet on this edge
-  if (type == MEAS) {
+  if (type == MEAS)
+  {
     auto it = params.find("distance");
     if (it == params.end() || it->second.type != Param::DOUBLE)
       params["distance"] = Param(1.0);
   }
-  else if (type == LANE) {
+  else if (type == LANE)
+  {
     create_param_if_needed("bidirectional", Param::BOOL, false);
     create_param_if_needed("orientation", Param::STRING, std::string());
     create_param_if_needed("graph_idx", Param::INT, 0);
-    create_param_if_needed("demo_mock_floor_name", Param::STRING, std::string());
+    create_param_if_needed("demo_mock_floor_name", Param::STRING,
+      std::string());
     create_param_if_needed("demo_mock_lift_name", Param::STRING, std::string());
   }
-  else if (type == DOOR) {
+  else if (type == DOOR)
+  {
     create_param_if_needed("name", Param::STRING, std::string());
     create_param_if_needed("type", Param::STRING, std::string("hinged"));
     create_param_if_needed("motion_axis", Param::STRING, std::string("start"));
@@ -148,16 +154,16 @@ QString Edge::type_to_qstring() const
 void Edge::set_graph_idx(const int idx)
 {
   if (type != LANE)
-    return;  // for now at least, only lanes have graph indices
+    return;// for now at least, only lanes have graph indices
   params["graph_idx"] = Param(idx);
 }
 
 int Edge::get_graph_idx() const
 {
   if (type != LANE)
-    return 0;  // for now, only lanes have indices defined
+    return 0;// for now, only lanes have indices defined
   auto it = params.find("graph_idx");
   if (it == params.end() || it->second.type != Param::INT)
-    return 0;  // shouldn't get here
+    return 0;// shouldn't get here
   return it->second.value_int;
 }

@@ -45,7 +45,7 @@ public:
   } door_type = DOUBLE_SLIDING;
 
   YAML::Node to_yaml() const;
-  void from_yaml(const std::string& _name, const YAML::Node &data);
+  void from_yaml(const std::string& _name, const YAML::Node& data);
 };
 
 #endif

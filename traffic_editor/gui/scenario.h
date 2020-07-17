@@ -51,15 +51,15 @@ public:
   void clear_scene();
 
   void draw(
-      QGraphicsScene *scene,
-      const std::string& level_name,
-      const double meters_per_pixel,
-      std::vector<EditorModel>& editor_models) const;
+    QGraphicsScene* scene,
+    const std::string& level_name,
+    const double meters_per_pixel,
+    std::vector<EditorModel>& editor_models) const;
 
   void add_vertex(
-      const std::string& level_name,
-      const double x,
-      const double y);
+    const std::string& level_name,
+    const double x,
+    const double y);
 
   void clear_selection(const std::string& level_name);
   bool delete_selected(const std::string& level_name);
@@ -74,9 +74,9 @@ public:
   void sim_reset(Building& building);
 
   void scene_update(
-      QGraphicsScene *scene,
-      Building& building,
-      const int level_idx);
+    QGraphicsScene* scene,
+    Building& building,
+    const int level_idx);
 
   std::vector<std::string> behavior_signals;
 

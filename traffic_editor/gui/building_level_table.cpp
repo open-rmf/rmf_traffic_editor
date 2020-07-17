@@ -23,7 +23,7 @@ BuildingLevelTable::BuildingLevelTable()
 : TableList(6)
 {
   const QStringList labels =
-      { "Name", "Scale", "X", "Y", "Z", "" };
+  { "Name", "Scale", "X", "Y", "Z", "" };
   setHorizontalHeaderLabels(labels);
 }
 
@@ -40,21 +40,21 @@ void BuildingLevelTable::update(Building& building)
 
   for (size_t i = 0; i < building.levels.size(); i++)
   {
-    QTableWidgetItem *name_item = 
-        new QTableWidgetItem(QString::fromStdString(building.levels[i].name));
+    QTableWidgetItem* name_item =
+      new QTableWidgetItem(QString::fromStdString(building.levels[i].name));
     setItem(i, 0, name_item);
 
     if (static_cast<int>(i) == reference_level_idx)
       name_item->setBackground(QBrush(QColor("#e0ffe0")));
 
     setItem(
-        i,
-        1,
-        new QTableWidgetItem(
-            QString::number(
-                building.levels[i].drawing_meters_per_pixel,
-                'f',
-                4)));
+      i,
+      1,
+      new QTableWidgetItem(
+        QString::number(
+          building.levels[i].drawing_meters_per_pixel,
+          'f',
+          4)));
 
     Building::Transform t = building.get_transform(reference_level_idx, i);
 
@@ -62,28 +62,28 @@ void BuildingLevelTable::update(Building& building)
     setItem(i, 3, new QTableWidgetItem(QString::number(t.dy, 'f', 1)));
 
     setItem(
-        i,
-        4,
-        new QTableWidgetItem(
-            QString::number(building.levels[i].elevation, 'f', 1)));
+      i,
+      4,
+      new QTableWidgetItem(
+        QString::number(building.levels[i].elevation, 'f', 1)));
 
-    QPushButton *edit_button = new QPushButton("Edit...", this);
+    QPushButton* edit_button = new QPushButton("Edit...", this);
     setCellWidget(i, 5, edit_button);
     edit_button->setStyleSheet("QTableWidgetItem { background-color: red; }");
 
     connect(
-        edit_button,
-        &QAbstractButton::clicked,
-        [this, &building, i]()
+      edit_button,
+      &QAbstractButton::clicked,
+      [this, &building, i]()
+      {
+        BuildingLevelDialog level_dialog(building.levels[i]);
+        if (level_dialog.exec() == QDialog::Accepted)
         {
-          BuildingLevelDialog level_dialog(building.levels[i]);
-          if (level_dialog.exec() == QDialog::Accepted)
-          {
-            building.levels[i].load_drawing();
-            setWindowModified(true);  // not sure why, but this doesn't work
-          }
-          update(building);
-        });
+          building.levels[i].load_drawing();
+          setWindowModified(true);  // not sure why, but this doesn't work
+        }
+        update(building);
+      });
   }
 
   const int last_row_idx = static_cast<int>(building.levels.size());
@@ -91,24 +91,24 @@ void BuildingLevelTable::update(Building& building)
   for (int i = 0; i < 5; i++)
     setItem(last_row_idx, i, new QTableWidgetItem(QString()));
 
-  QPushButton *add_button = new QPushButton("Add...", this);
+  QPushButton* add_button = new QPushButton("Add...", this);
   setCellWidget(last_row_idx, 5, add_button);
   connect(
-      add_button,
-      &QAbstractButton::clicked,
-      [this, &building]()
+    add_button,
+    &QAbstractButton::clicked,
+    [this, &building]()
+    {
+      BuildingLevel level;
+      BuildingLevelDialog level_dialog(level);
+      if (level_dialog.exec() == QDialog::Accepted)
       {
-        BuildingLevel level;
-        BuildingLevelDialog level_dialog(level);
-        if (level_dialog.exec() == QDialog::Accepted)
-        {
-          level.load_drawing();
-          building.add_level(level);
-          setWindowModified(true);
-          update(building);
-          emit redraw_scene();
-        }
-      });
+        level.load_drawing();
+        building.add_level(level);
+        setWindowModified(true);
+        update(building);
+        emit redraw_scene();
+      }
+    });
 
   blockSignals(false);
 }

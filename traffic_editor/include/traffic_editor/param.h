@@ -27,7 +27,8 @@
 class Param
 {
 public:
-  enum Type {
+  enum Type
+  {
     UNDEFINED = 0,
     STRING,
     INT,
@@ -37,13 +38,13 @@ public:
 
   Param();
   ~Param();
-  Param(const std::string &s);
-  Param(const int &i);
-  Param(const double &d);
-  Param(const bool &b);
+  Param(const std::string& s);
+  Param(const int& i);
+  Param(const double& d);
+  Param(const bool& b);
   Param(const Type& t);
 
-  void from_yaml(const YAML::Node &data);
+  void from_yaml(const YAML::Node& data);
   YAML::Node to_yaml() const;
 
   int value_int;

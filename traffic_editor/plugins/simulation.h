@@ -32,9 +32,9 @@ public:
   virtual void reset(Building& building) = 0;
 
   virtual void scene_update(
-      QGraphicsScene *scene,
-      Building& building,
-      const int level_idx) = 0;
+    QGraphicsScene* scene,
+    Building& building,
+    const int level_idx) = 0;
 
   virtual void scene_clear() = 0;
 };

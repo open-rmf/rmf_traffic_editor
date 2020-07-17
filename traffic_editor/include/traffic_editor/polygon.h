@@ -36,7 +36,8 @@ public:
 
   std::map<std::string, Param> params;
 
-  enum Type {
+  enum Type
+  {
     UNDEFINED = 0,
     FLOOR,
     ZONE,
@@ -47,7 +48,7 @@ public:
   Polygon();
   ~Polygon();
 
-  void from_yaml(const YAML::Node &data, const Type polygon_type);
+  void from_yaml(const YAML::Node& data, const Type polygon_type);
   YAML::Node to_yaml() const;
 
   void remove_vertex(const int vertex_idx);
@@ -58,14 +59,14 @@ public:
     int movable_vertex = -1;
   };
 
-  void set_param(const std::string &name, const std::string &value);
+  void set_param(const std::string& name, const std::string& value);
   void create_required_parameters();
 
-  template <typename T>
+  template<typename T>
   void create_param_if_needed(
-      const std::string& name,
-      const Param::Type& param_type,
-      const T& param_value);
+    const std::string& name,
+    const Param::Type& param_type,
+    const T& param_value);
 };
 
 #endif

@@ -30,13 +30,13 @@ class TrafficMapDialog : public QDialog
 public:
   TrafficMapDialog(TrafficMap& _scenario);
   ~TrafficMapDialog();
- 
+
 private:
   TrafficMap& traffic_map;
 
-  QLineEdit *name_line_edit;
-  QLineEdit *path_line_edit;
-  QPushButton *ok_button, *cancel_button;
+  QLineEdit* name_line_edit;
+  QLineEdit* path_line_edit;
+  QPushButton* ok_button, * cancel_button;
 
 private slots:
   void ok_button_clicked();

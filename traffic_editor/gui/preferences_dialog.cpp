@@ -20,7 +20,7 @@
 #include <QtWidgets>
 
 
-PreferencesDialog::PreferencesDialog(QWidget *parent)
+PreferencesDialog::PreferencesDialog(QWidget* parent)
 : QDialog(parent)
 {
   setWindowTitle("Preferences");
@@ -30,33 +30,33 @@ PreferencesDialog::PreferencesDialog(QWidget *parent)
   ok_button = new QPushButton("OK", this);  // first button = [enter] button
   cancel_button = new QPushButton("Cancel", this);
 
-  QHBoxLayout *thumbnail_path_layout = new QHBoxLayout;
+  QHBoxLayout* thumbnail_path_layout = new QHBoxLayout;
   thumbnail_path_line_edit = new QLineEdit(
-      settings.value(preferences_keys::thumbnail_path).toString(), this);
+    settings.value(preferences_keys::thumbnail_path).toString(), this);
   thumbnail_path_button = new QPushButton("Find...", this);
   thumbnail_path_layout->addWidget(new QLabel("thumbnail path:"));
   thumbnail_path_layout->addWidget(thumbnail_path_line_edit);
   thumbnail_path_layout->addWidget(thumbnail_path_button);
   connect(
-      thumbnail_path_button, &QAbstractButton::clicked,
-      this, &PreferencesDialog::thumbnail_path_button_clicked);
+    thumbnail_path_button, &QAbstractButton::clicked,
+    this, &PreferencesDialog::thumbnail_path_button_clicked);
 
-  QHBoxLayout *bottom_buttons_layout = new QHBoxLayout;
+  QHBoxLayout* bottom_buttons_layout = new QHBoxLayout;
   bottom_buttons_layout->addWidget(cancel_button);
   bottom_buttons_layout->addWidget(ok_button);
   connect(
-      ok_button, &QAbstractButton::clicked,
-      this, &PreferencesDialog::ok_button_clicked);
+    ok_button, &QAbstractButton::clicked,
+    this, &PreferencesDialog::ok_button_clicked);
   connect(
-      cancel_button, &QAbstractButton::clicked,
-      this, &QDialog::reject);
+    cancel_button, &QAbstractButton::clicked,
+    this, &QDialog::reject);
 
   open_previous_project_checkbox = new QCheckBox(
-      "Open previous project at startup", this);
+    "Open previous project at startup", this);
   open_previous_project_checkbox->setChecked(
-      settings.value(preferences_keys::open_previous_project).toBool());
+    settings.value(preferences_keys::open_previous_project).toBool());
 
-  QVBoxLayout *vbox_layout = new QVBoxLayout;
+  QVBoxLayout* vbox_layout = new QVBoxLayout;
   vbox_layout->addWidget(open_previous_project_checkbox);
   vbox_layout->addLayout(thumbnail_path_layout);
   // todo: some sort of separator (?)
@@ -75,15 +75,15 @@ void PreferencesDialog::thumbnail_path_button_clicked()
   file_dialog.setFileMode(QFileDialog::Directory);
   file_dialog.setOption(QFileDialog::ShowDirsOnly);
   if (file_dialog.exec() != QDialog::Accepted)
-    return;  // user clicked 'cancel'
+    return;// user clicked 'cancel'
 
   const QString path = file_dialog.selectedFiles().first();
   if (!QFileInfo(path).exists())
   {
     QMessageBox::critical(
-        this,
-        "path does not exist",
-        "path does not exist");
+      this,
+      "path does not exist",
+      "path does not exist");
     return;
   }
   thumbnail_path_line_edit->setText(path);
@@ -91,13 +91,15 @@ void PreferencesDialog::thumbnail_path_button_clicked()
 
 void PreferencesDialog::ok_button_clicked()
 {
-  if (!thumbnail_path_line_edit->text().isEmpty()) {
+  if (!thumbnail_path_line_edit->text().isEmpty())
+  {
     // make sure the path exists
-    if (!QFileInfo(thumbnail_path_line_edit->text()).exists()) {
+    if (!QFileInfo(thumbnail_path_line_edit->text()).exists())
+    {
       QMessageBox::critical(
-          this,
-          "Thumbnail path must exist",
-          "Thumbnail path must exist");
+        this,
+        "Thumbnail path must exist",
+        "Thumbnail path must exist");
       return;
     }
   }
@@ -105,12 +107,12 @@ void PreferencesDialog::ok_button_clicked()
   QSettings settings;
 
   settings.setValue(
-      preferences_keys::thumbnail_path,
-      thumbnail_path_line_edit->text());
+    preferences_keys::thumbnail_path,
+    thumbnail_path_line_edit->text());
 
   settings.setValue(
-      preferences_keys::open_previous_project,
-      open_previous_project_checkbox->isChecked());
+    preferences_keys::open_previous_project,
+    open_previous_project_checkbox->isChecked());
 
   accept();
 }

@@ -30,14 +30,14 @@ class ScenarioDialog : public QDialog
 public:
   ScenarioDialog(Scenario& _scenario);
   ~ScenarioDialog();
- 
+
   Scenario& scenario;
 
 private:
 
-  QLineEdit *name_line_edit;
-  QLineEdit *scenario_path_line_edit;
-  QPushButton *ok_button, *cancel_button;
+  QLineEdit* name_line_edit;
+  QLineEdit* scenario_path_line_edit;
+  QPushButton* ok_button, * cancel_button;
 
 private slots:
   void ok_button_clicked();
