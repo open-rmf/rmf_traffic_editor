@@ -6,11 +6,12 @@
 #include <ignition/gazebo/components/JointPosition.hh>
 #include <ignition/gazebo/components/JointVelocity.hh>
 #include <ignition/gazebo/components/JointVelocityCmd.hh>
+#include <ignition/gazebo/components/JointPositionReset.hh>
 
 #include <rclcpp/rclcpp.hpp>
 
 #include <building_sim_common/utils.hpp>
-#include <building_sim_common/door_common.hpp>
+#include <building_sim_common/lift_common.hpp>
 
 // TODO remove this
 using namespace ignition;
@@ -19,20 +20,20 @@ using namespace systems;
 
 using namespace building_sim_common;
 
-namespace building_ignition_plugins {
+namespace building_sim_ign {
 
 //==============================================================================
 
-class IGNITION_GAZEBO_VISIBLE DoorPlugin
+class IGNITION_GAZEBO_VISIBLE LiftPlugin
   : public System,
   public ISystemConfigure,
   public ISystemPreUpdate
 {
 private:
   rclcpp::Node::SharedPtr _ros_node;
-  std::unordered_map<std::string, Entity> _joints;
+  Entity _cabin_joint;
 
-  std::shared_ptr<DoorCommon> _door_common = nullptr;
+  std::unique_ptr<LiftCommon> _lift_common = nullptr;
 
   bool _initialized = false;
 
@@ -42,6 +43,9 @@ private:
       components::JointPosition().TypeId()))
         ecm.CreateComponent(entity, components::JointPosition({0}));
     if (!ecm.EntityHasComponentType(entity,
+      components::JointPositionReset().TypeId()))
+        ecm.CreateComponent(entity, components::JointPositionReset({0}));
+    if (!ecm.EntityHasComponentType(entity,
       components::JointVelocity().TypeId()))
         ecm.CreateComponent(entity, components::JointVelocity({0}));
     if (!ecm.EntityHasComponentType(entity,
@@ -50,7 +54,7 @@ private:
   }
 
 public:
-  DoorPlugin()
+  LiftPlugin()
   {
     // TODO init ros node
     // Do nothing
@@ -65,46 +69,44 @@ public:
     // TODO proper rclcpp init (only once and pass args)
     auto model = Model(entity);
     char const** argv = NULL;
-    std::string name;
-    auto door_ele = sdf->GetElementImpl("door");
-    get_sdf_attribute_required<std::string>(door_ele, "name", name);
     if (!rclcpp::is_initialized())
       rclcpp::init(0, argv);
-    std::string plugin_name("plugin_" + name);
+    std::string plugin_name("plugin_" + model.Name(ecm));
     ignwarn << "Initializing plugin with name " << plugin_name << std::endl;
     _ros_node = std::make_shared<rclcpp::Node>(plugin_name);
 
     RCLCPP_INFO(_ros_node->get_logger(),
-      "Loading DoorPlugin for [%s]",
-      name.c_str());
+      "Loading LiftPlugin for [%s]",
+      model.Name(ecm).c_str());
 
-    _door_common = DoorCommon::make(
-      name,
+    _lift_common = LiftCommon::make(
+      model.Name(ecm),
       _ros_node,
       sdf);
 
-    if (!_door_common)
+    if (!_lift_common)
       return;
 
-    for (const auto& joint_name : _door_common->joint_names())
+    const auto joint = model.JointByName(ecm, _lift_common->get_joint_name());
+    if (!joint)
     {
-      const auto joint = model.JointByName(ecm, joint_name);
-      if (!joint)
-      {
-        RCLCPP_ERROR(_ros_node->get_logger(),
-          " -- Model is missing the joint [%s]",
-          joint_name.c_str());
-        return;
-      }
-      create_entity_components(joint, ecm);
-      _joints.insert({joint_name, joint});
+    RCLCPP_ERROR(_ros_node->get_logger(),
+        " -- Model is missing the joint [%s]",
+        _lift_common->get_joint_name().c_str());
+    return;
     }
+    create_entity_components(joint, ecm);
+    _cabin_joint = joint;
+
+    auto position_cmd = ecm.Component<components::JointPositionReset>(
+      _cabin_joint);
+    position_cmd->Data()[0] = _lift_common->get_elevation();
 
     _initialized = true;
 
     RCLCPP_INFO(_ros_node->get_logger(),
       "Finished loading [%s]",
-      name.c_str());
+      model.Name(ecm).c_str());
   }
 
   void PreUpdate(const UpdateInfo& info, EntityComponentManager& ecm) override
@@ -114,45 +116,31 @@ public:
     if (!_initialized)
       return;
 
-    double t =
+    // Send update request
+    const double t =
       (std::chrono::duration_cast<std::chrono::nanoseconds>(info.simTime).
       count()) * 1e-9;
+    const double position = ecm.Component<components::JointPosition>(
+      _cabin_joint)->Data()[0];
+    const double velocity = ecm.Component<components::JointVelocity>(
+      _cabin_joint)->Data()[0];
 
-    // Create DoorUpdateRequest
-    std::vector<DoorCommon::DoorUpdateRequest> requests;
-    for (const auto& joint : _joints)
-    {
-      DoorCommon::DoorUpdateRequest request;
-      request.joint_name = joint.first;
-      request.position = ecm.Component<components::JointPosition>(
-          joint.second)->Data()[0];
-      request.velocity = ecm.Component<components::JointVelocity>(
-          joint.second)->Data()[0];
-      requests.push_back(request);
-    }
-    
-    auto results = _door_common->update(t, requests);
+    auto result = _lift_common->update(t, position, velocity);
 
-    // Apply motions to the joints
-    for (const auto& result : results)
-    {
-      const auto it = _joints.find(result.joint_name);
-      assert(it != _joints.end());
-      auto vel_cmd = ecm.Component<components::JointVelocityCmd>(
-        it->second);
-      vel_cmd->Data()[0] = result.velocity;
-    }
+    // Apply motion to the joint
+    auto vel_cmd = ecm.Component<components::JointVelocityCmd>(
+      _cabin_joint);
+    vel_cmd->Data()[0] = result.velocity;
   }
-  
 };
 
 IGNITION_ADD_PLUGIN(
-  DoorPlugin,
+  LiftPlugin,
   System,
-  DoorPlugin::ISystemConfigure,
-  DoorPlugin::ISystemPreUpdate)
+  LiftPlugin::ISystemConfigure,
+  LiftPlugin::ISystemPreUpdate)
 
 // TODO would prefer namespaced
-IGNITION_ADD_PLUGIN_ALIAS(DoorPlugin, "door")
+IGNITION_ADD_PLUGIN_ALIAS(LiftPlugin, "lift")
 
-} // namespace building_ignition_plugins
+} // namespace building_sim_ign

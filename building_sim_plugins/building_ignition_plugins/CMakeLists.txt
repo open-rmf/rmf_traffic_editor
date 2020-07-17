@@ -45,6 +45,7 @@ find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(rmf_fleet_msgs REQUIRED)
 find_package(rmf_door_msgs REQUIRED)
+find_package(rmf_lift_msgs REQUIRED)
 find_package(building_map_msgs REQUIRED)
 find_package(building_sim_common REQUIRED)
 
@@ -68,7 +69,6 @@ target_include_directories(slotcar
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     ${building_sim_common_INCLUDE_DIRS}
-    ${GAZEBO_INCLUDE_DIRS}
     ${geometry_msgs_INCLUDE_DIRS}
     ${std_msgs_INCLUDE_DIRS}
     ${rmf_fleet_msgs_INCLUDE_DIRS}
@@ -84,7 +84,6 @@ add_library(door SHARED src/door.cpp)
 
 target_include_directories(door
   PUBLIC
-    ${GAZEBO_INCLUDE_DIRS}
     ${building_sim_common_INCLUDE_DIRS}
     ${geometry_msgs_INCLUDE_DIRS}
     ${rmf_door_msgs_INCLUDE_DIRS}
@@ -103,11 +102,38 @@ target_link_libraries(door
 )
 
 ###############################
+# lift stuff
+###############################
+
+add_library(lift SHARED src/lift.cpp)
+
+target_include_directories(lift
+  PUBLIC
+    ${building_sim_common_INCLUDE_DIRS}
+    ${geometry_msgs_INCLUDE_DIRS}
+    ${rmf_door_msgs_INCLUDE_DIRS}
+    ${rmf_lift_msgs_INCLUDE_DIRS}
+)
+
+target_link_libraries(lift
+  PUBLIC
+    ${rclcpp_LIBRARIES}
+    ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
+    ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
+    ${building_sim_common_LIBRARIES}
+    ${rmf_door_msgs_LIBRARIES}
+    ${rmf_lift_msgs_LIBRARIES}
+    ${rmf_fleet_msgs_LIBRARIES}
+    #${geometry_msgs_LIBRARIES}
+    #${tf2_ros_LIBRARIES}
+)
+
+###############################
 # install stuff
 ###############################
 
 install(
-  TARGETS slotcar door
+  TARGETS slotcar door lift
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

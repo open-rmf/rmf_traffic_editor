@@ -136,11 +136,15 @@ void SlotcarPlugin::init_infrastructure(EntityComponentManager& ecm)
     const components::Static* is_static
     ) -> bool
     {
-      if ((is_static->Data() == false) &&
-      (name->Data().find("door") != std::string::npos ||
-      name->Data().find("lift") != std::string::npos))
+      if (is_static->Data() == false)
       {
-        _infrastructure.insert(entity);
+        std::string n = name->Data();
+        std::for_each(n.begin(), n.end(), [](char& c){
+          c = ::tolower(c);
+        });
+        if (n.find("door") != std::string::npos ||
+            n.find("lift") != std::string::npos)
+          _infrastructure.insert(entity);
       }
       return true;
     });

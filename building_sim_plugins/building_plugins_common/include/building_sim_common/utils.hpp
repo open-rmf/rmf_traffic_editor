@@ -131,7 +131,8 @@ bool get_element_required(
     std::cerr << "Element [" << _element_name << "] not found" << std::endl;
     return false;
   }
-  _element = _sdf->GetElement(_element_name);
+  // using GetElementImpl() because for sdf::v9 GetElement() is not const
+  _element = _sdf->GetElementImpl(_element_name);
   return true;
 }
 
