@@ -103,8 +103,6 @@ private:
     }
   };
 
-  static constexpr std::size_t REQUEST_QUEUE_SIZE = 20;
-
   // Map joint name to its DoorElement 
   using Doors = std::unordered_map<std::string, DoorElement>;
 
