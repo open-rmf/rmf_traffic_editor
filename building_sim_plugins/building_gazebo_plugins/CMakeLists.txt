@@ -25,6 +25,7 @@ find_package(rclcpp REQUIRED)
 find_package(gazebo REQUIRED)
 find_package(gazebo_ros REQUIRED)
 find_package(gazebo_dev REQUIRED)
+find_package(OpenCV REQUIRED )
 find_package(gazebo_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(geometry_msgs REQUIRED)
@@ -156,11 +157,28 @@ target_link_libraries(toggle_floors
 )
 
 ###############################
+# thumbnail generation stuff
+###############################
+
+add_library(thumbnail_generator SHARED src/thumbnail_generator.cpp)
+
+target_include_directories(thumbnail_generator
+  PUBLIC
+    ${GAZEBO_INCLUDE_DIRS}
+    ${OpenCV_INCLUDE_DIRS}
+)
+
+target_link_libraries(thumbnail_generator
+  PUBLIC
+    ${OpenCV_LIBS}
+)
+
+###############################
 # install stuff
 ###############################
 
 install(
-  TARGETS slotcar door lift toggle_floors
+  TARGETS slotcar door lift toggle_floors thumbnail_generator
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

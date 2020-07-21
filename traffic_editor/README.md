@@ -17,7 +17,7 @@ Traffic Editor is now structured as a Colcon package. After installing
 ROS 2 Eloquent, the following command sequence will create a colcon
 workspace in `~/colcon_workspace` and build `traffic-editor` there:
 
-```
+```bash
 sudo apt update
 sudo apt install libyaml-cpp-dev qt5-default \
   libopencv-dev libopencv-videoio-dev \
@@ -33,7 +33,7 @@ colcon build --packages-select traffic_editor
 You are also **highly recommended** to also install the companion `traffic_editor_assets`
 package, which contains a nifty bunch of useful assets to use with `traffic_editor`.
 
-```
+```bash
 cd ~/colcon_workspace/src
 git clone https://github.com/osrf/traffic_editor_assets
 cd ~/colcon_workspace
@@ -43,7 +43,7 @@ colcon build --packages-select traffic_editor_assets
 
 Then you should be able to run `traffic-editor` by sourcing the install
 space of that workspace, in a new "clean" terminal:
-```
+```bash
 source ~/colcon_workspace/install/setup.bash
 traffic-editor
 ```
@@ -103,3 +103,36 @@ Click the "Add..." button in the "lifts" tab on the far right side of the main e
 *Note: Do include the keywork "lift" in the lift name as for now this is how slotcars recognize lift models.*
 
 You can add lift doors by lick the "Add..." button below the box showing the lift. Set Door type to "Double sliding" (The only supported type for now!), and align the doors to the edge of the lift (represented by the green box). After that, select which door you want to use on each floor by simply checking the boxes on the left.
+
+### Generating Custom Thumbnails
+
+Model thumbnails are used in `traffic_editor`. To generate a thumbnail, a simple working example is shown here to generate a `SUV`:
+```bash
+# Run as gz plugin, set --a for help options printout
+gzserver -s libthumbnail_generator.so empty.world --input ~/.gazebo/models/SUV/model.sdf --output .
+```
+After execution, you will notice a newly created `SUV.png` in your current working directory. This can be further placed into `traffic_editor_assets/assets/thumbnails`.
+
+To generate multiple model thumbnails listed in `model_list.yaml`, run this:
+```bash
+./scripts/generate_thumbnails.py ~/.gazebo/models test/model_list.yaml ~/output
+```
+
+User can also change the script default configs:  `img_size`, `cam_height` and `fhov`, which will alter the `meters_per_pixel` value.
+
+Similarly, the generated thumbnails in `~/output` can then be added to `traffic_editor_assets/assets/thumbnails`, while also append `model_list.yaml`.
+
+### Utilities
+
+A new model list `.yaml` file can be generated using the utility script, where an optional blacklisted model names can be added, to avoid creating moving models or agents,
+
+```bash
+# e.g. MODEL_DIR = '~/.gazebo/models'
+./scripts/generate_model_list.py output_model_list.yaml -d MODEL_DIR -b test/model_blacklist.yaml
+```
+
+In the event that merging multiple model lists is required, a different utility script can be used,
+
+```bash
+./scripts/merge_model_lists.py output_model_list.yaml -s test/model_list.yaml
+```
