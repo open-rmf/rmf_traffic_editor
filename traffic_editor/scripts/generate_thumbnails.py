@@ -64,10 +64,10 @@ class ThumbnailsGenerator:
                 print(" Warn!! {} doesnt exist, skip!".format(model_name))
                 continue
 
-            command = "gzserver -s libthumbnail_generator.so \
+            command = "GAZEBO_MODEL_PATH={} gzserver -s libthumbnail_generator.so \
                     empty.world --input '{}' --output '{}' \
                     --img-size {} --cam-height {} --cam-hfov {} ".format(
-                    sdf_path, self.output_dir, self.img_size,
+                    self.models_dir, sdf_path, self.output_dir, self.img_size,
                     self.cam_height, self.cam_hfov)
             print("------------------------------------------------------")
             os.system(command)
