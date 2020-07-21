@@ -28,6 +28,8 @@ endif()
 ign_find_package(ignition-gazebo4 QUIET)
 if (NOT ignition-gazebo4_FOUND)
   message("Wrong ignition-gazebo version found. Plugins require ignition-gazebo4 (dome)")
+  # To generate a setup.bash and avoid CMake warnings
+  ament_package()
   return()
 endif()
 set(IGN_GAZEBO_VER 4)
