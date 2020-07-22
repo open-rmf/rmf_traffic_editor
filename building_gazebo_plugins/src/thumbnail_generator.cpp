@@ -257,7 +257,7 @@ public:
   {
     rendering::VisualPtr vis = this->_scene->GetVisual(this->_model_name);
     // Place the visual at the origin
-    ignition::math::Box bbox = vis->BoundingBox();
+    ignition::math::AxisAlignedBox bbox = vis->BoundingBox();
     ignition::math::Vector3d trans = bbox.Center();
     vis->SetWorldPose(
       ignition::math::Pose3d(trans.X(), trans.Y(), trans.Z(), 0, 0, 0));
