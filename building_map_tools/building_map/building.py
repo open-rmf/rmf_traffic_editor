@@ -213,7 +213,7 @@ class Building:
 
         for lift_name, lift in self.lifts.items():
             lift.generate_shaft_doors(world)
-            lift.generate_cabin(world, options)
+            lift.generate_cabin(world)
 
         gui_ele = world.find('gui')
         c = self.center()
