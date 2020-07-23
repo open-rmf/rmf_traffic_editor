@@ -20,46 +20,47 @@
 
 
 ProjectDialog::ProjectDialog(Project& _project)
-: QDialog(), project(_project)
+: QDialog(),
+  project(_project)
 {
   setWindowTitle("Project Properties");
   ok_button = new QPushButton("OK", this);  // first button = [enter] button
   cancel_button = new QPushButton("Cancel", this);
 
-  QHBoxLayout *name_hbox = new QHBoxLayout;
+  QHBoxLayout* name_hbox = new QHBoxLayout;
   name_hbox->addWidget(new QLabel("Project name:"));
   name_line_edit = new QLineEdit(QString::fromStdString(project.name));
   name_hbox->addWidget(name_line_edit);
 
-  QHBoxLayout *building_hbox = new QHBoxLayout;
+  QHBoxLayout* building_hbox = new QHBoxLayout;
   building_path_line_edit = new QLineEdit(
-      QString::fromStdString(project.building.filename));
-  QPushButton *building_path_button = new QPushButton("Find...");
+    QString::fromStdString(project.building.filename));
+  QPushButton* building_path_button = new QPushButton("Find...");
   connect(
-      building_path_button,
-      &QAbstractButton::clicked,
-      this,
-      &ProjectDialog::building_path_button_clicked);
+    building_path_button,
+    &QAbstractButton::clicked,
+    this,
+    &ProjectDialog::building_path_button_clicked);
 
   building_hbox->addWidget(new QLabel("Building path:"));
   building_hbox->addWidget(building_path_line_edit);
   building_hbox->addWidget(building_path_button);
 
-  QHBoxLayout *bottom_buttons_hbox = new QHBoxLayout;
+  QHBoxLayout* bottom_buttons_hbox = new QHBoxLayout;
   bottom_buttons_hbox->addWidget(cancel_button);
   bottom_buttons_hbox->addWidget(ok_button);
   connect(
-      ok_button,
-      &QAbstractButton::clicked,
-      this,
-      &ProjectDialog::ok_button_clicked);
+    ok_button,
+    &QAbstractButton::clicked,
+    this,
+    &ProjectDialog::ok_button_clicked);
   connect(
-      cancel_button,
-      &QAbstractButton::clicked,
-      this,
-      &QDialog::reject);
+    cancel_button,
+    &QAbstractButton::clicked,
+    this,
+    &QDialog::reject);
 
-  QVBoxLayout *top_vbox = new QVBoxLayout;
+  QVBoxLayout* top_vbox = new QVBoxLayout;
   top_vbox->addLayout(name_hbox);
   top_vbox->addLayout(building_hbox);
   // todo: some sort of separator (?)
@@ -91,19 +92,19 @@ void ProjectDialog::building_path_button_clicked()
   file_dialog.setFileMode(QFileDialog::ExistingFile);
   file_dialog.setNameFilter("*.building.yaml");
   if (file_dialog.exec() != QDialog::Accepted)
-    return;  // user clicked 'cancel' in the QFileDialog
+    return;// user clicked 'cancel' in the QFileDialog
   const QString filename = file_dialog.selectedFiles().first();
   if (!QFileInfo(filename).exists())  // is this check even needed?
   {
     QMessageBox::critical(
-        this,
-        "Building file does not exist",
-        "File does not exist.");
+      this,
+      "Building file does not exist",
+      "File does not exist.");
     return;
   }
   // todo: probably should change to the path of this project before
   // calculating the relative path. This is already done
   // implicitly, but maybe should be more explicit here.
   building_path_line_edit->setText(
-      QDir::current().relativeFilePath(filename));
+    QDir::current().relativeFilePath(filename));
 }

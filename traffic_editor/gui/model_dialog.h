@@ -20,8 +20,8 @@
 
 #include <QDialog>
 #include <QObject>
-#include "model.h"
-#include "editor_model.h"
+#include "traffic_editor/model.h"
+#include "traffic_editor/editor_model.h"
 #include <vector>
 class QLineEdit;
 class QListWidget;
@@ -34,24 +34,24 @@ class ModelDialog : public QDialog
 
 public:
   ModelDialog(
-      QWidget *parent,
-      Model& model,
-      const std::vector<EditorModel>& editor_models);
+    QWidget* parent,
+    Model& model,
+    const std::vector<EditorModel>& editor_models);
   ~ModelDialog();
 
 private:
   Model& _model;
   std::vector<EditorModel> _editor_models;
 
-  QLineEdit *_model_name_line_edit;
-  QListWidget *_model_name_list_widget;
-  QLabel *_model_preview_label;
+  QLineEdit* _model_name_line_edit;
+  QListWidget* _model_name_list_widget;
+  QLabel* _model_preview_label;
 
-  QPushButton *_ok_button, *_cancel_button;
+  QPushButton* _ok_button, * _cancel_button;
 
 private slots:
   void ok_button_clicked();
-  void model_name_line_edited(const QString &text);
+  void model_name_line_edited(const QString& text);
   void model_name_list_widget_changed(int row);
 };
 

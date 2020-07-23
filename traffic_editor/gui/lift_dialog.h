@@ -23,8 +23,8 @@
 #include <QDialog>
 #include <QObject>
 
-#include "lift.h"
-#include "building.h"
+#include "traffic_editor/lift.h"
+#include "traffic_editor/building.h"
 
 class QLineEdit;
 class QLabel;
@@ -45,24 +45,24 @@ private:
 
   std::vector<QString> _level_names;
 
-  QLineEdit *_name_line_edit;
-  QComboBox *_reference_floor_combo_box;
-  QLineEdit *_x_line_edit;
-  QLineEdit *_y_line_edit;
-  QLineEdit *_yaw_line_edit;
-  QLineEdit *_width_line_edit;
-  QLineEdit *_depth_line_edit;
+  QLineEdit* _name_line_edit;
+  QComboBox* _reference_floor_combo_box;
+  QLineEdit* _x_line_edit;
+  QLineEdit* _y_line_edit;
+  QLineEdit* _yaw_line_edit;
+  QLineEdit* _width_line_edit;
+  QLineEdit* _depth_line_edit;
 
-  QTableWidget *_door_table;
-  QTableWidget *_level_table;
+  QTableWidget* _door_table;
+  QTableWidget* _level_table;
 
-  QGraphicsView *_lift_view;
-  QGraphicsScene *_lift_scene;
+  QGraphicsView* _lift_view;
+  QGraphicsScene* _lift_scene;
 
-  QPushButton *_ok_button, *_cancel_button;
+  QPushButton* _ok_button, * _cancel_button;
 
   void update_door_table();
-  void set_door_cell(const int row, const int col, const QString &text);
+  void set_door_cell(const int row, const int col, const QString& text);
   void door_table_cell_changed(int row, int col);
 
   void update_level_table();

@@ -37,52 +37,54 @@ void LiftTable::update(Building& building)
   for (size_t i = 0; i < building.lifts.size(); i++)
   {
     setItem(
-        i,
-        0,
-        new QTableWidgetItem(
-            QString::fromStdString(building.lifts[i].name)));
+      i,
+      0,
+      new QTableWidgetItem(
+        QString::fromStdString(building.lifts[i].name)));
 
-    QPushButton *edit_button = new QPushButton("Edit...", this);
+    QPushButton* edit_button = new QPushButton("Edit...", this);
     setCellWidget(i, 1, edit_button);
 
     connect(
-        edit_button,
-        &QAbstractButton::clicked,
-        [this, &building, i]() {
-          /*
-          LiftDialog lift_dialog(building.lifts[i], building);
-          lift_dialog.exec();
-          update(building);
-          emit redraw();
-          */
-          LiftDialog *dialog = new LiftDialog(building.lifts[i], building);
-          dialog->show();
-          dialog->raise();
-          dialog->activateWindow();
-          connect(
-              dialog,
-              &LiftDialog::redraw,
-              [this]() { emit redraw(); });
-        });
+      edit_button,
+      &QAbstractButton::clicked,
+      [this, &building, i]()
+      {
+        /*
+        LiftDialog lift_dialog(building.lifts[i], building);
+        lift_dialog.exec();
+        update(building);
+        emit redraw();
+        */
+        LiftDialog* dialog = new LiftDialog(building.lifts[i], building);
+        dialog->show();
+        dialog->raise();
+        dialog->activateWindow();
+        connect(
+          dialog,
+          &LiftDialog::redraw,
+          [this]() { emit redraw(); });
+      });
   }
 
   // we'll use the last row for the "Add" button
   const int last_row_idx = static_cast<int>(building.lifts.size());
   setCellWidget(last_row_idx, 0, nullptr);
-  QPushButton *add_button = new QPushButton("Add...", this);
+  QPushButton* add_button = new QPushButton("Add...", this);
   setCellWidget(last_row_idx, 1, add_button);
   connect(
-      add_button, &QAbstractButton::clicked,
-      [this, &building]() {
-        Lift lift;
-        LiftDialog lift_dialog(lift, building);
-        if (lift_dialog.exec() == QDialog::Accepted)
-        {
-          building.lifts.push_back(lift);
-          update(building);
-          emit redraw();
-        }
-      });
+    add_button, &QAbstractButton::clicked,
+    [this, &building]()
+    {
+      Lift lift;
+      LiftDialog lift_dialog(lift, building);
+      if (lift_dialog.exec() == QDialog::Accepted)
+      {
+        building.lifts.push_back(lift);
+        update(building);
+        emit redraw();
+      }
+    });
 
   blockSignals(false);
 }

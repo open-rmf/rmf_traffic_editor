@@ -21,7 +21,7 @@
 #include <QGraphicsView>
 #include <QWheelEvent>
 
-#include "building.h"
+#include "traffic_editor/building.h"
 
 
 class MapView : public QGraphicsView
@@ -29,14 +29,14 @@ class MapView : public QGraphicsView
   Q_OBJECT
 
 public:
-  MapView(QWidget *parent = nullptr);
+  MapView(QWidget* parent = nullptr);
   void zoom_fit(const Building& building, int level_index);
 
 protected:
-  void wheelEvent(QWheelEvent *event);
-  void mouseMoveEvent(QMouseEvent *e);
-  void mousePressEvent(QMouseEvent *e);
-  void mouseReleaseEvent(QMouseEvent *e);
+  void wheelEvent(QWheelEvent* event);
+  void mouseMoveEvent(QMouseEvent* e);
+  void mousePressEvent(QMouseEvent* e);
+  void mouseReleaseEvent(QMouseEvent* e);
 
   bool is_panning;
   int pan_start_x, pan_start_y;

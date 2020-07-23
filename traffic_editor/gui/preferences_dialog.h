@@ -26,14 +26,14 @@ class QCheckBox;
 class PreferencesDialog : public QDialog
 {
 public:
-  PreferencesDialog(QWidget *parent);
+  PreferencesDialog(QWidget* parent);
   ~PreferencesDialog();
- 
+
 private:
-  QLineEdit *thumbnail_path_line_edit;
-  QPushButton *thumbnail_path_button;
-  QCheckBox *open_previous_project_checkbox;
-  QPushButton *ok_button, *cancel_button;
+  QLineEdit* thumbnail_path_line_edit;
+  QPushButton* thumbnail_path_button;
+  QCheckBox* open_previous_project_checkbox;
+  QPushButton* ok_button, * cancel_button;
 
 private slots:
   void thumbnail_path_button_clicked();

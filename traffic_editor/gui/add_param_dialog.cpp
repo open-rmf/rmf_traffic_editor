@@ -20,32 +20,32 @@
 
 
 AddParamDialog::AddParamDialog(
-    QWidget *parent,
-    const std::vector<std::pair<std::string, Param::Type> >& _param_names)
+  QWidget* parent,
+  const std::vector<std::pair<std::string, Param::Type>>& _param_names)
 : QDialog(parent),
   param_names(_param_names)
 {
   ok_button = new QPushButton("OK", this);  // first button = [enter] button
   cancel_button = new QPushButton("Cancel", this);
 
-  QHBoxLayout *name_hbox_layout = new QHBoxLayout;
+  QHBoxLayout* name_hbox_layout = new QHBoxLayout;
   name_hbox_layout->addWidget(new QLabel("name:"));
   name_combo_box = new QComboBox;
   for (const auto& param_name : param_names)
     name_combo_box->addItem(QString::fromStdString(param_name.first));
   name_hbox_layout->addWidget(name_combo_box);
 
-  QHBoxLayout *bottom_buttons_layout = new QHBoxLayout;
+  QHBoxLayout* bottom_buttons_layout = new QHBoxLayout;
   bottom_buttons_layout->addWidget(cancel_button);
   bottom_buttons_layout->addWidget(ok_button);
   connect(
-      ok_button, &QAbstractButton::clicked,
-      this, &AddParamDialog::ok_button_clicked);
+    ok_button, &QAbstractButton::clicked,
+    this, &AddParamDialog::ok_button_clicked);
   connect(
-      cancel_button, &QAbstractButton::clicked,
-      this, &QDialog::reject);
+    cancel_button, &QAbstractButton::clicked,
+    this, &QDialog::reject);
 
-  QVBoxLayout *vbox_layout = new QVBoxLayout;
+  QVBoxLayout* vbox_layout = new QVBoxLayout;
   vbox_layout->addLayout(name_hbox_layout);
   // todo: some sort of separator (?)
   vbox_layout->addLayout(bottom_buttons_layout);

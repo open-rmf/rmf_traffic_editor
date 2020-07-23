@@ -15,22 +15,24 @@
  *
 */
 
+#include <cmath>
+
 #include <QGraphicsScene>
 #include <QGraphicsSimpleTextItem>
 
-#include "fiducial.h"
+#include "traffic_editor/fiducial.h"
 using std::string;
 
 Fiducial::Fiducial()
 {
 }
 
-Fiducial::Fiducial(double _x, double _y, const string &_name)
+Fiducial::Fiducial(double _x, double _y, const string& _name)
 : x(_x), y(_y), name(_name)
 {
 }
 
-void Fiducial::from_yaml(const YAML::Node &data)
+void Fiducial::from_yaml(const YAML::Node& data)
 {
   if (!data.IsSequence())
     throw std::runtime_error("Vertex::from_yaml expected a sequence");
@@ -45,15 +47,15 @@ YAML::Node Fiducial::to_yaml() const
   // with more than 1/1000 precision inside a single pixel.
   YAML::Node node;
   node.SetStyle(YAML::EmitterStyle::Flow);
-  node.push_back(round(x * 1000.0) / 1000.0);
-  node.push_back(round(y * 1000.0) / 1000.0);
+  node.push_back(std::round(x * 1000.0) / 1000.0);
+  node.push_back(std::round(y * 1000.0) / 1000.0);
   node.push_back(name);
   return node;
 }
 
 void Fiducial::draw(
-    QGraphicsScene *scene,
-    const double meters_per_pixel) const
+  QGraphicsScene* scene,
+  const double meters_per_pixel) const
 {
   const double a = 0.5;
   const QColor color = QColor::fromRgbF(0.0, 0.0, 1.0, a);
@@ -64,17 +66,18 @@ void Fiducial::draw(
   const double radius = 0.5 / meters_per_pixel;
 
   scene->addEllipse(
-      x - radius,
-      y - radius,
-      2 * radius,
-      2 * radius,
-      pen);
+    x - radius,
+    y - radius,
+    2 * radius,
+    2 * radius,
+    pen);
   scene->addLine(x, y - 2 * radius, x, y + 2 * radius, pen);
   scene->addLine(x - 2 * radius, y, x + 2 * radius, y, pen);
 
-  if (!name.empty()) {
-    QGraphicsSimpleTextItem *item = scene->addSimpleText(
-        QString::fromStdString(name));
+  if (!name.empty())
+  {
+    QGraphicsSimpleTextItem* item = scene->addSimpleText(
+      QString::fromStdString(name));
     item->setBrush(QColor(0, 0, 255, 255));
     item->setPos(x, y + radius);
   }
@@ -84,5 +87,5 @@ double Fiducial::distance(const Fiducial& f)
 {
   const double dx = f.x - x;
   const double dy = f.y - y;
-  return sqrt(dx*dx + dy*dy);
+  return std::sqrt(dx*dx + dy*dy);
 }

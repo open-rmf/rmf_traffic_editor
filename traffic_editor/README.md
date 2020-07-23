@@ -13,63 +13,78 @@ This program is developed and tested on
 [`yaml-cpp`](https://github.com/jbeder/yaml-cpp).
 
 ## Compiling Instructions
-Configuring and compiling can be sequenced using `colcon` or using
-vanilla CMake:
-```
+Traffic Editor is now structured as a Colcon package. After installing
+ROS 2 Eloquent, the following command sequence will create a colcon
+workspace in `~/colcon_workspace` and build `traffic-editor` there:
+
+```bash
 sudo apt update
-sudo apt install git cmake libyaml-cpp-dev qt5-default
+sudo apt install libyaml-cpp-dev qt5-default \
+  libopencv-dev libopencv-videoio-dev \
+  libignition-plugin-dev libignition-common3-dev
+mkdir -p ~/colcon_workspace/src
+cd ~/colcon_workspace/src
 git clone https://github.com/osrf/traffic_editor
-cd traffic_editor/traffic_editor
-mkdir build
-cd build
-cmake ..
-make
+cd ~/colcon_workspace
+source /opt/ros/eloquent/setup.bash
+colcon build --packages-select traffic_editor
+```
+
+You are also **highly recommended** to also install the companion `traffic_editor_assets`
+package, which contains a nifty bunch of useful assets to use with `traffic_editor`.
+
+```bash
+cd ~/colcon_workspace/src
+git clone https://github.com/osrf/traffic_editor_assets
+cd ~/colcon_workspace
+source /opt/ros/eloquent/setup.bash
+colcon build --packages-select traffic_editor_assets
+```
+
+Then you should be able to run `traffic-editor` by sourcing the install
+space of that workspace, in a new "clean" terminal:
+```bash
+source ~/colcon_workspace/install/setup.bash
+traffic-editor
 ```
 
 # Quick Start
 
 If it's the first time you are running it, starting the editor with
-`./traffic-editor` should bring up a blank window.
+`traffic-editor` should bring up a blank window.
 
-First, you'll need to make sure that `traffic-editor` knows where the model
-thumbnails are found. Depending on how `traffic-editor` is built, it may not
-find it automatically. The thumbnails are top-view renderings of various art
-assets that can be added to the environments, such as chairs. Click
-"Edit->Preferences..." and see if the path provided in the "Thumbnail Path"
-box looks reasonable. If necessary, the "Find..." button can be used to browse
-the filesystem to point to the "traffic_editor/thumbnails" directory in the
-`traffic_editor` repository that was cloned earlier.
+First, you'll need to make sure that `traffic-editor` knows where the
+model thumbnails are found. If you installed `traffic_editor_assets`,
+`traffic_editor` should find it automatically. The thumbnails are
+top-view renderings of various art assets that can be added to the
+environments, such as chairs.
+
+Click `Edit->Preferences...` and see if the path provided in the "Thumbnail Path" box looks reasonable. 
+
+If necessary, the "Find..." button can be used to browse the filesystem to point to any desired thumbnail directory.
+
+(If you installed the recommended `traffic_editor_assets` package, you will find its thumbnail directory in its install space at `<workspace_dir>/install/traffic_editor_assets/share/assets/thumbnails`.)
 
 ### Creating a new Project and an empty Building Map
 
 Click `Project->New...` and save your new project as `test.project.yaml`
 
-Click `Edit->Project Properties...` and enter "test" as the project name
-and `test.building.yaml` as the building path. Then click OK.
+Click `Edit->Project Properties...` and enter "test" as the project name and `test.building.yaml` as the building path. Then click OK.
 
 Click `Edit->Building Properties...` and enter "test" as the building name.
 Click OK.
 
 ### Creating a level and adding some stuff
 
-Click the "Add..." button in the "levels" tab on the far right side of the
-main editor window. This will pop up a dialog where you can create a new
-level. Enter `L1` for the name and click OK. This will create a 10 meter square
-level.
+Click the "Add..." button in the "levels" tab on the far right side of the main editor window. This will pop up a dialog where you can create a new level. Enter `L1` for the name and click OK. This will create a 10 meter square level.
 
-You can zoom in and out using the mouse wheel on the rendering on the left
-side of the main window. You can pan around by dragging the mouse around with
-the mouse wheel (or middle button) depressed.
+You can zoom in and out using the mouse wheel on the rendering on the left side of the main window. You can pan around by dragging the mouse around with the mouse wheel (or middle button) depressed.
 
-Now, you should be able to click the green dot toolbar icon, which is the "Add
-Vertex" tool (or press `V`) and click a few vertices in the white area. Press
-the `[Escape]` key to return to the "Select" tool.
+Now, you should be able to click the green dot toolbar icon, which is the "Add Vertex" tool (or press `V`) and click a few vertices in the white area. Press the `[Escape]` key to return to the "Select" tool.
 
-Now, you should be able to click the `add wall` tool (or press `W`) and
-drag from one vertex to another vertex to add wall segments.
+Now, you should be able to click the `add wall` tool (or press `W`) and drag from one vertex to another vertex to add wall segments.
 
-To delete wall segments or vertices, first press `[Escape]` to enter Select
-mode. Then, click on a wall segment or vertex, and press `[Delete]`.
+To delete wall segments or vertices, first press `[Escape]` to enter Select mode. Then, click on a wall segment or vertex, and press `[Delete]`.
 
 ### Save your work
 
@@ -77,15 +92,47 @@ Click `Project->Save` or press `Ctrl+S` to save the project and building map.
 
 ### Adding real-world measurements to set the scale
 
-To set the scale of the drawing, click the `add measurement` tool (or
-press `M`) and drag from one vertex to another to add a real-world measurement
-line, which should show up as a pink line. Then click the `select` tool (or
-press `Esc`) and click on the line with the left button. This should populate
-the property-editor in the lower-right pane of the editor window. You can then
-specify the real-world length of the measurement line in meters. If you set
-more than one measurement line on a drawing, the editor will compute an average
-value of pixels-per-meter from all supplied measurements.
+To set the scale of the drawing, click the `add measurement` tool (or press `M`) and drag from one vertex to another to add a real-world measurement line, which should show up as a pink line. Then click the `select` tool (or press `Esc`) and click on the line with the left button. This should populate the property-editor in the lower-right pane of the editor window. You can then specify the real-world length of the measurement line in meters. If you set more than one measurement line on a drawing, the editor will compute an average value of pixels-per-meter from all supplied measurements.
 
-Currently you need to re-load the document (closing the editor and re-opening)
-to re-compute the scale. This is not ideal, but is hopefully not a
-frequently-used feature. Typically the scale of a map is only set one time.
+Currently you need to re-load the document (closing the editor and re-opening) to re-compute the scale. This is not ideal, but is hopefully not a frequently-used feature. Typically the scale of a map is only set one time.
+
+### Adding lifts
+
+Click the "Add..." button in the "lifts" tab on the far right side of the main editor window. This will pop up a dialog where you can create a new lift. You can specify the name, position, size, and reference floor in the dialog.
+
+*Note: Do include the keywork "lift" in the lift name as for now this is how slotcars recognize lift models.*
+
+You can add lift doors by lick the "Add..." button below the box showing the lift. Set Door type to "Double sliding" (The only supported type for now!), and align the doors to the edge of the lift (represented by the green box). After that, select which door you want to use on each floor by simply checking the boxes on the left.
+
+### Generating Custom Thumbnails
+
+Model thumbnails are used in `traffic_editor`. To generate a thumbnail, a simple working example is shown here to generate a `SUV`:
+```bash
+# Run as gz plugin, set --a for help options printout
+gzserver -s libthumbnail_generator.so empty.world --input ~/.gazebo/models/SUV/model.sdf --output .
+```
+After execution, you will notice a newly created `SUV.png` in your current working directory. This can be further placed into `traffic_editor_assets/assets/thumbnails`.
+
+To generate multiple model thumbnails listed in `model_list.yaml`, run this:
+```bash
+./scripts/generate_thumbnails.py ~/.gazebo/models test/model_list.yaml ~/output
+```
+
+User can also change the script default configs:  `img_size`, `cam_height` and `fhov`, which will alter the `meters_per_pixel` value.
+
+Similarly, the generated thumbnails in `~/output` can then be added to `traffic_editor_assets/assets/thumbnails`, while also append `model_list.yaml`.
+
+### Utilities
+
+A new model list `.yaml` file can be generated using the utility script, where an optional blacklisted model names can be added, to avoid creating moving models or agents,
+
+```bash
+# e.g. MODEL_DIR = '~/.gazebo/models'
+./scripts/generate_model_list.py output_model_list.yaml -d MODEL_DIR -b test/model_blacklist.yaml
+```
+
+In the event that merging multiple model lists is required, a different utility script can be used,
+
+```bash
+./scripts/merge_model_lists.py output_model_list.yaml -s test/model_list.yaml
+```

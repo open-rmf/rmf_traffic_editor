@@ -1,0 +1,30 @@
+<package format="3">
+  <name>building_ignition_plugins</name>
+  <version>0.0.0</version>
+  <description>
+    Ignition gazebo plugins for building infrastructure simulation
+  </description>
+  <author>Luca Della Vedova</author>
+  <author>Kevin Ma</author>
+  <maintainer email="luca@openrobotics.org">Luca Della Vedova</maintainer>
+  <license>Apache 2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <!-- TODO fix dependencies -->
+  <depend>rclcpp</depend>
+  <depend>rmf_fleet_msgs</depend>
+  <depend>rmf_door_msgs</depend>
+  <depend>rmf_lift_msgs</depend>
+  <depend>tf2_ros</depend>
+  <depend>geometry_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>std_srvs</depend>
+
+  <depend>building_sim_common</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+
+</package>

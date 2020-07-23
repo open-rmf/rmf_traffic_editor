@@ -39,7 +39,7 @@ class Model:
         pose_ele = SubElement(include_ele, 'pose')
         x, y = transform.transform_point((self.x, self.y))
         z = self.z
-        yaw = self.yaw + 1.5707 + transform.rotation
+        yaw = self.yaw + transform.rotation
         pose_ele.text = f'{x} {y} {z} 0 0 {yaw}'
 
         static_ele = SubElement(include_ele, 'static')

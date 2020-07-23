@@ -22,7 +22,7 @@
 #include <QImageReader>
 #include <QSettings>
 
-#include "editor_model.h"
+#include "traffic_editor/editor_model.h"
 
 using std::string;
 
@@ -34,10 +34,10 @@ EditorModel::EditorModel(const string _name, const double _meters_per_pixel)
 {
   // make a lowercase copy for fast auto-complete
   std::transform(
-      name_lowercase.begin(),
-      name_lowercase.end(),
-      name_lowercase.begin(),
-      [](unsigned char c) { return std::tolower(c); });
+    name_lowercase.begin(),
+    name_lowercase.end(),
+    name_lowercase.begin(),
+    [](unsigned char c) { return std::tolower(c); });
 }
 
 EditorModel::~EditorModel()
@@ -56,18 +56,19 @@ QPixmap EditorModel::get_pixmap()
   QString thumbnail_path(settings.value(THUMBNAIL_PATH_KEY).toString());
 
   string filename =
-      thumbnail_path.toStdString() +
-      "/images/cropped/" +
-      name +
-      string(".png");
+    thumbnail_path.toStdString() +
+    "/images/cropped/" +
+    name +
+    string(".png");
   // qInfo("loading: [%s]", filename.c_str());
   QImageReader image_reader(QString::fromStdString(filename));
   image_reader.setAutoTransform(true);  // not sure what this does
   QImage image = image_reader.read();
-  if (image.isNull()) {
+  if (image.isNull())
+  {
     qWarning("unable to read %s: %s",
-        filename.c_str(),
-        qUtf8Printable(image_reader.errorString()));
+      filename.c_str(),
+      qUtf8Printable(image_reader.errorString()));
     return QPixmap();
   }
   pixmap = QPixmap::fromImage(image);

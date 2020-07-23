@@ -15,7 +15,7 @@
  *
 */
 
-#include "polygon.h"
+#include "traffic_editor/polygon.h"
 using std::string;
 using std::vector;
 
@@ -29,13 +29,14 @@ Polygon::~Polygon()
 {
 }
 
-void Polygon::from_yaml(const YAML::Node &data, const Type polygon_type)
+void Polygon::from_yaml(const YAML::Node& data, const Type polygon_type)
 {
   if (!data.IsMap())
     throw std::runtime_error("Polygon::from_yaml() expected a map");
   type = polygon_type;
   for (YAML::const_iterator it = data["vertices"].begin();
-      it != data["vertices"].end(); ++it) {
+    it != data["vertices"].end(); ++it)
+  {
     vertices.push_back(it->as<int>());
   }
 
@@ -43,8 +44,8 @@ void Polygon::from_yaml(const YAML::Node &data, const Type polygon_type)
   if (data["parameters"])
   {
     for (YAML::const_iterator it = data["parameters"].begin();
-        it != data["parameters"].end();
-        ++it)
+      it != data["parameters"].end();
+      ++it)
     {
       Param p;
       p.from_yaml(it->second);
@@ -58,11 +59,11 @@ void Polygon::from_yaml(const YAML::Node &data, const Type polygon_type)
 YAML::Node Polygon::to_yaml() const
 {
   YAML::Node y;
-  for (const auto &vertex_idx : vertices)
+  for (const auto& vertex_idx : vertices)
     y["vertices"].push_back(vertex_idx);
   y["vertices"].SetStyle(YAML::EmitterStyle::Flow);
   y["parameters"] = YAML::Node(YAML::NodeType::Map);
-  for (const auto &param : params)
+  for (const auto& param : params)
     y["parameters"][param.first] = param.second.to_yaml();
   y["parameters"].SetStyle(YAML::EmitterStyle::Flow);
   return y;
@@ -86,8 +87,8 @@ void Polygon::remove_vertex(const int vertex_idx)
     return;  // never found it. so sad.
   }
   printf("found vertex %d at polygon vertices idx %d\n",
-      vertex_idx,
-      vertex_occurrence_idx);
+    vertex_idx,
+    vertex_occurrence_idx);
 
   vertices.erase(vertices.begin() + vertex_occurrence_idx);
 
@@ -96,7 +97,7 @@ void Polygon::remove_vertex(const int vertex_idx)
   //v.erase(std::remove(v.begin(), v.end(), vertex_idx), v.end());
 }
 
-void Polygon::set_param(const std::string &name, const std::string &value)
+void Polygon::set_param(const std::string& name, const std::string& value)
 {
   auto it = params.find(name);
   if (it == params.end())
@@ -113,19 +114,19 @@ void Polygon::create_required_parameters()
   if (type == FLOOR)
   {
     create_param_if_needed(
-        "texture_name",
-        Param::STRING,
-        std::string("blue_linoleum"));
+      "texture_name",
+      Param::STRING,
+      std::string("blue_linoleum"));
     create_param_if_needed("texture_scale", Param::DOUBLE, 1.0);
     create_param_if_needed("texture_rotation", Param::DOUBLE, 0.0);
   }
 }
 
-template <typename T>
+template<typename T>
 void Polygon::create_param_if_needed(
-    const std::string& name,
-    const Param::Type& param_type,
-    const T& param_value)
+  const std::string& name,
+  const Param::Type& param_type,
+  const T& param_value)
 {
   auto it = params.find(name);
   if (it == params.end() || it->second.type != param_type)

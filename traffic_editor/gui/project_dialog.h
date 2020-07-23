@@ -29,13 +29,13 @@ class ProjectDialog : public QDialog
 public:
   ProjectDialog(Project& _project);
   ~ProjectDialog();
- 
+
 private:
   Project& project;
 
-  QLineEdit *name_line_edit;
-  QLineEdit *building_path_line_edit;
-  QPushButton *ok_button, *cancel_button;
+  QLineEdit* name_line_edit;
+  QLineEdit* building_path_line_edit;
+  QPushButton* ok_button, * cancel_button;
 
 private slots:
   void ok_button_clicked();

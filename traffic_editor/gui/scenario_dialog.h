@@ -19,6 +19,7 @@
 #define SCENARIO_DIALOG_H
 
 #include <QDialog>
+#include <memory>
 #include "project.h"
 class QLineEdit;
 class QComboBox;
@@ -29,13 +30,14 @@ class ScenarioDialog : public QDialog
 public:
   ScenarioDialog(Scenario& _scenario);
   ~ScenarioDialog();
- 
-private:
+
   Scenario& scenario;
 
-  QLineEdit *name_line_edit;
-  QLineEdit *scenario_path_line_edit;
-  QPushButton *ok_button, *cancel_button;
+private:
+
+  QLineEdit* name_line_edit;
+  QLineEdit* scenario_path_line_edit;
+  QPushButton* ok_button, * cancel_button;
 
 private slots:
   void ok_button_clicked();

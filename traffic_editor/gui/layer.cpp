@@ -16,7 +16,7 @@
 */
 
 #include <QImageReader>
-#include "layer.h"
+#include "traffic_editor/layer.h"
 using std::string;
 using std::vector;
 
@@ -28,7 +28,7 @@ Layer::~Layer()
 {
 }
 
-bool Layer::from_yaml(const std::string& _name, const YAML::Node &y)
+bool Layer::from_yaml(const std::string& _name, const YAML::Node& y)
 {
   if (!y.IsMap())
     throw std::runtime_error("Layer::from_yaml() expected a map");
@@ -45,10 +45,11 @@ bool Layer::from_yaml(const std::string& _name, const YAML::Node &y)
   QImageReader image_reader(QString::fromStdString(filename));
   image_reader.setAutoTransform(true);
   QImage image = image_reader.read();
-  if (image.isNull()) {
+  if (image.isNull())
+  {
     qWarning("unable to read %s: %s",
-        qUtf8Printable(QString::fromStdString(filename)),
-        qUtf8Printable(image_reader.errorString()));
+      qUtf8Printable(QString::fromStdString(filename)),
+      qUtf8Printable(image_reader.errorString()));
     return false;
   }
   image = image.convertToFormat(QImage::Format_Grayscale8);

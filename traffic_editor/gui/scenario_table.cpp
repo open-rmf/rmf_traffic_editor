@@ -18,6 +18,8 @@
 #include "scenario_dialog.h"
 #include "scenario_table.h"
 #include <QtWidgets>
+using std::unique_ptr;
+
 
 ScenarioTable::ScenarioTable()
 : TableList(2)
@@ -36,47 +38,50 @@ void ScenarioTable::update(Project& project)
   setRowCount(1 + project.scenarios.size());
   for (size_t i = 0; i < project.scenarios.size(); i++)
   {
-    const Scenario& scenario = project.scenarios[i];
+    const Scenario& scenario = *project.scenarios[i];
 
-    QTableWidgetItem *name_item =
-        new QTableWidgetItem(QString::fromStdString(scenario.name));
+    QTableWidgetItem* name_item =
+      new QTableWidgetItem(QString::fromStdString(scenario.name));
 
     if (static_cast<int>(i) == project.scenario_idx)
       name_item->setBackground(QBrush(QColor("#e0ffe0")));
 
     setItem(i, 0, name_item);
 
-    QPushButton *edit_button = new QPushButton("Edit...", this);
+    QPushButton* edit_button = new QPushButton("Edit...", this);
     setCellWidget(i, 1, edit_button);
     connect(
-        edit_button,
-        &QAbstractButton::clicked,
-        [this, &project, i]()
-        {
-          ScenarioDialog dialog(project.scenarios[i]);
-          dialog.exec();
-          update(project);
-          emit redraw();
-        });
+      edit_button,
+      &QAbstractButton::clicked,
+      [this, &project, i]()
+      {
+        ScenarioDialog dialog(*project.scenarios[i]);
+        dialog.exec();
+        update(project);
+        emit redraw();
+      });
   }
 
   // we'll use the last row for the "Add" button
   const int last_row_idx = static_cast<int>(project.scenarios.size());
   setCellWidget(last_row_idx, 0, nullptr);
-  QPushButton *add_button = new QPushButton("Add...", this);
+  QPushButton* add_button = new QPushButton("Add...", this);
   setCellWidget(last_row_idx, 1, add_button);
   connect(
-      add_button, &QAbstractButton::clicked,
-      [this, &project]() {
-        Scenario scenario;
-        ScenarioDialog scenario_dialog(scenario);
-        if (scenario_dialog.exec() == QDialog::Accepted)
-        {
-          project.scenarios.push_back(scenario);
-          update(project);
-          emit redraw();
-        }
-      });
+    add_button, &QAbstractButton::clicked,
+    [this, &project]()
+    {
+      unique_ptr<Scenario> scenario = std::make_unique<Scenario>();
+      ScenarioDialog scenario_dialog(*scenario);
+      if (scenario_dialog.exec() == QDialog::Accepted)
+      {
+        project.scenarios.push_back(std::move(scenario));
+        update(project);
+        emit redraw();
+      }
+      else
+        scenario.release();
+    });
 
   blockSignals(false);
 }

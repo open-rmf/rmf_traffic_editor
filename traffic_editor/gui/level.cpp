@@ -16,12 +16,13 @@
 */
 
 #include <algorithm>
+#include <cmath>
 
 #include <QGraphicsScene>
 #include <QImage>
 #include <QImageReader>
 
-#include "level.h"
+#include "traffic_editor/level.h"
 using std::string;
 using std::vector;
 
@@ -35,15 +36,16 @@ Level::~Level()
 }
 
 void Level::load_yaml_edge_sequence(
-    const YAML::Node &data,
-    const char *sequence_name,
-    const Edge::Type type)
+  const YAML::Node& data,
+  const char* sequence_name,
+  const Edge::Type type)
 {
   if (!data[sequence_name] || !data[sequence_name].IsSequence())
     return;
 
-  const YAML::Node &yl = data[sequence_name];
-  for (YAML::const_iterator it = yl.begin(); it != yl.end(); ++it) {
+  const YAML::Node& yl = data[sequence_name];
+  for (YAML::const_iterator it = yl.begin(); it != yl.end(); ++it)
+  {
     Edge e;
     e.from_yaml(*it, type);
     edges.push_back(e);
@@ -51,10 +53,10 @@ void Level::load_yaml_edge_sequence(
 }
 
 double Level::point_to_line_segment_distance(
-    const double x, const double y,
-    const double x0, const double y0,
-    const double x1, const double y1,
-    double &x_proj, double &y_proj)
+  const double x, const double y,
+  const double x0, const double y0,
+  const double x1, const double y1,
+  double& x_proj, double& y_proj)
 {
   // this portion figures out which edge is closest to (x, y) by repeatedly
   // testing the distance from the click to each edge in the polygon, using
@@ -69,8 +71,8 @@ double Level::point_to_line_segment_distance(
   const double dy0 = y - y0;
   const double dot = dx0*dx + dy0*dy;
   const double t = std::max(
-      0.0,
-      std::min(1.0, dot / segment_length_squared));
+    0.0,
+    std::min(1.0, dot / segment_length_squared));
 
   x_proj = x0 + t * dx;
   y_proj = y0 + t * dy;
@@ -78,7 +80,7 @@ double Level::point_to_line_segment_distance(
   const double dx_proj = x - x_proj;
   const double dy_proj = y - y_proj;
 
-  const double dist = sqrt(dx_proj * dx_proj + dy_proj * dy_proj);
+  const double dist = std::sqrt(dx_proj * dx_proj + dy_proj * dy_proj);
 
   /*
   printf("   p=(%.1f, %.1f) p0=(%.1f, %.1f) p1=(%.1f, %.1f) t=%.3f proj=(%.1f, %.1f) dist=%.3f\n",
@@ -93,9 +95,9 @@ double Level::point_to_line_segment_distance(
  * 'split' by the newly created edge
  */
 Polygon::EdgeDragPolygon Level::polygon_edge_drag_press(
-    const Polygon *polygon,
-    const double x,
-    const double y)
+  const Polygon* polygon,
+  const double x,
+  const double y)
 {
   Polygon::EdgeDragPolygon edp;
 
@@ -111,7 +113,7 @@ Polygon::EdgeDragPolygon Level::polygon_edge_drag_press(
   for (size_t v0_idx = 0; v0_idx < polygon->vertices.size(); v0_idx++)
   {
     const size_t v1_idx =
-        v0_idx < polygon->vertices.size() - 1 ? v0_idx + 1 : 0;
+      v0_idx < polygon->vertices.size() - 1 ? v0_idx + 1 : 0;
     const size_t v0 = polygon->vertices[v0_idx];
     const size_t v1 = polygon->vertices[v1_idx];
 
@@ -122,7 +124,7 @@ Polygon::EdgeDragPolygon Level::polygon_edge_drag_press(
 
     double x_proj = 0, y_proj = 0;
     const double dist = point_to_line_segment_distance(
-        x, y, x0, y0, x1, y1, x_proj, y_proj);
+      x, y, x0, y0, x1, y1, x_proj, y_proj);
 
     if (dist < min_dist)
     {
@@ -140,7 +142,7 @@ Polygon::EdgeDragPolygon Level::polygon_edge_drag_press(
   for (size_t i = 0; i < polygon->vertices.size(); i++)
   {
     const int v_idx = polygon->vertices[i];
-    const Vertex &v = vertices[v_idx];
+    const Vertex& v = vertices[v_idx];
     polygon_vertices.append(QPointF(v.x, v.y));
     if (v_idx == min_idx)
     {
@@ -149,15 +151,15 @@ Polygon::EdgeDragPolygon Level::polygon_edge_drag_press(
     }
   }
   edp.polygon = QPolygonF(polygon_vertices);
- 
+
   return edp;
 }
 
-bool Level::parse_vertices(const YAML::Node &_data)
+bool Level::parse_vertices(const YAML::Node& _data)
 {
   if (_data["vertices"] && _data["vertices"].IsSequence())
   {
-    const YAML::Node &pts = _data["vertices"];
+    const YAML::Node& pts = _data["vertices"];
     for (YAML::const_iterator it = pts.begin(); it != pts.end(); ++it)
     {
       Vertex v;
