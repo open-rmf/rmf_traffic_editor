@@ -114,6 +114,10 @@ void Edge::create_required_parameters()
     if (it == params.end() || it->second.type != Param::DOUBLE)
       params["distance"] = Param(1.0);
   }
+  else if (type == WALL)
+  {
+    create_param_if_needed("texture_name", Param::STRING, std::string());
+  }
   else if (type == LANE)
   {
     create_param_if_needed("bidirectional", Param::BOOL, false);
