@@ -36,15 +36,15 @@ include(GNUInstallDirs)
 
 add_library(slotcar_common SHARED ${PROJECT_SOURCE_DIR}/src/slotcar_common.cpp)
 
-target_link_libraries(slotcar_common
-  PUBLIC
-    Eigen3::Eigen
-    ${rmf_fleet_msgs_LIBRARIES}
-    ${building_map_msgs_LIBRARIES}
-    ${rclcpp_LIBRARIES}
-    ${geometry_msgs_LIBRARIES}
-    ${tf2_ros_LIBRARIES}
+ament_target_dependencies(slotcar_common
+    Eigen3
+    rmf_fleet_msgs
+    building_map_msgs
+    rclcpp
+    geometry_msgs
+    tf2_ros
 )
+
 
 target_include_directories(slotcar_common
   PUBLIC
@@ -65,11 +65,10 @@ target_include_directories(slotcar_common
 
 add_library(door_common SHARED src/door_common.cpp)
 
-target_link_libraries(door_common
- PUBLIC
-   ${rmf_fleet_msgs_LIBRARIES}
-   ${rclcpp_LIBRARIES}
-   ${rmf_door_msgs_LIBRARIES}
+ament_target_dependencies(door_common
+    rmf_fleet_msgs
+    rclcpp
+    rmf_door_msgs
 )
 
 target_include_directories(door_common
@@ -86,13 +85,13 @@ target_include_directories(door_common
 
 add_library(lift_common SHARED src/lift_common.cpp)
 
-target_link_libraries(lift_common
- PUBLIC
-   ${rmf_fleet_msgs_LIBRARIES}
-   ${rclcpp_LIBRARIES}
-   ${rmf_door_msgs_LIBRARIES}
-   ${rmf_lift_msgs_LIBRARIES}
+ament_target_dependencies(lift_common
+   rmf_fleet_msgs
+   rclcpp
+   rmf_door_msgs
+   rmf_lift_msgs
 )
+
 
 target_include_directories(lift_common
  PUBLIC
