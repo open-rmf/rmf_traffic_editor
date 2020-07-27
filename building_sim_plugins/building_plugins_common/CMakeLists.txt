@@ -41,6 +41,7 @@ ament_target_dependencies(slotcar_common
     rmf_fleet_msgs
     building_map_msgs
     rclcpp
+    std_msgs
     geometry_msgs
     tf2_ros
 )
@@ -52,11 +53,6 @@ target_include_directories(slotcar_common
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     ${EIGEN3_INCLUDE_DIRS}
     ${GAZEBO_INCLUDE_DIRS}
-    ${geometry_msgs_INCLUDE_DIRS}
-    ${std_msgs_INCLUDE_DIRS}
-    ${rmf_fleet_msgs_INCLUDE_DIRS}
-    ${building_map_msgs_INCLUDE_DIRS}
-    ${tf2_ros_INCLUDE_DIRS}
 )
 
 ###############################
@@ -75,8 +71,6 @@ target_include_directories(door_common
  PUBLIC
    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-   ${rmf_fleet_msgs_INCLUDE_DIRS}
-   ${rmf_door_msgs_INCLUDE_DIRS}
 )
 
 ###############################
@@ -97,9 +91,6 @@ target_include_directories(lift_common
  PUBLIC
    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-   ${rmf_fleet_msgs_INCLUDE_DIRS}
-   ${rmf_door_msgs_INCLUDE_DIRS}
-   ${rmf_lift_msgs_INCLUDE_DIRS}
 )
 
 ###############################
