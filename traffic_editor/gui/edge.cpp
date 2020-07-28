@@ -116,7 +116,8 @@ void Edge::create_required_parameters()
   }
   else if (type == WALL)
   {
-    create_param_if_needed("texture_name", Param::STRING, std::string());
+    create_param_if_needed("texture_name", Param::STRING, std::string("default"));
+    create_param_if_needed("alpha", Param::DOUBLE, 1.0);
   }
   else if (type == LANE)
   {

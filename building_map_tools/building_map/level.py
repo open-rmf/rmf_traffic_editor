@@ -127,19 +127,27 @@ class Level:
         return edges
 
     def generate_walls(self, model_ele, model_name, model_path):
-        # Create texture list
-        wall_texture_list = []
+        wall_params_list = []
+        # crude method to identify all unique params list in walls
         for wall in self.walls:
+            # check if param exists, if not use default val
+            tex = "default"
+            alpha = 1.0
             if "texture_name" in wall.params:
                 tex = wall.params["texture_name"].value
-                if tex not in wall_texture_list:
-                    wall_texture_list.append(tex)
-        print(f'Walls Generation, specified textures: {wall_texture_list}')
+            if "alpha" in wall.params:
+                alpha = wall.params["alpha"].value
+            if [tex, alpha] not in wall_params_list:
+                wall_params_list.append([tex, alpha])
+        print(f'Walls Generation, wall params list: {wall_params_list}')
 
-        for texture_name in wall_texture_list:
-            single_texture_walls = Wall(self.walls, texture_name)
+        wall_cnt = 0
+        for wall_params in wall_params_list:
+            wall_cnt += 1
+            single_texture_walls = Wall(self.walls, wall_params)
             single_texture_walls.generate(
                 model_ele,
+                wall_cnt,
                 model_name,
                 model_path,
                 self.transformed_vertices)
