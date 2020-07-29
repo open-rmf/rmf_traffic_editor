@@ -506,7 +506,6 @@ class Level:
         return True
 
     def is_in_lift(self, p, lift_vert_list):
-        # checks if a point is in 
         verts = np.array(lift_vert_list)
         # array of vectors from the point to four rectangle vertices
         a = verts - np.array(p)
