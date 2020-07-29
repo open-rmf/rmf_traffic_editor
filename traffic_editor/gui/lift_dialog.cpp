@@ -338,8 +338,8 @@ void LiftDialog::update_lift_wps()
       if (!found)
       {
         _building.add_vertex(level_idx, x_m / scale, -1.0 * y_m / scale);
-        _building.levels[level_idx].vertices.back().params["belongs_to"]
-          = _lift.name;
+        _building.levels[level_idx].vertices.back().params["belongs_to"] =
+          _lift.name;
       }
     }
   }
