@@ -20,9 +20,10 @@
 using std::vector;
 
 
-LiftDialog::LiftDialog(Lift& lift, const Building& building)
+LiftDialog::LiftDialog(Lift& lift, Building& building)
 : QDialog(),
-  _lift(lift)
+  _lift(lift),
+  _building(building)
 {
   setWindowTitle("Lift Properties");
   for (const auto& level : building.levels)
@@ -148,6 +149,13 @@ LiftDialog::LiftDialog(Lift& lift, const Building& building)
     });
   depth_hbox->addWidget(_depth_line_edit);
 
+  QHBoxLayout* add_wp_hbox = new QHBoxLayout;
+  _add_wp_button = new QPushButton("Add lift waypoints", this);
+  add_wp_hbox->addWidget(_add_wp_button);
+  connect(
+    _add_wp_button, &QAbstractButton::clicked,
+    this, &LiftDialog::add_wp_button_clicked);
+
   _level_table = new QTableWidget;
   _level_table->setMinimumSize(200, 200);
   _level_table->verticalHeader()->setVisible(false);
@@ -200,6 +208,7 @@ LiftDialog::LiftDialog(Lift& lift, const Building& building)
   left_vbox->addLayout(yaw_hbox);
   left_vbox->addLayout(width_hbox);
   left_vbox->addLayout(depth_hbox);
+  left_vbox->addLayout(add_wp_hbox);
   left_vbox->addWidget(_level_table);
 
   QVBoxLayout* right_vbox = new QVBoxLayout;
@@ -292,6 +301,32 @@ void LiftDialog::ok_button_clicked()
   }
 
   accept();
+}
+
+void LiftDialog::add_wp_button_clicked()
+{
+  double scale = _building.levels[0].drawing_meters_per_pixel;
+  for (size_t level_idx = 0; level_idx < _level_names.size(); level_idx++)
+  {
+    if (_lift.reference_floor_name == _building.levels[level_idx].name)
+    {
+      scale = _building.levels[level_idx].drawing_meters_per_pixel;
+      break;
+    }
+  }
+  const double x_m = _lift.x * scale;
+  const double y_m = -1.0 * _lift.y * scale;
+
+  for (size_t level_idx = 0; level_idx < _level_names.size(); level_idx++)
+  {
+    const std::string level_name = _level_names[level_idx].toStdString();
+    if (_lift.level_doors[level_name].size() != 0)
+    {
+      scale = _building.levels[level_idx].drawing_meters_per_pixel;
+      _building.add_vertex(level_idx, x_m / scale, -1.0 * y_m / scale);
+    }
+  }
+  emit redraw();
 }
 
 void LiftDialog::update_door_table()
