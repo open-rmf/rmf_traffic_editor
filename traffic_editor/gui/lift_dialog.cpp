@@ -327,7 +327,7 @@ void LiftDialog::update_lift_wps()
       scale = _building.levels[level_idx].drawing_meters_per_pixel;
       for (auto& v : _building.levels[level_idx].vertices)
       {
-        auto it = v.params.find("lift");
+        auto it = v.params.find("belongs_to");
         if ((it != v.params.end()) && (it->second.value_string == _lift.name))
         {
           v.x = x_m / scale;
@@ -338,7 +338,8 @@ void LiftDialog::update_lift_wps()
       if (!found)
       {
         _building.add_vertex(level_idx, x_m / scale, -1.0 * y_m / scale);
-        _building.levels[level_idx].vertices.back().params["lift"] = _lift.name;
+        _building.levels[level_idx].vertices.back().params["belongs_to"]
+          = _lift.name;
       }
     }
   }
