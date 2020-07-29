@@ -305,40 +305,38 @@ void LiftDialog::ok_button_clicked()
 
 void LiftDialog::update_lift_wps()
 {
-  double scale = _building.levels[0].drawing_meters_per_pixel;
-  for (size_t level_idx = 0; level_idx < _level_names.size(); level_idx++)
-  {
-    if (_lift.reference_floor_name == _building.levels[level_idx].name)
-    {
-      scale = _building.levels[level_idx].drawing_meters_per_pixel;
-      break;
-    }
-  }
-  const double x_m = _lift.x * scale;
-  const double y_m = -1.0 * _lift.y * scale;
+  const QPointF from_point = QPointF(_lift.x, _lift.y);
+  QPointF to_point;
 
   bool found = false;
   for (size_t level_idx = 0; level_idx < _level_names.size(); level_idx++)
   {
     const std::string level_name = _level_names[level_idx].toStdString();
+    // Vertices will only be generated on levels that the lift is serving (has
+    // a door opening on that level)
     if (_lift.level_doors[level_name].size() != 0)
     {
+      _building.transform_between_levels(
+        _lift.reference_floor_name,
+        from_point,
+        _building.levels[level_idx].name,
+        to_point);
       found = false;
-      scale = _building.levels[level_idx].drawing_meters_per_pixel;
+
       for (auto& v : _building.levels[level_idx].vertices)
       {
-        auto it = v.params.find("belongs_to");
+        auto it = v.params.find("lift_cabin");
         if ((it != v.params.end()) && (it->second.value_string == _lift.name))
         {
-          v.x = x_m / scale;
-          v.y = -1.0 * y_m / scale;
+          v.x = to_point.x();
+          v.y = to_point.y();
           found = true;
         }
       }
       if (!found)
       {
-        _building.add_vertex(level_idx, x_m / scale, -1.0 * y_m / scale);
-        _building.levels[level_idx].vertices.back().params["belongs_to"] =
+        _building.add_vertex(level_idx, to_point.x(), to_point.y());
+        _building.levels[level_idx].vertices.back().params["lift_cabin"] =
           _lift.name;
       }
     }
