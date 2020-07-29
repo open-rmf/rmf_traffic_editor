@@ -70,9 +70,10 @@ private:
   void update_level_table();
   void update_lift_view();
 
+  void update_lift_wps();
+
 private slots:
   void ok_button_clicked();
-  void add_wp_button_clicked();
 
 signals:
   void redraw();

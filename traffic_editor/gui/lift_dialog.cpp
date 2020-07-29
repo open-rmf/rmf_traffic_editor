@@ -86,7 +86,7 @@ LiftDialog::LiftDialog(Lift& lift, Building& building)
     [this](const QString& text)
     {
       _lift.x = text.toDouble();
-      emit redraw();
+      update_lift_wps();
     });
   x_hbox->addWidget(_x_line_edit);
 
@@ -100,7 +100,7 @@ LiftDialog::LiftDialog(Lift& lift, Building& building)
     [this](const QString& text)
     {
       _lift.y = text.toDouble();
-      emit redraw();
+      update_lift_wps();
     });
   y_hbox->addWidget(_y_line_edit);
 
@@ -154,7 +154,7 @@ LiftDialog::LiftDialog(Lift& lift, Building& building)
   add_wp_hbox->addWidget(_add_wp_button);
   connect(
     _add_wp_button, &QAbstractButton::clicked,
-    this, &LiftDialog::add_wp_button_clicked);
+    this, &LiftDialog::update_lift_wps);
 
   _level_table = new QTableWidget;
   _level_table->setMinimumSize(200, 200);
@@ -303,7 +303,7 @@ void LiftDialog::ok_button_clicked()
   accept();
 }
 
-void LiftDialog::add_wp_button_clicked()
+void LiftDialog::update_lift_wps()
 {
   double scale = _building.levels[0].drawing_meters_per_pixel;
   for (size_t level_idx = 0; level_idx < _level_names.size(); level_idx++)
@@ -317,13 +317,29 @@ void LiftDialog::add_wp_button_clicked()
   const double x_m = _lift.x * scale;
   const double y_m = -1.0 * _lift.y * scale;
 
+  bool found = false;
   for (size_t level_idx = 0; level_idx < _level_names.size(); level_idx++)
   {
     const std::string level_name = _level_names[level_idx].toStdString();
     if (_lift.level_doors[level_name].size() != 0)
     {
+      found = false;
       scale = _building.levels[level_idx].drawing_meters_per_pixel;
-      _building.add_vertex(level_idx, x_m / scale, -1.0 * y_m / scale);
+      for (auto& v : _building.levels[level_idx].vertices)
+      {
+        auto it = v.params.find("lift");
+        if ((it != v.params.end()) && (it->second.value_string == _lift.name))
+        {
+          v.x = x_m / scale;
+          v.y = -1.0 * y_m / scale;
+          found = true;
+        }
+      }
+      if (!found)
+      {
+        _building.add_vertex(level_idx, x_m / scale, -1.0 * y_m / scale);
+        _building.levels[level_idx].vertices.back().params["lift"] = _lift.name;
+      }
     }
   }
   emit redraw();
