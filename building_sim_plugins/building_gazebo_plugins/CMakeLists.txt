@@ -44,44 +44,25 @@ include(GNUInstallDirs)
 
 add_library(slotcar SHARED ${PROJECT_SOURCE_DIR}/src/slotcar.cpp)
 
-target_link_libraries(slotcar
-  PUBLIC
-    # TODO remove eigen
-    Eigen3::Eigen
-    ${building_sim_common_LIBRARIES}
-    ${rmf_fleet_msgs_LIBRARIES}
-    ${rclcpp_LIBRARIES}
-    ${GAZEBO_LIBRARIES}
-    ${gazebo_ros_LIBRARIES}
-    ${geometry_msgs_LIBRARIES}
-    ${tf2_ros_LIBRARIES}
-    ${building_map_msgs_LIBRARIES}
+ament_target_dependencies(slotcar
+  Eigen3
+  building_sim_common
+  rmf_fleet_msgs
+  rclcpp
+  gazebo_ros
+  std_msgs
+  geometry_msgs
+  tf2_ros
+  building_map_msgs
 )
 
 target_include_directories(slotcar
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    ${EIGEN3_INCLUDE_DIRS}
     ${GAZEBO_INCLUDE_DIRS}
-    ${building_sim_common_INCLUDE_DIRS}
-    ${geometry_msgs_INCLUDE_DIRS}
-    ${std_msgs_INCLUDE_DIRS}
-    ${rmf_fleet_msgs_INCLUDE_DIRS}
-    ${building_map_msgs_INCLUDE_DIRS}
-    ${tf2_ros_INCLUDE_DIRS}
-    ${building_map_msgs_INCLUDE_DIRS}
 )
-
-# These lines are taken out because of this issue: https://github.com/ament/ament_cmake/issues/158
-#ament_target_dependencies(slotcar
-#  building_sim_utils
-#  "rmf_fleet_msgs"
-#  "rclcpp"
-#  "gazebo_dev"
-#  "gazebo_ros"
-#  "geometry_msgs"
-#  "tf2_ros"
-#)
 
 ###############################
 # door stuff
@@ -89,14 +70,12 @@ target_include_directories(slotcar
 
 add_library(door SHARED src/door.cpp)
 
-target_link_libraries(door
-  PUBLIC
-    ${building_sim_common_LIBRARIES}
-    ${rmf_fleet_msgs_LIBRARIES}
-    ${rclcpp_LIBRARIES}
-    ${GAZEBO_LIBRARIES}
-    ${gazebo_ros_LIBRARIES}
-    ${rmf_door_msgs_LIBRARIES}
+ament_target_dependencies(door
+  building_sim_common
+  rmf_fleet_msgs
+  rclcpp
+  gazebo_ros
+  rmf_door_msgs
 )
 
 target_include_directories(door
@@ -104,10 +83,6 @@ target_include_directories(door
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     ${GAZEBO_INCLUDE_DIRS}
-    ${building_sim_common_INCLUDE_DIRS}
-    ${gazebo_ros_INCLUDE_DIRS}
-    ${rmf_fleet_msgs_INCLUDE_DIRS}
-    ${rmf_door_msgs_INCLUDE_DIRS}
 )
 
 ###############################
@@ -116,15 +91,13 @@ target_include_directories(door
 
 add_library(lift SHARED src/lift.cpp)
 
-target_link_libraries(lift
-  PUBLIC
-    ${building_sim_common_LIBRARIES}
-    ${rmf_fleet_msgs_LIBRARIES}
-    ${rclcpp_LIBRARIES}
-    ${GAZEBO_LIBRARIES}
-    ${gazebo_ros_LIBRARIES}
-    ${rmf_door_msgs_LIBRARIES}
-    ${rmf_lift_msgs_LIBRARIES}
+ament_target_dependencies(lift
+    building_sim_common
+    rmf_fleet_msgs
+    rclcpp
+    gazebo_ros
+    rmf_door_msgs
+    rmf_lift_msgs
 )
 
 target_include_directories(lift
@@ -132,10 +105,6 @@ target_include_directories(lift
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     ${GAZEBO_INCLUDE_DIRS}
-    ${building_sim_common_INCLUDE_DIRS}
-    ${rmf_fleet_msgs_INCLUDE_DIRS}
-    ${rmf_door_msgs_INCLUDE_DIRS}
-    ${rmf_lift_msgs_INCLUDE_DIRS}
 )
 
 ###############################
