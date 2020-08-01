@@ -19,7 +19,6 @@
 #define BUILDING_LEVEL_DIALOG_H
 
 #include <QDialog>
-#include <string>
 #include "traffic_editor/building.h"
 #include "traffic_editor/building_level.h"
 class QLineEdit;

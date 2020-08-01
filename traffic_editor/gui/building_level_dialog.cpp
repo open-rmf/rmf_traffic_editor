@@ -184,11 +184,7 @@ void BuildingLevelDialog::ok_button_clicked()
   building_level.name = name_line_edit->text().toStdString();
   for (size_t i = 0; i < building->lifts.size(); i ++) {
     if (building->lifts[i].level_doors.find(original_name) != building->lifts[i].level_doors.end()) {
-      while (!building->lifts[i].level_doors[original_name].empty()) {
-        auto str = building->lifts[i].level_doors[original_name].front();
-        building->lifts[i].level_doors[original_name].pop_front();
-        building->lifts[i].level_doors[building_level.name].push_back(str);
-      }
+      building->lifts[i].level_doors[building_level.name] = building->lifts[i].level_doors[original_name];
       building->lifts[i].level_doors.erase(original_name);
     }
   }
