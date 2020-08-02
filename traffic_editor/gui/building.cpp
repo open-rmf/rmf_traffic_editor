@@ -107,6 +107,7 @@ bool Building::load_yaml_file()
   for (auto& level : levels)
     level.calculate_scale();
 
+  lifts.clear();
   if (y["lifts"] && y["lifts"].IsMap())
   {
     const YAML::Node& y_lifts = y["lifts"];
