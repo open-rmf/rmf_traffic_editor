@@ -38,7 +38,8 @@ public:
     LANE,
     WALL,
     MEAS,
-    DOOR
+    DOOR,
+    HUMAN_LANE,
   } type;
 
   bool selected;  // only for visualization, not saved to YAML

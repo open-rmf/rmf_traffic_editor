@@ -22,7 +22,8 @@ enum EditorModeId
 {
   MODE_BUILDING = 1,
   MODE_TRAFFIC = 2,
-  MODE_SCENARIO = 3
+  MODE_SCENARIO = 3,
+  MODE_CROWD_SIM = 4
 };
 
 #endif

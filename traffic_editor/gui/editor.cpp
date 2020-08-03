@@ -299,6 +299,12 @@ Editor::Editor()
     [this]() { this->set_mode(MODE_SCENARIO, "Scenario"); },
     QKeySequence(Qt::CTRL + Qt::Key_E));
 
+  mode_menu->addAction(
+    "&Crowd Simulation",
+    this,
+    [this]() { this->set_mode(MODE_CROWD_SIM, "CrowdSim"); },
+    QKeySequence(Qt::CTRL + Qt::Key_C));
+
   // VIEW MENU
   QMenu* view_menu = menuBar()->addMenu("&View");
   view_models_action =
@@ -324,6 +330,7 @@ Editor::Editor()
   mode_combo_box->addItem("Building");
   mode_combo_box->addItem("Traffic");
   mode_combo_box->addItem("Scenario");
+  mode_combo_box->addItem("Crowd_Sim");
   connect(
     mode_combo_box,
     &QComboBox::currentTextChanged,
@@ -335,6 +342,8 @@ Editor::Editor()
         set_mode(MODE_TRAFFIC, "Traffic");
       else if (text == "Scenario")
         set_mode(MODE_SCENARIO, "Scenario");
+      else if (text == "Crowd_Sim")
+        set_mode(MODE_CROWD_SIM, "CrowdSim");
     });
 
   QLabel* mode_label = new QLabel("Edit mode:");
@@ -362,6 +371,7 @@ Editor::Editor()
   create_tool_button(TOOL_ADD_HOLE, ":icons/hole.svg", "Add hole polygon");
   create_tool_button(TOOL_ADD_ROI, ":icons/roi.svg", "Add region of interest");
   create_tool_button(TOOL_EDIT_POLYGON, "", "Edit Polygon");
+  create_tool_button(TOOL_ADD_HUMAN_LANE, "", "Add Human Lane with width");
 
   connect(
     tool_button_group,
@@ -842,6 +852,8 @@ void Editor::mouse_event(const MouseType t, QMouseEvent* e)
     case TOOL_EDIT_POLYGON: mouse_edit_polygon(t, e, p); break;
     case TOOL_ADD_FIDUCIAL: mouse_add_fiducial(t, e, p); break;
     case TOOL_ADD_ROI:      mouse_add_roi(t, e, p); break;
+    case TOOL_ADD_HUMAN_LANE: mouse_add_human_lane(t, e, p); break;
+
     default: break;
   }
   previous_mouse_point = p;
@@ -972,6 +984,7 @@ const QString Editor::tool_id_to_string(const int id)
     case TOOL_ADD_FLOOR: return "add &floor";
     case TOOL_ADD_HOLE: return "add hole";
     case TOOL_EDIT_POLYGON: return "&edit polygon";
+    case TOOL_ADD_HUMAN_LANE: return "add human lane";
     default: return "unknown tool ID";
   }
 }
@@ -1830,6 +1843,12 @@ void Editor::mouse_add_door(
   mouse_add_edge(t, e, p, Edge::DOOR);
 }
 
+void Editor::mouse_add_human_lane(
+  const MouseType t, QMouseEvent* e, const QPointF& p)
+{
+  mouse_add_edge(t, e, p, Edge::HUMAN_LANE);
+}
+
 void Editor::mouse_add_model(
   const MouseType t, QMouseEvent*, const QPointF& p)
 {
@@ -2333,8 +2352,11 @@ void Editor::set_mode(const EditorModeId _mode, const QString& mode_string)
   // scenario tools
   set_tool_visibility(TOOL_ADD_ROI, mode == MODE_SCENARIO);
 
+  // crowd_sim tools
+  set_tool_visibility(TOOL_ADD_HUMAN_LANE, mode == MODE_CROWD_SIM);
+
   // "multi-purpose" tools
-  set_tool_visibility(TOOL_EDIT_POLYGON, mode != MODE_TRAFFIC);
+  set_tool_visibility(TOOL_EDIT_POLYGON, mode != MODE_TRAFFIC && mode != MODE_CROWD_SIM);
 }
 
 void Editor::update_tables()
