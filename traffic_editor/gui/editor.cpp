@@ -1787,12 +1787,13 @@ void Editor::mouse_add_edge(
       return;
     }
 
-    if (edge_type != Edge::LANE)
+    if (edge_type != Edge::LANE) {
       project.building.add_edge(
         level_idx,
         prev_clicked_idx,
         clicked_idx,
         edge_type);
+    }
     else
     {
       project.add_lane(

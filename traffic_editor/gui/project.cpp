@@ -396,7 +396,7 @@ void Project::mouse_select_press(
       }
     }
   }
-  else if (mode == MODE_TRAFFIC)
+  else if (mode == MODE_TRAFFIC || mode == MODE_CROWD_SIM)
   {
     // todo: keep traffic-map vertices separate from building vertices
     // for now, they're using the same vertex list.

@@ -139,7 +139,6 @@ void Edge::create_required_parameters()
   }
   else if (type == HUMAN_LANE) {
     create_param_if_needed("width", Param::DOUBLE, 1.0);
-    create_param_if_needed("is_human_lane", Param::BOOL, true);
     create_param_if_needed("bidirectional", Param::BOOL, true);
     create_param_if_needed("orientation", Param::STRING, std::string());
     create_param_if_needed("graph_idx", Param::INT, 9);
@@ -170,14 +169,14 @@ QString Edge::type_to_qstring() const
 
 void Edge::set_graph_idx(const int idx)
 {
-  if (type != LANE)
+  if (type != LANE && type != HUMAN_LANE)
     return;// for now at least, only lanes have graph indices
   params["graph_idx"] = Param(idx);
 }
 
 int Edge::get_graph_idx() const
 {
-  if (type != LANE)
+  if (type != LANE && type != HUMAN_LANE)
     return 0;// for now, only lanes have indices defined
   auto it = params.find("graph_idx");
   if (it == params.end() || it->second.type != Param::INT)
@@ -187,9 +186,9 @@ int Edge::get_graph_idx() const
 
 double Edge::get_width() const{
   if (type != HUMAN_LANE)
-    return 0.0;
+    return -1.0;
   auto it = params.find("width");
   if (it == params.end() || it->second.type != Param::DOUBLE)
-    return 0.0;  // shouldn't get here
+    return -1.0;  // shouldn't get here
   return it->second.value_double;
 }
