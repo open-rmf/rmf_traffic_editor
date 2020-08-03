@@ -19,7 +19,7 @@
 #include <QtWidgets>
 
 
-BuildingLevelDialog::BuildingLevelDialog(BuildingLevel& _level, Building* _building)
+BuildingLevelDialog::BuildingLevelDialog(BuildingLevel& _level, Building& _building)
 : building_level(_level), building(_building)
 {
   ok_button = new QPushButton("OK", this);  // first button = [enter] button
@@ -182,10 +182,10 @@ void BuildingLevelDialog::ok_button_clicked()
   }
   auto original_name = building_level.name;
   building_level.name = name_line_edit->text().toStdString();
-  for (size_t i = 0; i < building->lifts.size(); i ++) {
-    if (building->lifts[i].level_doors.find(original_name) != building->lifts[i].level_doors.end()) {
-      building->lifts[i].level_doors[building_level.name] = building->lifts[i].level_doors[original_name];
-      building->lifts[i].level_doors.erase(original_name);
+  for (size_t i = 0; i < building.lifts.size(); i ++) {
+    if (building.lifts[i].level_doors.find(original_name) != building.lifts[i].level_doors.end()) {
+      building.lifts[i].level_doors[building_level.name] = building.lifts[i].level_doors[original_name];
+      building.lifts[i].level_doors.erase(original_name);
     }
   }
   building_level.elevation = elevation_line_edit->text().toDouble();

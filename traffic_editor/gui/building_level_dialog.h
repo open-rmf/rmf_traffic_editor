@@ -27,12 +27,12 @@ class QLineEdit;
 class BuildingLevelDialog : public QDialog
 {
 public:
-  BuildingLevelDialog(BuildingLevel& level, Building* building);
+  BuildingLevelDialog(BuildingLevel& level, Building& building);
   ~BuildingLevelDialog();
 
 private:
   BuildingLevel& building_level;
-  Building* building;
+  Building& building;
 
   QLineEdit* name_line_edit, * drawing_filename_line_edit;
   QLineEdit* x_line_edit, * y_line_edit;
