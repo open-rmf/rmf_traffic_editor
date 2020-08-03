@@ -69,6 +69,8 @@ public:
   QString type_to_qstring() const;
   void set_graph_idx(const int idx);
   int get_graph_idx() const;
+
+  double get_width() const;
 };
 
 #endif

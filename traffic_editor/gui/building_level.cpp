@@ -873,6 +873,7 @@ void BuildingLevel::draw(
       case Edge::WALL: draw_wall(scene, edge); break;
       case Edge::MEAS: draw_meas(scene, edge); break;
       case Edge::DOOR: draw_door(scene, edge); break;
+      case Edge::HUMAN_LANE: draw_lane(scene, edge, rendering_options); break;
       default:
         printf("tried to draw unknown edge type: %d\n",
           static_cast<int>(edge.type));
