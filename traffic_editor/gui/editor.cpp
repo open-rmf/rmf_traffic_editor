@@ -1842,7 +1842,7 @@ void Editor::mouse_add_model(
       p.x(),
       p.y(),
       0.0,
-      0.0,
+      M_PI / 2.0,
       mouse_motion_editor_model->name);
     /*
     const int model_row = model_name_list_widget->currentRow();
