@@ -165,7 +165,7 @@ Editor::Editor()
     });
 
   right_tab_widget = new QTabWidget;
-  right_tab_widget->setStyleSheet("QTabBar::tab { color: white; }");
+  right_tab_widget->setStyleSheet("QTabBar::tab { color: black; }");
   right_tab_widget->addTab(level_table, "levels");
   right_tab_widget->addTab(layers_table, "layers");
   right_tab_widget->addTab(lift_table, "lifts");
