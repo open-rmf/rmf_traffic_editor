@@ -184,7 +184,7 @@ class LiftDoor:
                                     upper_limit=0))
 
         plugin_ele = SubElement(lift_model_ele, 'plugin')
-        plugin_ele.set('name', 'door')
+        plugin_ele.set('name', f'door_{name}')
         plugin_ele.set('filename', 'libdoor.so')
         for param_name, param_value in self.params.items():
             ele = SubElement(plugin_ele, param_name)
