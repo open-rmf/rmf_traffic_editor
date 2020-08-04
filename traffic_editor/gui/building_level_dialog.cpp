@@ -197,10 +197,6 @@ void BuildingLevelDialog::ok_button_clicked()
     }
   }
   building_level.elevation = elevation_line_edit->text().toDouble();
-  for (size_t i = 0; i < building_level.models.size(); i ++)
-  {
-    building_level.models[i].state.z = building_level.elevation;
-  }
   building_level.drawing_filename =
     drawing_filename_line_edit->text().toStdString();
   if (building_level.drawing_filename.empty())
