@@ -124,7 +124,7 @@ class LiftDoor:
 
     def generate_door_plugin(self, model_ele, name):
         plugin_ele = SubElement(model_ele, 'plugin')
-        plugin_ele.set('name', 'door')
+        plugin_ele.set('name', f'door_{name}')
         plugin_ele.set('filename', 'libdoor.so')
         for param_name, param_value in self.params.items():
             ele = SubElement(plugin_ele, param_name)
