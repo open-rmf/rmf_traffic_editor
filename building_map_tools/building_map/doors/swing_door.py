@@ -11,7 +11,7 @@ class SwingDoor(Door):
 
     def generate(self, world_ele, options):
         plugin_ele = SubElement(self.model_ele, 'plugin')
-        plugin_ele.set('name', 'door')
+        plugin_ele.set('name', f'door_{self.name}')
         plugin_ele.set('filename', 'libdoor.so')
         plugin_params = {
           'v_max_door': '0.5',
