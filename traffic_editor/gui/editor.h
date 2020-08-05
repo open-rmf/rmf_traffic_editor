@@ -41,6 +41,7 @@ class Level;
 class LiftTable;
 class ScenarioTable;
 class TrafficTable;
+class CrowdSimTable;
 
 #ifdef HAS_OPENCV
 namespace cv {
@@ -196,6 +197,7 @@ private:
   LiftTable* lift_table;
   ScenarioTable* scenario_table;
   TrafficTable* traffic_table;
+  CrowdSimTable* crowd_sim_table;
 
   QTableWidget* property_editor;
   void update_property_editor();

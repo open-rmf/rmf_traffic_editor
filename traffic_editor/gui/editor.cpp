@@ -57,6 +57,8 @@
 #include "traffic_table.h"
 #include "ui_transform_dialog.h"
 
+#include "crowd_sim_table.h"
+
 using std::string;
 using std::isnan;
 
@@ -164,6 +166,17 @@ Editor::Editor()
       create_scene();
     });
 
+  crowd_sim_table = new CrowdSimTable;
+  // connect(
+  //   crowd_sim_table,
+  //   &QTableWidget::cellClicked,
+  //   [=](){
+  //     crowd_sim_table->update();
+  //     create_scene();
+  //   }
+  // );
+
+
   right_tab_widget = new QTabWidget;
   right_tab_widget->setStyleSheet("QTabBar::tab { color: black; }");
   right_tab_widget->addTab(level_table, "levels");
@@ -171,6 +184,7 @@ Editor::Editor()
   right_tab_widget->addTab(lift_table, "lifts");
   right_tab_widget->addTab(traffic_table, "traffic");
   right_tab_widget->addTab(scenario_table, "scenarios");
+  right_tab_widget->addTab(crowd_sim_table, "crowd_sim");
 
   property_editor = new QTableWidget;
   property_editor->setStyleSheet(
@@ -2367,6 +2381,7 @@ void Editor::update_tables()
   lift_table->update(project.building);
   scenario_table->update(project);
   traffic_table->update(project);
+  crowd_sim_table->update(project);
 }
 
 void Editor::sim_reset()

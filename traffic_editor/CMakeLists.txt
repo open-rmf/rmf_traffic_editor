@@ -43,6 +43,9 @@ add_executable(traffic-editor
   gui/building_level.cpp
   gui/building_level_dialog.cpp
   gui/building_level_table.cpp
+  gui/crowd_sim_table.cpp
+  gui/crowd_sim_impl.cpp
+  gui/crowd_sim_dialog.cpp
   gui/edge.cpp
   gui/editor.cpp
   gui/editor_model.cpp
