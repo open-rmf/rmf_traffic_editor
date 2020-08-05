@@ -33,8 +33,8 @@ class Building:
         self.lifts = {}
         if 'lifts' in yaml_node:
             for lift_name, lift_yaml in yaml_node['lifts'].items():
-                if 'reference_level_name' in lift_yaml:
-                    ref_level_name = lift_yaml['reference_level_name']
+                if 'reference_floor_name' in lift_yaml:
+                    ref_level_name = lift_yaml['reference_floor_name']
                     transform = self.levels[ref_level_name].transform
                 else:
                     transform = self.ref_level.transform
