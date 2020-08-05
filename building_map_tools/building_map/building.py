@@ -89,8 +89,8 @@ class Building:
             f0 = f_pair[0]
             f1 = f_pair[1]
             print(
-                f'    ({f0.x:.5}, {f0.y:.5})'
-                f' -> ({f1.x:.5}, {f1.y:.5})'
+                f'    ({float(f0.x):.5}, {float(f0.y):.5})'
+                f' -> ({float(f1.x):.5}, {float(f1.y):.5})'
                 f'   {f0.name}')
 
         # calculate the bearings and distances between each fiducial pair
