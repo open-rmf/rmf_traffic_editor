@@ -76,7 +76,7 @@ void BuildingLevelTable::update(Building& building)
       &QAbstractButton::clicked,
       [this, &building, i]()
       {
-        BuildingLevelDialog level_dialog(building.levels[i]);
+        BuildingLevelDialog level_dialog(building.levels[i], building);
         if (level_dialog.exec() == QDialog::Accepted)
         {
           building.levels[i].load_drawing();
@@ -99,7 +99,7 @@ void BuildingLevelTable::update(Building& building)
     [this, &building]()
     {
       BuildingLevel level;
-      BuildingLevelDialog level_dialog(level);
+      BuildingLevelDialog level_dialog(level, building);
       if (level_dialog.exec() == QDialog::Accepted)
       {
         level.load_drawing();
