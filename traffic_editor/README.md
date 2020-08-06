@@ -117,7 +117,7 @@ After execution, you will notice a newly created `SUV.png` in your current worki
 
 To generate multiple model thumbnails listed in `model_list.yaml`, run this:
 ```bash
-./scripts/generate_thumbnails.py ~/.gazebo/models test/model_list.yaml ~/output
+export GAZEBO_MODEL_PATH=/PATH/TO/MODELS; ./scripts/generate_thumbnails.py /PATH/TO/MODELS test/model_list.yaml ~/output
 ```
 
 User can also change the script default configs:  `img_size`, `cam_height` and `fhov`, which will alter the `meters_per_pixel` value.
@@ -137,4 +137,10 @@ In the event that merging multiple model lists is required, a different utility 
 
 ```bash
 ./scripts/merge_model_lists.py output_model_list.yaml -s test/model_list.yaml
+```
+
+To sort the model list `.yaml` file,
+
+```bash
+./scripts/sort_model_list.py model_list.yaml
 ```
