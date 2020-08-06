@@ -1,5 +1,7 @@
 #include <crowd_sim_impl.h>
 
+namespace crowd_sim{
+
 State::State(std::string state_name) : name(state_name) {}
 
 State::~State() {}
@@ -16,8 +18,28 @@ void State::setNavmeshFile(std::string file_name) {
     this->navmesh_file_name = file_name;
 }
 
-bool State::isValid(){
+void State::setName(std::string name) {
+    this->name = name;
+}
+
+bool State::isValid() {
     return true;
+}
+
+std::string State::getName() {
+    return this->name;
+}
+
+std::string State::getNavmeshFileName() {
+    return this->navmesh_file_name;
+}
+
+bool State::getFinalState() {
+    return this->is_final_state;
+}
+
+size_t State::getGoalSetId() {
+    return this->goal_set_id;
 }
 
 GoalSet::GoalSet(size_t goal_id) : id(goal_id) {}
@@ -28,3 +50,8 @@ void GoalSet::addGoalArea(std::string area_name){
     this->goal_area_contained.insert(area_name);
 }
 
+size_t GoalSet::getGoalSetId() {
+    return this->id;
+}
+    
+} //namespace crowd_sim

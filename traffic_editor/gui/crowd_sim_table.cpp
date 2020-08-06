@@ -9,22 +9,12 @@
 
 CrowdSimTable::CrowdSimTable() : TableList(3)
 {
+    crowd_sim_impl = std::make_shared<crowd_sim::CrowdSimImplementation>();
+
     const QStringList labels =
     { "Name", "Status", "" };
     setHorizontalHeaderLabels(labels);
 
-    crowd_sim_impl = std::make_shared<CrowdSimImplementation>();
-}
-
-CrowdSimTable::~CrowdSimTable()
-{
-}
-
-void CrowdSimTable::update(const Project& project)
-{   
-    update_goal_area(project);
-
-    blockSignals(true);
     setRowCount(1 + this->required_components.size());
 
     // enable_crowd_sim check box
@@ -43,17 +33,17 @@ void CrowdSimTable::update(const Project& project)
         }
     );
 
+    // required components
     for (size_t i = 0; i < this->required_components.size(); ++i) {
-        QTableWidgetItem* name_item = new QTableWidgetItem (QString::fromStdString(this->required_components[i]));
+        QTableWidgetItem* name_item = 
+            new QTableWidgetItem (QString::fromStdString(this->required_components[i]));
         setItem(i+1, 0, name_item);
 
-        QPushButton* edit_button = new QPushButton("Edit", this);
+        QPushButton* edit_button = new QPushButton("Edit");
         setCellWidget(i+1, 2, edit_button);
         edit_button->setStyleSheet("QTableWidgetItem { background-color: red; }");
 
-        size_t status_number = 0;
         if ("States" == this->required_components[i]) {
-            status_number = this->crowd_sim_impl->states.size();
             connect(
                 edit_button,
                 &QAbstractButton::clicked,
@@ -64,7 +54,6 @@ void CrowdSimTable::update(const Project& project)
             );
         }
         if ("GoalSets" == this->required_components[i]) {
-            status_number = this->crowd_sim_impl->goal_sets.size();
             connect(
                 edit_button,
                 &QAbstractButton::clicked,
@@ -74,13 +63,30 @@ void CrowdSimTable::update(const Project& project)
             );
         }
 
-        setItem(i+1, 1, new QTableWidgetItem(QString::number(status_number)));
-
-
     }
-    
 
+}
 
+CrowdSimTable::~CrowdSimTable() {}
+
+void CrowdSimTable::update(const Project& project)
+{   
+    update_goal_area(project);
+
+    blockSignals(true);
+
+    size_t status_number = 0;
+    for(size_t i = 0; i < required_components.size(); ++i){
+        status_number = 0;
+        if ("States" == this->required_components[i]) {
+            status_number = crowd_sim_impl->states.size();
+        }
+        if ("GoalSets" == this->required_components[i]) {
+            status_number = crowd_sim_impl->goal_sets.size();
+        }
+
+        setItem(i+1, 1, new QTableWidgetItem(QString::number(status_number)));
+    }
 
     blockSignals(false);
 }

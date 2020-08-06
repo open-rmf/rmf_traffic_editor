@@ -166,7 +166,7 @@ Editor::Editor()
       create_scene();
     });
 
-  crowd_sim_table = new CrowdSimTable;
+  crowd_sim_table = new CrowdSimTable();
   // connect(
   //   crowd_sim_table,
   //   &QTableWidget::cellClicked,

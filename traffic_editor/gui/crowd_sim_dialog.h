@@ -4,49 +4,56 @@
 #include <memory>
 
 #include <QDialog>
+#include <QComboBox>
+#include <QtWidgets>
 
 #include <crowd_sim_impl.h>
 #include <table_list.h>
 
-// class CrowdSimDialog : public QDialog
-// {
-// public:
-//     CrowdSimDialog(CrowdSimImplPtr implPtr);
-//     ~CrowdSimDialog() {}
+class CrowdSimDialog : public QDialog
+{
+public:
+    CrowdSimDialog(CrowdSimImplPtr implPtr);
+    ~CrowdSimDialog() {}
 
-//     QPushButton *ok_button, *cancel_button;
-//     CrowdSimImplPtr crowd_sim_impl;
+    virtual void ok_button_clicked();
+    virtual void cancel_button_clicked();
 
-// };
+    QPushButton *ok_button, *cancel_button;
+    QHBoxLayout* bottom_buttons_hbox;
+    QVBoxLayout* top_vbox;
+    CrowdSimImplPtr crowd_sim_impl;
+};
 
 class StatesTab;
-class StatesDialog : public QDialog
+
+class StatesDialog : public CrowdSimDialog
 {
 public:
     StatesDialog(CrowdSimImplPtr implPtr);
     ~StatesDialog() {}
 
-    // void update();
-
 private:
-    CrowdSimImplPtr crowd_sim_impl;
-
-    std::shared_ptr<StatesTab> states_tab = std::make_shared<StatesTab>();
-
-// public slots:
-//     void ok_button_clicked();
+    std::shared_ptr<StatesTab> states_tab;
+    void ok_button_clicked() override;
 };
 
 class StatesTab : public TableList
 {
 public:
-    StatesTab();
+    StatesTab(CrowdSimImplPtr crowd_sim_impl);
     ~StatesTab() {}
 
-    // void update(CrowdSimImplPtr implPtr);
+    void update();
+    int save();
+private:
+    CrowdSimImplPtr implPtr;
+
+    void list_states_in_impl();
+    void list_goal_sets_in_combo(QComboBox* comboBox, size_t current_goal_set_id);
+    void list_final_states_in_combo(QComboBox* comboBox, bool current_state);
+    void add_button_clicked();
 };
-
-
 
 
 #endif

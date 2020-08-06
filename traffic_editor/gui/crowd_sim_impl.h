@@ -3,8 +3,10 @@
 
 #include <string>
 #include <vector>
-#include <unordered_set>
+#include <set>
 #include <memory>
+
+namespace crowd_sim {
 
 class State
 {
@@ -16,12 +18,18 @@ public:
     void setNavmeshFile(std::string file_name);
     void setFinalState(bool is_final);
     void setGoalSetId(size_t goal_set_id);
+    void setName(std::string name);
+
+    std::string getName();
+    std::string getNavmeshFileName();
+    bool getFinalState();
+    size_t getGoalSetId();
 
 private:
-    std::string name;
-    std::string navmesh_file_name;
-    bool is_final_state;
-    size_t goal_set_id;
+    std::string name = "";
+    std::string navmesh_file_name = "";
+    bool is_final_state = true;
+    size_t goal_set_id = 0;
 };
 
 class GoalSet
@@ -31,9 +39,11 @@ public:
     ~GoalSet();
 
     void addGoalArea(std::string goal_area_name);
+    size_t getGoalSetId();
+
 private:
     size_t id;
-    std::unordered_set<std::string> goal_area_contained;
+    std::set<std::string> goal_area_contained;
 };
 
 // class Condition
@@ -56,9 +66,12 @@ private:
 class CrowdSimImplementation
 {
 public:
-    CrowdSimImplementation() {}
+    CrowdSimImplementation() {
+        goal_sets.emplace_back(0);
+        goal_sets.emplace_back(1);
+    }
     ~CrowdSimImplementation() {}
-
+    
     std::vector<State> states;
     std::vector<GoalSet> goal_sets;
     // std::vector<Transition> transitions;
@@ -67,6 +80,7 @@ public:
     // std::vector<ModelType> model_types;
 };
 
-using CrowdSimImplPtr = std::shared_ptr<CrowdSimImplementation>;
+} //namespace crowd_sim
+using CrowdSimImplPtr = std::shared_ptr<crowd_sim::CrowdSimImplementation>;
 
 #endif
