@@ -23,7 +23,7 @@ from .doors.double_sliding_door import DoubleSlidingDoor
 
 
 class Level:
-    def __init__(self, yaml_node, name):
+    def __init__(self, yaml_node, name, model_counts = {}):
         self.name = name
         print(f'parsing level {name}')
 
@@ -70,7 +70,6 @@ class Level:
             self.doors = self.parse_edge_sequence(yaml_node['doors'])
 
         self.models = []
-        model_counts = {}
         if 'models' in yaml_node:
             for model_yaml in yaml_node['models']:
                 name = model_yaml["name"]
