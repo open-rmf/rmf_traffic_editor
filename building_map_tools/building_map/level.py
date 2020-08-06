@@ -23,7 +23,7 @@ from .doors.double_sliding_door import DoubleSlidingDoor
 
 
 class Level:
-    def __init__(self, yaml_node, name, model_counts = {}):
+    def __init__(self, yaml_node, name, model_counts={}):
         self.name = name
         print(f'parsing level {name}')
 
