@@ -1,4 +1,5 @@
 #include <crowd_sim_dialog.h>
+#include <multi_select_combo_box.h>
 
 #include <iostream>
 #include <sstream>
@@ -39,7 +40,7 @@ void CrowdSimDialog::cancel_button_clicked() {
     reject();
 }
 
-
+//==========================================================================
 StatesDialog::StatesDialog(CrowdSimImplPtr implPtr) 
     : CrowdSimDialog(implPtr) 
 {
@@ -61,7 +62,8 @@ void StatesDialog::ok_button_clicked() {
     accept();
 }
 
-StatesTab::StatesTab(CrowdSimImplPtr crowd_sim_impl) : TableList(5), implPtr(crowd_sim_impl)
+StatesTab::StatesTab(CrowdSimImplPtr crowd_sim_impl) 
+    : TableList(5), implPtr(crowd_sim_impl)
 {
     const QStringList labels =
         { "Name", "Is Final", "Navmesh File Name", "Goal Set Id", ""};
@@ -172,4 +174,88 @@ int StatesTab::save() {
         current_state.setName(name_item);
     }
     return rows_count;
+}
+
+//==============================================================================
+
+GoalSetTab::GoalSetTab(CrowdSimImplPtr crowd_sim_impl) 
+    : TableList(3), implPtr(crowd_sim_impl) 
+{
+    const QStringList labels =
+        { "Id", "Goal Area", ""};
+    setHorizontalHeaderLabels(labels);
+    resizeColumnsToContents();
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    setMinimumSize(800, 400);
+}
+
+void GoalSetTab::update() {
+
+    auto goal_set_number = implPtr->goal_sets.size();
+    setRowCount(1 + goal_set_number);
+    clearContents();
+    list_goal_set_in_impl();
+
+    QPushButton* add_button = new QPushButton("Add...", this);
+    for (auto i = 0; i < 2; i++) {
+        setItem(goal_set_number, i, new QTableWidgetItem(QString::fromStdString("")));
+    }
+    setCellWidget(goal_set_number, 2, add_button);
+    connect(
+        add_button,
+        &QAbstractButton::clicked,
+        [&](){
+            add_button_clicked();
+            update();
+        }
+    );
+
+}
+
+void GoalSetTab::list_goal_set_in_impl() {
+    auto goal_set_number = implPtr->goal_sets.size();
+    for (auto i = 0; i < goal_set_number; i++) {
+        auto& goal_set = implPtr->goal_sets[i];
+        setItem(i, 0, new QTableWidgetItem(QString::number(static_cast<int>(goal_set.getGoalSetId()))));
+
+        MultiSelectComboBox* multi_combo_box = new MultiSelectComboBox(implPtr->getGoalAreas());
+        setCellWidget(i, 1, multi_combo_box);
+    }
+}
+
+int GoalSetTab::save() {
+    auto row_count = rowCount();
+    for (auto i = 0; i < row_count - 1; i++) {
+
+    }
+    return row_count;
+}
+
+void GoalSetTab::add_button_clicked() {
+    auto row_count = save();
+    size_t new_goal_set_id = 0;
+    if(implPtr->goal_sets.size() != 0) {
+        new_goal_set_id = implPtr->goal_sets.back().getGoalSetId() + 1;
+    }
+    implPtr->goal_sets.emplace_back(new_goal_set_id);
+}
+
+
+GoalSetDialog::GoalSetDialog(CrowdSimImplPtr crowd_sim_impl)
+    : CrowdSimDialog(crowd_sim_impl)
+{
+    goal_set_tab = std::make_shared<GoalSetTab>(crowd_sim_impl);
+    goal_set_tab->update();
+
+    setWindowTitle("Goal Sets");
+
+    QHBoxLayout* table_box = new QHBoxLayout;
+    table_box->addWidget(goal_set_tab.get());
+
+    top_vbox->addLayout(table_box);
+    top_vbox->addLayout(bottom_buttons_hbox);
+}
+
+void GoalSetDialog::ok_button_clicked() {
+    accept();
 }

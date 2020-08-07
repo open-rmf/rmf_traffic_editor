@@ -66,11 +66,10 @@ private:
 class CrowdSimImplementation
 {
 public:
-    CrowdSimImplementation() {
-        goal_sets.emplace_back(0);
-        goal_sets.emplace_back(1);
-    }
+    CrowdSimImplementation() {}
     ~CrowdSimImplementation() {}
+
+    std::vector<std::string> getGoalAreas();
     
     std::vector<State> states;
     std::vector<GoalSet> goal_sets;
@@ -78,6 +77,8 @@ public:
     // std::vector<AgentProfile> agent_profiles;
     // std::vector<AgentGroup> agent_groups;
     // std::vector<ModelType> model_types;
+
+    std::set<std::string> goal_areas;
 };
 
 } //namespace crowd_sim

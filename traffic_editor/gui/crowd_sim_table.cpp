@@ -58,7 +58,8 @@ CrowdSimTable::CrowdSimTable() : TableList(3)
                 edit_button,
                 &QAbstractButton::clicked,
                 [this](){
-                    std::cout << "Goal Sets clicked" << std::endl;
+                    GoalSetDialog goal_set_dialog(this->crowd_sim_impl);
+                    goal_set_dialog.exec();
                 }
             );
         }
@@ -103,8 +104,7 @@ void CrowdSimTable::update_goal_area(const Project& project){
                 std::cout << "Error param type for human_goal_set_name." << std::endl;
                 return;
             }
-            this->goal_areas.insert(param.value_string);
+            crowd_sim_impl->goal_areas.insert(param.value_string);
         }
     }
 }
-

@@ -46,6 +46,7 @@ add_executable(traffic-editor
   gui/crowd_sim_table.cpp
   gui/crowd_sim_impl.cpp
   gui/crowd_sim_dialog.cpp
+  gui/multi_select_combo_box.cpp
   gui/edge.cpp
   gui/editor.cpp
   gui/editor_model.cpp

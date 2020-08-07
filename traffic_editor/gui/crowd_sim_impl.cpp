@@ -2,6 +2,10 @@
 
 namespace crowd_sim{
 
+std::vector<std::string> CrowdSimImplementation::getGoalAreas() {
+    return std::vector<std::string>(goal_areas.begin(), goal_areas.end());
+}
+
 State::State(std::string state_name) : name(state_name) {}
 
 State::~State() {}

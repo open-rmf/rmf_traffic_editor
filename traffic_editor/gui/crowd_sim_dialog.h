@@ -56,4 +56,33 @@ private:
 };
 
 
+class GoalSetTab : public TableList
+{
+public:
+    GoalSetTab(CrowdSimImplPtr crowd_sim_impl);
+    ~GoalSetTab() {}
+
+    void update();
+
+private:
+    CrowdSimImplPtr implPtr;
+
+    void add_button_clicked();
+    void list_goal_set_in_impl();    
+    int save();
+
+};
+
+class GoalSetDialog : public CrowdSimDialog
+{
+public:
+    GoalSetDialog(CrowdSimImplPtr crowd_sim_impl);
+    ~GoalSetDialog() {}
+
+private:
+    std::shared_ptr<GoalSetTab> goal_set_tab;
+    void ok_button_clicked() override;
+
+};
+
 #endif

@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <string>
-#include <unordered_set>
+#include <set>
 
 #include <QTableWidget>
 
@@ -32,7 +32,7 @@ private:
         "AgentProfiles", 
         "AgentGroups", 
         "ModelTypes" };
-    std::unordered_set<std::string> goal_areas;
+    std::set<std::string> goal_areas;
 
     CrowdSimImplPtr crowd_sim_impl;
 
