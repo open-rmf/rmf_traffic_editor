@@ -52,6 +52,7 @@ private:
     void list_states_in_impl();
     void list_goal_sets_in_combo(QComboBox* comboBox, size_t current_goal_set_id);
     void list_final_states_in_combo(QComboBox* comboBox, bool current_state);
+    void list_navmesh_file_in_combo(QComboBox* comboBox, std::string navmesh_filename);
     void add_button_clicked();
 };
 

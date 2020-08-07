@@ -60,7 +60,7 @@ CrowdSimTable::CrowdSimTable(const Project& input_project) : TableList(3), proje
             connect(
                 edit_button,
                 &QAbstractButton::clicked,
-                [this](){
+                [this]() {
                     update();
                     GoalSetDialog goal_set_dialog(this->crowd_sim_impl);
                     goal_set_dialog.exec();
@@ -68,7 +68,6 @@ CrowdSimTable::CrowdSimTable(const Project& input_project) : TableList(3), proje
                 }
             );
         }
-
     }
 
 }
@@ -78,6 +77,7 @@ CrowdSimTable::~CrowdSimTable() {}
 void CrowdSimTable::update()
 {   
     update_goal_area();
+    update_navmesh_level();
 
     blockSignals(true);
 
@@ -98,6 +98,7 @@ void CrowdSimTable::update()
 }
 
 void CrowdSimTable::update_goal_area(){
+    crowd_sim_impl->goal_areas.clear();
 
     for (auto level : project.building.levels) {
         auto vertex_list = level.vertices;
@@ -111,5 +112,13 @@ void CrowdSimTable::update_goal_area(){
             }
             crowd_sim_impl->goal_areas.insert(param.value_string);
         }
+    }
+}
+
+void CrowdSimTable::update_navmesh_level() {
+    crowd_sim_impl->navmesh_filename_list.clear();
+
+    for (auto level : project.building.levels) {
+        crowd_sim_impl->navmesh_filename_list.emplace_back(level.name + "_navmesh.nav");
     }
 }

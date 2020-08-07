@@ -71,6 +71,7 @@ public:
     ~CrowdSimImplementation() {}
 
     std::vector<std::string> getGoalAreas();
+    std::vector<std::string> getNavmeshFileName();
     
     std::vector<State> states;
     std::vector<GoalSet> goal_sets;
@@ -80,6 +81,7 @@ public:
     // std::vector<ModelType> model_types;
 
     std::set<std::string> goal_areas;
+    std::vector<std::string> navmesh_filename_list;
 };
 
 } //namespace crowd_sim

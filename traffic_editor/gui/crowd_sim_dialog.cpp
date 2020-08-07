@@ -113,7 +113,17 @@ void StatesTab::list_states_in_impl() {
             }
         );
 
-        setItem(i, 2, new QTableWidgetItem(QString::fromStdString(current_state.getNavmeshFileName() )));
+        QComboBox* navmesh_list_combo = new QComboBox;
+        list_navmesh_file_in_combo(navmesh_list_combo, current_state.getNavmeshFileName());
+        setCellWidget(i, 2, navmesh_list_combo);
+        connect(
+            navmesh_list_combo,
+            &QComboBox::currentTextChanged,
+            [&](const QString& text){
+                current_state.setNavmeshFile(text.toStdString());
+            }
+        );
+        // setItem(i, 2, new QTableWidgetItem(QString::fromStdString(current_state.getNavmeshFileName() )));
 
         QComboBox* goal_set_combo = new QComboBox;
         list_goal_sets_in_combo(goal_set_combo, current_state.getGoalSetId());
@@ -162,6 +172,16 @@ void StatesTab::list_final_states_in_combo(QComboBox* comboBox, bool current_sta
     }
 }
 
+void StatesTab::list_navmesh_file_in_combo(QComboBox* comboBox, std::string navmesh_filename) {
+    auto navmesh_list = implPtr->getNavmeshFileName();
+    for (auto i = 0; i < navmesh_list.size(); i++) {
+        comboBox->addItem(QString::fromStdString(navmesh_list[i]));
+        if (navmesh_list[i] == navmesh_filename) {
+            comboBox->setCurrentIndex(i);
+        }
+    }
+}
+
 void StatesTab::add_button_clicked() {
     implPtr->states.emplace_back("state" + std::to_string( save() ));
 }
@@ -183,9 +203,9 @@ GoalSetTab::GoalSetTab(CrowdSimImplPtr crowd_sim_impl)
 {
     const QStringList labels =
         { "Id", "Goal Area", ""};
+
     setHorizontalHeaderLabels(labels);
-    resizeColumnsToContents();
-    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     setMinimumSize(800, 400);
 }
 
@@ -230,7 +250,7 @@ void GoalSetTab::list_goal_set_in_impl() {
 int GoalSetTab::save() {
     auto row_count = rowCount();
     implPtr->goal_sets.clear();
-    
+
     for (auto i = 0; i < row_count - 1; i++) {
         
         QTableWidgetItem* pItem_setid = item(i, 0);

@@ -21,6 +21,7 @@ public:
 
     void update();
     void update_goal_area();
+    void update_navmesh_level();
 
 private:
     bool enable_crowd_sim = false;
@@ -36,9 +37,6 @@ private:
 
     CrowdSimImplPtr crowd_sim_impl;
     const Project& project;
-
 };
-
-
 
 #endif
