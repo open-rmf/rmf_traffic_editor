@@ -20,7 +20,7 @@ class Building:
         model_counts = {}
         for level_name, level_yaml in yaml_node['levels'].items():
             self.levels[level_name] =
-                Level(level_yaml, level_name, model_counts)
+            Level(level_yaml, level_name, model_counts)
 
         if 'reference_level_name' in yaml_node:
             self.reference_level_name = yaml_node['reference_level_name']
