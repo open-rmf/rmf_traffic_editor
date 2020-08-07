@@ -15,14 +15,12 @@ public:
     template<typename ITEM_TYPE>
     MultiSelectComboBox(const std::vector<ITEM_TYPE>& selection_list) {
         selections.clear();
-        check_result.clear();
         for (auto item : selection_list) {
             std::stringstream s;
             std::string temp;
             s << item;
             s >> temp;
-            selections.emplace_back(temp);
-            check_result.emplace_back(false);
+            selections.emplace_back(temp, false);
         }
 
         build_list();
@@ -30,15 +28,14 @@ public:
 
     ~MultiSelectComboBox() {}
 
-    std::vector<bool> getCheckResult();
+    std::vector<std::pair<std::string, bool> > getCheckResult();
 
 private:
     void build_list();
     void box_checked(int state);
     void text_changed(const QString& text);
 
-    std::vector<std::string> selections;
-    std::vector<bool> check_result;
+    std::vector<std::pair<std::string, bool> > selections;
     QString selectedText;
 
     QListWidget* pListWidget;

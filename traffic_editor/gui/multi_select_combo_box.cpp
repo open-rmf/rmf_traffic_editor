@@ -2,18 +2,6 @@
 
 #include <iostream>
 
-// MultiSelectComboBox::MultiSelectComboBox(const std::vector<std::string>& selection_list)
-// {
-//     selections.clear();
-//     check_result.clear();
-//     for (size_t i = 0; i < selection_list.size(); i++) {
-//         selections.emplace_back(selection_list[i]);
-//         check_result.emplace_back(false);
-//     }
-
-//     build_list();
-// }
-
 void MultiSelectComboBox::build_list() {
     pListWidget = new QListWidget(this);
     pLineEdit = new QLineEdit(this);
@@ -30,7 +18,7 @@ void MultiSelectComboBox::build_list() {
     for (size_t i = 0; i < selections.size(); i++) {
         QListWidgetItem* pListItem = new QListWidgetItem(pListWidget);
         pListWidget->addItem(pListItem);
-        QCheckBox* pCheckBox = new QCheckBox(QString::fromStdString(selections[i]));
+        QCheckBox* pCheckBox = new QCheckBox(QString::fromStdString(selections[i].first));
         pListWidget->setItemWidget(pListItem, pCheckBox);
 
         connect(
@@ -59,7 +47,9 @@ void MultiSelectComboBox::box_checked(int state) {
         if(pCheckBox->isChecked()) {
             QString checkbox_text = pCheckBox->text();
             selectedText.append(checkbox_text).append(";");
-            check_result[i] = true;
+            selections[i].second = true;
+        } else {
+            selections[i].second = false;
         }
     }
 
@@ -76,6 +66,6 @@ void MultiSelectComboBox::text_changed(const QString& text) {
     pLineEdit->setText(text);
 }
 
-std::vector<bool> MultiSelectComboBox::getCheckResult() {
-    return check_result;
+std::vector<std::pair<std::string, bool> > MultiSelectComboBox::getCheckResult() {
+    return selections;
 }
