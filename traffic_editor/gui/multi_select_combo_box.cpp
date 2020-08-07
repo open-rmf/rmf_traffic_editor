@@ -66,6 +66,12 @@ void MultiSelectComboBox::text_changed(const QString& text) {
     pLineEdit->setText(text);
 }
 
-std::vector<std::pair<std::string, bool> > MultiSelectComboBox::getCheckResult() {
-    return selections;
+std::vector<std::string> MultiSelectComboBox::getCheckResult() {
+    std::vector<std::string> result;
+    for (auto item : selections) {
+        if (item.second) {
+            result.emplace_back(item.first);
+        }
+    }
+    return result;
 }

@@ -28,7 +28,7 @@ public:
 
     ~MultiSelectComboBox() {}
 
-    std::vector<std::pair<std::string, bool> > getCheckResult();
+    std::vector<std::string> getCheckResult();
 
 private:
     void build_list();

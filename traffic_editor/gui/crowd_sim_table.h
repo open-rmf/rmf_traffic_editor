@@ -16,11 +16,11 @@ class CrowdSimTable : public TableList
     Q_OBJECT;
 
 public:
-    CrowdSimTable();
+    CrowdSimTable(const Project& input_project);
     ~CrowdSimTable();
 
-    void update(const Project& project);
-    void update_goal_area(const Project& project);
+    void update();
+    void update_goal_area();
 
 private:
     bool enable_crowd_sim = false;
@@ -35,6 +35,7 @@ private:
     std::set<std::string> goal_areas;
 
     CrowdSimImplPtr crowd_sim_impl;
+    const Project& project;
 
 };
 

@@ -226,6 +226,23 @@ void GoalSetTab::list_goal_set_in_impl() {
 int GoalSetTab::save() {
     auto row_count = rowCount();
     for (auto i = 0; i < row_count - 1; i++) {
+        implPtr->goal_sets.clear();
+
+        QTableWidgetItem* pItem_setid = item(i, 0);
+        bool OK_status;
+        auto set_id = pItem_setid->text().toInt(&OK_status);
+        if(!OK_status) {
+            std::cout << "Invalid goal set id in row " << i << " with [" << pItem_setid->text().toStdString() << "]";
+            return -1; // should try exception?
+        }
+
+        implPtr->goal_sets.emplace_back(static_cast<size_t>(set_id));
+        auto goal_set_iterator = implPtr->goal_sets.back();
+        
+        auto pItem_areas = static_cast<MultiSelectComboBox*>(cellWidget(i, 1));
+        for(auto item : pItem_areas->getCheckResult() ) {
+            goal_set_iterator.addGoalArea(item);
+        }
 
     }
     return row_count;

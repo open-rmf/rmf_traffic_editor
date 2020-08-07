@@ -7,7 +7,7 @@
 #include <QString>
 
 
-CrowdSimTable::CrowdSimTable() : TableList(3)
+CrowdSimTable::CrowdSimTable(const Project& input_project) : TableList(3), project(input_project)
 {
     crowd_sim_impl = std::make_shared<crowd_sim::CrowdSimImplementation>();
 
@@ -48,6 +48,7 @@ CrowdSimTable::CrowdSimTable() : TableList(3)
                 edit_button,
                 &QAbstractButton::clicked,
                 [this](){
+                    update();
                     StatesDialog states_dialog(this->crowd_sim_impl);
                     states_dialog.exec();
                 }
@@ -58,6 +59,7 @@ CrowdSimTable::CrowdSimTable() : TableList(3)
                 edit_button,
                 &QAbstractButton::clicked,
                 [this](){
+                    update();
                     GoalSetDialog goal_set_dialog(this->crowd_sim_impl);
                     goal_set_dialog.exec();
                 }
@@ -70,9 +72,9 @@ CrowdSimTable::CrowdSimTable() : TableList(3)
 
 CrowdSimTable::~CrowdSimTable() {}
 
-void CrowdSimTable::update(const Project& project)
+void CrowdSimTable::update()
 {   
-    update_goal_area(project);
+    update_goal_area();
 
     blockSignals(true);
 
@@ -92,7 +94,7 @@ void CrowdSimTable::update(const Project& project)
     blockSignals(false);
 }
 
-void CrowdSimTable::update_goal_area(const Project& project){
+void CrowdSimTable::update_goal_area(){
 
     for (auto level : project.building.levels) {
         auto vertex_list = level.vertices;

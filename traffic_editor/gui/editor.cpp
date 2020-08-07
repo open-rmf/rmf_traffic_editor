@@ -166,15 +166,15 @@ Editor::Editor()
       create_scene();
     });
 
-  crowd_sim_table = new CrowdSimTable();
-  // connect(
-  //   crowd_sim_table,
-  //   &QTableWidget::cellClicked,
-  //   [=](){
-  //     crowd_sim_table->update();
-  //     create_scene();
-  //   }
-  // );
+  crowd_sim_table = new CrowdSimTable(project);
+  connect(
+    crowd_sim_table,
+    &QTableWidget::cellClicked,
+    [&](){
+      crowd_sim_table->update();
+      create_scene();
+    }
+  );
 
 
   right_tab_widget = new QTabWidget;
@@ -2381,7 +2381,7 @@ void Editor::update_tables()
   lift_table->update(project.building);
   scenario_table->update(project);
   traffic_table->update(project);
-  crowd_sim_table->update(project);
+  crowd_sim_table->update();
 }
 
 void Editor::sim_reset()
