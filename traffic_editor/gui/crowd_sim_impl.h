@@ -39,6 +39,7 @@ public:
     ~GoalSet();
 
     void addGoalArea(std::string goal_area_name);
+    std::set<std::string> getGoalAreas();
     size_t getGoalSetId();
 
 private:

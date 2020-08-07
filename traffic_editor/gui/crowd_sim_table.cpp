@@ -10,6 +10,7 @@
 CrowdSimTable::CrowdSimTable(const Project& input_project) : TableList(3), project(input_project)
 {
     crowd_sim_impl = std::make_shared<crowd_sim::CrowdSimImplementation>();
+    update();
 
     const QStringList labels =
     { "Name", "Status", "" };
@@ -51,6 +52,7 @@ CrowdSimTable::CrowdSimTable(const Project& input_project) : TableList(3), proje
                     update();
                     StatesDialog states_dialog(this->crowd_sim_impl);
                     states_dialog.exec();
+                    update();
                 }
             );
         }
@@ -62,6 +64,7 @@ CrowdSimTable::CrowdSimTable(const Project& input_project) : TableList(3), proje
                     update();
                     GoalSetDialog goal_set_dialog(this->crowd_sim_impl);
                     goal_set_dialog.exec();
+                    update();
                 }
             );
         }

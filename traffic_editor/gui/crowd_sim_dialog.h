@@ -63,14 +63,13 @@ public:
     ~GoalSetTab() {}
 
     void update();
+    int save();
 
 private:
     CrowdSimImplPtr implPtr;
 
     void add_button_clicked();
-    void list_goal_set_in_impl();    
-    int save();
-
+    void list_goal_set_in_impl();
 };
 
 class GoalSetDialog : public CrowdSimDialog

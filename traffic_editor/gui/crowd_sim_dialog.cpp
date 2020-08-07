@@ -190,7 +190,7 @@ GoalSetTab::GoalSetTab(CrowdSimImplPtr crowd_sim_impl)
 }
 
 void GoalSetTab::update() {
-
+    blockSignals(true);
     auto goal_set_number = implPtr->goal_sets.size();
     setRowCount(1 + goal_set_number);
     clearContents();
@@ -209,25 +209,30 @@ void GoalSetTab::update() {
             update();
         }
     );
+    blockSignals(false);
 
 }
 
 void GoalSetTab::list_goal_set_in_impl() {
+    blockSignals(true);
     auto goal_set_number = implPtr->goal_sets.size();
     for (auto i = 0; i < goal_set_number; i++) {
         auto& goal_set = implPtr->goal_sets[i];
         setItem(i, 0, new QTableWidgetItem(QString::number(static_cast<int>(goal_set.getGoalSetId()))));
 
         MultiSelectComboBox* multi_combo_box = new MultiSelectComboBox(implPtr->getGoalAreas());
+        multi_combo_box->showCheckedItem(goal_set.getGoalAreas());
         setCellWidget(i, 1, multi_combo_box);
     }
+    blockSignals(false);
 }
 
 int GoalSetTab::save() {
     auto row_count = rowCount();
+    implPtr->goal_sets.clear();
+    
     for (auto i = 0; i < row_count - 1; i++) {
-        implPtr->goal_sets.clear();
-
+        
         QTableWidgetItem* pItem_setid = item(i, 0);
         bool OK_status;
         auto set_id = pItem_setid->text().toInt(&OK_status);
@@ -236,10 +241,12 @@ int GoalSetTab::save() {
             return -1; // should try exception?
         }
 
-        implPtr->goal_sets.emplace_back(static_cast<size_t>(set_id));
-        auto goal_set_iterator = implPtr->goal_sets.back();
-        
         auto pItem_areas = static_cast<MultiSelectComboBox*>(cellWidget(i, 1));
+        if (pItem_areas->getCheckResult().empty()) { //if no goal area selected, don't save the goal set
+            continue;
+        }
+        implPtr->goal_sets.emplace_back(static_cast<size_t>(set_id));
+        auto& goal_set_iterator = implPtr->goal_sets.back();
         for(auto item : pItem_areas->getCheckResult() ) {
             goal_set_iterator.addGoalArea(item);
         }
@@ -274,5 +281,6 @@ GoalSetDialog::GoalSetDialog(CrowdSimImplPtr crowd_sim_impl)
 }
 
 void GoalSetDialog::ok_button_clicked() {
+    goal_set_tab->save();
     accept();
 }

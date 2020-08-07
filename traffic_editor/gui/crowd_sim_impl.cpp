@@ -57,5 +57,9 @@ void GoalSet::addGoalArea(std::string area_name){
 size_t GoalSet::getGoalSetId() {
     return this->id;
 }
+
+std::set<std::string> GoalSet::getGoalAreas() {
+    return this->goal_area_contained;
+}
     
 } //namespace crowd_sim
