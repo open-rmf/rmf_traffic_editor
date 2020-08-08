@@ -37,11 +37,12 @@ class LiftDialog : public QDialog
   Q_OBJECT
 
 public:
-  LiftDialog(Lift& lift, const Building& building);
+  LiftDialog(Lift& lift, Building& building);
   ~LiftDialog();
 
 private:
   Lift& _lift;
+  Building& _building;
 
   std::vector<QString> _level_names;
 
@@ -60,6 +61,7 @@ private:
   QGraphicsScene* _lift_scene;
 
   QPushButton* _ok_button, * _cancel_button;
+  QPushButton* _add_wp_button;
 
   void update_door_table();
   void set_door_cell(const int row, const int col, const QString& text);
@@ -67,6 +69,8 @@ private:
 
   void update_level_table();
   void update_lift_view();
+
+  void update_lift_wps();
 
 private slots:
   void ok_button_clicked();
