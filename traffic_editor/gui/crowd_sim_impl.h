@@ -47,6 +47,27 @@ private:
     std::set<std::string> goal_area_contained;
 };
 
+class AgentProfile
+{
+public:
+    AgentProfile(std::string profile_name) : profile_name(profile_name) {}
+    ~AgentProfile() {}
+
+    std::string profile_name = "new_profile";
+    // external_agent profile setup
+    size_t profile_class = 1;
+    double max_accel = 0.0;
+    double max_angle_vel = 0.0;
+    size_t max_neighbors = 10;
+    double max_speed = 0.0;
+    double neighbor_dist = 5.0;
+    size_t obstacle_set = 1;
+    double pref_speed = 0.0;
+    double r = 0.25;
+    double ORCA_tau = 1.0;
+    double ORCA_tauObst = 0.4;
+};
+
 // class Condition
 // {
 
@@ -67,21 +88,27 @@ private:
 class CrowdSimImplementation
 {
 public:
-    CrowdSimImplementation() {}
+    CrowdSimImplementation() {
+        external_agent = std::make_shared<AgentProfile>("external_agent");
+    }
     ~CrowdSimImplementation() {}
 
     std::vector<std::string> getGoalAreas();
     std::vector<std::string> getNavmeshFileName();
+    void clearAgentProfile();
     
     std::vector<State> states;
     std::vector<GoalSet> goal_sets;
     // std::vector<Transition> transitions;
-    // std::vector<AgentProfile> agent_profiles;
+    std::vector<AgentProfile> agent_profiles;
     // std::vector<AgentGroup> agent_groups;
     // std::vector<ModelType> model_types;
 
     std::set<std::string> goal_areas;
     std::vector<std::string> navmesh_filename_list;
+
+private:
+    std::shared_ptr<AgentProfile> external_agent;
 };
 
 } //namespace crowd_sim

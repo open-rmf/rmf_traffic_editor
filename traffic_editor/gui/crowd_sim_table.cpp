@@ -68,6 +68,19 @@ CrowdSimTable::CrowdSimTable(const Project& input_project) : TableList(3), proje
                 }
             );
         }
+
+        if ("AgentProfiles" == this->required_components[i]) {
+            connect(
+                edit_button,
+                &QAbstractButton::clicked,
+                [this]() {
+                    update();
+                    AgentProfileDialog agent_profile_dialog(this->crowd_sim_impl);
+                    agent_profile_dialog.exec();
+                    update();
+                }
+            );
+        }
     }
 
 }

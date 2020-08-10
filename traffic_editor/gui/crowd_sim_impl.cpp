@@ -10,6 +10,11 @@ std::vector<std::string> CrowdSimImplementation::getNavmeshFileName() {
     return navmesh_filename_list;
 }
 
+void CrowdSimImplementation::clearAgentProfile() {
+    agent_profiles.clear();
+    agent_profiles.emplace_back(*external_agent);
+}
+
 State::State(std::string state_name) : name(state_name) {}
 
 State::~State() {}

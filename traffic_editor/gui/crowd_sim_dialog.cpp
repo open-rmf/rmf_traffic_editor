@@ -304,3 +304,79 @@ void GoalSetDialog::ok_button_clicked() {
     goal_set_tab->save();
     accept();
 }
+
+//===================================================================
+AgentProfileTab::AgentProfileTab(CrowdSimImplPtr crowd_sim_impl) 
+    : TableList(12), implPtr(crowd_sim_impl)
+{
+    const QStringList labels =
+        { "Name", "class", "max_accel", "max_angle_vel", "max_neighbors",
+        "max_speed", "neighbor_dist", "pref_speed", "r", "ORCA_tau", "ORCA_tauObst", ""};
+    
+    setHorizontalHeaderLabels(labels);
+    setMinimumSize(1600, 400);
+
+}
+
+void AgentProfileTab::add_button_clicked() {
+    auto row_count = save();
+    implPtr->agent_profiles.emplace_back("new profile");
+}
+
+void AgentProfileTab::update() {
+    blockSignals(true);
+    auto profiles_number = implPtr->agent_profiles.size();
+    setRowCount(1 + profiles_number);
+    clearContents();
+    // list_goal_set_in_impl();
+
+    QPushButton* add_button = new QPushButton("Add...", this);
+    for (auto i = 0; i < 11; i++) {
+        setItem(profiles_number, i, new QTableWidgetItem(QString::fromStdString("")));
+    }
+    setCellWidget(profiles_number, 11, add_button);
+    connect(
+        add_button,
+        &QAbstractButton::clicked,
+        [&](){
+            add_button_clicked();
+            update();
+        }
+    );
+    blockSignals(false);
+
+}
+
+int AgentProfileTab::save() {
+    auto row_count = rowCount();
+    implPtr->clearAgentProfile();
+    //ignore the first row of external agent, which has been added in clear agent profile
+    for (auto i = 1; i < row_count - 1; i++) {
+        QTableWidgetItem* pItem = item(i, 0);
+        auto profile_name = pItem->text();
+        AgentProfile current_profile(profile_name);
+        
+    }
+    return row_count-1;
+
+}
+
+
+
+
+AgentProfileDialog::AgentProfileDialog(CrowdSimImplPtr crowd_sim_impl)
+    : CrowdSimDialog(crowd_sim_impl)
+{
+    agent_profile_tab = std::make_shared<AgentProfileTab>(crowd_sim_impl);
+    agent_profile_tab->update();
+
+    setWindowTitle("Agent Profiles");
+
+    QHBoxLayout* table_box = new QHBoxLayout;
+    table_box->addWidget(agent_profile_tab.get());
+
+    top_vbox->addLayout(table_box);
+    top_vbox->addLayout(bottom_buttons_hbox);
+}
+
+

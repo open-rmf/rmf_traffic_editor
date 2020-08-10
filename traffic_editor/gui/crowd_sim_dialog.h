@@ -25,8 +25,8 @@ public:
     CrowdSimImplPtr crowd_sim_impl;
 };
 
+//====================================================================
 class StatesTab;
-
 class StatesDialog : public CrowdSimDialog
 {
 public:
@@ -56,7 +56,7 @@ private:
     void add_button_clicked();
 };
 
-
+//=======================================================================================
 class GoalSetTab : public TableList
 {
 public:
@@ -83,6 +83,35 @@ private:
     std::shared_ptr<GoalSetTab> goal_set_tab;
     void ok_button_clicked() override;
 
+};
+
+//==============================================================
+class AgentProfileTab : public TableList
+{
+public :
+    AgentProfileTab(CrowdSimImplPtr crowd_sim_impl);
+    ~AgentProfileTab() {}
+
+    void update();
+    int save();
+
+private:
+    CrowdSimImplPtr implPtr;
+    
+    void add_button_clicked();
+    void list_agent_profile_in_impl();
+
+};
+
+class AgentProfileDialog : public CrowdSimDialog
+{
+public:
+    AgentProfileDialog(CrowdSimImplPtr crowd_sim_impl);
+    ~AgentProfileDialog() {}
+
+private:
+    std::shared_ptr<AgentProfileTab> agent_profile_tab;
+    // void ok_button_clicked() override;
 };
 
 #endif
