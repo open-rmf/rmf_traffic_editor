@@ -103,6 +103,9 @@ void CrowdSimTable::update()
         if ("GoalSets" == this->required_components[i]) {
             status_number = crowd_sim_impl->goal_sets.size();
         }
+        if ("AgentProfiles" == this->required_components[i]) {
+            status_number = crowd_sim_impl->agent_profiles.size();
+        }
 
         setItem(i+1, 1, new QTableWidgetItem(QString::number(status_number)));
     }

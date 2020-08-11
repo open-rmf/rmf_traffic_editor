@@ -111,7 +111,7 @@ public:
 
 private:
     std::shared_ptr<AgentProfileTab> agent_profile_tab;
-    // void ok_button_clicked() override;
+    void ok_button_clicked() override;
 };
 
 #endif

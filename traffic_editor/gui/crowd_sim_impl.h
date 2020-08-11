@@ -90,6 +90,7 @@ class CrowdSimImplementation
 public:
     CrowdSimImplementation() {
         external_agent = std::make_shared<AgentProfile>("external_agent");
+        clearAgentProfile();
     }
     ~CrowdSimImplementation() {}
 
