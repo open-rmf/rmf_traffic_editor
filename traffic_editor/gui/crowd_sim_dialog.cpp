@@ -27,9 +27,7 @@ CrowdSimDialog::CrowdSimDialog(CrowdSimImplPtr implPtr)
             this->cancel_button_clicked();
         }
     );
-
     top_vbox = new QVBoxLayout(this);
-
 }
 
 void CrowdSimDialog::ok_button_clicked() {
