@@ -113,12 +113,15 @@ YAML::Node Lift::to_yaml() const
 void Lift::draw(
   QGraphicsScene* scene,
   const double meters_per_pixel,
-  const string& /*level_name*/,
+  const string& level_name,
   const bool apply_transformation,
   const double scale,
   const double translate_x,
   const double translate_y) const
 {
+  auto it = level_doors.find(level_name);
+  if (it == level_doors.end())
+    return;
   const double cabin_w = width / meters_per_pixel;
   const double cabin_d = depth / meters_per_pixel;
   QPen cabin_pen(Qt::black);
@@ -152,6 +155,9 @@ void Lift::draw(
 
   for (const LiftDoor& door : doors)
   {
+    if (find(it->second.begin(), it->second.end(), door.name)
+      == it->second.end())
+      continue;
     const double door_x = door.x / meters_per_pixel;
     const double door_y = -door.y / meters_per_pixel;
     const double door_w = door.width / meters_per_pixel;

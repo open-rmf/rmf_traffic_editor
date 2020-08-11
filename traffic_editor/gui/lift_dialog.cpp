@@ -274,7 +274,7 @@ void LiftDialog::ok_button_clicked()
   {
     const std::string level_name =
       _level_table->item(level_row, 0)->text().toStdString();
-    _lift.level_doors[level_name].clear();
+    _lift.level_doors.erase(level_name);
     for (int door_col = 1; door_col < _level_table->columnCount(); door_col++)
     {
       const std::string door_name =
@@ -299,7 +299,8 @@ void LiftDialog::ok_button_clicked()
       }
     }
   }
-
+  update_lift_view();
+  emit redraw();
   accept();
 }
 
