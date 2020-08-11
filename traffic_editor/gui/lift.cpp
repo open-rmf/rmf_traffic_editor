@@ -119,9 +119,6 @@ void Lift::draw(
   const double translate_x,
   const double translate_y) const
 {
-  auto it = level_doors.find(level_name);
-  if (it == level_doors.end())
-    return;
   const double cabin_w = width / meters_per_pixel;
   const double cabin_d = depth / meters_per_pixel;
   QPen cabin_pen(Qt::black);
@@ -133,7 +130,11 @@ void Lift::draw(
     cabin_w,
     cabin_d);
   cabin_rect->setPen(cabin_pen);
-  cabin_rect->setBrush(QBrush(QColor::fromRgbF(0.5, 1.0, 0.5, 0.5)));
+  auto it = level_doors.find(level_name);
+  if (it == level_doors.end())
+    cabin_rect->setBrush(QBrush(QColor::fromRgbF(0.7, 0.7, 0.7, 0.3)));
+  else
+    cabin_rect->setBrush(QBrush(QColor::fromRgbF(0.5, 1.0, 0.5, 0.5)));
   scene->addItem(cabin_rect);
 
   QList<QGraphicsItem*> items;
@@ -153,29 +154,31 @@ void Lift::draw(
     items.append(text_item);
   }
 
-  for (const LiftDoor& door : doors)
-  {
-    if (find(it->second.begin(), it->second.end(), door.name)
-      == it->second.end())
-      continue;
-    const double door_x = door.x / meters_per_pixel;
-    const double door_y = -door.y / meters_per_pixel;
-    const double door_w = door.width / meters_per_pixel;
-    const double door_thickness = 0.2 / meters_per_pixel;
-    QGraphicsRectItem* door_item = new QGraphicsRectItem(
-      -door_w / 2.0,
-      -door_thickness / 2.0,
-      door_w,
-      door_thickness);
-    door_item->setRotation(-180.0 / 3.1415926 * door.motion_axis_orientation);
-    door_item->setPos(door_x, door_y);
+  if (it != level_doors.end()) {
+    for (const LiftDoor& door : doors)
+    {
+      if (find(it->second.begin(), it->second.end(), door.name)
+        == it->second.end())
+        continue;
+      const double door_x = door.x / meters_per_pixel;
+      const double door_y = -door.y / meters_per_pixel;
+      const double door_w = door.width / meters_per_pixel;
+      const double door_thickness = 0.2 / meters_per_pixel;
+      QGraphicsRectItem* door_item = new QGraphicsRectItem(
+        -door_w / 2.0,
+        -door_thickness / 2.0,
+        door_w,
+        door_thickness);
+      door_item->setRotation(-180.0 / 3.1415926 * door.motion_axis_orientation);
+      door_item->setPos(door_x, door_y);
 
-    QPen door_pen(Qt::red);
-    door_pen.setWidth(0.05 / meters_per_pixel);
-    door_item->setPen(door_pen);
-    door_item->setBrush(QBrush(QColor::fromRgbF(1.0, 0.0, 0.0, 0.5)));
+      QPen door_pen(Qt::red);
+      door_pen.setWidth(0.05 / meters_per_pixel);
+      door_item->setPen(door_pen);
+      door_item->setBrush(QBrush(QColor::fromRgbF(1.0, 0.0, 0.0, 0.5)));
 
-    items.append(door_item);
+      items.append(door_item);
+    }
   }
 
   QGraphicsItemGroup* group = scene->createItemGroup(items);
