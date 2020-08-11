@@ -132,7 +132,7 @@ void Lift::draw(
   cabin_rect->setPen(cabin_pen);
   auto it = level_doors.find(level_name);
   if (it == level_doors.end())
-    cabin_rect->setBrush(QBrush(QColor::fromRgbF(0.7, 0.7, 0.7, 0.3)));
+    cabin_rect->setBrush(QBrush(QColor::fromRgbF(1.0, 0.3, 0.3, 0.3)));
   else
     cabin_rect->setBrush(QBrush(QColor::fromRgbF(0.5, 1.0, 0.5, 0.5)));
   scene->addItem(cabin_rect);
@@ -154,7 +154,8 @@ void Lift::draw(
     items.append(text_item);
   }
 
-  if (it != level_doors.end()) {
+  if (it != level_doors.end())
+  {
     for (const LiftDoor& door : doors)
     {
       if (find(it->second.begin(), it->second.end(), door.name)
