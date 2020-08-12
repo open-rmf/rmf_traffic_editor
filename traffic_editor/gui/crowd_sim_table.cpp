@@ -81,6 +81,19 @@ CrowdSimTable::CrowdSimTable(const Project& input_project) : TableList(3), proje
                 }
             );
         }
+
+        if ("Transitions" == this->required_components[i]) {
+            connect(
+                edit_button,
+                &QAbstractButton::clicked,
+                [this]() {
+                    update();
+                    TransitionDialog transition_dialog(this->crowd_sim_impl);
+                    transition_dialog.exec();
+                    update();
+                }
+            );
+        }
     }
 
 }
@@ -105,6 +118,9 @@ void CrowdSimTable::update()
         }
         if ("AgentProfiles" == this->required_components[i]) {
             status_number = crowd_sim_impl->agent_profiles.size();
+        }
+        if ("Transitions" == this->required_components[i]) {
+            status_number = crowd_sim_impl->transitions.size();
         }
 
         setItem(i+1, 1, new QTableWidgetItem(QString::number(status_number)));

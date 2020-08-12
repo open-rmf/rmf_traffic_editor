@@ -48,6 +48,7 @@ public:
     int save();
 private:
     CrowdSimImplPtr implPtr;
+    int label_size = 0;
 
     void list_states_in_impl();
     void list_goal_sets_in_combo(QComboBox* comboBox, size_t current_goal_set_id);
@@ -68,6 +69,7 @@ public:
 
 private:
     CrowdSimImplPtr implPtr;
+    int label_size = 0;
 
     void add_button_clicked();
     void list_goal_set_in_impl();
@@ -97,6 +99,7 @@ public :
 
 private:
     CrowdSimImplPtr implPtr;
+    int label_size = 0;
     
     void add_button_clicked();
     void list_agent_profile_in_impl();
@@ -111,6 +114,67 @@ public:
 
 private:
     std::shared_ptr<AgentProfileTab> agent_profile_tab;
+    void ok_button_clicked() override;
+};
+
+//==============================================================
+class TransitionTab : public TableList
+{
+public:
+    TransitionTab(CrowdSimImplPtr crowd_sim_impl);
+    ~TransitionTab() {}
+
+    void update();
+    void save();
+
+private:
+    CrowdSimImplPtr implPtr;
+    int label_size = 0;
+
+    void add_button_clicked();
+    void list_transition_in_impl();
+    void list_from_states_in_combo(QComboBox* comboBox, std::string current_state);
+};
+
+class TransitionDialog : public CrowdSimDialog
+{
+public:
+    TransitionDialog(CrowdSimImplPtr crowd_sim_impl);
+    ~TransitionDialog() {}
+
+private:
+    std::shared_ptr<TransitionTab> transition_tab;
+    // void ok_button_clicked() override;
+
+};
+
+class ToStateTab : public TableList 
+{
+public:
+    ToStateTab(crowd_sim::Transition& trasition, CrowdSimImplPtr crowd_sim_impl);
+    ~ToStateTab() {}
+
+    void update();
+    void save();
+
+private:
+    crowd_sim::Transition& current_transition;
+    CrowdSimImplPtr implPtr;
+
+    int label_size = 0;
+    void list_to_states_in_current_transition();
+    void add_button_clicked();
+
+};
+
+class ToStateDialog : public CrowdSimDialog
+{
+public:
+    ToStateDialog(crowd_sim::Transition& transition, CrowdSimImplPtr crowd_sim_impl);
+    ~ToStateDialog() {}
+private:
+    std::shared_ptr<ToStateTab> to_state_tab;
+
     void ok_button_clicked() override;
 };
 

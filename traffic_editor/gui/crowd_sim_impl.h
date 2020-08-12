@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <set>
+#include <map>
 #include <memory>
 
 namespace crowd_sim {
@@ -88,16 +89,20 @@ public:
     virtual std::string getConditionName() {
         return name;
     }
+    virtual bool isValid() {
+        return false;
+    }
 
     enum TYPE {
+        BASE,
         GOAL,
         TIMER,
         AND,
         OR,
         NOT
     } type;
-
-    std::string name = "base condition";
+    
+    std::string name = "base_condition";
 };
 
 class ConditionGOAL : public Condition 
@@ -115,6 +120,10 @@ public:
 
     double getDistance() {
         return distance;
+    }
+
+    bool isValid() override {
+        return true;
     }
 
 private:
@@ -141,6 +150,10 @@ public:
         return this->distribution;
     }
 
+    bool isValid() override {
+        return true;
+    }
+
 private:
     //currently only provides const value distribution for timer
     std::string distribution = "c";
@@ -159,6 +172,13 @@ public:
     void setConditions(ConditionPtr condition1, ConditionPtr condition2) {
         this->condition1 = condition1;
         this->condition2 = condition2;
+    }
+
+    bool isValid() override {
+        if(condition1 && condition2 && condition1->isValid() && condition2->isValid()) {
+            return true;
+        }
+        return false;
     }
 
 private:
@@ -180,6 +200,13 @@ public:
         this->condition2 = condition2;
     }
 
+    bool isValid() override {
+        if(condition1 && condition2 && condition1->isValid() && condition2->isValid()) {
+            return true;
+        }
+        return false;
+    }
+
 private:
     ConditionPtr condition1;
     ConditionPtr condition2;
@@ -198,6 +225,13 @@ public:
         this->condition1 = condition1;
     } 
 
+    bool isValid() override {
+        if(condition1 && condition1->isValid()) {
+            return true;
+        }
+        return false;
+    }
+
 private:
     ConditionPtr condition1;
 };
@@ -206,28 +240,53 @@ private:
 class Transition
 {
 using StateName = std::string;
+using ToStateType = std::map<StateName, double>;
 public:
-    Transition();
-    ~Transition();
+    Transition(StateName from_state_name) {
+        this->from_state_name = from_state_name;
+        this->condition = std::make_shared<Condition>();
+    }
+    ~Transition() {}
 
     void setFromState(StateName state_name) {
         this->from_state_name = state_name;
     }
-    std::string getFromState() {
+    std::string getFromState() const {
         return this->from_state_name;
     }
 
     void addToState(StateName state_name, double weight = 1.0) {
-        this->to_state_name.emplace_back(state_name, weight);
+        this->to_state_name.insert(std::make_pair(state_name, weight) );
     }
-    std::vector<std::pair<StateName, double> > getToState() {
+    void deleteToState(StateName state_name) {
+        this->to_state_name.erase(state_name);
+    }
+    ToStateType getToState() const {
         return this->to_state_name;
+    }
+    void clearToState() {
+        this->to_state_name.clear();
+    }
+
+    void setCondition(ConditionPtr condition) {
+        this->condition = condition;
+    }
+
+    ConditionPtr getCondition() const {
+        return condition;
+    }
+
+    bool isValid() {
+        if (condition && condition->isValid() && to_state_name.size() > 0 && from_state_name.size() > 0) {
+            return true;
+        } 
+        return false;
     }
 
 private:
-    StateName from_state_name;
+    StateName from_state_name = "";
     //output states with weights
-    std::vector<std::pair<StateName, double>> to_state_name;
+    ToStateType to_state_name;
     ConditionPtr condition;
 };
 

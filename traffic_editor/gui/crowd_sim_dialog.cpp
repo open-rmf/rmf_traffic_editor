@@ -496,9 +496,6 @@ int AgentProfileTab::save() {
 
 }
 
-
-
-
 AgentProfileDialog::AgentProfileDialog(CrowdSimImplPtr crowd_sim_impl)
     : CrowdSimDialog(crowd_sim_impl)
 {
@@ -514,9 +511,278 @@ AgentProfileDialog::AgentProfileDialog(CrowdSimImplPtr crowd_sim_impl)
     top_vbox->addLayout(bottom_buttons_hbox);
 }
 
-
 void AgentProfileDialog::ok_button_clicked() {
     agent_profile_tab->save();
     accept();
 }
 
+//=============================================================
+TransitionDialog::TransitionDialog(CrowdSimImplPtr crowd_sim_impl) 
+    : CrowdSimDialog(crowd_sim_impl)
+{
+    transition_tab = std::make_shared<TransitionTab>(crowd_sim_impl);
+    transition_tab->update();
+
+    setWindowTitle("Transitions");
+
+    QHBoxLayout* table_box = new QHBoxLayout;
+    table_box->addWidget(transition_tab.get());
+
+    top_vbox->addLayout(table_box);
+    top_vbox->addLayout(bottom_buttons_hbox);
+
+}
+
+
+TransitionTab::TransitionTab(CrowdSimImplPtr crowd_sim_impl) 
+    : TableList(6), implPtr(crowd_sim_impl)
+{
+    const QStringList labels =
+        { "From State", "To State", "To-State edit" , "Condition", "Condition edit", ""};
+    
+    label_size = labels.size();
+    setHorizontalHeaderLabels(labels);
+    setMinimumSize(800, 400);
+}
+
+void TransitionTab::update() {
+    blockSignals(true);
+    clearContents();
+    auto transition_number = implPtr->transitions.size();
+    setRowCount(1 + transition_number);
+
+    list_transition_in_impl();
+
+    QPushButton* add_button = new QPushButton("Add...", this);
+    for (auto i = 0; i < label_size-1; i++) {
+        setItem(transition_number, i, new QTableWidgetItem(QString::fromStdString("")));
+    }
+    setCellWidget(transition_number, label_size-1, add_button);
+    connect(
+        add_button,
+        &QAbstractButton::clicked,
+        [&]() {
+            add_button_clicked();
+            update();
+        }
+    );
+
+    blockSignals(false);
+}
+
+void TransitionTab::list_transition_in_impl() {
+
+    auto transition_number = implPtr->transitions.size();
+
+    for (auto i = 0; i < transition_number; i++) {
+        auto& transition = implPtr->transitions[i];
+
+        auto from_state_name = transition.getFromState();
+        QComboBox* from_state_comboBox = new QComboBox;
+        list_from_states_in_combo(from_state_comboBox, from_state_name);
+        setCellWidget(i, 0, from_state_comboBox);
+        // setItem(i, 0, new QTableWidgetItem(QString::fromStdString(from_state_name)));
+
+        auto to_state = transition.getToState();
+        std::string to_state_name = "";
+        for ( auto state : to_state) {
+            to_state_name += state.first + ";" ;
+        }
+        setItem(i, 1, new QTableWidgetItem(QString::fromStdString(to_state_name)));
+
+        QPushButton* to_state_edit = new QPushButton("Edit", this);
+        setCellWidget(i, 2, to_state_edit);
+        connect(
+            to_state_edit,
+            &QAbstractButton::clicked,
+            [this, &transition](){
+                ToStateDialog to_state_dialog(transition, this->implPtr);
+                to_state_dialog.exec();
+                update();
+            }
+        );
+
+        auto condition_name = transition.getCondition()->getConditionName();
+        setItem(i, 3, new QTableWidgetItem(QString::fromStdString(condition_name)));
+
+        QPushButton* condition_edit = new QPushButton("Edit", this);
+        setCellWidget(i, 4, condition_edit);
+        // connect(
+        //     condition_edit,
+        //     &QAbstrctButton::clicked,
+        //     [](){}
+        // );   
+
+        QPushButton* delete_button = new QPushButton("delete", this);
+        setCellWidget(i, 5, delete_button);
+        connect(
+            delete_button,
+            &QAbstractButton::clicked,
+            [this, i]() {
+                this->implPtr->transitions.erase(implPtr->transitions.begin() + i);
+                update();
+            }
+        );   
+    }
+}
+
+void TransitionTab::list_from_states_in_combo(QComboBox* comboBox, std::string current_state) {
+    for (auto state : implPtr->states) {
+        if(state.getFinalState()) { //transitions end up with final state
+            continue;
+        }
+        comboBox->addItem(QString::fromStdString(state.getName() ) );
+    }
+    auto index = comboBox->findText(QString::fromStdString(current_state) );
+    if (index >= 0) {
+        comboBox->setCurrentIndex(index);
+    } else {
+        comboBox->setCurrentIndex(0);
+    }
+}
+
+void TransitionTab::save() {
+    // instead of clearing the vector first, check the invalid transition and delete it
+    update();
+    auto row_count = rowCount();
+    std::vector<size_t> invalid_trasition;
+    for(auto i = 0; i < row_count-1; i++) {
+        auto& current_transition = implPtr->transitions.at(i);
+        if (!current_transition.isValid() ) {
+            invalid_trasition.push_back(i);
+        }
+    }
+    //delete all the invalid transition, from the transitions end to begin
+    while(!invalid_trasition.empty()) {
+        size_t index = invalid_trasition.back();
+        implPtr->transitions.erase(implPtr->transitions.begin() + index);
+        invalid_trasition.pop_back();
+    }
+    update();
+}
+
+void TransitionTab::add_button_clicked() {
+    save();
+    implPtr->transitions.emplace_back("");
+}
+
+ToStateDialog::ToStateDialog(crowd_sim::Transition& transition, CrowdSimImplPtr crowd_sim_impl)
+    : CrowdSimDialog(crowd_sim_impl)
+{
+    to_state_tab = std::make_shared<ToStateTab>(transition, crowd_sim_impl);
+    to_state_tab->update();
+
+    setWindowTitle("Transition To State Setup" );
+
+    QHBoxLayout* table_box = new QHBoxLayout;
+    table_box->addWidget(to_state_tab.get());
+
+    top_vbox->addLayout(table_box);
+    top_vbox->addLayout(bottom_buttons_hbox);
+}
+
+void ToStateDialog::ok_button_clicked() {
+    to_state_tab->save();
+    accept();
+}
+
+ToStateTab::ToStateTab(crowd_sim::Transition& transition, CrowdSimImplPtr crowd_sim_impl)
+    : TableList(3), current_transition(transition), implPtr(crowd_sim_impl)
+{   
+    const QStringList labels {"To State Name", "Weight", ""};
+    label_size = labels.size();
+    setHorizontalHeaderLabels(labels);
+    setMinimumSize(400, 400);
+}
+
+void ToStateTab::update() {
+    blockSignals(true);
+    clearContents();
+    
+    auto to_state_number = current_transition.getToState().size();
+    setRowCount(1 + to_state_number);
+    if (to_state_number != implPtr->states.size()) { 
+        // to_states include all the states defined, not allowed to add more
+        QPushButton* add_button = new QPushButton("Add...", this);
+        for (auto i = 0; i < label_size-1; i++) {
+            setItem(to_state_number, i, new QTableWidgetItem(QString::fromStdString("")));
+        }
+        setCellWidget(to_state_number, label_size-1, add_button);
+        connect(
+            add_button,
+            &QAbstractButton::clicked,
+            [&]() {
+                add_button_clicked();
+                update();
+            }
+        );
+    }
+
+    list_to_states_in_current_transition();
+
+    blockSignals(false);
+}
+
+void ToStateTab::list_to_states_in_current_transition() {
+    auto to_state_number = current_transition.getToState().size();
+    size_t row_number = 0;
+    for (auto to_state : current_transition.getToState() ) {
+        auto to_state_name = to_state.first;
+        auto to_state_weight = to_state.second;
+
+        QComboBox* state_comboBox = new QComboBox;
+        for (auto state : implPtr->states) {
+            state_comboBox->addItem( QString::fromStdString(state.getName() ));
+        }
+        auto index = state_comboBox->findText(QString::fromStdString(to_state_name) );
+        if (index >= 0) {
+            state_comboBox->setCurrentIndex(index);
+        } else {
+            state_comboBox->setCurrentIndex(0);
+        }
+        setCellWidget(row_number, 0, state_comboBox);
+
+        setItem(row_number, 1, new QTableWidgetItem(QString::number(to_state_weight)));
+
+        QPushButton* delete_button = new QPushButton("Delete", this);
+        setCellWidget(row_number, 2, delete_button);
+        connect(
+            delete_button,
+            &QAbstractButton::clicked,
+            [this, to_state_name](){
+                std::cout << "deleting" << to_state_name << std::endl;
+                this->current_transition.deleteToState(to_state_name);
+                std::cout << "deleted" << std::endl;
+                update();
+            }
+        );
+
+        row_number++;
+    }
+}
+
+void ToStateTab::add_button_clicked() {
+    save();
+    // insert an empty to_state key
+    current_transition.addToState("");
+}
+
+void ToStateTab::save() {
+    blockSignals(true);
+    current_transition.clearToState();
+    auto row_count = rowCount() - 1;
+    for (auto row = 0; row < row_count; row++) {
+        QComboBox* current_to_state_combo = static_cast<QComboBox*>(cellWidget(row, 0));
+        std::string to_state_name = current_to_state_combo->currentText().toStdString();
+
+        QTableWidgetItem* weight_item = item(row, 1);
+        bool OK_status;
+        double to_state_weight = weight_item->text().toDouble(&OK_status);
+        if(!OK_status) {
+            std::cout << "Error in saving ToStateTab, invalid weight provided!" << std::endl;
+            continue;
+        }
+        current_transition.addToState(to_state_name, to_state_weight);
+    }
+    blockSignals(false);
+}
