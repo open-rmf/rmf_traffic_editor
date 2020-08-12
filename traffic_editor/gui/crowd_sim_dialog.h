@@ -178,4 +178,22 @@ private:
     void ok_button_clicked() override;
 };
 
+class ConditionDialog : public CrowdSimDialog 
+{
+public:
+    ConditionDialog(crowd_sim::Transition& transition, CrowdSimImplPtr crowd_sim_impl);
+    ~ConditionDialog() {}
+
+
+private:
+    crowd_sim::Transition& current_transition;
+    void ok_button_clicked() override;
+
+    QComboBox* root_type;
+    QLineEdit* root_value;
+
+    QComboBox* condition1_type, condition2_type;
+    QLineEdit* condition1_value, condition2_value;
+};
+
 #endif

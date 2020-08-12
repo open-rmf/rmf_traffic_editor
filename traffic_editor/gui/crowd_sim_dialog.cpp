@@ -607,11 +607,15 @@ void TransitionTab::list_transition_in_impl() {
 
         QPushButton* condition_edit = new QPushButton("Edit", this);
         setCellWidget(i, 4, condition_edit);
-        // connect(
-        //     condition_edit,
-        //     &QAbstrctButton::clicked,
-        //     [](){}
-        // );   
+        connect(
+            condition_edit,
+            &QAbstractButton::clicked,
+            [this, &transition](){
+                ConditionDialog condition_dialog(transition, this->implPtr);
+                condition_dialog.exec();
+                update();
+            }
+        );
 
         QPushButton* delete_button = new QPushButton("delete", this);
         setCellWidget(i, 5, delete_button);
@@ -750,9 +754,7 @@ void ToStateTab::list_to_states_in_current_transition() {
             delete_button,
             &QAbstractButton::clicked,
             [this, to_state_name](){
-                std::cout << "deleting" << to_state_name << std::endl;
                 this->current_transition.deleteToState(to_state_name);
-                std::cout << "deleted" << std::endl;
                 update();
             }
         );
@@ -785,4 +787,20 @@ void ToStateTab::save() {
         current_transition.addToState(to_state_name, to_state_weight);
     }
     blockSignals(false);
+}
+
+ConditionDialog::ConditionDialog(crowd_sim::Transition& transition, CrowdSimImplPtr crowd_sim_impl)
+    : CrowdSimDialog(crowd_sim_impl), current_transition(transition)
+{
+    
+    setWindowTitle("Transition Condition Setup" );
+
+    QHBoxLayout* root_condition = new QHBoxLayout;
+
+    top_vbox->addLayout(bottom_buttons_hbox);
+
+}
+
+void ConditionDialog::ok_button_clicked() {
+    accept();
 }
