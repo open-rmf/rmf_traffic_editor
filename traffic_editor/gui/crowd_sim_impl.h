@@ -11,10 +11,20 @@ namespace crowd_sim {
 class State;
 class GoalSet;
 class Condition;
+class ConditionAND;
+class ConditionOR;
+class ConditionNOT;
+class ConditionGOAL;
+class ConditionTIMER;
 
 using StatePtr = std::shared_ptr<State>;
 using GoalSetPtr = std::shared_ptr<GoalSet>;
 using ConditionPtr = std::shared_ptr<Condition>;
+using ConditionAndPtr = std::shared_ptr<ConditionAND>;
+using ConditionOrPtr = std::shared_ptr<ConditionOR>;
+using ConditionNotPtr = std::shared_ptr<ConditionNOT>;
+using ConditionGoalPtr = std::shared_ptr<ConditionGOAL>;
+using ConditionTimerPtr = std::shared_ptr<ConditionTIMER>;
 
 //=========================================================
 class State
@@ -83,15 +93,11 @@ public:
 class Condition
 {
 public:
-    Condition() {}
+    Condition() {
+        name = "base_condition";
+        type = BASE;
+    }
     ~Condition() {}
-
-    virtual std::string getConditionName() {
-        return name;
-    }
-    virtual bool isValid() {
-        return false;
-    }
 
     enum TYPE {
         BASE,
@@ -101,8 +107,19 @@ public:
         OR,
         NOT
     } type;
-    
-    std::string name = "base_condition";
+
+    std::string name;
+
+    virtual std::string getConditionName() {
+        return name;
+    }
+    virtual TYPE getType() {
+        return type;
+    }
+    virtual bool isValid() {
+        return false;
+    }
+
 };
 
 class ConditionGOAL : public Condition 
@@ -114,11 +131,11 @@ public:
     }
     ~ConditionGOAL() {}
 
-    void setDistance(double distance) {
+    void setValue(double distance) {
         this->distance = distance;
     }
 
-    double getDistance() {
+    double getValue() {
         return distance;
     }
 
@@ -130,19 +147,19 @@ private:
     double distance = 0.1;
 };
 
-class ConditionTimer : public Condition {
+class ConditionTIMER : public Condition {
 public:
-    ConditionTimer() {
+    ConditionTIMER() {
         type = TIMER;
         name = "timer";
     }
-    ~ConditionTimer() {}
+    ~ConditionTIMER() {}
 
-    void setDuration(double value) {
+    void setValue(double value) {
         this->duration = value;
     }
 
-    double getDuration() {
+    double getValue() {
         return this->duration;
     }
 
@@ -169,9 +186,22 @@ public:
     }
     ~ConditionAND() {}
 
-    void setConditions(ConditionPtr condition1, ConditionPtr condition2) {
-        this->condition1 = condition1;
-        this->condition2 = condition2;
+    void setCondition(ConditionPtr condition, int condition_index){
+        if (condition_index == 1) {
+            this->condition1 = condition;
+        } 
+        if (condition_index == 2) {
+            this->condition2 = condition;
+        }
+    }
+
+    ConditionPtr getCondition(int condition_index) {
+        if (condition_index == 1) {
+            return this->condition1;
+        } 
+        if (condition_index == 2) {
+            return this->condition2;
+        }
     }
 
     bool isValid() override {
@@ -195,9 +225,22 @@ public:
     }
     ~ConditionOR() {}
 
-    void setConditions(ConditionPtr condition1, ConditionPtr condition2) {
-        this->condition1 = condition1;
-        this->condition2 = condition2;
+    void setCondition(ConditionPtr condition, int condition_index){
+        if (condition_index == 1) {
+            this->condition1 = condition;
+        } 
+        if (condition_index == 2) {
+            this->condition2 = condition;
+        }
+    }
+
+    ConditionPtr getCondition(int condition_index) {
+        if (condition_index == 1) {
+            return this->condition1;
+        } 
+        if (condition_index == 2) {
+            return this->condition2;
+        }
     }
 
     bool isValid() override {
@@ -212,18 +255,22 @@ private:
     ConditionPtr condition2;
 };
 
-class ConditionNot : public Condition
+class ConditionNOT : public Condition
 {
 public:
-    ConditionNot() {
+    ConditionNOT() {
         type = NOT;
         name = "not";
     }
-    ~ConditionNot() {}
+    ~ConditionNOT() {}
 
-    void setConditions(ConditionPtr condition1) {
+    void setCondition(ConditionPtr condition1) {
         this->condition1 = condition1;
     } 
+
+    ConditionPtr getCondition() {
+        return this->condition1;
+    }
 
     bool isValid() override {
         if(condition1 && condition1->isValid()) {

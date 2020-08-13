@@ -581,7 +581,6 @@ void TransitionTab::list_transition_in_impl() {
         QComboBox* from_state_comboBox = new QComboBox;
         list_from_states_in_combo(from_state_comboBox, from_state_name);
         setCellWidget(i, 0, from_state_comboBox);
-        // setItem(i, 0, new QTableWidgetItem(QString::fromStdString(from_state_name)));
 
         auto to_state = transition.getToState();
         std::string to_state_name = "";
@@ -794,13 +793,313 @@ ConditionDialog::ConditionDialog(crowd_sim::Transition& transition, CrowdSimImpl
 {
     
     setWindowTitle("Transition Condition Setup" );
+    // root condition comboBox
+    QHBoxLayout* root_condition_type = new QHBoxLayout;
+    root_type = new QComboBox;
+    root_type->addItem("base_condition(invalid)");
+    root_type->addItem("goal_reached");
+    root_type->addItem("timer");
+    root_type->addItem("and");
+    root_type->addItem("or");
+    root_type->addItem("not");
 
-    QHBoxLayout* root_condition = new QHBoxLayout;
+    connect(
+        root_type,
+        QOverload<int>::of(&QComboBox::activated),
+        [this](int index) {
+            if (index == 0) { //"base_condition(invalid)"
+                this->root_condition_value_container->setEnabled(false);
+                this->condition1_container->setEnabled(false);
+                this->condition2_container->setEnabled(false);
+                return;          
+            }
+            if (index == 1 || index == 2) {//"goal_reached" || "timer"
+                this->root_condition_value_container->setEnabled(true);
+                this->condition1_container->setEnabled(false);
+                this->condition2_container->setEnabled(false);
 
+                if (index == 1 ) { //"goal_reached"
+                    if(current_transition.getCondition()->getType() == crowd_sim::Condition::GOAL) return;
+                    current_transition.setCondition(
+                        static_cast<crowd_sim::ConditionPtr>(std::make_shared<crowd_sim::ConditionGOAL>() ) );
+                }
+                if (index == 2 ) { //"timer"
+                    if(current_transition.getCondition()->getType() == crowd_sim::Condition::TIMER) return;
+                    current_transition.setCondition(
+                        static_cast<crowd_sim::ConditionPtr>(std::make_shared<crowd_sim::ConditionTIMER>() ) );
+                }
+                return;
+            }
+            if (index == 3 || index == 4) { //"and" || "or"
+                this->root_condition_value_container->setEnabled(false);
+                this->condition1_container->setEnabled(true);
+                this->condition2_container->setEnabled(true);
+
+                if (index == 3 ) { //"and"
+                    if(current_transition.getCondition()->getType() == crowd_sim::Condition::AND) return;
+                    current_transition.setCondition(
+                        static_cast<crowd_sim::ConditionPtr>(std::make_shared<crowd_sim::ConditionAND>() ) );
+                }
+                if (index == 4 ) { //"or"
+                    if(current_transition.getCondition()->getType() == crowd_sim::Condition::OR) return;
+                    current_transition.setCondition(
+                        static_cast<crowd_sim::ConditionPtr>(std::make_shared<crowd_sim::ConditionOR>() ) );
+                }
+                return;
+            }
+            if (index == 5 ) { //"not"
+                this->root_condition_value_container->setEnabled(false);
+                this->condition1_container->setEnabled(true);
+                this->condition2_container->setEnabled(false);
+
+                if(current_transition.getCondition()->getType() == crowd_sim::Condition::NOT) return;
+                current_transition.setCondition(
+                    static_cast<crowd_sim::ConditionPtr>(std::make_shared<crowd_sim::ConditionNOT>() ) );
+                return;
+            }
+        }
+    );
+
+    root_condition_type->addWidget(new QLabel("Condition type:"));
+    root_condition_type->addWidget(root_type);
+
+    // root condition value container
+    root_condition_value_container = new QWidget;
+    QHBoxLayout* root_condition_value = new QHBoxLayout(root_condition_value_container);
+    root_value = new QLineEdit(QString::number(rootValueD));
+    root_condition_value->addWidget(new QLabel("Value (duration(s) / goal distance(m))"));
+    root_condition_value->addWidget(root_value);
+    connect(
+        root_value,
+        &QLineEdit::editingFinished,
+        [&]() {
+            bool OK_status;
+            double temp = root_value->text().toDouble(&OK_status);
+            if(!OK_status) {
+                std::cout << "Invalid condition value input!" << std::endl;
+                return;
+            }
+            auto root_condition = current_transition.getCondition();
+            // save to condition
+            if (crowd_sim::Condition::GOAL == root_condition->getType()) {
+                auto goal_condition = std::dynamic_pointer_cast<crowd_sim::ConditionGOAL>(root_condition);
+                goal_condition->setValue(temp);
+            }
+            if(crowd_sim::Condition::TIMER == root_condition->getType()) {
+                auto timer_condition = std::dynamic_pointer_cast<crowd_sim::ConditionTIMER>(root_condition);
+                timer_condition->setValue(temp);
+            }
+        }
+    );
+
+    // 2 condition container
+    condition1_container = new QWidget;
+    construct_leaf_condition_widget(condition1_container, condition1_type, condition1_value, 1);
+    condition2_container = new QWidget;
+    construct_leaf_condition_widget(condition2_container, condition2_type, condition2_value, 2);
+
+    top_vbox->addLayout(root_condition_type);
+    top_vbox->addWidget(root_condition_value_container);
+    top_vbox->addWidget(condition1_container);
+    top_vbox->addWidget(condition2_container);
     top_vbox->addLayout(bottom_buttons_hbox);
+
+    root_condition_value_container->setEnabled(false);
+    condition1_container->setEnabled(false);
+    condition2_container->setEnabled(false);
+
+    update();
 
 }
 
+void ConditionDialog::construct_leaf_condition_widget(
+    QWidget*& condition_container, QComboBox*& condition_type, QLineEdit*& condition_value, int condition_index) {
+
+    QHBoxLayout* condition_hbox = new QHBoxLayout(condition_container);
+    condition_type = new QComboBox;
+    condition_type->addItem("goal_reached");
+    condition_type->addItem("timer");
+
+    condition_value = new QLineEdit(QString::number(0));
+    std::string condition_label = "condition" + std::to_string(condition_index) + ":";
+    condition_hbox->addWidget(new QLabel(QString::fromStdString(condition_label) ));
+    condition_hbox->addWidget(condition_type);
+    condition_hbox->addWidget(condition_value);
+    connect(
+        condition_value,
+        &QLineEdit::editingFinished,
+        [this, condition_type, condition_value, condition_index](){
+            bool OK_status;
+            double temp_value = condition_value->text().toDouble(&OK_status);
+            if (!OK_status) {
+                std::cout << "Invalid condition value input!" << std::endl;
+                return;
+            }
+
+            std::cout << "in here" << std::endl;
+
+            if (condition_type->currentIndex() == 0) { //goal_reached condition
+                this->set_sub_condition_in_root_condition(crowd_sim::Condition::GOAL, temp_value, condition_index);
+            }
+            if (condition_type->currentIndex() == 1) { //timer condition
+                this->set_sub_condition_in_root_condition(crowd_sim::Condition::TIMER, temp_value, condition_index);
+            }
+            
+        }
+    );
+}
+
+void ConditionDialog::set_sub_condition_in_root_condition(
+    crowd_sim::Condition::TYPE type, double value, int condition_index) {
+    
+    crowd_sim::ConditionPtr sub_condition = nullptr;
+    if(type == crowd_sim::Condition::GOAL) {
+        sub_condition = std::make_shared<crowd_sim::ConditionGOAL>();
+        auto temp = std::dynamic_pointer_cast<crowd_sim::ConditionGOAL>(sub_condition);
+        temp->setValue(value);
+    }
+    if(type == crowd_sim::Condition::TIMER) {
+        sub_condition = std::make_shared<crowd_sim::ConditionTIMER>();
+        auto temp = std::dynamic_pointer_cast<crowd_sim::ConditionTIMER>(sub_condition);
+        temp->setValue(value);
+    }
+
+    if(!sub_condition) {
+        std::cout << "Invalid sub condition!" << std::endl;
+        return;
+    }
+
+    crowd_sim::ConditionPtr root_condition = this->current_transition.getCondition();
+    if (crowd_sim::Condition::AND == root_condition->getType()) {
+        crowd_sim::ConditionAndPtr temp = std::dynamic_pointer_cast<crowd_sim::ConditionAND>(root_condition);
+        temp->setCondition(sub_condition, condition_index);
+    }
+    if (crowd_sim::Condition::OR == root_condition->getType()) {
+        crowd_sim::ConditionOrPtr temp = std::dynamic_pointer_cast<crowd_sim::ConditionOR>(root_condition);
+        temp->setCondition(sub_condition, condition_index);
+    }
+    if (crowd_sim::Condition::NOT == root_condition->getType()) {
+        crowd_sim::ConditionNotPtr temp = std::dynamic_pointer_cast<crowd_sim::ConditionNOT>(root_condition);
+        temp->setCondition(sub_condition);
+    }
+    
+}
+
+void ConditionDialog::initialize_sub_condition(
+    crowd_sim::ConditionPtr sub_condition, double value) {
+    if (!sub_condition) {
+        std::cout << "Invalid sub condition!" << std::endl;
+        return;
+    }
+    
+    if (crowd_sim::Condition::GOAL == sub_condition->getType()) { //goal_reached condition
+        crowd_sim::ConditionGoalPtr temp = std::dynamic_pointer_cast<crowd_sim::ConditionGOAL>(sub_condition);
+        if (value > 0) temp->setValue(value);
+    }
+    if (crowd_sim::Condition::TIMER == sub_condition->getType()) { //timer condition
+        crowd_sim::ConditionTimerPtr temp = std::dynamic_pointer_cast<crowd_sim::ConditionTIMER>(sub_condition);
+        if (value > 0) temp->setValue(value);
+    }
+    if (!sub_condition) {
+        std::cout << "Empty sub condition!" << std::endl;
+        return;
+    }
+}
+
 void ConditionDialog::ok_button_clicked() {
+    save();
     accept();
+}
+
+void ConditionDialog::save() {
+
+}
+
+void ConditionDialog::update() {
+    crowd_sim::ConditionPtr root_condition = current_transition.getCondition();
+
+    switch (root_condition->getType()) {
+        case crowd_sim::Condition::GOAL : 
+            root_type->setCurrentIndex(1);
+            break;
+        case crowd_sim::Condition::TIMER :
+            root_type->setCurrentIndex(2);
+            break;
+        case crowd_sim::Condition::AND :
+            root_type->setCurrentIndex(3);
+            break;
+        case crowd_sim::Condition::OR :
+            root_type->setCurrentIndex(4);
+            break;
+        case crowd_sim::Condition::NOT :
+            root_type->setCurrentIndex(5);
+            break;
+        default:
+            root_type->setCurrentIndex(0);
+    }
+
+    if (crowd_sim::Condition::GOAL == root_condition->getType()) {
+        auto goal_condition = std::dynamic_pointer_cast<crowd_sim::ConditionGOAL>(root_condition);
+        rootValueD = goal_condition->getValue();
+    }
+    if(crowd_sim::Condition::TIMER == root_condition->getType()) {
+        auto timer_condition = std::dynamic_pointer_cast<crowd_sim::ConditionTIMER>(root_condition);
+        rootValueD = timer_condition->getValue();
+    }
+    root_value->setText(QString::number(rootValueD));
+
+    if(crowd_sim::Condition::NOT == root_condition->getType()) {
+        auto not_condition = std::dynamic_pointer_cast<crowd_sim::ConditionNOT>(root_condition);
+        auto sub_condition = not_condition->getCondition();
+        if (crowd_sim::Condition::GOAL == sub_condition->getType()) {
+            condition1ValueD = std::dynamic_pointer_cast<crowd_sim::ConditionGOAL>(sub_condition)->getValue();
+        }
+        if (crowd_sim::Condition::TIMER == sub_condition->getType()) {
+            condition1ValueD = std::dynamic_pointer_cast<crowd_sim::ConditionTIMER>(sub_condition)->getValue();
+        }
+    }
+
+    if(crowd_sim::Condition::AND == root_condition->getType() ) {
+        auto and_condition = std::dynamic_pointer_cast<crowd_sim::ConditionAND>(root_condition);
+        for (int i = 1; i <= 2; i++) {
+            auto sub_condition = and_condition->getCondition(i);
+            double temp_value;
+            if (crowd_sim::Condition::GOAL == sub_condition->getType()) {
+                temp_value = std::dynamic_pointer_cast<crowd_sim::ConditionGOAL>(sub_condition)->getValue();
+            }
+            if (crowd_sim::Condition::TIMER == sub_condition->getType()) {
+                temp_value = std::dynamic_pointer_cast<crowd_sim::ConditionTIMER>(sub_condition)->getValue();
+            }
+            if (i == 1) {
+                condition1ValueD = temp_value;
+            }
+            if (i == 2) {
+                condition2ValueD = temp_value;
+            }
+        }
+    }
+
+    if(crowd_sim::Condition::OR == root_condition->getType() ) {
+        auto or_condition = std::dynamic_pointer_cast<crowd_sim::ConditionOR>(root_condition);
+        for (int i = 1; i <= 2; i++) {
+            auto sub_condition = or_condition->getCondition(i);
+            double temp_value;
+            if (crowd_sim::Condition::GOAL == sub_condition->getType()) {
+                temp_value = std::dynamic_pointer_cast<crowd_sim::ConditionGOAL>(sub_condition)->getValue();
+            }
+            if (crowd_sim::Condition::TIMER == sub_condition->getType()) {
+                temp_value = std::dynamic_pointer_cast<crowd_sim::ConditionTIMER>(sub_condition)->getValue();
+            }
+            if (i == 1) {
+                condition1ValueD = temp_value;
+            }
+            if (i == 2) {
+                condition2ValueD = temp_value;
+            }
+        }
+    }
+
+    condition1_value->setText(QString::number(condition1ValueD));
+    condition2_value->setText(QString::number(condition2ValueD));
+
 }

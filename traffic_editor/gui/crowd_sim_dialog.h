@@ -184,16 +184,31 @@ public:
     ConditionDialog(crowd_sim::Transition& transition, CrowdSimImplPtr crowd_sim_impl);
     ~ConditionDialog() {}
 
-
 private:
-    crowd_sim::Transition& current_transition;
     void ok_button_clicked() override;
+    void save();
+    void update();
 
-    QComboBox* root_type;
-    QLineEdit* root_value;
+    void construct_leaf_condition_widget(
+        QWidget*& condition_container, QComboBox*& condition_type, QLineEdit*& condition_value, int condition_index);
 
-    QComboBox* condition1_type, condition2_type;
-    QLineEdit* condition1_value, condition2_value;
+    void set_sub_condition_in_root_condition(
+        crowd_sim::Condition::TYPE type, double value, int condition_index);
+
+    void initialize_sub_condition(
+        crowd_sim::ConditionPtr sub_condition, double value = -1.0);
+
+    crowd_sim::Transition& current_transition;
+    QComboBox *root_type;
+    QLineEdit *root_value;
+    double rootValueD = 0;
+
+    QComboBox *condition1_type, *condition2_type;
+    QLineEdit *condition1_value, *condition2_value;
+    double condition1ValueD = 0, condition2ValueD = 0;
+
+    QWidget *root_condition_value_container, *condition1_container, *condition2_container;
+
 };
 
 #endif
