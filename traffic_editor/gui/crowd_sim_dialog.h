@@ -133,7 +133,7 @@ private:
 
     void add_button_clicked();
     void list_transition_in_impl();
-    void list_from_states_in_combo(QComboBox* comboBox, std::string current_state);
+    void list_from_states_in_combo(QComboBox*& comboBox, crowd_sim::Transition& transition);
 };
 
 class TransitionDialog : public CrowdSimDialog

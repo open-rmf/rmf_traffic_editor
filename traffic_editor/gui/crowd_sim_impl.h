@@ -1,6 +1,7 @@
 #ifndef CROWD_SIM_IMPL__H
 #define CROWD_SIM_IMPL__H
 
+#include <iostream>
 #include <string>
 #include <vector>
 #include <set>
@@ -208,6 +209,7 @@ public:
         if(condition1 && condition2 && condition1->isValid() && condition2->isValid()) {
             return true;
         }
+        std::cout << "Invalid and condition" << std::endl;
         return false;
     }
 
@@ -247,6 +249,7 @@ public:
         if(condition1 && condition2 && condition1->isValid() && condition2->isValid()) {
             return true;
         }
+        std::cout << "Invalid or condition" << std::endl;
         return false;
     }
 
@@ -276,6 +279,7 @@ public:
         if(condition1 && condition1->isValid()) {
             return true;
         }
+        std::cout << "Invalid not condition" << std::endl;
         return false;
     }
 
@@ -327,6 +331,7 @@ public:
         if (condition && condition->isValid() && to_state_name.size() > 0 && from_state_name.size() > 0) {
             return true;
         } 
+        std::cout << "Invalid transition" << std::endl;
         return false;
     }
 

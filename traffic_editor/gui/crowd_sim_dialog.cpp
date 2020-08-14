@@ -577,9 +577,8 @@ void TransitionTab::list_transition_in_impl() {
     for (auto i = 0; i < transition_number; i++) {
         auto& transition = implPtr->transitions[i];
 
-        auto from_state_name = transition.getFromState();
         QComboBox* from_state_comboBox = new QComboBox;
-        list_from_states_in_combo(from_state_comboBox, from_state_name);
+        list_from_states_in_combo(from_state_comboBox, transition);
         setCellWidget(i, 0, from_state_comboBox);
 
         auto to_state = transition.getToState();
@@ -629,19 +628,28 @@ void TransitionTab::list_transition_in_impl() {
     }
 }
 
-void TransitionTab::list_from_states_in_combo(QComboBox* comboBox, std::string current_state) {
+void TransitionTab::list_from_states_in_combo(QComboBox*& comboBox, crowd_sim::Transition& transition) {
     for (auto state : implPtr->states) {
         if(state.getFinalState()) { //transitions end up with final state
             continue;
         }
         comboBox->addItem(QString::fromStdString(state.getName() ) );
     }
-    auto index = comboBox->findText(QString::fromStdString(current_state) );
+    auto index = comboBox->findText(QString::fromStdString(transition.getFromState()) );
     if (index >= 0) {
         comboBox->setCurrentIndex(index);
     } else {
         comboBox->setCurrentIndex(0);
     }
+
+    connect(
+        comboBox,
+        QOverload<int>::of(&QComboBox::activated),
+        [this, comboBox, &transition](int index) {
+            auto state_name = comboBox->itemText(index).toStdString();
+            transition.setFromState(state_name);
+        }
+    );
 }
 
 void TransitionTab::save() {
