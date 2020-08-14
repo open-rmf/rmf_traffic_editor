@@ -395,7 +395,7 @@ private:
     size_t group_id;
     bool is_external_group = false;
     double spawn_point_x;
-    double spwan_point_y;
+    double spawn_point_y;
     int spawn_number = 0;
     std::vector<std::string> external_agent_name;
 
@@ -421,7 +421,7 @@ public:
     std::vector<GoalSet> goal_sets;
     std::vector<Transition> transitions;
     std::vector<AgentProfile> agent_profiles;
-    // std::vector<AgentGroup> agent_groups;
+    std::vector<AgentGroup> agent_groups;
     // std::vector<ModelType> model_types;
 
     std::set<std::string> goal_areas;

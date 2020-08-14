@@ -1116,5 +1116,45 @@ void ConditionDialog::update() {
 
     condition1_value->setText(QString::number(condition1ValueD));
     condition2_value->setText(QString::number(condition2ValueD));
+}
+
+//============================================================================
+AgentGroupDialog::AgentGroupDialog(CrowdSimImplPtr crowd_sim_impl)
+    : CrowdSimDialog(crowd_sim_impl)
+{
+    agent_group_tab = std::make_shared<AgentGroupTab>(crowd_sim_impl);
+    agent_group_tab->update();
+
+    setWindowTitle("Agent Group");
+
+    QHBoxLayout* table_box = new QHBoxLayout;
+    table_box->addWidget(agent_group_tab.get());
+
+    top_vbox->addLayout(table_box);
+    top_vbox->addLayout(bottom_buttons_hbox);
+}
+
+AgentGroupTab::AgentGroupTab(CrowdSimImplPtr crowd_sim_impl) 
+    : TableList(8), implPtr(crowd_sim_impl)
+{
+    const QStringList labels = {
+        "id", "profile", "initial state", "spawn number", "external agent", "point_x", "point_y", ""
+    };
+    label_size = labels.size();
+    setHorizontalHeaderLabels(labels);
+    setMinimumSize(800, 400);
+}
+
+void AgentGroupTab::update() {
+
 
 }
+
+void AgentGroupTab::save() {
+
+}
+
+void AgentGroupTab::add_button_clicked() {
+
+}
+

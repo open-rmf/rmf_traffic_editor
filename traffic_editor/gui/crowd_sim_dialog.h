@@ -212,6 +212,30 @@ private:
 };
 
 //===========================================================
+class AgentGroupTab : public TableList
+{
+public: 
+    AgentGroupTab(CrowdSimImplPtr crowd_sim_impl);
+    ~AgentGroupTab() {}
 
+    void update();
+    void save();
+
+private:
+    CrowdSimImplPtr implPtr;
+    int label_size;
+    void add_button_clicked();
+};
+
+class AgentGroupDialog : public CrowdSimDialog
+{
+public:
+    AgentGroupDialog(CrowdSimImplPtr crowd_sim_impl);
+    ~AgentGroupDialog() {}
+
+private:
+    std::shared_ptr<AgentGroupTab> agent_group_tab;
+
+};
 
 #endif
