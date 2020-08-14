@@ -370,7 +370,26 @@ public:
         return external_agent_name;
     }
 
-    
+    void setSpawnNumber(int number) {
+        spawn_number = number;
+    }
+    int getSpawnNumber() {
+        return spawn_number;
+    }
+
+    void setAgentProfile(std::string profile) {
+        agent_profile = profile;
+    }
+    std::string getAgentProfile() {
+        return agent_profile;
+    }
+
+    void setInitialState(std::string state) {
+        initial_state = state;
+    }
+    std::string getInitialState() {
+        return initial_state;
+    }
 
 private:
     size_t group_id;
