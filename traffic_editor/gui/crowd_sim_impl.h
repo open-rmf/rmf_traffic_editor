@@ -7,6 +7,7 @@
 #include <set>
 #include <map>
 #include <memory>
+#include <algorithm>
 
 namespace crowd_sim {
 class State;
@@ -340,6 +341,47 @@ private:
     //output states with weights
     ToStateType to_state_name;
     ConditionPtr condition;
+};
+
+//=========================================================
+class AgentGroup
+{
+public:
+    AgentGroup(size_t group_id, bool is_external_group = false);
+    ~AgentGroup() {}
+
+    bool isValid() {
+        return agent_profile.size() > 0 && initial_state.size() > 0;
+    }
+
+    void setSpawnPoint(double x, double y) {
+        spawn_point_x = x;
+        spawn_point_y = y;
+    }
+    std::pair<double, double> getSpawnPoint() {
+        return std::pair<double, double>(spawn_point_x, spawn_point_y);
+    }
+
+    void setExternalAgentName(std::vector<std::string> external_name) {
+        external_agent_name.clear();
+        std::copy(external_name.begin(), external_name.end(), external_agent_name.begin());
+    }
+    std::vector<std::string> getExternalAgentName() {
+        return external_agent_name;
+    }
+
+    
+
+private:
+    size_t group_id;
+    bool is_external_group = false;
+    double spawn_point_x;
+    double spwan_point_y;
+    int spawn_number = 0;
+    std::vector<std::string> external_agent_name;
+
+    std::string agent_profile;
+    std::string initial_state;
 };
 
 //=========================================================
