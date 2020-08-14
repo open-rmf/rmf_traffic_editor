@@ -117,6 +117,8 @@ void CrowdSimTable::update()
 {   
     update_goal_area();
     update_navmesh_level();
+    update_external_agent_from_spawn_point();
+    update_external_agent_state();
 
     blockSignals(true);
 
@@ -169,4 +171,29 @@ void CrowdSimTable::update_navmesh_level() {
     for (auto level : project.building.levels) {
         crowd_sim_impl->navmesh_filename_list.emplace_back(level.name + "_navmesh.nav");
     }
+}
+
+void CrowdSimTable::update_external_agent_from_spawn_point() {
+    std::vector<std::string> spawn_point_name;
+    // currently only for 1 level!
+    for (auto level : project.building.levels) {
+        for (auto vertex : level.vertices) {
+            if (vertex.params.find("spawn_robot_name") != vertex.params.end()) {
+                spawn_point_name.emplace_back(vertex.params["spawn_robot_name"].value_string);
+            }
+        }
+    }
+    if(crowd_sim_impl->agent_groups.size() == 0) {
+        crowd_sim_impl->agent_groups.emplace_back(0, true);
+    }
+    auto& external_group = crowd_sim_impl->agent_groups.at(0);
+    external_group.setExternalAgentName(spawn_point_name);
+}
+
+void CrowdSimTable::update_external_agent_state() {
+    if(crowd_sim_impl->states.size() == 0) {
+        crowd_sim_impl->states.emplace_back("external_static");
+    }
+    auto& external_state = crowd_sim_impl->states.at(0);
+    external_state.setFinalState(true);
 }

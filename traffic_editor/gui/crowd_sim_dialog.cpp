@@ -96,7 +96,15 @@ void StatesTab::list_states_in_impl() {
 
     auto states_number = implPtr->states.size();
 
-    for (size_t i = 0; i < states_number; i++) {
+    //row 0 for external_state
+    auto& current_state = implPtr->states.at(0);
+    setItem(0, 0, new QTableWidgetItem(QString::fromStdString(current_state.getName() )));
+    setItem(0, 1, new QTableWidgetItem(QString::number(current_state.getFinalState()? 1:0 )));
+    setItem(0, 2, new QTableWidgetItem(QString::fromStdString("")));
+    setItem(0, 3, new QTableWidgetItem(QString::fromStdString("")));
+    setItem(0, 4, new QTableWidgetItem(QString::fromStdString("")));
+
+    for (size_t i = 1; i < states_number; i++) {
         auto& current_state = implPtr->states.at(i);
         setItem(i, 0, new QTableWidgetItem(QString::fromStdString(current_state.getName()) ) );
 
@@ -1146,8 +1154,28 @@ AgentGroupTab::AgentGroupTab(CrowdSimImplPtr crowd_sim_impl)
 }
 
 void AgentGroupTab::update() {
+    blockSignals(true);
+    clearContents();
+    auto group_number = implPtr->agent_groups.size();
+    setRowCount(1 + group_number);
 
+    list_agent_group_in_impl();
 
+    QPushButton* add_button = new QPushButton("Add...", this);
+    for (auto i = 0; i < label_size-1; i++) {
+        setItem(group_number, i, new QTableWidgetItem(QString::fromStdString("")));
+    }
+    setCellWidget(group_number, label_size-1, add_button);
+    connect(
+        add_button,
+        &QAbstractButton::clicked,
+        [&]() {
+            add_button_clicked();
+            update();
+        }
+    );
+
+    blockSignals(false);
 }
 
 void AgentGroupTab::save() {
@@ -1155,6 +1183,39 @@ void AgentGroupTab::save() {
 }
 
 void AgentGroupTab::add_button_clicked() {
-
+    save();
+    size_t new_id = 0;
+    if(implPtr->agent_groups.size() > 0) {
+        new_id = implPtr->agent_groups.back().getGroupId() + 1;
+    }
+    implPtr->agent_groups.emplace_back(new_id); //no external agent group added manually
 }
 
+void AgentGroupTab::list_agent_group_in_impl() {
+    auto group_number = implPtr->agent_groups.size();
+
+    for (auto row = 0; row < group_number; row++) {
+        auto& current_group = implPtr->agent_groups.at(row);
+        
+        setItem(row, 0, new QTableWidgetItem(QString::number(static_cast<int>(current_group.getGroupId()) )));
+        setItem(row, 1, new QTableWidgetItem(QString::fromStdString(current_group.getAgentProfile() )));
+        setItem(row, 2, new QTableWidgetItem(QString::fromStdString(current_group.getInitialState() )));
+        setItem(row, 3, new QTableWidgetItem(QString::number(current_group.getSpawnNumber() )));
+        std::string external_agent_name = "";
+        if (current_group.isExternalGroup()) {
+            for (auto name : current_group.getExternalAgentName()) {
+                external_agent_name += name + ";";
+            }
+        }
+        setItem(row, 4, new QTableWidgetItem(QString::fromStdString(external_agent_name) ));
+        auto spawn_point = current_group.getSpawnPoint();
+        setItem(row, 5, new QTableWidgetItem(QString::number(spawn_point.first)));
+        setItem(row, 6, new QTableWidgetItem(QString::number(spawn_point.second)));
+
+        QPushButton* delete_button = new QPushButton("Delete", this);
+        setCellWidget(row, 7, delete_button);
+        //connect();
+
+    }
+
+}

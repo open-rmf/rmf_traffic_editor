@@ -46,6 +46,7 @@ public:
 
     void update();
     int save();
+    
 private:
     CrowdSimImplPtr implPtr;
     int label_size = 0;
@@ -225,6 +226,7 @@ private:
     CrowdSimImplPtr implPtr;
     int label_size;
     void add_button_clicked();
+    void list_agent_group_in_impl();
 };
 
 class AgentGroupDialog : public CrowdSimDialog

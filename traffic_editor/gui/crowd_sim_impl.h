@@ -7,7 +7,6 @@
 #include <set>
 #include <map>
 #include <memory>
-#include <algorithm>
 
 namespace crowd_sim {
 class State;
@@ -347,11 +346,21 @@ private:
 class AgentGroup
 {
 public:
-    AgentGroup(size_t group_id, bool is_external_group = false);
+    AgentGroup(size_t group_id, bool is_external_group = false) 
+        : group_id(group_id), is_external_group(is_external_group)
+    {}
     ~AgentGroup() {}
 
     bool isValid() {
         return agent_profile.size() > 0 && initial_state.size() > 0;
+    }
+
+    bool isExternalGroup() {
+        return is_external_group;
+    }
+
+    size_t getGroupId() {
+        return group_id;
     }
 
     void setSpawnPoint(double x, double y) {
@@ -362,9 +371,12 @@ public:
         return std::pair<double, double>(spawn_point_x, spawn_point_y);
     }
 
-    void setExternalAgentName(std::vector<std::string> external_name) {
+    void setExternalAgentName(std::vector<std::string>& external_name) {
         external_agent_name.clear();
-        std::copy(external_name.begin(), external_name.end(), external_agent_name.begin());
+        for (auto name : external_name) {
+            external_agent_name.emplace_back(name);
+        }
+        spawn_number = static_cast<int>(external_agent_name.size());
     }
     std::vector<std::string> getExternalAgentName() {
         return external_agent_name;
@@ -394,13 +406,13 @@ public:
 private:
     size_t group_id;
     bool is_external_group = false;
-    double spawn_point_x;
-    double spawn_point_y;
+    double spawn_point_x = 0.0;
+    double spawn_point_y = 0.0;
     int spawn_number = 0;
-    std::vector<std::string> external_agent_name;
+    std::vector<std::string> external_agent_name = {};
 
-    std::string agent_profile;
-    std::string initial_state;
+    std::string agent_profile = "";
+    std::string initial_state = "";
 };
 
 //=========================================================

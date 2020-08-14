@@ -22,6 +22,8 @@ public:
     void update();
     void update_goal_area();
     void update_navmesh_level();
+    void update_external_agent_from_spawn_point();
+    void update_external_agent_state();
 
 private:
     bool enable_crowd_sim = false;
