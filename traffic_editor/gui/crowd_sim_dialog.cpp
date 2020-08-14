@@ -936,8 +936,6 @@ void ConditionDialog::construct_leaf_condition_widget(
                 return;
             }
 
-            std::cout << "in here" << std::endl;
-
             if (condition_type->currentIndex() == 0) { //goal_reached condition
                 this->set_sub_condition_in_root_condition(crowd_sim::Condition::GOAL, temp_value, condition_index);
             }
@@ -1013,6 +1011,15 @@ void ConditionDialog::ok_button_clicked() {
 
 void ConditionDialog::save() {
 
+    if (root_condition_value_container->isEnabled()) {
+        root_value->editingFinished();
+    }
+    if (condition1_container->isEnabled()) {
+        condition1_value->editingFinished();
+    }
+    if (condition2_container->isEnabled()) {
+        condition2_value->editingFinished();
+    }
 }
 
 void ConditionDialog::update() {
