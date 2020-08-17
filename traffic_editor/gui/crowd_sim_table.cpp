@@ -10,6 +10,7 @@
 CrowdSimTable::CrowdSimTable(const Project& input_project) : TableList(3), project(input_project)
 {
     crowd_sim_impl = std::make_shared<crowd_sim::CrowdSimImplementation>();
+    project.building.crowd_sim_impl = crowd_sim_impl;
     update();
 
     const QStringList labels =
