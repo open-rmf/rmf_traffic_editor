@@ -189,15 +189,38 @@ void StatesTab::list_navmesh_file_in_combo(QComboBox* comboBox, std::string navm
 }
 
 void StatesTab::add_button_clicked() {
-    implPtr->states.emplace_back("state" + std::to_string( save() ));
+    save();
+    implPtr->states.emplace_back("new state");
 }
 
 int StatesTab::save() {
     auto rows_count = rowCount();
-    for (auto i = 0; i < rows_count - 1; i++) {
+    //external_state is not allowed to be changed
+    for (auto i = 1; i < rows_count - 1; i++) {
         auto& current_state = implPtr->states.at(i);
+        //state_name
         auto name_item = item(i, 0)->text().toStdString();
         current_state.setName(name_item);
+        //is_final
+        auto final_item = static_cast<QComboBox*>(cellWidget(i, 1))->currentText().toStdString();
+        if (final_item == "1") {
+            current_state.setFinalState(true);
+            continue;
+        }
+        else
+            current_state.setFinalState(false);
+        //navmeshfile_name
+        auto navmeshfile_name = static_cast<QComboBox*>(cellWidget(i, 2))->currentText().toStdString();
+        current_state.setNavmeshFile(navmeshfile_name);
+        //goal_set_id
+        bool OK_status;
+        auto goal_set_id = static_cast<QComboBox*>(cellWidget(i, 3))->currentText().toInt(&OK_status);
+        if(!OK_status && goal_set_id >= 0) {
+            std::cout << "Invalid goal set id provided." << std::endl;
+            continue;
+        }
+        current_state.setGoalSetId(static_cast<size_t>(goal_set_id));
+        
     }
     return rows_count;
 }
@@ -326,7 +349,7 @@ AgentProfileTab::AgentProfileTab(CrowdSimImplPtr crowd_sim_impl)
 }
 
 void AgentProfileTab::add_button_clicked() {
-    auto row_count = save();
+    save();
     implPtr->agent_profiles.emplace_back("new profile");
 }
 
@@ -391,12 +414,10 @@ void AgentProfileTab::update() {
 
 int AgentProfileTab::save() {
     auto row_count = rowCount();
-    implPtr->clearAgentProfile();
-    //ignore the first row of external agent, which has been added in clear agent profile
+    //external_agent profile is not allowed to be changed
     for (auto i = 1; i < row_count - 1; i++) {
         QTableWidgetItem* pItem = item(i, 0);
         auto profile_name = pItem->text();
-        implPtr->agent_profiles.emplace_back(profile_name.toStdString());
         auto& current_profile = implPtr->agent_profiles.at(i);
         
         bool OK_status;

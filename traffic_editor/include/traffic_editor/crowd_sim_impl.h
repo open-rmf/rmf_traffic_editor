@@ -33,42 +33,58 @@ using ConditionTimerPtr = std::shared_ptr<ConditionTIMER>;
 class State
 {
 public:
-    State(std::string state_name);
-    ~State();
+    State(std::string state_name) 
+        : name(state_name),
+        navmesh_file_name(""),
+        is_final_state(true),
+        goal_set_id(-1)
+    {}
+    ~State() {}
 
-    bool isValid();
-    void setNavmeshFile(std::string file_name);
-    void setFinalState(bool is_final);
-    void setGoalSetId(size_t goal_set_id);
-    void setName(std::string name);
+    void setNavmeshFile(std::string file_name) {this->navmesh_file_name = file_name;}
+    void setFinalState(bool is_final) { this->is_final_state = is_final; }
+    void setGoalSetId(size_t goal_set_id) { this->goal_set_id = static_cast<int>(goal_set_id); }
+    void setName(std::string name) { this->name = name; }
 
-    std::string getName();
-    std::string getNavmeshFileName();
-    bool getFinalState();
-    size_t getGoalSetId();
+    bool isValid() const;
+    std::string getName() const {return this->name;}
+    std::string getNavmeshFileName() const {return this->navmesh_file_name;}
+    bool getFinalState() const {return this->is_final_state;}
+    int getGoalSetId() const {return this->goal_set_id;}
 
     YAML::Node to_yaml() const;
 
 private:
-    std::string name = "";
-    std::string navmesh_file_name = "";
-    bool is_final_state = true;
-    size_t goal_set_id = 0;
+    std::string name;
+    std::string navmesh_file_name;
+    bool is_final_state;
+    int goal_set_id;
 };
 
 //=========================================================
 class GoalSet
 {
 public:
-    GoalSet(size_t goal_id);
-    ~GoalSet();
+    GoalSet(size_t goal_id) 
+        : id(goal_id),
+        capacity(1),
+        goal_area_contained({})
+    {}
+    ~GoalSet() {}
 
     void addGoalArea(std::string goal_area_name);
-    std::set<std::string> getGoalAreas();
-    size_t getGoalSetId();
+    void setCapacity(size_t capacity) { this->capacity = capacity; }
+    
+    std::set<std::string> getGoalAreas() const { return this->goal_area_contained; }
+    YAML::Node getGoalAreasToYaml() const;
+    size_t getGoalSetId() const { return this->id; }
+    size_t getCapacity() const {return this->capacity; }
+
+    YAML::Node to_yaml() const;
 
 private:
     size_t id;
+    size_t capacity;
     std::set<std::string> goal_area_contained;
 };
 
@@ -98,12 +114,6 @@ public:
 class Condition
 {
 public:
-    Condition() {
-        name = "base_condition";
-        type = BASE;
-    }
-    ~Condition() {}
-
     enum TYPE {
         BASE,
         GOAL,
@@ -111,29 +121,28 @@ public:
         AND,
         OR,
         NOT
-    } type;
+    };
 
+    Condition() : name("base_condition"), type(BASE) 
+    {}
+    Condition(std::string name, TYPE type) : name(name), type(type)
+    {}
+    virtual ~Condition() {}
+
+    TYPE type;
     std::string name;
 
-    virtual std::string getConditionName() {
-        return name;
-    }
-    virtual TYPE getType() {
-        return type;
-    }
-    virtual bool isValid() {
-        return false;
-    }
+    virtual std::string getConditionName() const { return name; }
+    virtual TYPE getType() const { return type; }
+    virtual bool isValid() const { return false; }
 
 };
 
 class ConditionGOAL : public Condition 
 {
 public:
-    ConditionGOAL() {
-        type = GOAL;
-        name = "goal_reached";
-    }
+    ConditionGOAL() : Condition("goal_reached", GOAL)
+    {}
     ~ConditionGOAL() {}
 
     void setValue(double distance) {
@@ -144,9 +153,7 @@ public:
         return distance;
     }
 
-    bool isValid() override {
-        return true;
-    }
+    bool isValid() const override { return true; }
 
 private:
     double distance = 0.1;
@@ -154,10 +161,8 @@ private:
 
 class ConditionTIMER : public Condition {
 public:
-    ConditionTIMER() {
-        type = TIMER;
-        name = "timer";
-    }
+    ConditionTIMER() : Condition("timer", TIMER) 
+    {}
     ~ConditionTIMER() {}
 
     void setValue(double value) {
@@ -172,9 +177,7 @@ public:
         return this->distribution;
     }
 
-    bool isValid() override {
-        return true;
-    }
+    bool isValid() const override { return true; }
 
 private:
     //currently only provides const value distribution for timer
@@ -185,10 +188,11 @@ private:
 class ConditionAND : public Condition 
 {
 public:
-    ConditionAND() {
-        type = AND;
-        name = "and";
-    }
+    ConditionAND() 
+        : Condition("and", AND), 
+        condition1(std::make_shared<Condition>()), 
+        condition2(std::make_shared<Condition>())
+    {}
     ~ConditionAND() {}
 
     void setCondition(ConditionPtr condition, int condition_index){
@@ -209,7 +213,7 @@ public:
         }
     }
 
-    bool isValid() override {
+    bool isValid() const override {
         if(condition1 && condition2 && condition1->isValid() && condition2->isValid()) {
             return true;
         }
@@ -249,7 +253,7 @@ public:
         }
     }
 
-    bool isValid() override {
+    bool isValid() const override {
         if(condition1 && condition2 && condition1->isValid() && condition2->isValid()) {
             return true;
         }
@@ -279,7 +283,7 @@ public:
         return this->condition1;
     }
 
-    bool isValid() override {
+    bool isValid() const override {
         if(condition1 && condition1->isValid()) {
             return true;
         }
@@ -423,16 +427,27 @@ private:
 class CrowdSimImplementation
 {
 public:
-    CrowdSimImplementation() {
-        external_agent = std::make_shared<AgentProfile>("external_agent");
-        clearAgentProfile();
+    CrowdSimImplementation() 
+        : enable_crowd_sim(false)
+    {
+        initializeState();
+        initializeAgentProfile();
+        initializeAgentGroup();
     }
     ~CrowdSimImplementation() {}
 
     std::vector<std::string> getGoalAreas();
     std::vector<std::string> getNavmeshFileName();
     void clearAgentProfile();
+
+    YAML::Node to_yaml();
+
+    // update from project.building in crowd_sim_table
+    std::set<std::string> goal_areas;
+    std::vector<std::string> navmesh_filename_list;
     
+    // real configurations
+    bool enable_crowd_sim;
     std::vector<State> states;
     std::vector<GoalSet> goal_sets;
     std::vector<Transition> transitions;
@@ -440,11 +455,11 @@ public:
     std::vector<AgentGroup> agent_groups;
     // std::vector<ModelType> model_types;
 
-    std::set<std::string> goal_areas;
-    std::vector<std::string> navmesh_filename_list;
 
 private:
-    std::shared_ptr<AgentProfile> external_agent;
+    void initializeState();
+    void initializeAgentProfile();
+    void initializeAgentGroup();
 };
 
 } //namespace crowd_sim

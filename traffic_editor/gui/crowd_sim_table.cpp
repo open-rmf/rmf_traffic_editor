@@ -25,13 +25,13 @@ CrowdSimTable::CrowdSimTable(const Project& input_project) : TableList(3), proje
     setItem(0, 0, enable_crowd_sim_name_item);
 
     QCheckBox* enable_crowd_sim_checkbox = new QCheckBox;
-    enable_crowd_sim_checkbox->setChecked(this->enable_crowd_sim);
+    enable_crowd_sim_checkbox->setChecked(crowd_sim_impl->enable_crowd_sim);
     setCellWidget(0, 1, enable_crowd_sim_checkbox);
     connect(
         enable_crowd_sim_checkbox,
         &QAbstractButton::clicked,
         [this] (bool box_checked){
-            this->enable_crowd_sim = box_checked;
+            crowd_sim_impl->enable_crowd_sim = box_checked;
         }
     );
 
@@ -150,10 +150,8 @@ void CrowdSimTable::update()
 
 void CrowdSimTable::update_goal_area(){
     crowd_sim_impl->goal_areas.clear();
-
     for (auto level : project.building.levels) {
         auto vertex_list = level.vertices;
-
         for (auto vertex : vertex_list){
             if (vertex.params.find("human_goal_set_name") == vertex.params.end() ) continue;
             auto param = vertex.params["human_goal_set_name"];
@@ -168,7 +166,6 @@ void CrowdSimTable::update_goal_area(){
 
 void CrowdSimTable::update_navmesh_level() {
     crowd_sim_impl->navmesh_filename_list.clear();
-
     for (auto level : project.building.levels) {
         crowd_sim_impl->navmesh_filename_list.emplace_back(level.name + "_navmesh.nav");
     }

@@ -26,8 +26,6 @@ public:
     void update_external_agent_state();
 
 private:
-    bool enable_crowd_sim = false;
-
     std::vector<std::string> required_components { 
         "States", 
         "GoalSets", 

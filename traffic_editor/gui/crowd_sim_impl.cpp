@@ -10,74 +10,92 @@ std::vector<std::string> CrowdSimImplementation::getNavmeshFileName() {
     return navmesh_filename_list;
 }
 
-void CrowdSimImplementation::clearAgentProfile() {
-    agent_profiles.clear();
-    agent_profiles.emplace_back(*external_agent);
+void CrowdSimImplementation::initializeState() {
+    if(states.size() == 0)
+        states.emplace_back("external_static");
+    else
+        states[0] = State("external_static");
 }
 
-State::State(std::string state_name) : name(state_name) {}
-
-State::~State() {}
-
-void State::setFinalState(bool is_final) {
-    this->is_final_state = is_final;
+void CrowdSimImplementation::initializeAgentProfile() {
+    if (agent_profiles.size() == 0)
+        agent_profiles.emplace_back("external_agent");
+    else 
+        agent_profiles[0] = AgentProfile("external_agent");
 }
 
-void State::setGoalSetId(size_t goal_set_id) {
-    this->goal_set_id = goal_set_id;
+void CrowdSimImplementation::initializeAgentGroup() {
+    if (agent_groups.size() == 0) 
+        agent_groups.emplace_back(0, true);
+    else
+        agent_groups[0] = AgentGroup(0, true);
 }
 
-void State::setNavmeshFile(std::string file_name) {
-    this->navmesh_file_name = file_name;
-}
 
-void State::setName(std::string name) {
-    this->name = name;
-}
-
-bool State::isValid() {
-    return true;
-}
-
-std::string State::getName() {
-    return this->name;
-}
-
-std::string State::getNavmeshFileName() {
-    return this->navmesh_file_name;
-}
-
-bool State::getFinalState() {
-    return this->is_final_state;
-}
-
-size_t State::getGoalSetId() {
-    return this->goal_set_id;
+//=================================================
+bool State::isValid() const{
+    if (is_final_state && name.size() > 0) return true;
+    // not final state
+    if (name.size() > 0 && navmesh_file_name.size() > 0 && goal_set_id >= 0) return true;
+    return false;
 }
 
 YAML::Node State::to_yaml() const {
     YAML::Node state_node(YAML::NodeType::Map);
-    state_node["name"] = this->name;
-    state_node["goal_set"] = this->goal_set_id;
-    state_node["navmesh_file_name"] = this->navmesh_file_name;
-    state_node["final"] = this->is_final_state? 1 : 0;
+    state_node.SetStyle(YAML::EmitterStyle::Flow);
+    state_node["name"] = getName();
+    state_node["goal_set"] = getGoalSetId();
+    state_node["navmesh_file_name"] = getNavmeshFileName();
+    state_node["final"] = getFinalState()? 1 : 0;
     return state_node;
 }
 
-GoalSet::GoalSet(size_t goal_id) : id(goal_id) {}
-
-GoalSet::~GoalSet() {}
-
+//===================================================
 void GoalSet::addGoalArea(std::string area_name){
+    if (area_name.empty()){
+        std::cout << "Invalid area_name provided." << std::endl;
+    }
     this->goal_area_contained.insert(area_name);
 }
 
-size_t GoalSet::getGoalSetId() {
-    return this->id;
+YAML::Node GoalSet::getGoalAreasToYaml() const {
+    YAML::Node goal_area = YAML::Node(YAML::NodeType::Sequence);
+    goal_area.SetStyle(YAML::EmitterStyle::Flow);
+    for (auto area : getGoalAreas()) {
+        goal_area.push_back(area);
+    }
+    return goal_area;
 }
 
-std::set<std::string> GoalSet::getGoalAreas() {
-    return this->goal_area_contained;
+YAML::Node GoalSet::to_yaml() const {
+    YAML::Node goalset_node(YAML::NodeType::Map);
+    goalset_node.SetStyle(YAML::EmitterStyle::Flow);
+    goalset_node["set_id"] = getGoalSetId();
+    goalset_node["capacity"] = getCapacity();
+    goalset_node["set_area"] = getGoalAreasToYaml();
+    return goalset_node;
+}
+
+//====================================================
+
+
+
+YAML::Node CrowdSimImplementation::to_yaml() {
+    YAML::Node top_node = YAML::Node(YAML::NodeType::Map);
+    top_node["enable"] = enable_crowd_sim? 1 : 0;
+
+    top_node["states"] = YAML::Node(YAML::NodeType::Sequence);
+    for (auto state : states) {
+        if (!state.isValid()) continue;
+        top_node["states"].push_back(state.to_yaml());
+    }
+
+    top_node["goal_sets"] = YAML::Node(YAML::NodeType::Sequence);
+    for (auto goal_set : goal_sets) {
+        top_node["goal_sets"].push_back(goal_set.to_yaml());
+    }
+
+    return top_node;
 }
     
 } //namespace crowd_sim
