@@ -55,6 +55,15 @@ size_t State::getGoalSetId() {
     return this->goal_set_id;
 }
 
+YAML::Node State::to_yaml() const {
+    YAML::Node state_node(YAML::NodeType::Map);
+    state_node["name"] = this->name;
+    state_node["goal_set"] = this->goal_set_id;
+    state_node["navmesh_file_name"] = this->navmesh_file_name;
+    state_node["final"] = this->is_final_state? 1 : 0;
+    return state_node;
+}
+
 GoalSet::GoalSet(size_t goal_id) : id(goal_id) {}
 
 GoalSet::~GoalSet() {}

@@ -8,6 +8,8 @@
 #include <map>
 #include <memory>
 
+#include <yaml-cpp/yaml.h>
+
 namespace crowd_sim {
 class State;
 class GoalSet;
@@ -44,6 +46,8 @@ public:
     std::string getNavmeshFileName();
     bool getFinalState();
     size_t getGoalSetId();
+
+    YAML::Node to_yaml() const;
 
 private:
     std::string name = "";

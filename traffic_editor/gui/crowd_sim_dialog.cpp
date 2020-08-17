@@ -1276,9 +1276,7 @@ void AgentGroupTab::list_agent_group_in_impl() {
                 update();
             }
         );
-
     }
-
 }
 
 void AgentGroupTab::add_profiles_in_combobox(QComboBox*& profile_combo, std::string current_profile) {
