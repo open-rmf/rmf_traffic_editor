@@ -7,7 +7,7 @@
 #include <QComboBox>
 #include <QtWidgets>
 
-#include <crowd_sim_impl.h>
+#include <traffic_editor/crowd_sim_impl.h>
 #include <table_list.h>
 
 class CrowdSimDialog : public QDialog

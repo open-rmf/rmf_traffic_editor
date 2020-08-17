@@ -9,7 +9,7 @@
 
 #include <table_list.h>
 #include <project.h>
-#include <crowd_sim_impl.h>
+#include <traffic_editor/crowd_sim_impl.h>
 
 class CrowdSimTable : public TableList
 {

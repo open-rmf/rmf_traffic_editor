@@ -46,6 +46,8 @@ public:
   std::vector<Lift> lifts;
   std::mutex building_mutex;
 
+  
+
   std::string filename;
 
   bool load_yaml_file();
