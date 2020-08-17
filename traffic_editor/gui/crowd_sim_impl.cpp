@@ -2,36 +2,6 @@
 
 namespace crowd_sim{
 
-std::vector<std::string> CrowdSimImplementation::getGoalAreas() {
-    return std::vector<std::string>(goal_areas.begin(), goal_areas.end());
-}
-
-std::vector<std::string> CrowdSimImplementation::getNavmeshFileName() {
-    return navmesh_filename_list;
-}
-
-void CrowdSimImplementation::initializeState() {
-    if(states.size() == 0)
-        states.emplace_back("external_static");
-    else
-        states[0] = State("external_static");
-}
-
-void CrowdSimImplementation::initializeAgentProfile() {
-    if (agent_profiles.size() == 0)
-        agent_profiles.emplace_back("external_agent");
-    else 
-        agent_profiles[0] = AgentProfile("external_agent");
-}
-
-void CrowdSimImplementation::initializeAgentGroup() {
-    if (agent_groups.size() == 0) 
-        agent_groups.emplace_back(0, true);
-    else
-        agent_groups[0] = AgentGroup(0, true);
-}
-
-
 //=================================================
 bool State::isValid() const{
     if (is_final_state && name.size() > 0) return true;
@@ -77,8 +47,45 @@ YAML::Node GoalSet::to_yaml() const {
 }
 
 //====================================================
+YAML::Node AgentProfile::to_yaml() const {
+    YAML::Node profile_node(YAML::NodeType::Map);
+    profile_node.SetStyle(YAML::EmitterStyle::Flow);
+    profile_node["name"] = profile_name;
+    profile_node["class"] = profile_class;
+    profile_node["max_accel"] = max_accel;
+    profile_node["max_angle_vel"] = max_angle_vel;
+    profile_node["max_neighbors"] = max_neighbors;
+    profile_node["max_speed"] = max_speed;
+    profile_node["neighbor_dist"] = neighbor_dist;
+    profile_node["obstacle_set"] = obstacle_set;
+    profile_node["pref_speed"] = pref_speed;
+    profile_node["r"] = r;
+    profile_node["ORCA_tau"] = ORCA_tau;
+    profile_node["ORCA_tauObst"] = ORCA_tauObst;
+    return profile_node;
+}
 
+//===========================================================
+void CrowdSimImplementation::initializeState() {
+    if(states.size() == 0)
+        states.emplace_back("external_static");
+    else
+        states[0] = State("external_static");
+}
 
+void CrowdSimImplementation::initializeAgentProfile() {
+    if (agent_profiles.size() == 0)
+        agent_profiles.emplace_back("external_agent");
+    else 
+        agent_profiles[0] = AgentProfile("external_agent");
+}
+
+void CrowdSimImplementation::initializeAgentGroup() {
+    if (agent_groups.size() == 0) 
+        agent_groups.emplace_back(0, true);
+    else
+        agent_groups[0] = AgentGroup(0, true);
+}
 
 YAML::Node CrowdSimImplementation::to_yaml() {
     YAML::Node top_node = YAML::Node(YAML::NodeType::Map);
@@ -93,6 +100,11 @@ YAML::Node CrowdSimImplementation::to_yaml() {
     top_node["goal_sets"] = YAML::Node(YAML::NodeType::Sequence);
     for (auto goal_set : goal_sets) {
         top_node["goal_sets"].push_back(goal_set.to_yaml());
+    }
+
+    top_node["agent_profiles"] = YAML::Node(YAML::NodeType::Sequence);
+    for (auto profile : agent_profiles) {
+        top_node["agent_profiles"].push_back(profile.to_yaml());
     }
 
     return top_node;

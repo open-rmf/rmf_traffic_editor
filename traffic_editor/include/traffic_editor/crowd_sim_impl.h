@@ -92,22 +92,27 @@ private:
 class AgentProfile
 {
 public:
-    AgentProfile(std::string profile_name) : profile_name(profile_name) {}
+    AgentProfile(std::string profile_name) 
+        : profile_name(profile_name),
+        profile_class(1),
+        max_accel(0.0),
+        max_angle_vel(0.0),
+        max_neighbors(10),
+        max_speed(0.0),
+        neighbor_dist(5.0),
+        obstacle_set(1),
+        pref_speed(0.0),
+        r(0.25),
+        ORCA_tau(1.0),
+        ORCA_tauObst(0.4)
+    {}
     ~AgentProfile() {}
 
-    std::string profile_name = "new_profile";
-    // default external_agent profile setup
-    size_t profile_class = 1;
-    double max_accel = 0.0;
-    double max_angle_vel = 0.0;
-    size_t max_neighbors = 10;
-    double max_speed = 0.0;
-    double neighbor_dist = 5.0;
-    size_t obstacle_set = 1;
-    double pref_speed = 0.0;
-    double r = 0.25;
-    double ORCA_tau = 1.0;
-    double ORCA_tauObst = 0.4;
+    YAML::Node to_yaml() const;
+
+    std::string profile_name;
+    size_t profile_class, max_neighbors, obstacle_set;
+    double max_accel, max_angle_vel, max_speed, neighbor_dist, pref_speed, r, ORCA_tau, ORCA_tauObst;
 };
 
 //=========================================================
@@ -135,54 +140,42 @@ public:
     virtual std::string getConditionName() const { return name; }
     virtual TYPE getType() const { return type; }
     virtual bool isValid() const { return false; }
-
+    virtual YAML::Node to_yaml() const { return YAML::Node(YAML::NodeType::Map); }
 };
 
 class ConditionGOAL : public Condition 
 {
 public:
-    ConditionGOAL() : Condition("goal_reached", GOAL)
+    ConditionGOAL() : Condition("goal_reached", GOAL), distance(0.1)
     {}
     ~ConditionGOAL() {}
 
-    void setValue(double distance) {
-        this->distance = distance;
-    }
+    void setValue(double distance) { this->distance = distance;}
 
-    double getValue() {
-        return distance;
-    }
-
+    double getValue() const { return distance; }
     bool isValid() const override { return true; }
 
 private:
-    double distance = 0.1;
+    double distance;
 };
 
-class ConditionTIMER : public Condition {
+class ConditionTIMER : public Condition 
+{
 public:
-    ConditionTIMER() : Condition("timer", TIMER) 
+    ConditionTIMER() : Condition("timer", TIMER), distribution("c"), duration(30.0)
     {}
     ~ConditionTIMER() {}
 
-    void setValue(double value) {
-        this->duration = value;
-    }
+    void setValue(double value) { this->duration = value; }
 
-    double getValue() {
-        return this->duration;
-    }
-
-    std::string getTimerDistribution() {
-        return this->distribution;
-    }
-
+    double getValue() const { return this->duration; }
+    std::string getTimerDistribution() const { return this->distribution;}
     bool isValid() const override { return true; }
 
 private:
     //currently only provides const value distribution for timer
-    std::string distribution = "c";
-    double duration = 30.0;
+    std::string distribution;
+    double duration;
 };
 
 class ConditionAND : public Condition 
@@ -196,28 +189,22 @@ public:
     ~ConditionAND() {}
 
     void setCondition(ConditionPtr condition, int condition_index){
-        if (condition_index == 1) {
+        if (condition_index == 1)
             this->condition1 = condition;
-        } 
-        if (condition_index == 2) {
+        if (condition_index == 2)
             this->condition2 = condition;
-        }
     }
 
-    ConditionPtr getCondition(int condition_index) {
-        if (condition_index == 1) {
+    ConditionPtr getCondition(int condition_index) const {
+        if (condition_index == 1)
             return this->condition1;
-        } 
-        if (condition_index == 2) {
+        if (condition_index == 2)
             return this->condition2;
-        }
     }
 
     bool isValid() const override {
-        if(condition1 && condition2 && condition1->isValid() && condition2->isValid()) {
-            return true;
-        }
-        std::cout << "Invalid and condition" << std::endl;
+        if(condition1->isValid() && condition2->isValid()) { return true; }
+        std::cout << "Invalid <and> condition" << std::endl;
         return false;
     }
 
@@ -229,34 +216,29 @@ private:
 class ConditionOR : public Condition 
 {
 public:
-    ConditionOR() {
-        type = OR;
-        name = "or";
-    }
+    ConditionOR() 
+        : Condition("or", OR),
+        condition1(std::make_shared<Condition>()), 
+        condition2(std::make_shared<Condition>())       
+    {}
     ~ConditionOR() {}
 
     void setCondition(ConditionPtr condition, int condition_index){
-        if (condition_index == 1) {
+        if (condition_index == 1)
             this->condition1 = condition;
-        } 
-        if (condition_index == 2) {
+        if (condition_index == 2)
             this->condition2 = condition;
-        }
     }
 
-    ConditionPtr getCondition(int condition_index) {
-        if (condition_index == 1) {
+    ConditionPtr getCondition(int condition_index) const {
+        if (condition_index == 1)
             return this->condition1;
-        } 
-        if (condition_index == 2) {
+        if (condition_index == 2)
             return this->condition2;
-        }
     }
 
     bool isValid() const override {
-        if(condition1 && condition2 && condition1->isValid() && condition2->isValid()) {
-            return true;
-        }
+        if(condition1->isValid() && condition2->isValid()) { return true; }
         std::cout << "Invalid or condition" << std::endl;
         return false;
     }
@@ -269,24 +251,17 @@ private:
 class ConditionNOT : public Condition
 {
 public:
-    ConditionNOT() {
-        type = NOT;
-        name = "not";
-    }
+    ConditionNOT()
+        : Condition("not", NOT),
+        condition1(std::make_shared<Condition>())
+    {}
     ~ConditionNOT() {}
 
-    void setCondition(ConditionPtr condition1) {
-        this->condition1 = condition1;
-    } 
+    void setCondition(ConditionPtr condition1) { this->condition1 = condition1; } 
 
-    ConditionPtr getCondition() {
-        return this->condition1;
-    }
-
+    ConditionPtr getCondition() const { return this->condition1; }
     bool isValid() const override {
-        if(condition1 && condition1->isValid()) {
-            return true;
-        }
+        if(condition1->isValid()) { return true; }
         std::cout << "Invalid not condition" << std::endl;
         return false;
     }
@@ -301,18 +276,15 @@ class Transition
 using StateName = std::string;
 using ToStateType = std::map<StateName, double>;
 public:
-    Transition(StateName from_state_name) {
-        this->from_state_name = from_state_name;
-        this->condition = std::make_shared<Condition>();
-    }
+    Transition(StateName from_state_name) 
+        : from_state_name(from_state_name),
+        to_state_name({}),
+        condition(std::make_shared<Condition>())
+    {}
     ~Transition() {}
 
-    void setFromState(StateName state_name) {
-        this->from_state_name = state_name;
-    }
-    std::string getFromState() const {
-        return this->from_state_name;
-    }
+    void setFromState(StateName state_name) { this->from_state_name = state_name; }
+    std::string getFromState() const { return this->from_state_name; }
 
     void addToState(StateName state_name, double weight = 1.0) {
         this->to_state_name.insert(std::make_pair(state_name, weight) );
@@ -327,25 +299,18 @@ public:
         this->to_state_name.clear();
     }
 
-    void setCondition(ConditionPtr condition) {
-        this->condition = condition;
-    }
-
-    ConditionPtr getCondition() const {
-        return condition;
-    }
+    void setCondition(ConditionPtr condition) { this->condition = condition; }
+    ConditionPtr getCondition() const { return condition; }
 
     bool isValid() {
-        if (condition && condition->isValid() && to_state_name.size() > 0 && from_state_name.size() > 0) {
-            return true;
-        } 
+        if (condition->isValid() && to_state_name.size() > 0 && from_state_name.size() > 0)
+            return true; 
         std::cout << "Invalid transition" << std::endl;
         return false;
     }
 
 private:
-    StateName from_state_name = "";
-    //output states with weights
+    StateName from_state_name;
     ToStateType to_state_name;
     ConditionPtr condition;
 };
@@ -355,30 +320,30 @@ class AgentGroup
 {
 public:
     AgentGroup(size_t group_id, bool is_external_group = false) 
-        : group_id(group_id), is_external_group(is_external_group)
+        : group_id(group_id), 
+        is_external_group(is_external_group),
+        spawn_point_x(0.0),
+        spawn_point_y(0.0),
+        spawn_number(0),
+        external_agent_name({}),
+        agent_profile(""),
+        initial_state("")
     {}
     ~AgentGroup() {}
 
-    bool isValid() {
-        return agent_profile.size() > 0 && initial_state.size() > 0;
-    }
-
-    bool isExternalGroup() {
-        return is_external_group;
-    }
-
-    size_t getGroupId() {
-        return group_id;
-    }
+    bool isValid() const { return agent_profile.size() > 0 && initial_state.size() > 0; }
+    bool isExternalGroup() const { return is_external_group; }
+    size_t getGroupId() const { return group_id; }
+    std::pair<double, double> getSpawnPoint() const { return std::pair<double, double>(spawn_point_x, spawn_point_y); }
+    std::vector<std::string> getExternalAgentName() const { return external_agent_name; }
+    int getSpawnNumber() const { return spawn_number; }
+    std::string getAgentProfile() const { return agent_profile; }
+    std::string getInitialState() const { return initial_state; }
 
     void setSpawnPoint(double x, double y) {
         spawn_point_x = x;
         spawn_point_y = y;
     }
-    std::pair<double, double> getSpawnPoint() {
-        return std::pair<double, double>(spawn_point_x, spawn_point_y);
-    }
-
     void setExternalAgentName(std::vector<std::string>& external_name) {
         external_agent_name.clear();
         for (auto name : external_name) {
@@ -386,41 +351,23 @@ public:
         }
         spawn_number = static_cast<int>(external_agent_name.size());
     }
-    std::vector<std::string> getExternalAgentName() {
-        return external_agent_name;
-    }
-
     void setSpawnNumber(int number) {
         spawn_number = number;
     }
-    int getSpawnNumber() {
-        return spawn_number;
-    }
-
     void setAgentProfile(std::string profile) {
         agent_profile = profile;
     }
-    std::string getAgentProfile() {
-        return agent_profile;
-    }
-
     void setInitialState(std::string state) {
         initial_state = state;
-    }
-    std::string getInitialState() {
-        return initial_state;
     }
 
 private:
     size_t group_id;
     bool is_external_group = false;
-    double spawn_point_x = 0.0;
-    double spawn_point_y = 0.0;
-    int spawn_number = 0;
-    std::vector<std::string> external_agent_name = {};
-
-    std::string agent_profile = "";
-    std::string initial_state = "";
+    double spawn_point_x, spawn_point_y;
+    int spawn_number;
+    std::vector<std::string> external_agent_name;
+    std::string agent_profile, initial_state;
 };
 
 //=========================================================
@@ -436,9 +383,9 @@ public:
     }
     ~CrowdSimImplementation() {}
 
-    std::vector<std::string> getGoalAreas();
-    std::vector<std::string> getNavmeshFileName();
-    void clearAgentProfile();
+    std::vector<std::string> getGoalAreas() const { 
+        return std::vector<std::string>(goal_areas.begin(), goal_areas.end()); }
+    std::vector<std::string> getNavmeshFileName() const {return navmesh_filename_list;}
 
     YAML::Node to_yaml();
 
