@@ -1150,7 +1150,8 @@ AgentGroupTab::AgentGroupTab(CrowdSimImplPtr crowd_sim_impl)
     };
     label_size = labels.size();
     setHorizontalHeaderLabels(labels);
-    setMinimumSize(800, 400);
+    horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    setMinimumSize(1200, 400);
 }
 
 void AgentGroupTab::update() {
@@ -1179,6 +1180,41 @@ void AgentGroupTab::update() {
 }
 
 void AgentGroupTab::save() {
+    auto row_count = rowCount();
+    //row 0 reserved for external agent, only save the agent profile and initial state
+    auto& external_group = implPtr->agent_groups.at(0);
+    auto profile_combo = static_cast<QComboBox*>(cellWidget(0, 1));
+    external_group.setAgentProfile(profile_combo->currentText().toStdString());
+    auto state_combo = static_cast<QComboBox*>(cellWidget(0, 2));
+    external_group.setInitialState(state_combo->currentText().toStdString());
+
+    for (auto row = 1; row < row_count-1; row++) {
+        auto& current_group = implPtr->agent_groups.at(row);
+        auto profile_combo = static_cast<QComboBox*>(cellWidget(row, 1));
+        current_group.setAgentProfile(profile_combo->currentText().toStdString());
+        auto state_combo = static_cast<QComboBox*>(cellWidget(row, 2));
+        current_group.setInitialState(state_combo->currentText().toStdString());
+        
+        bool OK_status;
+        int spawn_number = item(row, 3)->text().toInt(&OK_status);
+        if (!OK_status) {
+            std::cout << "Invalid input of spawn_number, use default 0." << std::endl;
+            spawn_number = 0;
+        }
+        current_group.setSpawnNumber(spawn_number);
+
+        double point_x = item(row, 5)->text().toDouble(&OK_status);
+        if (!OK_status) {
+            std::cout << "Invalid input of x for spawn point coord, use default 0.0." << std::endl;
+            point_x = 0.0;
+        }
+        double point_y = item(row, 6)->text().toDouble(&OK_status);
+        if (!OK_status) {
+            std::cout << "Invalid input of y for spawn point coord, use default 0.0." << std::endl;
+            point_y = 0.0;
+        }
+        current_group.setSpawnPoint(point_x, point_y);
+    }
 
 }
 
@@ -1198,24 +1234,73 @@ void AgentGroupTab::list_agent_group_in_impl() {
         auto& current_group = implPtr->agent_groups.at(row);
         
         setItem(row, 0, new QTableWidgetItem(QString::number(static_cast<int>(current_group.getGroupId()) )));
-        setItem(row, 1, new QTableWidgetItem(QString::fromStdString(current_group.getAgentProfile() )));
-        setItem(row, 2, new QTableWidgetItem(QString::fromStdString(current_group.getInitialState() )));
+        auto current_profile = current_group.getAgentProfile();
+        QComboBox* profile_combo = new QComboBox;
+        add_profiles_in_combobox(profile_combo, current_profile);
+        setCellWidget(row, 1, profile_combo);
+
+        auto current_state = current_group.getInitialState();
+        QComboBox* state_combo = new QComboBox;
+        add_states_in_combobox(state_combo, current_state);
+        setCellWidget(row, 2, state_combo);
         setItem(row, 3, new QTableWidgetItem(QString::number(current_group.getSpawnNumber() )));
+
         std::string external_agent_name = "";
         if (current_group.isExternalGroup()) {
             for (auto name : current_group.getExternalAgentName()) {
                 external_agent_name += name + ";";
             }
         }
+
         setItem(row, 4, new QTableWidgetItem(QString::fromStdString(external_agent_name) ));
         auto spawn_point = current_group.getSpawnPoint();
         setItem(row, 5, new QTableWidgetItem(QString::number(spawn_point.first)));
         setItem(row, 6, new QTableWidgetItem(QString::number(spawn_point.second)));
 
+        if(row == 0) {
+            // row 0 is not allowed to be deleted
+            setItem(row, 7, new QTableWidgetItem(QString::fromStdString("") ));
+            continue;
+        }
+
         QPushButton* delete_button = new QPushButton("Delete", this);
         setCellWidget(row, 7, delete_button);
-        //connect();
+        connect(
+            delete_button,
+            &QAbstractButton::clicked,
+            [this, row]() {
+                //delete part
+                save();
+                if (row == 0) return;
+                this->implPtr->agent_groups.erase(this->implPtr->agent_groups.begin() + row);
+                update();
+            }
+        );
 
     }
 
+}
+
+void AgentGroupTab::add_profiles_in_combobox(QComboBox*& profile_combo, std::string current_profile) {
+    for (auto profile : implPtr->agent_profiles) {
+        profile_combo->addItem(QString::fromStdString(profile.profile_name));
+    }
+    int current_index = profile_combo->findText(QString::fromStdString(current_profile));
+    if (current_index > 0) {
+        profile_combo->setCurrentIndex(current_index);
+    } else {
+        profile_combo->setCurrentIndex(0);
+    }
+}
+
+void AgentGroupTab::add_states_in_combobox(QComboBox*& state_combo, std::string current_state) {
+    for (auto state : implPtr->states) {
+        state_combo->addItem(QString::fromStdString(state.getName()));
+    }
+    int current_index = state_combo->findText(QString::fromStdString(current_state));
+    if (current_index > 0) {
+        state_combo->setCurrentIndex(current_index);
+    } else {
+        state_combo->setCurrentIndex(0);
+    }
 }

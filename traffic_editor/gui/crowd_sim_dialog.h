@@ -46,7 +46,7 @@ public:
 
     void update();
     int save();
-    
+
 private:
     CrowdSimImplPtr implPtr;
     int label_size = 0;
@@ -227,6 +227,8 @@ private:
     int label_size;
     void add_button_clicked();
     void list_agent_group_in_impl();
+    void add_profiles_in_combobox(QComboBox*& profile_combo, std::string current_profile);
+    void add_states_in_combobox(QComboBox*& state_combo, std::string current_state);
 };
 
 class AgentGroupDialog : public CrowdSimDialog
