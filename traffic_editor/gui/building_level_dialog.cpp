@@ -183,9 +183,10 @@ void BuildingLevelDialog::ok_button_clicked()
   }
   auto original_name = building_level.name;
   building_level.name = name_line_edit->text().toStdString();
-  if (original_name != building_level.name)
+  building_level.elevation = elevation_line_edit->text().toDouble();
+  for (size_t i = 0; i < building.lifts.size(); i ++)
   {
-    for (size_t i = 0; i < building.lifts.size(); i ++)
+    if (original_name != building_level.name)
     {
       if (building.lifts[i].level_doors.find(original_name) !=
         building.lifts[i].level_doors.end())
@@ -195,8 +196,17 @@ void BuildingLevelDialog::ok_button_clicked()
         building.lifts[i].level_doors.erase(original_name);
       }
     }
+    if (building.lifts[i].highest_floor == original_name)
+    {
+      building.lifts[i].highest_floor = building_level.name;
+      building.lifts[i].highest_elevation = building_level.elevation;
+    }
+    if (building.lifts[i].lowest_floor == original_name)
+    {
+      building.lifts[i].lowest_floor = building_level.name;
+      building.lifts[i].lowest_elevation = building_level.elevation;
+    }
   }
-  building_level.elevation = elevation_line_edit->text().toDouble();
   building_level.drawing_filename =
     drawing_filename_line_edit->text().toStdString();
   if (building_level.drawing_filename.empty())

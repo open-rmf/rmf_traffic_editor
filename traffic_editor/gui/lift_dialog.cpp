@@ -16,6 +16,7 @@
 */
 
 #include "lift_dialog.h"
+#include <cfloat>
 #include <QtWidgets>
 using std::vector;
 
@@ -75,6 +76,62 @@ LiftDialog::LiftDialog(Lift& lift, Building& building)
       emit redraw();
     });
   ref_name_hbox->addWidget(_reference_floor_combo_box);
+
+  QHBoxLayout* highest_name_hbox = new QHBoxLayout;
+  highest_name_hbox->addWidget(new QLabel("Highest floor:"));
+  _highest_floor_combo_box = new QComboBox;
+  for (const QString& level_name : _level_names)
+    _highest_floor_combo_box->addItem(level_name);
+  _highest_floor_combo_box->addItem("");  // empty string for not specifying
+  _highest_floor_combo_box->setCurrentText(
+    QString::fromStdString(_lift.highest_floor));
+  connect(
+    _highest_floor_combo_box,
+    &QComboBox::currentTextChanged,
+    [this](const QString& text)
+    {
+      _lift.highest_floor = text.toStdString();
+      if (_lift.highest_floor.empty())
+        _lift.highest_elevation = DBL_MAX;
+      else
+      {
+        for (auto level : _building.levels)
+        {
+          if (level.name == _lift.highest_floor)
+            _lift.highest_elevation = level.elevation;
+        }
+      }
+      emit redraw();
+    });
+  highest_name_hbox->addWidget(_highest_floor_combo_box);
+
+  QHBoxLayout* lowest_name_hbox = new QHBoxLayout;
+  lowest_name_hbox->addWidget(new QLabel("Lowest floor:"));
+  _lowest_floor_combo_box = new QComboBox;
+  for (const QString& level_name : _level_names)
+    _lowest_floor_combo_box->addItem(level_name);
+  _lowest_floor_combo_box->addItem("");
+  _lowest_floor_combo_box->setCurrentText(
+    QString::fromStdString(_lift.lowest_floor));
+  connect(
+    _lowest_floor_combo_box,
+    &QComboBox::currentTextChanged,
+    [this](const QString& text)
+    {
+      _lift.lowest_floor = text.toStdString();
+      if (_lift.lowest_floor.empty())
+        _lift.lowest_elevation = -DBL_MAX;
+      else
+      {
+        for (auto level : _building.levels)
+        {
+          if (level.name == _lift.lowest_floor)
+            _lift.lowest_elevation = level.elevation;
+        }
+      }
+      emit redraw();
+    });
+  lowest_name_hbox->addWidget(_lowest_floor_combo_box);
 
   QHBoxLayout* x_hbox = new QHBoxLayout;
   x_hbox->addWidget(new QLabel("X:"));
@@ -203,6 +260,8 @@ LiftDialog::LiftDialog(Lift& lift, Building& building)
   QVBoxLayout* left_vbox = new QVBoxLayout;
   left_vbox->addLayout(name_hbox);
   left_vbox->addLayout(ref_name_hbox);
+  left_vbox->addLayout(highest_name_hbox);
+  left_vbox->addLayout(lowest_name_hbox);
   left_vbox->addLayout(x_hbox);
   left_vbox->addLayout(y_hbox);
   left_vbox->addLayout(yaw_hbox);
@@ -261,6 +320,8 @@ void LiftDialog::ok_button_clicked()
   _lift.name = _name_line_edit->text().toStdString();
   _lift.reference_floor_name =
     _reference_floor_combo_box->currentText().toStdString();
+  _lift.highest_floor = _highest_floor_combo_box->currentText().toStdString();
+  _lift.lowest_floor = _lowest_floor_combo_box->currentText().toStdString();
 
   _lift.x = _x_line_edit->text().toDouble();
   _lift.y = _y_line_edit->text().toDouble();
@@ -474,5 +535,5 @@ void LiftDialog::door_table_cell_changed(int row, int col)
 void LiftDialog::update_lift_view()
 {
   _lift_scene->clear();
-  _lift.draw(_lift_scene, 0.01, std::string(), false);
+  _lift.draw(_lift_scene, 0.01, std::string(), _lift.lowest_elevation, false);
 }

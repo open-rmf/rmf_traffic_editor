@@ -114,7 +114,7 @@ bool Building::load_yaml_file()
     for (YAML::const_iterator it = y_lifts.begin(); it != y_lifts.end(); ++it)
     {
       Lift lift;
-      lift.from_yaml(it->first.as<string>(), it->second);
+      lift.from_yaml(it->first.as<string>(), it->second, levels);
       lifts.push_back(lift);
     }
   }
@@ -430,6 +430,7 @@ void Building::draw_lifts(QGraphicsScene* scene, const int level_idx)
       scene,
       level.drawing_meters_per_pixel,
       level.name,
+      level.elevation,
       true,
       t.scale,
       t.dx,
