@@ -74,7 +74,8 @@ public:
   Lift();
 
   YAML::Node to_yaml() const;
-  void from_yaml(const std::string& _name, const YAML::Node& data, const std::vector<BuildingLevel>& levels);
+  void from_yaml(const std::string& _name, const YAML::Node& data,
+    const std::vector<BuildingLevel>& levels);
 
   void draw(
     QGraphicsScene* scene,

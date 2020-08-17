@@ -29,7 +29,8 @@ Lift::Lift()
 {
 }
 
-void Lift::from_yaml(const std::string& _name, const YAML::Node& data, const std::vector<BuildingLevel>& levels)
+void Lift::from_yaml(const std::string& _name, const YAML::Node& data,
+  const std::vector<BuildingLevel>& levels)
 {
   if (!data.IsMap())
     throw std::runtime_error("Lift::from_yaml() expected a map");
