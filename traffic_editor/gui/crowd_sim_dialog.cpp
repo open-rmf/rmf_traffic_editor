@@ -5,6 +5,7 @@
 #include <sstream>
 #include <string>
 
+//========================================================
 CrowdSimDialog::CrowdSimDialog(CrowdSimImplPtr implPtr) 
 : crowd_sim_impl(implPtr)
 {
@@ -52,7 +53,6 @@ StatesDialog::StatesDialog(CrowdSimImplPtr implPtr)
 
     top_vbox->addLayout(table_box);
     top_vbox->addLayout(bottom_buttons_hbox);
-
 }
 
 void StatesDialog::ok_button_clicked() {
@@ -65,12 +65,19 @@ StatesTab::StatesTab(CrowdSimImplPtr crowd_sim_impl)
 {
     const QStringList labels =
         { "Name", "Is Final", "Navmesh File Name", "Goal Set Id", ""};
+    label_size = labels.size();
+
     setHorizontalHeaderLabels(labels);
     setMinimumSize(800, 400);
+
+    setSizePolicy(
+        QSizePolicy::Expanding,
+        QSizePolicy::MinimumExpanding);
 }
 
 void StatesTab::update()
 {
+    blockSignals(true);
     auto states_number = implPtr->states.size();    
     setRowCount(1 + states_number);
     clearContents();
@@ -78,10 +85,10 @@ void StatesTab::update()
     list_states_in_impl();
 
     QPushButton* add_button = new QPushButton("Add...", this);
-    for (auto i = 0; i < 4; i++) {
+    for (auto i = 0; i < label_size - 1; i++) {
         setItem(states_number, i, new QTableWidgetItem(QString::fromStdString("")));
     }
-    setCellWidget(states_number, 4, add_button);
+    setCellWidget(states_number, label_size - 1, add_button);
     connect(
         add_button,
         &QAbstractButton::clicked,
@@ -90,6 +97,7 @@ void StatesTab::update()
             update();
         }
     );
+    blockSignals(false);
 }
 
 void StatesTab::list_states_in_impl() {
@@ -129,7 +137,6 @@ void StatesTab::list_states_in_impl() {
                 current_state.setNavmeshFile(text.toStdString());
             }
         );
-        // setItem(i, 2, new QTableWidgetItem(QString::fromStdString(current_state.getNavmeshFileName() )));
 
         QComboBox* goal_set_combo = new QComboBox;
         list_goal_sets_in_combo(goal_set_combo, current_state.getGoalSetId());
@@ -232,10 +239,14 @@ GoalSetTab::GoalSetTab(CrowdSimImplPtr crowd_sim_impl)
 {
     const QStringList labels =
         { "Id", "Goal Area", ""};
+    label_size = labels.size();
 
     setHorizontalHeaderLabels(labels);
     horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     setMinimumSize(800, 400);
+    setSizePolicy(
+        QSizePolicy::Expanding,
+        QSizePolicy::MinimumExpanding);
 }
 
 void GoalSetTab::update() {
@@ -246,10 +257,10 @@ void GoalSetTab::update() {
     list_goal_set_in_impl();
 
     QPushButton* add_button = new QPushButton("Add...", this);
-    for (auto i = 0; i < 2; i++) {
+    for (auto i = 0; i < label_size - 1; i++) {
         setItem(goal_set_number, i, new QTableWidgetItem(QString::fromStdString("")));
     }
-    setCellWidget(goal_set_number, 2, add_button);
+    setCellWidget(goal_set_number, label_size - 1, add_button);
     connect(
         add_button,
         &QAbstractButton::clicked,
@@ -299,9 +310,8 @@ int GoalSetTab::save() {
         for(auto item : pItem_areas->getCheckResult() ) {
             goal_set_iterator.addGoalArea(item);
         }
-
     }
-    return row_count;
+    return static_cast<int>(implPtr->goal_sets.size());
 }
 
 void GoalSetTab::add_button_clicked() {
@@ -342,10 +352,13 @@ AgentProfileTab::AgentProfileTab(CrowdSimImplPtr crowd_sim_impl)
         { "Name", "class", "max_accel", "max_angle_vel", "max_neighbors",
         "max_speed", "neighbor_dist", "obstacle_set", "pref_speed", "r",
         "ORCA_tau", "ORCA_tauObst", ""};
-    
+    label_size = labels.size();
+
     setHorizontalHeaderLabels(labels);
     setMinimumSize(1600, 400);
-
+    setSizePolicy(
+        QSizePolicy::Expanding,
+        QSizePolicy::MinimumExpanding);
 }
 
 void AgentProfileTab::add_button_clicked() {
@@ -354,7 +367,7 @@ void AgentProfileTab::add_button_clicked() {
 }
 
 void AgentProfileTab::list_agent_profile_in_impl() {
-    blockSignals(true);
+    
     auto profile_count = implPtr->agent_profiles.size();
     
     for (auto i = 0; i < profile_count; i++) {
@@ -385,7 +398,6 @@ void AgentProfileTab::list_agent_profile_in_impl() {
             }
         );
     }
-    blockSignals(false);
 }
 
 void AgentProfileTab::update() {
@@ -396,10 +408,10 @@ void AgentProfileTab::update() {
     list_agent_profile_in_impl();
 
     QPushButton* add_button = new QPushButton("Add...", this);
-    for (auto i = 0; i < 11; i++) {
+    for (auto i = 0; i < label_size - 1; i++) {
         setItem(profiles_number, i, new QTableWidgetItem(QString::fromStdString("")));
     }
-    setCellWidget(profiles_number, 12, add_button);
+    setCellWidget(profiles_number, label_size - 1, add_button);
     connect(
         add_button,
         &QAbstractButton::clicked,
@@ -409,7 +421,6 @@ void AgentProfileTab::update() {
         }
     );
     blockSignals(false);
-
 }
 
 int AgentProfileTab::save() {
@@ -421,7 +432,8 @@ int AgentProfileTab::save() {
         auto& current_profile = implPtr->agent_profiles.at(i);
         
         bool OK_status;
-        pItem = item(i, 1); //profile_class
+        //profile_class
+        pItem = item(i, 1); 
         auto profile_class = pItem->text().toInt(&OK_status);
         if(!OK_status) {
             std::cout << "Error in saving profile_class for Agent Profile: [" 
@@ -429,8 +441,8 @@ int AgentProfileTab::save() {
             return -1;
         }
         current_profile.profile_class = static_cast<size_t>(profile_class);
-
-        pItem = item(i, 2); //max_accel
+        //max_accel
+        pItem = item(i, 2); 
         auto max_accel = pItem->text().toDouble(&OK_status);
         if(!OK_status) {
             std::cout << "Error in saving max_accel for Agent Profile: [" 
@@ -438,8 +450,8 @@ int AgentProfileTab::save() {
             return -1;
         }
         current_profile.max_accel = static_cast<double>(max_accel);
-
-        pItem = item(i, 3); //max_angle_vel
+        //max_angle_vel
+        pItem = item(i, 3); 
         auto max_angle_vel = pItem->text().toDouble(&OK_status);
         if(!OK_status) {
             std::cout << "Error in saving max_angle_vel for Agent Profile: [" 
@@ -447,8 +459,8 @@ int AgentProfileTab::save() {
             return -1;
         }
         current_profile.max_angle_vel = static_cast<double>(max_angle_vel);
-
-        pItem = item(i, 4); //max_neighbors
+        //max_neighbors
+        pItem = item(i, 4); 
         auto max_neighbors = pItem->text().toInt(&OK_status);
         if(!OK_status) {
             std::cout << "Error in saving max_neighbors for Agent Profile: [" 
@@ -456,8 +468,8 @@ int AgentProfileTab::save() {
             return -1;
         }
         current_profile.max_neighbors = static_cast<size_t>(max_neighbors);
-
-        pItem = item(i, 5); //max_speed
+        //max_speed
+        pItem = item(i, 5); 
         auto max_speed = pItem->text().toDouble(&OK_status);
         if(!OK_status) {
             std::cout << "Error in saving max_speed for Agent Profile: [" 
@@ -465,8 +477,8 @@ int AgentProfileTab::save() {
             return -1;
         }
         current_profile.max_speed = static_cast<double>(max_speed);
-
-        pItem = item(i, 6); //neighbor_dist
+        //neighbor_dist
+        pItem = item(i, 6); 
         auto neighbor_dist = pItem->text().toDouble(&OK_status);
         if(!OK_status) {
             std::cout << "Error in saving neighbor dist for Agent Profile: [" 
@@ -474,8 +486,8 @@ int AgentProfileTab::save() {
             return -1;            
         }
         current_profile.neighbor_dist = static_cast<double>(neighbor_dist);
-
-        pItem = item(i, 7); //obstacle_set
+        //obstacle_set
+        pItem = item(i, 7); 
         auto obstacle_set = pItem->text().toInt(&OK_status);
         if(!OK_status) {
             std::cout << "Error in saving obstacle_set for Agent Profile: [" 
@@ -483,8 +495,8 @@ int AgentProfileTab::save() {
             return -1;            
         }       
         current_profile.obstacle_set = static_cast<double>(obstacle_set);
-
-        pItem = item(i, 8); //pref_speed
+        //pref_speed
+        pItem = item(i, 8); 
         auto pref_speed = pItem->text().toDouble(&OK_status);
         if(!OK_status) {
             std::cout << "Error in saving pref_speed for Agent Profile: [" 
@@ -492,8 +504,8 @@ int AgentProfileTab::save() {
             return -1;            
         }
         current_profile.pref_speed = static_cast<double>(pref_speed);
-
-        pItem = item(i, 9); //r
+        //r
+        pItem = item(i, 9); 
         auto r = pItem->text().toDouble(&OK_status);
         if(!OK_status) {
             std::cout << "Error in saving r for Agent Profile: [" 
@@ -501,8 +513,8 @@ int AgentProfileTab::save() {
             return -1;            
         }        
         current_profile.r = static_cast<double>(r);
-
-        pItem = item(i, 10); //ORCA_tau
+        //ORCA_tau
+        pItem = item(i, 10); 
         auto ORCA_tau = pItem->text().toDouble(&OK_status);
         if(!OK_status) {
             std::cout << "Error in saving ORCA_tau for Agent Profile: [" 
@@ -510,8 +522,8 @@ int AgentProfileTab::save() {
             return -1;            
         }
         current_profile.ORCA_tau = static_cast<double>(ORCA_tau);
-
-        pItem = item(i, 11); //ORCA_tauObst
+        //ORCA_tauObst
+        pItem = item(i, 11); 
         auto ORCA_tauObst = pItem->text().toDouble(&OK_status);
         if(!OK_status) {
             std::cout << "Error in saving ORCA_tauObst for Agent Profile: [" 
@@ -519,10 +531,8 @@ int AgentProfileTab::save() {
             return -1;            
         }
         current_profile.ORCA_tauObst = static_cast<double>(ORCA_tauObst);   
-
     }
     return row_count-1;
-
 }
 
 AgentProfileDialog::AgentProfileDialog(CrowdSimImplPtr crowd_sim_impl)
@@ -559,9 +569,12 @@ TransitionDialog::TransitionDialog(CrowdSimImplPtr crowd_sim_impl)
 
     top_vbox->addLayout(table_box);
     top_vbox->addLayout(bottom_buttons_hbox);
-
 }
 
+void TransitionDialog::ok_button_clicked() {
+    transition_tab->save();
+    accept();
+}
 
 TransitionTab::TransitionTab(CrowdSimImplPtr crowd_sim_impl) 
     : TableList(6), implPtr(crowd_sim_impl)
@@ -572,6 +585,9 @@ TransitionTab::TransitionTab(CrowdSimImplPtr crowd_sim_impl)
     label_size = labels.size();
     setHorizontalHeaderLabels(labels);
     setMinimumSize(800, 400);
+    setSizePolicy(
+        QSizePolicy::Expanding,
+        QSizePolicy::MinimumExpanding);
 }
 
 void TransitionTab::update() {
@@ -579,7 +595,6 @@ void TransitionTab::update() {
     clearContents();
     auto transition_number = implPtr->transitions.size();
     setRowCount(1 + transition_number);
-
     list_transition_in_impl();
 
     QPushButton* add_button = new QPushButton("Add...", this);
@@ -595,14 +610,12 @@ void TransitionTab::update() {
             update();
         }
     );
-
     blockSignals(false);
 }
 
 void TransitionTab::list_transition_in_impl() {
 
     auto transition_number = implPtr->transitions.size();
-
     for (auto i = 0; i < transition_number; i++) {
         auto& transition = implPtr->transitions[i];
 
@@ -657,7 +670,7 @@ void TransitionTab::list_transition_in_impl() {
     }
 }
 
-void TransitionTab::list_from_states_in_combo(QComboBox*& comboBox, crowd_sim::Transition& transition) {
+void TransitionTab::list_from_states_in_combo(QComboBox* comboBox, crowd_sim::Transition& transition) {
     for (auto state : implPtr->states) {
         if(state.getFinalState()) { //transitions end up with final state
             continue;
@@ -683,6 +696,7 @@ void TransitionTab::list_from_states_in_combo(QComboBox*& comboBox, crowd_sim::T
 
 void TransitionTab::save() {
     // instead of clearing the vector first, check the invalid transition and delete it
+    // because the save process is done within the button clicked event
     update();
     auto row_count = rowCount();
     std::vector<size_t> invalid_trasition;
@@ -738,9 +752,9 @@ ToStateTab::ToStateTab(crowd_sim::Transition& transition, CrowdSimImplPtr crowd_
 void ToStateTab::update() {
     blockSignals(true);
     clearContents();
-    
     auto to_state_number = current_transition.getToState().size();
     setRowCount(1 + to_state_number);
+
     if (to_state_number != implPtr->states.size()) { 
         // to_states include all the states defined, not allowed to add more
         QPushButton* add_button = new QPushButton("Add...", this);
@@ -828,7 +842,6 @@ void ToStateTab::save() {
 ConditionDialog::ConditionDialog(crowd_sim::Transition& transition, CrowdSimImplPtr crowd_sim_impl)
     : CrowdSimDialog(crowd_sim_impl), current_transition(transition)
 {
-    
     setWindowTitle("Transition Condition Setup" );
     // root condition comboBox
     QHBoxLayout* root_condition_type = new QHBoxLayout;
@@ -946,7 +959,6 @@ ConditionDialog::ConditionDialog(crowd_sim::Transition& transition, CrowdSimImpl
     condition2_container->setEnabled(false);
 
     update();
-
 }
 
 void ConditionDialog::construct_leaf_condition_widget(
@@ -978,8 +990,7 @@ void ConditionDialog::construct_leaf_condition_widget(
             }
             if (condition_type->currentIndex() == 1) { //timer condition
                 this->set_sub_condition_in_root_condition(crowd_sim::Condition::TIMER, temp_value, condition_index);
-            }
-            
+            }  
         }
     );
 }
@@ -1017,7 +1028,6 @@ void ConditionDialog::set_sub_condition_in_root_condition(
         crowd_sim::ConditionNotPtr temp = std::dynamic_pointer_cast<crowd_sim::ConditionNOT>(root_condition);
         temp->setCondition(sub_condition);
     }
-    
 }
 
 void ConditionDialog::initialize_sub_condition(

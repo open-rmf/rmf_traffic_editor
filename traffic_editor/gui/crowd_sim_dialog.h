@@ -14,7 +14,7 @@ class CrowdSimDialog : public QDialog
 {
 public:
     CrowdSimDialog(CrowdSimImplPtr implPtr);
-    ~CrowdSimDialog() {}
+    virtual ~CrowdSimDialog() {}
 
     virtual void ok_button_clicked();
     virtual void cancel_button_clicked();
@@ -104,7 +104,6 @@ private:
     
     void add_button_clicked();
     void list_agent_profile_in_impl();
-
 };
 
 class AgentProfileDialog : public CrowdSimDialog
@@ -134,7 +133,7 @@ private:
 
     void add_button_clicked();
     void list_transition_in_impl();
-    void list_from_states_in_combo(QComboBox*& comboBox, crowd_sim::Transition& transition);
+    void list_from_states_in_combo(QComboBox* comboBox, crowd_sim::Transition& transition);
 };
 
 class TransitionDialog : public CrowdSimDialog
@@ -145,8 +144,7 @@ public:
 
 private:
     std::shared_ptr<TransitionTab> transition_tab;
-    // void ok_button_clicked() override;
-
+    void ok_button_clicked() override;
 };
 
 class ToStateTab : public TableList 
@@ -165,7 +163,6 @@ private:
     int label_size = 0;
     void list_to_states_in_current_transition();
     void add_button_clicked();
-
 };
 
 class ToStateDialog : public CrowdSimDialog

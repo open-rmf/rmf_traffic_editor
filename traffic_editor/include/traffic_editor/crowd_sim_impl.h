@@ -141,6 +141,7 @@ public:
     virtual TYPE getType() const { return type; }
     virtual bool isValid() const { return false; }
     virtual YAML::Node to_yaml() const { return YAML::Node(YAML::NodeType::Map); }
+    
 };
 
 class ConditionGOAL : public Condition 
@@ -308,6 +309,8 @@ public:
         std::cout << "Invalid transition" << std::endl;
         return false;
     }
+
+    YAML::Node to_yaml() const;
 
 private:
     StateName from_state_name;

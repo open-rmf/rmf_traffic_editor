@@ -66,6 +66,23 @@ YAML::Node AgentProfile::to_yaml() const {
 }
 
 //===========================================================
+YAML::Node Transition::to_yaml() const{
+    YAML::Node transition_node(YAML::NodeType::Map);
+    transition_node.SetStyle(YAML::EmitterStyle::Flow);
+    transition_node["from"] = from_state_name;
+    transition_node["to"] = to_state_name.size() == 1 ? to_state_name.begin()->first : "";
+    transition_node["Condition"] = condition->to_yaml();
+    transition_node["Target"] = YAML::Node(YAML::NodeType::Sequence);
+    for (auto to_state : to_state_name) {
+        YAML::Node target_node = YAML::Node(YAML::NodeType::Map);
+        target_node["name"] = to_state.first;
+        target_node["weight"] = to_state.second;
+        transition_node["Target"].push_back(target_node);
+    }
+    return transition_node;
+}
+
+//===========================================================
 void CrowdSimImplementation::initializeState() {
     if(states.size() == 0)
         states.emplace_back("external_static");
@@ -105,6 +122,11 @@ YAML::Node CrowdSimImplementation::to_yaml() {
     top_node["agent_profiles"] = YAML::Node(YAML::NodeType::Sequence);
     for (auto profile : agent_profiles) {
         top_node["agent_profiles"].push_back(profile.to_yaml());
+    }
+
+    top_node["transitions"] = YAML::Node(YAML::NodeType::Sequence);
+    for (auto transition : transitions) {
+        top_node["transitions"].push_back(transition.to_yaml());
     }
 
     return top_node;
