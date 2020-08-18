@@ -38,7 +38,7 @@ set(IGN_PLUGIN_VER 1)
 ign_find_package(ignition-common3 REQUIRED)
 set(IGN_COMMON_VER 3)
 ign_find_package(ignition-math4 REQUIRED)
-ign_find_package(sdformat9 REQUIRED)
+ign_find_package(sdformat10 REQUIRED)
 set(IGN_MATH_VER 4)
 
 find_package(tf2_ros REQUIRED)
