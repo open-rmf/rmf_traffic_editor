@@ -83,6 +83,23 @@ YAML::Node Transition::to_yaml() const{
 }
 
 //===========================================================
+YAML::Node AgentGroup::to_yaml() const {
+    YAML::Node group_node = YAML::Node(YAML::NodeType::Map);
+    group_node.SetStyle(YAML::EmitterStyle::Flow);
+    group_node["group_id"] = group_id;
+    group_node["profile_selector"] = agent_profile;
+    group_node["state_selector"] = initial_state;
+    group_node["agents_number"] = spawn_number;
+    group_node["agents_name"] = YAML::Node(YAML::NodeType::Sequence);
+    for (auto name : external_agent_name) {
+        group_node["agents_name"].push_back(name);
+    }
+    group_node["x"] = spawn_point_x;
+    group_node["y"] = spawn_point_y;
+    return group_node;
+}
+
+//===========================================================
 void CrowdSimImplementation::initializeState() {
     if(states.size() == 0)
         states.emplace_back("external_static");
@@ -102,6 +119,16 @@ void CrowdSimImplementation::initializeAgentGroup() {
         agent_groups.emplace_back(0, true);
     else
         agent_groups[0] = AgentGroup(0, true);
+}
+
+YAML::Node CrowdSimImplementation::output_obstacle_node() const {
+    // Need to refactoring later. Currently with hard code configuration.
+    YAML::Node obstacle_node = YAML::Node(YAML::NodeType::Map);
+    obstacle_node.SetStyle(YAML::EmitterStyle::Flow);
+    obstacle_node["class"] = 1;
+    obstacle_node["type"] = "nav_mesh";
+    obstacle_node["file_name"] = this->navmesh_filename_list[0];
+    return obstacle_node;
 }
 
 YAML::Node CrowdSimImplementation::to_yaml() {
@@ -128,6 +155,14 @@ YAML::Node CrowdSimImplementation::to_yaml() {
     for (auto transition : transitions) {
         top_node["transitions"].push_back(transition.to_yaml());
     }
+
+    top_node["obstacle_set"] = output_obstacle_node();
+
+    top_node["agent_group"] = YAML::Node(YAML::NodeType::Sequence);
+    for (auto group : agent_groups) {
+        top_node["agent_group"].push_back(group.to_yaml());
+    }
+    
 
     return top_node;
 }

@@ -235,10 +235,10 @@ int StatesTab::save() {
 //==============================================================================
 
 GoalSetTab::GoalSetTab(CrowdSimImplPtr crowd_sim_impl) 
-    : TableList(3), implPtr(crowd_sim_impl) 
+    : TableList(4), implPtr(crowd_sim_impl) 
 {
     const QStringList labels =
-        { "Id", "Goal Area", ""};
+        { "Id", "Goal Area", "Capacity", ""};
     label_size = labels.size();
 
     setHorizontalHeaderLabels(labels);
@@ -283,6 +283,8 @@ void GoalSetTab::list_goal_set_in_impl() {
         MultiSelectComboBox* multi_combo_box = new MultiSelectComboBox(implPtr->getGoalAreas());
         multi_combo_box->showCheckedItem(goal_set.getGoalAreas());
         setCellWidget(i, 1, multi_combo_box);
+
+        setItem(i, 2, new QTableWidgetItem(QString::number(static_cast<int>(goal_set.getCapacity() ))));
     }
     blockSignals(false);
 }
@@ -305,11 +307,20 @@ int GoalSetTab::save() {
         if (pItem_areas->getCheckResult().empty()) { //if no goal area selected, don't save the goal set
             continue;
         }
+
+        auto pItem_capacity = item(i, 2);
+        auto capacity = pItem_capacity->text().toInt(&OK_status);
+        if (!OK_status) {
+            std::cout << "Invalid capacity for goal set" << std::endl;
+            return -1;
+        }
+
         implPtr->goal_sets.emplace_back(static_cast<size_t>(set_id));
         auto& goal_set_iterator = implPtr->goal_sets.back();
         for(auto item : pItem_areas->getCheckResult() ) {
             goal_set_iterator.addGoalArea(item);
         }
+        goal_set_iterator.setCapacity(static_cast<size_t>(capacity));
     }
     return static_cast<int>(implPtr->goal_sets.size());
 }

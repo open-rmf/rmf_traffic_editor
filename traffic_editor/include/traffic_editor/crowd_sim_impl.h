@@ -141,7 +141,7 @@ public:
     virtual TYPE getType() const { return type; }
     virtual bool isValid() const { return false; }
     virtual YAML::Node to_yaml() const { return YAML::Node(YAML::NodeType::Map); }
-    
+
 };
 
 class ConditionGOAL : public Condition 
@@ -155,6 +155,7 @@ public:
 
     double getValue() const { return distance; }
     bool isValid() const override { return true; }
+    YAML::Node to_yaml() const override;
 
 private:
     double distance;
@@ -343,6 +344,8 @@ public:
     std::string getAgentProfile() const { return agent_profile; }
     std::string getInitialState() const { return initial_state; }
 
+    YAML::Node to_yaml() const;
+
     void setSpawnPoint(double x, double y) {
         spawn_point_x = x;
         spawn_point_y = y;
@@ -410,6 +413,8 @@ private:
     void initializeState();
     void initializeAgentProfile();
     void initializeAgentGroup();
+
+    YAML::Node output_obstacle_node() const;
 };
 
 } //namespace crowd_sim
