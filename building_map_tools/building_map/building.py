@@ -59,7 +59,7 @@ class Building:
             lift_vert_lists[lift_name] = lift.get_lift_vertices()
 
         for level_name, level in self.levels.items():
-            level.set_lift_vert_lists(lift_vert_lists)
+            level.set_lift_vert_lists(lift_vert_lists, self.lifts)
 
     def transform_all_vertices(self):
         """ Transform all vertices on all levels to a unified system """

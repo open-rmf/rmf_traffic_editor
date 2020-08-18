@@ -205,6 +205,8 @@ class Lift:
         self.depth = float(yaml_node['depth'])
         self.width = float(yaml_node['width'])
         self.yaw = float(yaml_node['yaw'])
+        self.highest_elevation = float(levels[yaml_node['highest_floor']].elevation)
+        self.lowest_elevation = float(levels[yaml_node['lowest_floor']].elevation)
         raw_pos = (float(yaml_node['x']), -float(yaml_node['y']))
         self.x, self.y = transform.transform_point(raw_pos)
         self.cabin_height = 2.5
@@ -215,7 +217,7 @@ class Lift:
         self.shaft_width = self.width + 2 * self.gap
 
         # default params
-        self.cabin_mass = 800
+        self.cabin_mass = 1200
         self.params = {
             'v_max_cabin': 2.0,
             'a_max_cabin': 1.2,
@@ -316,6 +318,13 @@ class Lift:
         inertial = SubElement(platform, 'inertial')
         mass = SubElement(inertial, 'mass')
         mass.text = f'{self.cabin_mass}'
+        inertial = SubElement(inertial, 'inertia')
+        SubElement(inertial, 'ixx').text = \
+            str(self.cabin_mass/12.0*(self.width**2 + self.floor_thickness**2))
+        SubElement(inertial, 'iyy').text = \
+            str(self.cabin_mass/12.0*(self.depth**2 + self.floor_thickness**2))
+        SubElement(inertial, 'izz').text = \
+            str(self.cabin_mass/12.0*(self.width**2 + self.depth**2))
 
         # visuals and collisions for floor and walls of cabin
         floor_dims = [self.width, self.depth, self.floor_thickness]

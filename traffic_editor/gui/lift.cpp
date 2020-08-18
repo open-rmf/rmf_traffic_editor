@@ -29,7 +29,8 @@ Lift::Lift()
 {
 }
 
-void Lift::from_yaml(const std::string& _name, const YAML::Node& data)
+void Lift::from_yaml(const std::string& _name, const YAML::Node& data,
+  const std::vector<BuildingLevel>& levels)
 {
   if (!data.IsMap())
     throw std::runtime_error("Lift::from_yaml() expected a map");
@@ -50,6 +51,18 @@ void Lift::from_yaml(const std::string& _name, const YAML::Node& data)
       door.from_yaml(it->first.as<string>(), it->second);
       doors.push_back(door);
     }
+  }
+
+  if (data["highest_floor"])
+    highest_floor = data["highest_floor"].as<string>();
+  if (data["lowest_floor"])
+    lowest_floor = data["lowest_floor"].as<string>();
+  for (auto level : levels)
+  {
+    if (level.name == highest_floor)
+      highest_elevation = level.elevation;
+    if (level.name == lowest_floor)
+      lowest_elevation = level.elevation;
   }
 
   // for every level, load if every door can open
@@ -83,6 +96,8 @@ YAML::Node Lift::to_yaml() const
   // let's give yaw another decimal place because, I don't know, reasons (?)
   n["yaw"] = std::round(yaw * 10000.0) / 10000.0;
   n["reference_floor_name"] = reference_floor_name;
+  n["highest_floor"] = highest_floor;
+  n["lowest_floor"] = lowest_floor;
   n["width"] = std::round(width * 1000.0) / 1000.0;
   n["depth"] = std::round(depth * 1000.0) / 1000.0;
 
@@ -114,13 +129,13 @@ void Lift::draw(
   QGraphicsScene* scene,
   const double meters_per_pixel,
   const string& level_name,
+  const double elevation,
   const bool apply_transformation,
   const double scale,
   const double translate_x,
   const double translate_y) const
 {
-  auto it = level_doors.find(level_name);
-  if (it == level_doors.end())
+  if (elevation > highest_elevation || elevation < lowest_elevation)
     return;
   const double cabin_w = width / meters_per_pixel;
   const double cabin_d = depth / meters_per_pixel;
