@@ -143,6 +143,16 @@ YAML::Node AgentGroup::to_yaml() const {
     return group_node;
 }
 
+//==========================================================
+YAML::Node ModelType::to_yaml() const {
+    YAML::Node model_node = YAML::Node(YAML::NodeType::Map);
+    model_node["typename"] = getName();
+    model_node["animation"] = getAnimation();
+    model_node["animation_speed"] = getAnimationSpeed();
+    model_node["gazebo"] = gazebo_conf.to_yaml();
+    model_node["ign"] = ign_conf.to_yaml();
+    return model_node;
+}
 //===========================================================
 void CrowdSimImplementation::initializeState() {
     if(states.size() == 0)

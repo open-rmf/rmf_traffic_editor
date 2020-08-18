@@ -383,6 +383,74 @@ private:
     std::string agent_profile, initial_state;
 };
 
+//========================================================
+class ModelType 
+{
+public:
+    struct GazeboConf {
+        std::string filename;
+        std::vector<double> initial_pose;
+
+        GazeboConf(std::string file = "", std::vector<double> pose = {0, 0, 0, 0, 0, 0})
+            : filename(file), initial_pose(pose) {}
+        YAML::Node to_yaml() const{
+            YAML::Node result = YAML::Node(YAML::NodeType::Map);
+            result["filename"] = filename;
+            result["pose"] = YAML::Node(YAML::NodeType::Sequence);
+            result["pose"] = initial_pose;
+            return result;
+        }
+    };
+
+    struct IgnConf{
+        std::string filename;
+        std::vector<double> initial_pose;
+        IgnConf(std::string file = "", std::vector<double> pose = {0, 0, 0, 0, 0, 0})
+            : filename(file), initial_pose(pose) {}
+        YAML::Node to_yaml() const{
+            YAML::Node result = YAML::Node(YAML::NodeType::Map);
+            result["model_file_path"] = filename;
+            result["pose"] = YAML::Node(YAML::NodeType::Sequence);
+            result["pose"] = initial_pose;
+            return result;
+        }
+    };
+
+public:
+    ModelType(std::string type_name, std::string animation_name) 
+        : name(type_name),
+        animation(animation_name),
+        animation_speed(0.2),
+        gazebo_conf(),
+        ign_conf()
+     {}
+    ~ModelType() {}
+
+    std::string getName() const {return name;}
+    std::string getAnimation() const {return animation;}
+    double getAnimationSpeed() const {return animation_speed;}
+    GazeboConf getGazeboConf() const {return gazebo_conf;}
+    IgnConf getIgnConf() const {return ign_conf;}
+
+    void setName(std::string type_name) { name = type_name; }
+    void setAnimation(std::string animation_name) { animation = animation_name; }
+    void setAnimationSpeed(double speed) { animation_speed = speed; }
+    void setGazeboConf(std::string file, std::vector<double> pose) {
+        gazebo_conf = GazeboConf(file, pose);
+    }
+    void setIgnConf(std::string file, std::vector<double> pose) {
+        ign_conf = IgnConf(file, pose);
+    }
+
+    YAML::Node to_yaml() const;
+
+private:
+    std::string name, animation;
+    double animation_speed;
+    GazeboConf gazebo_conf;
+    IgnConf ign_conf;
+};
+
 //=========================================================
 class CrowdSimImplementation
 {
