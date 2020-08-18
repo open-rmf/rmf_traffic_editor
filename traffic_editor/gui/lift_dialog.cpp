@@ -98,7 +98,10 @@ LiftDialog::LiftDialog(Lift& lift, Building& building)
         for (auto level : _building.levels)
         {
           if (level.name == _lift.highest_floor)
+          {
             _lift.highest_elevation = level.elevation;
+            break;
+          }
         }
       }
       emit redraw();
@@ -126,7 +129,10 @@ LiftDialog::LiftDialog(Lift& lift, Building& building)
         for (auto level : _building.levels)
         {
           if (level.name == _lift.lowest_floor)
+          {
             _lift.lowest_elevation = level.elevation;
+            break;
+          }
         }
       }
       emit redraw();

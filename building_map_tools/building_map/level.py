@@ -101,8 +101,11 @@ class Level:
             v.z = self.elevation
             self.transformed_vertices.append(v)
 
-    def set_lift_vert_lists(self, lift_vert_lists):
-        self.lift_vert_lists = lift_vert_lists
+    def set_lift_vert_lists(self, lift_vert_lists, lifts):
+        for lift_name, lift in lifts.items():
+            if self.elevation >= lift.lowest_elevation and \
+                self.elevation <= lift.highest_elevation:
+                self.lift_vert_lists[lift_name] = lift_vert_lists[lift_name]
 
     def calculate_scale_using_measurements(self):
         # use the measurements to estimate scale for this level

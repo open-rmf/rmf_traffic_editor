@@ -205,6 +205,8 @@ class Lift:
         self.depth = float(yaml_node['depth'])
         self.width = float(yaml_node['width'])
         self.yaw = float(yaml_node['yaw'])
+        self.highest_elevation = float(levels[yaml_node['highest_floor']].elevation)
+        self.lowest_elevation = float(levels[yaml_node['lowest_floor']].elevation)
         raw_pos = (float(yaml_node['x']), -float(yaml_node['y']))
         self.x, self.y = transform.transform_point(raw_pos)
         self.cabin_height = 2.5
