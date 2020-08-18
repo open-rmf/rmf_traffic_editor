@@ -173,6 +173,7 @@ public:
     double getValue() const { return this->duration; }
     std::string getTimerDistribution() const { return this->distribution;}
     bool isValid() const override { return true; }
+    YAML::Node to_yaml() const override;
 
 private:
     //currently only provides const value distribution for timer
@@ -210,6 +211,8 @@ public:
         return false;
     }
 
+    YAML::Node to_yaml() const override;
+
 private:
     ConditionPtr condition1;
     ConditionPtr condition2;
@@ -245,6 +248,8 @@ public:
         return false;
     }
 
+    YAML::Node to_yaml() const override;
+
 private:
     ConditionPtr condition1;
     ConditionPtr condition2;
@@ -267,6 +272,8 @@ public:
         std::cout << "Invalid not condition" << std::endl;
         return false;
     }
+
+    YAML::Node to_yaml() const override;
 
 private:
     ConditionPtr condition1;

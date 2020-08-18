@@ -713,6 +713,10 @@ void TransitionTab::save() {
     std::vector<size_t> invalid_trasition;
     for(auto i = 0; i < row_count-1; i++) {
         auto& current_transition = implPtr->transitions.at(i);
+        //from_state_name may not be updated
+        auto pItem_from_state = static_cast<QComboBox*>(cellWidget(i, 0));
+        current_transition.setFromState(pItem_from_state->currentText().toStdString());
+
         if (!current_transition.isValid() ) {
             invalid_trasition.push_back(i);
         }
