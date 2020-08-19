@@ -146,6 +146,7 @@ YAML::Node AgentGroup::to_yaml() const {
 //==========================================================
 YAML::Node ModelType::to_yaml() const {
     YAML::Node model_node = YAML::Node(YAML::NodeType::Map);
+    model_node.SetStyle(YAML::EmitterStyle::Flow);
     model_node["typename"] = getName();
     model_node["animation"] = getAnimation();
     model_node["animation_speed"] = getAnimationSpeed();
@@ -153,6 +154,7 @@ YAML::Node ModelType::to_yaml() const {
     model_node["ign"] = ign_conf.to_yaml();
     return model_node;
 }
+
 //===========================================================
 void CrowdSimImplementation::initializeState() {
     if(states.size() == 0)
@@ -174,6 +176,24 @@ void CrowdSimImplementation::initializeAgentGroup() {
     else
         agent_groups[0] = AgentGroup(0, true);
 }
+
+void CrowdSimImplementation::initializeModelType() {
+    if (model_types.size() == 0) 
+        model_types.emplace_back("human", "walk");
+    else
+        model_types[0] = ModelType("human", "walk");
+    auto& default_type = model_types.at(0);
+    default_type.setAnimationSpeed(0.2);
+    default_type.setGazeboConf(
+        "walk.dae",
+        {0, 0, 0, 0, 0, 0}
+    );
+    default_type.setIgnConf(
+        "https://fuel.ignitionrobotics.org/1.0/Mingfei/models/actor",
+        {0, 0, 0, 0, 0, 0}
+    );
+}
+
 
 YAML::Node CrowdSimImplementation::output_obstacle_node() const {
     // Need to refactoring later. Currently with hard code configuration.
@@ -216,8 +236,12 @@ YAML::Node CrowdSimImplementation::to_yaml() {
     for (auto group : agent_groups) {
         top_node["agent_group"].push_back(group.to_yaml());
     }
-    
 
+    top_node["model_types"] = YAML::Node(YAML::NodeType::Sequence);
+    for (auto model_type : model_types) {
+        top_node["model_types"].push_back(model_type.to_yaml());
+    }
+    
     return top_node;
 }
     

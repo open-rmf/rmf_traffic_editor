@@ -33,18 +33,18 @@ using ConditionTimerPtr = std::shared_ptr<ConditionTIMER>;
 class State
 {
 public:
-    State(std::string state_name) 
-        : name(state_name),
+    State(std::string state_name_) 
+        : name(state_name_),
         navmesh_file_name(""),
         is_final_state(true),
         goal_set_id(-1)
     {}
     ~State() {}
 
-    void setNavmeshFile(std::string file_name) {this->navmesh_file_name = file_name;}
-    void setFinalState(bool is_final) { this->is_final_state = is_final; }
-    void setGoalSetId(size_t goal_set_id) { this->goal_set_id = static_cast<int>(goal_set_id); }
-    void setName(std::string name) { this->name = name; }
+    void setNavmeshFile(std::string file_name_) {this->navmesh_file_name = file_name_;}
+    void setFinalState(bool is_final_) { this->is_final_state = is_final_; }
+    void setGoalSetId(size_t goal_set_id_) { this->goal_set_id = static_cast<int>(goal_set_id_); }
+    void setName(std::string name_) { this->name = name_; }
 
     bool isValid() const;
     std::string getName() const {return this->name;}
@@ -65,15 +65,15 @@ private:
 class GoalSet
 {
 public:
-    GoalSet(size_t goal_id) 
-        : id(goal_id),
+    GoalSet(size_t goal_id_) 
+        : id(goal_id_),
         capacity(1),
         goal_area_contained({})
     {}
     ~GoalSet() {}
 
     void addGoalArea(std::string goal_area_name);
-    void setCapacity(size_t capacity) { this->capacity = capacity; }
+    void setCapacity(size_t capacity_) { this->capacity = capacity_; }
     
     std::set<std::string> getGoalAreas() const { return this->goal_area_contained; }
     YAML::Node getGoalAreasToYaml() const;
@@ -92,15 +92,15 @@ private:
 class AgentProfile
 {
 public:
-    AgentProfile(std::string profile_name) 
-        : profile_name(profile_name),
+    AgentProfile(std::string profile_name_) 
+        : profile_name(profile_name_),
         profile_class(1),
+        max_neighbors(10),
+        obstacle_set(1),
         max_accel(0.0),
         max_angle_vel(0.0),
-        max_neighbors(10),
         max_speed(0.0),
         neighbor_dist(5.0),
-        obstacle_set(1),
         pref_speed(0.0),
         r(0.25),
         ORCA_tau(1.0),
@@ -130,12 +130,12 @@ public:
 
     Condition() : name("base_condition"), type(BASE) 
     {}
-    Condition(std::string name, TYPE type) : name(name), type(type)
+    Condition(std::string name_, TYPE type_) : name(name_), type(type_)
     {}
     virtual ~Condition() {}
 
-    TYPE type;
     std::string name;
+    TYPE type;
 
     virtual std::string getConditionName() const { return name; }
     virtual TYPE getType() const { return type; }
@@ -151,7 +151,7 @@ public:
     {}
     ~ConditionGOAL() {}
 
-    void setValue(double distance) { this->distance = distance;}
+    void setValue(double distance_) { this->distance = distance_;}
 
     double getValue() const { return distance; }
     bool isValid() const override { return true; }
@@ -168,7 +168,7 @@ public:
     {}
     ~ConditionTIMER() {}
 
-    void setValue(double value) { this->duration = value; }
+    void setValue(double value_) { this->duration = value_; }
 
     double getValue() const { return this->duration; }
     std::string getTimerDistribution() const { return this->distribution;}
@@ -203,6 +203,7 @@ public:
             return this->condition1;
         if (condition_index == 2)
             return this->condition2;
+        return this->condition1;
     }
 
     bool isValid() const override {
@@ -240,6 +241,7 @@ public:
             return this->condition1;
         if (condition_index == 2)
             return this->condition2;
+        return this->condition1;
     }
 
     bool isValid() const override {
@@ -264,7 +266,7 @@ public:
     {}
     ~ConditionNOT() {}
 
-    void setCondition(ConditionPtr condition1) { this->condition1 = condition1; } 
+    void setCondition(ConditionPtr condition_) { this->condition1 = condition_; } 
 
     ConditionPtr getCondition() const { return this->condition1; }
     bool isValid() const override {
@@ -285,21 +287,21 @@ class Transition
 using StateName = std::string;
 using ToStateType = std::map<StateName, double>;
 public:
-    Transition(StateName from_state_name) 
-        : from_state_name(from_state_name),
+    Transition(StateName from_state_name_) 
+        : from_state_name(from_state_name_),
         to_state_name({}),
         condition(std::make_shared<Condition>())
     {}
     ~Transition() {}
 
-    void setFromState(StateName state_name) { this->from_state_name = state_name; }
+    void setFromState(StateName state_name_) { this->from_state_name = state_name_; }
     std::string getFromState() const { return this->from_state_name; }
 
-    void addToState(StateName state_name, double weight = 1.0) {
-        this->to_state_name.insert(std::make_pair(state_name, weight) );
+    void addToState(StateName state_name_, double weight_ = 1.0) {
+        this->to_state_name.insert(std::make_pair(state_name_, weight_) );
     }
-    void deleteToState(StateName state_name) {
-        this->to_state_name.erase(state_name);
+    void deleteToState(StateName state_name_) {
+        this->to_state_name.erase(state_name_);
     }
     ToStateType getToState() const {
         return this->to_state_name;
@@ -308,7 +310,7 @@ public:
         this->to_state_name.clear();
     }
 
-    void setCondition(ConditionPtr condition) { this->condition = condition; }
+    void setCondition(ConditionPtr condition_) { this->condition = condition_; }
     ConditionPtr getCondition() const { return condition; }
 
     bool isValid() {
@@ -330,9 +332,9 @@ private:
 class AgentGroup
 {
 public:
-    AgentGroup(size_t group_id, bool is_external_group = false) 
-        : group_id(group_id), 
-        is_external_group(is_external_group),
+    AgentGroup(size_t group_id_, bool is_external_group_ = false) 
+        : group_id(group_id_), 
+        is_external_group(is_external_group_),
         spawn_point_x(0.0),
         spawn_point_y(0.0),
         spawn_number(0),
@@ -395,6 +397,7 @@ public:
             : filename(file), initial_pose(pose) {}
         YAML::Node to_yaml() const{
             YAML::Node result = YAML::Node(YAML::NodeType::Map);
+            result.SetStyle(YAML::EmitterStyle::Flow);
             result["filename"] = filename;
             result["pose"] = YAML::Node(YAML::NodeType::Sequence);
             result["pose"] = initial_pose;
@@ -409,6 +412,7 @@ public:
             : filename(file), initial_pose(pose) {}
         YAML::Node to_yaml() const{
             YAML::Node result = YAML::Node(YAML::NodeType::Map);
+            result.SetStyle(YAML::EmitterStyle::Flow);
             result["model_file_path"] = filename;
             result["pose"] = YAML::Node(YAML::NodeType::Sequence);
             result["pose"] = initial_pose;
@@ -432,9 +436,9 @@ public:
     GazeboConf getGazeboConf() const {return gazebo_conf;}
     IgnConf getIgnConf() const {return ign_conf;}
 
-    void setName(std::string type_name) { name = type_name; }
-    void setAnimation(std::string animation_name) { animation = animation_name; }
-    void setAnimationSpeed(double speed) { animation_speed = speed; }
+    void setName(std::string type_name_) { name = type_name_; }
+    void setAnimation(std::string animation_name_) { animation = animation_name_; }
+    void setAnimationSpeed(double speed_) { animation_speed = speed_; }
     void setGazeboConf(std::string file, std::vector<double> pose) {
         gazebo_conf = GazeboConf(file, pose);
     }
@@ -461,6 +465,7 @@ public:
         initializeState();
         initializeAgentProfile();
         initializeAgentGroup();
+        initializeModelType();
     }
     ~CrowdSimImplementation() {}
 
@@ -481,13 +486,13 @@ public:
     std::vector<Transition> transitions;
     std::vector<AgentProfile> agent_profiles;
     std::vector<AgentGroup> agent_groups;
-    // std::vector<ModelType> model_types;
-
+    std::vector<ModelType> model_types;
 
 private:
     void initializeState();
     void initializeAgentProfile();
     void initializeAgentGroup();
+    void initializeModelType();
 
     YAML::Node output_obstacle_node() const;
 };

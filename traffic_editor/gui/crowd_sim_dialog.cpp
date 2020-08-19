@@ -113,7 +113,7 @@ void StatesTab::list_states_in_impl() {
     setItem(0, 4, new QTableWidgetItem(QString::fromStdString("")));
 
     for (size_t i = 1; i < states_number; i++) {
-        auto& current_state = implPtr->states.at(i);
+        current_state = implPtr->states.at(i);
         setItem(i, 0, new QTableWidgetItem(QString::fromStdString(current_state.getName()) ) );
 
         QComboBox* final_state_combo = new QComboBox;
@@ -187,7 +187,7 @@ void StatesTab::list_final_states_in_combo(QComboBox* comboBox, bool current_sta
 
 void StatesTab::list_navmesh_file_in_combo(QComboBox* comboBox, std::string navmesh_filename) {
     auto navmesh_list = implPtr->getNavmeshFileName();
-    for (auto i = 0; i < navmesh_list.size(); i++) {
+    for (size_t i = 0; i < navmesh_list.size(); i++) {
         comboBox->addItem(QString::fromStdString(navmesh_list[i]));
         if (navmesh_list[i] == navmesh_filename) {
             comboBox->setCurrentIndex(i);
@@ -276,7 +276,7 @@ void GoalSetTab::update() {
 void GoalSetTab::list_goal_set_in_impl() {
     blockSignals(true);
     auto goal_set_number = implPtr->goal_sets.size();
-    for (auto i = 0; i < goal_set_number; i++) {
+    for (size_t i = 0; i < goal_set_number; i++) {
         auto& goal_set = implPtr->goal_sets[i];
         setItem(i, 0, new QTableWidgetItem(QString::number(static_cast<int>(goal_set.getGoalSetId()))));
 
@@ -326,7 +326,7 @@ int GoalSetTab::save() {
 }
 
 void GoalSetTab::add_button_clicked() {
-    auto row_count = save();
+    save();
     size_t new_goal_set_id = 0;
     if(implPtr->goal_sets.size() != 0) {
         new_goal_set_id = implPtr->goal_sets.back().getGoalSetId() + 1;
@@ -335,8 +335,8 @@ void GoalSetTab::add_button_clicked() {
 }
 
 
-GoalSetDialog::GoalSetDialog(CrowdSimImplPtr crowd_sim_impl)
-    : CrowdSimDialog(crowd_sim_impl)
+GoalSetDialog::GoalSetDialog(CrowdSimImplPtr crowd_sim_impl_)
+    : CrowdSimDialog(crowd_sim_impl_)
 {
     goal_set_tab = std::make_shared<GoalSetTab>(crowd_sim_impl);
     goal_set_tab->update();
@@ -381,7 +381,7 @@ void AgentProfileTab::list_agent_profile_in_impl() {
     
     auto profile_count = implPtr->agent_profiles.size();
     
-    for (auto i = 0; i < profile_count; i++) {
+    for (size_t i = 0; i < profile_count; i++) {
         auto& current_profile = implPtr->agent_profiles[i];
         setItem(i, 0, new QTableWidgetItem(QString::fromStdString(current_profile.profile_name)));
         setItem(i, 1, new QTableWidgetItem(QString::number(static_cast<uint>(current_profile.profile_class))));
@@ -546,10 +546,10 @@ int AgentProfileTab::save() {
     return row_count-1;
 }
 
-AgentProfileDialog::AgentProfileDialog(CrowdSimImplPtr crowd_sim_impl)
-    : CrowdSimDialog(crowd_sim_impl)
+AgentProfileDialog::AgentProfileDialog(CrowdSimImplPtr crowd_sim_impl_)
+    : CrowdSimDialog(crowd_sim_impl_)
 {
-    agent_profile_tab = std::make_shared<AgentProfileTab>(crowd_sim_impl);
+    agent_profile_tab = std::make_shared<AgentProfileTab>(crowd_sim_impl_);
     agent_profile_tab->update();
 
     setWindowTitle("Agent Profiles");
@@ -567,10 +567,10 @@ void AgentProfileDialog::ok_button_clicked() {
 }
 
 //=============================================================
-TransitionDialog::TransitionDialog(CrowdSimImplPtr crowd_sim_impl) 
-    : CrowdSimDialog(crowd_sim_impl)
+TransitionDialog::TransitionDialog(CrowdSimImplPtr crowd_sim_impl_) 
+    : CrowdSimDialog(crowd_sim_impl_)
 {
-    transition_tab = std::make_shared<TransitionTab>(crowd_sim_impl);
+    transition_tab = std::make_shared<TransitionTab>(crowd_sim_impl_);
     transition_tab->update();
 
     setWindowTitle("Transitions");
@@ -627,7 +627,7 @@ void TransitionTab::update() {
 void TransitionTab::list_transition_in_impl() {
 
     auto transition_number = implPtr->transitions.size();
-    for (auto i = 0; i < transition_number; i++) {
+    for (size_t i = 0; i < transition_number; i++) {
         auto& transition = implPtr->transitions[i];
 
         QComboBox* from_state_comboBox = new QComboBox;
@@ -698,8 +698,8 @@ void TransitionTab::list_from_states_in_combo(QComboBox* comboBox, crowd_sim::Tr
     connect(
         comboBox,
         QOverload<int>::of(&QComboBox::activated),
-        [this, comboBox, &transition](int index) {
-            auto state_name = comboBox->itemText(index).toStdString();
+        [this, comboBox, &transition](int index_) {
+            auto state_name = comboBox->itemText(index_).toStdString();
             transition.setFromState(state_name);
         }
     );
@@ -735,10 +735,10 @@ void TransitionTab::add_button_clicked() {
     implPtr->transitions.emplace_back("");
 }
 
-ToStateDialog::ToStateDialog(crowd_sim::Transition& transition, CrowdSimImplPtr crowd_sim_impl)
-    : CrowdSimDialog(crowd_sim_impl)
+ToStateDialog::ToStateDialog(crowd_sim::Transition& transition, CrowdSimImplPtr crowd_sim_impl_)
+    : CrowdSimDialog(crowd_sim_impl_)
 {
-    to_state_tab = std::make_shared<ToStateTab>(transition, crowd_sim_impl);
+    to_state_tab = std::make_shared<ToStateTab>(transition, crowd_sim_impl_);
     to_state_tab->update();
 
     setWindowTitle("Transition To State Setup" );
@@ -793,7 +793,6 @@ void ToStateTab::update() {
 }
 
 void ToStateTab::list_to_states_in_current_transition() {
-    auto to_state_number = current_transition.getToState().size();
     size_t row_number = 0;
     for (auto to_state : current_transition.getToState() ) {
         auto to_state_name = to_state.first;
@@ -854,8 +853,8 @@ void ToStateTab::save() {
     blockSignals(false);
 }
 
-ConditionDialog::ConditionDialog(crowd_sim::Transition& transition, CrowdSimImplPtr crowd_sim_impl)
-    : CrowdSimDialog(crowd_sim_impl), current_transition(transition)
+ConditionDialog::ConditionDialog(crowd_sim::Transition& transition, CrowdSimImplPtr crowd_sim_impl_)
+    : CrowdSimDialog(crowd_sim_impl_), current_transition(transition)
 {
     setWindowTitle("Transition Condition Setup" );
     // root condition comboBox
@@ -1132,7 +1131,7 @@ void ConditionDialog::update() {
         auto and_condition = std::dynamic_pointer_cast<crowd_sim::ConditionAND>(root_condition);
         for (int i = 1; i <= 2; i++) {
             auto sub_condition = and_condition->getCondition(i);
-            double temp_value;
+            double temp_value = 0.0;
             if (crowd_sim::Condition::GOAL == sub_condition->getType()) {
                 temp_value = std::dynamic_pointer_cast<crowd_sim::ConditionGOAL>(sub_condition)->getValue();
             }
@@ -1152,7 +1151,7 @@ void ConditionDialog::update() {
         auto or_condition = std::dynamic_pointer_cast<crowd_sim::ConditionOR>(root_condition);
         for (int i = 1; i <= 2; i++) {
             auto sub_condition = or_condition->getCondition(i);
-            double temp_value;
+            double temp_value = 0.0;
             if (crowd_sim::Condition::GOAL == sub_condition->getType()) {
                 temp_value = std::dynamic_pointer_cast<crowd_sim::ConditionGOAL>(sub_condition)->getValue();
             }
@@ -1173,10 +1172,10 @@ void ConditionDialog::update() {
 }
 
 //============================================================================
-AgentGroupDialog::AgentGroupDialog(CrowdSimImplPtr crowd_sim_impl)
-    : CrowdSimDialog(crowd_sim_impl)
+AgentGroupDialog::AgentGroupDialog(CrowdSimImplPtr crowd_sim_impl_)
+    : CrowdSimDialog(crowd_sim_impl_)
 {
-    agent_group_tab = std::make_shared<AgentGroupTab>(crowd_sim_impl);
+    agent_group_tab = std::make_shared<AgentGroupTab>(crowd_sim_impl_);
     agent_group_tab->update();
 
     setWindowTitle("Agent Group");
@@ -1186,6 +1185,11 @@ AgentGroupDialog::AgentGroupDialog(CrowdSimImplPtr crowd_sim_impl)
 
     top_vbox->addLayout(table_box);
     top_vbox->addLayout(bottom_buttons_hbox);
+}
+
+void AgentGroupDialog::ok_button_clicked() {
+    agent_group_tab->save();
+    accept();
 }
 
 AgentGroupTab::AgentGroupTab(CrowdSimImplPtr crowd_sim_impl) 
@@ -1228,17 +1232,17 @@ void AgentGroupTab::update() {
 void AgentGroupTab::save() {
     auto row_count = rowCount();
     //row 0 reserved for external agent, only save the agent profile and initial state
-    auto& external_group = implPtr->agent_groups.at(0);
+    auto& current_group = implPtr->agent_groups.at(0);
     auto profile_combo = static_cast<QComboBox*>(cellWidget(0, 1));
-    external_group.setAgentProfile(profile_combo->currentText().toStdString());
+    current_group.setAgentProfile(profile_combo->currentText().toStdString());
     auto state_combo = static_cast<QComboBox*>(cellWidget(0, 2));
-    external_group.setInitialState(state_combo->currentText().toStdString());
+    current_group.setInitialState(state_combo->currentText().toStdString());
 
     for (auto row = 1; row < row_count-1; row++) {
-        auto& current_group = implPtr->agent_groups.at(row);
-        auto profile_combo = static_cast<QComboBox*>(cellWidget(row, 1));
+        current_group = implPtr->agent_groups.at(row);
+        profile_combo = static_cast<QComboBox*>(cellWidget(row, 1));
         current_group.setAgentProfile(profile_combo->currentText().toStdString());
-        auto state_combo = static_cast<QComboBox*>(cellWidget(row, 2));
+        state_combo = static_cast<QComboBox*>(cellWidget(row, 2));
         current_group.setInitialState(state_combo->currentText().toStdString());
         
         bool OK_status;
@@ -1276,7 +1280,7 @@ void AgentGroupTab::add_button_clicked() {
 void AgentGroupTab::list_agent_group_in_impl() {
     auto group_number = implPtr->agent_groups.size();
 
-    for (auto row = 0; row < group_number; row++) {
+    for (size_t row = 0; row < group_number; row++) {
         auto& current_group = implPtr->agent_groups.at(row);
         
         setItem(row, 0, new QTableWidgetItem(QString::number(static_cast<int>(current_group.getGroupId()) )));
@@ -1347,4 +1351,140 @@ void AgentGroupTab::add_states_in_combobox(QComboBox*& state_combo, std::string 
     } else {
         state_combo->setCurrentIndex(0);
     }
+}
+
+//===========================================================
+ModelTypeTab::ModelTypeTab(CrowdSimImplPtr crowd_sim_impl)
+    : TableList(18), implPtr(crowd_sim_impl)
+{
+    const QStringList labels = 
+        {"name", "animation", "anim_speed", 
+        "gazebo_model", "x", "y", "z", "pitch", "roll", "yaw",
+        "ign_model", "x", "y", "z", "pitch", "roll", "yaw",
+        ""};
+    label_size = labels.size();
+    setHorizontalHeaderLabels(labels);
+    horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    setMinimumSize(1600, 400);
+    setSizePolicy(
+        QSizePolicy::Expanding,
+        QSizePolicy::MinimumExpanding);
+} 
+
+void ModelTypeTab::update() {
+    blockSignals(true);
+    auto model_number = implPtr->model_types.size();
+    clearContents();
+    setRowCount(1 + model_number);
+    list_model_type_in_impl();
+
+    for (auto column = 0; column < label_size - 1; column++) {
+        setItem(model_number, column, new QTableWidgetItem(QString::fromStdString("" )));
+    }
+    QPushButton* add_button = new QPushButton("Add");
+    setCellWidget(model_number, label_size - 1, add_button);
+    connect(
+        add_button,
+        &QAbstractButton::clicked,
+        [this]() {
+            add_button_clicked();
+            update();
+        }
+    );
+    blockSignals(false);
+}
+
+void ModelTypeTab::save() {
+    blockSignals(true);
+    auto row_count = rowCount();
+    for (auto row = 0; row < row_count - 1; row++) {
+        auto& current_model_type = this->implPtr->model_types.at(row);
+        bool OK_status; //return 0.0 if fails to convert
+        current_model_type.setName( item(row, 0)->text().toStdString() );
+        current_model_type.setAnimation( item(row, 1)->text().toStdString() );
+        current_model_type.setAnimationSpeed( item(row, 2)->text().toDouble(&OK_status) );
+        std::string filename = item(row, 3)->text().toStdString();
+        std::vector<double> initial_pose = {
+            item(row, 4)->text().toDouble(&OK_status),
+            item(row, 5)->text().toDouble(&OK_status),
+            item(row, 6)->text().toDouble(&OK_status),
+            item(row, 7)->text().toDouble(&OK_status),
+            item(row, 8)->text().toDouble(&OK_status),
+            item(row, 9)->text().toDouble(&OK_status)
+        };
+        current_model_type.setGazeboConf(filename, initial_pose);
+
+        filename = item(row, 10)->text().toStdString();
+        initial_pose = {
+            item(row, 11)->text().toDouble(&OK_status),
+            item(row, 12)->text().toDouble(&OK_status),
+            item(row, 13)->text().toDouble(&OK_status),
+            item(row, 14)->text().toDouble(&OK_status),
+            item(row, 15)->text().toDouble(&OK_status),
+            item(row, 16)->text().toDouble(&OK_status)
+        };
+        current_model_type.setIgnConf(filename, initial_pose);
+    }
+    blockSignals(false);
+}
+
+void ModelTypeTab::list_model_type_in_impl() {
+    auto model_number = implPtr->model_types.size();
+
+    for (size_t row = 0; row < model_number; row++) {
+        auto& current_model_type = implPtr->model_types.at(row);
+        setItem(row, 0, new QTableWidgetItem(QString::fromStdString(current_model_type.getName() )));
+        setItem(row, 1, new QTableWidgetItem(QString::fromStdString(current_model_type.getAnimation() )));
+        setItem(row, 2, new QTableWidgetItem(QString::number(current_model_type.getAnimationSpeed() )));
+        setItem(row, 3, new QTableWidgetItem(QString::fromStdString(current_model_type.getGazeboConf().filename )));
+        setItem(row, 4, new QTableWidgetItem(QString::number(current_model_type.getGazeboConf().initial_pose[0] )));
+        setItem(row, 5, new QTableWidgetItem(QString::number(current_model_type.getGazeboConf().initial_pose[1] )));
+        setItem(row, 6, new QTableWidgetItem(QString::number(current_model_type.getGazeboConf().initial_pose[2] )));
+        setItem(row, 7, new QTableWidgetItem(QString::number(current_model_type.getGazeboConf().initial_pose[3] )));
+        setItem(row, 8, new QTableWidgetItem(QString::number(current_model_type.getGazeboConf().initial_pose[4] )));
+        setItem(row, 9, new QTableWidgetItem(QString::number(current_model_type.getGazeboConf().initial_pose[5] )));
+        setItem(row, 10, new QTableWidgetItem(QString::fromStdString(current_model_type.getIgnConf().filename )));
+        setItem(row, 11, new QTableWidgetItem(QString::number(current_model_type.getIgnConf().initial_pose[0] )));
+        setItem(row, 12, new QTableWidgetItem(QString::number(current_model_type.getIgnConf().initial_pose[1] )));
+        setItem(row, 13, new QTableWidgetItem(QString::number(current_model_type.getIgnConf().initial_pose[2] )));
+        setItem(row, 14, new QTableWidgetItem(QString::number(current_model_type.getIgnConf().initial_pose[3] )));
+        setItem(row, 15, new QTableWidgetItem(QString::number(current_model_type.getIgnConf().initial_pose[4] )));
+        setItem(row, 16, new QTableWidgetItem(QString::number(current_model_type.getIgnConf().initial_pose[5] )));
+
+        QPushButton* delete_button = new QPushButton("delete");
+        setCellWidget(row, 17, delete_button);
+        connect(
+            delete_button,
+            &QAbstractButton::clicked,
+            [this, row]() {
+                this->implPtr->model_types.erase(implPtr->model_types.begin() + row);
+                update();
+            }
+        );
+    }
+}
+
+void ModelTypeTab::add_button_clicked() {
+    save();
+    this->implPtr->model_types.emplace_back("new_model", "walk");
+}
+
+ModelTypeDialog::ModelTypeDialog(CrowdSimImplPtr crowd_sim_impl_) 
+    : CrowdSimDialog(crowd_sim_impl_)
+{
+    model_type_tab = std::make_shared<ModelTypeTab>(crowd_sim_impl);
+    model_type_tab->update();
+
+    setWindowTitle("ModelType" );
+
+    QHBoxLayout* table_box = new QHBoxLayout;
+    table_box->addWidget(model_type_tab.get());
+
+    top_vbox->addLayout(table_box);
+    top_vbox->addLayout(bottom_buttons_hbox);
+}
+
+void ModelTypeDialog::ok_button_clicked() {
+    model_type_tab->save();
+    accept();
 }

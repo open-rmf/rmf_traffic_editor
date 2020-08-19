@@ -19,10 +19,10 @@ public:
     virtual void ok_button_clicked();
     virtual void cancel_button_clicked();
 
+    CrowdSimImplPtr crowd_sim_impl;
     QPushButton *ok_button, *cancel_button;
     QHBoxLayout* bottom_buttons_hbox;
     QVBoxLayout* top_vbox;
-    CrowdSimImplPtr crowd_sim_impl;
 };
 
 //====================================================================
@@ -236,6 +236,39 @@ public:
 
 private:
     std::shared_ptr<AgentGroupTab> agent_group_tab;
+    void ok_button_clicked() override;
+
+};
+
+//=============================================================
+class ModelTypeTab : public TableList
+{
+public:
+    ModelTypeTab(CrowdSimImplPtr crowd_sim_impl);
+    ~ModelTypeTab() {}
+
+    void update();
+    void save();
+
+private:
+    int label_size;
+    CrowdSimImplPtr implPtr;
+    void list_model_type_in_impl();
+    void add_button_clicked();
+
+
+};
+
+class ModelTypeDialog : public CrowdSimDialog 
+{
+public:
+    ModelTypeDialog(CrowdSimImplPtr crowd_sim_impl);
+    ~ModelTypeDialog() {}
+
+private:
+    std::shared_ptr<ModelTypeTab> model_type_tab;
+
+    void ok_button_clicked() override;
 
 };
 
