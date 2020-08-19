@@ -1,0 +1,53 @@
+table, th, td {
+	border-collapse:collapse;
+	border: 1px solid grey;
+}
+table {
+	table-layout : fixed;
+	width: 950 px;
+	max-width: 900 px;
+	background-color : #292929;
+}
+td {
+	min-width: 200px;
+}
+#content {
+	position : relative;
+}
+body, html {
+	background: #000000;
+	width: 1000px;
+	font-family: Arial;
+	font-size: 16px;
+	color: #C0C0C0;
+}
+h1 {
+	font-size : 50px;
+	line-height : 100px;
+	color : #FFFFFF;
+	border-bottom : 1px dotted #888888;
+}
+#logo {
+	position: absolute;
+	top: 0px;
+	right: 0px;
+}
+.divider {
+	background : #DDD;
+}
+.box {
+	padding : 0px;
+}
+.inf {
+	color: #C0C0C0;
+	min-width : 1000px;
+	max-width : 1000px;
+}
+.err {
+	color: #EE1100;
+	font-weight: bold
+}
+.war {
+	color: #FFCC00;
+	font-weight: bold
+}

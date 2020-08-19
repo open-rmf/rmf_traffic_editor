@@ -173,7 +173,7 @@ if (menge_FOUND)
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
   )
 else (NOT menge_FOUND)
-  message("menge-cmake not found, skipping crowd_simulation plugins")
+  message("menge-cmake not found, skipping crowd_simulation gazebo plugins")
 endif()
 
 ###############################
