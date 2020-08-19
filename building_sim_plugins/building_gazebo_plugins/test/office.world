@@ -1,0 +1,657 @@
+<sdf version="1.6">
+	<world name="world">
+		<scene>
+			<ambient>0.8 0.8 0.8 1.0</ambient>
+			<background>0 0 0</background>
+			<grid>false</grid>
+		</scene>
+		<include>
+			<uri>model://sun</uri>
+		</include>
+		<gui>
+			<camera name="gui_camera">
+				<pose>12.98050313207134 -26.57380811719063 10 0 0.6 1.57</pose>
+			</camera>
+			<plugin filename="libtoggle_floors.so" name="toggle_floors">
+				<floor model_name="building_L1" name="L1" />
+			</plugin>
+		</gui>
+		<include>
+			<name>OfficeChairBlack</name>
+			<uri>model://OfficeChairBlack</uri>
+			<pose>6.562113035969731 -6.72165375308089 0 0 0 4.2503</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>OfficeChairBlack_2</name>
+			<uri>model://OfficeChairBlack</uri>
+			<pose>6.239069750128609 -7.483497502189539 0 0 0 4.2239</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>OfficeChairBlack_3</name>
+			<uri>model://OfficeChairBlack</uri>
+			<pose>5.758449741995906 -8.260443694221157 0 0 0 4.247</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>OfficeChairBlack_4</name>
+			<uri>model://OfficeChairBlack</uri>
+			<pose>5.395881060410753 -9.02572443426407 0 0 0 4.2458</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>OfficeChairBlack_5</name>
+			<uri>model://OfficeChairBlack</uri>
+			<pose>3.8721597002138073 -8.264828820585564 0 0 0 1.0926</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>OfficeChairBlack_6</name>
+			<uri>model://OfficeChairBlack</uri>
+			<pose>4.26201267190027 -7.489812761393875 0 0 0 1.1213</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>OfficeChairBlack_7</name>
+			<uri>model://OfficeChairBlack</uri>
+			<pose>4.652678331098282 -6.752375034116462 0 0 0 1.0613</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>OfficeChairBlack_8</name>
+			<uri>model://OfficeChairBlack</uri>
+			<pose>5.0126227092607225 -6.058839363452574 0 0 0 1.0779</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>Fridge</name>
+			<uri>model://Fridge</uri>
+			<pose>15.988145328136557 -5.750839262070037 0 0 0 1.5708</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>OfficeChairGrey</name>
+			<uri>model://OfficeChairGrey</uri>
+			<pose>14.25575798385424 -5.546939351620108 0 0 0 0.0166</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>AdjTable</name>
+			<uri>model://AdjTable</uri>
+			<pose>11.788455629778278 -5.979746244489952 0 0 0 3.1613</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>AdjTable_2</name>
+			<uri>model://AdjTable</uri>
+			<pose>8.395375217623192 -4.354184980501898 0 0 0 1.099</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>AdjTable_3</name>
+			<uri>model://AdjTable</uri>
+			<pose>14.244879822892347 -5.941482207487806 0 0 0 3.1594</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>SmallCubicle</name>
+			<uri>model://SmallCubicle</uri>
+			<pose>10.225911509914997 -8.526615785243605 0 0 0 1.5708</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>SmallCubicle_2</name>
+			<uri>model://SmallCubicle</uri>
+			<pose>10.183296208528093 -9.890381619078704 0 0 0 1.5708</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>SmallCubicle_3</name>
+			<uri>model://SmallCubicle</uri>
+			<pose>13.810743847321321 -9.831106223705028 0 0 0 1.5708</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>SmallCubicle_4</name>
+			<uri>model://SmallCubicle</uri>
+			<pose>9.391493072925952 -8.541963727519024 0 0 0 -1.5708</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>SmallCubicle_5</name>
+			<uri>model://SmallCubicle</uri>
+			<pose>9.36992299189023 -9.890178447200816 0 0 0 4.7124</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>SmallCubicle_6</name>
+			<uri>model://SmallCubicle</uri>
+			<pose>12.9440464782329 -9.827406802428492 0 0 0 4.7124</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>SmallCubicle_7</name>
+			<uri>model://SmallCubicle</uri>
+			<pose>12.955153207557416 -8.471810171183453 0 0 0 -1.5708</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>SmallCubicle_8</name>
+			<uri>model://SmallCubicle</uri>
+			<pose>13.810743847321321 -8.460694976364024 0 0 0 1.5708</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>AdjTable_4</name>
+			<uri>model://AdjTable</uri>
+			<pose>6.734191151045531 -9.675341117324612 0 0 0 1.0878</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>Drawer</name>
+			<uri>model://Drawer</uri>
+			<pose>6.111215380472989 -10.564387392980658 0 0 0 1.1104</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>BigCubicle</name>
+			<uri>model://BigCubicle</uri>
+			<pose>17.319691488336666 -8.342677511796122 0 0 0 1.5708</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>BigCubicle_2</name>
+			<uri>model://BigCubicle</uri>
+			<pose>17.350328114423117 -9.715696131570017 0 0 0 1.5708</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>BigCubicle_3</name>
+			<uri>model://BigCubicle</uri>
+			<pose>16.480625494640943 -9.730028214455997 0 0 0 -1.5708</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>BigCubicle_4</name>
+			<uri>model://BigCubicle</uri>
+			<pose>16.48540849926621 -8.382482268872248 0 0 0 -1.5708</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>AdjTable_5</name>
+			<uri>model://AdjTable</uri>
+			<pose>22.074836169849544 -10.32024251971918 0 0 0 4.6088</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>AdjTable_6</name>
+			<uri>model://AdjTable</uri>
+			<pose>22.382768547272782 -7.585083441133288 0 0 0 4.5816</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>AdjTable_7</name>
+			<uri>model://AdjTable</uri>
+			<pose>19.94360549828424 -8.644573991347123 0 0 0 1.5864</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>AdjTable_8</name>
+			<uri>model://AdjTable</uri>
+			<pose>19.933099819098473 -7.193799800806701 0 0 0 1.5733</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>AdjTable_9</name>
+			<uri>model://AdjTable</uri>
+			<pose>7.47503200727756 -3.868731174774456 0 0 0 4.2286</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>AdjTable_10</name>
+			<uri>model://AdjTable</uri>
+			<pose>13.006471037713835 -5.565732750324702 0 0 0 1.5914</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>OfficeChairGrey_2</name>
+			<uri>model://OfficeChairGrey</uri>
+			<pose>20.8759104529405 -3.9703171137182056 0 0 0 0.0</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>OfficeChairGrey_3</name>
+			<uri>model://OfficeChairGrey</uri>
+			<pose>21.680132469578517 -3.9703171137182056 0 0 0 0.0</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>OfficeChairGrey_4</name>
+			<uri>model://OfficeChairGrey</uri>
+			<pose>22.188062164297264 -4.512108788084869 0 0 0 -1.5708</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>OfficeChairGrey_5</name>
+			<uri>model://OfficeChairGrey</uri>
+			<pose>21.66320147975456 -5.07083145227549 0 0 0 3.1416</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>OfficeChairGrey_6</name>
+			<uri>model://OfficeChairGrey</uri>
+			<pose>20.816651988556647 -5.036969472627574 0 0 0 3.1416</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>OfficeChairGrey_7</name>
+			<uri>model://OfficeChairGrey</uri>
+			<pose>20.257929324366025 -4.529039777908827 0 0 0 1.5708</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>OfficeChairGrey_8</name>
+			<uri>model://OfficeChairGrey</uri>
+			<pose>14.205616857490586 -8.518074100877419 0 0 0 -1.5708</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>OfficeChairGrey_9</name>
+			<uri>model://OfficeChairGrey</uri>
+			<pose>21.993355781321743 -7.517359481837455 0 0 0 1.419</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>OfficeChairGrey_10</name>
+			<uri>model://OfficeChairGrey</uri>
+			<pose>21.731416437755286 -10.29278045422472 0 0 0 1.4599</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>OfficeChairBlue</name>
+			<uri>model://OfficeChairBlue</uri>
+			<pose>8.867969936579339 -8.374719410037965 0 0 0 1.5708</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>OfficeChairBlue_2</name>
+			<uri>model://OfficeChairBlue</uri>
+			<pose>8.853637853693357 -9.784393622780726 0 0 0 1.5708</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>OfficeChairBlue_3</name>
+			<uri>model://OfficeChairBlue</uri>
+			<pose>10.702933682710107 -8.503742017991438 0 0 0 4.7124</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>OfficeChairBlue_4</name>
+			<uri>model://OfficeChairBlue</uri>
+			<pose>10.698159143579753 -9.870411516581347 0 0 0 4.7124</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>OfficeChairBlue_5</name>
+			<uri>model://OfficeChairBlue</uri>
+			<pose>12.456662539665526 -8.470294847594209 0 0 0 1.5708</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>OfficeChairBlue_6</name>
+			<uri>model://OfficeChairBlue</uri>
+			<pose>14.310741373307545 -9.832181341558849 0 0 0 -1.5708</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>OfficeChairBlue_7</name>
+			<uri>model://OfficeChairBlue</uri>
+			<pose>16.02188879085571 -9.773041394103762 0 0 0 1.5708</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>OfficeChairBlue_8</name>
+			<uri>model://OfficeChairBlue</uri>
+			<pose>16.041003878366954 -8.435044526780727 0 0 0 1.5708</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>OfficeChairBlue_9</name>
+			<uri>model://OfficeChairBlue</uri>
+			<pose>17.804290279077996 -8.544952047222951 0 0 0 -1.5708</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>OfficeChairBlue_10</name>
+			<uri>model://OfficeChairBlue</uri>
+			<pose>17.83296291034487 -9.72525367532564 0 0 0 -1.5708</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>OfficeChairBlack_9</name>
+			<uri>model://OfficeChairBlack</uri>
+			<pose>12.394542738001423 -9.712716277360999 0 0 0 1.5708</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>OfficeChairGrey_11</name>
+			<uri>model://OfficeChairGrey</uri>
+			<pose>11.842888762062305 -5.564640701481056 0 0 0 0.016</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>Drawer_2</name>
+			<uri>model://Drawer</uri>
+			<pose>10.366802741735066 -10.79836520685285 0 0 0 1.5708</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>Drawer_3</name>
+			<uri>model://Drawer</uri>
+			<pose>17.944157186013715 -7.932151801534608 0 0 0 1.5708</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>Drawer_4</name>
+			<uri>model://Drawer</uri>
+			<pose>22.225716685665745 -9.267287331577394 0 0 0 4.6217</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>ConfTable</name>
+			<uri>model://ConfTable</uri>
+			<pose>5.248606845427052 -7.381911563245789 0 0 0 1.1017</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>RecTable</name>
+			<uri>model://RecTable</uri>
+			<pose>21.23146123924362 -4.50364329317289 0 0 0 0.0</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>WhiteCabinet</name>
+			<uri>model://WhiteCabinet</uri>
+			<pose>15.067979893184077 -2.914111175530219 0 0 0 -0.0292</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>SquareShelf</name>
+			<uri>model://SquareShelf</uri>
+			<pose>7.948845757501031 -2.980853137416262 0 0 0 2.664</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>coke_dispenser</name>
+			<uri>model://TeleportDispenser</uri>
+			<pose>17.704388973621732 -5.289418996397703 0 0 0 1.5708</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>Coke</name>
+			<uri>model://Coke</uri>
+			<pose>17.704388973621732 -5.291535370125699 0 0 0 1.5708</pose>
+			<static>False</static>
+		</include>
+		<include>
+			<name>coke_ingestor</name>
+			<uri>model://TeleportIngestor</uri>
+			<pose>22.542656349675333 -7.610446063889577 0.805 0 0 1.5708</pose>
+			<static>True</static>
+		</include>
+		<include>
+			<name>magni2</name>
+			<uri>model://Magni</uri>
+			<pose>15.157189278566513 -11.22709173117512 0.0 0 0 -1.5614052527841036</pose>
+		</include>
+		<include>
+			<name>magni1</name>
+			<uri>model://Magni</uri>
+			<pose>11.553368836072618 -11.315970962255989 0.0 0 0 -1.5772312340829895</pose>
+		</include>
+		<model name="main_door">
+			<pose>13.131950836046645 -2.579487092649509 0.0 0 0 -3.120269390429785</pose>
+			<link name="right">
+				<pose>-0.473864332736097 0 1.11 0 0 0</pose>
+				<visual name="right_visual">
+					<geometry>
+						<box>
+							<size>0.937728665472194 0.03 2.2</size>
+						</box>
+					</geometry>
+					<material>
+						<ambient>120 60 0 0.6</ambient>
+						<diffuse>120 60 0 0.6</diffuse>
+					</material>
+				</visual>
+				<collision name="right_collision">
+					<geometry>
+						<box>
+							<size>0.937728665472194 0.03 2.2</size>
+						</box>
+					</geometry>
+					<surface>
+						<contact>
+							<collide_bitmask>0x02</collide_bitmask>
+						</contact>
+					</surface>
+				</collision>
+				<inertial>
+					<mass>50.0</mass>
+					<inertia>
+						<ixx>20.17041666666667</ixx>
+						<iyy>23.83056270853443</iyy>
+						<izz>3.6676460418677586</izz>
+					</inertia>
+				</inertial>
+			</link>
+			<joint name="right_joint" type="revolute">
+				<parent>world</parent>
+				<child>right</child>
+				<axis>
+					<xyz>0 0 1</xyz>
+					<limit>
+						<lower>0</lower>
+						<upper>1.57</upper>
+					</limit>
+				</axis>
+				<pose>-0.473864332736097 0 0 0 0 0</pose>
+			</joint>
+			<link name="left">
+				<pose>0.473864332736097 0 1.11 0 0 0</pose>
+				<visual name="left_visual">
+					<geometry>
+						<box>
+							<size>0.937728665472194 0.03 2.2</size>
+						</box>
+					</geometry>
+					<material>
+						<ambient>120 60 0 0.6</ambient>
+						<diffuse>120 60 0 0.6</diffuse>
+					</material>
+				</visual>
+				<collision name="left_collision">
+					<geometry>
+						<box>
+							<size>0.937728665472194 0.03 2.2</size>
+						</box>
+					</geometry>
+					<surface>
+						<contact>
+							<collide_bitmask>0x02</collide_bitmask>
+						</contact>
+					</surface>
+				</collision>
+				<inertial>
+					<mass>50.0</mass>
+					<inertia>
+						<ixx>20.17041666666667</ixx>
+						<iyy>23.83056270853443</iyy>
+						<izz>3.6676460418677586</izz>
+					</inertia>
+				</inertial>
+			</link>
+			<joint name="left_joint" type="revolute">
+				<parent>world</parent>
+				<child>left</child>
+				<axis>
+					<xyz>0 0 1</xyz>
+					<limit>
+						<lower>-1.57</lower>
+						<upper>0</upper>
+					</limit>
+				</axis>
+				<pose>0.473864332736097 0 0 0 0 0</pose>
+			</joint>
+			<plugin filename="libdoor.so" name="door">
+				<v_max_door>0.5</v_max_door>
+				<a_max_door>0.3</a_max_door>
+				<a_nom_door>0.15</a_nom_door>
+				<dx_min_door>0.01</dx_min_door>
+				<f_max_door>500.0</f_max_door>
+				<door left_joint_name="left_joint" name="main_door" right_joint_name="right_joint" type="DoubleSwingDoor" />
+			</plugin>
+		</model>
+		<model name="coe_door">
+			<pose>8.077686357313898 -5.898342045416362 0.0 0 0 1.1560010438234292</pose>
+			<plugin filename="libdoor.so" name="door">
+				<v_max_door>0.5</v_max_door>
+				<a_max_door>0.3</a_max_door>
+				<a_nom_door>0.15</a_nom_door>
+				<dx_min_door>0.01</dx_min_door>
+				<f_max_door>500.0</f_max_door>
+				<door left_joint_name="left_joint" name="coe_door" right_joint_name="empty_joint" type="SwingDoor" />
+			</plugin>
+			<link name="left">
+				<pose>0 0 1.11 0 0 0</pose>
+				<visual name="left_visual">
+					<geometry>
+						<box>
+							<size>0.8766026166317483 0.03 2.2</size>
+						</box>
+					</geometry>
+					<material>
+						<ambient>120 60 0 0.6</ambient>
+						<diffuse>120 60 0 0.6</diffuse>
+					</material>
+				</visual>
+				<collision name="left_collision">
+					<geometry>
+						<box>
+							<size>0.8766026166317483 0.03 2.2</size>
+						</box>
+					</geometry>
+					<surface>
+						<contact>
+							<collide_bitmask>0x02</collide_bitmask>
+						</contact>
+					</surface>
+				</collision>
+				<inertial>
+					<mass>50.0</mass>
+					<inertia>
+						<ixx>20.17041666666667</ixx>
+						<iyy>23.36846728119012</iyy>
+						<izz>3.20555061452345</izz>
+					</inertia>
+				</inertial>
+			</link>
+			<joint name="left_joint" type="revolute">
+				<parent>world</parent>
+				<child>left</child>
+				<axis>
+					<xyz>0 0 1</xyz>
+					<limit>
+						<lower>-1.57</lower>
+						<upper>0</upper>
+					</limit>
+				</axis>
+				<pose>0.44330130831587417 0 0 0 0 0</pose>
+			</joint>
+		</model>
+		<model name="hardware_door">
+			<pose>19.450062912168402 -10.319158936370446 0.0 0 0 -1.5760607387686447</pose>
+			<plugin filename="libdoor.so" name="door">
+				<v_max_door>0.5</v_max_door>
+				<a_max_door>0.3</a_max_door>
+				<a_nom_door>0.15</a_nom_door>
+				<dx_min_door>0.01</dx_min_door>
+				<f_max_door>500.0</f_max_door>
+				<door left_joint_name="left_joint" name="hardware_door" right_joint_name="empty_joint" type="SwingDoor" />
+			</plugin>
+			<link name="left">
+				<pose>0 0 1.11 0 0 0</pose>
+				<visual name="left_visual">
+					<geometry>
+						<box>
+							<size>0.8792617700206885 0.03 2.2</size>
+						</box>
+					</geometry>
+					<material>
+						<ambient>120 60 0 0.6</ambient>
+						<diffuse>120 60 0 0.6</diffuse>
+					</material>
+				</visual>
+				<collision name="left_collision">
+					<geometry>
+						<box>
+							<size>0.8792617700206885 0.03 2.2</size>
+						</box>
+					</geometry>
+					<surface>
+						<contact>
+							<collide_bitmask>0x02</collide_bitmask>
+						</contact>
+					</surface>
+				</collision>
+				<inertial>
+					<mass>50.0</mass>
+					<inertia>
+						<ixx>20.17041666666667</ixx>
+						<iyy>23.387921917582982</iyy>
+						<izz>3.225005250916309</izz>
+					</inertia>
+				</inertial>
+			</link>
+			<joint name="left_joint" type="revolute">
+				<parent>world</parent>
+				<child>left</child>
+				<axis>
+					<xyz>0 0 1</xyz>
+					<limit>
+						<lower>-1.57</lower>
+						<upper>0</upper>
+					</limit>
+				</axis>
+				<pose>0.44463088501034426 0 0 0 0 0</pose>
+			</joint>
+		</model>
+		<include>
+			<name>building_L1</name>
+			<uri>model://building_L1</uri>
+			<pose>0 0 0.0 0 0 0</pose>
+		</include>
+		<plugin filename="libcrowd_simulator.so" name="crowd_simulation">
+			<behavior_file>behavior_file.xml</behavior_file>
+			<scene_file>scene_file.xml</scene_file>
+			<update_time_step>0.1</update_time_step>
+			<model_type>
+				<typename>human</typename>
+				<animation>walk</animation>
+				<animation_speed>0.2</animation_speed>
+				<initial_pose>0 0 0 0 0 0</initial_pose>
+				<filename>walk.dae</filename>
+			</model_type>
+			<model_type>
+				<typename>running_human</typename>
+				<animation>walk</animation>
+				<animation_speed>0.2</animation_speed>
+				<initial_pose>0 0 0 0 0 0</initial_pose>
+				<filename>walk.dae</filename>
+			</model_type>
+			<external_agent>magni1</external_agent>
+			<external_agent>magni2</external_agent>
+		</plugin>
+	</world>
+</sdf>

@@ -1,7 +1,7 @@
 #include <fstream>
 #include <cmath>
 
-#include "crowd_simulator_common.hpp"
+#include <building_sim_common/crowd_simulator_common.hpp>
 
 namespace crowd_simulator {
 
