@@ -246,7 +246,7 @@ LiftCommon::LiftCommon(rclcpp::Node::SharedPtr node,
   // Initial lift state
   _lift_state.lift_name = _lift_name;
   _lift_state.current_floor = _floor_names[0];
-  _lift_state.destination_floor = floor_names[0];
+  _lift_state.destination_floor = reference_floor_name;
   _lift_state.door_state = LiftState::DOOR_CLOSED;
   _lift_state.motion_state = LiftState::MOTION_STOPPED;
   for (const std::string& floor_name : _floor_names)

@@ -70,6 +70,11 @@ void LiftTable::update(Building& building)
   // we'll use the last row for the "Add" button
   const int last_row_idx = static_cast<int>(building.lifts.size());
   setCellWidget(last_row_idx, 0, nullptr);
+  setItem(
+      last_row_idx,
+      0,
+      new QTableWidgetItem(
+        QString::fromStdString("")));
   QPushButton* add_button = new QPushButton("Add...", this);
   setCellWidget(last_row_idx, 1, add_button);
   connect(

@@ -205,12 +205,10 @@ class Lift:
         self.depth = float(yaml_node['depth'])
         self.width = float(yaml_node['width'])
         self.yaw = float(yaml_node['yaw'])
-        self.z = 0
         if 'highest_floor' in yaml_node:
             self.highest_floor = str(yaml_node['highest_floor'])
             if self.highest_floor:
                 self.highest_elevation = levels[self.highest_floor].elevation
-                self.z = self.highest_elevation
             else:
                 self.highest_elevation = float('inf')
         else:
@@ -220,12 +218,11 @@ class Lift:
             self.lowest_floor = str(yaml_node['lowest_floor'])
             if self.lowest_floor:
                 self.lowest_elevation = levels[self.lowest_floor].elevation
-                self.z = self.lowest_elevation
             else:
                 self.lowest_elevation = -float('inf')
         else:
             self.lowest_elevation = -float('inf')
-    
+
         raw_pos = (float(yaml_node['x']), -float(yaml_node['y']))
         self.x, self.y = transform.transform_point(raw_pos)
         self.cabin_height = 2.5
@@ -419,4 +416,4 @@ class Lift:
 
         # pose
         model_pose = SubElement(lift_model_ele, 'pose')
-        model_pose.text = f'{self.x} {self.y} {self.z} 0 0 {self.yaw}'
+        model_pose.text = f'{self.x} {self.y} 0 0 0 {self.yaw}'
