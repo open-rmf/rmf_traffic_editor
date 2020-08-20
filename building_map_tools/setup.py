@@ -7,6 +7,7 @@ setup(
     name=package_name,
     version='0.0.0',
     packages=[
+        'building_crowdsim_navmesh',
         'building_map',
         'building_map.doors',
         'building_map_server',
