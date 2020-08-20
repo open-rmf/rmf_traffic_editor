@@ -1,14 +1,13 @@
-from building_navmesh.lane import Lane, LaneManager
-from building_navmesh.lane_vertex import LaneVertex, LaneVertexManager
-from building_navmesh.polygon import Polygon, HubPolygon, LanePolygon, PolygonManager
-from building_navmesh.vertex import Vertex, VertexManager
-from building_navmesh.edge import Edge, EdgeManager
-from building_navmesh.util import FileWriter
-from building_navmesh.obstacle import Obstacle, ObstacleManager
-from building_navmesh.connection import ConnectionManager
-from building_navmesh.polygon_factory import PolygonFactory
+from building_crowdsim_navmesh.lane import Lane, LaneManager
+from building_crowdsim_navmesh.lane_vertex import LaneVertex, LaneVertexManager
+from building_crowdsim_navmesh.polygon import Polygon, HubPolygon, LanePolygon, PolygonManager
+from building_crowdsim_navmesh.vertex import Vertex, VertexManager
+from building_crowdsim_navmesh.edge import Edge, EdgeManager
+from building_crowdsim_navmesh.util import FileWriter
+from building_crowdsim_navmesh.obstacle import Obstacle, ObstacleManager
+from building_crowdsim_navmesh.connection import ConnectionManager
+from building_crowdsim_navmesh.polygon_factory import PolygonFactory
 
-import sys
 
 file_name = "test_navmesh.nav"
 
@@ -80,4 +79,4 @@ def main():
     navmesh_file.closeFile()
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()

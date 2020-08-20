@@ -3,12 +3,12 @@ import sys
 import os
 import copy
 
-from .build_navmesh import BuildNavmesh
+from building_crowdsim_navmesh.build_navmesh import BuildNavmesh
 from building_map.vertex import Vertex
 from building_map.edge import Edge
 from building_map.transform import Transform
-from configfile_generator.template_conf_yaml import *
-from configfile_generator.util import *
+# from configfile_generator.template_conf_yaml import *
+# from configfile_generator.util import *
 
 class NavmeshGenerator:
     '''Generate navmesh for one level based on 'human_lanes' '''
@@ -143,38 +143,6 @@ class NavmeshGenerator:
         self._lanes_number = count
         return count
 
-class BuildingYamlParse:
-    
-    def __init__(self, map_path):
-        
-        self._building_file = map_path
-        with open(self._building_file) as f :
-            _yaml_raw = yaml.load(f, yaml.SafeLoader)
-            self._level_raw = _yaml_raw['levels']
-        
-        if not self._level_raw:
-            print("Error loading map file: ", map_path)
-            return
-        
-        self._level_number = len(self._level_raw)
-        self._level_keys = list(self._level_raw.keys())
-
-    def GeteRawData(self):
-        return self._level_raw
-
-    def GetLevelRawData(self, level_id):
-        if level_id > self._level_number :
-            print("Error finding level id for ", level_id, ". Total level number is ", self._level_number)
-            return
-        key = self._level_keys[level_id]
-        return self.GetLevelRawDataFromKey(key)
-        
-    def GetLevelRawDataFromKey(self, key):
-        if not key in self._level_keys:
-            print("Invalid level name: ", key)
-            return
-        return self._level_raw[key]
-
 
 def navmesh_output(level_name, level_yaml_node, output_file_path):
     # TODO, add graph_id support
@@ -186,50 +154,6 @@ def navmesh_output(level_name, level_yaml_node, output_file_path):
     # provide lane vertices for goals 
     return navmesh_generator
 
-
-def configfile_level_output(level_name, navmesh_generator, configfile_output_file):
-    
-    level_config = {}
-    # behavior file related tag: 'goals', 'state', 'transition', 'goal_set', 'goal_area'
-    level_vertices = navmesh_generator.get_transformed_vertices()
-    goal_area = set()
-    external_agent = []
-    level_config['goals'] = []
-    
-    for v in level_vertices :
-        # vertices without specified name are not goals
-        if len( v.getName() ) == 0 :
-            continue   
-        # specified vertices name, e.g. robot sqawn point, robot lane stop point
-        if v.getParams() and 'spawn_robot_name' in v.getParams() :
-            external_agent.append(v.getParams()['spawn_robot_name'][1])
-            continue
-        
-        goal_area.add(v.getName())
-        level_config['goals'].append(v)
-    
-    # generate template
-    level_config['state'] = [StateYAML().getAttributes()]
-    level_config['transition'] = [TransitionYAML().getAttributes()]
-    level_config['goal_set'] = [GoalSetYAML().getAttributes()]
-    level_config['goal_area'] = list(goal_area)
-
-    # scene file related, tag: 'obstacle_set', 'agent_profile', 'agent_group'
-    level_config['obstacle_set'] = [ObstacleSetYAML().getAttributes()]
-    level_config['agent_profile'] = [AgentProfileYAML().getAttributes()]
-    level_config['agent_group'] = [AgentGroupYAML().getAttributes()]
-
-    # predefined external agents
-    external_agent_group = AgentsListYAML()
-    external_agent_group.setAttributes('group_id', str(0))
-    external_agent_group.setAttributes('agents_number', '')
-    external_agent_group.setAttributes('agents_name', external_agent)
-
-    level_config['agent_list'] = [external_agent_group.getAttributes()]
-    
-    # generate template config file
-    write_mode = "a" # append one level to the config file
-    templateYamlFile(level_name, level_config, configfile_output_file, write_mode)
 
 def configfile_plugin_output(configfile_output_file):
     filehandle = open(configfile_output_file, "a")

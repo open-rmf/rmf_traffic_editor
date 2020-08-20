@@ -1,17 +1,17 @@
-from .lane import Lane, LaneManager
-from .lane_vertex import LaneVertex, LaneVertexManager
-from .polygon import Polygon, HubPolygon, LanePolygon, PolygonManager
-from .vertex import Vertex, VertexManager
-from .edge import Edge, EdgeManager
-from .obstacle import Obstacle, ObstacleManager
-from .util import FileWriter
-from .connection import ConnectionManager
-from .polygon_factory import PolygonFactory
+from building_crowdsim_navmesh.lane import Lane, LaneManager
+from building_crowdsim_navmesh.lane_vertex import LaneVertex, LaneVertexManager
+from building_crowdsim_navmesh.polygon import Polygon, HubPolygon, LanePolygon, PolygonManager
+from building_crowdsim_navmesh.vertex import Vertex, VertexManager
+from building_crowdsim_navmesh.edge import Edge, EdgeManager
+from building_crowdsim_navmesh.obstacle import Obstacle, ObstacleManager
+from building_crowdsim_navmesh.util import FileWriter
+from building_crowdsim_navmesh.connection import ConnectionManager
+from building_crowdsim_navmesh.polygon_factory import PolygonFactory
+
 
 class BuildNavmesh:
     
     def __init__(self):
-
         self.laneVertexManager = LaneVertexManager()
         self.laneManager = LaneManager()
         self.polygonManager = PolygonManager()
