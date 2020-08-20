@@ -105,15 +105,15 @@ void StatesTab::list_states_in_impl() {
     auto states_number = implPtr->states.size();
 
     //row 0 for external_state
-    auto& current_state = implPtr->states.at(0);
-    setItem(0, 0, new QTableWidgetItem(QString::fromStdString(current_state.getName() )));
-    setItem(0, 1, new QTableWidgetItem(QString::number(current_state.getFinalState()? 1:0 )));
+    auto& external_state = implPtr->states.at(0);
+    setItem(0, 0, new QTableWidgetItem(QString::fromStdString(external_state.getName() )));
+    setItem(0, 1, new QTableWidgetItem(QString::number(external_state.getFinalState()? 1:0 )));
     setItem(0, 2, new QTableWidgetItem(QString::fromStdString("")));
     setItem(0, 3, new QTableWidgetItem(QString::fromStdString("")));
     setItem(0, 4, new QTableWidgetItem(QString::fromStdString("")));
 
     for (size_t i = 1; i < states_number; i++) {
-        current_state = implPtr->states.at(i);
+        auto& current_state = implPtr->states.at(i);
         setItem(i, 0, new QTableWidgetItem(QString::fromStdString(current_state.getName()) ) );
 
         QComboBox* final_state_combo = new QComboBox;
@@ -197,10 +197,11 @@ void StatesTab::list_navmesh_file_in_combo(QComboBox* comboBox, std::string navm
 
 void StatesTab::add_button_clicked() {
     save();
-    implPtr->states.emplace_back("new state");
+    implPtr->states.emplace_back("new_state");
 }
 
 int StatesTab::save() {
+    blockSignals(true);
     auto rows_count = rowCount();
     //external_state is not allowed to be changed
     for (auto i = 1; i < rows_count - 1; i++) {
@@ -227,9 +228,11 @@ int StatesTab::save() {
             continue;
         }
         current_state.setGoalSetId(static_cast<size_t>(goal_set_id));
-        
     }
+
+    blockSignals(false);
     return rows_count;
+    
 }
 
 //==============================================================================
@@ -242,8 +245,9 @@ GoalSetTab::GoalSetTab(CrowdSimImplPtr crowd_sim_impl)
     label_size = labels.size();
 
     setHorizontalHeaderLabels(labels);
-    horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    setMinimumSize(800, 400);
+    horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
+    // horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    setMinimumSize(600, 400);
     setSizePolicy(
         QSizePolicy::Expanding,
         QSizePolicy::MinimumExpanding);
@@ -1200,7 +1204,7 @@ AgentGroupTab::AgentGroupTab(CrowdSimImplPtr crowd_sim_impl)
     };
     label_size = labels.size();
     setHorizontalHeaderLabels(labels);
-    horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    horizontalHeader()->setSectionResizeMode(4, QHeaderView::Stretch);
     setMinimumSize(1200, 400);
 }
 
@@ -1230,16 +1234,17 @@ void AgentGroupTab::update() {
 }
 
 void AgentGroupTab::save() {
+    blockSignals(true);
     auto row_count = rowCount();
     //row 0 reserved for external agent, only save the agent profile and initial state
-    auto& current_group = implPtr->agent_groups.at(0);
+    auto& external_group = implPtr->agent_groups.at(0);
     auto profile_combo = static_cast<QComboBox*>(cellWidget(0, 1));
-    current_group.setAgentProfile(profile_combo->currentText().toStdString());
+    external_group.setAgentProfile(profile_combo->currentText().toStdString());
     auto state_combo = static_cast<QComboBox*>(cellWidget(0, 2));
-    current_group.setInitialState(state_combo->currentText().toStdString());
+    external_group.setInitialState(state_combo->currentText().toStdString());
 
     for (auto row = 1; row < row_count-1; row++) {
-        current_group = implPtr->agent_groups.at(row);
+        auto& current_group = implPtr->agent_groups.at(row);
         profile_combo = static_cast<QComboBox*>(cellWidget(row, 1));
         current_group.setAgentProfile(profile_combo->currentText().toStdString());
         state_combo = static_cast<QComboBox*>(cellWidget(row, 2));
@@ -1265,6 +1270,7 @@ void AgentGroupTab::save() {
         }
         current_group.setSpawnPoint(point_x, point_y);
     }
+    blockSignals(false);
 
 }
 
@@ -1280,20 +1286,20 @@ void AgentGroupTab::add_button_clicked() {
 void AgentGroupTab::list_agent_group_in_impl() {
     auto group_number = implPtr->agent_groups.size();
 
-    for (size_t row = 0; row < group_number; row++) {
-        auto& current_group = implPtr->agent_groups.at(row);
+    for (size_t i = 0; i < group_number; i++) {
+        auto& current_group = implPtr->agent_groups.at(i);
         
-        setItem(row, 0, new QTableWidgetItem(QString::number(static_cast<int>(current_group.getGroupId()) )));
+        setItem(i, 0, new QTableWidgetItem(QString::number(static_cast<int>(current_group.getGroupId()) )));
         auto current_profile = current_group.getAgentProfile();
         QComboBox* profile_combo = new QComboBox;
         add_profiles_in_combobox(profile_combo, current_profile);
-        setCellWidget(row, 1, profile_combo);
+        setCellWidget(i, 1, profile_combo);
 
         auto current_state = current_group.getInitialState();
         QComboBox* state_combo = new QComboBox;
         add_states_in_combobox(state_combo, current_state);
-        setCellWidget(row, 2, state_combo);
-        setItem(row, 3, new QTableWidgetItem(QString::number(current_group.getSpawnNumber() )));
+        setCellWidget(i, 2, state_combo);
+        setItem(i, 3, new QTableWidgetItem(QString::number(current_group.getSpawnNumber() )));
 
         std::string external_agent_name = "";
         if (current_group.isExternalGroup()) {
@@ -1302,27 +1308,28 @@ void AgentGroupTab::list_agent_group_in_impl() {
             }
         }
 
-        setItem(row, 4, new QTableWidgetItem(QString::fromStdString(external_agent_name) ));
+        setItem(i, 4, new QTableWidgetItem(QString::fromStdString(external_agent_name) ));
         auto spawn_point = current_group.getSpawnPoint();
-        setItem(row, 5, new QTableWidgetItem(QString::number(spawn_point.first)));
-        setItem(row, 6, new QTableWidgetItem(QString::number(spawn_point.second)));
+        setItem(i, 5, new QTableWidgetItem(QString::number(spawn_point.first)));
+        setItem(i, 6, new QTableWidgetItem(QString::number(spawn_point.second)));
 
-        if(row == 0) {
+        if(i == 0) {
             // row 0 is not allowed to be deleted
-            setItem(row, 7, new QTableWidgetItem(QString::fromStdString("") ));
+            setItem(i, 7, new QTableWidgetItem(QString::fromStdString("") ));
             continue;
         }
 
         QPushButton* delete_button = new QPushButton("Delete", this);
-        setCellWidget(row, 7, delete_button);
+        setCellWidget(i, 7, delete_button);
         connect(
             delete_button,
             &QAbstractButton::clicked,
-            [this, row]() {
+            [this, i]() {
                 //delete part
                 save();
-                if (row == 0) return;
-                this->implPtr->agent_groups.erase(this->implPtr->agent_groups.begin() + row);
+                if (i != 0) {
+                    this->implPtr->agent_groups.erase(this->implPtr->agent_groups.begin() + i);
+                }
                 update();
             }
         );
