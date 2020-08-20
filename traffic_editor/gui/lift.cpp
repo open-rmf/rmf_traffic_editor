@@ -38,6 +38,10 @@ void Lift::from_yaml(const std::string& _name, const YAML::Node& data)
   yaw = data["yaw"].as<double>();
   name = _name;
   reference_floor_name = data["reference_floor_name"].as<string>();
+  if (data["initial_floor_name"])
+    initial_floor_name = data["initial_floor_name"].as<string>();
+  else
+    initial_floor_name = reference_floor_name;
   width = data["width"].as<double>();
   depth = data["depth"].as<double>();
 
@@ -83,6 +87,7 @@ YAML::Node Lift::to_yaml() const
   // let's give yaw another decimal place because, I don't know, reasons (?)
   n["yaw"] = std::round(yaw * 10000.0) / 10000.0;
   n["reference_floor_name"] = reference_floor_name;
+  n["initial_floor_name"] = initial_floor_name;
   n["width"] = std::round(width * 1000.0) / 1000.0;
   n["depth"] = std::round(depth * 1000.0) / 1000.0;
 

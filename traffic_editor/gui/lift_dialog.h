@@ -48,6 +48,7 @@ private:
 
   QLineEdit* _name_line_edit;
   QComboBox* _reference_floor_combo_box;
+  QComboBox* _initial_floor_combo_box;
   QLineEdit* _x_line_edit;
   QLineEdit* _y_line_edit;
   QLineEdit* _yaw_line_edit;
