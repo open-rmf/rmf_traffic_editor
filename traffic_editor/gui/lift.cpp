@@ -223,7 +223,7 @@ bool Lift::level_door_opens(
     {
       if (level.elevation < lowest_elevation ||
         level.elevation > highest_elevation)
-          return false;
+        return false;
       break;
     }
   }
