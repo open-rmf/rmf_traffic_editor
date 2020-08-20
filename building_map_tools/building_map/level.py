@@ -105,7 +105,7 @@ class Level:
         for lift_name, lift in lifts.items():
             if self.elevation >= lift.lowest_elevation and \
                 self.elevation <= lift.highest_elevation:
-                self.lift_vert_lists[lift_name] = lift_vert_lists[lift_name]
+                self.lift_vert_lists[lift_name] = (lift_vert_lists[lift_name])
 
     def calculate_scale_using_measurements(self):
         # use the measurements to estimate scale for this level

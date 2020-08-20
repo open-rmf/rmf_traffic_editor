@@ -104,6 +104,7 @@ LiftDialog::LiftDialog(Lift& lift, Building& building)
           }
         }
       }
+      update_level_table();
       emit redraw();
     });
   highest_name_hbox->addWidget(_highest_floor_combo_box);
@@ -135,6 +136,7 @@ LiftDialog::LiftDialog(Lift& lift, Building& building)
           }
         }
       }
+      update_level_table();
       emit redraw();
     });
   lowest_name_hbox->addWidget(_lowest_floor_combo_box);
@@ -496,7 +498,8 @@ void LiftDialog::update_level_table()
       checkbox->setStyleSheet("margin-left: 50%; margin-right: 50%");
       if (_lift.level_door_opens(
           level_name.toStdString(),
-          _lift.doors[door_idx].name))
+          _lift.doors[door_idx].name,
+          _building.levels))
         checkbox->setChecked(true);
       _level_table->setCellWidget(level_idx, door_idx + 1, checkbox);
     }

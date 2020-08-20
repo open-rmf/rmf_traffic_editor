@@ -89,7 +89,8 @@ public:
 
   bool level_door_opens(
     const std::string& level_name,
-    const std::string& door_name) const;
+    const std::string& door_name,
+    const std::vector<BuildingLevel>& levels) const;
 };
 
 #endif

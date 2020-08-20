@@ -211,11 +211,22 @@ void Lift::draw(
 
 bool Lift::level_door_opens(
   const std::string& level_name,
-  const std::string& door_name) const
+  const std::string& door_name,
+  const std::vector<BuildingLevel>& levels) const
 {
   LevelDoorMap::const_iterator level_it = level_doors.find(level_name);
   if (level_it == level_doors.end())
     return false;
+  for (auto level : levels)
+  {
+    if (level.name == level_name)
+    {
+      if (level.elevation < lowest_elevation ||
+        level.elevation > highest_elevation)
+          return false;
+      break;
+    }
+  }
   const DoorNameList& names = level_it->second;
   if (std::find(names.begin(), names.end(), door_name) == names.end())
     return false;
