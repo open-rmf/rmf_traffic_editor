@@ -1,12 +1,12 @@
-from building_crowdsim_navmesh.lane import Lane, LaneManager
-from building_crowdsim_navmesh.lane_vertex import LaneVertex, LaneVertexManager
-from building_crowdsim_navmesh.polygon import Polygon, HubPolygon, LanePolygon, PolygonManager
-from building_crowdsim_navmesh.vertex import Vertex, VertexManager
-from building_crowdsim_navmesh.edge import Edge, EdgeManager
-from building_crowdsim_navmesh.util import FileWriter
-from building_crowdsim_navmesh.obstacle import Obstacle, ObstacleManager
-from building_crowdsim_navmesh.connection import ConnectionManager
-from building_crowdsim_navmesh.polygon_factory import PolygonFactory
+from building_crowdsim.lane import Lane, LaneManager
+from building_crowdsim.lane_vertex import LaneVertex, LaneVertexManager
+from building_crowdsim.polygon import Polygon, HubPolygon, LanePolygon, PolygonManager
+from building_crowdsim.vertex import Vertex, VertexManager
+from building_crowdsim.edge import Edge, EdgeManager
+from building_crowdsim.util import FileWriter
+from building_crowdsim.obstacle import Obstacle, ObstacleManager
+from building_crowdsim.connection import ConnectionManager
+from building_crowdsim.polygon_factory import PolygonFactory
 
 
 file_name = "test_navmesh.nav"
