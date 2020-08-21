@@ -48,6 +48,8 @@ setup(
     scripts=[],
     entry_points={
         'console_scripts': [
+            'building_crowdsim_navmesh = '
+            'building_crowdsim_navmesh.navmesh_generator:main',
             'building_map_server = '
             'building_map_server.building_map_server:main',
             'building_map_generator = '

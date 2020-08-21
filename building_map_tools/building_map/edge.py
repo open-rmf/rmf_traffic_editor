@@ -45,3 +45,13 @@ class Edge:
             return 'forward'
         else:
             return ''
+
+    def width(self):
+        # get the width for human_lanes
+        if 'width' not in self.params:
+            raise ValueError('expected a width param')
+        p = self.params['width']
+        if p.type != ParamValue.DOUBLE :
+            print("For edge [ ", self.start_idx, ",", self.end_idx, " ], error in parsing 'width'.")
+            raise ValueError('expected width param to be DOUBLE')
+        return float(p.value)
