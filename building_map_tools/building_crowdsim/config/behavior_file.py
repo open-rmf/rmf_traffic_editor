@@ -2,6 +2,7 @@ import xml.etree.ElementTree as ET
 
 from .leaf_element import LeafElement, Element
 
+#########################################################
 class BehaviorFile (Element):
     
     def __init__(self) :
@@ -22,7 +23,7 @@ class BehaviorFile (Element):
             raise ValueError("transition provided is not an Element")
         self.addSubElement(goal_set)
 
-
+#########################################################
 class BehaviorState (Element):
     def __init__(self) :
         Element.__init__(self, 'State')
@@ -60,6 +61,7 @@ class BehaviorState (Element):
         self.addAttribute('final', 0)
     
 
+#########################################################
 class GoalSelector (LeafElement):
 
     def __init__(self) : 
@@ -71,7 +73,7 @@ class GoalSelector (LeafElement):
     def setGoalSetId(self, goal_set_id) :
         self.addAttribute('goal_set', goal_set_id)
 
-
+#########################################################
 class VelComponent (LeafElement): 
 
     def __init__(self) : 
@@ -83,7 +85,7 @@ class VelComponent (LeafElement):
     def setNavMeshFile(self, file_name) : 
         self.addAttribute('file_name', file_name)
 
-
+#########################################################
 class StateTransition (Element):
 
     def __init__(self) :
@@ -129,7 +131,7 @@ class StateTransition (Element):
         self._target.parseTarget(target_params)
         self.addSubElement(self._target)
 
-
+#########################################################
 class TransitionCondition (Element):
 
     def __init__(self) :
@@ -210,6 +212,7 @@ class TransitionCondition (Element):
             raise ValueError('invalid condition distance provided for TransitionCondition')
 
 
+#########################################################
 class TransitionTarget (Element) :
     
     def __init__(self) :
@@ -230,7 +233,7 @@ class TransitionTarget (Element) :
             tmp.parseState(state_item)
             self.addSubElement(tmp)
 
-
+#########################################################
 class TargetState (LeafElement) :
 
     def __init__(self):
@@ -242,7 +245,7 @@ class TargetState (LeafElement) :
         self.addAttribute('weight', params['weight'])
         self.addAttribute('name', params['name'])
 
-
+#########################################################
 class GoalSet (Element): 
 
     def __init__(self) :
@@ -266,7 +269,8 @@ class GoalSet (Element):
         self._goalList.append(goal)
         self.addSubElement(goal)
 
-    
+
+#########################################################
 class Goal (LeafElement):
     def __init__(self, id = -1) :
         # default id = -1, need to initialize

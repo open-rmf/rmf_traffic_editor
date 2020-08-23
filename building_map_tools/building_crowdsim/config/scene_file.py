@@ -2,6 +2,7 @@ import xml.etree.ElementTree as ET
 
 from .leaf_element import LeafElement, Element
 
+#########################################################
 class SceneFile (Element):
     
     def __init__(self) :
@@ -32,18 +33,20 @@ class SceneFile (Element):
         self.addSubElement( tmp )
         return tmp
 
-
+#########################################################
 class SpatialQuery (LeafElement) :
     def __init__(self) :
         LeafElement.__init__(self, 'SpatialQuery')
         self.addAttribute('type', 'kd-tree')
         self.addAttribute('test_visibility', 'false')
     
+#########################################################
 class Common (LeafElement):
     def __init__(self) :
         LeafElement.__init__(self, 'Common')
         self.addAttribute('time_step', 0.1)
     
+#########################################################
 class ObstacleSet (LeafElement):
     def __init__(self):
         LeafElement.__init__(self, 'ObstacleSet')
@@ -57,6 +60,7 @@ class ObstacleSet (LeafElement):
     def setClassId(self, id):
         self.addAttribute('class', id)
 
+#########################################################
 class ProfileCommon (LeafElement) :
     def __init__(self):
         LeafElement.__init__(self, 'Common')
@@ -88,30 +92,35 @@ class ProfileCommon (LeafElement) :
     def setObstacleSet(self, obstacle_set):
         self.addAttribute('obstacle_set', obstacle_set)
 
+#########################################################
 class ProfileORCA (LeafElement) :
     def __init__(self):
         LeafElement.__init__(self, 'ORCA')
         self.addAttribute('tau', 3.0)
         self.addAttribute('tauObst', 0.15)
 
+#########################################################
 class ProfileSelector (LeafElement) :
     def __init__(self, name) :
         LeafElement.__init__(self, 'ProfileSelector')
         self.addAttribute('type', 'const')
         self.addAttribute('name', name)
 
+#########################################################
 class StateSelector (LeafElement) :
     def __init__(self, name) :
         LeafElement.__init__(self, 'StateSelector')
         self.addAttribute('type', 'const')
         self.addAttribute('name', name)
 
+#########################################################
 class Agent (LeafElement) :
     def __init__(self, x, y) :
         LeafElement.__init__(self, 'Agent')
         self.addAttribute('p_x', x)
         self.addAttribute('p_y', y)
 
+#########################################################
 class AgentGenerator (Element) :
     def __init__(self):
         Element.__init__(self, 'Generator')
@@ -120,7 +129,7 @@ class AgentGenerator (Element) :
     def addAgent(self, x, y):
         self.addSubElement(Agent(x, y))
 
-
+#########################################################
 class AgentProfile (Element):
     def __init__(self, name):
         Element.__init__(self, 'AgentProfile')
@@ -136,7 +145,7 @@ class AgentProfile (Element):
     def setProfileORCA(self, key, value):
         self._profileORCA.addAttribute(key, value)
         
-
+#########################################################
 class AgentGroup (Element):
 
     def __init__(self, profile_type, state_name) :
@@ -151,6 +160,8 @@ class AgentGroup (Element):
     def addAgent(self, x, y):
         self._generator.addAgent(x, y)
 
+
+#########################################################
 if __name__ == '__main__':
 
     root = SceneFile()

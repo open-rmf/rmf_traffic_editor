@@ -80,4 +80,10 @@ class BuildingYamlParse:
 
     def GetCrowdSimConfig(self) :
         return self.crowd_sim_config
-    
+
+    def GetHumanGoals(self) :
+        human_goals = []
+        for level_name in self.levels_name :
+            current_level = self.GetLevelWithHumanLanes(level_name)
+            human_goals.extend(current_level.get_human_goals())
+        return human_goals
