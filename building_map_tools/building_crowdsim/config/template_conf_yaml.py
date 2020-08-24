@@ -206,7 +206,9 @@ class AgentProfileYAML (BasicYAML):
 
         return agent_profile
 
+
 class AgentGroupYAML (BasicYAML):
+    '''template: {agents_name: [magni2, magni1], agents_number: 2, group_id: 0, profile_selector: "", state_selector: "", x: 0, y: 0}'''
     def __init__(self):
         BasicYAML.__init__(self)
         self._attributes['group_id'] = ''
@@ -216,81 +218,20 @@ class AgentGroupYAML (BasicYAML):
 
     def load(self, yaml_node):
         keys = yaml_node.keys()
-
         if not 'group_id' in keys or not 'profile_selector' in keys or not 'state_selector' in keys :
             raise ValueError("Invalid AgentGroup YAML provided.")
-
         BasicYAML.load(self, yaml_node)
-
         self._agent_group = AgentGroup(self._attributes['profile_selector'], self._attributes['state_selector'])
-        return self._agent_group
-
-    def loadAgents(self, agents_list_yaml) :
-        agents_list = agents_list_yaml.getAgentsGroup(self._attributes['group_id'])
-        if not agents_list or not self._agent_group:
-            print("No agents are loaded.")
-            return 
-
-        for agent in agents_list :
-            # agent is type of PointXML
-            self._agent_group.addAgent(agent._x, agent._y)
-
-        return self._agent_group
-
-
-class AgentsListYAML (BasicYAML):
-    # not needed in generating the template YAML list
-    def __init__(self):
-        BasicYAML.__init__(self)
-        self._attributes['group_id'] = 0
-        self._attributes['agents_number'] = 0
-        self._attributes['agents_name'] = []
-        self._attributes['x'] = 0.0
-        self._attributes['y'] = 0.0
-
-        # dict key (group_id) with str type
-        self._agents = {}
-
-    def load(self, yaml_node):
-        # each lists will be 
-        # {group_id:, agents_number: , agents_name: , x: , y: }
-        for agent_group in yaml_node :
-            # trivial case
-            if agent_group['group_id'] is None:
-                raise ValueError("missing 'group_id' for agent_list")
-
-            group_id = str(agent_group['group_id'])
-            agents_number = 0
-            spawn_x = 0.0
-            spawn_y = 0.0
-
-            if agent_group['agents_name'] :
-                agents_name = agent_group['agents_name']
-                agents_number = len(agents_name)
-            elif agent_group['agents_number'] :
-                agents_number = int(agent_group['agents_number'])
-            else :
-                raise ValueError("at leaset 'agents_name' or 'agents_number' provided for agent list")
-
-            if agent_group['x'] and agent_group['y'] :
-                spawn_x = float(agent_group['x'])
-                spawn_y = float(agent_group['y'])
-
-            # add all the agent positions in the dict
-            if not group_id in self._agents :
-                self._agents[group_id] = []
-            for i in range(agents_number) :
-                self._agents[group_id].append(PointYAML(spawn_x, spawn_y))
-
-    def allGroupId(self):
-        return self._agents.keys()
-
-    def getAgentsGroup(self, group_id):
-        if not str(group_id) in self.allGroupId() :
-            print("No agent for [", group_id, "] listed in conf_yaml")
-            return None
         
-        return self._agents[str(group_id)]
+        if int(self._attributes['agents_number']) <= 0 :
+            print("No agent spawned for agent_group [", self._attributes["group_id"], "].")
+
+        spawn_point_x = float(self._attributes['x'])
+        spawn_point_y = float(self._attributes['y'])
+        for i in range(int(self._attributes['agents_number'])) :
+            self._agent_group.addAgent(spawn_point_x, spawn_point_y)
+
+        return self._agent_group
 
 
 class ObstacleSetYAML (BasicYAML) :
@@ -339,15 +280,9 @@ class ExternalAgentYAML (BasicYAML):
         BasicYAML.__init__(self)
         self._external_agent = set()
 
-    def load(self, yaml_node):
-        BasicYAML.load(self, yaml_node)
-        # yaml_node should be one line in agent_group, to find the agent group with class 0
-        if not 'agents_name' in self._attributes or not 'group_id' in self._attributes :
-            return
-
-        if self._attributes['group_id'] == str(0) :
-            for name in self._attributes['agents_name'] :
-                self._external_agent.add(str(name))
+    def load(self, external_agent_name_list):
+        for name in external_agent_name_list :
+            self._external_agent.add(str(name))
         
     def getExternalAgents(self) :
         return list(self._external_agent)

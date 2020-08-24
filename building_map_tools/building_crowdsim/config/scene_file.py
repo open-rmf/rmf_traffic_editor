@@ -20,7 +20,7 @@ class SceneFile (Element):
     def addObstacleSet(self, file_name, class_id):
         self._obstacleSet = ObstacleSet()
         self._obstacleSet.setNavMeshFile(file_name)
-        self._obstacleSet.setClass(class_id)
+        self._obstacleSet.setClassId(class_id)
         self.addSubElement(self._obstacleSet)
 
     def addAgentProfile(self, profile_name) :

@@ -1,6 +1,6 @@
 import xml.etree.ElementTree as ET
 
-from configfile_generator.leaf_element import LeafElement, Element
+from .leaf_element import LeafElement, Element
 
 class Plugin (Element) :
     def __init__(self, model_env) :
@@ -28,6 +28,8 @@ class Plugin (Element) :
         self.addSubElement(self._behavior_file)
         self.addSubElement(self._scene_file)
         self.addSubElement(self._update_time_step)
+
+        self._initialized = False
     
     def setBehaviorFileName(self, behavior_file_name) :
         self._behavior_file.setText(str(behavior_file_name))
@@ -104,7 +106,7 @@ class ModelType (Element) :
         raise ValueError("invalid params provided in model_type: [" + key + "]")
 
     def setGazeboModel(self, key, value) :
-        if key == 'initial_pose' :
+        if key == 'pose' :
             # value would be [x, y, z, pitch, roll, yaw]
             content = ''
             for number in value :
@@ -120,7 +122,7 @@ class ModelType (Element) :
         raise ValueError('invalid params provided for gazebo model:[' + key + ']')
 
     def setIgnModel(self, key, value) :
-        if key == 'initial_pose' :
+        if key == 'pose' :
             # value would be [x, y, z, pitch, roll, yaw]
             content = ''
             for number in value :
