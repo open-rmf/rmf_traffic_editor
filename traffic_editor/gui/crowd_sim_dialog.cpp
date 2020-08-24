@@ -134,7 +134,7 @@ void StatesTab::list_states_in_impl() {
             navmesh_list_combo,
             &QComboBox::currentTextChanged,
             [&](const QString& text){
-                current_state.setNavmeshFile(text.toStdString());
+                current_state.setNavmeshFileName(text.toStdString());
             }
         );
 
@@ -219,7 +219,7 @@ int StatesTab::save() {
             current_state.setFinalState(false);
         //navmeshfile_name
         auto navmeshfile_name = static_cast<QComboBox*>(cellWidget(i, 2))->currentText().toStdString();
-        current_state.setNavmeshFile(navmeshfile_name);
+        current_state.setNavmeshFileName(navmeshfile_name);
         //goal_set_id
         bool OK_status;
         auto goal_set_id = static_cast<QComboBox*>(cellWidget(i, 3))->currentText().toInt(&OK_status);
@@ -442,9 +442,11 @@ int AgentProfileTab::save() {
     auto row_count = rowCount();
     //external_agent profile is not allowed to be changed
     for (auto i = 1; i < row_count - 1; i++) {
-        QTableWidgetItem* pItem = item(i, 0);
-        auto profile_name = pItem->text();
         auto& current_profile = implPtr->agent_profiles.at(i);
+
+        QTableWidgetItem* pItem = item(i, 0);
+        auto profile_name = pItem->text().toStdString();
+        current_profile.profile_name = profile_name;
         
         bool OK_status;
         //profile_class
@@ -452,7 +454,7 @@ int AgentProfileTab::save() {
         auto profile_class = pItem->text().toInt(&OK_status);
         if(!OK_status) {
             std::cout << "Error in saving profile_class for Agent Profile: [" 
-                << profile_name.toStdString() << "]" << std::endl;
+                << profile_name << "]" << std::endl;
             return -1;
         }
         current_profile.profile_class = static_cast<size_t>(profile_class);
@@ -461,7 +463,7 @@ int AgentProfileTab::save() {
         auto max_accel = pItem->text().toDouble(&OK_status);
         if(!OK_status) {
             std::cout << "Error in saving max_accel for Agent Profile: [" 
-                << profile_name.toStdString() << "]" << std::endl;
+                << profile_name << "]" << std::endl;
             return -1;
         }
         current_profile.max_accel = static_cast<double>(max_accel);
@@ -470,7 +472,7 @@ int AgentProfileTab::save() {
         auto max_angle_vel = pItem->text().toDouble(&OK_status);
         if(!OK_status) {
             std::cout << "Error in saving max_angle_vel for Agent Profile: [" 
-                << profile_name.toStdString() << "]" << std::endl;
+                << profile_name << "]" << std::endl;
             return -1;
         }
         current_profile.max_angle_vel = static_cast<double>(max_angle_vel);
@@ -479,7 +481,7 @@ int AgentProfileTab::save() {
         auto max_neighbors = pItem->text().toInt(&OK_status);
         if(!OK_status) {
             std::cout << "Error in saving max_neighbors for Agent Profile: [" 
-                << profile_name.toStdString() << "]" << std::endl;
+                << profile_name << "]" << std::endl;
             return -1;
         }
         current_profile.max_neighbors = static_cast<size_t>(max_neighbors);
@@ -488,7 +490,7 @@ int AgentProfileTab::save() {
         auto max_speed = pItem->text().toDouble(&OK_status);
         if(!OK_status) {
             std::cout << "Error in saving max_speed for Agent Profile: [" 
-                << profile_name.toStdString() << "]" << std::endl;
+                << profile_name << "]" << std::endl;
             return -1;
         }
         current_profile.max_speed = static_cast<double>(max_speed);
@@ -497,7 +499,7 @@ int AgentProfileTab::save() {
         auto neighbor_dist = pItem->text().toDouble(&OK_status);
         if(!OK_status) {
             std::cout << "Error in saving neighbor dist for Agent Profile: [" 
-                << profile_name.toStdString() << "]" << std::endl;
+                << profile_name << "]" << std::endl;
             return -1;            
         }
         current_profile.neighbor_dist = static_cast<double>(neighbor_dist);
@@ -506,7 +508,7 @@ int AgentProfileTab::save() {
         auto obstacle_set = pItem->text().toInt(&OK_status);
         if(!OK_status) {
             std::cout << "Error in saving obstacle_set for Agent Profile: [" 
-                << profile_name.toStdString() << "]" << std::endl;
+                << profile_name << "]" << std::endl;
             return -1;            
         }       
         current_profile.obstacle_set = static_cast<double>(obstacle_set);
@@ -515,7 +517,7 @@ int AgentProfileTab::save() {
         auto pref_speed = pItem->text().toDouble(&OK_status);
         if(!OK_status) {
             std::cout << "Error in saving pref_speed for Agent Profile: [" 
-                << profile_name.toStdString() << "]" << std::endl;
+                << profile_name << "]" << std::endl;
             return -1;            
         }
         current_profile.pref_speed = static_cast<double>(pref_speed);
@@ -524,7 +526,7 @@ int AgentProfileTab::save() {
         auto r = pItem->text().toDouble(&OK_status);
         if(!OK_status) {
             std::cout << "Error in saving r for Agent Profile: [" 
-                << profile_name.toStdString() << "]" << std::endl;
+                << profile_name << "]" << std::endl;
             return -1;            
         }        
         current_profile.r = static_cast<double>(r);
@@ -533,7 +535,7 @@ int AgentProfileTab::save() {
         auto ORCA_tau = pItem->text().toDouble(&OK_status);
         if(!OK_status) {
             std::cout << "Error in saving ORCA_tau for Agent Profile: [" 
-                << profile_name.toStdString() << "]" << std::endl;
+                << profile_name << "]" << std::endl;
             return -1;            
         }
         current_profile.ORCA_tau = static_cast<double>(ORCA_tau);
@@ -542,7 +544,7 @@ int AgentProfileTab::save() {
         auto ORCA_tauObst = pItem->text().toDouble(&OK_status);
         if(!OK_status) {
             std::cout << "Error in saving ORCA_tauObst for Agent Profile: [" 
-                << profile_name.toStdString() << "]" << std::endl;
+                << profile_name << "]" << std::endl;
             return -1;            
         }
         current_profile.ORCA_tauObst = static_cast<double>(ORCA_tauObst);   

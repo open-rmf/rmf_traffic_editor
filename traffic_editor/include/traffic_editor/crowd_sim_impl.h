@@ -39,9 +39,12 @@ public:
         is_final_state(true),
         goal_set_id(-1)
     {}
+    State(const YAML::Node& input) {
+        from_yaml(input);
+    }
     ~State() {}
 
-    void setNavmeshFile(std::string file_name_) {this->navmesh_file_name = file_name_;}
+    void setNavmeshFileName(std::string file_name_) {this->navmesh_file_name = file_name_;}
     void setFinalState(bool is_final_) { this->is_final_state = is_final_; }
     void setGoalSetId(size_t goal_set_id_) { this->goal_set_id = static_cast<int>(goal_set_id_); }
     void setName(std::string name_) { this->name = name_; }
@@ -53,6 +56,7 @@ public:
     int getGoalSetId() const {return this->goal_set_id;}
 
     YAML::Node to_yaml() const;
+    void from_yaml(const YAML::Node& input);
 
 private:
     std::string name;
@@ -70,6 +74,9 @@ public:
         capacity(1),
         goal_area_contained({})
     {}
+    GoalSet(const YAML::Node& input) {
+        from_yaml(input);
+    }
     ~GoalSet() {}
 
     void addGoalArea(std::string goal_area_name);
@@ -81,11 +88,14 @@ public:
     size_t getCapacity() const {return this->capacity; }
 
     YAML::Node to_yaml() const;
+    void from_yaml(const YAML::Node& input);
 
 private:
     size_t id;
     size_t capacity;
     std::set<std::string> goal_area_contained;
+
+    void setGoalSetId(size_t id_) { this->id = id_; }
 };
 
 //=========================================================
@@ -106,9 +116,13 @@ public:
         ORCA_tau(1.0),
         ORCA_tauObst(0.4)
     {}
+    AgentProfile(const YAML::Node& input) {
+        from_yaml(input);
+    }
     ~AgentProfile() {}
 
     YAML::Node to_yaml() const;
+    void from_yaml(const YAML::Node& input);
 
     std::string profile_name;
     size_t profile_class, max_neighbors, obstacle_set;
@@ -141,6 +155,7 @@ public:
     virtual TYPE getType() const { return type; }
     virtual bool isValid() const { return false; }
     virtual YAML::Node to_yaml() const { return YAML::Node(YAML::NodeType::Map); }
+    virtual void from_yaml(const YAML::Node& input) {} //base class do nothing
 
 };
 
@@ -156,6 +171,7 @@ public:
     double getValue() const { return distance; }
     bool isValid() const override { return true; }
     YAML::Node to_yaml() const override;
+    void from_yaml(const YAML::Node& input) override;
 
 private:
     double distance;
@@ -174,6 +190,7 @@ public:
     std::string getTimerDistribution() const { return this->distribution;}
     bool isValid() const override { return true; }
     YAML::Node to_yaml() const override;
+    void from_yaml(const YAML::Node& input) override;
 
 private:
     //currently only provides const value distribution for timer
@@ -213,6 +230,7 @@ public:
     }
 
     YAML::Node to_yaml() const override;
+    void from_yaml(const YAML::Node& input) override;
 
 private:
     ConditionPtr condition1;
@@ -251,6 +269,7 @@ public:
     }
 
     YAML::Node to_yaml() const override;
+    void from_yaml(const YAML::Node& input) override;
 
 private:
     ConditionPtr condition1;
@@ -276,6 +295,7 @@ public:
     }
 
     YAML::Node to_yaml() const override;
+    void from_yaml(const YAML::Node& input) override;
 
 private:
     ConditionPtr condition1;
@@ -321,6 +341,7 @@ public:
     }
 
     YAML::Node to_yaml() const;
+    void from_yaml(const YAML::Node& input);
 
 private:
     StateName from_state_name;
@@ -354,6 +375,7 @@ public:
     std::string getInitialState() const { return initial_state; }
 
     YAML::Node to_yaml() const;
+    void from_yaml(const YAML::Node& input);
 
     void setSpawnPoint(double x, double y) {
         spawn_point_x = x;
@@ -403,6 +425,7 @@ public:
             result["pose"] = initial_pose;
             return result;
         }
+        void from_yaml(const YAML::Node& input);
     };
 
     struct IgnConf{
@@ -418,6 +441,7 @@ public:
             result["pose"] = initial_pose;
             return result;
         }
+        void from_yaml(const YAML::Node& input);
     };
 
 public:
@@ -447,6 +471,7 @@ public:
     }
 
     YAML::Node to_yaml() const;
+    void from_yaml(const YAML::Node& input);
 
 private:
     std::string name, animation;
@@ -460,7 +485,8 @@ class CrowdSimImplementation
 {
 public:
     CrowdSimImplementation() 
-        : enable_crowd_sim(false)
+        : enable_crowd_sim(false),
+        update_time_step(0.1)
     {
         initializeState();
         initializeAgentProfile();
@@ -481,6 +507,7 @@ public:
     
     // real configurations
     bool enable_crowd_sim;
+    double update_time_step;
     std::vector<State> states;
     std::vector<GoalSet> goal_sets;
     std::vector<Transition> transitions;
@@ -494,6 +521,7 @@ private:
     void initializeAgentGroup();
     void initializeModelType();
 
+    //obstacle set is not allowed to change
     YAML::Node output_obstacle_node() const;
 };
 

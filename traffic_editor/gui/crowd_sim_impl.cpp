@@ -20,6 +20,13 @@ YAML::Node State::to_yaml() const {
     return state_node;
 }
 
+void State::from_yaml(const YAML::Node& input) {
+    setName(input["name"].as<std::string>());
+    setNavmeshFileName(input["navmesh_file_name"].as<std::string>());
+    setFinalState(input["final"].as<int>() == 0? false : true);
+    setGoalSetId(input["goal_set"].as<int>());
+}
+
 //===================================================
 void GoalSet::addGoalArea(std::string area_name){
     if (area_name.empty()){
@@ -46,6 +53,15 @@ YAML::Node GoalSet::to_yaml() const {
     return goalset_node;
 }
 
+void GoalSet::from_yaml(const YAML::Node& input) {
+    setGoalSetId(input["set_id"].as<size_t>());
+    setCapacity(input["capacity"].as<size_t>());
+    goal_area_contained.clear();
+    for (auto area : input["set_area"]) {
+        addGoalArea(area.as<std::string>());
+    }
+}
+
 //====================================================
 YAML::Node AgentProfile::to_yaml() const {
     YAML::Node profile_node(YAML::NodeType::Map);
@@ -65,6 +81,21 @@ YAML::Node AgentProfile::to_yaml() const {
     return profile_node;
 }
 
+void AgentProfile::from_yaml(const YAML::Node& input) {
+    profile_name = input["name"].as<std::string>();
+    profile_class = input["class"].as<size_t>();
+    max_neighbors = input["max_neighbors"].as<size_t>();
+    obstacle_set = input["obstacle_set"].as<size_t>();
+    max_accel = input["max_accel"].as<double>();
+    max_angle_vel = input["max_angle_vel"].as<double>();
+    max_speed = input["max_speed"].as<double>();
+    neighbor_dist = input["neighbor_dist"].as<double>();
+    pref_speed = input["pref_speed"].as<double>();
+    r = input["r"].as<double>();
+    ORCA_tau = input["ORCA_tau"].as<double>();
+    ORCA_tauObst = input["ORCA_tauObst"].as<double>();  
+}
+
 //===========================================================
 YAML::Node Transition::to_yaml() const{
     YAML::Node transition_node(YAML::NodeType::Map);
@@ -82,6 +113,10 @@ YAML::Node Transition::to_yaml() const{
     return transition_node;
 }
 
+void Transition::from_yaml(const YAML::Node& input) {
+
+}
+
 YAML::Node ConditionGOAL::to_yaml() const {
     YAML::Node goal_node = YAML::Node(YAML::NodeType::Map);
     goal_node.SetStyle(YAML::EmitterStyle::Flow);
@@ -89,6 +124,11 @@ YAML::Node ConditionGOAL::to_yaml() const {
     goal_node["distance"] = getValue();
     return goal_node;
 }
+
+void ConditionGOAL::from_yaml(const YAML::Node& input) {
+
+}
+
 
 YAML::Node ConditionTIMER::to_yaml() const {
     YAML::Node timer_node = YAML::Node(YAML::NodeType::Map);
@@ -100,6 +140,10 @@ YAML::Node ConditionTIMER::to_yaml() const {
     return timer_node;
 }
 
+void ConditionTIMER::from_yaml(const YAML::Node& input) {
+
+}
+
 YAML::Node ConditionAND::to_yaml() const {
     YAML::Node and_node = YAML::Node(YAML::NodeType::Map);
     and_node.SetStyle(YAML::EmitterStyle::Block);
@@ -107,6 +151,10 @@ YAML::Node ConditionAND::to_yaml() const {
     and_node["condition1"] = condition1->to_yaml();
     and_node["condition2"] = condition2->to_yaml();
     return and_node;
+}
+
+void ConditionAND::from_yaml(const YAML::Node& input) {
+
 }
 
 YAML::Node ConditionOR::to_yaml() const {
@@ -118,12 +166,20 @@ YAML::Node ConditionOR::to_yaml() const {
     return or_node;
 }
 
+void ConditionOR::from_yaml(const YAML::Node& input) {
+
+}
+
 YAML::Node ConditionNOT::to_yaml() const {
     YAML::Node not_node = YAML::Node(YAML::NodeType::Map);
     not_node.SetStyle(YAML::EmitterStyle::Block);
     not_node["type"] = getConditionName();
     not_node["condition1"] = condition1->to_yaml();
     return not_node;
+}
+
+void ConditionNOT::from_yaml(const YAML::Node& input) {
+
 }
 
 //===========================================================
@@ -143,6 +199,10 @@ YAML::Node AgentGroup::to_yaml() const {
     return group_node;
 }
 
+void AgentGroup::from_yaml(const YAML::Node& input) {
+
+}
+
 //==========================================================
 YAML::Node ModelType::to_yaml() const {
     YAML::Node model_node = YAML::Node(YAML::NodeType::Map);
@@ -153,6 +213,10 @@ YAML::Node ModelType::to_yaml() const {
     model_node["gazebo"] = gazebo_conf.to_yaml();
     model_node["ign"] = ign_conf.to_yaml();
     return model_node;
+}
+
+void ModelType::from_yaml(const YAML::Node& input) {
+
 }
 
 //===========================================================
@@ -208,6 +272,7 @@ YAML::Node CrowdSimImplementation::output_obstacle_node() const {
 YAML::Node CrowdSimImplementation::to_yaml() {
     YAML::Node top_node = YAML::Node(YAML::NodeType::Map);
     top_node["enable"] = enable_crowd_sim? 1 : 0;
+    top_node["update_time_step"] = update_time_step;
 
     top_node["states"] = YAML::Node(YAML::NodeType::Sequence);
     for (auto state : states) {

@@ -17,7 +17,8 @@ CrowdSimTable::CrowdSimTable(const Project& input_project) : TableList(3), proje
     { "Name", "Status", "" };
     setHorizontalHeaderLabels(labels);
 
-    setRowCount(1 + this->required_components.size());
+    // 2: enable_crowd_sim and update_time_step 
+    setRowCount(2 + this->required_components.size());
 
     // enable_crowd_sim check box
     QTableWidgetItem* enable_crowd_sim_name_item =
@@ -35,14 +36,38 @@ CrowdSimTable::CrowdSimTable(const Project& input_project) : TableList(3), proje
         }
     );
 
+    // update_time_step
+    QTableWidgetItem* update_time_step_name_item =
+        new QTableWidgetItem(QString::fromStdString("update_time_step"));
+    setItem(1, 0, update_time_step_name_item);
+
+    QLineEdit* update_time_step_value_item =
+        new QLineEdit(QString::number(crowd_sim_impl->update_time_step));
+    setCellWidget(1, 1, update_time_step_value_item);
+    connect(
+        update_time_step_value_item,
+        &QLineEdit::editingFinished,
+        [this, update_time_step_value_item]() {
+            bool OK_status;
+            double update_time_step_ = update_time_step_value_item->text().toDouble(&OK_status);
+            if(OK_status) {
+                crowd_sim_impl->update_time_step = update_time_step_;
+            } else {
+                crowd_sim_impl->update_time_step = 0.1;
+                std::cout << "Invalid update_time_step provided for crowd_sim. default 0.1s will be used." << std::endl;
+            }
+        }
+    );
+
     // required components
     for (size_t i = 0; i < this->required_components.size(); ++i) {
+        int row_id = i+2;
         QTableWidgetItem* name_item = 
             new QTableWidgetItem (QString::fromStdString(this->required_components[i]));
-        setItem(i+1, 0, name_item);
+        setItem(row_id, 0, name_item);
 
         QPushButton* edit_button = new QPushButton("Edit");
-        setCellWidget(i+1, 2, edit_button);
+        setCellWidget(row_id, 2, edit_button);
         edit_button->setStyleSheet("QTableWidgetItem { background-color: red; }");
 
         if ("States" == this->required_components[i]) {
@@ -69,7 +94,6 @@ CrowdSimTable::CrowdSimTable(const Project& input_project) : TableList(3), proje
                 }
             );
         }
-
         if ("AgentProfiles" == this->required_components[i]) {
             connect(
                 edit_button,
@@ -82,7 +106,6 @@ CrowdSimTable::CrowdSimTable(const Project& input_project) : TableList(3), proje
                 }
             );
         }
-
         if ("Transitions" == this->required_components[i]) {
             connect(
                 edit_button,
@@ -95,7 +118,6 @@ CrowdSimTable::CrowdSimTable(const Project& input_project) : TableList(3), proje
                 }
             );
         }
-
         if ("AgentGroups" == this->required_components[i]) {
             connect(
                 edit_button,
@@ -108,7 +130,6 @@ CrowdSimTable::CrowdSimTable(const Project& input_project) : TableList(3), proje
                 }
             );
         }
-
         if ("ModelTypes" == this->required_components[i]) {
             connect(
                 edit_button,
@@ -158,7 +179,7 @@ void CrowdSimTable::update()
             status_number = crowd_sim_impl->model_types.size();
         }
 
-        setItem(i+1, 1, new QTableWidgetItem(QString::number(status_number)));
+        setItem(i+2, 1, new QTableWidgetItem(QString::number(status_number)));
     }
 
     blockSignals(false);

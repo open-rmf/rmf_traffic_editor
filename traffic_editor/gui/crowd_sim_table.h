@@ -27,12 +27,12 @@ public:
 
 private:
     std::vector<std::string> required_components { 
-        "States", 
         "GoalSets", 
+        "States", 
         "Transitions", 
         "AgentProfiles", 
         "AgentGroups", 
-        "ModelTypes" };
+        "ModelTypes"};
     std::set<std::string> goal_areas;
 
     CrowdSimImplPtr crowd_sim_impl;
