@@ -74,48 +74,23 @@ def navmesh_output(level_name, level_yaml_node, output_file_path):
     # provide lane vertices for goals 
     return navmesh_generator
 
-def main():
-    # get the building.yaml file generated from traffic-editor
-    if len(sys.argv) > 1 :
-        map_path = sys.argv[1]
-    elif 'RMF_MAP_PATH' in os.environ:
-        map_path = os.environ['RMF_MAP_PATH']
-    else:
-        print('map path must be provided in command line or RMF_MAP_PATH env')
-        sys.exit(1)
-        raise ValueError('Map path not provided')
-    
-    if not os.path.exists(map_path) :
-        print('map path does not exist!')
-        sys.exit(1)
+def navmesh_main(map_file, output_dir, output_file_prefix):
+    if not os.path.exists(map_file) :
         raise ValueError('Map path not exist!')
+        
+    if not os.path.exists(output_dir) :
+        print("Creating output folder path: ", output_dir)
+        os.makedirs(output_dir)
 
-    # provide the output path
-    if len(sys.argv) > 2:
-        output_folder_path = sys.argv[2]
-        if not os.path.exists(output_folder_path) :
-            print("Creating output folder path: ", output_folder_path)
-            os.makedirs(output_folder_path)
-    else:
-        output_folder_path = os.getcwd() + "navmesh_output"
-        if not os.path.exists(output_folder_path) :
-            os.makedirs(output_folder_path)
-
-    # provide the navmeshfile prefix if needed
-    if len(sys.argv) > 3 :
-        output_file_prefix = sys.argv[3]
-    else :
-        output_file_prefix = 'tmp'
+    if len(output_file_prefix) == 0 :
+        output_file_prefix = 'temp'
 
     # parse the yaml file
-    yaml_parse = BuildingYamlParse(map_path)
+    yaml_parse = BuildingYamlParse(map_file)
 
     for level_name in yaml_parse.GetLevelNames() :
         # navmesh output
-        navmesh_output_file = output_folder_path + '/' + output_file_prefix + '.' + level_name + ".navmesh.nav"
+        navmesh_output_file = output_dir + '/' + level_name + "_navmesh.nav"
         level_with_human_lanes = yaml_parse.GetLevelWithHumanLanes(level_name)
         navmesh_output(level_name, level_with_human_lanes, navmesh_output_file)
 
-
-if __name__ == "__main__":
-    sys.exit(main())
