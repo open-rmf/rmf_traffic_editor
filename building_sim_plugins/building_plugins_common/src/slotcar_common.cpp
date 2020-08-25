@@ -298,7 +298,7 @@ bool SlotcarCommon::emergency_stop(
   {
     Eigen::Vector3d detect_vector = obstacle_pos - stop_zone;
     // check whether the obstacle model is in the same level with the slotcar, hardcode adjacent level elevation 2.0 m
-    if (detect_vector(2) > 2.0) continue;
+    if (std::abs(detect_vector(2)) > 2.0) continue;
     detect_vector(2) = 0;
     if (detect_vector.norm() < _stop_radius)
     {
