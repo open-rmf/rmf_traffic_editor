@@ -85,6 +85,7 @@ void CrowdSimulatorPlugin::_Update(const gazebo::common::UpdateInfo& updateInfo)
       this->_initialized = false;
       return;
     }
+    this->_world->ModelByName(objPtr->modelName)->SetStatic(false);
   }
 
   //if all the models have been added, added all models with update task
