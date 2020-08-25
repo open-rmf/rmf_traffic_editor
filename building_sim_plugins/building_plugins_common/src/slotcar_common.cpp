@@ -296,7 +296,9 @@ bool SlotcarCommon::emergency_stop(
   bool need_to_stop = false;
   for (const auto& obstacle_pos : obstacle_positions)
   {
-    if ((obstacle_pos - stop_zone).norm() < _stop_radius)
+    Eigen::Vector3d detect_vector = obstacle_pos - stop_zone;
+    detect_vector(2) = 0;
+    if (detect_vector.norm() < _stop_radius)
     {
       need_to_stop = true;
       break;
