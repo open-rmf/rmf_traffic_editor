@@ -85,7 +85,7 @@ class ConfigFileGenerator:
                     tmp = AgentProfileYAML().load(item)
                     self.scene_file.addSubElement(tmp)
                 continue
-            if key == 'agent_group' :
+            if key == 'agent_groups' :
                 for item in self.crowd_sim_yaml[key]:
                     tmp = AgentGroupYAML().load(item)
                     self.scene_file.addSubElement(tmp)

@@ -70,7 +70,8 @@ class ProfileCommon (LeafElement) :
         self.addAttribute('max_neighbors', 10)
         self.addAttribute('max_speed', 2)
         self.addAttribute('neighbor_dist', 5)
-        self.addAttribute('obstacleSet', None)
+        # use default obstacleSet
+        self.addAttribute('obstacleSet', 1)
         self.addAttribute('pref_speed', 0)
         self.addAttribute('r', 0.2)
 
