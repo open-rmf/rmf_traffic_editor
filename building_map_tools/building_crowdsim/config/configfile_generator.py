@@ -74,22 +74,20 @@ class ConfigFileGenerator:
         self.scene_file.addSpatialQuery()
         self.scene_file.addCommon()
 
-        for key in self.crowd_sim_yaml :
-            if key == 'obstacle_set' :
-                # only one obstacle set
-                tmp = ObstacleSetYAML().load(self.crowd_sim_yaml[key])
+        # must follow the sequence. 'obstacle_set', 'agent_profiles', 'agent_groups'
+        if ('obstacle_set' in self.crowd_sim_yaml) :
+            # only one obstacle set
+            tmp = ObstacleSetYAML().load(self.crowd_sim_yaml['obstacle_set'])
+            self.scene_file.addSubElement(tmp)
+        if ('agent_profiles' in self.crowd_sim_yaml) :
+            for item in self.crowd_sim_yaml['agent_profiles']:
+                tmp = AgentProfileYAML().load(item)
                 self.scene_file.addSubElement(tmp)
-                continue
-            if key == 'agent_profiles' :
-                for item in self.crowd_sim_yaml[key]:
-                    tmp = AgentProfileYAML().load(item)
-                    self.scene_file.addSubElement(tmp)
-                continue
-            if key == 'agent_groups' :
-                for item in self.crowd_sim_yaml[key]:
-                    tmp = AgentGroupYAML().load(item)
-                    self.scene_file.addSubElement(tmp)
-                continue
+        if ('agent_groups' in self.crowd_sim_yaml) :
+            for item in self.crowd_sim_yaml['agent_groups']:
+                tmp = AgentGroupYAML().load(item)
+                self.scene_file.addSubElement(tmp)  
+
         writeXmlFile(self.scene_file.outputXmlElement(), output_dir = output_dir, file_name = 'scene_file.xml')
 
     def generate_plugin_file(self) :
