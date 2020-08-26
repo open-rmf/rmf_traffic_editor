@@ -18,7 +18,7 @@ def calIntersectVertexFromLaneVector(lane_vector, id0, id1, orign_point):
 
     ## special case with 2 lanes are parallel, use the mid point as the intersection point
     # note that when 2 lanes are nearly parallel, not using the special case might cause rediculous result.
-    if(abs( vector0.getUnit().getDot(vector1.getNormalUnit()) ) < 0.1) :
+    if(abs( vector0.getUnit().getDot(vector1.getNormalUnit()) ) < 0.01) :
         length = (lane0_width + lane1_width) / 2
         result_x = length * vector0.getNormalUnit().x
         result_y = length * vector0.getNormalUnit().y
