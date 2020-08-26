@@ -128,9 +128,7 @@ void Transition::from_yaml(const YAML::Node& input) {
 
     //set condition from yaml
     ConditionPtr condition_ptr = std::make_shared<Condition>()->init_from_yaml(input["Condition"]);
-    printf("in here 1");
     condition_ptr->from_yaml(input["Condition"]);
-    printf("in here 2");
     setCondition(condition_ptr);
 }
 
@@ -285,7 +283,19 @@ YAML::Node AgentGroup::to_yaml() const {
 }
 
 void AgentGroup::from_yaml(const YAML::Node& input) {
-
+    group_id = input["group_id"].as<size_t>();
+    spawn_point_x = input["x"].as<double>();
+    spawn_point_y = input["y"].as<double>();
+    spawn_number = input["agents_number"].as<int>();
+    agent_profile = input["profile_selector"].as<std::string>();
+    initial_state = input["state_selector"].as<std::string>();
+    const YAML::Node& agent_name_node = input["agents_name"];
+    for (YAML::const_iterator it = agent_name_node.begin(); it != agent_name_node.end(); it++) {
+        external_agent_name.emplace_back( (*it).as<std::string>() );
+    }
+    if (external_agent_name.size() > 0) {
+        is_external_group = true;
+    }
 }
 
 //==========================================================
@@ -301,7 +311,11 @@ YAML::Node ModelType::to_yaml() const {
 }
 
 void ModelType::from_yaml(const YAML::Node& input) {
-
+    name = input["typename"].as<std::string>();
+    animation = input["animation"].as<std::string>();
+    animation_speed = input["animation_speed"].as<double>();
+    gazebo_conf.from_yaml(input["gazebo"]);
+    ign_conf.from_yaml(input["ign"]);
 }
 
 //===========================================================
@@ -397,16 +411,6 @@ YAML::Node CrowdSimImplementation::to_yaml() {
 
 bool CrowdSimImplementation::from_yaml(const YAML::Node& input) {
     
-    if (input["update_time_step"] && input["update_time_step"].as<double>() > 0) {
-        this->update_time_step = input["update_time_step"].as<double>();
-    }
-    if (input["enable"] && input["enable"].as<int>() == 1) {
-        this->enable_crowd_sim = true;
-    } else {
-        // default disable crowd_simulation
-        this->enable_crowd_sim = false;
-    }
-
     // check
     if (!input["goal_sets"] || !input["goal_sets"].IsSequence()) {
         printf("Error in load goal_sets\n");
@@ -433,7 +437,18 @@ bool CrowdSimImplementation::from_yaml(const YAML::Node& input) {
         return false;
     }
 
+    clear();
     // load part
+    if (input["update_time_step"] && input["update_time_step"].as<double>() > 0) {
+        this->update_time_step = input["update_time_step"].as<double>();
+    }
+    if (input["enable"] && input["enable"].as<int>() == 1) {
+        this->enable_crowd_sim = true;
+    } else {
+        // default disable crowd_simulation
+        this->enable_crowd_sim = false;
+    }
+
     const YAML::Node& goal_set_node = input["goal_sets"];
     for (YAML::const_iterator it = goal_set_node.begin(); it != goal_set_node.end(); it++) {
         GoalSet goalset_temp(*it);
@@ -454,8 +469,29 @@ bool CrowdSimImplementation::from_yaml(const YAML::Node& input) {
         this->transitions.emplace_back(transition_temp);
     }
     printf("crowd_sim loaded %lu transitions\n", this->transitions.size());
-    
 
+    const YAML::Node& agent_profile_node = input["agent_profiles"];
+    for (YAML::const_iterator it = agent_profile_node.begin(); it != agent_profile_node.end(); it++) {
+        AgentProfile agent_profile_temp(*it);
+        this->agent_profiles.emplace_back(agent_profile_temp);
+    }
+    printf("crowd_sim loaded %lu agent_profiles\n", this->agent_profiles.size());
+    
+    const YAML::Node& agent_group_node = input["agent_groups"];
+    for (YAML::const_iterator it = agent_group_node.begin(); it!= agent_group_node.end(); it++) {
+        AgentGroup agent_group_temp(*it);
+        this->agent_groups.emplace_back(agent_group_temp);
+    }
+    printf("crowd_sim loaded %lu agent_groups\n", this->agent_profiles.size());
+
+    const YAML::Node& model_type_node = input["model_types"];
+    for (YAML::const_iterator it = model_type_node.begin(); it != model_type_node.end(); it++) {
+        ModelType model_type_temp(*it);
+        this->model_types.emplace_back(model_type_temp);
+    }
+    printf("crowd_sim loaded %lu model_types\n", this->agent_profiles.size());
+
+    init_default_configure();
     return true;
 }
 

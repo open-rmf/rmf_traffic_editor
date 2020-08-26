@@ -125,7 +125,20 @@ public:
         ORCA_tau(1.0),
         ORCA_tauObst(0.4)
     {}
-    AgentProfile(const YAML::Node& input) {
+    AgentProfile(const YAML::Node& input) 
+        : profile_name("N.A."),
+        profile_class(1),
+        max_neighbors(10),
+        obstacle_set(1),
+        max_accel(0.0),
+        max_angle_vel(0.0),
+        max_speed(0.0),
+        neighbor_dist(5.0),
+        pref_speed(0.0),
+        r(0.25),
+        ORCA_tau(1.0),
+        ORCA_tauObst(0.4)
+    {
         from_yaml(input);
     }
     ~AgentProfile() {}
@@ -166,7 +179,9 @@ public:
     virtual TYPE getType() const { return type; }
     virtual bool isValid() const { return false; }
     virtual YAML::Node to_yaml() const { return YAML::Node(YAML::NodeType::Map); }
-    virtual void from_yaml(const YAML::Node& input) {} //base class do nothing
+    virtual void from_yaml(const YAML::Node& input) { //base class do nothing
+        if (!input["type"]) printf("Invalid Condition yaml input.");
+    }
 };
 
 class ConditionGOAL : public Condition 
@@ -380,6 +395,18 @@ public:
         agent_profile(""),
         initial_state("")
     {}
+    AgentGroup(const YAML::Node& input) 
+        : group_id(65535), 
+        is_external_group(false),
+        spawn_point_x(0.0),
+        spawn_point_y(0.0),
+        spawn_number(0),
+        external_agent_name({}),
+        agent_profile(""),
+        initial_state("")
+    {
+        from_yaml(input);
+    }
     ~AgentGroup() {}
 
     bool isValid() const { return agent_profile.size() > 0 && initial_state.size() > 0; }
@@ -432,7 +459,7 @@ public:
         std::string filename;
         std::vector<double> initial_pose;
 
-        GazeboConf(std::string file = "", std::vector<double> pose = {0, 0, 0, 0, 0, 0})
+        GazeboConf(std::string file = "", std::vector<double> pose = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0})
             : filename(file), initial_pose(pose) {}
         YAML::Node to_yaml() const{
             YAML::Node result = YAML::Node(YAML::NodeType::Map);
@@ -442,13 +469,22 @@ public:
             result["pose"] = initial_pose;
             return result;
         }
-        void from_yaml(const YAML::Node& input);
+        void from_yaml(const YAML::Node& input) {
+            filename = input["filename"].as<std::string>();
+            const YAML::Node& pose_node = input["pose"];
+            size_t i = 0;
+            for (YAML::const_iterator it = pose_node.begin(); 
+                it != pose_node.end() && i < initial_pose.size(); 
+                it++) {
+                initial_pose[i++] = (*it).as<double>();
+            }
+        }
     };
 
     struct IgnConf{
         std::string filename;
         std::vector<double> initial_pose;
-        IgnConf(std::string file = "", std::vector<double> pose = {0, 0, 0, 0, 0, 0})
+        IgnConf(std::string file = "", std::vector<double> pose = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0})
             : filename(file), initial_pose(pose) {}
         YAML::Node to_yaml() const{
             YAML::Node result = YAML::Node(YAML::NodeType::Map);
@@ -458,7 +494,16 @@ public:
             result["pose"] = initial_pose;
             return result;
         }
-        void from_yaml(const YAML::Node& input);
+        void from_yaml(const YAML::Node& input) {
+            filename = input["model_file_path"].as<std::string>();
+            const YAML::Node& pose_node = input["pose"];
+            size_t i = 0;
+            for (YAML::const_iterator it = pose_node.begin(); 
+                it != pose_node.end() && i < initial_pose.size(); 
+                it++) {
+                initial_pose[i++] = (*it).as<double>();
+            }
+        }
     };
 
 public:
@@ -469,6 +514,15 @@ public:
         gazebo_conf(),
         ign_conf()
      {}
+     ModelType(const YAML::Node& input) 
+        : name("N.A"),
+        animation("N.A"),
+        animation_speed(0.2),
+        gazebo_conf(),
+        ign_conf()
+     {
+        from_yaml(input);
+     }
     ~ModelType() {}
 
     std::string getName() const {return name;}
