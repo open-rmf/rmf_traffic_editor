@@ -39,7 +39,12 @@ public:
         is_final_state(true),
         goal_set_id(-1)
     {}
-    State(const YAML::Node& input) {
+    State(const YAML::Node& input)
+        : name("N.A."),
+        navmesh_file_name(""),
+        is_final_state(true),
+        goal_set_id(-1)
+    {
         from_yaml(input);
     }
     ~State() {}
@@ -74,7 +79,11 @@ public:
         capacity(1),
         goal_area_contained({})
     {}
-    GoalSet(const YAML::Node& input) {
+    GoalSet(const YAML::Node& input) 
+        : id(65535), //initialize with invalid id
+        capacity(1),
+        goal_area_contained({})
+    {
         from_yaml(input);
     }
     ~GoalSet() {}
@@ -313,6 +322,13 @@ public:
         to_state_name({}),
         condition(std::make_shared<Condition>())
     {}
+    Transition(const YAML::Node& input)
+        : from_state_name("N.A."),
+        to_state_name({}),
+        condition(std::make_shared<Condition>())
+    {
+        from_yaml(input);
+    }
     ~Transition() {}
 
     void setFromState(StateName state_name_) { this->from_state_name = state_name_; }

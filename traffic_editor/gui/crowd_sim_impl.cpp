@@ -115,7 +115,9 @@ YAML::Node Transition::to_yaml() const{
 
 void Transition::from_yaml(const YAML::Node& input) {
     setFromState(input["from"].as<std::string>());
-    addToState(input["to"].as<std::string>());
+    if ( input["to"] && input["to"].as<std::string>() != "" ) {
+        addToState(input["to"].as<std::string>());
+    }
     const YAML::Node& targets = input["Target"];
     for (YAML::const_iterator it = targets.begin(); it != targets.end(); it++) {
         if (!it->IsMap()) {
@@ -126,7 +128,9 @@ void Transition::from_yaml(const YAML::Node& input) {
 
     //set condition from yaml
     ConditionPtr condition_ptr = std::make_shared<Condition>()->init_from_yaml(input["Condition"]);
-    condition_ptr->from_yaml(input["condition"]);
+    printf("in here 1");
+    condition_ptr->from_yaml(input["Condition"]);
+    printf("in here 2");
     setCondition(condition_ptr);
 }
 
@@ -378,9 +382,9 @@ YAML::Node CrowdSimImplementation::to_yaml() {
 
     top_node["obstacle_set"] = output_obstacle_node();
 
-    top_node["agent_group"] = YAML::Node(YAML::NodeType::Sequence);
+    top_node["agent_groups"] = YAML::Node(YAML::NodeType::Sequence);
     for (auto group : agent_groups) {
-        top_node["agent_group"].push_back(group.to_yaml());
+        top_node["agent_groups"].push_back(group.to_yaml());
     }
 
     top_node["model_types"] = YAML::Node(YAML::NodeType::Sequence);
@@ -398,21 +402,59 @@ bool CrowdSimImplementation::from_yaml(const YAML::Node& input) {
     }
     if (input["enable"] && input["enable"].as<int>() == 1) {
         this->enable_crowd_sim = true;
+    } else {
+        // default disable crowd_simulation
+        this->enable_crowd_sim = false;
     }
 
-    // When loading goal set, there might be a risk that the configuration set the goal_area name, 
-    // but we delete the goal vertices in yaml
-    // this definitely won't crash the traffic-editor, but need to figure out whether this delete will make crowd sim crash
+    // check
     if (!input["goal_sets"] || !input["goal_sets"].IsSequence()) {
-        printf("Error in load goal_sets");
+        printf("Error in load goal_sets\n");
         return false;
     }
+    if (!input["states"] || !input["states"].IsSequence()) {
+        printf("Error in load states\n");
+        return false;
+    }
+    if (!input["transitions"] || !input["transitions"].IsSequence()) {
+        printf("Error in load transitions\n");
+        return false;
+    }
+    if (!input["agent_profiles"] || !input["agent_profiles"].IsSequence()) {
+        printf("Error in load agent_profiles\n");
+        return false;
+    }
+    if (!input["agent_groups"] || !input["agent_groups"].IsSequence()) {
+        printf("Error in load agent_groups\n");
+        return false;
+    }
+    if (!input["model_types"] || !input["model_types"].IsSequence()) {
+        printf("Error in load model_types\n");
+        return false;
+    }
+
+    // load part
     const YAML::Node& goal_set_node = input["goal_sets"];
     for (YAML::const_iterator it = goal_set_node.begin(); it != goal_set_node.end(); it++) {
         GoalSet goalset_temp(*it);
         this->goal_sets.emplace_back(goalset_temp);
     }
-    printf("crowd_sim loaded %d goal_sets\n", this->goal_sets.size());
+    printf("crowd_sim loaded %lu goal_sets\n", this->goal_sets.size());
+    
+    const YAML::Node& state_node = input["states"];
+    for (YAML::const_iterator it = state_node.begin(); it != state_node.end(); it++) {
+        State state_temp(*it);
+        this->states.emplace_back(state_temp);
+    }
+    printf("crowd_sim loaded %lu states\n", this->states.size());
+
+    const YAML::Node& transition_node = input["transitions"];
+    for (YAML::const_iterator it = transition_node.begin(); it != transition_node.end(); it++) {
+        Transition transition_temp(*it);
+        this->transitions.emplace_back(transition_temp);
+    }
+    printf("crowd_sim loaded %lu transitions\n", this->transitions.size());
+    
 
     return true;
 }
