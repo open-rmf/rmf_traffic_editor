@@ -19,7 +19,7 @@ class PolygonFactory:
         self.edgeManager = edgeManager
         self.obstacleManager = obstacleManager
         # predefined scale factor, see self.intersectionPolygonUpdate() special case explaination
-        self.scale_special_case = 0.5
+        self.scale_special_case = 0.01
 
     def getLaneVector(self, lane):
         lane_vertices = lane.getLaneVertices()
@@ -211,10 +211,7 @@ class PolygonFactory:
         assert(len(vertices) == 2)
         intersect_vertex = self.laneVertexManager.getLaneVertex(polygon.getHubVertexId())
         v0 = vertices[0]
-        # v1 = Vertex([2 * intersect_vertex.x - v0.x, 2 * intersect_vertex.y - v0.y])
         v1 = vertices[1]
-        # for id in v0.getLane():
-        #     v1.setLane(id) # might not be necessary, but keep the same as v0
         
         '''
         ## Some Explaination: essentially, this polygon should not appear coz this polygon can be represent by an edge
