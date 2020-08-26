@@ -38,34 +38,31 @@ class ConfigFileGenerator:
             self.human_goals[set_name].append(vertex)
 
     def generate_behavior_file(self, output_dir = ""):
-        for key in self.crowd_sim_yaml :
-            if key == "states" :
-                for s in self.crowd_sim_yaml[key] :
-                    state = StateYAML().load(s)
-                    self.behavior_file.addState(state)
-                continue
-            if key == "transitions" :
-                for t in self.crowd_sim_yaml[key] :
-                    transition = TransitionYAML().load(t)
-                    self.behavior_file.addTransition(transition)
-                continue
-            if key == "goal_sets" :
-                for gs in self.crowd_sim_yaml[key] :
-                    goal_set = GoalSetYAML().load(gs)
-                    # update goal_sets with goal
-                    for area in gs['set_area'] :
-                        if not area in self.human_goals:
-                            print("set_area [", area, "] not found in goal set.")
-                            continue
-                        area_goal_list = self.human_goals[area]
-                        for g in area_goal_list :
-                            # g is building.map.vertex.Vertex type
-                            tmp = Goal()
-                            tmp.setCoord(g.x, g.y)
-                            tmp.setCapacity(gs['capacity'])
-                            goal_set.addGoal(tmp)
-                    self.behavior_file.addGoalSet(goal_set)
-                continue
+        # must follow the sequence states, transitions, goal_sets
+        if 'states' in self.crowd_sim_yaml :
+            for s in self.crowd_sim_yaml['states'] :
+                state = StateYAML().load(s)
+                self.behavior_file.addState(state)
+        if 'transitions' in self.crowd_sim_yaml:
+            for t in self.crowd_sim_yaml['transitions'] :
+                transition = TransitionYAML().load(t)
+                self.behavior_file.addTransition(transition)
+        if 'goal_sets' :
+            for gs in self.crowd_sim_yaml['goal_sets'] :
+                goal_set = GoalSetYAML().load(gs)
+                # update goal_sets with goal
+                for area in gs['set_area'] :
+                    if not area in self.human_goals:
+                        print("set_area [", area, "] not found in goal set.")
+                        continue
+                    area_goal_list = self.human_goals[area]
+                    for g in area_goal_list :
+                        # g is building.map.vertex.Vertex type
+                        tmp = Goal()
+                        tmp.setCoord(g.x, g.y)
+                        tmp.setCapacity(gs['capacity'])
+                        goal_set.addGoal(tmp)
+                self.behavior_file.addGoalSet(goal_set)
 
         writeXmlFile(self.behavior_file.outputXmlElement(), output_dir = output_dir, file_name = 'behavior_file.xml')
 
