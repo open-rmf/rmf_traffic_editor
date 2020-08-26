@@ -56,7 +56,7 @@ class StateYAML (BasicYAML):
         if self._attributes['name'] :
             B_state.setStateName(self._attributes['name'])
         
-        if self._attributes['goal_set'] :
+        if not self._attributes['goal_set'] == None : 
             B_goal_selector.setGoalSetId(self._attributes['goal_set'])
 
         if self._attributes['navmesh_file_name'] :

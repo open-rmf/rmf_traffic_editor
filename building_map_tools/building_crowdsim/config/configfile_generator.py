@@ -96,7 +96,7 @@ class ConfigFileGenerator:
         external_agent_yaml = ExternalAgentYAML()
         
         for key in self.crowd_sim_yaml :
-            if key == 'agent_group' :
+            if key == 'agent_groups' :
                 for group_item in self.crowd_sim_yaml[key] :
                     if not 'agents_name' in group_item or not group_item['agents_name'] :
                         continue
