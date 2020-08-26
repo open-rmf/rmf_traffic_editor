@@ -347,6 +347,9 @@ class PolygonFactory:
         lane = self.laneManager.getLane(polygon.getLaneId())
         already_vertices = lane.getPolygonVertices() # got ids
 
+        if(len(already_vertices) == 0) :
+            raise ValueError("You are getting a lane not connected with any other hub. Please check the building.yaml")
+
         if(len(already_vertices) > 2):
             self.lanePolygonGeneralCase(polygon, already_vertices)
         else:
