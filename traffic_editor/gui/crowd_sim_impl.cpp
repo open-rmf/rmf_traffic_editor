@@ -114,7 +114,40 @@ YAML::Node Transition::to_yaml() const{
 }
 
 void Transition::from_yaml(const YAML::Node& input) {
+    setFromState(input["from"].as<std::string>());
+    addToState(input["to"].as<std::string>());
+    const YAML::Node& targets = input["Target"];
+    for (YAML::const_iterator it = targets.begin(); it != targets.end(); it++) {
+        if (!it->IsMap()) {
+            throw std::runtime_error("Single Target expects a map");
+        }
+        addToState((*it)["name"].as<std::string>(), (*it)["weight"].as<double>() );
+    }
 
+    //set condition from yaml
+    ConditionPtr condition_ptr = std::make_shared<Condition>()->init_from_yaml(input["Condition"]);
+    condition_ptr->from_yaml(input["condition"]);
+    setCondition(condition_ptr);
+}
+
+ConditionPtr Condition::init_from_yaml(const YAML::Node& input) {
+    if (input["type"] && input["type"].as<std::string>() == "goal_reached") {
+        return std::make_shared<ConditionGOAL>();
+    }
+    if (input["type"] && input["type"].as<std::string>() == "timer") {
+        return std::make_shared<ConditionTIMER>();
+    }
+    if (input["type"] && input["type"].as<std::string>() == "and") {
+        return std::make_shared<ConditionAND>();
+    }
+    if (input["type"] && input["type"].as<std::string>() == "or") {
+        return std::make_shared<ConditionOR>();
+    }
+    if (input["type"] && input["type"].as<std::string>() == "not") {
+        return std::make_shared<ConditionNOT>();
+    }
+    //default
+    return std::make_shared<Condition>();
 }
 
 YAML::Node ConditionGOAL::to_yaml() const {
@@ -126,7 +159,12 @@ YAML::Node ConditionGOAL::to_yaml() const {
 }
 
 void ConditionGOAL::from_yaml(const YAML::Node& input) {
-
+    if (input["type"].as<std::string>() != "goal_reached" ) {
+        throw std::runtime_error("Error in parsing goal_reached condition");
+    }
+    if (input["distance"] && input["distance"].as<double>() > 0) {
+        setValue(input["distance"].as<double>() );
+    } 
 }
 
 
@@ -141,7 +179,12 @@ YAML::Node ConditionTIMER::to_yaml() const {
 }
 
 void ConditionTIMER::from_yaml(const YAML::Node& input) {
-
+    if (input["type"].as<std::string>() != "timer" ) {
+        throw std::runtime_error("Error in parsing timer condition");
+    }
+    if (input["value"] && input["value"].as<double>() > 0) {
+        setValue(input["value"].as<double>() );
+    } 
 }
 
 YAML::Node ConditionAND::to_yaml() const {
@@ -154,7 +197,21 @@ YAML::Node ConditionAND::to_yaml() const {
 }
 
 void ConditionAND::from_yaml(const YAML::Node& input) {
+    if (input["type"].as<std::string>() != "and" ) {
+        throw std::runtime_error("Error in parsing and condition");
+    }
 
+    if (input["condition1"]) {
+        auto condition1_ptr = init_from_yaml(input["condition1"]);
+        condition1_ptr->from_yaml(input["condition1"]);
+        setCondition(condition1_ptr, 1);
+    }
+
+    if (input["condition2"]) {
+        auto condition2_ptr = init_from_yaml(input["condition2"]);
+        condition2_ptr->from_yaml(input["condition2"]);
+        setCondition(condition2_ptr, 2);
+    }
 }
 
 YAML::Node ConditionOR::to_yaml() const {
@@ -168,6 +225,21 @@ YAML::Node ConditionOR::to_yaml() const {
 
 void ConditionOR::from_yaml(const YAML::Node& input) {
 
+    if (input["type"].as<std::string>() != "or" ) {
+        throw std::runtime_error("Error in parsing or condition");
+    }
+
+    if (input["condition1"]) {
+        auto condition1_ptr = init_from_yaml(input["condition1"]);
+        condition1_ptr->from_yaml(input["condition1"]);
+        setCondition(condition1_ptr, 1);
+    }
+
+    if (input["condition2"]) {
+        auto condition2_ptr = init_from_yaml(input["condition2"]);
+        condition2_ptr->from_yaml(input["condition2"]);
+        setCondition(condition2_ptr, 2);
+    }
 }
 
 YAML::Node ConditionNOT::to_yaml() const {
@@ -180,6 +252,15 @@ YAML::Node ConditionNOT::to_yaml() const {
 
 void ConditionNOT::from_yaml(const YAML::Node& input) {
 
+    if (input["type"].as<std::string>() != "not" ) {
+        throw std::runtime_error("Error in parsing not condition");
+    }
+
+    if (input["condition1"]) {
+        auto condition1_ptr = init_from_yaml(input["condition1"]);
+        condition1_ptr->from_yaml(input["condition1"]);
+        setCondition(condition1_ptr);
+    }
 }
 
 //===========================================================
@@ -308,6 +389,53 @@ YAML::Node CrowdSimImplementation::to_yaml() {
     }
     
     return top_node;
+}
+
+bool CrowdSimImplementation::from_yaml(const YAML::Node& input) {
+    
+    if (input["update_time_step"] && input["update_time_step"].as<double>() > 0) {
+        this->update_time_step = input["update_time_step"].as<double>();
+    }
+    if (input["enable"] && input["enable"].as<int>() == 1) {
+        this->enable_crowd_sim = true;
+    }
+
+    // When loading goal set, there might be a risk that the configuration set the goal_area name, 
+    // but we delete the goal vertices in yaml
+    // this definitely won't crash the traffic-editor, but need to figure out whether this delete will make crowd sim crash
+    if (!input["goal_sets"] || !input["goal_sets"].IsSequence()) {
+        printf("Error in load goal_sets");
+        return false;
+    }
+    const YAML::Node& goal_set_node = input["goal_sets"];
+    for (YAML::const_iterator it = goal_set_node.begin(); it != goal_set_node.end(); it++) {
+        GoalSet goalset_temp(*it);
+        this->goal_sets.emplace_back(goalset_temp);
+    }
+    printf("crowd_sim loaded %d goal_sets\n", this->goal_sets.size());
+
+    return true;
+}
+
+void CrowdSimImplementation::clear() {
+    goal_areas.clear();
+    navmesh_filename_list.clear();
+    
+    enable_crowd_sim = false;
+    update_time_step = 0.1;
+    states.clear();
+    goal_sets.clear();
+    transitions.clear();
+    agent_profiles.clear();
+    agent_groups.clear();
+    model_types.clear();
+}
+
+void CrowdSimImplementation::init_default_configure() {
+    initializeState();
+    initializeAgentProfile();
+    initializeAgentGroup();
+    initializeModelType();
 }
     
 } //namespace crowd_sim

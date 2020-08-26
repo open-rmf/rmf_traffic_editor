@@ -151,12 +151,13 @@ public:
     std::string name;
     TYPE type;
 
+    ConditionPtr init_from_yaml(const YAML::Node& input);
+
     virtual std::string getConditionName() const { return name; }
     virtual TYPE getType() const { return type; }
     virtual bool isValid() const { return false; }
     virtual YAML::Node to_yaml() const { return YAML::Node(YAML::NodeType::Map); }
     virtual void from_yaml(const YAML::Node& input) {} //base class do nothing
-
 };
 
 class ConditionGOAL : public Condition 
@@ -488,10 +489,7 @@ public:
         : enable_crowd_sim(false),
         update_time_step(0.1)
     {
-        initializeState();
-        initializeAgentProfile();
-        initializeAgentGroup();
-        initializeModelType();
+        init_default_configure();
     }
     ~CrowdSimImplementation() {}
 
@@ -500,6 +498,9 @@ public:
     std::vector<std::string> getNavmeshFileName() const {return navmesh_filename_list;}
 
     YAML::Node to_yaml();
+    bool from_yaml(const YAML::Node& input);
+    void clear();
+    void init_default_configure();
 
     // update from project.building in crowd_sim_table
     std::set<std::string> goal_areas;

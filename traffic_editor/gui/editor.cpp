@@ -621,6 +621,8 @@ bool Editor::load_project(const QString& filename)
 
   create_scene();
 
+  printf("crowdsim load %d goal_sets before update table\n", project.building.crowd_sim_impl->goal_sets.size());
+
   update_tables();
 
   if (project.has_sim_plugin())

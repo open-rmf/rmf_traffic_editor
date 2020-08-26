@@ -3,15 +3,18 @@
 
 #include <iostream>
 
-#include <QtWidgets>
 #include <QString>
 
 
 CrowdSimTable::CrowdSimTable(const Project& input_project) : TableList(3), project(input_project)
 {
-    crowd_sim_impl = std::make_shared<crowd_sim::CrowdSimImplementation>();
-    project.building.crowd_sim_impl = crowd_sim_impl;
-    update();
+    if (project.building.crowd_sim_impl == nullptr) {
+        printf("Initialize crowd_sim_implementation for project.building\n");
+        crowd_sim_impl = std::make_shared<crowd_sim::CrowdSimImplementation>();
+        project.building.crowd_sim_impl = crowd_sim_impl;
+    } else {
+        crowd_sim_impl = project.building.crowd_sim_impl;
+    }
 
     const QStringList labels =
     { "Name", "Status", "" };
@@ -21,11 +24,10 @@ CrowdSimTable::CrowdSimTable(const Project& input_project) : TableList(3), proje
     setRowCount(2 + this->required_components.size());
 
     // enable_crowd_sim check box
-    QTableWidgetItem* enable_crowd_sim_name_item =
-      new QTableWidgetItem(QString::fromStdString("enable_crowd_sim"));
+    enable_crowd_sim_name_item = new QTableWidgetItem(QString::fromStdString("enable_crowd_sim"));
     setItem(0, 0, enable_crowd_sim_name_item);
 
-    QCheckBox* enable_crowd_sim_checkbox = new QCheckBox;
+    enable_crowd_sim_checkbox = new QCheckBox;
     enable_crowd_sim_checkbox->setChecked(crowd_sim_impl->enable_crowd_sim);
     setCellWidget(0, 1, enable_crowd_sim_checkbox);
     connect(
@@ -37,17 +39,15 @@ CrowdSimTable::CrowdSimTable(const Project& input_project) : TableList(3), proje
     );
 
     // update_time_step
-    QTableWidgetItem* update_time_step_name_item =
-        new QTableWidgetItem(QString::fromStdString("update_time_step"));
+    update_time_step_name_item = new QTableWidgetItem(QString::fromStdString("update_time_step"));
     setItem(1, 0, update_time_step_name_item);
 
-    QLineEdit* update_time_step_value_item =
-        new QLineEdit(QString::number(crowd_sim_impl->update_time_step));
+    update_time_step_value_item = new QLineEdit(QString::number(crowd_sim_impl->update_time_step));
     setCellWidget(1, 1, update_time_step_value_item);
     connect(
         update_time_step_value_item,
         &QLineEdit::editingFinished,
-        [this, update_time_step_value_item]() {
+        [this]() {
             bool OK_status;
             double update_time_step_ = update_time_step_value_item->text().toDouble(&OK_status);
             if(OK_status) {
@@ -59,7 +59,8 @@ CrowdSimTable::CrowdSimTable(const Project& input_project) : TableList(3), proje
         }
     );
 
-    // required components
+    // update required components
+    update();
     for (size_t i = 0; i < this->required_components.size(); ++i) {
         int row_id = i+2;
         QTableWidgetItem* name_item = 
@@ -156,6 +157,9 @@ void CrowdSimTable::update()
     update_external_agent_state();
 
     blockSignals(true);
+
+    enable_crowd_sim_checkbox->setChecked(crowd_sim_impl->enable_crowd_sim);
+    update_time_step_value_item->setText(QString::number(crowd_sim_impl->update_time_step));
 
     size_t status_number = 0;
     for(size_t i = 0; i < required_components.size(); ++i){

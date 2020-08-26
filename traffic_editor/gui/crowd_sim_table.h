@@ -6,6 +6,7 @@
 #include <set>
 
 #include <QTableWidget>
+#include <QtWidgets>
 
 #include <table_list.h>
 #include <project.h>
@@ -34,6 +35,11 @@ private:
         "AgentGroups", 
         "ModelTypes"};
     std::set<std::string> goal_areas;
+
+    QTableWidgetItem* enable_crowd_sim_name_item;
+    QCheckBox* enable_crowd_sim_checkbox;
+    QTableWidgetItem* update_time_step_name_item;
+    QLineEdit* update_time_step_value_item;
 
     CrowdSimImplPtr crowd_sim_impl;
     const Project& project;
