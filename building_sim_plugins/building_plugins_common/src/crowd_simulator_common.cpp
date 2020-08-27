@@ -214,28 +214,6 @@ void CrowdSimInterface::GetAgentPose(const AgentPtr agentPtr, double deltaSimTim
 }
 
 //=============================================================
-AgentPose3d::AgentPose3d(){
-  this->_x = 0.0;
-  this->_y = 0.0;
-  this->_z = 0.0;
-  this->_pitch = 0.0;
-  this->_roll = 0.0;
-  this->_yaw = 0.0;
-}
-
-AgentPose3d::~AgentPose3d(){
-  //do nothing
-}
-
-AgentPose3d::AgentPose3d(double& x, double& y, double& z, double& pitch, double& roll, double& yaw){
-  this->_x = x;
-  this->_y = y;
-  this->_z = z;
-  this->_pitch = pitch;
-  this->_roll = roll;
-  this->_yaw = yaw;
-}
-
 double AgentPose3d::X() const {
   return this->_x;
 }

@@ -5,11 +5,14 @@
 #include <list>
 #include <queue>
 #include <memory>
+#include <regex> //for parsing initial_pose
 
 #include <MengeCore/Runtime/SimulatorDB.h>
 #include <MengeCore/Orca/ORCADBEntry.h>
 #include <MengeCore/Orca/ORCASimulator.h>
 #include <MengeCore/PluginEngine/CorePluginEngine.h>
+
+#include <rclcpp/rclcpp.hpp>
 
 namespace crowd_simulator {
 
@@ -22,10 +25,11 @@ using AgentPtr = std::shared_ptr<Menge::Agents::BaseAgent>;
 class  AgentPose3d{
 
 public:
-  AgentPose3d();
-  AgentPose3d(double& x, double& y, double& z, double& pitch, double& roll, double& yaw);
+  AgentPose3d() : _x(0), _y(0), _z(0), _pitch(0), _roll(0), _yaw(0) {}
+  AgentPose3d(double& x, double& y, double& z, double& pitch, double& roll, double& yaw)
+    : _x(x), _y(y), _z(z), _pitch(pitch), _roll(roll), _yaw(yaw) {}
 
-  ~AgentPose3d();
+  ~AgentPose3d() {}
 
   double X() const;
   double Y() const;
@@ -183,6 +187,11 @@ public:
         simTimeStep);
   }
 
+  rclcpp::Logger logger() const;
+
+  template<typename SdfPtrT>
+  bool ReadSDF(SdfPtrT& sdf);
+
   bool SpawnObject(std::vector<std::string>& externalModels);
   void AddObject(AgentPtr agentPtr, const std::string& modelName,
     const std::string& typeName, bool isExternal);
@@ -200,8 +209,159 @@ public:
 private:
   std::vector<ObjectPtr> _objects; //Database, use id to access ObjectPtr
   std::shared_ptr<MengeHandle> _mengeHandle;
+  std::shared_ptr<ModelTypeDatabase> _modelTypeDBPtr;
+
   float _simTimeStep;
+  std::string _resourcePath;
+  std::string _behaviorFile;
+  std::string _sceneFile;
+  std::vector<std::string> _externalAgents;
+
+  template<typename SdfPtrT>
+  bool _LoadModelInitPose(SdfPtrT& modelTypeElement, AgentPose3d& result) const;
+
 };
+
+template<typename SdfPtrT>
+bool CrowdSimInterface::ReadSDF(SdfPtrT& sdf) 
+{
+  if (!sdf->template HasElement("resource_path"))
+  {
+    char* menge_resource_path;
+    menge_resource_path = getenv("MENGE_RESOURCE_PATH");
+    RCLCPP_ERROR(logger(), 
+      "No resource path provided! <env MENGE_RESOURCE_PATH> " + std::string(menge_resource_path) + " will be used." ); 
+    this->_resourcePath = std::string(menge_resource_path);
+  } else{
+    this->_resourcePath = sdf->template GetElement("resource_path")->template Get<std::string>();
+  }
+  
+  if (!sdf->template HasElement("behavior_file"))
+  {
+    RCLCPP_ERROR(logger(), 
+      "No behavior file found! <behavior_file> Required!" ); 
+    return false;
+  }
+  this->_behaviorFile = sdf->template GetElement("behavior_file")->template Get<std::string>();
+
+  if (!sdf->template HasElement("scene_file"))
+  {
+    RCLCPP_ERROR(logger(), 
+      "No scene file found! <scene_file> Required!" );
+    return false;
+  }
+  this->_sceneFile = sdf->template GetElement("scene_file")->template Get<std::string>();
+
+  if (!sdf->template HasElement("update_time_step"))
+  {
+    RCLCPP_ERROR(logger(), 
+      "No update_time_step found! <update_time_step> Required!");
+    return false;
+  }
+  this->_simTimeStep = sdf->template GetElement("update_time_step")->template Get<float>();
+
+  if (!sdf->template HasElement("model_type"))
+  {
+    RCLCPP_ERROR(logger(), 
+      "No model type for agents found! <model_type> element Required!");
+    return false;
+  }
+  auto modelTypeElement = sdf->template GetElement("model_type");
+  while (modelTypeElement)
+  {
+    std::string s;
+    if (!modelTypeElement->template Get<std::string>("typename", s, ""))
+    {
+      RCLCPP_ERROR(logger(), 
+        "No model type name configured in <model_type>! <typename> Required");
+      return false;
+    }
+
+    auto modelTypePtr = this->_modelTypeDBPtr->Emplace(s, new crowd_simulator::ModelTypeDatabase::Record()); //unordered_map
+    modelTypePtr->typeName = s;
+
+    if (!modelTypeElement->template Get<std::string>("filename", modelTypePtr->fileName,""))
+    {
+      RCLCPP_ERROR(logger(), 
+        "No actor skin configured in <model_type>! <filename> Required");
+      return false;
+    }
+
+    if (!modelTypeElement->template Get<std::string>("animation", modelTypePtr->animation, ""))
+    {
+      RCLCPP_ERROR(logger(), 
+        "No animation configured in <model_type>! <animation> Required");
+      return false;
+    }
+
+    if (!modelTypeElement->template Get<double>("animation_speed", modelTypePtr->animationSpeed, 0.0))
+    {
+      RCLCPP_ERROR(logger(), 
+        "No animation speed configured in <model_type>! <animation_speed> Required");
+      return false;
+    }
+
+    if (!modelTypeElement->template HasElement("initial_pose"))
+    {
+      RCLCPP_ERROR(logger(), 
+        "No model initial pose configured in <model_type>! <initial_pose> Required [" + s + "]");
+      return false;
+    }
+    if (!this->_LoadModelInitPose(modelTypeElement, modelTypePtr->pose))
+    {
+      RCLCPP_ERROR(logger(), 
+        "Error loading model initial pose in <model_type>! Check <initial_pose> in [" + s + "]");
+      return false;
+    }
+
+    modelTypeElement = modelTypeElement->template GetNextElement("model_type");
+  }
+
+  if (!sdf->template HasElement("external_agent"))
+  {
+    RCLCPP_ERROR(logger(), 
+      "No external agent provided. <external_agent> is needed with a unique name defined above.");
+  }
+  auto externalAgentElement = sdf->template GetElement("external_agent");
+  while (externalAgentElement)
+  {
+    auto exAgentName = externalAgentElement->template Get<std::string>();
+    RCLCPP_ERROR(logger(), 
+      "Added external agent: [ " + exAgentName + " ].");
+    this->_externalAgents.emplace_back(exAgentName); //just store the name
+    externalAgentElement = externalAgentElement->template GetNextElement("external_agent");
+  }
+
+  return true;
+}
+
+template<typename SdfPtrT>
+bool CrowdSimInterface::_LoadModelInitPose(SdfPtrT& modelTypeElement, AgentPose3d& result) const
+{
+  std::string poseStr;
+  if (modelTypeElement->template Get<std::string>("initial_pose", poseStr, ""))
+  {
+    std::regex ws_re("\\s+"); //whitespace
+    std::vector<std::string> parts(
+      std::sregex_token_iterator(poseStr.begin(), poseStr.end(), ws_re, -1),
+      std::sregex_token_iterator());
+
+    if (parts.size() != 6)
+    {
+      RCLCPP_ERROR(logger(), 
+        "Error loading <initial_pose> in <model_type>, 6 floats (x, y, z, pitch, roll, yaw) expected.");
+      return false;
+    }
+
+    result.X( std::stod(parts[0]) );
+    result.Y( std::stod(parts[1]) );
+    result.Z( std::stod(parts[2]) );
+    result.Pitch( std::stod(parts[3]) );
+    result.Roll( std::stod(parts[4]) );
+    result.Yaw( std::stod(parts[5]) );
+  }
+  return true;
+}
 
 } //namespace crowd_simulator
 

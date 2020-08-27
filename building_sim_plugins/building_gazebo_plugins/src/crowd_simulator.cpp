@@ -401,12 +401,12 @@ bool CrowdSimulatorPlugin::_LoadModelInitPose(
       return false;
     }
 
-    double x = ignition::math::parseFloat(parts[0]);
-    double y = ignition::math::parseFloat(parts[1]);
-    double z = ignition::math::parseFloat(parts[2]);
-    double pitch = ignition::math::parseFloat(parts[3]);
-    double roll = ignition::math::parseFloat(parts[4]);
-    double yaw = ignition::math::parseFloat(parts[5]);
+    double x = std::stod(parts[0]);
+    double y = std::stod(parts[1]);
+    double z = std::stod(parts[2]);
+    double pitch = std::stod(parts[3]);
+    double roll = std::stod(parts[4]);
+    double yaw = std::stod(parts[5]);
 
     result.X() = x;
     result.Y() = y;

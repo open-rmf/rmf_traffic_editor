@@ -109,10 +109,10 @@ if (menge_FOUND)
       $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
       ${menge_INCLUDE_DIRS}
   )
-
-  target_link_libraries(crowd_simulator_common
-    PUBLIC
-      ${menge_LIBRARIES}
+  
+  ament_target_dependencies(crowd_simulator_common
+    menge
+    rclcpp
   )
 
   #crowd_simulation_common_install

@@ -152,18 +152,18 @@ if (menge_FOUND)
       src/crowd_simulator.cpp
   )
 
+  ament_target_dependencies(crowd_simulator
+    building_sim_common
+    rclcpp
+    menge
+  )
+
   target_include_directories(crowd_simulator
     PUBLIC
       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
       ${GAZEBO_INCLUDE_DIRS}
       ${menge_INCLUDE_DIRS}
       ${building_sim_common_INCLUDE_DIRS}   
-  )
-
-  target_link_libraries(crowd_simulator
-  PUBLIC
-    ${GAZEBO_LIBRARIES}
-    ${building_sim_common_LIBRARIES}
   )
 
   #install
