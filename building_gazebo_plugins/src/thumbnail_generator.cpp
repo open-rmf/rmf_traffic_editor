@@ -256,8 +256,17 @@ public:
   void RenderCameraVisual()
   {
     rendering::VisualPtr vis = this->_scene->GetVisual(this->_model_name);
-    // Place the visual at the origin
+
+    // unfortunately, IGNITION_MATH_MAJOR_VERSION doesn't seem to be defined.
+    // we'll use the Gazebo version instead, since they usually (always?)
+    // move in lockstep
+#if GAZEBO_MAJOR_VERSION <= 9
+    ignition::math::Box bbox = vis->BoundingBox();
+#else
     ignition::math::AxisAlignedBox bbox = vis->BoundingBox();
+#endif
+
+    // Place the visual at the origin
     ignition::math::Vector3d trans = bbox.Center();
     vis->SetWorldPose(
       ignition::math::Pose3d(trans.X(), trans.Y(), trans.Z(), 0, 0, 0));
