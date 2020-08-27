@@ -129,6 +129,15 @@ class ConfigFileGenerator:
             raise ValueError("Invalid world file! please check your world file: ", world_file_to_be_inserted)    
         if not self.plugin_file._initialized :
             raise ValueError("Plugin file has not been initialized! call generate_plugin_file() first")
+        
+        tag_already_inserted = []
+        for world_child in world_root :
+            # remove the possible crowd_simulation plugin previously inserted
+            if world_child.tag == "plugin" and world_child.attrib['name'] == "crowd_simulation":
+                tag_already_inserted.append(world_child)
+        for world_child in tag_already_inserted:
+            world_root.remove(world_child)
+
         world_root.append(self.plugin_file.outputXmlElement())
         writeXMLtoCompleteFilePath(file_root, file_name = world_file_to_be_inserted)
         print("Insert <plugin> tag into ", world_file_to_be_inserted)
