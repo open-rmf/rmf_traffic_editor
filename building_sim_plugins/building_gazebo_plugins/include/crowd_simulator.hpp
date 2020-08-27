@@ -22,60 +22,6 @@ namespace crowd_simulation_gazebo {
 
 using ObjectPtr = crowd_simulator::CrowdSimInterface::ObjectPtr;
 
-//================================================================
-
-template<typename... Args>
-using Task = std::function<bool(Args... args)>;
-
-template<typename TaskType>
-class TaskManager
-{
-public:
-  using TaskPtr = std::shared_ptr<TaskType>;
-
-  void AddTask(const TaskType& task);
-
-  template<typename... TaskArgs>
-  void RunAllTasks(TaskArgs... args);
-
-  size_t GetTasksCount();
-
-private:
-  std::list<TaskPtr> _tasks;
-};
-
-template<typename TaskType>
-void TaskManager<TaskType>::AddTask(const TaskType& task)
-{
-  this->_tasks.emplace_back(std::make_shared<TaskType>(task));
-}
-
-template<typename TaskType>
-template<typename... TaskArgs>
-void TaskManager<TaskType>::RunAllTasks(TaskArgs... args)
-{
-  std::list<TaskPtr> done;
-  for (const auto& task : this->_tasks)
-  {
-    if ((*task)(args...))
-    {
-      done.emplace_back(task);
-    }
-  }
-
-  for (const auto& task : done)
-  {
-    this->_tasks.remove(task);
-  }
-}
-
-template<typename TaskType>
-size_t TaskManager<TaskType>::GetTasksCount()
-{
-  return this->_tasks.size();
-}
-
-//===============================================================
 crowd_simulator::AgentPose3d Convert(const ignition::math::Pose3d& ignition_pose);
 
 ignition::math::Pose3d Convert(const crowd_simulator::AgentPose3d& agent_pose);
@@ -99,7 +45,7 @@ private:
   gazebo::common::Time _lastSimTime;
   size_t _objectsCount;
 
-  mutable bool _initialized = false; //avoid optimization from compiler
+  bool _initialized = false; //avoid optimization from compiler
 
   //CrowdSimInterface related
   std::string _resourcePath;
