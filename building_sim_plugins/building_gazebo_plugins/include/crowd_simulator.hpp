@@ -59,14 +59,13 @@ private:
   std::shared_ptr<crowd_simulator::ModelTypeDatabase> _modelTypeDBPtr;
   std::shared_ptr<crowd_simulator::CrowdSimInterface> _crowdSimInterface;
 
-  using UpdateObjectTask = Task<double, double>;
-  TaskManager<UpdateObjectTask> _updateTaskManager;
-
   void _Update(const gazebo::common::UpdateInfo& updateInfo); //Update trigger function
-  void _UpdateObject(double deltaTime, double deltaSimTime,
+  void _UpdateAllObjects(double deltaTime, double deltaSimTime);
+  void _UpdateInternalObject(double deltaTime, double deltaSimTime,
     const crowd_simulator::AgentPtr agentPtr,
     const gazebo::physics::ModelPtr modelPtr,
     const crowd_simulator::ModelTypeDatabase::Record* typePtr);
+  void _Initialization();
 
   ignition::math::Pose3d _AnimationRootPose(
     const gazebo::physics::ActorPtr actorPtr,

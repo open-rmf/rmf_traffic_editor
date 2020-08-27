@@ -68,76 +68,40 @@ void CrowdSimulatorPlugin::_Update(const gazebo::common::UpdateInfo& updateInfo)
       this->_lastSimTime = updateInfo.simTime;
       this->_crowdSimInterface->OneStepSim();
     }
-    this->_updateTaskManager.RunAllTasks(deltaTime, deltaSimTime);
-
+    this->_UpdateAllObjects(deltaTime, deltaSimTime);
     return;
   }
 
   // not initizalied
-  //check all the inserted models have been really added in gazebo world
-  this->_objectsCount = this->_crowdSimInterface->GetNumObjects();
-  for (size_t id = 0; id < _objectsCount; ++id)
-  {
-    ObjectPtr objPtr = this->_crowdSimInterface->GetObjectById(id);
-    //if model hasn't been added in world, not initialized, return
-    if (!this->_world->ModelByName(objPtr->modelName))
-    {
-      this->_initialized = false;
-      return;
-    }
-    this->_world->ModelByName(objPtr->modelName)->SetStatic(false);
-  }
-
-  //if all the models have been added, added all models with update task
-  for (size_t id = 0; id < _objectsCount; ++id)
-  {
-    ObjectPtr objPtr = this->_crowdSimInterface->GetObjectById(id);
-    gazebo::physics::ModelPtr modelPtr = this->_world->ModelByName(
-      objPtr->modelName);
-    crowd_simulator::ModelTypeDatabase::Record* typePtr = this->_modelTypeDBPtr->Get(
-      objPtr->typeName);
-
-    if (!modelPtr)
-    {
-      gzerr << objPtr->modelName << "model not found!" << std::endl;
-      return;
-    }
-
-    if (!typePtr && objPtr->typeName != "0")   //type 0 is for external agent
-    {
-      gzerr << objPtr->typeName << "model type not found!" << std::endl;
-      return;
-    }
-
-    //very important, reset custom trajectory for internal actor
-    if (!objPtr->isExternal)
-    {
-      gazebo::physics::ActorPtr actorPtr =
-        boost::dynamic_pointer_cast<gazebo::physics::Actor>(modelPtr);
-      gazebo::physics::TrajectoryInfoPtr trajectoryInfo(new gazebo::physics::
-        TrajectoryInfo()); //matches the actor skeleton
-      trajectoryInfo->type = typePtr->animation;
-      // trajectoryInfo->duration = typePtr->animationSpeed;
-      actorPtr->SetCustomTrajectory(trajectoryInfo);
-    }
-
-    this->_updateTaskManager.AddTask(
-      [=](double deltaTime, double deltaSimTime) -> bool
-      {
-        this->_UpdateObject(deltaTime, deltaSimTime, objPtr->agentPtr, modelPtr,
-        typePtr);
-        return false;
-      }
-    );
-
-  }
-  this->_initialized = true;
-  gzdbg << "Gazebo models all loaded! Start simulating..." << std::endl;
-
+  this->_Initialization();
 }
 
 //============================================
-void CrowdSimulatorPlugin::_UpdateObject(double deltaTime, double deltaSimTime,
+void CrowdSimulatorPlugin::_UpdateAllObjects(double deltaTime, double deltaSimTime) 
+{
+  for (size_t id = 0; id < _objectsCount; ++id)
+  {
+    ObjectPtr objPtr = this->_crowdSimInterface->GetObjectById(id);
+    gazebo::physics::ModelPtr modelPtr = this->_world->ModelByName(objPtr->modelName);
+
+    //update external agents
+    if (objPtr->agentPtr->_external)
+    {
+      ignition::math::Pose3d pose = modelPtr->WorldPose();
+      this->_crowdSimInterface->UpdateExternalAgent(objPtr->agentPtr, Convert(pose));
+      continue;
+    }
+
+    //update internal agents
+    //not yet reach the simulation time step, the internal agent position only updated at simulation time step
+    if(deltaSimTime - 0.0 < 1e-6) continue;
+    crowd_simulator::ModelTypeDatabase::Record* typePtr = this->_modelTypeDBPtr->Get(objPtr->typeName);
+    this->_UpdateInternalObject(deltaTime, deltaSimTime, objPtr->agentPtr, modelPtr, typePtr);
+  }
+}
+
+//============================================
+void CrowdSimulatorPlugin::_UpdateInternalObject(double deltaTime, double deltaSimTime,
   const crowd_simulator::AgentPtr agentPtr,
   const gazebo::physics::ModelPtr modelPtr,
   const crowd_simulator::ModelTypeDatabase::Record* typePtr)
@@ -154,22 +118,10 @@ void CrowdSimulatorPlugin::_UpdateObject(double deltaTime, double deltaSimTime,
     assert(modelPtr);
   }
 
-  ignition::math::Pose3d pose;
-  if (agentPtr->_external)
-  {
-    //update pose from gazebo to menge
-    pose = modelPtr->WorldPose();
-    this->_crowdSimInterface->UpdateExternalAgent(agentPtr, Convert(pose));
-    return;
-  }
-
-  // only update the external agents
-  if(deltaSimTime - 0.0 < 1e-6) return;
-
   //update pose from menge to gazebo
   crowd_simulator::AgentPose3d agent_pose;
   this->_crowdSimInterface->GetAgentPose(agentPtr, deltaSimTime, agent_pose);
-  pose = Convert(agent_pose); 
+  ignition::math::Pose3d pose = Convert(agent_pose); 
 
   gazebo::physics::ActorPtr actorPtr =
     boost::dynamic_pointer_cast<gazebo::physics::Actor>(modelPtr);
@@ -196,6 +148,41 @@ void CrowdSimulatorPlugin::_UpdateObject(double deltaTime, double deltaSimTime,
 
 }
 
+//============================================
+void CrowdSimulatorPlugin::_Initialization() 
+{
+  this->_objectsCount = this->_crowdSimInterface->GetNumObjects();
+  for (size_t id = 0; id < _objectsCount; ++id)
+  {
+    ObjectPtr objPtr = this->_crowdSimInterface->GetObjectById(id);
+    //if model hasn't been added in world, not initialized, return
+    if (!this->_world->ModelByName(objPtr->modelName))
+    {
+      this->_initialized = false;
+      return;
+    }
+
+    //model has been added, set internal actors as non-static model and set custom trajectory
+    //because only non-static model can interact with slotcars
+    if (!objPtr->isExternal)
+    {
+      gazebo::physics::ModelPtr modelPtr = this->_world->ModelByName(
+        objPtr->modelName);
+      gazebo::physics::ActorPtr actorPtr =
+        boost::dynamic_pointer_cast<gazebo::physics::Actor>(modelPtr);
+      gazebo::physics::TrajectoryInfoPtr trajectoryInfo(new gazebo::physics::
+        TrajectoryInfo()); //matches the actor skeleton
+      
+      crowd_simulator::ModelTypeDatabase::Record* typePtr = this->_modelTypeDBPtr->Get(objPtr->typeName);
+      trajectoryInfo->type = typePtr->animation;
+      actorPtr->SetCustomTrajectory(trajectoryInfo);
+      actorPtr->SetStatic(false);
+    }
+  }
+
+  this->_initialized = true;
+  std::cout << "Gazebo models all loaded! Start simulating..." << std::endl;
+}
 
 //============================================
 ignition::math::Pose3d CrowdSimulatorPlugin::_AnimationRootPose(
