@@ -1345,8 +1345,8 @@ void Editor::populate_property_editor(const Vertex& vertex)
   property_editor->blockSignals(true);  // otherwise we get tons of callbacks
   property_editor->setRowCount(5 + vertex.params.size());
 
-  property_editor_set_row(0, "x (pixels)", vertex.x);
-  property_editor_set_row(1, "y (pixels)", vertex.y);
+  property_editor_set_row(0, "x (pixels)", vertex.x, 3, true);
+  property_editor_set_row(1, "y (pixels)", vertex.y, 3, true);
   property_editor_set_row(2, "x (m)", vertex.x * scale);
   property_editor_set_row(3, "y (m)", -1.0 * vertex.y * scale);
   property_editor_set_row(
@@ -1461,6 +1461,10 @@ void Editor::property_editor_cell_changed(int row, int column)
       continue;
     if (name == "name")
       v.name = value;
+    else if (name == "x (pixels)")
+      v.x = stof(value);
+    else if (name == "y (pixels)")
+      v.y = stof(value);
     else
       v.set_param(name, value);
     create_scene();
@@ -1842,7 +1846,7 @@ void Editor::mouse_add_model(
       p.x(),
       p.y(),
       0.0,
-      0.0,
+      M_PI / 2.0,
       mouse_motion_editor_model->name);
     /*
     const int model_row = model_name_list_widget->currentRow();

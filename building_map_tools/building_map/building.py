@@ -17,8 +17,12 @@ class Building:
         print(f'building name: {self.name}')
 
         self.levels = {}
+        self.model_counts = {}
         for level_name, level_yaml in yaml_node['levels'].items():
-            self.levels[level_name] = Level(level_yaml, level_name)
+            self.levels[level_name] = Level(
+                level_yaml,
+                level_name,
+                self.model_counts)
 
         if 'reference_level_name' in yaml_node:
             self.reference_level_name = yaml_node['reference_level_name']
@@ -31,14 +35,15 @@ class Building:
         self.transform_all_vertices()
 
         self.lifts = {}
-        for lift_name, lift_yaml in yaml_node['lifts'].items():
-            if 'reference_level_name' in lift_yaml:
-                ref_level_name = lift_yaml['reference_level_name']
-                transform = self.levels[ref_level_name].transform
-            else:
-                transform = self.ref_level.transform
-            self.lifts[lift_name] = \
-                Lift(lift_yaml, lift_name, transform, self.levels)
+        if 'lifts' in yaml_node:
+            for lift_name, lift_yaml in yaml_node['lifts'].items():
+                if 'reference_floor_name' in lift_yaml:
+                    ref_level_name = lift_yaml['reference_floor_name']
+                    transform = self.levels[ref_level_name].transform
+                else:
+                    transform = self.ref_level.transform
+                self.lifts[lift_name] = \
+                    Lift(lift_yaml, lift_name, transform, self.levels)
 
         self.set_lift_vert_lists()
 
@@ -49,9 +54,9 @@ class Building:
         return s
 
     def set_lift_vert_lists(self):
-        lift_vert_lists = []
+        lift_vert_lists = {}
         for lift_name, lift in self.lifts.items():
-            lift_vert_lists.append(lift.get_lift_vertices())
+            lift_vert_lists[lift_name] = lift.get_lift_vertices()
 
         for level_name, level in self.levels.items():
             level.set_lift_vert_lists(lift_vert_lists)
@@ -88,8 +93,8 @@ class Building:
             f0 = f_pair[0]
             f1 = f_pair[1]
             print(
-                f'    ({f0.x:.5}, {f0.y:.5})'
-                f' -> ({f1.x:.5}, {f1.y:.5})'
+                f'    ({float(f0.x):.5}, {float(f0.y):.5})'
+                f' -> ({float(f1.x):.5}, {float(f1.y):.5})'
                 f'   {f0.name}')
 
         # calculate the bearings and distances between each fiducial pair
@@ -212,7 +217,7 @@ class Building:
 
         for lift_name, lift in self.lifts.items():
             lift.generate_shaft_doors(world)
-            lift.generate_cabin(world)
+            lift.generate_cabin(world, options)
 
         gui_ele = world.find('gui')
         c = self.center()

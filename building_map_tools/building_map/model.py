@@ -30,7 +30,7 @@ class Model:
 
         self.yaw = yaml_node['yaw']
 
-    def generate(self, world_ele, model_cnt, transform):
+    def generate(self, world_ele, model_cnt, transform, elevation):
         include_ele = SubElement(world_ele, 'include')
         name_ele = SubElement(include_ele, 'name')
         name_ele.text = self.name
@@ -38,7 +38,7 @@ class Model:
         uri_ele.text = f'model://{self.model_name}'
         pose_ele = SubElement(include_ele, 'pose')
         x, y = transform.transform_point((self.x, self.y))
-        z = self.z
+        z = self.z + elevation
         yaw = self.yaw + transform.rotation
         pose_ele.text = f'{x} {y} {z} 0 0 {yaw}'
 

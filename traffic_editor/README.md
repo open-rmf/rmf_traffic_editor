@@ -104,6 +104,8 @@ Click the "Add..." button in the "lifts" tab on the far right side of the main e
 
 You can add lift doors by lick the "Add..." button below the box showing the lift. Set Door type to "Double sliding" (The only supported type for now!), and align the doors to the edge of the lift (represented by the green box). After that, select which door you want to use on each floor by simply checking the boxes on the left.
 
+Lift waypoints at the center of the lift on each level can also be generated using the "Add lift waypoints" button in the dialog. Note that waypoints will only be generated on levels that the lift is serving (has a door opening on that level).
+
 ### Generating Custom Thumbnails
 
 Model thumbnails are used in `traffic_editor`. To generate a thumbnail, a simple working example is shown here to generate a `SUV`:
@@ -115,7 +117,7 @@ After execution, you will notice a newly created `SUV.png` in your current worki
 
 To generate multiple model thumbnails listed in `model_list.yaml`, run this:
 ```bash
-./scripts/generate_thumbnails.py ~/.gazebo/models test/model_list.yaml ~/output
+export GAZEBO_MODEL_PATH=/PATH/TO/MODELS; ./scripts/generate_thumbnails.py /PATH/TO/MODELS test/model_list.yaml ~/output
 ```
 
 User can also change the script default configs:  `img_size`, `cam_height` and `fhov`, which will alter the `meters_per_pixel` value.
@@ -135,4 +137,10 @@ In the event that merging multiple model lists is required, a different utility 
 
 ```bash
 ./scripts/merge_model_lists.py output_model_list.yaml -s test/model_list.yaml
+```
+
+To sort the model list `.yaml` file,
+
+```bash
+./scripts/sort_model_list.py model_list.yaml
 ```

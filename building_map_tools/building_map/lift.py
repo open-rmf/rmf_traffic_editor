@@ -53,7 +53,7 @@ class LiftDoor:
         door_pose = SubElement(door_model_ele, 'pose')
         (x, y) = self.cabin_door_pose
         door_pose.text = \
-            f'{x} {y} 0 0 0 {self.motion_axis_orientation + np.pi/2}'
+            f'{x} {y} 0 0 0 {self.motion_axis_orientation}'
 
         self.generate_door_link_and_joint(door_model_ele, parent='platform')
 
@@ -67,14 +67,14 @@ class LiftDoor:
         (door_x, door_y) = self.shaft_door_pose
         x_new = x + door_x * np.cos(yaw) - door_y * np.sin(yaw)
         y_new = y + door_x * np.sin(yaw) + door_y * np.cos(yaw)
-        yaw_new = yaw + self.motion_axis_orientation + np.pi/2
+        yaw_new = yaw + self.motion_axis_orientation
         door_pose.text = f'{x_new} {y_new} {z} 0 0 {yaw_new}'
 
         self.generate_door_link_and_joint(model_ele)
 
         floor_thickness = 0.05
         ramp_depth = self.gap * 2
-        ramp_size = [ramp_depth, self.width, floor_thickness]
+        ramp_size = [self.width, ramp_depth, floor_thickness]
         ramp_pose = Element('pose')
         ramp_pose.text = f'0 0 {-floor_thickness / 2} 0 0 0'
         model_ele.append(box_link('ramp',
@@ -87,9 +87,9 @@ class LiftDoor:
         self.generate_door_plugin(model_ele, name)
 
     def generate_door_link_and_joint(self, model_ele, parent='world'):
-        door_size = [self.thickness, self.width / 2, self.height]
+        door_size = [self.width / 2, self.thickness, self.height]
         right_door_pose = Element('pose')
-        right_door_pose.text = f'0 {self.width / 4} {self.height / 2} 0 0 0'
+        right_door_pose.text = f'{self.width / 4} 0 {self.height / 2} 0 0 0'
 
         model_ele.append(box_link('right_door',
                                   door_size,
@@ -101,12 +101,12 @@ class LiftDoor:
                                'prismatic',
                                parent,
                                'right_door',
-                               joint_axis='y',
+                               joint_axis='x',
                                lower_limit=0,
                                upper_limit=self.width / 2))
 
         left_door_pose = Element('pose')
-        left_door_pose.text = f'0 {-self.width / 4} {self.height / 2} 0 0 0'
+        left_door_pose.text = f'{-self.width / 4} 0 {self.height / 2} 0 0 0'
 
         model_ele.append(box_link('left_door',
                                   door_size,
@@ -118,7 +118,7 @@ class LiftDoor:
                                'prismatic',
                                parent,
                                'left_door',
-                               joint_axis='y',
+                               joint_axis='x',
                                lower_limit=-self.width / 2,
                                upper_limit=0))
 
@@ -133,6 +133,66 @@ class LiftDoor:
         door_ele.set('left_joint_name', 'left_joint')
         door_ele.set('name', f'{name}')
         door_ele.set('right_joint_name', 'right_joint')
+        door_ele.set('type', 'DoubleSlidingDoor')
+
+    # TODO: remove this function once nesting model is supported in ignition.
+    def generate_cabin_door_ign(self, lift_model_ele, name):
+        # This is for cabin door generation for ignition gazebo as it doesn't
+        # support nested models yet. Once ignition gazebo supports nested
+        # models, this should be removed.
+        (x, y) = self.cabin_door_pose
+        yaw = self.motion_axis_orientation
+        right_x = x + np.cos(yaw) * self.width/4
+        left_x = x - np.cos(yaw) * self.width/4
+        right_y = y + np.sin(yaw) * self.width/4
+        left_y = y - np.sin(yaw) * self.width/4
+
+        door_size = [self.width / 2, self.thickness, self.height]
+        right_door_pose = Element('pose')
+        right_door_pose.text = \
+            f'{right_x} {right_y} {self.height / 2} 0 0 {yaw}'
+
+        lift_model_ele.append(box_link(f'{name}_right_door',
+                                       door_size,
+                                       right_door_pose,
+                                       material=lift_material(),
+                                       bitmask='0x02'))
+
+        lift_model_ele.append(joint(f'{name}_right_joint',
+                                    'prismatic',
+                                    'platform',
+                                    f'{name}_right_door',
+                                    joint_axis='x',
+                                    lower_limit=0,
+                                    upper_limit=self.width / 2))
+
+        left_door_pose = Element('pose')
+        left_door_pose.text = f'{left_x} {left_y} {self.height / 2} 0 0 {yaw}'
+
+        lift_model_ele.append(box_link(f'{name}_left_door',
+                                       door_size,
+                                       left_door_pose,
+                                       material=lift_material(),
+                                       bitmask='0x02'))
+
+        lift_model_ele.append(joint(f'{name}_left_joint',
+                                    'prismatic',
+                                    'platform',
+                                    f'{name}_left_door',
+                                    joint_axis='x',
+                                    lower_limit=-self.width / 2,
+                                    upper_limit=0))
+
+        plugin_ele = SubElement(lift_model_ele, 'plugin')
+        plugin_ele.set('name', 'door')
+        plugin_ele.set('filename', 'libdoor.so')
+        for param_name, param_value in self.params.items():
+            ele = SubElement(plugin_ele, param_name)
+            ele.text = f'{param_value}'
+        door_ele = SubElement(plugin_ele, 'door')
+        door_ele.set('left_joint_name', f'{name}_left_joint')
+        door_ele.set('name', f'{name}')
+        door_ele.set('right_joint_name', f'{name}_right_joint')
         door_ele.set('type', 'DoubleSlidingDoor')
 
 
@@ -155,7 +215,7 @@ class Lift:
         self.shaft_width = self.width + 2 * self.gap
 
         # default params
-        self.cabin_mass = 800
+        self.cabin_mass = 1200
         self.params = {
             'v_max_cabin': 2.0,
             'a_max_cabin': 1.2,
@@ -243,7 +303,7 @@ class Lift:
         platform.append(visual(name, pose, dims, lift_material()))
         platform.append(collision(name, pose, dims, '0x01'))
 
-    def generate_cabin(self, world_ele):
+    def generate_cabin(self, world_ele, options):
         # materials missing for now
         lift_model_name = f'{self.name}'
         lift_model_ele = SubElement(world_ele, 'model')
@@ -256,6 +316,13 @@ class Lift:
         inertial = SubElement(platform, 'inertial')
         mass = SubElement(inertial, 'mass')
         mass.text = f'{self.cabin_mass}'
+        inertial = SubElement(inertial, 'inertia')
+        SubElement(inertial, 'ixx').text = \
+            str(self.cabin_mass/12.0*(self.width**2 + self.floor_thickness**2))
+        SubElement(inertial, 'iyy').text = \
+            str(self.cabin_mass/12.0*(self.depth**2 + self.floor_thickness**2))
+        SubElement(inertial, 'izz').text = \
+            str(self.cabin_mass/12.0*(self.width**2 + self.depth**2))
 
         # visuals and collisions for floor and walls of cabin
         floor_dims = [self.width, self.depth, self.floor_thickness]
@@ -287,9 +354,16 @@ class Lift:
                                     joint_axis='z'))
 
         # cabin doors
-        for lift_door in self.doors:
-            lift_door.generate_cabin_door(
-                lift_model_ele, f'CabinDoor_{self.name}_{lift_door.name}')
+        # TODO: remove the if statement here once nesting model is supported
+        # in ignition.
+        if 'ignition' in options:
+            for lift_door in self.doors:
+                lift_door.generate_cabin_door_ign(
+                    lift_model_ele, f'CabinDoor_{self.name}_{lift_door.name}')
+        else:
+            for lift_door in self.doors:
+                lift_door.generate_cabin_door(
+                    lift_model_ele, f'CabinDoor_{self.name}_{lift_door.name}')
 
         # lift cabin plugin
         plugin_ele = SubElement(lift_model_ele, 'plugin')

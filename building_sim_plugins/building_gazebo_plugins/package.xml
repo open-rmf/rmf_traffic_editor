@@ -10,6 +10,7 @@
   <author>Roselle Carmen</author>
   <author>Aaron Chong</author>
   <author>Brandon Ong</author>
+  <author>Kevin Ma</author>
   <maintainer email="morgan@openrobotics.org">Morgan Quigley</maintainer>
   <license>Apache 2.0</license>
 
@@ -26,7 +27,7 @@
   <depend>geometry_msgs</depend>
   <depend>std_msgs</depend>
   <depend>std_srvs</depend>
-  <depend>building_map_msgs</depend>
+  <depend>building_sim_common</depend>
 
   <export>
     <build_type>ament_cmake</build_type>

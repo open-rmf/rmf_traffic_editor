@@ -20,9 +20,10 @@
 using std::vector;
 
 
-LiftDialog::LiftDialog(Lift& lift, const Building& building)
+LiftDialog::LiftDialog(Lift& lift, Building& building)
 : QDialog(),
-  _lift(lift)
+  _lift(lift),
+  _building(building)
 {
   setWindowTitle("Lift Properties");
   for (const auto& level : building.levels)
@@ -85,7 +86,7 @@ LiftDialog::LiftDialog(Lift& lift, const Building& building)
     [this](const QString& text)
     {
       _lift.x = text.toDouble();
-      emit redraw();
+      update_lift_wps();
     });
   x_hbox->addWidget(_x_line_edit);
 
@@ -99,7 +100,7 @@ LiftDialog::LiftDialog(Lift& lift, const Building& building)
     [this](const QString& text)
     {
       _lift.y = text.toDouble();
-      emit redraw();
+      update_lift_wps();
     });
   y_hbox->addWidget(_y_line_edit);
 
@@ -147,6 +148,13 @@ LiftDialog::LiftDialog(Lift& lift, const Building& building)
       emit redraw();
     });
   depth_hbox->addWidget(_depth_line_edit);
+
+  QHBoxLayout* add_wp_hbox = new QHBoxLayout;
+  _add_wp_button = new QPushButton("Add lift waypoints", this);
+  add_wp_hbox->addWidget(_add_wp_button);
+  connect(
+    _add_wp_button, &QAbstractButton::clicked,
+    this, &LiftDialog::update_lift_wps);
 
   _level_table = new QTableWidget;
   _level_table->setMinimumSize(200, 200);
@@ -200,6 +208,7 @@ LiftDialog::LiftDialog(Lift& lift, const Building& building)
   left_vbox->addLayout(yaw_hbox);
   left_vbox->addLayout(width_hbox);
   left_vbox->addLayout(depth_hbox);
+  left_vbox->addLayout(add_wp_hbox);
   left_vbox->addWidget(_level_table);
 
   QVBoxLayout* right_vbox = new QVBoxLayout;
@@ -265,7 +274,7 @@ void LiftDialog::ok_button_clicked()
   {
     const std::string level_name =
       _level_table->item(level_row, 0)->text().toStdString();
-    _lift.level_doors[level_name].clear();
+    _lift.level_doors.erase(level_name);
     for (int door_col = 1; door_col < _level_table->columnCount(); door_col++)
     {
       const std::string door_name =
@@ -290,8 +299,50 @@ void LiftDialog::ok_button_clicked()
       }
     }
   }
-
+  update_lift_view();
+  emit redraw();
   accept();
+}
+
+void LiftDialog::update_lift_wps()
+{
+  const QPointF from_point = QPointF(_lift.x, _lift.y);
+  QPointF to_point;
+
+  bool found = false;
+  for (size_t level_idx = 0; level_idx < _level_names.size(); level_idx++)
+  {
+    const std::string level_name = _level_names[level_idx].toStdString();
+    // Vertices will only be generated on levels that the lift is serving (has
+    // a door opening on that level)
+    if (_lift.level_doors[level_name].size() != 0)
+    {
+      _building.transform_between_levels(
+        _lift.reference_floor_name,
+        from_point,
+        _building.levels[level_idx].name,
+        to_point);
+      found = false;
+
+      for (auto& v : _building.levels[level_idx].vertices)
+      {
+        auto it = v.params.find("lift_cabin");
+        if ((it != v.params.end()) && (it->second.value_string == _lift.name))
+        {
+          v.x = to_point.x();
+          v.y = to_point.y();
+          found = true;
+        }
+      }
+      if (!found)
+      {
+        _building.add_vertex(level_idx, to_point.x(), to_point.y());
+        _building.levels[level_idx].vertices.back().params["lift_cabin"] =
+          _lift.name;
+      }
+    }
+  }
+  emit redraw();
 }
 
 void LiftDialog::update_door_table()

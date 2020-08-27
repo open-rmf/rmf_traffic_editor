@@ -1,0 +1,34 @@
+<package format="3">
+  <name>building_sim_common</name>
+  <version>0.0.0</version>
+  <description>
+    Common utility functions for Gazebo and ignition building plugins
+  </description>
+  <author>Morgan Quigley</author>
+  <author>Michael Grey</author>
+  <author>Roselle Carmen</author>
+  <author>Aaron Chong</author>
+  <author>Brandon Ong</author>
+  <author>Kevin Ma</author>
+  <maintainer email="morgan@openrobotics.org">Morgan Quigley</maintainer>
+  <license>Apache 2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <build_depend>eigen</build_depend>
+
+  <depend>rclcpp</depend>
+  <depend>rmf_fleet_msgs</depend>
+  <depend>rmf_door_msgs</depend>
+  <depend>rmf_lift_msgs</depend>
+  <depend>building_map_msgs</depend>
+  <depend>tf2_ros</depend>
+  <depend>geometry_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>std_srvs</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+
+</package>
