@@ -95,7 +95,7 @@ void CrowdSimulatorPlugin::_UpdateAllObjects(double deltaTime, double deltaSimTi
     //update internal agents
     //not yet reach the simulation time step, the internal agent position only updated at simulation time step
     if(deltaSimTime - 0.0 < 1e-6) continue;
-    crowd_simulator::ModelTypeDatabase::Record* typePtr = this->_modelTypeDBPtr->Get(objPtr->typeName);
+    auto typePtr = this->_modelTypeDBPtr->Get(objPtr->typeName);
     this->_UpdateInternalObject(deltaTime, deltaSimTime, objPtr->agentPtr, modelPtr, typePtr);
   }
 }
@@ -104,7 +104,7 @@ void CrowdSimulatorPlugin::_UpdateAllObjects(double deltaTime, double deltaSimTi
 void CrowdSimulatorPlugin::_UpdateInternalObject(double deltaTime, double deltaSimTime,
   const crowd_simulator::AgentPtr agentPtr,
   const gazebo::physics::ModelPtr modelPtr,
-  const crowd_simulator::ModelTypeDatabase::Record* typePtr)
+  const crowd_simulator::ModelTypeDatabase::RecordPtr typePtr)
 {
 
   if (!agentPtr)
@@ -173,7 +173,7 @@ void CrowdSimulatorPlugin::_Initialization()
       gazebo::physics::TrajectoryInfoPtr trajectoryInfo(new gazebo::physics::
         TrajectoryInfo()); //matches the actor skeleton
       
-      crowd_simulator::ModelTypeDatabase::Record* typePtr = this->_modelTypeDBPtr->Get(objPtr->typeName);
+      crowd_simulator::ModelTypeDatabase::RecordPtr typePtr = this->_modelTypeDBPtr->Get(objPtr->typeName);
       trajectoryInfo->type = typePtr->animation;
       actorPtr->SetCustomTrajectory(trajectoryInfo);
       actorPtr->SetStatic(false);
@@ -421,7 +421,7 @@ bool CrowdSimulatorPlugin::_LoadModelInitPose(
 
 //============================================
 bool CrowdSimulatorPlugin::_CreateModel(const std::string& modelName,
-  const crowd_simulator::ModelTypeDatabase::Record* modelTypePtr,
+  const crowd_simulator::ModelTypeDatabase::RecordPtr modelTypePtr,
   const crowd_simulator::AgentPtr agentPtr)
 {
   sdf::ElementPtr modelElement(new sdf::Element());

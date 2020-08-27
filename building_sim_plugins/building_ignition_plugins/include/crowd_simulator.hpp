@@ -66,7 +66,7 @@ private:
    
     bool _CreateEntity(ignition::gazebo::EntityComponentManager& ecm, 
       const std::string& modelName, 
-      const crowd_simulator::ModelTypeDatabase::Record* modelTypePtr, 
+      const crowd_simulator::ModelTypeDatabase::RecordPtr modelTypePtr, 
       const crowd_simulator::AgentPtr agentPtr);
     
     bool _CheckSpawnedAgents(ignition::gazebo::EntityComponentManager& ecm);

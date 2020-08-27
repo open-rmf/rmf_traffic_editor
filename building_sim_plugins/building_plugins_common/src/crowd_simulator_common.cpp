@@ -85,7 +85,7 @@ bool MengeHandle::_LoadSimulation()
 
 //============================================
 
-ModelTypeDatabase::Record* ModelTypeDatabase::Get(const std::string& typeName)
+ModelTypeDatabase::RecordPtr ModelTypeDatabase::Get(const std::string& typeName)
 {
   if (this->_records.find(typeName) == this->_records.end())
   {

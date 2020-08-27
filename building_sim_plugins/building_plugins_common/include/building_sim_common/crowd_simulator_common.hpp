@@ -119,9 +119,6 @@ private:
 class ModelTypeDatabase
 {
 public:
-
-  ModelTypeDatabase() {}
-
   struct Record
   {
     std::string typeName;
@@ -134,9 +131,13 @@ public:
     std::string modelFilePath;
   };
 
+  using RecordPtr = std::shared_ptr<Record>;
+
+  ModelTypeDatabase() {}
+
   //Create a new record and returns a reference to the record
   template<typename... Args>
-  Record* Emplace(Args&& ... args){
+  RecordPtr Emplace(Args&& ... args){
     auto pair = this->_records.emplace(std::forward<Args>(args)...); //return pair<iterator, bool>
     assert(pair.second);
     return pair.first->second;
@@ -145,10 +146,10 @@ public:
   //Get the total number of actors
   size_t Size();
 
-  Record* Get(const std::string& typeName);
+  RecordPtr Get(const std::string& typeName);
 
 private:
-  std::unordered_map<std::string, Record*> _records;
+  std::unordered_map<std::string, RecordPtr> _records;
 };
 
 //================================================================

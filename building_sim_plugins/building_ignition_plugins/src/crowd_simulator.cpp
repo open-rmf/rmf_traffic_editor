@@ -318,7 +318,7 @@ bool CrowdSimulatorPlugin::_LoadAgents(ignition::gazebo::EntityComponentManager&
 
 bool CrowdSimulatorPlugin::_CreateEntity(ignition::gazebo::EntityComponentManager& ecm,
     const std::string& modelName, 
-    const crowd_simulator::ModelTypeDatabase::Record* modelTypePtr, 
+    const crowd_simulator::ModelTypeDatabase::RecordPtr modelTypePtr, 
     const crowd_simulator::AgentPtr agentPtr) {
 
     // Use ignition create service to spawn actors

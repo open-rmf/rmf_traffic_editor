@@ -64,7 +64,7 @@ private:
   void _UpdateInternalObject(double deltaTime, double deltaSimTime,
     const crowd_simulator::AgentPtr agentPtr,
     const gazebo::physics::ModelPtr modelPtr,
-    const crowd_simulator::ModelTypeDatabase::Record* typePtr);
+    const crowd_simulator::ModelTypeDatabase::RecordPtr typePtr);
   void _Initialization();
 
   ignition::math::Pose3d _AnimationRootPose(
@@ -76,7 +76,7 @@ private:
   bool _LoadModelInitPose(const sdf::ElementPtr& modelTypeElement,
     crowd_simulator::AgentPose3d& result) const;
   bool _CreateModel(const std::string& modelName,
-    const crowd_simulator::ModelTypeDatabase::Record* modelTypePtr,
+    const crowd_simulator::ModelTypeDatabase::RecordPtr modelTypePtr,
     const crowd_simulator::AgentPtr agentPtr);
 
 };
