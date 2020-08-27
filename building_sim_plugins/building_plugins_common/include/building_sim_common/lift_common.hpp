@@ -228,7 +228,7 @@ std::unique_ptr<LiftCommon> LiftCommon::make(
   }
 
   assert(!floor_names.empty());
-  std::string& reference_floor_name = floor_names[0];
+  std::string reference_floor_name = floor_names[0];
   get_sdf_param_if_available<std::string>(sdf_clone, "reference_floor",
     reference_floor_name);
 
