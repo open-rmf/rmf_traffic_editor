@@ -19,61 +19,67 @@ CrowdSimulatorPlugin::CrowdSimulatorPlugin()
 void CrowdSimulatorPlugin::Load(gazebo::physics::WorldPtr world,
   sdf::ElementPtr sdf)
 {
-
-  this->_world = world;
-  if (!this->_LoadParams(sdf))
-  {
-    gzerr << "Error loading crowd simulator plugin. Load params failed." <<
-      std::endl;
+  _world = world;
+  _crowdSimInterface = std::make_shared<crowd_simulator::CrowdSimInterface>();
+  if (!_crowdSimInterface->readSDF(sdf)) {
     return;
   }
+  if () {
 
-  if (!this->_LoadCrowdSim())
-  {
-    gzerr << "Failed initializing crowd simulator interface." << std::endl;
-    return;
   }
+  // if (!this->_LoadParams(sdf))
+  // {
+  //   gzerr << "Error loading crowd simulator plugin. Load params failed." <<
+  //     std::endl;
+  //   return;
+  // }
 
-  this->_updateConnectionPtr = gazebo::event::Events::ConnectWorldUpdateBegin(
-    [this](gazebo::common::UpdateInfo updateInfo)
-    {
-      this->_Update(updateInfo);
-    }
-  );
+  // if (!this->_LoadCrowdSim())
+  // {
+  //   gzerr << "Failed initializing crowd simulator interface." << std::endl;
+  //   return;
+  // }
+
+  // this->_updateConnectionPtr = gazebo::event::Events::ConnectWorldUpdateBegin(
+  //   [this](gazebo::common::UpdateInfo updateInfo)
+  //   {
+  //     this->_Update(updateInfo);
+  //   }
+  // );
 }
 
 //============================================
 void CrowdSimulatorPlugin::_Update(const gazebo::common::UpdateInfo& updateInfo)
 {
-  //first round do nothing, initialize time stamp
-  if (this->_lastSimTime == gazebo::common::Time::Zero)
-  {
-    this->_lastSimTime = updateInfo.simTime;
-    this->_lastAnimTime = updateInfo.simTime;
-  }
+  // //first round do nothing, initialize time stamp
+  // if (this->_lastSimTime == gazebo::common::Time::Zero)
+  // {
+  //   this->_lastSimTime = updateInfo.simTime;
+  //   this->_lastAnimTime = updateInfo.simTime;
+  // }
 
-  // if initialized, do updates
-  if (this->_initialized)
-  {
-    auto deltaTime = (updateInfo.simTime - this->_lastAnimTime).Double();
-    this->_lastAnimTime = updateInfo.simTime;
+  // // if initialized, do updates
+  // if (this->_initialized)
+  // {
+  //   auto deltaTime = (updateInfo.simTime - this->_lastAnimTime).Double();
+  //   this->_lastAnimTime = updateInfo.simTime;
 
-    auto deltaSimTime = (updateInfo.simTime - this->_lastSimTime).Double();
-    if (deltaSimTime < this->_simTimeStep)
-    {
-      deltaSimTime = 0.0;
-    }
-    else
-    {
-      this->_lastSimTime = updateInfo.simTime;
-      this->_crowdSimInterface->OneStepSim();
-    }
-    this->_UpdateAllObjects(deltaTime, deltaSimTime);
-    return;
-  }
+  //   auto deltaSimTime = (updateInfo.simTime - this->_lastSimTime).Double();
+  //   if (deltaSimTime < this->_simTimeStep)
+  //   {
+  //     deltaSimTime = 0.0;
+  //   }
+  //   else
+  //   {
+  //     this->_lastSimTime = updateInfo.simTime;
+  //     this->_crowdSimInterface->OneStepSim();
+  //   }
+  //   this->_UpdateAllObjects(deltaTime, deltaSimTime);
+  //   return;
+  // }
 
-  // not initizalied
-  this->_Initialization();
+  // // not initizalied
+  // this->_Initialization();
 }
 
 //============================================
@@ -377,44 +383,6 @@ bool CrowdSimulatorPlugin::_LoadCrowdSim()
     }
   }
 
-  return true;
-}
-
-
-//============================================
-bool CrowdSimulatorPlugin::_LoadModelInitPose(
-  const sdf::ElementPtr& modelTypeElement,
-  crowd_simulator::AgentPose3d& result) const
-{
-  std::string poseStr;
-  if (modelTypeElement->Get<std::string>("initial_pose", poseStr, ""))
-  {
-    std::regex ws_re("\\s+"); //whitespace
-    std::vector<std::string> parts(
-      std::sregex_token_iterator(poseStr.begin(), poseStr.end(), ws_re, -1),
-      std::sregex_token_iterator());
-
-    if (parts.size() != 6)
-    {
-      gzerr <<
-        "Error loading <initial_pose> in <model_type>, 6 floats (x, y, z, pitch, roll, yaw) expected.";
-      return false;
-    }
-
-    double x = std::stod(parts[0]);
-    double y = std::stod(parts[1]);
-    double z = std::stod(parts[2]);
-    double pitch = std::stod(parts[3]);
-    double roll = std::stod(parts[4]);
-    double yaw = std::stod(parts[5]);
-
-    result.X() = x;
-    result.Y() = y;
-    result.Z() = z;
-    result.Pitch() = pitch;
-    result.Roll() = roll;
-    result.Yaw() = yaw;
-  }
   return true;
 }
 

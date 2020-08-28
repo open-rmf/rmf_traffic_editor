@@ -4,6 +4,8 @@
 #include <memory>
 #include <unordered_map>
 
+#include <rclcpp/rclcpp.hpp>
+
 #include <ignition/math/Pose3.hh>
 
 #include <gazebo/common/Plugin.hh>
@@ -73,8 +75,6 @@ private:
 
   bool _LoadParams(const sdf::ElementPtr& sdf);
   bool _LoadCrowdSim();
-  bool _LoadModelInitPose(const sdf::ElementPtr& modelTypeElement,
-    crowd_simulator::AgentPose3d& result) const;
   bool _CreateModel(const std::string& modelName,
     const crowd_simulator::ModelTypeDatabase::RecordPtr modelTypePtr,
     const crowd_simulator::AgentPtr agentPtr);

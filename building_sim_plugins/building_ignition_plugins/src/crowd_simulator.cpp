@@ -219,12 +219,12 @@ bool CrowdSimulatorPlugin::_LoadModelInitPose(const sdf::ElementPtr& modelTypeEl
         double roll = ignition::math::parseFloat(parts[4]);
         double yaw = ignition::math::parseFloat(parts[5]);
         
-        result.X() = x;
-        result.Y() = y;
-        result.Z() = z;
-        result.Pitch() = pitch;
-        result.Roll() = roll;
-        result.Yaw() = yaw;
+        result.X(x);
+        result.Y(y);
+        result.Z(z);
+        result.Pitch(pitch);
+        result.Roll(roll);
+        result.Yaw(yaw);
 
     }
     return true;

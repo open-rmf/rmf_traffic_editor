@@ -1,6 +1,8 @@
 #include <fstream>
 #include <cmath>
 
+#include <rclcpp/logger.hpp>
+
 #include <building_sim_common/crowd_simulator_common.hpp>
 
 namespace crowd_simulator {
@@ -101,10 +103,37 @@ size_t ModelTypeDatabase::Size()
 }
 
 //================================================================
-bool CrowdSimInterface::SpawnObject(std::vector<std::string>& externalModels)
+
+rclcpp::Logger CrowdSimInterface::logger() const {
+  return rclcpp::get_logger("crowdsim");
+}
+
+void CrowdSimInterface::init_ros_node(const rclcpp::Node::SharedPtr node)
+{
+  _ros_node = std::move(node);
+}
+
+bool CrowdSimInterface::initCrowdSim() {
+  _mengeHandle = std::make_shared<MengeHandle>(
+    _resourcePath,
+    _behaviorFile, 
+    _sceneFile,
+    _simTimeStep);
+  
+  if (!_mengeHandle->initialized) return false;
+
+  if (!_sdf_loaded) {
+    RCLCPP_ERROR(logger(), "Please load the sdf before initialize the crowd_sim interface!");
+    return false;
+  }
+  _spawnObject();
+}
+
+
+bool CrowdSimInterface::_spawnObject()
 {
   //External models are loaded first in scene file
-  size_t externalCount = externalModels.size();
+  size_t externalCount = _externalAgents.size();
   size_t totalAgentCount = this->_mengeHandle->GetAgentCount();
 
   //external model must be included in scene file
@@ -114,7 +143,7 @@ bool CrowdSimInterface::SpawnObject(std::vector<std::string>& externalModels)
   {
     auto agentPtr = this->_mengeHandle->GetAgent(i);
     agentPtr->_external = true;
-    this->AddObject(agentPtr, externalModels[i], "0", true);
+    this->_addObject(agentPtr, _externalAgents[i], "0", true);
   }
 
   for (size_t i = externalCount; i < totalAgentCount; ++i)
@@ -124,41 +153,38 @@ bool CrowdSimInterface::SpawnObject(std::vector<std::string>& externalModels)
 
     std::string modelName = "agent" + std::to_string(i);
 
-    this->AddObject(agentPtr, modelName, agentPtr->_typeName, false);
+    this->_addObject(agentPtr, modelName, agentPtr->_typeName, false);
   }
 
   return true;
 }
 
-void CrowdSimInterface::AddObject(AgentPtr agentPtr,
+void CrowdSimInterface::_addObject(AgentPtr agentPtr,
   const std::string& modelName,
   const std::string& typeName,
   bool isExternal = false)
 {
   assert(agentPtr);
-
   // must provide a model name in gazebo if it's an external agent
   if (isExternal)
   {
     assert(!modelName.empty());
   }
-
   this->_objects.emplace_back(new Object{agentPtr, modelName, typeName,
       isExternal});
 }
 
 
-size_t CrowdSimInterface::GetNumObjects()
+size_t CrowdSimInterface::getNumObjects()
 {
   return this->_objects.size();
 }
 
-CrowdSimInterface::ObjectPtr CrowdSimInterface::GetObjectById(size_t id)
+CrowdSimInterface::ObjectPtr CrowdSimInterface::getObjectById(size_t id)
 {
   assert(id < this->_objects.size());
   return this->_objects[id];
 }
-
 
 void CrowdSimInterface::OneStepSim()
 {
@@ -168,7 +194,7 @@ void CrowdSimInterface::OneStepSim()
 
 void CrowdSimInterface::UpdateExternalAgent(size_t id, const AgentPose3d& modelPose){
 
-  assert(id < this->GetNumObjects());
+  assert(id < this->getNumObjects());
 
   auto agentPtr = this->_objects[id]->agentPtr;
   this->UpdateExternalAgent(agentPtr, modelPose);
@@ -186,7 +212,7 @@ void CrowdSimInterface::UpdateExternalAgent(const AgentPtr agentPtr, const Agent
 
 void CrowdSimInterface::GetAgentPose(size_t id, double deltaSimTime, AgentPose3d& modelPose){
 
-  assert(id < this->GetNumObjects());
+  assert(id < this->getNumObjects());
 
   auto agentPtr = this->_objects[id]->agentPtr;
   this->GetAgentPose(agentPtr, deltaSimTime, modelPose);
@@ -203,7 +229,7 @@ void CrowdSimInterface::GetAgentPose(const AgentPtr agentPtr, double deltaSimTim
 
   modelPose.X(Px);
   modelPose.Y(Py);
-  modelPose.Z() = 0.0;
+  modelPose.Z(0.0);
 
   double xRot = static_cast<double>(agentPtr->_orient.x());
   double yRot = static_cast<double>(agentPtr->_orient.y());
@@ -235,30 +261,6 @@ double AgentPose3d::Roll() const {
 }
 
 double AgentPose3d::Yaw() const {
-  return this->_yaw;
-}
-
-double& AgentPose3d::X(){
-  return this->_x;
-}
-
-double& AgentPose3d::Y(){
-  return this->_y;
-}
-
-double& AgentPose3d::Z(){
-  return this->_z;
-}
-
-double& AgentPose3d::Pitch(){
-  return this->_pitch;
-}
-
-double& AgentPose3d::Roll(){
-  return this->_roll;
-}
-
-double& AgentPose3d::Yaw(){
   return this->_yaw;
 }
 

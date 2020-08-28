@@ -38,13 +38,6 @@ public:
   double Roll() const;
   double Yaw() const;
 
-  double& X();
-  double& Y();
-  double& Z();
-  double& Pitch();
-  double& Roll();
-  double& Yaw();
-
   void X(const double& x);
   void Y(const double& y);
   void Z(const double& z);
@@ -108,7 +101,6 @@ private:
   float _simTimeStep;
   size_t _agentCount;
   
-  //Have some problem when transfer raw pointer to shared_ptr or unique_ptr
   std::shared_ptr<Menge::Agents::SimulatorInterface> _sim;
 
   std::string _ResourceFilePath(const std::string& relativePath) const;
@@ -176,60 +168,62 @@ public:
 
   using ObjectPtr = std::shared_ptr<Object>;
 
-  CrowdSimInterface(const std::string& resourcePath,
-    const std::string& behaviorFile,
-    const std::string& sceneFile,
-    float simTimeStep = 0.0
-  )
-  {
-    this->_mengeHandle = std::make_shared<MengeHandle>(resourcePath,
-        behaviorFile, sceneFile,
-        simTimeStep);
-  }
+  CrowdSimInterface()
+    : _modelTypeDBPtr(std::make_shared<crowd_simulator::ModelTypeDatabase>()),
+    _initialized(false),
+    _sdf_loaded(false)
+  {}
 
   rclcpp::Logger logger() const;
+  void init_ros_node(const rclcpp::Node::SharedPtr node);
 
   template<typename SdfPtrT>
-  bool ReadSDF(SdfPtrT& sdf);
+  bool readSDF(SdfPtrT& sdf);
 
-  bool SpawnObject(std::vector<std::string>& externalModels);
-  void AddObject(AgentPtr agentPtr, const std::string& modelName,
-    const std::string& typeName, bool isExternal);
+  bool initCrowdSim();
 
-  size_t GetNumObjects();
-  ObjectPtr GetObjectById(size_t id);
+  size_t getNumObjects();
+  ObjectPtr getObjectById(size_t id);
 
   void OneStepSim();
 
   void UpdateExternalAgent(size_t id, const AgentPose3d& modelPose);
   void UpdateExternalAgent(const AgentPtr agentPtr, const AgentPose3d& modelPose);
+
   void GetAgentPose(size_t id, double deltaSimTime, AgentPose3d& modelPose);
   void GetAgentPose(const AgentPtr agentPtr, double deltaSimTime, AgentPose3d& modelPose);
 
 private:
+  
+  std::shared_ptr<ModelTypeDatabase> _modelTypeDBPtr;
+  bool _initialized;
+  bool _sdf_loaded;
   std::vector<ObjectPtr> _objects; //Database, use id to access ObjectPtr
   std::shared_ptr<MengeHandle> _mengeHandle;
-  std::shared_ptr<ModelTypeDatabase> _modelTypeDBPtr;
-
   float _simTimeStep;
   std::string _resourcePath;
   std::string _behaviorFile;
   std::string _sceneFile;
   std::vector<std::string> _externalAgents;
+  rclcpp::Node::SharedPtr _ros_node;
 
   template<typename SdfPtrT>
-  bool _LoadModelInitPose(SdfPtrT& modelTypeElement, AgentPose3d& result) const;
+  bool _loadModelInitPose(SdfPtrT& modelTypeElement, AgentPose3d& result) const;
+
+  bool _spawnObject();
+  void _addObject(AgentPtr agentPtr, const std::string& modelName,
+    const std::string& typeName, bool isExternal);
 
 };
 
 template<typename SdfPtrT>
-bool CrowdSimInterface::ReadSDF(SdfPtrT& sdf) 
+bool CrowdSimInterface::readSDF(SdfPtrT& sdf) 
 {
   if (!sdf->template HasElement("resource_path"))
   {
     char* menge_resource_path;
     menge_resource_path = getenv("MENGE_RESOURCE_PATH");
-    RCLCPP_ERROR(logger(), 
+    RCLCPP_WARN(logger(), 
       "No resource path provided! <env MENGE_RESOURCE_PATH> " + std::string(menge_resource_path) + " will be used." ); 
     this->_resourcePath = std::string(menge_resource_path);
   } else{
@@ -307,7 +301,7 @@ bool CrowdSimInterface::ReadSDF(SdfPtrT& sdf)
         "No model initial pose configured in <model_type>! <initial_pose> Required [" + s + "]");
       return false;
     }
-    if (!this->_LoadModelInitPose(modelTypeElement, modelTypePtr->pose))
+    if (!this->_loadModelInitPose(modelTypeElement, modelTypePtr->pose))
     {
       RCLCPP_ERROR(logger(), 
         "Error loading model initial pose in <model_type>! Check <initial_pose> in [" + s + "]");
@@ -326,17 +320,18 @@ bool CrowdSimInterface::ReadSDF(SdfPtrT& sdf)
   while (externalAgentElement)
   {
     auto exAgentName = externalAgentElement->template Get<std::string>();
-    RCLCPP_ERROR(logger(), 
+    RCLCPP_INFO(logger(), 
       "Added external agent: [ " + exAgentName + " ].");
     this->_externalAgents.emplace_back(exAgentName); //just store the name
     externalAgentElement = externalAgentElement->template GetNextElement("external_agent");
   }
 
+  _sdf_loaded = true;
   return true;
 }
 
 template<typename SdfPtrT>
-bool CrowdSimInterface::_LoadModelInitPose(SdfPtrT& modelTypeElement, AgentPose3d& result) const
+bool CrowdSimInterface::_loadModelInitPose(SdfPtrT& modelTypeElement, AgentPose3d& result) const
 {
   std::string poseStr;
   if (modelTypeElement->template Get<std::string>("initial_pose", poseStr, ""))
