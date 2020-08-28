@@ -89,12 +89,13 @@ bool MengeHandle::_LoadSimulation()
 
 ModelTypeDatabase::RecordPtr ModelTypeDatabase::Get(const std::string& typeName)
 {
-  if (this->_records.find(typeName) == this->_records.end())
+  auto it = this->_records.find(typeName);
+  if (it == this->_records.end())
   {
     std::cout << "The model type [ " << typeName << " ] is not defined in scene file!" << std::endl;
     return nullptr;
   }
-  return this->_records[typeName];
+  return it;
 }
 
 size_t ModelTypeDatabase::Size()
@@ -128,8 +129,18 @@ bool CrowdSimInterface::initCrowdSim()
     return false;
   }
   _spawnObject();
+  _initialized = true;
+  return true;
 }
 
+bool CrowdSimInterface::isInitialized() const 
+{
+  return _initialized;
+}
+
+double CrowdSimInterface::getSimTimeStep() const {
+  return static_cast<double>(_simTimeStep);
+}
 
 bool CrowdSimInterface::_spawnObject()
 {
@@ -185,67 +196,6 @@ CrowdSimInterface::ObjectPtr CrowdSimInterface::getObjectById(size_t id) const
 void CrowdSimInterface::oneStepSim() const
 {
   _mengeHandle->SimStep();
-}
-
-
-void CrowdSimInterface::updateExternalAgent(size_t id, const AgentPose3d& modelPose) {
-  assert(id < getNumObjects());
-  auto agentPtr = _objects[id]->agentPtr;
-  updateExternalAgent(agentPtr, modelPose);
-}
-
-void CrowdSimInterface::updateExternalAgent(const AgentPtr agentPtr, const AgentPose3d& modelPose) {
-  assert(agentPtr);
-  agentPtr->_pos.setX(modelPose.X());
-  agentPtr->_pos.setY(modelPose.Y());
-}
-
-//=============================================================
-double AgentPose3d::X() const {
-  return this->_x;
-}
-
-double AgentPose3d::Y() const {
-  return this->_y;
-}
-
-double AgentPose3d::Z() const {
-  return this->_z;
-}
-
-double AgentPose3d::Pitch() const {
-  return this->_pitch;
-}
-
-double AgentPose3d::Roll() const {
-  return this->_roll;
-}
-
-double AgentPose3d::Yaw() const {
-  return this->_yaw;
-}
-
-void AgentPose3d::X(const double& x){
-  this->_x = x;
-}
-
-void AgentPose3d::Y(const double& y){
-  this->_y = y;
-}
-void AgentPose3d::Z(const double& z){
-  this->_z = z;
-}
-
-void AgentPose3d::Pitch(const double& pitch){
-  this->_pitch = pitch;
-}
-
-void AgentPose3d::Roll(const double& roll){
-  this->_roll = roll;
-}
-
-void AgentPose3d::Yaw(const double& yaw){
-  this->_yaw = yaw;
 }
 
 } //namespace crowd_simulator

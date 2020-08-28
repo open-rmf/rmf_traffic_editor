@@ -1,0 +1,225 @@
+[0.155s] DEBUG:colcon:Command line arguments: ['/usr/bin/colcon', 'build']
+[0.155s] DEBUG:colcon:Parsed command line arguments: Namespace(ament_cmake_args=None, base_paths=['.'], build_base='build', catkin_cmake_args=None, catkin_skip_building_tests=False, cmake_args=None, cmake_clean_cache=False, cmake_clean_first=False, cmake_force_configure=False, cmake_target=None, cmake_target_skip_unavailable=False, continue_on_error=False, event_handlers=None, executor='parallel', ignore_user_meta=False, install_base='install', log_base=None, log_level=None, main=<bound method BuildVerb.main of <colcon_core.verb.build.BuildVerb object at 0x7f6314a71908>>, merge_install=False, metas=['./colcon.meta'], packages_above=None, packages_above_and_dependencies=None, packages_above_depth=None, packages_end=None, packages_ignore=None, packages_ignore_regex=None, packages_select=None, packages_select_build_failed=False, packages_select_by_dep=None, packages_select_regex=None, packages_select_test_failures=False, packages_skip=None, packages_skip_build_finished=False, packages_skip_by_dep=None, packages_skip_regex=None, packages_skip_test_passed=False, packages_skip_up_to=None, packages_start=None, packages_up_to=None, packages_up_to_regex=None, parallel_workers=8, paths=None, symlink_install=False, test_result_base=None, verb_extension=<colcon_core.verb.build.BuildVerb object at 0x7f6314a71908>, verb_name='build', verb_parser=<colcon_defaults.argument_parser.defaults.DefaultArgumentsDecorator object at 0x7f6314a71b70>)
+[0.171s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) check parameters
+[0.171s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) check parameters
+[0.171s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) check parameters
+[0.171s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) check parameters
+[0.171s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) discover
+[0.172s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) discover
+[0.172s] INFO:colcon.colcon_core.package_discovery:Crawling recursively for packages in '/home/fred/plugin_ws_test/src/rmf/traffic_editor'
+[0.172s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ignore', 'ignore_ament_install']
+[0.172s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore'
+[0.172s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore_ament_install'
+[0.172s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_pkg']
+[0.172s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_pkg'
+[0.172s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_meta']
+[0.172s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_meta'
+[0.172s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ros']
+[0.172s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ros'
+[0.182s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['cmake', 'python']
+[0.182s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'cmake'
+[0.182s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python'
+[0.182s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['python_setup_py']
+[0.182s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python_setup_py'
+[0.182s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extensions ['ignore', 'ignore_ament_install']
+[0.182s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extension 'ignore'
+[0.182s] Level 1:colcon.colcon_core.package_identification:_identify(build) ignored
+[0.183s] Level 1:colcon.colcon_core.package_identification:_identify(building_map_msgs) by extensions ['ignore', 'ignore_ament_install']
+[0.183s] Level 1:colcon.colcon_core.package_identification:_identify(building_map_msgs) by extension 'ignore'
+[0.183s] Level 1:colcon.colcon_core.package_identification:_identify(building_map_msgs) by extension 'ignore_ament_install'
+[0.183s] Level 1:colcon.colcon_core.package_identification:_identify(building_map_msgs) by extensions ['colcon_pkg']
+[0.183s] Level 1:colcon.colcon_core.package_identification:_identify(building_map_msgs) by extension 'colcon_pkg'
+[0.183s] Level 1:colcon.colcon_core.package_identification:_identify(building_map_msgs) by extensions ['colcon_meta']
+[0.183s] Level 1:colcon.colcon_core.package_identification:_identify(building_map_msgs) by extension 'colcon_meta'
+[0.183s] Level 1:colcon.colcon_core.package_identification:_identify(building_map_msgs) by extensions ['ros']
+[0.183s] Level 1:colcon.colcon_core.package_identification:_identify(building_map_msgs) by extension 'ros'
+[0.185s] DEBUG:colcon.colcon_core.package_identification:Package 'building_map_msgs' with type 'ros.ament_cmake' and name 'building_map_msgs'
+[0.185s] Level 1:colcon.colcon_core.package_identification:_identify(building_map_tools) by extensions ['ignore', 'ignore_ament_install']
+[0.185s] Level 1:colcon.colcon_core.package_identification:_identify(building_map_tools) by extension 'ignore'
+[0.185s] Level 1:colcon.colcon_core.package_identification:_identify(building_map_tools) by extension 'ignore_ament_install'
+[0.185s] Level 1:colcon.colcon_core.package_identification:_identify(building_map_tools) by extensions ['colcon_pkg']
+[0.185s] Level 1:colcon.colcon_core.package_identification:_identify(building_map_tools) by extension 'colcon_pkg'
+[0.185s] Level 1:colcon.colcon_core.package_identification:_identify(building_map_tools) by extensions ['colcon_meta']
+[0.186s] Level 1:colcon.colcon_core.package_identification:_identify(building_map_tools) by extension 'colcon_meta'
+[0.186s] Level 1:colcon.colcon_core.package_identification:_identify(building_map_tools) by extensions ['ros']
+[0.186s] Level 1:colcon.colcon_core.package_identification:_identify(building_map_tools) by extension 'ros'
+[0.186s] DEBUG:colcon.colcon_core.package_identification:Package 'building_map_tools' with type 'ros.ament_python' and name 'building_map_tools'
+[0.186s] Level 1:colcon.colcon_core.package_identification:_identify(building_sim_plugins) by extensions ['ignore', 'ignore_ament_install']
+[0.186s] Level 1:colcon.colcon_core.package_identification:_identify(building_sim_plugins) by extension 'ignore'
+[0.186s] Level 1:colcon.colcon_core.package_identification:_identify(building_sim_plugins) by extension 'ignore_ament_install'
+[0.186s] Level 1:colcon.colcon_core.package_identification:_identify(building_sim_plugins) by extensions ['colcon_pkg']
+[0.186s] Level 1:colcon.colcon_core.package_identification:_identify(building_sim_plugins) by extension 'colcon_pkg'
+[0.186s] Level 1:colcon.colcon_core.package_identification:_identify(building_sim_plugins) by extensions ['colcon_meta']
+[0.187s] Level 1:colcon.colcon_core.package_identification:_identify(building_sim_plugins) by extension 'colcon_meta'
+[0.187s] Level 1:colcon.colcon_core.package_identification:_identify(building_sim_plugins) by extensions ['ros']
+[0.187s] Level 1:colcon.colcon_core.package_identification:_identify(building_sim_plugins) by extension 'ros'
+[0.187s] Level 1:colcon.colcon_core.package_identification:_identify(building_sim_plugins) by extensions ['cmake', 'python']
+[0.187s] Level 1:colcon.colcon_core.package_identification:_identify(building_sim_plugins) by extension 'cmake'
+[0.187s] Level 1:colcon.colcon_core.package_identification:_identify(building_sim_plugins) by extension 'python'
+[0.187s] Level 1:colcon.colcon_core.package_identification:_identify(building_sim_plugins) by extensions ['python_setup_py']
+[0.187s] Level 1:colcon.colcon_core.package_identification:_identify(building_sim_plugins) by extension 'python_setup_py'
+[0.187s] Level 1:colcon.colcon_core.package_identification:_identify(building_sim_plugins/building_gazebo_plugins) by extensions ['ignore', 'ignore_ament_install']
+[0.187s] Level 1:colcon.colcon_core.package_identification:_identify(building_sim_plugins/building_gazebo_plugins) by extension 'ignore'
+[0.187s] Level 1:colcon.colcon_core.package_identification:_identify(building_sim_plugins/building_gazebo_plugins) by extension 'ignore_ament_install'
+[0.187s] Level 1:colcon.colcon_core.package_identification:_identify(building_sim_plugins/building_gazebo_plugins) by extensions ['colcon_pkg']
+[0.187s] Level 1:colcon.colcon_core.package_identification:_identify(building_sim_plugins/building_gazebo_plugins) by extension 'colcon_pkg'
+[0.187s] Level 1:colcon.colcon_core.package_identification:_identify(building_sim_plugins/building_gazebo_plugins) by extensions ['colcon_meta']
+[0.187s] Level 1:colcon.colcon_core.package_identification:_identify(building_sim_plugins/building_gazebo_plugins) by extension 'colcon_meta'
+[0.187s] Level 1:colcon.colcon_core.package_identification:_identify(building_sim_plugins/building_gazebo_plugins) by extensions ['ros']
+[0.187s] Level 1:colcon.colcon_core.package_identification:_identify(building_sim_plugins/building_gazebo_plugins) by extension 'ros'
+[0.189s] DEBUG:colcon.colcon_core.package_identification:Package 'building_sim_plugins/building_gazebo_plugins' with type 'ros.ament_cmake' and name 'building_gazebo_plugins'
+[0.189s] Level 1:colcon.colcon_core.package_identification:_identify(building_sim_plugins/building_ignition_plugins) by extensions ['ignore', 'ignore_ament_install']
+[0.189s] Level 1:colcon.colcon_core.package_identification:_identify(building_sim_plugins/building_ignition_plugins) by extension 'ignore'
+[0.189s] Level 1:colcon.colcon_core.package_identification:_identify(building_sim_plugins/building_ignition_plugins) by extension 'ignore_ament_install'
+[0.189s] Level 1:colcon.colcon_core.package_identification:_identify(building_sim_plugins/building_ignition_plugins) by extensions ['colcon_pkg']
+[0.189s] Level 1:colcon.colcon_core.package_identification:_identify(building_sim_plugins/building_ignition_plugins) by extension 'colcon_pkg'
+[0.189s] Level 1:colcon.colcon_core.package_identification:_identify(building_sim_plugins/building_ignition_plugins) by extensions ['colcon_meta']
+[0.189s] Level 1:colcon.colcon_core.package_identification:_identify(building_sim_plugins/building_ignition_plugins) by extension 'colcon_meta'
+[0.189s] Level 1:colcon.colcon_core.package_identification:_identify(building_sim_plugins/building_ignition_plugins) by extensions ['ros']
+[0.189s] Level 1:colcon.colcon_core.package_identification:_identify(building_sim_plugins/building_ignition_plugins) by extension 'ros'
+[0.190s] DEBUG:colcon.colcon_core.package_identification:Package 'building_sim_plugins/building_ignition_plugins' with type 'ros.ament_cmake' and name 'building_ignition_plugins'
+[0.190s] Level 1:colcon.colcon_core.package_identification:_identify(building_sim_plugins/building_plugins_common) by extensions ['ignore', 'ignore_ament_install']
+[0.190s] Level 1:colcon.colcon_core.package_identification:_identify(building_sim_plugins/building_plugins_common) by extension 'ignore'
+[0.190s] Level 1:colcon.colcon_core.package_identification:_identify(building_sim_plugins/building_plugins_common) by extension 'ignore_ament_install'
+[0.190s] Level 1:colcon.colcon_core.package_identification:_identify(building_sim_plugins/building_plugins_common) by extensions ['colcon_pkg']
+[0.190s] Level 1:colcon.colcon_core.package_identification:_identify(building_sim_plugins/building_plugins_common) by extension 'colcon_pkg'
+[0.190s] Level 1:colcon.colcon_core.package_identification:_identify(building_sim_plugins/building_plugins_common) by extensions ['colcon_meta']
+[0.190s] Level 1:colcon.colcon_core.package_identification:_identify(building_sim_plugins/building_plugins_common) by extension 'colcon_meta'
+[0.190s] Level 1:colcon.colcon_core.package_identification:_identify(building_sim_plugins/building_plugins_common) by extensions ['ros']
+[0.190s] Level 1:colcon.colcon_core.package_identification:_identify(building_sim_plugins/building_plugins_common) by extension 'ros'
+[0.192s] DEBUG:colcon.colcon_core.package_identification:Package 'building_sim_plugins/building_plugins_common' with type 'ros.ament_cmake' and name 'building_sim_common'
+[0.192s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extensions ['ignore', 'ignore_ament_install']
+[0.192s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extension 'ignore'
+[0.192s] Level 1:colcon.colcon_core.package_identification:_identify(install) ignored
+[0.192s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extensions ['ignore', 'ignore_ament_install']
+[0.192s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extension 'ignore'
+[0.192s] Level 1:colcon.colcon_core.package_identification:_identify(log) ignored
+[0.192s] Level 1:colcon.colcon_core.package_identification:_identify(test_maps) by extensions ['ignore', 'ignore_ament_install']
+[0.192s] Level 1:colcon.colcon_core.package_identification:_identify(test_maps) by extension 'ignore'
+[0.192s] Level 1:colcon.colcon_core.package_identification:_identify(test_maps) by extension 'ignore_ament_install'
+[0.192s] Level 1:colcon.colcon_core.package_identification:_identify(test_maps) by extensions ['colcon_pkg']
+[0.192s] Level 1:colcon.colcon_core.package_identification:_identify(test_maps) by extension 'colcon_pkg'
+[0.192s] Level 1:colcon.colcon_core.package_identification:_identify(test_maps) by extensions ['colcon_meta']
+[0.192s] Level 1:colcon.colcon_core.package_identification:_identify(test_maps) by extension 'colcon_meta'
+[0.192s] Level 1:colcon.colcon_core.package_identification:_identify(test_maps) by extensions ['ros']
+[0.192s] Level 1:colcon.colcon_core.package_identification:_identify(test_maps) by extension 'ros'
+[0.193s] DEBUG:colcon.colcon_core.package_identification:Package 'test_maps' with type 'ros.ament_cmake' and name 'test_maps'
+[0.193s] Level 1:colcon.colcon_core.package_identification:_identify(traffic_editor) by extensions ['ignore', 'ignore_ament_install']
+[0.193s] Level 1:colcon.colcon_core.package_identification:_identify(traffic_editor) by extension 'ignore'
+[0.193s] Level 1:colcon.colcon_core.package_identification:_identify(traffic_editor) by extension 'ignore_ament_install'
+[0.193s] Level 1:colcon.colcon_core.package_identification:_identify(traffic_editor) by extensions ['colcon_pkg']
+[0.193s] Level 1:colcon.colcon_core.package_identification:_identify(traffic_editor) by extension 'colcon_pkg'
+[0.193s] Level 1:colcon.colcon_core.package_identification:_identify(traffic_editor) by extensions ['colcon_meta']
+[0.193s] Level 1:colcon.colcon_core.package_identification:_identify(traffic_editor) by extension 'colcon_meta'
+[0.193s] Level 1:colcon.colcon_core.package_identification:_identify(traffic_editor) by extensions ['ros']
+[0.193s] Level 1:colcon.colcon_core.package_identification:_identify(traffic_editor) by extension 'ros'
+[0.194s] DEBUG:colcon.colcon_core.package_identification:Package 'traffic_editor' with type 'ros.ament_cmake' and name 'traffic_editor'
+[0.194s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) using defaults
+[0.194s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) discover
+[0.194s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) using defaults
+[0.194s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) discover
+[0.194s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) using defaults
+[0.199s] Level 5:colcon.colcon_core.verb:set package 'building_map_msgs' build argument 'cmake_args' from command line to 'None'
+[0.199s] Level 5:colcon.colcon_core.verb:set package 'building_map_msgs' build argument 'cmake_target' from command line to 'None'
+[0.199s] Level 5:colcon.colcon_core.verb:set package 'building_map_msgs' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.199s] Level 5:colcon.colcon_core.verb:set package 'building_map_msgs' build argument 'cmake_clean_cache' from command line to 'False'
+[0.199s] Level 5:colcon.colcon_core.verb:set package 'building_map_msgs' build argument 'cmake_clean_first' from command line to 'False'
+[0.199s] Level 5:colcon.colcon_core.verb:set package 'building_map_msgs' build argument 'cmake_force_configure' from command line to 'False'
+[0.199s] Level 5:colcon.colcon_core.verb:set package 'building_map_msgs' build argument 'ament_cmake_args' from command line to 'None'
+[0.199s] Level 5:colcon.colcon_core.verb:set package 'building_map_msgs' build argument 'catkin_cmake_args' from command line to 'None'
+[0.199s] Level 5:colcon.colcon_core.verb:set package 'building_map_msgs' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.199s] DEBUG:colcon.colcon_core.verb:Building package 'building_map_msgs' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/fred/plugin_ws_test/src/rmf/traffic_editor/build/building_map_msgs', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/fred/plugin_ws_test/src/rmf/traffic_editor/install/building_map_msgs', 'merge_install': False, 'path': '/home/fred/plugin_ws_test/src/rmf/traffic_editor/building_map_msgs', 'symlink_install': False, 'test_result_base': None}
+[0.202s] Level 5:colcon.colcon_core.verb:set package 'traffic_editor' build argument 'cmake_args' from command line to 'None'
+[0.202s] Level 5:colcon.colcon_core.verb:set package 'traffic_editor' build argument 'cmake_target' from command line to 'None'
+[0.202s] Level 5:colcon.colcon_core.verb:set package 'traffic_editor' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.202s] Level 5:colcon.colcon_core.verb:set package 'traffic_editor' build argument 'cmake_clean_cache' from command line to 'False'
+[0.202s] Level 5:colcon.colcon_core.verb:set package 'traffic_editor' build argument 'cmake_clean_first' from command line to 'False'
+[0.202s] Level 5:colcon.colcon_core.verb:set package 'traffic_editor' build argument 'cmake_force_configure' from command line to 'False'
+[0.202s] Level 5:colcon.colcon_core.verb:set package 'traffic_editor' build argument 'ament_cmake_args' from command line to 'None'
+[0.202s] Level 5:colcon.colcon_core.verb:set package 'traffic_editor' build argument 'catkin_cmake_args' from command line to 'None'
+[0.202s] Level 5:colcon.colcon_core.verb:set package 'traffic_editor' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.202s] DEBUG:colcon.colcon_core.verb:Building package 'traffic_editor' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/fred/plugin_ws_test/src/rmf/traffic_editor/build/traffic_editor', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/fred/plugin_ws_test/src/rmf/traffic_editor/install/traffic_editor', 'merge_install': False, 'path': '/home/fred/plugin_ws_test/src/rmf/traffic_editor/traffic_editor', 'symlink_install': False, 'test_result_base': None}
+[0.204s] Level 5:colcon.colcon_core.verb:set package 'building_map_tools' build argument 'cmake_args' from command line to 'None'
+[0.204s] Level 5:colcon.colcon_core.verb:set package 'building_map_tools' build argument 'cmake_target' from command line to 'None'
+[0.205s] Level 5:colcon.colcon_core.verb:set package 'building_map_tools' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.205s] Level 5:colcon.colcon_core.verb:set package 'building_map_tools' build argument 'cmake_clean_cache' from command line to 'False'
+[0.205s] Level 5:colcon.colcon_core.verb:set package 'building_map_tools' build argument 'cmake_clean_first' from command line to 'False'
+[0.205s] Level 5:colcon.colcon_core.verb:set package 'building_map_tools' build argument 'cmake_force_configure' from command line to 'False'
+[0.205s] Level 5:colcon.colcon_core.verb:set package 'building_map_tools' build argument 'ament_cmake_args' from command line to 'None'
+[0.205s] Level 5:colcon.colcon_core.verb:set package 'building_map_tools' build argument 'catkin_cmake_args' from command line to 'None'
+[0.205s] Level 5:colcon.colcon_core.verb:set package 'building_map_tools' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.205s] DEBUG:colcon.colcon_core.verb:Building package 'building_map_tools' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/fred/plugin_ws_test/src/rmf/traffic_editor/build/building_map_tools', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/fred/plugin_ws_test/src/rmf/traffic_editor/install/building_map_tools', 'merge_install': False, 'path': '/home/fred/plugin_ws_test/src/rmf/traffic_editor/building_map_tools', 'symlink_install': False, 'test_result_base': None}
+[0.207s] Level 5:colcon.colcon_core.verb:set package 'building_sim_common' build argument 'cmake_args' from command line to 'None'
+[0.207s] Level 5:colcon.colcon_core.verb:set package 'building_sim_common' build argument 'cmake_target' from command line to 'None'
+[0.207s] Level 5:colcon.colcon_core.verb:set package 'building_sim_common' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.207s] Level 5:colcon.colcon_core.verb:set package 'building_sim_common' build argument 'cmake_clean_cache' from command line to 'False'
+[0.207s] Level 5:colcon.colcon_core.verb:set package 'building_sim_common' build argument 'cmake_clean_first' from command line to 'False'
+[0.207s] Level 5:colcon.colcon_core.verb:set package 'building_sim_common' build argument 'cmake_force_configure' from command line to 'False'
+[0.207s] Level 5:colcon.colcon_core.verb:set package 'building_sim_common' build argument 'ament_cmake_args' from command line to 'None'
+[0.207s] Level 5:colcon.colcon_core.verb:set package 'building_sim_common' build argument 'catkin_cmake_args' from command line to 'None'
+[0.207s] Level 5:colcon.colcon_core.verb:set package 'building_sim_common' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.207s] DEBUG:colcon.colcon_core.verb:Building package 'building_sim_common' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/fred/plugin_ws_test/src/rmf/traffic_editor/build/building_sim_common', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/fred/plugin_ws_test/src/rmf/traffic_editor/install/building_sim_common', 'merge_install': False, 'path': '/home/fred/plugin_ws_test/src/rmf/traffic_editor/building_sim_plugins/building_plugins_common', 'symlink_install': False, 'test_result_base': None}
+[0.210s] Level 5:colcon.colcon_core.verb:set package 'building_gazebo_plugins' build argument 'cmake_args' from command line to 'None'
+[0.210s] Level 5:colcon.colcon_core.verb:set package 'building_gazebo_plugins' build argument 'cmake_target' from command line to 'None'
+[0.210s] Level 5:colcon.colcon_core.verb:set package 'building_gazebo_plugins' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.210s] Level 5:colcon.colcon_core.verb:set package 'building_gazebo_plugins' build argument 'cmake_clean_cache' from command line to 'False'
+[0.210s] Level 5:colcon.colcon_core.verb:set package 'building_gazebo_plugins' build argument 'cmake_clean_first' from command line to 'False'
+[0.210s] Level 5:colcon.colcon_core.verb:set package 'building_gazebo_plugins' build argument 'cmake_force_configure' from command line to 'False'
+[0.210s] Level 5:colcon.colcon_core.verb:set package 'building_gazebo_plugins' build argument 'ament_cmake_args' from command line to 'None'
+[0.210s] Level 5:colcon.colcon_core.verb:set package 'building_gazebo_plugins' build argument 'catkin_cmake_args' from command line to 'None'
+[0.210s] Level 5:colcon.colcon_core.verb:set package 'building_gazebo_plugins' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.210s] DEBUG:colcon.colcon_core.verb:Building package 'building_gazebo_plugins' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/fred/plugin_ws_test/src/rmf/traffic_editor/build/building_gazebo_plugins', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/fred/plugin_ws_test/src/rmf/traffic_editor/install/building_gazebo_plugins', 'merge_install': False, 'path': '/home/fred/plugin_ws_test/src/rmf/traffic_editor/building_sim_plugins/building_gazebo_plugins', 'symlink_install': False, 'test_result_base': None}
+[0.213s] Level 5:colcon.colcon_core.verb:set package 'building_ignition_plugins' build argument 'cmake_args' from command line to 'None'
+[0.213s] Level 5:colcon.colcon_core.verb:set package 'building_ignition_plugins' build argument 'cmake_target' from command line to 'None'
+[0.213s] Level 5:colcon.colcon_core.verb:set package 'building_ignition_plugins' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.213s] Level 5:colcon.colcon_core.verb:set package 'building_ignition_plugins' build argument 'cmake_clean_cache' from command line to 'False'
+[0.213s] Level 5:colcon.colcon_core.verb:set package 'building_ignition_plugins' build argument 'cmake_clean_first' from command line to 'False'
+[0.213s] Level 5:colcon.colcon_core.verb:set package 'building_ignition_plugins' build argument 'cmake_force_configure' from command line to 'False'
+[0.213s] Level 5:colcon.colcon_core.verb:set package 'building_ignition_plugins' build argument 'ament_cmake_args' from command line to 'None'
+[0.213s] Level 5:colcon.colcon_core.verb:set package 'building_ignition_plugins' build argument 'catkin_cmake_args' from command line to 'None'
+[0.213s] Level 5:colcon.colcon_core.verb:set package 'building_ignition_plugins' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.213s] DEBUG:colcon.colcon_core.verb:Building package 'building_ignition_plugins' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/fred/plugin_ws_test/src/rmf/traffic_editor/build/building_ignition_plugins', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/fred/plugin_ws_test/src/rmf/traffic_editor/install/building_ignition_plugins', 'merge_install': False, 'path': '/home/fred/plugin_ws_test/src/rmf/traffic_editor/building_sim_plugins/building_ignition_plugins', 'symlink_install': False, 'test_result_base': None}
+[0.215s] Level 5:colcon.colcon_core.verb:set package 'test_maps' build argument 'cmake_args' from command line to 'None'
+[0.215s] Level 5:colcon.colcon_core.verb:set package 'test_maps' build argument 'cmake_target' from command line to 'None'
+[0.215s] Level 5:colcon.colcon_core.verb:set package 'test_maps' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.215s] Level 5:colcon.colcon_core.verb:set package 'test_maps' build argument 'cmake_clean_cache' from command line to 'False'
+[0.215s] Level 5:colcon.colcon_core.verb:set package 'test_maps' build argument 'cmake_clean_first' from command line to 'False'
+[0.215s] Level 5:colcon.colcon_core.verb:set package 'test_maps' build argument 'cmake_force_configure' from command line to 'False'
+[0.215s] Level 5:colcon.colcon_core.verb:set package 'test_maps' build argument 'ament_cmake_args' from command line to 'None'
+[0.215s] Level 5:colcon.colcon_core.verb:set package 'test_maps' build argument 'catkin_cmake_args' from command line to 'None'
+[0.215s] Level 5:colcon.colcon_core.verb:set package 'test_maps' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.215s] DEBUG:colcon.colcon_core.verb:Building package 'test_maps' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/fred/plugin_ws_test/src/rmf/traffic_editor/build/test_maps', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/fred/plugin_ws_test/src/rmf/traffic_editor/install/test_maps', 'merge_install': False, 'path': '/home/fred/plugin_ws_test/src/rmf/traffic_editor/test_maps', 'symlink_install': False, 'test_result_base': None}
+[0.216s] INFO:colcon.colcon_core.executor:Executing jobs using 'parallel' executor
+[0.218s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete
+[0.218s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/home/fred/plugin_ws_test/src/rmf/traffic_editor/building_map_msgs' with build type 'ament_cmake'
+[0.231s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_core.shell.bat': Not used on non-Windows systems
+[0.231s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/fred/plugin_ws_test/src/rmf/traffic_editor/building_map_msgs'
+[0.232s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.232s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.234s] DEBUG:colcon.colcon_core.shell:Ignoring prefix path '/opt/ros/eloquent'
+[0.236s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/home/fred/plugin_ws_test/src/rmf/traffic_editor/traffic_editor' with build type 'ament_cmake'
+[0.237s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/fred/plugin_ws_test/src/rmf/traffic_editor/traffic_editor'
+[0.238s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.238s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.240s] DEBUG:colcon.colcon_core.shell:Ignoring prefix path '/opt/ros/eloquent'
+[0.246s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/fred/plugin_ws_test/src/rmf/traffic_editor/build/building_map_msgs': CMAKE_PREFIX_PATH=/opt/ros/eloquent /usr/bin/cmake /home/fred/plugin_ws_test/src/rmf/traffic_editor/building_map_msgs -DCMAKE_INSTALL_PREFIX=/home/fred/plugin_ws_test/src/rmf/traffic_editor/install/building_map_msgs
+[0.256s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/fred/plugin_ws_test/src/rmf/traffic_editor/build/traffic_editor': CMAKE_PREFIX_PATH=/opt/ros/eloquent /usr/bin/cmake /home/fred/plugin_ws_test/src/rmf/traffic_editor/traffic_editor -DCMAKE_INSTALL_PREFIX=/home/fred/plugin_ws_test/src/rmf/traffic_editor/install/traffic_editor
+[1.466s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/fred/plugin_ws_test/src/rmf/traffic_editor/build/traffic_editor' returned '1': CMAKE_PREFIX_PATH=/opt/ros/eloquent /usr/bin/cmake /home/fred/plugin_ws_test/src/rmf/traffic_editor/traffic_editor -DCMAKE_INSTALL_PREFIX=/home/fred/plugin_ws_test/src/rmf/traffic_editor/install/traffic_editor
+[2.211s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:closing loop
+[2.212s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:loop closed
+[2.212s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete finished with '1'
+[2.212s] DEBUG:colcon.colcon_core.event_reactor:joining thread
+[2.218s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.terminal_notifier': Not used on non-Darwin systems
+[2.218s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.win32': Not used on non-Windows systems
+[2.218s] INFO:colcon.colcon_notification.desktop_notification:Sending desktop notification using 'notify2'
+[2.394s] DEBUG:colcon.colcon_core.event_reactor:joined thread
+[2.395s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/fred/plugin_ws_test/src/rmf/traffic_editor/install/local_setup.ps1'
+[2.396s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/fred/plugin_ws_test/src/rmf/traffic_editor/install/_local_setup_util_ps1.py'
+[2.397s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/fred/plugin_ws_test/src/rmf/traffic_editor/install/setup.ps1'
+[2.399s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/fred/plugin_ws_test/src/rmf/traffic_editor/install/local_setup.sh'
+[2.399s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/fred/plugin_ws_test/src/rmf/traffic_editor/install/_local_setup_util_sh.py'
+[2.400s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/fred/plugin_ws_test/src/rmf/traffic_editor/install/setup.sh'
+[2.402s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/fred/plugin_ws_test/src/rmf/traffic_editor/install/local_setup.bash'
+[2.402s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/fred/plugin_ws_test/src/rmf/traffic_editor/install/setup.bash'
+[2.404s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/fred/plugin_ws_test/src/rmf/traffic_editor/install/local_setup.zsh'
+[2.404s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/fred/plugin_ws_test/src/rmf/traffic_editor/install/setup.zsh'

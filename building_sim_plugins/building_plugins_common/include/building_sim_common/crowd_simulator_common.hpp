@@ -17,44 +17,35 @@
 namespace crowd_simulator {
 
 using AgentPtr = std::shared_ptr<Menge::Agents::BaseAgent>;
-//===============================================================
-/*
-* class AgentPose3d
-* replace the common interface of ignition::math::Pose3d, which might apply with different version in different plugins
-*/
+
+// simply 
 class  AgentPose3d{
-
 public:
-  AgentPose3d() : _x(0), _y(0), _z(0), _pitch(0), _roll(0), _yaw(0) {}
-  AgentPose3d(double& x, double& y, double& z, double& pitch, double& roll, double& yaw)
-    : _x(x), _y(y), _z(z), _pitch(pitch), _roll(roll), _yaw(yaw) {}
+  AgentPose3d()
+    : _x(0), _y(0), _z(0), _pitch(0), _roll(0), _yaw(0)
+  {}
+  AgentPose3d(double x, double y, double z, double pitch, double roll, double yaw)
+    : _x(x), _y(y), _z(z), _pitch(pitch), _roll(roll), _yaw(yaw)
+  {}
+  ~AgentPose3d();
 
-  ~AgentPose3d() {}
+  double X() const {return _x;}
+  double Y() const {return _y;}
+  double Z() const {return _z;}
+  double Pitch() const {return _pitch;}
+  double Roll() const {return _roll;}
+  double Yaw() const {return _yaw;}
 
-  double X() const;
-  double Y() const;
-  double Z() const;
-  double Pitch() const;
-  double Roll() const;
-  double Yaw() const;
-
-  void X(const double& x);
-  void Y(const double& y);
-  void Z(const double& z);
-  void Pitch(const double& pitch);
-  void Roll(const double& roll);
-  void Yaw(const double& yaw);
+  void X(double x) {_x = x;}
+  void Y(double y) {_y = y;}
+  void Z(double z) {_z = z;}
+  void Pitch(double pitch) {_pitch = pitch;}
+  void Roll(double roll) {_roll = roll;}
+  void Yaw(double yaw) {_yaw = yaw;}
 
 private:
-  double _x;
-  double _y;
-  double _z;
-  double _pitch;
-  double _roll;
-  double _yaw;
-
+  double _x, _y, _z, _pitch, _roll, _yaw;
 };
-
 //================================================================
 /*
 * class MengeHandle
@@ -105,7 +96,6 @@ private:
 
   std::string _ResourceFilePath(const std::string& relativePath) const;
   bool _LoadSimulation(); //initialize simulatorinterface
-
 };
 
 //================================================================
@@ -165,7 +155,6 @@ public:
     std::string typeName;
     bool isExternal = false;
   };
-
   using ObjectPtr = std::shared_ptr<Object>;
 
   CrowdSimInterface()
@@ -174,6 +163,7 @@ public:
     _sdf_loaded(false)
   {}
 
+  std::shared_ptr<ModelTypeDatabase> _modelTypeDBPtr;
   rclcpp::Logger logger() const;
   void init_ros_node(const rclcpp::Node::SharedPtr node);
 
@@ -181,14 +171,20 @@ public:
   bool readSDF(SdfPtrT& sdf);
 
   bool initCrowdSim();
+  bool isInitialized() const;
+
+  double getSimTimeStep() const;
 
   size_t getNumObjects() const;
   ObjectPtr getObjectById(size_t id) const;
 
   void oneStepSim() const;
 
-  void updateExternalAgent(size_t id, const AgentPose3d& modelPose);
-  void updateExternalAgent(const AgentPtr agentPtr, const AgentPose3d& modelPose);
+  template<typename IgnMathPose3d>
+  void updateExternalAgent(size_t id, const IgnMathPose3d& modelPose);
+
+  template<typename IgnMathPose3d>
+  void updateExternalAgent(const AgentPtr agentPtr, const IgnMathPose3d& modelPose);
 
   template<typename IgnMathPose3d>
   IgnMathPose3d getAgentPose(size_t id, double deltaSimTime);
@@ -197,8 +193,6 @@ public:
   IgnMathPose3d getAgentPose(const AgentPtr agentPtr, double deltaSimTime);
 
 private:
-  
-  std::shared_ptr<ModelTypeDatabase> _modelTypeDBPtr;
   bool _initialized;
   bool _sdf_loaded;
   std::vector<ObjectPtr> _objects; //Database, use id to access ObjectPtr
@@ -228,9 +222,9 @@ bool CrowdSimInterface::readSDF(SdfPtrT& sdf)
     menge_resource_path = getenv("MENGE_RESOURCE_PATH");
     RCLCPP_WARN(logger(), 
       "No resource path provided! <env MENGE_RESOURCE_PATH> " + std::string(menge_resource_path) + " will be used." ); 
-    this->_resourcePath = std::string(menge_resource_path);
+    _resourcePath = std::string(menge_resource_path);
   } else{
-    this->_resourcePath = sdf->template GetElement("resource_path")->template Get<std::string>();
+    _resourcePath = sdf->template GetElement("resource_path")->template Get<std::string>();
   }
   
   if (!sdf->template HasElement("behavior_file"))
@@ -239,7 +233,7 @@ bool CrowdSimInterface::readSDF(SdfPtrT& sdf)
       "No behavior file found! <behavior_file> Required!" ); 
     return false;
   }
-  this->_behaviorFile = sdf->template GetElement("behavior_file")->template Get<std::string>();
+  _behaviorFile = sdf->template GetElement("behavior_file")->template Get<std::string>();
 
   if (!sdf->template HasElement("scene_file"))
   {
@@ -247,7 +241,7 @@ bool CrowdSimInterface::readSDF(SdfPtrT& sdf)
       "No scene file found! <scene_file> Required!" );
     return false;
   }
-  this->_sceneFile = sdf->template GetElement("scene_file")->template Get<std::string>();
+  _sceneFile = sdf->template GetElement("scene_file")->template Get<std::string>();
 
   if (!sdf->template HasElement("update_time_step"))
   {
@@ -255,7 +249,7 @@ bool CrowdSimInterface::readSDF(SdfPtrT& sdf)
       "No update_time_step found! <update_time_step> Required!");
     return false;
   }
-  this->_simTimeStep = sdf->template GetElement("update_time_step")->template Get<float>();
+  _simTimeStep = sdf->template GetElement("update_time_step")->template Get<float>();
 
   if (!sdf->template HasElement("model_type"))
   {
@@ -304,7 +298,7 @@ bool CrowdSimInterface::readSDF(SdfPtrT& sdf)
         "No model initial pose configured in <model_type>! <initial_pose> Required [" + s + "]");
       return false;
     }
-    if (!this->_loadModelInitPose(modelTypeElement, modelTypePtr->pose))
+    if (!_loadModelInitPose(modelTypeElement, modelTypePtr->pose))
     {
       RCLCPP_ERROR(logger(), 
         "Error loading model initial pose in <model_type>! Check <initial_pose> in [" + s + "]");
@@ -325,7 +319,7 @@ bool CrowdSimInterface::readSDF(SdfPtrT& sdf)
     auto exAgentName = externalAgentElement->template Get<std::string>();
     RCLCPP_INFO(logger(), 
       "Added external agent: [ " + exAgentName + " ].");
-    this->_externalAgents.emplace_back(exAgentName); //just store the name
+    _externalAgents.emplace_back(exAgentName); //just store the name
     externalAgentElement = externalAgentElement->template GetNextElement("external_agent");
   }
 
@@ -381,6 +375,21 @@ IgnMathPose3d CrowdSimInterface::getAgentPose(const AgentPtr agentPtr, double de
   double yRot = static_cast<double>(agentPtr->_orient.y());
 
   IgnMathPose3d agent_pose(Px, Py, 0, 0, 0, std::atan2(yRot, xRot));
+  return agent_pose;
+}
+
+template<typename IgnMathPose3d>
+void CrowdSimInterface::updateExternalAgent(size_t id, const IgnMathPose3d& modelPose) {
+  assert(id < getNumObjects());
+  auto agentPtr = _objects[id]->agentPtr;
+  updateExternalAgent<IgnMathPose3d>(agentPtr, modelPose);
+}
+
+template<typename IgnMathPose3d>
+void CrowdSimInterface::updateExternalAgent(const AgentPtr agentPtr, const IgnMathPose3d& modelPose) {
+  assert(agentPtr);
+  agentPtr->_pos.setX(modelPose.Pos().X());
+  agentPtr->_pos.setY(modelPose.Pos().Y());
 }
 
 } //namespace crowd_simulator

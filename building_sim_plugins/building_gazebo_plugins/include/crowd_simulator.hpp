@@ -37,44 +37,36 @@ class CrowdSimulatorPlugin : public gazebo::WorldPlugin
 {
 
 public:
-  CrowdSimulatorPlugin();
+  CrowdSimulatorPlugin() 
+    : _crowdSimInterface(std::make_shared<crowd_simulator::CrowdSimInterface>()),
+    _initialized(false),
+    _objectsCount(0)
+  {}
+
   void Load(gazebo::physics::WorldPtr world, sdf::ElementPtr sdf) override;
 
 private:
+  std::shared_ptr<crowd_simulator::CrowdSimInterface> _crowdSimInterface;
+  bool _initialized;
+  size_t _objectsCount;
   gazebo::physics::WorldPtr _world;
   gazebo::event::ConnectionPtr _updateConnectionPtr;
-  gazebo::common::Time _lastAnimTime;
+  gazebo::common::Time _lastTime;
   gazebo::common::Time _lastSimTime;
-  size_t _objectsCount;
 
-  bool _initialized = false; //avoid optimization from compiler
-
-  //CrowdSimInterface related
-  std::string _resourcePath;
-  std::string _behaviorFile;
-  std::string _sceneFile;
-  float _simTimeStep; //must be initialized from world file
-  std::vector<std::string> _externalAgents; //loaded from world file, store unique model name
-
-
-  //template model type for construct corresponding model for agents
-  std::shared_ptr<crowd_simulator::ModelTypeDatabase> _modelTypeDBPtr;
-  std::shared_ptr<crowd_simulator::CrowdSimInterface> _crowdSimInterface;
-
+  bool _spawnAgentsInWorld();
+  void _initSpawnedAgents();
   void _Update(const gazebo::common::UpdateInfo& updateInfo); //Update trigger function
   void _UpdateAllObjects(double deltaTime, double deltaSimTime);
   void _UpdateInternalObject(double deltaTime, double deltaSimTime,
     const crowd_simulator::AgentPtr agentPtr,
     const gazebo::physics::ModelPtr modelPtr,
     const crowd_simulator::ModelTypeDatabase::RecordPtr typePtr);
-  void _Initialization();
-
+  
   ignition::math::Pose3d _AnimationRootPose(
     const gazebo::physics::ActorPtr actorPtr,
     const gazebo::common::SkeletonAnimation* animation);
 
-  bool _LoadParams(const sdf::ElementPtr& sdf);
-  bool _LoadCrowdSim();
   bool _CreateModel(const std::string& modelName,
     const crowd_simulator::ModelTypeDatabase::RecordPtr modelTypePtr,
     const crowd_simulator::AgentPtr agentPtr);

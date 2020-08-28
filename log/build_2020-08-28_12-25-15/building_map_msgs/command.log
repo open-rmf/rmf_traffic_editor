@@ -1,0 +1,1 @@
+Invoking command in '/home/fred/plugin_ws_test/src/rmf/traffic_editor/build/building_map_msgs': CMAKE_PREFIX_PATH=/opt/ros/eloquent /usr/bin/cmake /home/fred/plugin_ws_test/src/rmf/traffic_editor/building_map_msgs -DCMAKE_INSTALL_PREFIX=/home/fred/plugin_ws_test/src/rmf/traffic_editor/install/building_map_msgs

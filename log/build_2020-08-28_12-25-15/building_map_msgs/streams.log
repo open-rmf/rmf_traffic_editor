@@ -1,0 +1,43 @@
+[0.026s] Invoking command in '/home/fred/plugin_ws_test/src/rmf/traffic_editor/build/building_map_msgs': CMAKE_PREFIX_PATH=/opt/ros/eloquent /usr/bin/cmake /home/fred/plugin_ws_test/src/rmf/traffic_editor/building_map_msgs -DCMAKE_INSTALL_PREFIX=/home/fred/plugin_ws_test/src/rmf/traffic_editor/install/building_map_msgs
+[0.078s] -- The C compiler identification is GNU 8.4.0
+[0.127s] -- The CXX compiler identification is GNU 8.4.0
+[0.130s] -- Check for working C compiler: /usr/bin/cc
+[0.192s] -- Check for working C compiler: /usr/bin/cc -- works
+[0.192s] -- Detecting C compiler ABI info
+[0.258s] -- Detecting C compiler ABI info - done
+[0.265s] -- Detecting C compile features
+[0.463s] -- Detecting C compile features - done
+[0.466s] -- Check for working CXX compiler: /usr/bin/c++
+[0.546s] -- Check for working CXX compiler: /usr/bin/c++ -- works
+[0.546s] -- Detecting CXX compiler ABI info
+[0.630s] -- Detecting CXX compiler ABI info - done
+[0.638s] -- Detecting CXX compile features
+[0.975s] -- Detecting CXX compile features - done
+[0.977s] -- Found ament_cmake: 0.8.2 (/opt/ros/eloquent/share/ament_cmake/cmake)
+[1.003s] -- Found PythonInterp: /usr/bin/python3 (found suitable version "3.6.9", minimum required is "3") 
+[1.003s] -- Using PYTHON_EXECUTABLE: /usr/bin/python3
+[1.199s] -- Found builtin_interfaces: 0.8.0 (/opt/ros/eloquent/share/builtin_interfaces/cmake)
+[1.215s] -- Found rosidl_adapter: 0.8.2 (/opt/ros/eloquent/share/rosidl_adapter/cmake)
+[1.257s] -- Found geometry_msgs: 0.8.1 (/opt/ros/eloquent/share/geometry_msgs/cmake)
+[1.269s] -- Found rosidl_default_generators: 0.8.0 (/opt/ros/eloquent/share/rosidl_default_generators/cmake)
+[1.334s] -- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "1.1.1") 
+[1.353s] -- Found FastRTPS: /opt/ros/eloquent/include  
+[1.427s] -- Found PythonInterp: /usr/bin/python3 (found version "3.6.9") 
+[1.592s] -- Found ament_cmake_cppcheck: 0.8.1 (/opt/ros/eloquent/share/ament_cmake_cppcheck/cmake)
+[1.594s] -- Found ament_cmake_cpplint: 0.8.1 (/opt/ros/eloquent/share/ament_cmake_cpplint/cmake)
+[1.596s] -- Found ament_cmake_uncrustify: 0.8.1 (/opt/ros/eloquent/share/ament_cmake_uncrustify/cmake)
+[1.608s] -- Using single matching rosidl_typesupport_c: rosidl_typesupport_fastrtps_c
+[1.615s] -- Using single matching rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp
+[1.702s] -- Found rmw_implementation_cmake: 0.8.1 (/opt/ros/eloquent/share/rmw_implementation_cmake/cmake)
+[1.725s] -- Found PythonInterp: /usr/bin/python3 (found suitable version "3.6.9", minimum required is "3.5") 
+[1.726s] -- Found python_cmake_module: 0.8.0 (/opt/ros/eloquent/share/python_cmake_module/cmake)
+[1.750s] -- Found PythonLibs: /usr/lib/x86_64-linux-gnu/libpython3.6m.so (found suitable version "3.6.9", minimum required is "3.5") 
+[1.750s] -- Using PYTHON_EXECUTABLE: /usr/bin/python3
+[1.751s] -- Using PYTHON_INCLUDE_DIRS: /usr/include/python3.6m
+[1.751s] -- Using PYTHON_LIBRARIES: /usr/lib/x86_64-linux-gnu/libpython3.6m.so
+[1.770s] -- Found PythonExtra: .so  
+[1.872s] -- Found ament_cmake_flake8: 0.8.1 (/opt/ros/eloquent/share/ament_cmake_flake8/cmake)
+[1.873s] -- Found ament_cmake_pep257: 0.8.1 (/opt/ros/eloquent/share/ament_cmake_pep257/cmake)
+[1.881s] -- Configuring done
+[1.974s] -- Generating done
+[1.977s] -- Build files have been written to: /home/fred/plugin_ws_test/src/rmf/traffic_editor/build/building_map_msgs
