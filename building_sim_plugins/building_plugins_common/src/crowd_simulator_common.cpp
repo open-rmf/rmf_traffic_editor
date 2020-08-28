@@ -113,7 +113,8 @@ void CrowdSimInterface::init_ros_node(const rclcpp::Node::SharedPtr node)
   _ros_node = std::move(node);
 }
 
-bool CrowdSimInterface::initCrowdSim() {
+bool CrowdSimInterface::initCrowdSim() 
+{
   _mengeHandle = std::make_shared<MengeHandle>(
     _resourcePath,
     _behaviorFile, 
@@ -134,28 +135,25 @@ bool CrowdSimInterface::_spawnObject()
 {
   //External models are loaded first in scene file
   size_t externalCount = _externalAgents.size();
-  size_t totalAgentCount = this->_mengeHandle->GetAgentCount();
+  size_t totalAgentCount = _mengeHandle->GetAgentCount();
 
   //external model must be included in scene file
   assert(externalCount <= totalAgentCount);
 
   for (size_t i = 0; i < externalCount; ++i)
   {
-    auto agentPtr = this->_mengeHandle->GetAgent(i);
+    auto agentPtr = _mengeHandle->GetAgent(i);
     agentPtr->_external = true;
-    this->_addObject(agentPtr, _externalAgents[i], "0", true);
+    _addObject(agentPtr, _externalAgents[i], "0", true);
   }
 
   for (size_t i = externalCount; i < totalAgentCount; ++i)
   {
     auto agentPtr = this->_mengeHandle->GetAgent(i);
     agentPtr->_external = false;
-
     std::string modelName = "agent" + std::to_string(i);
-
-    this->_addObject(agentPtr, modelName, agentPtr->_typeName, false);
+    _addObject(agentPtr, modelName, agentPtr->_typeName, false);
   }
-
   return true;
 }
 
@@ -170,73 +168,36 @@ void CrowdSimInterface::_addObject(AgentPtr agentPtr,
   {
     assert(!modelName.empty());
   }
-  this->_objects.emplace_back(new Object{agentPtr, modelName, typeName,
-      isExternal});
+  _objects.emplace_back(new Object{agentPtr, modelName, typeName, isExternal});
 }
 
-
-size_t CrowdSimInterface::getNumObjects()
+size_t CrowdSimInterface::getNumObjects() const
 {
-  return this->_objects.size();
+  return _objects.size();
 }
 
-CrowdSimInterface::ObjectPtr CrowdSimInterface::getObjectById(size_t id)
+CrowdSimInterface::ObjectPtr CrowdSimInterface::getObjectById(size_t id) const
 {
-  assert(id < this->_objects.size());
-  return this->_objects[id];
+  assert(id < _objects.size());
+  return _objects[id];
 }
 
-void CrowdSimInterface::OneStepSim()
+void CrowdSimInterface::oneStepSim() const
 {
-  this->_mengeHandle->SimStep();
+  _mengeHandle->SimStep();
 }
 
 
-void CrowdSimInterface::UpdateExternalAgent(size_t id, const AgentPose3d& modelPose){
-
-  assert(id < this->getNumObjects());
-
-  auto agentPtr = this->_objects[id]->agentPtr;
-  this->UpdateExternalAgent(agentPtr, modelPose);
+void CrowdSimInterface::updateExternalAgent(size_t id, const AgentPose3d& modelPose) {
+  assert(id < getNumObjects());
+  auto agentPtr = _objects[id]->agentPtr;
+  updateExternalAgent(agentPtr, modelPose);
 }
 
-
-void CrowdSimInterface::UpdateExternalAgent(const AgentPtr agentPtr, const AgentPose3d& modelPose){
-
+void CrowdSimInterface::updateExternalAgent(const AgentPtr agentPtr, const AgentPose3d& modelPose) {
   assert(agentPtr);
-
   agentPtr->_pos.setX(modelPose.X());
   agentPtr->_pos.setY(modelPose.Y());
-}
-
-
-void CrowdSimInterface::GetAgentPose(size_t id, double deltaSimTime, AgentPose3d& modelPose){
-
-  assert(id < this->getNumObjects());
-
-  auto agentPtr = this->_objects[id]->agentPtr;
-  this->GetAgentPose(agentPtr, deltaSimTime, modelPose);
-}
-
-
-void CrowdSimInterface::GetAgentPose(const AgentPtr agentPtr, double deltaSimTime, AgentPose3d& modelPose){
-  //calculate future position in deltaSimTime.
-  assert(agentPtr);
-  double Px = static_cast<double>(agentPtr->_pos.x()) +
-    static_cast<double>(agentPtr->_vel.x()) * deltaSimTime;
-  double Py = static_cast<double>(agentPtr->_pos.y()) +
-    static_cast<double>(agentPtr->_vel.y()) * deltaSimTime;
-
-  modelPose.X(Px);
-  modelPose.Y(Py);
-  modelPose.Z(0.0);
-
-  double xRot = static_cast<double>(agentPtr->_orient.x());
-  double yRot = static_cast<double>(agentPtr->_orient.y());
-
-  modelPose.Pitch(0);
-  modelPose.Roll(0);
-  modelPose.Yaw(std::atan2(yRot, xRot));
 }
 
 //=============================================================

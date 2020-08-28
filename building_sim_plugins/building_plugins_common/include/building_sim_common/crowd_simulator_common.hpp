@@ -182,16 +182,19 @@ public:
 
   bool initCrowdSim();
 
-  size_t getNumObjects();
-  ObjectPtr getObjectById(size_t id);
+  size_t getNumObjects() const;
+  ObjectPtr getObjectById(size_t id) const;
 
-  void OneStepSim();
+  void oneStepSim() const;
 
-  void UpdateExternalAgent(size_t id, const AgentPose3d& modelPose);
-  void UpdateExternalAgent(const AgentPtr agentPtr, const AgentPose3d& modelPose);
+  void updateExternalAgent(size_t id, const AgentPose3d& modelPose);
+  void updateExternalAgent(const AgentPtr agentPtr, const AgentPose3d& modelPose);
 
-  void GetAgentPose(size_t id, double deltaSimTime, AgentPose3d& modelPose);
-  void GetAgentPose(const AgentPtr agentPtr, double deltaSimTime, AgentPose3d& modelPose);
+  template<typename IgnMathPose3d>
+  IgnMathPose3d getAgentPose(size_t id, double deltaSimTime);
+
+  template<typename IgnMathPose3d>
+  IgnMathPose3d getAgentPose(const AgentPtr agentPtr, double deltaSimTime);
 
 private:
   
@@ -356,6 +359,28 @@ bool CrowdSimInterface::_loadModelInitPose(SdfPtrT& modelTypeElement, AgentPose3
     result.Yaw( std::stod(parts[5]) );
   }
   return true;
+}
+
+template<typename IgnMathPose3d>
+IgnMathPose3d CrowdSimInterface::getAgentPose(size_t id, double deltaSimTime) {
+  assert(id < getNumObjects());
+  auto agentPtr = _objects[id]->agentPtr;
+  return getAgentPose<IgnMathPose3d>(agentPtr, deltaSimTime);
+}
+
+template<typename IgnMathPose3d>
+IgnMathPose3d CrowdSimInterface::getAgentPose(const AgentPtr agentPtr, double deltaSimTime) {
+  //calculate future position in deltaSimTime. currently in 2d
+  assert(agentPtr);
+  double Px = static_cast<double>(agentPtr->_pos.x()) +
+    static_cast<double>(agentPtr->_vel.x()) * deltaSimTime;
+  double Py = static_cast<double>(agentPtr->_pos.y()) +
+    static_cast<double>(agentPtr->_vel.y()) * deltaSimTime;
+
+  double xRot = static_cast<double>(agentPtr->_orient.x());
+  double yRot = static_cast<double>(agentPtr->_orient.y());
+
+  IgnMathPose3d agent_pose(Px, Py, 0, 0, 0, std::atan2(yRot, xRot));
 }
 
 } //namespace crowd_simulator
