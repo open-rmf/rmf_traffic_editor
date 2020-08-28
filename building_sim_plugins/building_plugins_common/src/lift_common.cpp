@@ -284,6 +284,10 @@ LiftCommon::LiftUpdateResult LiftCommon::update(const double time,
   {
     std::string desired_floor = _lift_request->destination_floor;
     uint8_t desired_door_state = _lift_request->door_state;
+    if (_lift_request->request_type == LiftRequest::REQUEST_END_SESSION)
+      _lift_state.session_id = "";
+    else
+      _lift_state.session_id = _lift_request->session_id;
 
     if ((_lift_state.current_floor == desired_floor) &&
       (_lift_state.door_state == desired_door_state) &&
