@@ -50,24 +50,24 @@ private:
 
     bool _spawnAgentsInWorld(ignition::gazebo::EntityComponentManager& ecm);
     void _initSpawnedAgents(ignition::gazebo::EntityComponentManager& ecm);
+    void _configSpawnedAgents(
+        const crowd_simulator::CrowdSimInterface::ObjectPtr objPtr,
+        const ignition::gazebo::Entity& enity, 
+        ignition::gazebo::EntityComponentManager& ecm) const;
    
     bool _CreateEntity(ignition::gazebo::EntityComponentManager& ecm, 
       const std::string& modelName, 
-      const crowd_simulator::ModelTypeDatabase::RecordPtr modelTypePtr, 
-      const crowd_simulator::AgentPtr agentPtr);
+      const crowd_simulator::ModelTypeDatabase::RecordPtr modelTypePtr) const;
     
-    bool _CheckSpawnedAgents(ignition::gazebo::EntityComponentManager& ecm);
-
     void _UpdateAllObjects(
         double deltaTime, double deltaAnimTime, 
-        ignition::gazebo::EntityComponentManager& ecm);
-    // void _UpdateInternalObject(
-    //     double deltaTime, double deltaAnimTime,
-    //     const crowd_simulator::AgentPtr agentPtr,
-    //     const gazebo::physics::ModelPtr modelPtr,
-    //     const crowd_simulator::ModelTypeDatabase::RecordPtr typePtr,
-    //     ignition::gazebo::EntityComponentManager& ecm
-    // );
+        ignition::gazebo::EntityComponentManager& ecm) const;
+    void _UpdateInternalObject(
+        double deltaSimTime,
+        const crowd_simulator::CrowdSimInterface::ObjectPtr objPtr,
+        const ignition::gazebo::Entity& enity,
+        ignition::gazebo::EntityComponentManager& ecm
+    ) const;
 
 };
 

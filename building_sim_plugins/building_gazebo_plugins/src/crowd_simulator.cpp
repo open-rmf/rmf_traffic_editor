@@ -121,7 +121,8 @@ void CrowdSimulatorPlugin::_UpdateInternalObject(double deltaTime, double deltaS
     boost::dynamic_pointer_cast<gazebo::physics::Actor>(modelPtr);
 
   auto delta_dist_vector = pose.Pos() - actorPtr->WorldPose().Pos() ;
-  delta_dist_vector.Z(0.0);
+  // might need future work on 3D case
+  // delta_dist_vector.Z(0.0);
   double deltaDist = delta_dist_vector.Length();
 
   // _simTimeStep is small, then deltaDist is small, the scriptTime is small than expected.

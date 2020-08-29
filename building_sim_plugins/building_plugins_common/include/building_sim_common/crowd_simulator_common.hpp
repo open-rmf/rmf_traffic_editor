@@ -22,28 +22,33 @@ class  AgentPose3d
 {
 public:
   AgentPose3d()
-    : _x(0), _y(0), _z(0), _pitch(0), _roll(0), _yaw(0)
+    : _x(0), _y(0), _z(0), _roll(0), _pitch(0), _yaw(0)
   {}
-  AgentPose3d(double x, double y, double z, double pitch, double roll, double yaw)
-    : _x(x), _y(y), _z(z), _pitch(pitch), _roll(roll), _yaw(yaw)
+  AgentPose3d(double x, double y, double z, double roll, double pitch, double yaw)
+    : _x(x), _y(y), _z(z), _roll(roll), _pitch(pitch), _yaw(yaw)
   {}
 
   double X() const {return _x;}
   double Y() const {return _y;}
   double Z() const {return _z;}
-  double Pitch() const {return _pitch;}
   double Roll() const {return _roll;}
+  double Pitch() const {return _pitch;}
   double Yaw() const {return _yaw;}
 
   void X(double x) {_x = x;}
   void Y(double y) {_y = y;}
   void Z(double z) {_z = z;}
-  void Pitch(double pitch) {_pitch = pitch;}
   void Roll(double roll) {_roll = roll;}
+  void Pitch(double pitch) {_pitch = pitch;}
   void Yaw(double yaw) {_yaw = yaw;}
 
+  template<typename IgnMathPose3d>
+  IgnMathPose3d ConvertToIgnMathPose3d() {
+    return IgnMathPose3d(_x, _y, _z, _roll, _pitch, _yaw);
+  }
+
 private:
-  double _x, _y, _z, _pitch, _roll, _yaw;
+  double _x, _y, _z, _roll, _pitch, _yaw;
 };
 //================================================================
 /*
