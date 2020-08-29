@@ -18,8 +18,8 @@ namespace crowd_simulator {
 
 using AgentPtr = std::shared_ptr<Menge::Agents::BaseAgent>;
 
-// simply 
-class  AgentPose3d{
+class  AgentPose3d 
+{
 public:
   AgentPose3d()
     : _x(0), _y(0), _z(0), _pitch(0), _roll(0), _yaw(0)
@@ -27,7 +27,6 @@ public:
   AgentPose3d(double x, double y, double z, double pitch, double roll, double yaw)
     : _x(x), _y(y), _z(z), _pitch(pitch), _roll(roll), _yaw(yaw)
   {}
-  ~AgentPose3d();
 
   double X() const {return _x;}
   double Y() const {return _y;}
@@ -50,9 +49,16 @@ private:
 /*
 * class MengeHandle
 */
-class MengeHandle
+class MengeHandle : public std::enable_shared_from_this<MengeHandle>
 {
 public:
+
+  static std::shared_ptr<MengeHandle> init_and_make(
+    const std::string& resourcePath,
+    const std::string& behaviorFile,
+    const std::string& sceneFile,
+    const float simTimeStep
+  );
 
   MengeHandle(const std::string& resourcePath,
     const std::string& behaviorFile,
@@ -65,25 +71,15 @@ public:
     _simTimeStep(simTimeStep),
     _agentCount(0)
   {
-
     _behaviorFile = this->_ResourceFilePath(_behaviorFile);
     _sceneFile = this->_ResourceFilePath(_sceneFile);
-
-    if (this->_LoadSimulation())
-    {
-      this->initialized = true;
-    }
-    assert(this->initialized);
   }
 
-  bool initialized = false;
-
   void SetSimTimeStep(float simTimeStep);
-  float GetSimTimeStep();
+  float GetSimTimeStep() const;
   size_t GetAgentCount();
-  void SimStep(); //proceed one-time simulation step in _sim
-
-  AgentPtr GetAgent(size_t id);
+  void SimStep() const; //proceed one-time simulation step in _sim
+  AgentPtr GetAgent(size_t id) const;
 
 private:
   std::string _resourcePath;
@@ -91,7 +87,6 @@ private:
   std::string _sceneFile;
   float _simTimeStep;
   size_t _agentCount;
-  
   std::shared_ptr<Menge::Agents::SimulatorInterface> _sim;
 
   std::string _ResourceFilePath(const std::string& relativePath) const;
@@ -112,27 +107,14 @@ public:
     AgentPose3d pose;
     std::string animation;
     double animationSpeed;
-    
-    //for ignition
-    std::string modelFilePath;
   };
 
   using RecordPtr = std::shared_ptr<Record>;
 
-  ModelTypeDatabase() {}
-
   //Create a new record and returns a reference to the record
-  template<typename... Args>
-  RecordPtr Emplace(Args&& ... args){
-    auto pair = this->_records.emplace(std::forward<Args>(args)...); //return pair<iterator, bool>
-    assert(pair.second);
-    return pair.first->second;
-  }
-
-  //Get the total number of actors
-  size_t Size();
-
-  RecordPtr Get(const std::string& typeName);
+  RecordPtr Emplace(std::string typeName, RecordPtr record_ptr);
+  size_t Size() const;
+  RecordPtr Get(const std::string& typeName) const;
 
 private:
   std::unordered_map<std::string, RecordPtr> _records;
@@ -146,7 +128,6 @@ private:
 */
 class CrowdSimInterface
 {
-
 public:
   struct Object
   {
@@ -224,7 +205,7 @@ bool CrowdSimInterface::readSDF(SdfPtrT& sdf)
       "No resource path provided! <env MENGE_RESOURCE_PATH> " + std::string(menge_resource_path) + " will be used." ); 
     _resourcePath = std::string(menge_resource_path);
   } else{
-    _resourcePath = sdf->template GetElement("resource_path")->template Get<std::string>();
+    _resourcePath = sdf->template GetElementImpl("resource_path")->template Get<std::string>();
   }
   
   if (!sdf->template HasElement("behavior_file"))
@@ -233,7 +214,7 @@ bool CrowdSimInterface::readSDF(SdfPtrT& sdf)
       "No behavior file found! <behavior_file> Required!" ); 
     return false;
   }
-  _behaviorFile = sdf->template GetElement("behavior_file")->template Get<std::string>();
+  _behaviorFile = sdf->template GetElementImpl("behavior_file")->template Get<std::string>();
 
   if (!sdf->template HasElement("scene_file"))
   {
@@ -241,7 +222,7 @@ bool CrowdSimInterface::readSDF(SdfPtrT& sdf)
       "No scene file found! <scene_file> Required!" );
     return false;
   }
-  _sceneFile = sdf->template GetElement("scene_file")->template Get<std::string>();
+  _sceneFile = sdf->template GetElementImpl("scene_file")->template Get<std::string>();
 
   if (!sdf->template HasElement("update_time_step"))
   {
@@ -249,7 +230,7 @@ bool CrowdSimInterface::readSDF(SdfPtrT& sdf)
       "No update_time_step found! <update_time_step> Required!");
     return false;
   }
-  _simTimeStep = sdf->template GetElement("update_time_step")->template Get<float>();
+  _simTimeStep = sdf->template GetElementImpl("update_time_step")->template Get<float>();
 
   if (!sdf->template HasElement("model_type"))
   {
@@ -257,7 +238,7 @@ bool CrowdSimInterface::readSDF(SdfPtrT& sdf)
       "No model type for agents found! <model_type> element Required!");
     return false;
   }
-  auto modelTypeElement = sdf->template GetElement("model_type");
+  auto modelTypeElement = sdf->template GetElementImpl("model_type");
   while (modelTypeElement)
   {
     std::string s;
@@ -268,7 +249,7 @@ bool CrowdSimInterface::readSDF(SdfPtrT& sdf)
       return false;
     }
 
-    auto modelTypePtr = this->_modelTypeDBPtr->Emplace(s, new crowd_simulator::ModelTypeDatabase::Record()); //unordered_map
+    auto modelTypePtr = this->_modelTypeDBPtr->Emplace(s, std::make_shared<ModelTypeDatabase::Record>() ); //unordered_map
     modelTypePtr->typeName = s;
 
     if (!modelTypeElement->template Get<std::string>("filename", modelTypePtr->fileName,""))
@@ -313,7 +294,7 @@ bool CrowdSimInterface::readSDF(SdfPtrT& sdf)
     RCLCPP_ERROR(logger(), 
       "No external agent provided. <external_agent> is needed with a unique name defined above.");
   }
-  auto externalAgentElement = sdf->template GetElement("external_agent");
+  auto externalAgentElement = sdf->template GetElementImpl("external_agent");
   while (externalAgentElement)
   {
     auto exAgentName = externalAgentElement->template Get<std::string>();

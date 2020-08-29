@@ -8,12 +8,25 @@
 namespace crowd_simulator {
 
 //================================================================
+std::shared_ptr<MengeHandle> MengeHandle::init_and_make(
+  const std::string& resourcePath,
+  const std::string& behaviorFile,
+  const std::string& sceneFile,
+  const float simTimeStep
+) {
+  auto menge_handle = std::make_shared<MengeHandle>(resourcePath, behaviorFile, sceneFile, simTimeStep);
+  if (!menge_handle->_LoadSimulation()) {
+    return nullptr;
+  }
+  return menge_handle;
+}
+
 void MengeHandle::SetSimTimeStep(float simTimeStep)
 {
   this->_simTimeStep = simTimeStep;
 }
 
-float MengeHandle::GetSimTimeStep()
+float MengeHandle::GetSimTimeStep() const
 {
   return this->_simTimeStep;
 }
@@ -27,12 +40,12 @@ size_t MengeHandle::GetAgentCount()
   return this->_agentCount;
 }
 
-void MengeHandle::SimStep()
+void MengeHandle::SimStep() const
 {
   this->_sim->step();
 }
 
-AgentPtr MengeHandle::GetAgent(size_t id)
+AgentPtr MengeHandle::GetAgent(size_t id) const
 {
   return AgentPtr(this->_sim->getAgent(id));
 }
@@ -79,15 +92,18 @@ bool MengeHandle::_LoadSimulation()
       std::endl;
     return true;
   }
-
   std::cout << "Error in provided navmesh. Menge simulator initialized false." << std::endl;
-
   return false;
 }
 
 //============================================
+ModelTypeDatabase::RecordPtr ModelTypeDatabase::Emplace(std::string typeName, RecordPtr record_ptr){
+  auto pair = this->_records.emplace(typeName, record_ptr); //return pair<iterator, bool>
+  assert(pair.second);
+  return pair.first->second;
+}
 
-ModelTypeDatabase::RecordPtr ModelTypeDatabase::Get(const std::string& typeName)
+ModelTypeDatabase::RecordPtr ModelTypeDatabase::Get(const std::string& typeName) const
 {
   auto it = this->_records.find(typeName);
   if (it == this->_records.end())
@@ -95,10 +111,10 @@ ModelTypeDatabase::RecordPtr ModelTypeDatabase::Get(const std::string& typeName)
     std::cout << "The model type [ " << typeName << " ] is not defined in scene file!" << std::endl;
     return nullptr;
   }
-  return it;
+  return it->second;
 }
 
-size_t ModelTypeDatabase::Size()
+size_t ModelTypeDatabase::Size() const
 {
   return this->_records.size();
 }
@@ -116,13 +132,11 @@ void CrowdSimInterface::init_ros_node(const rclcpp::Node::SharedPtr node)
 
 bool CrowdSimInterface::initCrowdSim() 
 {
-  _mengeHandle = std::make_shared<MengeHandle>(
+  _mengeHandle = MengeHandle::init_and_make(
     _resourcePath,
     _behaviorFile, 
     _sceneFile,
     _simTimeStep);
-  
-  if (!_mengeHandle->initialized) return false;
 
   if (!_sdf_loaded) {
     RCLCPP_ERROR(logger(), "Please load the sdf before initialize the crowd_sim interface!");

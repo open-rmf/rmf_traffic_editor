@@ -17,15 +17,18 @@ void CrowdSimulatorPlugin::Load(gazebo::physics::WorldPtr world,
   _world = world;
   
   if (!_crowdSimInterface->readSDF(sdf)) {
-    return;
+    exit(EXIT_FAILURE);
   }
 
   if (!_crowdSimInterface->initCrowdSim()) {
     RCLCPP_ERROR(_crowdSimInterface->logger(), "Crowd simulation failed to initialize.");
-    return;
+    exit(EXIT_FAILURE);
   }
 
-  _spawnAgentsInWorld();
+  if (!_spawnAgentsInWorld()) {
+    RCLCPP_ERROR(_crowdSimInterface->logger(), "Crowd simulation failed to spawn agents in the world.");
+    exit(EXIT_FAILURE);
+  }
 
   _updateConnectionPtr = gazebo::event::Events::ConnectWorldUpdateBegin(
     [this](gazebo::common::UpdateInfo updateInfo)
@@ -45,28 +48,28 @@ void CrowdSimulatorPlugin::_Update(const gazebo::common::UpdateInfo& updateInfo)
     _lastTime = updateInfo.simTime;
   }
 
-  // if initialized, do updates
-  if (_initialized)
+  if (!_initialized)
   {
-    auto deltaTime = (updateInfo.simTime - _lastTime).Double();
-    _lastTime = updateInfo.simTime;
-
-    auto deltaSimTime = (updateInfo.simTime - _lastSimTime).Double();
-    if (deltaSimTime - _crowdSimInterface->getSimTimeStep() < 1e-6)
-    {
-      deltaSimTime = 0.0;
-    }
-    else
-    {
-      _lastSimTime = updateInfo.simTime;
-      _crowdSimInterface->oneStepSim();
-    }
-    _UpdateAllObjects(deltaTime, deltaSimTime);
+    // not initizalied
+    _initSpawnedAgents();
     return;
   }
 
-  // not initizalied
-  _initSpawnedAgents();
+  auto deltaTime = (updateInfo.simTime - _lastTime).Double();
+  _lastTime = updateInfo.simTime;
+
+  auto deltaSimTime = (updateInfo.simTime - _lastSimTime).Double();
+  if (deltaSimTime - _crowdSimInterface->getSimTimeStep() < 1e-6)
+  {
+    deltaSimTime = 0.0;
+  }
+  else
+  {
+    _lastSimTime = updateInfo.simTime;
+    _crowdSimInterface->oneStepSim();
+  }
+  _UpdateAllObjects(deltaTime, deltaSimTime);
+
 }
 
 //============================================
@@ -128,7 +131,9 @@ void CrowdSimulatorPlugin::_UpdateInternalObject(double deltaTime, double deltaS
   //add on original loaded pose
   auto animation = actorPtr->SkeletonAnimations().at(typePtr->animation);
   auto animPose = _AnimationRootPose(actorPtr, animation);
-  animPose += Convert(typePtr->pose);
+  auto init_pose = typePtr->pose;
+  animPose += ignition::math::Pose3d(
+    init_pose.X(), init_pose.Y(), init_pose.Z(), init_pose.Pitch(), init_pose.Roll(), init_pose.Yaw());
 
   //update x and y coordinates
   animPose.Pos().X(pose.Pos().X());
@@ -260,26 +265,6 @@ bool CrowdSimulatorPlugin::_CreateModel(const std::string& modelName,
     "Insert actor for crowd simulator agent: [" + modelName + "] at ["+ oss.str() +"].");
   return true;
 }
-
-//===================================================
-
-crowd_simulator::AgentPose3d Convert(const ignition::math::Pose3d& ignition_pose){
-  auto pos = ignition_pose.Pos();
-  auto euler = ignition_pose.Rot().Euler();
-
-  return crowd_simulator::AgentPose3d(pos.X(), pos.Y(), pos.Z(), euler.X(), euler.Y(), euler.Z());
-}
-
-ignition::math::Pose3d Convert(const crowd_simulator::AgentPose3d& agent_pose){
-  return ignition::math::Pose3d(
-    agent_pose.X(), 
-    agent_pose.Y(), 
-    agent_pose.Z(), 
-    agent_pose.Pitch(), 
-    agent_pose.Roll(), 
-    agent_pose.Yaw());
-}
-
 
 // insert the plugin
 GZ_REGISTER_WORLD_PLUGIN(CrowdSimulatorPlugin)

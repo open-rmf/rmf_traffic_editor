@@ -23,11 +23,6 @@
 namespace crowd_simulation_gazebo {
 
 using ObjectPtr = crowd_simulator::CrowdSimInterface::ObjectPtr;
-
-crowd_simulator::AgentPose3d Convert(const ignition::math::Pose3d& ignition_pose);
-
-ignition::math::Pose3d Convert(const crowd_simulator::AgentPose3d& agent_pose);
-
 //================================================================
 /*
 * class CrowdSimulatorPlugin
