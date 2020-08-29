@@ -269,7 +269,8 @@ void CrowdSimulatorPlugin::_UpdateInternalObject(
     
     auto distance_traveled_vector = agent_pose.Pos() - current_pose.Pos();
     // might need future work on 3D case
-    // distance_traveled_vector.Z(0.0);
+    // the center of human has a z_elevation, which will make the human keep walking even if he reached the target
+    distance_traveled_vector.Z(0.0);
     double distance_traveled = distance_traveled_vector.Length();
 
     // set trajectory

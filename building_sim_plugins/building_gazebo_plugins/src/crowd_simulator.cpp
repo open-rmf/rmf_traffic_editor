@@ -122,7 +122,8 @@ void CrowdSimulatorPlugin::_UpdateInternalObject(double deltaTime, double deltaS
 
   auto delta_dist_vector = pose.Pos() - actorPtr->WorldPose().Pos() ;
   // might need future work on 3D case
-  // delta_dist_vector.Z(0.0);
+  // the center of human has a z_elevation, which will make the human keep walking even if he reached the target
+  delta_dist_vector.Z(0.0);
   double deltaDist = delta_dist_vector.Length();
 
   // _simTimeStep is small, then deltaDist is small, the scriptTime is small than expected.
