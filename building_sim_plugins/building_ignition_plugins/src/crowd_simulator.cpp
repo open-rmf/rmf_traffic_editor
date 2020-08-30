@@ -42,11 +42,13 @@ void CrowdSimulatorPlugin::Configure(const ignition::gazebo::Entity& entity,
             "Error loading crowd simulator plugin. Crowd Simulator failed to spawn agents in the world!");
         exit(EXIT_FAILURE);
     }
+
 }
 
 //=================================================
 void CrowdSimulatorPlugin::PreUpdate(const ignition::gazebo::UpdateInfo& info, ignition::gazebo::EntityComponentManager& ecm)
 {
+    // wait for all the models and actors loaded in ignition rendering
     if(!_initialized) {
         _initSpawnedAgents(ecm);
         return;
@@ -102,11 +104,33 @@ void CrowdSimulatorPlugin::_initSpawnedAgents(ignition::gazebo::EntityComponentM
             continue;
         objects_name.insert( {obj->modelName, id} );
     }
-
+    // for external agent
     ecm.Each<ignition::gazebo::components::Model,
         ignition::gazebo::components::Name>(
             [&](const ignition::gazebo::Entity& entity,
             const ignition::gazebo::components::Model*,
+            const ignition::gazebo::components::Name* name) -> bool {
+                auto it_objects_name = objects_name.find(name->Data());
+                if(it_objects_name != objects_name.end()){
+                    // update in entityDic
+                    _entityDic[name->Data()] = entity;
+                    auto objPtr = _crowdSimInterface->getObjectById(it_objects_name->second);
+                    // config internal spawned agent for custom trajectory
+                    if (!objPtr->isExternal) {
+                        _configSpawnedAgents(objPtr, entity, ecm);
+                    }
+                    objects_name.erase(name->Data()); 
+                    RCLCPP_INFO(_crowdSimInterface->logger(),
+                        "Crowd Simulator found agent: " + name->Data() );
+                }
+                return true;
+            }
+        );
+    // for internal agent
+    ecm.Each<ignition::gazebo::components::Actor,
+        ignition::gazebo::components::Name>(
+            [&](const ignition::gazebo::Entity& entity,
+            const ignition::gazebo::components::Actor*,
             const ignition::gazebo::components::Name* name) -> bool {
                 auto it_objects_name = objects_name.find(name->Data());
                 if(it_objects_name != objects_name.end()){
@@ -243,7 +267,6 @@ void CrowdSimulatorPlugin::_UpdateAllObjects(
 
         // for internal agent
         if(deltaSimTime - 0.0 < 1e-6) continue; // not yet reach the simulation update time
-        std::cout << "in here" << std::endl;
         _UpdateInternalObject(deltaSimTime, objPtr, entity, ecm);
     }
 }
