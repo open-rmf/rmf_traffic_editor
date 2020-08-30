@@ -19,7 +19,11 @@ class IGNITION_GAZEBO_VISIBLE CrowdSimulatorPlugin
     public ignition::gazebo::ISystemPreUpdate
 {   
 public:
-    CrowdSimulatorPlugin();
+    CrowdSimulatorPlugin()
+     : _transportNodePtr(std::make_shared<ignition::transport::Node>()),
+     _crowdSimInterface(std::make_shared<crowd_simulator::CrowdSimInterface>()),
+     _initialized(false)
+    {}
 
     // inherit from ISystemConfigure 
     void Configure(const ignition::gazebo::Entity& entity,
@@ -30,54 +34,41 @@ public:
     void PreUpdate(const ignition::gazebo::UpdateInfo& info, ignition::gazebo::EntityComponentManager& ecm) override;
 
 private:
-
+    std::shared_ptr<ignition::transport::Node> _transportNodePtr;
+    std::shared_ptr<crowd_simulator::CrowdSimInterface> _crowdSimInterface;
+    bool _initialized;
+    std::chrono::steady_clock::duration _lastSimTime{0};
+    std::chrono::steady_clock::duration _lastTime{0};
+    
     std::shared_ptr<ignition::gazebo::Model> _world;
     std::string _worldName;
-
-    std::string _resourcePath;
-    std::string _behaviorFile;
-    std::string _sceneFile;
-    double _simTimeStep; // load "update_time_step" tag from world file
-    std::vector<std::string> _externalAgents; //store the name of all "external_agent"
-
-    std::chrono::steady_clock::duration _lastSimTime{0};
-    std::chrono::steady_clock::duration _lastAnimTime{0};
 
     // map for <model_name, object_id>, contains both external (models) and internal agents (actors)
     std::unordered_map<std::string, size_t> _objectDic;
     // map for <model_name, entity_id> contains external and internal agents
     std::unordered_map<std::string, ignition::gazebo::Entity> _entityDic;
 
-    std::shared_ptr<crowd_simulator::ModelTypeDatabase> _modelTypeDBPtr;
-    std::shared_ptr<crowd_simulator::CrowdSimInterface> _crowdSimInterface;
-    std::shared_ptr<rclcpp::Node> _nodePtr;
-    std::shared_ptr<ignition::transport::Node> _transportNodePtr;
-
-    volatile bool _pluginInitialized = false; // disable compiler optimization
-    volatile bool _agentInitialized = false;
-
-    bool _LoadParams(const std::shared_ptr<const sdf::Element>& sdf);
-
-    bool _LoadModelInitPose(const sdf::ElementPtr& modelTypeElement, crowd_simulator::AgentPose3d& result) const;
-    
-    bool _LoadCrowdSim();
-    
-    bool _LoadAgents(ignition::gazebo::EntityComponentManager& ecm);
+    bool _spawnAgentsInWorld(ignition::gazebo::EntityComponentManager& ecm);
+    void _initSpawnedAgents(ignition::gazebo::EntityComponentManager& ecm);
+    void _configSpawnedAgents(
+        const crowd_simulator::CrowdSimInterface::ObjectPtr objPtr,
+        const ignition::gazebo::Entity& enity, 
+        ignition::gazebo::EntityComponentManager& ecm) const;
    
     bool _CreateEntity(ignition::gazebo::EntityComponentManager& ecm, 
       const std::string& modelName, 
-      const crowd_simulator::ModelTypeDatabase::Record* modelTypePtr, 
-      const crowd_simulator::AgentPtr agentPtr);
+      const crowd_simulator::ModelTypeDatabase::RecordPtr modelTypePtr) const;
     
-    bool _CheckSpawnedAgents(ignition::gazebo::EntityComponentManager& ecm);
-
-    void _UpdateObject(double deltaTime, double deltaAnimTime, ignition::gazebo::EntityComponentManager& ecm);
+    void _UpdateAllObjects(
+        double deltaTime, double deltaAnimTime, 
+        ignition::gazebo::EntityComponentManager& ecm) const;
+    void _UpdateInternalObject(
+        double deltaSimTime,
+        const crowd_simulator::CrowdSimInterface::ObjectPtr objPtr,
+        const ignition::gazebo::Entity& enity,
+        ignition::gazebo::EntityComponentManager& ecm
+    ) const;
 
 };
-
-//================================================================================
-crowd_simulator::AgentPose3d Convert(const ignition::math::Pose3d& ignition_pose);
-
-ignition::math::Pose3d Convert(const crowd_simulator::AgentPose3d& agent_pose);
 
 } //namespace crowd_simulation_ign
