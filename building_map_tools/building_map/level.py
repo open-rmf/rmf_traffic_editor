@@ -152,12 +152,9 @@ class Level:
                 self.transformed_vertices)
 
     def generate_sdf_models(self, world_ele):
-        model_cnt = 0
         for model in self.models:
-            model_cnt += 1
             model.generate(
                 world_ele,
-                model_cnt,
                 self.transform,
                 self.elevation)
 

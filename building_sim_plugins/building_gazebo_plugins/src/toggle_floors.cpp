@@ -45,6 +45,17 @@ public:
       string floor_name = floor_ele->GetAttribute("name")->GetAsString();
       string model_name =
         floor_ele->GetAttribute("model_name")->GetAsString();
+
+      std::vector<string> models;
+      for (sdf::ElementPtr model_ele = floor_ele->GetFirstElement();
+        model_ele;
+        model_ele = model_ele->GetNextElement("model"))
+      {
+        if (model_ele->GetName() != string("model"))
+          continue;
+        models.push_back(model_ele->GetAttribute("name")->GetAsString());
+      }
+
       printf(
         "ToggleFloors::Load found a floor element: [%s]->[%s]\n",
         floor_name.c_str(),
@@ -57,16 +68,17 @@ public:
       connect(
         button,
         &QAbstractButton::clicked,
-        [this, button, model_name]()
+        [this, button, model_name, models]()
         {
-          this->button_clicked(button, model_name);
+          this->button_clicked(button, model_name, models);
         });
       hbox->addWidget(button);
     }
     setLayout(hbox);
   }
 
-  void button_clicked(QPushButton* button, string model_name)
+  void button_clicked(
+    QPushButton* button, string model_name, std::vector<string> models)
   {
     bool visible = button->isChecked();
     printf(
@@ -78,6 +90,11 @@ public:
     visual_msg.set_name(model_name);
     visual_msg.set_visible(visible);
     visual_pub->Publish(visual_msg);
+    for (string model : models)
+    {
+      visual_msg.set_name(model);
+      visual_pub->Publish(visual_msg);
+    }
   }
 };
 

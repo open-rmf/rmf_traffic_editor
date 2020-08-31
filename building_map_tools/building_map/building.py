@@ -240,6 +240,13 @@ class Building:
                         'name': level_name,
                         'model_name': f'{self.name}_{level_name}'})
 
+                for model in level.models:
+                    if model.static:
+                        model_ele = SubElement(
+                            floor_ele,
+                            'model',
+                            {'name': model.name})
+
         elif 'ignition' in options:
             plugin_ele = gui_ele.find('.//plugin[@filename="GzScene3D"]')
             camera_pose_ele = plugin_ele.find('camera_pose')

@@ -30,7 +30,7 @@ class Model:
 
         self.yaw = yaml_node['yaw']
 
-    def generate(self, world_ele, model_cnt, transform, elevation):
+    def generate(self, world_ele, transform, elevation):
         include_ele = SubElement(world_ele, 'include')
         name_ele = SubElement(include_ele, 'name')
         name_ele.text = self.name
