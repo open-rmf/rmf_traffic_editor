@@ -338,6 +338,8 @@ void CrowdSimImplementation::initializeAgentGroup() {
         agent_groups.emplace_back(0, true);
     else
         agent_groups[0] = AgentGroup(0, true);
+    agent_groups[0].setAgentProfile("external_agent");
+    agent_groups[0].setInitialState("external_static");
 }
 
 void CrowdSimImplementation::initializeModelType() {
