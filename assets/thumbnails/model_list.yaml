@@ -37,6 +37,7 @@ models:
 - OpenRobotics/MalePatientBed
 - OpenRobotics/MaleVisitorOnPhone
 - OpenRobotics/MaleVisitorSit
+- OpenRobotics/MetalCabinet
 - OpenRobotics/MiniSofa
 - OpenRobotics/MiR100
 - OpenRobotics/MiRCart
