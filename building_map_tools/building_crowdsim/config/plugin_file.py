@@ -69,7 +69,7 @@ class ModelType (Element) :
         self._filename = LeafElement('filename') 
         # for ign model
         self._initial_pose_ign = LeafElement('initial_pose')
-        self._model_file_path = LeafElement('model_file_path')
+        self._model_file_path = LeafElement('filename')
 
         self.addSubElement(self._type_name)
         self.addSubElement(self._animation)
