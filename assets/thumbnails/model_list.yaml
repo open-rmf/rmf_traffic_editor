@@ -1,23 +1,30 @@
 meters_per_pixel: 0.004
 models:
 - OpenRobotics/AdjTable
+- OpenRobotics/Ambulance2
 - OpenRobotics/AnesthesiaMachine
 - OpenRobotics/ArmoredPillars
 - OpenRobotics/BathroomSink
 - OpenRobotics/BedsideTable
 - OpenRobotics/BedTable
 - OpenRobotics/BigCubicle
+- OpenRobotics/BloodPressureMonitor
 - OpenRobotics/BMWCart
 - OpenRobotics/Bookshelf
+- OpenRobotics/BPCart
 - OpenRobotics/Cafe
 - OpenRobotics/Cafe table
 - OpenRobotics/CArm
 - OpenRobotics/CGMClassic
 - OpenRobotics/CGMVanguard
 - OpenRobotics/Chair
+- OpenRobotics/CleaningSection
+- OpenRobotics/CoffeeTable
 - OpenRobotics/Coke
 - OpenRobotics/ConfTable
 - OpenRobotics/Construction Cone
+- OpenRobotics/Desk
+- OpenRobotics/DeskChair
 - OpenRobotics/Drawer
 - OpenRobotics/ElderLadyPatient
 - OpenRobotics/ElderMalePatient
@@ -29,24 +36,30 @@ models:
 - OpenRobotics/Gazebo
 - OpenRobotics/InstrumentCart1
 - OpenRobotics/InstrumentCart2
+- OpenRobotics/IVStand
 - OpenRobotics/KitchenCountertop
 - OpenRobotics/KitchenSink
 - OpenRobotics/Lamp Post
 - OpenRobotics/LampAndStand
+- OpenRobotics/LitterBin
+- OpenRobotics/LockerBig
 - OpenRobotics/MainTable
 - OpenRobotics/MalePatientBed
 - OpenRobotics/MaleVisitorOnPhone
 - OpenRobotics/MaleVisitorSit
 - OpenRobotics/MetalCabinet
+- OpenRobotics/MetalCabinetYellow
 - OpenRobotics/MiniSofa
 - OpenRobotics/MiR100
 - OpenRobotics/MiRCart
+- OpenRobotics/MonitorAndKeyboard
 - OpenRobotics/MopCart1
 - OpenRobotics/MopCart2
 - OpenRobotics/MopCart3
 - OpenRobotics/MopCart4
 - OpenRobotics/NormalBed
 - OpenRobotics/Nurse
+- OpenRobotics/NurseDesk
 - OpenRobotics/NurseTable
 - OpenRobotics/Oak tree
 - OpenRobotics/OfficeChairBlack
@@ -60,30 +73,39 @@ models:
 - OpenRobotics/PatientWheelChair
 - OpenRobotics/Pine Tree
 - OpenRobotics/Playground
+- OpenRobotics/Postbox
 - OpenRobotics/PotatoChipChair
 - OpenRobotics/RecTable
 - OpenRobotics/RobotPlaceholder
+- OpenRobotics/Scrubber
 - OpenRobotics/Scrubs
+- OpenRobotics/ScrubsTrolley
 - OpenRobotics/Shower
 - OpenRobotics/SmallCubicle
+- OpenRobotics/Sofa
 - OpenRobotics/SquareShelf
 - OpenRobotics/Standing person
 - OpenRobotics/StorageRack
 - OpenRobotics/StorageRackCovered
 - OpenRobotics/StorageRackCoverOpen
+- OpenRobotics/SurgicalTrolleyGuards
 - OpenRobotics/SurgicalTrolleyMed
 - OpenRobotics/SUV
 - OpenRobotics/Table
 - OpenRobotics/TeleportDispenser
 - OpenRobotics/TeleportIngestor
 - OpenRobotics/Toilet
+- OpenRobotics/TrashBin
 - OpenRobotics/TrolleyBed
 - OpenRobotics/TrolleyBedPatient
 - OpenRobotics/TrolleyBox1
 - OpenRobotics/TrolleyBox2
 - OpenRobotics/TruckBox
 - OpenRobotics/TruckDelivery
+- OpenRobotics/TVStand
 - OpenRobotics/VendingMachine
 - OpenRobotics/VisitorKidSit
 - OpenRobotics/WhiteCabinet
 - OpenRobotics/WhiteChipChair
+- OpenRobotics/XRayMachine
+- OpenRobotics/XRayMachineSmall
