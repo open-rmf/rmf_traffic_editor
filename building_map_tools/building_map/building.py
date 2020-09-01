@@ -247,6 +247,12 @@ class Building:
                             'model',
                             {'name': model.name})
 
+                for door in level.doors:
+                    model_ele = SubElement(
+                        floor_ele,
+                        'model',
+                        {'name': door.params['name'].value})
+
         elif 'ignition' in options:
             plugin_ele = gui_ele.find('.//plugin[@filename="GzScene3D"]')
             camera_pose_ele = plugin_ele.find('camera_pose')
