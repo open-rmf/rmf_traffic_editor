@@ -260,8 +260,8 @@ class Building:
                                 model_ele = SubElement(
                                     floor_ele,
                                     'model',
-                                    {'name':(f'ShaftDoor_{lift_name}_' + \
-                                        f'{level_name}_{door.name}')})
+                                    {'name': (f'ShaftDoor_{lift_name}_' +
+                                              f'{level_name}_{door.name}')})
 
         elif 'ignition' in options:
             plugin_ele = gui_ele.find('.//plugin[@filename="GzScene3D"]')
