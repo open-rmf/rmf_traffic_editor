@@ -47,13 +47,12 @@ public:
         floor_ele->GetAttribute("model_name")->GetAsString();
 
       std::vector<string> models;
-      for (sdf::ElementPtr model_ele = floor_ele->GetFirstElement();
-        model_ele;
-        model_ele = model_ele->GetNextElement("model"))
+      auto model_ele = floor_ele->GetElement("model");
+      while (model_ele)
       {
-        if (model_ele->GetName() != string("model"))
-          continue;
-        models.push_back(model_ele->GetAttribute("name")->GetAsString());
+        if (model_ele->HasAttribute("name"))
+          models.push_back(model_ele->GetAttribute("name")->GetAsString());
+        model_ele = model_ele->GetNextElement("model");
       }
 
       printf(
