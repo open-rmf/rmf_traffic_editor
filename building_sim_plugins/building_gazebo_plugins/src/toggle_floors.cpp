@@ -90,7 +90,7 @@ public:
     visual_msg.set_name(model_name);
     visual_msg.set_visible(visible);
     visual_pub->Publish(visual_msg);
-    for (string model : models)
+    for (const string& model : models)
     {
       visual_msg.set_name(model);
       visual_pub->Publish(visual_msg);
