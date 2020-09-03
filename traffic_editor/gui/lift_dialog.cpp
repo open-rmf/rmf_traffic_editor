@@ -16,6 +16,7 @@
 */
 
 #include "lift_dialog.h"
+#include <cfloat>
 #include <QtWidgets>
 using std::vector;
 
@@ -92,6 +93,70 @@ LiftDialog::LiftDialog(Lift& lift, Building& building)
       emit redraw();
     });
   init_floor_hbox->addWidget(_initial_floor_combo_box);
+
+  QHBoxLayout* highest_name_hbox = new QHBoxLayout;
+  highest_name_hbox->addWidget(new QLabel("Highest floor:"));
+  _highest_floor_combo_box = new QComboBox;
+  for (const QString& level_name : _level_names)
+    _highest_floor_combo_box->addItem(level_name);
+  _highest_floor_combo_box->addItem("");  // empty string for not specifying
+  _highest_floor_combo_box->setCurrentText(
+    QString::fromStdString(_lift.highest_floor));
+  connect(
+    _highest_floor_combo_box,
+    &QComboBox::currentTextChanged,
+    [this](const QString& text)
+    {
+      _lift.highest_floor = text.toStdString();
+      if (_lift.highest_floor.empty())
+        _lift.highest_elevation = DBL_MAX;
+      else
+      {
+        for (const auto& level : _building.levels)
+        {
+          if (level.name == _lift.highest_floor)
+          {
+            _lift.highest_elevation = level.elevation;
+            break;
+          }
+        }
+      }
+      update_level_table();
+      emit redraw();
+    });
+  highest_name_hbox->addWidget(_highest_floor_combo_box);
+
+  QHBoxLayout* lowest_name_hbox = new QHBoxLayout;
+  lowest_name_hbox->addWidget(new QLabel("Lowest floor:"));
+  _lowest_floor_combo_box = new QComboBox;
+  for (const QString& level_name : _level_names)
+    _lowest_floor_combo_box->addItem(level_name);
+  _lowest_floor_combo_box->addItem("");
+  _lowest_floor_combo_box->setCurrentText(
+    QString::fromStdString(_lift.lowest_floor));
+  connect(
+    _lowest_floor_combo_box,
+    &QComboBox::currentTextChanged,
+    [this](const QString& text)
+    {
+      _lift.lowest_floor = text.toStdString();
+      if (_lift.lowest_floor.empty())
+        _lift.lowest_elevation = -DBL_MAX;
+      else
+      {
+        for (const auto& level : _building.levels)
+        {
+          if (level.name == _lift.lowest_floor)
+          {
+            _lift.lowest_elevation = level.elevation;
+            break;
+          }
+        }
+      }
+      update_level_table();
+      emit redraw();
+    });
+  lowest_name_hbox->addWidget(_lowest_floor_combo_box);
 
   QHBoxLayout* x_hbox = new QHBoxLayout;
   x_hbox->addWidget(new QLabel("X:"));
@@ -220,6 +285,8 @@ LiftDialog::LiftDialog(Lift& lift, Building& building)
   QVBoxLayout* left_vbox = new QVBoxLayout;
   left_vbox->addLayout(name_hbox);
   left_vbox->addLayout(ref_name_hbox);
+  left_vbox->addLayout(highest_name_hbox);
+  left_vbox->addLayout(lowest_name_hbox);
   left_vbox->addLayout(init_floor_hbox);
   left_vbox->addLayout(x_hbox);
   left_vbox->addLayout(y_hbox);
@@ -276,9 +343,17 @@ void LiftDialog::ok_button_clicked()
     return;
   }
 
+  if (_lift.lowest_elevation > _lift.highest_elevation)
+  {
+    QMessageBox::critical(this, "Error", "Lowest floor above highest floor");
+    return;
+  }
+  /*
   _lift.name = _name_line_edit->text().toStdString();
   _lift.reference_floor_name =
     _reference_floor_combo_box->currentText().toStdString();
+  _lift.highest_floor = _highest_floor_combo_box->currentText().toStdString();
+  _lift.lowest_floor = _lowest_floor_combo_box->currentText().toStdString();
 
   _lift.x = _x_line_edit->text().toDouble();
   _lift.y = _y_line_edit->text().toDouble();
@@ -286,7 +361,7 @@ void LiftDialog::ok_button_clicked()
 
   _lift.width = _width_line_edit->text().toDouble();
   _lift.depth = _depth_line_edit->text().toDouble();
-
+  */
   // grab all the level-door checkbox matrix states and save them
   for (int level_row = 0; level_row < _level_table->rowCount(); level_row++)
   {
@@ -447,7 +522,8 @@ void LiftDialog::update_level_table()
       checkbox->setStyleSheet("margin-left: 50%; margin-right: 50%");
       if (_lift.level_door_opens(
           level_name.toStdString(),
-          _lift.doors[door_idx].name))
+          _lift.doors[door_idx].name,
+          _building.levels))
         checkbox->setChecked(true);
       _level_table->setCellWidget(level_idx, door_idx + 1, checkbox);
     }
@@ -492,5 +568,5 @@ void LiftDialog::door_table_cell_changed(int row, int col)
 void LiftDialog::update_lift_view()
 {
   _lift_scene->clear();
-  _lift.draw(_lift_scene, 0.01, std::string(), false);
+  _lift.draw(_lift_scene, 0.01, std::string(), _lift.lowest_elevation, false);
 }
