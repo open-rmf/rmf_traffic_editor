@@ -217,7 +217,7 @@ bool Lift::level_door_opens(
   LevelDoorMap::const_iterator level_it = level_doors.find(level_name);
   if (level_it == level_doors.end())
     return false;
-  for (auto level : levels)
+  for (const auto& level : levels)
   {
     if (level.name == level_name)
     {
