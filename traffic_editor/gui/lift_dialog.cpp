@@ -95,7 +95,7 @@ LiftDialog::LiftDialog(Lift& lift, Building& building)
         _lift.highest_elevation = DBL_MAX;
       else
       {
-        for (auto level : _building.levels)
+        for (const auto& level : _building.levels)
         {
           if (level.name == _lift.highest_floor)
           {
