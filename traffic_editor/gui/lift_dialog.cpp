@@ -127,7 +127,7 @@ LiftDialog::LiftDialog(Lift& lift, Building& building)
         _lift.lowest_elevation = -DBL_MAX;
       else
       {
-        for (auto level : _building.levels)
+        for (const auto& level : _building.levels)
         {
           if (level.name == _lift.lowest_floor)
           {
