@@ -201,10 +201,15 @@ class Lift:
         self.name = name
         print(f'parsing lift {name}')
 
-        self.initial_floor_name = yaml_node['initial_floor_name']
         self.depth = float(yaml_node['depth'])
         self.width = float(yaml_node['width'])
         self.yaw = float(yaml_node['yaw'])
+
+        if 'initial_floor_name' in yaml_node:
+            self.initial_floor_name = str(yaml_node['initial_floor_name'])
+        else:
+            self.initial_floor_name = ''
+
         if 'highest_floor' in yaml_node:
             self.highest_floor = str(yaml_node['highest_floor'])
             if self.highest_floor:
@@ -249,6 +254,9 @@ class Lift:
                 self.level_doors[level_name] = door_names
                 self.level_elevation[level_name] = levels[level_name].elevation
                 self.level_names.append(level_name)
+
+        if (not self.initial_floor_name) and self.level_names:
+            self.initial_floor_name = self.level_names[0]
 
         self.doors = []
         if 'doors' in yaml_node:
