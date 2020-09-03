@@ -890,13 +890,11 @@ ConditionDialog::ConditionDialog(crowd_sim::Transition& transition, CrowdSimImpl
 
                 if (index == 1 ) { //"goal_reached"
                     if(current_transition.getCondition()->getType() == crowd_sim::Condition::GOAL) return;
-                    current_transition.setCondition(
-                        static_cast<crowd_sim::ConditionPtr>(std::make_shared<crowd_sim::ConditionGOAL>() ) );
+                    current_transition.setCondition(std::make_shared<crowd_sim::ConditionGOAL>() );
                 }
                 if (index == 2 ) { //"timer"
                     if(current_transition.getCondition()->getType() == crowd_sim::Condition::TIMER) return;
-                    current_transition.setCondition(
-                        static_cast<crowd_sim::ConditionPtr>(std::make_shared<crowd_sim::ConditionTIMER>() ) );
+                    current_transition.setCondition( std::make_shared<crowd_sim::ConditionTIMER>() );
                 }
                 return;
             }
@@ -907,13 +905,11 @@ ConditionDialog::ConditionDialog(crowd_sim::Transition& transition, CrowdSimImpl
 
                 if (index == 3 ) { //"and"
                     if(current_transition.getCondition()->getType() == crowd_sim::Condition::AND) return;
-                    current_transition.setCondition(
-                        static_cast<crowd_sim::ConditionPtr>(std::make_shared<crowd_sim::ConditionAND>() ) );
+                    current_transition.setCondition( std::make_shared<crowd_sim::ConditionAND>() );
                 }
                 if (index == 4 ) { //"or"
                     if(current_transition.getCondition()->getType() == crowd_sim::Condition::OR) return;
-                    current_transition.setCondition(
-                        static_cast<crowd_sim::ConditionPtr>(std::make_shared<crowd_sim::ConditionOR>() ) );
+                    current_transition.setCondition( std::make_shared<crowd_sim::ConditionOR>() );
                 }
                 return;
             }
@@ -923,8 +919,7 @@ ConditionDialog::ConditionDialog(crowd_sim::Transition& transition, CrowdSimImpl
                 this->condition2_container->setEnabled(false);
 
                 if(current_transition.getCondition()->getType() == crowd_sim::Condition::NOT) return;
-                current_transition.setCondition(
-                    static_cast<crowd_sim::ConditionPtr>(std::make_shared<crowd_sim::ConditionNOT>() ) );
+                current_transition.setCondition(std::make_shared<crowd_sim::ConditionNOT>() );
                 return;
             }
         }
