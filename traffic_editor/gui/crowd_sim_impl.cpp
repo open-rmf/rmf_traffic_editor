@@ -152,6 +152,69 @@ ConditionPtr Condition::init_from_yaml(const YAML::Node& input) {
     return std::make_shared<Condition>();
 }
 
+void BoolCondition::setCondition(ConditionPtr condition, int condition_index) {
+    if (!condition) return;
+    if (condition_index == 1)
+        this->condition1 = condition;
+    if (condition_index == 2)
+        this->condition2 = condition;
+}
+
+void BoolCondition::setCondition(ConditionPtr condition) {
+    setCondition(condition, 1);
+ }
+
+ConditionPtr BoolCondition::getCondition(int condition_index) const {
+    if (condition_index == 1)
+        return this->condition1;
+    if (condition_index == 2) {
+        if (this->getType() == Condition::TYPE::NOT) {
+            return this->condition1; }
+        return this->condition2;
+    }
+    return this->condition1;
+}
+
+ConditionPtr BoolCondition::getCondition() const {
+    return getCondition(1);
+}
+
+bool BoolCondition::isValid() const {
+    if (this->getType() == Condition::TYPE::NOT) {
+        if (condition1->isValid()) return true;
+    }
+    else {
+        if(condition1->isValid() && condition2->isValid()) { return true; }
+    }
+    std::cout << "Invalid <" << this->getConditionName() << "> condition" << std::endl;
+    return false;
+}
+
+YAML::Node BoolCondition::to_yaml() const {
+    YAML::Node bool_node = YAML::Node(YAML::NodeType::Map);
+    bool_node.SetStyle(YAML::EmitterStyle::Block);
+    bool_node["type"] = getConditionName();
+    bool_node["condition1"] = getCondition(1)->to_yaml();
+    if (getCondition(2)) {
+        bool_node["condition2"] = getCondition(2)->to_yaml();
+    }
+    return bool_node;
+}
+
+void BoolCondition::from_yaml(const YAML::Node& input) {
+    if (input["condition1"]) {
+        auto condition1_ptr = init_from_yaml(input["condition1"]);
+        condition1_ptr->from_yaml(input["condition1"]);
+        setCondition(condition1_ptr, 1);
+    }
+
+    if (input["condition2"]) {
+        auto condition2_ptr = init_from_yaml(input["condition2"]);
+        condition2_ptr->from_yaml(input["condition2"]);
+        setCondition(condition2_ptr, 2);
+    }
+}
+
 YAML::Node ConditionGOAL::to_yaml() const {
     YAML::Node goal_node = YAML::Node(YAML::NodeType::Map);
     goal_node.SetStyle(YAML::EmitterStyle::Flow);
@@ -187,82 +250,6 @@ void ConditionTIMER::from_yaml(const YAML::Node& input) {
     if (input["value"] && input["value"].as<double>() > 0) {
         setValue(input["value"].as<double>() );
     } 
-}
-
-YAML::Node ConditionAND::to_yaml() const {
-    YAML::Node and_node = YAML::Node(YAML::NodeType::Map);
-    and_node.SetStyle(YAML::EmitterStyle::Block);
-    and_node["type"] = getConditionName();
-    and_node["condition1"] = condition1->to_yaml();
-    and_node["condition2"] = condition2->to_yaml();
-    return and_node;
-}
-
-void ConditionAND::from_yaml(const YAML::Node& input) {
-    if (input["type"].as<std::string>() != "and" ) {
-        throw std::runtime_error("Error in parsing and condition");
-    }
-
-    if (input["condition1"]) {
-        auto condition1_ptr = init_from_yaml(input["condition1"]);
-        condition1_ptr->from_yaml(input["condition1"]);
-        setCondition(condition1_ptr, 1);
-    }
-
-    if (input["condition2"]) {
-        auto condition2_ptr = init_from_yaml(input["condition2"]);
-        condition2_ptr->from_yaml(input["condition2"]);
-        setCondition(condition2_ptr, 2);
-    }
-}
-
-YAML::Node ConditionOR::to_yaml() const {
-    YAML::Node or_node = YAML::Node(YAML::NodeType::Map);
-    or_node.SetStyle(YAML::EmitterStyle::Block);
-    or_node["type"] = getConditionName();
-    or_node["condition1"] = condition1->to_yaml();
-    or_node["condition2"] = condition2->to_yaml();
-    return or_node;
-}
-
-void ConditionOR::from_yaml(const YAML::Node& input) {
-
-    if (input["type"].as<std::string>() != "or" ) {
-        throw std::runtime_error("Error in parsing or condition");
-    }
-
-    if (input["condition1"]) {
-        auto condition1_ptr = init_from_yaml(input["condition1"]);
-        condition1_ptr->from_yaml(input["condition1"]);
-        setCondition(condition1_ptr, 1);
-    }
-
-    if (input["condition2"]) {
-        auto condition2_ptr = init_from_yaml(input["condition2"]);
-        condition2_ptr->from_yaml(input["condition2"]);
-        setCondition(condition2_ptr, 2);
-    }
-}
-
-YAML::Node ConditionNOT::to_yaml() const {
-    YAML::Node not_node = YAML::Node(YAML::NodeType::Map);
-    not_node.SetStyle(YAML::EmitterStyle::Block);
-    not_node["type"] = getConditionName();
-    not_node["condition1"] = condition1->to_yaml();
-    return not_node;
-}
-
-void ConditionNOT::from_yaml(const YAML::Node& input) {
-
-    if (input["type"].as<std::string>() != "not" ) {
-        throw std::runtime_error("Error in parsing not condition");
-    }
-
-    if (input["condition1"]) {
-        auto condition1_ptr = init_from_yaml(input["condition1"]);
-        condition1_ptr->from_yaml(input["condition1"]);
-        setCondition(condition1_ptr);
-    }
 }
 
 //===========================================================

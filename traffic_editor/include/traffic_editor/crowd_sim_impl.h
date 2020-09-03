@@ -170,48 +170,90 @@ public:
     {}
     virtual ~Condition() {}
 
-    std::string name;
-    TYPE type;
-
     ConditionPtr init_from_yaml(const YAML::Node& input);
 
     virtual std::string getConditionName() const { return name; }
     virtual TYPE getType() const { return type; }
     virtual bool isValid() const { return false; }
+
     virtual YAML::Node to_yaml() const { return YAML::Node(YAML::NodeType::Map); }
     virtual void from_yaml(const YAML::Node& input) { //base class do nothing
         if (!input["type"]) printf("Invalid Condition yaml input.");
     }
+
+private:
+    std::string name;
+    TYPE type;
 };
 
-class ConditionGOAL : public Condition 
+class LeafCondition : public Condition
 {
 public:
-    ConditionGOAL() : Condition("goal_reached", GOAL), distance(0.1)
+    LeafCondition(const std::string& condition_name, Condition::TYPE condition_type)
+        : Condition(condition_name, condition_type), value(0)
+    {}
+    LeafCondition(const std::string& condition_name, Condition::TYPE condition_type, double condition_value)
+        : Condition(condition_name, condition_type), value(condition_value)
+    {}
+    virtual ~LeafCondition() {}
+
+    double getValue() const {return value;}
+    void setValue(double condition_value) {value = condition_value;}
+
+private:
+    double value;
+};
+
+class BoolCondition : public Condition
+{
+public:
+    BoolCondition(const std::string& condition_name, Condition::TYPE condition_type)
+        : Condition(condition_name, condition_type), condition1(nullptr), condition2(nullptr) 
+    {}
+    BoolCondition(const std::string& condition_name, Condition::TYPE condition_type, 
+        ConditionPtr condition_ptr_1)
+        : Condition(condition_name, condition_type), 
+        condition1(condition_ptr_1), condition2(nullptr) 
+    {}
+    BoolCondition(const std::string& condition_name, Condition::TYPE condition_type, 
+        ConditionPtr condition_ptr_1, ConditionPtr condition_ptr_2)
+        : Condition(condition_name, condition_type), 
+        condition1(condition_ptr_1), condition2(condition_ptr_2) 
+    {}
+    virtual ~BoolCondition() {}
+
+    virtual void setCondition(ConditionPtr condition, int condition_index);
+    virtual void setCondition(ConditionPtr condition); //default set condition1
+    virtual ConditionPtr getCondition(int condition_index) const;
+    virtual ConditionPtr getCondition() const; //default return condition1
+    bool isValid() const override;
+
+    virtual YAML::Node to_yaml() const override;
+    virtual void from_yaml(const YAML::Node& input) override;
+
+private:
+    ConditionPtr condition1, condition2;
+};
+
+class ConditionGOAL : public LeafCondition 
+{
+public:
+    ConditionGOAL() : LeafCondition("goal_reached", GOAL, 0.1)
     {}
     ~ConditionGOAL() {}
 
-    void setValue(double distance_) { this->distance = distance_;}
-
-    double getValue() const { return distance; }
     bool isValid() const override { return true; }
     YAML::Node to_yaml() const override;
     void from_yaml(const YAML::Node& input) override;
-
-private:
-    double distance;
 };
 
-class ConditionTIMER : public Condition 
+class ConditionTIMER : public LeafCondition 
 {
 public:
-    ConditionTIMER() : Condition("timer", TIMER), distribution("c"), duration(30.0)
+    ConditionTIMER() : LeafCondition("timer", TIMER, 30.0), distribution("c")
     {}
     ~ConditionTIMER() {}
 
-    void setValue(double value_) { this->duration = value_; }
-
-    double getValue() const { return this->duration; }
     std::string getTimerDistribution() const { return this->distribution;}
     bool isValid() const override { return true; }
     YAML::Node to_yaml() const override;
@@ -220,110 +262,33 @@ public:
 private:
     //currently only provides const value distribution for timer
     std::string distribution;
-    double duration;
 };
 
-class ConditionAND : public Condition 
+class ConditionAND : public BoolCondition 
 {
 public:
     ConditionAND() 
-        : Condition("and", AND), 
-        condition1(std::make_shared<Condition>()), 
-        condition2(std::make_shared<Condition>())
+        : BoolCondition("and", AND, std::make_shared<Condition>(), std::make_shared<Condition>())
     {}
     ~ConditionAND() {}
-
-    void setCondition(ConditionPtr condition, int condition_index){
-        if (condition_index == 1)
-            this->condition1 = condition;
-        if (condition_index == 2)
-            this->condition2 = condition;
-    }
-
-    ConditionPtr getCondition(int condition_index) const {
-        if (condition_index == 1)
-            return this->condition1;
-        if (condition_index == 2)
-            return this->condition2;
-        return this->condition1;
-    }
-
-    bool isValid() const override {
-        if(condition1->isValid() && condition2->isValid()) { return true; }
-        std::cout << "Invalid <and> condition" << std::endl;
-        return false;
-    }
-
-    YAML::Node to_yaml() const override;
-    void from_yaml(const YAML::Node& input) override;
-
-private:
-    ConditionPtr condition1;
-    ConditionPtr condition2;
 };
 
-class ConditionOR : public Condition 
+class ConditionOR : public BoolCondition 
 {
 public:
     ConditionOR() 
-        : Condition("or", OR),
-        condition1(std::make_shared<Condition>()), 
-        condition2(std::make_shared<Condition>())       
+        : BoolCondition("or", OR, std::make_shared<Condition>(), std::make_shared<Condition>())  
     {}
     ~ConditionOR() {}
-
-    void setCondition(ConditionPtr condition, int condition_index){
-        if (condition_index == 1)
-            this->condition1 = condition;
-        if (condition_index == 2)
-            this->condition2 = condition;
-    }
-
-    ConditionPtr getCondition(int condition_index) const {
-        if (condition_index == 1)
-            return this->condition1;
-        if (condition_index == 2)
-            return this->condition2;
-        return this->condition1;
-    }
-
-    bool isValid() const override {
-        if(condition1->isValid() && condition2->isValid()) { return true; }
-        std::cout << "Invalid or condition" << std::endl;
-        return false;
-    }
-
-    YAML::Node to_yaml() const override;
-    void from_yaml(const YAML::Node& input) override;
-
-private:
-    ConditionPtr condition1;
-    ConditionPtr condition2;
 };
 
-class ConditionNOT : public Condition
+class ConditionNOT : public BoolCondition
 {
 public:
     ConditionNOT()
-        : Condition("not", NOT),
-        condition1(std::make_shared<Condition>())
+        : BoolCondition("not", NOT, std::make_shared<Condition>())
     {}
     ~ConditionNOT() {}
-
-    void setCondition(ConditionPtr condition_) { this->condition1 = condition_; } 
-
-    ConditionPtr getCondition() const { return this->condition1; }
-    bool isValid() const override {
-        if(condition1->isValid()) { return true; }
-        std::cout << "Invalid not condition" << std::endl;
-        return false;
-    }
-
-    YAML::Node to_yaml() const override;
-    void from_yaml(const YAML::Node& input) override;
-
-private:
-    ConditionPtr condition1;
 };
 
 //=========================================================
