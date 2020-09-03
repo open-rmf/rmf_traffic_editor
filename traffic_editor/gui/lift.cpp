@@ -57,7 +57,7 @@ void Lift::from_yaml(const std::string& _name, const YAML::Node& data,
     highest_floor = data["highest_floor"].as<string>();
   if (data["lowest_floor"])
     lowest_floor = data["lowest_floor"].as<string>();
-  for (auto level : levels)
+  for (const auto& level : levels)
   {
     if (level.name == highest_floor)
       highest_elevation = level.elevation;
