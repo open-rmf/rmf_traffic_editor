@@ -11,214 +11,240 @@ namespace crowd_simulation_gazebo {
 
 //============================================
 //WorldPlugin
-void CrowdSimulatorPlugin::Load(gazebo::physics::WorldPtr world,
+void CrowdSimulatorPlugin::Load(
+  gazebo::physics::WorldPtr world,
   sdf::ElementPtr sdf)
 {
   _world = world;
-  
-  if (!_crowdSimInterface->readSDF(sdf)) {
+
+  if (!_crowd_sim_interface->read_sdf(sdf))
+  {
     exit(EXIT_FAILURE);
   }
 
-  if (!_crowdSimInterface->initCrowdSim()) {
-    RCLCPP_ERROR(_crowdSimInterface->logger(), "Crowd simulation failed to initialize.");
+  if (!_crowd_sim_interface->init_crowd_sim())
+  {
+    RCLCPP_ERROR(
+      _crowd_sim_interface->logger(),
+      "Crowd simulation failed to initialize.");
     exit(EXIT_FAILURE);
   }
 
-  if (!_spawnAgentsInWorld()) {
-    RCLCPP_ERROR(_crowdSimInterface->logger(), "Crowd simulation failed to spawn agents in the world.");
+  if (!_spawn_agents_in_world())
+  {
+    RCLCPP_ERROR(
+      _crowd_sim_interface->logger(),
+      "Crowd simulation failed to spawn agents in the world.");
     exit(EXIT_FAILURE);
   }
 
-  _updateConnectionPtr = gazebo::event::Events::ConnectWorldUpdateBegin(
-    [this](gazebo::common::UpdateInfo updateInfo)
+  _update_connection_ptr = gazebo::event::Events::ConnectWorldUpdateBegin(
+    [this](gazebo::common::UpdateInfo update_info)
     {
-      _Update(updateInfo);
+      _update(update_info);
     }
   );
 }
 
 //============================================
-void CrowdSimulatorPlugin::_Update(const gazebo::common::UpdateInfo& updateInfo)
+void CrowdSimulatorPlugin::_update(
+  const gazebo::common::UpdateInfo& update_info)
 {
   //first round do nothing, initialize time stamp
-  if (_lastSimTime == gazebo::common::Time::Zero)
+  if (_last_sim_time == gazebo::common::Time::Zero)
   {
-    _lastSimTime = updateInfo.simTime;
-    _lastTime = updateInfo.simTime;
+    _last_sim_time = update_info.simTime;
+    _last_time = update_info.simTime;
   }
 
   if (!_initialized)
   {
     // not initizalied
-    _initSpawnedAgents();
+    _init_spawned_agents();
     return;
   }
 
-  auto deltaTime = (updateInfo.simTime - _lastTime).Double();
-  _lastTime = updateInfo.simTime;
+  auto delta_time = (update_info.simTime - _last_time).Double();
+  _last_time = update_info.simTime;
 
-  auto deltaSimTime = (updateInfo.simTime - _lastSimTime).Double();
-  if (deltaSimTime - _crowdSimInterface->getSimTimeStep() < 1e-6)
+  auto delta_sim_time = (update_info.simTime - _last_sim_time).Double();
+  if (delta_sim_time - _crowd_sim_interface->get_sim_time_step() < 1e-6)
   {
-    deltaSimTime = 0.0;
+    delta_sim_time = 0.0;
   }
   else
   {
-    _lastSimTime = updateInfo.simTime;
-    _crowdSimInterface->oneStepSim();
+    _last_sim_time = update_info.simTime;
+    _crowd_sim_interface->one_step_sim();
   }
-  _UpdateAllObjects(deltaTime, deltaSimTime);
-
+  _update_all_objects(delta_time, delta_sim_time);
 }
 
 //============================================
-void CrowdSimulatorPlugin::_UpdateAllObjects(double deltaTime, double deltaSimTime) 
+void CrowdSimulatorPlugin::_update_all_objects(
+  double delta_time,
+  double delta_sim_time)
 {
-  for (size_t id = 0; id < _objectsCount; id++)
+  for (size_t id = 0; id < _objects_count; id++)
   {
-    ObjectPtr objPtr = _crowdSimInterface->getObjectById(id);
-    gazebo::physics::ModelPtr modelPtr = _world->ModelByName(objPtr->modelName);
+    ObjectPtr obj_ptr = _crowd_sim_interface->get_object_by_id(id);
+    gazebo::physics::ModelPtr model_ptr = _world->ModelByName(
+      obj_ptr->model_name);
 
     //update external agents
-    if (objPtr->agentPtr->_external)
+    if (obj_ptr->agent_ptr->_external)
     {
-      ignition::math::Pose3d pose = modelPtr->WorldPose();
-      _crowdSimInterface->updateExternalAgent<ignition::math::Pose3d>(objPtr->agentPtr, pose);
+      ignition::math::Pose3d pose = model_ptr->WorldPose();
+      _crowd_sim_interface->update_external_agent<ignition::math::Pose3d>(
+        obj_ptr->agent_ptr, pose);
       continue;
     }
 
     //update internal agents
     //not yet reach the simulation time step, the internal agent position only updated at simulation time step
-    if(deltaSimTime - 0.0 < 1e-6) continue;
-    auto typePtr = _crowdSimInterface->_modelTypeDBPtr->Get(objPtr->typeName);
-    _UpdateInternalObject(deltaTime, deltaSimTime, objPtr->agentPtr, modelPtr, typePtr);
+    if (delta_sim_time - 0.0 < 1e-6)
+      continue;
+    auto type_ptr = _crowd_sim_interface->_model_type_db_ptr->get(
+      obj_ptr->type_name);
+    _update_internal_object(delta_time, delta_sim_time, obj_ptr->agent_ptr,
+      model_ptr, type_ptr);
   }
 }
 
 //============================================
-void CrowdSimulatorPlugin::_UpdateInternalObject(double deltaTime, double deltaSimTime,
-  const crowd_simulator::AgentPtr agentPtr,
-  const gazebo::physics::ModelPtr modelPtr,
-  const crowd_simulator::ModelTypeDatabase::RecordPtr typePtr)
+void CrowdSimulatorPlugin::_update_internal_object(
+  double delta_time,
+  double delta_sim_time,
+  const crowd_simulator::AgentPtr agent_ptr,
+  const gazebo::physics::ModelPtr model_ptr,
+  const crowd_simulator::ModelTypeDatabase::RecordPtr type_ptr)
 {
-
-  if (!agentPtr)
+  if (!agent_ptr)
   {
-    RCLCPP_ERROR(_crowdSimInterface->logger(), "Null agentPtr when update Object!");
-    assert(agentPtr);
+    RCLCPP_ERROR(
+      _crowd_sim_interface->logger(), "Null agentPtr when update Object!");
+    assert(agent_ptr);
   }
-  if (!modelPtr)
+  if (!model_ptr)
   {
-    RCLCPP_ERROR(_crowdSimInterface->logger(), "Null modelPtr when update Object!");
-    assert(modelPtr);
+    RCLCPP_ERROR(
+      _crowd_sim_interface->logger(), "Null modelPtr when update Object!");
+    assert(model_ptr);
   }
 
   //update pose from menge to gazebo
-  ignition::math::Pose3d pose = _crowdSimInterface->getAgentPose<ignition::math::Pose3d>(agentPtr, deltaSimTime);
+  ignition::math::Pose3d pose =
+    _crowd_sim_interface->get_agent_pose<ignition::math::Pose3d>(agent_ptr,
+      delta_sim_time);
 
-  gazebo::physics::ActorPtr actorPtr =
-    boost::dynamic_pointer_cast<gazebo::physics::Actor>(modelPtr);
+  gazebo::physics::ActorPtr actor_ptr =
+    boost::dynamic_pointer_cast<gazebo::physics::Actor>(model_ptr);
 
-  auto delta_dist_vector = pose.Pos() - actorPtr->WorldPose().Pos() ;
+  auto delta_dist_vector = pose.Pos() - actor_ptr->WorldPose().Pos();
   // might need future work on 3D case
   // the center of human has a z_elevation, which will make the human keep walking even if he reached the target
   delta_dist_vector.Z(0.0);
-  double deltaDist = delta_dist_vector.Length();
+  double delta_dist = delta_dist_vector.Length();
 
   // _simTimeStep is small, then deltaDist is small, the scriptTime is small than expected.
-  actorPtr->SetScriptTime(
-    actorPtr->ScriptTime() + deltaDist / typePtr->animationSpeed );
+  actor_ptr->SetScriptTime(
+    actor_ptr->ScriptTime() + delta_dist / type_ptr->animation_speed);
 
   //add on original loaded pose
-  auto animation = actorPtr->SkeletonAnimations().at(typePtr->animation);
-  auto animPose = _AnimationRootPose(actorPtr, animation);
-  auto init_pose = typePtr->pose;
-  animPose += ignition::math::Pose3d(
-    init_pose.X(), init_pose.Y(), init_pose.Z(), init_pose.Pitch(), init_pose.Roll(), init_pose.Yaw());
+  auto animation = actor_ptr->SkeletonAnimations().at(type_ptr->animation);
+  auto anim_pose = _animation_root_pose(actor_ptr, animation);
+  auto init_pose = type_ptr->pose;
+  anim_pose += ignition::math::Pose3d(
+    init_pose.x(), init_pose.y(), init_pose.z(),
+    init_pose.pitch(), init_pose.roll(), init_pose.yaw());
 
   //update x and y coordinates
-  animPose.Pos().X(pose.Pos().X());
-  animPose.Pos().Y(pose.Pos().Y());
-  animPose.Rot() = pose.Rot() * animPose.Rot();
+  anim_pose.Pos().X(pose.Pos().X());
+  anim_pose.Pos().Y(pose.Pos().Y());
+  anim_pose.Rot() = pose.Rot() * anim_pose.Rot();
 
-  actorPtr->SetWorldPose(animPose);
+  actor_ptr->SetWorldPose(anim_pose);
 }
 
 //============================================
-void CrowdSimulatorPlugin::_initSpawnedAgents() 
+void CrowdSimulatorPlugin::_init_spawned_agents()
 {
-  _objectsCount = _crowdSimInterface->getNumObjects();
-  for (size_t id = 0; id < _objectsCount; ++id)
+  _objects_count = _crowd_sim_interface->get_num_objects();
+  for (size_t id = 0; id < _objects_count; ++id)
   {
-    ObjectPtr objPtr = _crowdSimInterface->getObjectById(id);
+    ObjectPtr obj_ptr = _crowd_sim_interface->get_object_by_id(id);
     // spawned agents are not fully loaded
-    if (!_world->ModelByName(objPtr->modelName))
+    if (!_world->ModelByName(obj_ptr->model_name))
     {
       _initialized = false;
       return;
     }
     // all agents are loaded, set internal actors as non-static model and set custom trajectory
     // because only non-static model can interact with slotcars
-    if (!objPtr->isExternal)
+    if (!obj_ptr->is_external)
     {
-      gazebo::physics::ModelPtr modelPtr = _world->ModelByName( objPtr->modelName );
-      gazebo::physics::ActorPtr actorPtr =
-        boost::dynamic_pointer_cast<gazebo::physics::Actor>(modelPtr);
-      gazebo::physics::TrajectoryInfoPtr trajectoryInfo(new gazebo::physics::
+      gazebo::physics::ModelPtr model_ptr = _world->ModelByName(
+        obj_ptr->model_name);
+      gazebo::physics::ActorPtr actor_ptr =
+        boost::dynamic_pointer_cast<gazebo::physics::Actor>(model_ptr);
+      gazebo::physics::TrajectoryInfoPtr trajectory_info(new gazebo::physics::
         TrajectoryInfo()); //matches the actor skeleton
-      
-      crowd_simulator::ModelTypeDatabase::RecordPtr typePtr = 
-        _crowdSimInterface->_modelTypeDBPtr->Get(objPtr->typeName);
-      trajectoryInfo->type = typePtr->animation;
-      actorPtr->SetCustomTrajectory(trajectoryInfo);
-      actorPtr->SetStatic(false);
+
+      crowd_simulator::ModelTypeDatabase::RecordPtr type_ptr =
+        _crowd_sim_interface->_model_type_db_ptr->get(obj_ptr->type_name);
+      trajectory_info->type = type_ptr->animation;
+      actor_ptr->SetCustomTrajectory(trajectory_info);
+      actor_ptr->SetStatic(false);
     }
   }
   _initialized = true;
-  RCLCPP_INFO(_crowdSimInterface->logger(), "Gazebo models all loaded! Start simulating...");
+  RCLCPP_INFO(
+    _crowd_sim_interface->logger(),
+    "Gazebo models all loaded! Start simulating...");
 }
 
 //============================================
-ignition::math::Pose3d CrowdSimulatorPlugin::_AnimationRootPose(
-  const gazebo::physics::ActorPtr actorPtr,
+ignition::math::Pose3d CrowdSimulatorPlugin::_animation_root_pose(
+  const gazebo::physics::ActorPtr actor_ptr,
   const gazebo::common::SkeletonAnimation* animation)
 {
-  auto* rootNode = actorPtr->Mesh()->GetSkeleton()->GetRootNode();
-  auto rootNodeName = rootNode->GetName();
-  if (!animation->HasNode(rootNodeName))
+  auto* root_node = actor_ptr->Mesh()->GetSkeleton()->GetRootNode();
+  auto root_node_name = root_node->GetName();
+  if (!animation->HasNode(root_node_name))
   {
     throw std::runtime_error("unable to find root node pose");
   }
   //get the animation trans for current time
-  auto animTrans = animation->PoseAt(actorPtr->ScriptTime(), true); //map<string, matrix4d>
-  auto& rootAnimTrans = animTrans[rootNodeName];
+  auto anim_trans = animation->PoseAt(actor_ptr->ScriptTime(), true); //map<string, matrix4d>
+  auto& root_anim_trans = anim_trans[root_node_name];
 
-  auto scaleTrans = ignition::math::Matrix4d::Identity;
-  auto actorScale = actorPtr->Scale();
-  scaleTrans.Scale(actorScale.X(), actorScale.Y(), actorScale.Z());
-  rootAnimTrans = scaleTrans * rootAnimTrans;
-  return rootAnimTrans.Pose();
+  auto scale_trans = ignition::math::Matrix4d::Identity;
+  auto actor_scale = actor_ptr->Scale();
+  scale_trans.Scale(actor_scale.X(), actor_scale.Y(), actor_scale.Z());
+  root_anim_trans = scale_trans * root_anim_trans;
+  return root_anim_trans.Pose();
 }
 
 
 //============================================
-bool CrowdSimulatorPlugin::_spawnAgentsInWorld()
+bool CrowdSimulatorPlugin::_spawn_agents_in_world()
 {
   //create model in world for each internal agents
-  _objectsCount = _crowdSimInterface->getNumObjects();
-  for (size_t id = 0; id < _objectsCount; id++)
+  _objects_count = _crowd_sim_interface->get_num_objects();
+  for (size_t id = 0; id < _objects_count; id++)
   {
-    if (!_crowdSimInterface->getObjectById(id)->isExternal)
+    if (!_crowd_sim_interface->get_object_by_id(id)->is_external)
     {
-      auto objectPtr = _crowdSimInterface->getObjectById(id);
-      assert(objectPtr);
-      auto typePtr = _crowdSimInterface->_modelTypeDBPtr->Get(objectPtr->typeName);
-      assert(typePtr);
-      if (!_CreateModel(objectPtr->modelName, typePtr, objectPtr->agentPtr) )
+      auto object_ptr = _crowd_sim_interface->get_object_by_id(id);
+      assert(object_ptr);
+      auto type_ptr = _crowd_sim_interface->_model_type_db_ptr->get(
+        object_ptr->type_name);
+      assert(type_ptr);
+      if (!_create_model(object_ptr->model_name, type_ptr,
+        object_ptr->agent_ptr) )
       {
-        RCLCPP_INFO(_crowdSimInterface->logger(),
-          "Failed to insert model [" + objectPtr->modelName + "] in world");
+        RCLCPP_INFO(_crowd_sim_interface->logger(),
+          "Failed to insert model [" + object_ptr->model_name + "] in world");
         return false;
       }
     }
@@ -227,44 +253,46 @@ bool CrowdSimulatorPlugin::_spawnAgentsInWorld()
 }
 
 //============================================
-bool CrowdSimulatorPlugin::_CreateModel(const std::string& modelName,
-  const crowd_simulator::ModelTypeDatabase::RecordPtr modelTypePtr,
-  const crowd_simulator::AgentPtr agentPtr)
+bool CrowdSimulatorPlugin::_create_model(
+  const std::string& model_name,
+  const crowd_simulator::ModelTypeDatabase::RecordPtr model_type_ptr,
+  const crowd_simulator::AgentPtr agent_ptr)
 {
-  sdf::ElementPtr modelElement(new sdf::Element());
-  modelElement->SetName("actor");
-  modelElement->AddAttribute("name", "string", modelName, true);
+  sdf::ElementPtr model_element(new sdf::Element());
+  model_element->SetName("actor");
+  model_element->AddAttribute("name", "string", model_name, true);
 
-  sdf::ElementPtr skinElement(new sdf::Element());
-  skinElement->SetName("skin");
-  modelElement->InsertElement(skinElement);
+  sdf::ElementPtr skin_element(new sdf::Element());
+  skin_element->SetName("skin");
+  model_element->InsertElement(skin_element);
 
-  sdf::ElementPtr animElement(new sdf::Element());
-  animElement->SetName("animation");
-  animElement->AddAttribute("name", "string", "walk", true);
-  modelElement->InsertElement(animElement);
+  sdf::ElementPtr anim_element(new sdf::Element());
+  anim_element->SetName("animation");
+  anim_element->AddAttribute("name", "string", "walk", true);
+  model_element->InsertElement(anim_element);
 
-  sdf::ElementPtr filenameElement(new sdf::Element());
-  filenameElement->SetName("filename");
-  filenameElement->AddValue("string", modelTypePtr->fileName, true);
-  skinElement->InsertElement(filenameElement);
-  animElement->InsertElement(filenameElement);
+  sdf::ElementPtr filename_element(new sdf::Element());
+  filename_element->SetName("filename");
+  filename_element->AddValue("string", model_type_ptr->file_name, true);
+  skin_element->InsertElement(filename_element);
+  anim_element->InsertElement(filename_element);
 
-  sdf::ElementPtr poseElement(new sdf::Element());
-  poseElement->SetName("pose");
+  sdf::ElementPtr pose_element(new sdf::Element());
+  pose_element->SetName("pose");
   std::ostringstream oss;
 
-  oss << agentPtr->_pos.x() << " " << agentPtr->_pos.y() << " " << "0 0 0 0";
-  poseElement->AddValue("pose", oss.str(), true);
-  modelElement->InsertElement(poseElement);
+  oss << agent_ptr->_pos.x() << " " << agent_ptr->_pos.y() << " " << "0 0 0 0";
+  pose_element->AddValue("pose", oss.str(), true);
+  model_element->InsertElement(pose_element);
 
   sdf::SDFPtr sdf(new sdf::SDF());
-  sdf->Root(modelElement);
+  sdf->Root(model_element);
 
   assert(sdf);
   _world->InsertModelSDF(*sdf);
-  RCLCPP_INFO(_crowdSimInterface->logger(),
-    "Insert actor for crowd simulator agent: [" + modelName + "] at ["+ oss.str() +"].");
+  RCLCPP_INFO(_crowd_sim_interface->logger(),
+    "Insert actor for crowd simulator agent: [" + model_name + "] at ["+ oss.str() +
+    "].");
   return true;
 }
 
