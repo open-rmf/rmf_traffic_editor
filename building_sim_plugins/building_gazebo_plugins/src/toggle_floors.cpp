@@ -6,8 +6,16 @@
 #include <gazebo/msgs/msgs.hh>
 #include <gazebo/rendering/rendering.hh>
 
+#include <rclcpp/rclcpp.hpp>
+#include <gazebo_ros/node.hpp>
+#include <rmf_fleet_msgs/msg/fleet_state.hpp>
+#include <rmf_fleet_msgs/msg/robot_state.hpp>
+
 #include <string>
+#include <unordered_map>
 using std::string;
+using FleetState = rmf_fleet_msgs::msg::FleetState;
+using RobotState = rmf_fleet_msgs::msg::RobotState;
 
 
 class ToggleFloors : public gazebo::GUIPlugin
@@ -15,6 +23,10 @@ class ToggleFloors : public gazebo::GUIPlugin
   Q_OBJECT
   gazebo::transport::NodePtr node;
   gazebo::transport::PublisherPtr visual_pub;
+  std::unordered_map<string, bool> floor_states;
+  std::unordered_map<string, bool> robot_states;
+  gazebo_ros::Node::SharedPtr ros_node;
+  rclcpp::Subscription<FleetState>::SharedPtr fleet_state_sub;
 
 public:
   ToggleFloors()
@@ -33,6 +45,27 @@ public:
   void Load(sdf::ElementPtr sdf)
   {
     printf("ToggleFloors::Load()\n");
+    ros_node = gazebo_ros::Node::Get(sdf);
+    fleet_state_sub = ros_node->create_subscription<FleetState>(
+      "/fleet_states", rclcpp::SystemDefaultsQoS(),
+      [&](FleetState::UniquePtr msg)
+      {
+        bool visible;
+        gazebo::msgs::Visual visual_msg;
+        visual_msg.set_parent_name("world");
+        for (const RobotState& robot : msg->robots)
+        {
+          visible = floor_states[robot.location.level_name];
+          if (robot_states.find(robot.name) == robot_states.end() ||
+            robot_states[robot.name] != visible)
+          {
+            robot_states[robot.name] = visible;
+            visual_msg.set_name(robot.name);
+            visual_msg.set_visible(visible);
+            visual_pub->Publish(visual_msg);
+          }
+        }
+      });
 
     QHBoxLayout* hbox = new QHBoxLayout;
 
@@ -54,6 +87,7 @@ public:
           models.push_back(model_ele->GetAttribute("name")->GetAsString());
         model_ele = model_ele->GetNextElement("model");
       }
+      floor_states[floor_name] = true;
 
       printf(
         "ToggleFloors::Load found a floor element: [%s]->[%s]\n",
@@ -67,9 +101,9 @@ public:
       connect(
         button,
         &QAbstractButton::clicked,
-        [this, button, model_name, models]()
+        [this, button, floor_name, model_name, models]()
         {
-          this->button_clicked(button, model_name, models);
+          this->button_clicked(button, floor_name, model_name, models);
         });
       hbox->addWidget(button);
     }
@@ -77,9 +111,13 @@ public:
   }
 
   void button_clicked(
-    QPushButton* button, string model_name, std::vector<string> models)
+    QPushButton* button,
+    string floor_name,
+    string model_name,
+    std::vector<string> models)
   {
     bool visible = button->isChecked();
+    floor_states[floor_name] = visible;
     printf(
       "clicked: [%s] %s\n",
       model_name.c_str(),

@@ -113,16 +113,18 @@ target_include_directories(lift
 
 add_library(toggle_floors SHARED src/toggle_floors.cpp)
 
+ament_target_dependencies(toggle_floors
+    Qt5
+    gazebo_ros
+    rmf_fleet_msgs
+    rclcpp
+)
+
 target_include_directories(toggle_floors
   PUBLIC
     ${GAZEBO_INCLUDE_DIRS}
     #${building_sim_common_INCLUDE_DIRS}
     ${Qt5Core_INCLUDE_DIRS}
-)
-
-target_link_libraries(toggle_floors
-  PUBLIC
-    Qt5::Widgets
 )
 
 ###############################
