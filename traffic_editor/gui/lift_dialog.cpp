@@ -77,6 +77,23 @@ LiftDialog::LiftDialog(Lift& lift, Building& building)
     });
   ref_name_hbox->addWidget(_reference_floor_combo_box);
 
+  QHBoxLayout* init_floor_hbox = new QHBoxLayout;
+  init_floor_hbox->addWidget(new QLabel("Initial floor:"));
+  _initial_floor_combo_box = new QComboBox;
+  for (const QString& level_name : _level_names)
+    _initial_floor_combo_box->addItem(level_name);
+  _initial_floor_combo_box->setCurrentText(
+    QString::fromStdString(_lift.initial_floor_name));
+  connect(
+    _initial_floor_combo_box,
+    &QComboBox::currentTextChanged,
+    [this](const QString& text)
+    {
+      _lift.initial_floor_name = text.toStdString();
+      emit redraw();
+    });
+  init_floor_hbox->addWidget(_initial_floor_combo_box);
+
   QHBoxLayout* highest_name_hbox = new QHBoxLayout;
   highest_name_hbox->addWidget(new QLabel("Highest floor:"));
   _highest_floor_combo_box = new QComboBox;
@@ -270,6 +287,7 @@ LiftDialog::LiftDialog(Lift& lift, Building& building)
   left_vbox->addLayout(ref_name_hbox);
   left_vbox->addLayout(highest_name_hbox);
   left_vbox->addLayout(lowest_name_hbox);
+  left_vbox->addLayout(init_floor_hbox);
   left_vbox->addLayout(x_hbox);
   left_vbox->addLayout(y_hbox);
   left_vbox->addLayout(yaw_hbox);

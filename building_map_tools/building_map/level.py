@@ -103,7 +103,8 @@ class Level:
 
     def set_lift_vert_lists(self, lift_vert_lists, lifts):
         for lift_name, lift in lifts.items():
-            if self.elevation >= lift.lowest_elevation and \
+            if lift.level_doors and \
+                    self.elevation >= lift.lowest_elevation and \
                     self.elevation <= lift.highest_elevation:
                 self.lift_vert_lists[lift_name] = \
                     (lift_vert_lists[lift_name])

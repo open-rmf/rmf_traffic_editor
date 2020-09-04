@@ -39,6 +39,7 @@ class Lift
 public:
   std::string name;
   std::string reference_floor_name;
+  std::string initial_floor_name;
 
   // (x, y, yaw) of the cabin center, relative to reference_floor_name origin
   double x = 0.0;
