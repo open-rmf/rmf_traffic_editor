@@ -304,7 +304,7 @@ void CrowdSimulatorPlugin::_config_spawned_agents(
   }
   // mark as one-time-change
   ecm.SetChanged(
-    entity, 
+    entity,
     ignition::gazebo::components::AnimationName::typeId,
     ignition::gazebo::ComponentState::OneTimeChange);
   // initialize agent animationTime
