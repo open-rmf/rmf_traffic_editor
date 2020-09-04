@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2020 Open Source Robotics Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+*/
+
 #ifndef BUILDING_SIM_COMMON__CROWD_SIMULATOR_COMMON_HPP
 #define BUILDING_SIM_COMMON__CROWD_SIMULATOR_COMMON_HPP
 
@@ -44,7 +61,7 @@ public:
   void yaw(double yaw) {_yaw = yaw;}
 
   template<typename IgnMathPose3d>
-  IgnMathPose3d ConvertToIgnMathPose3d()
+  IgnMathPose3d convert_to_ign_math_pose_3d()
   {
     return IgnMathPose3d(_x, _y, _z, _roll, _pitch, _yaw);
   }
@@ -149,7 +166,6 @@ public:
 
   CrowdSimInterface()
   : _model_type_db_ptr(std::make_shared<crowd_simulator::ModelTypeDatabase>()),
-    _initialized(false),
     _sdf_loaded(false)
   {}
 
@@ -157,18 +173,14 @@ public:
   rclcpp::Logger logger() const;
   void init_ros_node(const rclcpp::Node::SharedPtr node);
 
-  template<typename SdfPtrT>
-  bool read_sdf(SdfPtrT& sdf);
-
   bool init_crowd_sim();
-  bool is_initialized() const;
-
   double get_sim_time_step() const;
-
   size_t get_num_objects() const;
   ObjectPtr get_object_by_id(size_t id) const;
-
   void one_step_sim() const;
+
+  template<typename SdfPtrT>
+  bool read_sdf(SdfPtrT& sdf);
 
   template<typename IgnMathPose3d>
   void update_external_agent(
@@ -187,7 +199,6 @@ public:
     const AgentPtr agent_ptr, double delta_sim_time);
 
 private:
-  bool _initialized;
   bool _sdf_loaded;
   std::vector<ObjectPtr> _objects; //Database, use id to access ObjectPtr
   std::shared_ptr<MengeHandle> _menge_handle;

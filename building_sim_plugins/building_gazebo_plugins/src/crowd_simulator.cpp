@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2020 Open Source Robotics Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+*/
+
 #include <memory>
 #include <unordered_set>
 #include <regex>
@@ -123,13 +140,13 @@ void CrowdSimulatorPlugin::_update_internal_object(
   {
     RCLCPP_ERROR(
       _crowd_sim_interface->logger(), "Null agentPtr when update Object!");
-    assert(agent_ptr);
+    return;
   }
   if (!model_ptr)
   {
     RCLCPP_ERROR(
       _crowd_sim_interface->logger(), "Null modelPtr when update Object!");
-    assert(model_ptr);
+    return;
   }
 
   //update pose from menge to gazebo
