@@ -59,7 +59,7 @@ class Building:
             lift_vert_lists[lift_name] = lift.get_lift_vertices()
 
         for level_name, level in self.levels.items():
-            level.set_lift_vert_lists(lift_vert_lists)
+            level.set_lift_vert_lists(lift_vert_lists, self.lifts)
 
     def transform_all_vertices(self):
         """ Transform all vertices on all levels to a unified system """
@@ -216,6 +216,9 @@ class Building:
             pose_ele.text = f'0 0 {level.elevation} 0 0 0'
 
         for lift_name, lift in self.lifts.items():
+            if not lift.level_doors:
+                print(f'[{lift_name}] is not serving any floor, ignoring.')
+                continue
             lift.generate_shaft_doors(world)
             lift.generate_cabin(world, options)
 

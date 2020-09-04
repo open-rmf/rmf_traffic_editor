@@ -29,6 +29,8 @@ class QGraphicsView;
 #include <string>
 #include <vector>
 #include <yaml-cpp/yaml.h>
+#include <cfloat>
+#include "building_level.h"
 #include "lift_door.h"
 
 
@@ -37,6 +39,7 @@ class Lift
 public:
   std::string name;
   std::string reference_floor_name;
+  std::string initial_floor_name;
 
   // (x, y, yaw) of the cabin center, relative to reference_floor_name origin
   double x = 0.0;
@@ -46,6 +49,11 @@ public:
   // for now, we will model all lift cabins as rectangles
   double width = 1.0;  // meters
   double depth = 1.0;  // meters
+
+  std::string highest_floor;  // highest floor the lift can reach
+  std::string lowest_floor;  // lowest floor the lift can reach
+  double highest_elevation = DBL_MAX;
+  double lowest_elevation = -DBL_MAX;
 
   std::vector<LiftDoor> doors;
 
@@ -67,12 +75,14 @@ public:
   Lift();
 
   YAML::Node to_yaml() const;
-  void from_yaml(const std::string& _name, const YAML::Node& data);
+  void from_yaml(const std::string& _name, const YAML::Node& data,
+    const std::vector<BuildingLevel>& levels);
 
   void draw(
     QGraphicsScene* scene,
     const double meters_per_pixel,
     const std::string& level_name,
+    const double elevation,
     const bool apply_transformation = true,
     const double scale = 1.0,
     const double translate_x = 0.0,
@@ -80,7 +90,8 @@ public:
 
   bool level_door_opens(
     const std::string& level_name,
-    const std::string& door_name) const;
+    const std::string& door_name,
+    const std::vector<BuildingLevel>& levels) const;
 };
 
 #endif

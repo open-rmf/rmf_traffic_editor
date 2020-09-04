@@ -201,10 +201,33 @@ class Lift:
         self.name = name
         print(f'parsing lift {name}')
 
-        self.reference_floor_name = yaml_node['reference_floor_name']
         self.depth = float(yaml_node['depth'])
         self.width = float(yaml_node['width'])
         self.yaw = float(yaml_node['yaw'])
+
+        if 'initial_floor_name' in yaml_node:
+            self.initial_floor_name = str(yaml_node['initial_floor_name'])
+        else:
+            self.initial_floor_name = ''
+
+        if 'highest_floor' in yaml_node:
+            self.highest_floor = str(yaml_node['highest_floor'])
+            if self.highest_floor:
+                self.highest_elevation = levels[self.highest_floor].elevation
+            else:
+                self.highest_elevation = float('inf')
+        else:
+            self.highest_elevation = float('inf')
+
+        if 'lowest_floor' in yaml_node:
+            self.lowest_floor = str(yaml_node['lowest_floor'])
+            if self.lowest_floor:
+                self.lowest_elevation = levels[self.lowest_floor].elevation
+            else:
+                self.lowest_elevation = -float('inf')
+        else:
+            self.lowest_elevation = -float('inf')
+
         raw_pos = (float(yaml_node['x']), -float(yaml_node['y']))
         self.x, self.y = transform.transform_point(raw_pos)
         self.cabin_height = 2.5
@@ -231,6 +254,9 @@ class Lift:
                 self.level_doors[level_name] = door_names
                 self.level_elevation[level_name] = levels[level_name].elevation
                 self.level_names.append(level_name)
+
+        if (not self.initial_floor_name) and self.level_names:
+            self.initial_floor_name = self.level_names[0]
 
         self.doors = []
         if 'doors' in yaml_node:
@@ -387,8 +413,8 @@ class Lift:
                         'shaft_door',
                         f'ShaftDoor_{self.name}_{level_name}_{door.name}')
 
-        reference_floor_ele = SubElement(plugin_ele, 'reference_floor')
-        reference_floor_ele.text = f'{self.reference_floor_name}'
+        initial_floor_ele = SubElement(plugin_ele, 'initial_floor')
+        initial_floor_ele.text = f'{self.initial_floor_name}'
         for param_name, param_value in self.params.items():
             ele = SubElement(plugin_ele, param_name)
             ele.text = f'{param_value}'
