@@ -8,6 +8,7 @@
 #include <ignition/gazebo/components/Name.hh>
 #include <ignition/gazebo/components/Pose.hh>
 #include <ignition/gazebo/components/Static.hh>
+#include <ignition/gazebo/components/AxisAlignedBox.hh>
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -122,6 +123,12 @@ void SlotcarPlugin::Configure(const Entity& entity,
   // Initialize Pose3d component
   if (!ecm.EntityHasComponentType(entity, components::Pose().TypeId()))
     ecm.CreateComponent(entity, components::Pose());
+  // Initialize Bounding Box component
+  if (!ecm.EntityHasComponentType(entity,
+    components::AxisAlignedBox().TypeId()))
+  {
+    ecm.CreateComponent(entity, components::AxisAlignedBox());
+  }
 }
 
 void SlotcarPlugin::init_infrastructure(EntityComponentManager& ecm)
