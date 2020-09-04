@@ -15,23 +15,23 @@ std::shared_ptr<MengeHandle> MengeHandle::init_and_make(
   const float simTimeStep
 ) {
   auto menge_handle = std::make_shared<MengeHandle>(resourcePath, behaviorFile, sceneFile, simTimeStep);
-  if (!menge_handle->_LoadSimulation()) {
+  if (!menge_handle->_load_simulation()) {
     return nullptr;
   }
   return menge_handle;
 }
 
-void MengeHandle::SetSimTimeStep(float simTimeStep)
+void MengeHandle::set_sim_time_step(float simTimeStep)
 {
   this->_simTimeStep = simTimeStep;
 }
 
-float MengeHandle::GetSimTimeStep() const
+float MengeHandle::get_sim_time_step() const
 {
   return this->_simTimeStep;
 }
 
-size_t MengeHandle::GetAgentCount()
+size_t MengeHandle::get_agent_count()
 {
   if (this->_agentCount == 0)
   {
@@ -40,20 +40,18 @@ size_t MengeHandle::GetAgentCount()
   return this->_agentCount;
 }
 
-void MengeHandle::SimStep() const
+void MengeHandle::sim_step() const
 {
   this->_sim->step();
 }
 
-AgentPtr MengeHandle::GetAgent(size_t id) const
+AgentPtr MengeHandle::get_agent(size_t id) const
 {
   return AgentPtr(this->_sim->getAgent(id));
 }
 
-std::string MengeHandle::_ResourceFilePath(const std::string& relativePath)
-const
+std::string MengeHandle::_resource_file_path(const std::string& relativePath) const
 {
-
   std::string fullPath = this->_resourcePath + "/" + relativePath;
   std::cout << "Finding resource file: " << fullPath << std::endl;
   std::ifstream ifile(fullPath);
@@ -66,7 +64,7 @@ const
   return fullPath;
 }
 
-bool MengeHandle::_LoadSimulation()
+bool MengeHandle::_load_simulation()
 {
   Menge::SimulatorDB simDB;
   Menge::PluginEngine::CorePluginEngine engine(&simDB);
@@ -97,13 +95,13 @@ bool MengeHandle::_LoadSimulation()
 }
 
 //============================================
-ModelTypeDatabase::RecordPtr ModelTypeDatabase::Emplace(std::string typeName, RecordPtr record_ptr){
+ModelTypeDatabase::RecordPtr ModelTypeDatabase::emplace(std::string typeName, RecordPtr record_ptr){
   auto pair = this->_records.emplace(typeName, record_ptr); //return pair<iterator, bool>
   assert(pair.second);
   return pair.first->second;
 }
 
-ModelTypeDatabase::RecordPtr ModelTypeDatabase::Get(const std::string& typeName) const
+ModelTypeDatabase::RecordPtr ModelTypeDatabase::get(const std::string& typeName) const
 {
   auto it = this->_records.find(typeName);
   if (it == this->_records.end())
@@ -114,7 +112,7 @@ ModelTypeDatabase::RecordPtr ModelTypeDatabase::Get(const std::string& typeName)
   return it->second;
 }
 
-size_t ModelTypeDatabase::Size() const
+size_t ModelTypeDatabase::size() const
 {
   return this->_records.size();
 }
@@ -130,7 +128,7 @@ void CrowdSimInterface::init_ros_node(const rclcpp::Node::SharedPtr node)
   _ros_node = std::move(node);
 }
 
-bool CrowdSimInterface::initCrowdSim() 
+bool CrowdSimInterface::init_crowd_sim() 
 {
   _mengeHandle = MengeHandle::init_and_make(
     _resourcePath,
@@ -142,47 +140,47 @@ bool CrowdSimInterface::initCrowdSim()
     RCLCPP_ERROR(logger(), "Please load the sdf before initialize the crowd_sim interface!");
     return false;
   }
-  _spawnObject();
+  _spawn_object();
   _initialized = true;
   return true;
 }
 
-bool CrowdSimInterface::isInitialized() const 
+bool CrowdSimInterface::is_initialized() const 
 {
   return _initialized;
 }
 
-double CrowdSimInterface::getSimTimeStep() const {
+double CrowdSimInterface::get_sim_time_step() const {
   return static_cast<double>(_simTimeStep);
 }
 
-bool CrowdSimInterface::_spawnObject()
+bool CrowdSimInterface::_spawn_object()
 {
   //External models are loaded first in scene file
   size_t externalCount = _externalAgents.size();
-  size_t totalAgentCount = _mengeHandle->GetAgentCount();
+  size_t totalAgentCount = _mengeHandle->get_agent_count();
 
   //external model must be included in scene file
   assert(externalCount <= totalAgentCount);
 
   for (size_t i = 0; i < externalCount; ++i)
   {
-    auto agentPtr = _mengeHandle->GetAgent(i);
+    auto agentPtr = _mengeHandle->get_agent(i);
     agentPtr->_external = true;
-    _addObject(agentPtr, _externalAgents[i], "0", true);
+    _add_object(agentPtr, _externalAgents[i], "0", true);
   }
 
   for (size_t i = externalCount; i < totalAgentCount; ++i)
   {
-    auto agentPtr = this->_mengeHandle->GetAgent(i);
+    auto agentPtr = this->_mengeHandle->get_agent(i);
     agentPtr->_external = false;
     std::string modelName = "agent" + std::to_string(i);
-    _addObject(agentPtr, modelName, agentPtr->_typeName, false);
+    _add_object(agentPtr, modelName, agentPtr->_typeName, false);
   }
   return true;
 }
 
-void CrowdSimInterface::_addObject(AgentPtr agentPtr,
+void CrowdSimInterface::_add_object(AgentPtr agentPtr,
   const std::string& modelName,
   const std::string& typeName,
   bool isExternal = false)
@@ -196,20 +194,20 @@ void CrowdSimInterface::_addObject(AgentPtr agentPtr,
   _objects.emplace_back(new Object{agentPtr, modelName, typeName, isExternal});
 }
 
-size_t CrowdSimInterface::getNumObjects() const
+size_t CrowdSimInterface::get_num_objects() const
 {
   return _objects.size();
 }
 
-CrowdSimInterface::ObjectPtr CrowdSimInterface::getObjectById(size_t id) const
+CrowdSimInterface::ObjectPtr CrowdSimInterface::get_object_by_id(size_t id) const
 {
   assert(id < _objects.size());
   return _objects[id];
 }
 
-void CrowdSimInterface::oneStepSim() const
+void CrowdSimInterface::one_step_sim() const
 {
-  _mengeHandle->SimStep();
+  _mengeHandle->sim_step();
 }
 
 } //namespace crowd_simulator

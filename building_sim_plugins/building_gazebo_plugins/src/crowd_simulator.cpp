@@ -162,7 +162,7 @@ void CrowdSimulatorPlugin::_initSpawnedAgents()
     // because only non-static model can interact with slotcars
     if (!objPtr->isExternal)
     {
-      gazebo::physics::ModelPtr modelPtr = _world->ModelByName( objPtr->modelName);
+      gazebo::physics::ModelPtr modelPtr = _world->ModelByName( objPtr->modelName );
       gazebo::physics::ActorPtr actorPtr =
         boost::dynamic_pointer_cast<gazebo::physics::Actor>(modelPtr);
       gazebo::physics::TrajectoryInfoPtr trajectoryInfo(new gazebo::physics::

@@ -18,7 +18,7 @@ namespace crowd_simulator {
 
 using AgentPtr = std::shared_ptr<Menge::Agents::BaseAgent>;
 
-class  AgentPose3d 
+class AgentPose3d 
 {
 public:
   AgentPose3d()
@@ -76,15 +76,15 @@ public:
     _simTimeStep(simTimeStep),
     _agentCount(0)
   {
-    _behaviorFile = this->_ResourceFilePath(_behaviorFile);
-    _sceneFile = this->_ResourceFilePath(_sceneFile);
+    _behaviorFile = this->_resource_file_path(_behaviorFile);
+    _sceneFile = this->_resource_file_path(_sceneFile);
   }
 
-  void SetSimTimeStep(float simTimeStep);
-  float GetSimTimeStep() const;
-  size_t GetAgentCount();
-  void SimStep() const; //proceed one-time simulation step in _sim
-  AgentPtr GetAgent(size_t id) const;
+  void set_sim_time_step(float simTimeStep);
+  float get_sim_time_step() const;
+  size_t get_agent_count();
+  void sim_step() const; //proceed one-time simulation step in _sim
+  AgentPtr get_agent(size_t id) const;
 
 private:
   std::string _resourcePath;
@@ -94,8 +94,8 @@ private:
   size_t _agentCount;
   std::shared_ptr<Menge::Agents::SimulatorInterface> _sim;
 
-  std::string _ResourceFilePath(const std::string& relativePath) const;
-  bool _LoadSimulation(); //initialize simulatorinterface
+  std::string _resource_file_path(const std::string& relativePath) const;
+  bool _load_simulation(); //initialize simulatorinterface
 };
 
 //================================================================
@@ -117,9 +117,9 @@ public:
   using RecordPtr = std::shared_ptr<Record>;
 
   //Create a new record and returns a reference to the record
-  RecordPtr Emplace(std::string typeName, RecordPtr record_ptr);
-  size_t Size() const;
-  RecordPtr Get(const std::string& typeName) const;
+  RecordPtr emplace(std::string typeName, RecordPtr record_ptr);
+  size_t size() const;
+  RecordPtr get(const std::string& typeName) const;
 
 private:
   std::unordered_map<std::string, RecordPtr> _records;
@@ -154,29 +154,29 @@ public:
   void init_ros_node(const rclcpp::Node::SharedPtr node);
 
   template<typename SdfPtrT>
-  bool readSDF(SdfPtrT& sdf);
+  bool read_sdf(SdfPtrT& sdf);
 
-  bool initCrowdSim();
-  bool isInitialized() const;
+  bool init_crowd_sim();
+  bool is_initialized() const;
 
-  double getSimTimeStep() const;
+  double get_sim_time_step() const;
 
-  size_t getNumObjects() const;
-  ObjectPtr getObjectById(size_t id) const;
+  size_t get_num_objects() const;
+  ObjectPtr get_object_by_id(size_t id) const;
 
-  void oneStepSim() const;
-
-  template<typename IgnMathPose3d>
-  void updateExternalAgent(size_t id, const IgnMathPose3d& modelPose);
+  void one_step_sim() const;
 
   template<typename IgnMathPose3d>
-  void updateExternalAgent(const AgentPtr agentPtr, const IgnMathPose3d& modelPose);
+  void update_external_agent(size_t id, const IgnMathPose3d& modelPose);
 
   template<typename IgnMathPose3d>
-  IgnMathPose3d getAgentPose(size_t id, double deltaSimTime);
+  void update_external_agent(const AgentPtr agentPtr, const IgnMathPose3d& modelPose);
 
   template<typename IgnMathPose3d>
-  IgnMathPose3d getAgentPose(const AgentPtr agentPtr, double deltaSimTime);
+  IgnMathPose3d get_agent_pose(size_t id, double deltaSimTime);
+
+  template<typename IgnMathPose3d>
+  IgnMathPose3d get_agent_pose(const AgentPtr agentPtr, double deltaSimTime);
 
 private:
   bool _initialized;
@@ -191,16 +191,15 @@ private:
   rclcpp::Node::SharedPtr _ros_node;
 
   template<typename SdfPtrT>
-  bool _loadModelInitPose(SdfPtrT& modelTypeElement, AgentPose3d& result) const;
+  bool _load_model_init_pose(SdfPtrT& modelTypeElement, AgentPose3d& result) const;
 
-  bool _spawnObject();
-  void _addObject(AgentPtr agentPtr, const std::string& modelName,
+  bool _spawn_object();
+  void _add_object(AgentPtr agentPtr, const std::string& modelName,
     const std::string& typeName, bool isExternal);
-
 };
 
 template<typename SdfPtrT>
-bool CrowdSimInterface::readSDF(SdfPtrT& sdf) 
+bool CrowdSimInterface::read_sdf(SdfPtrT& sdf) 
 {
   if (!sdf->template HasElement("resource_path"))
   {
@@ -254,7 +253,7 @@ bool CrowdSimInterface::readSDF(SdfPtrT& sdf)
       return false;
     }
 
-    auto modelTypePtr = this->_modelTypeDBPtr->Emplace(s, std::make_shared<ModelTypeDatabase::Record>() ); //unordered_map
+    auto modelTypePtr = this->_modelTypeDBPtr->emplace(s, std::make_shared<ModelTypeDatabase::Record>() ); //unordered_map
     modelTypePtr->typeName = s;
 
     if (!modelTypeElement->template Get<std::string>("filename", modelTypePtr->fileName,""))
@@ -314,7 +313,7 @@ bool CrowdSimInterface::readSDF(SdfPtrT& sdf)
 }
 
 template<typename SdfPtrT>
-bool CrowdSimInterface::_loadModelInitPose(SdfPtrT& modelTypeElement, AgentPose3d& result) const
+bool CrowdSimInterface::_load_model_init_pose(SdfPtrT& modelTypeElement, AgentPose3d& result) const
 {
   std::string poseStr;
   if (modelTypeElement->template Get<std::string>("initial_pose", poseStr, ""))
@@ -342,14 +341,14 @@ bool CrowdSimInterface::_loadModelInitPose(SdfPtrT& modelTypeElement, AgentPose3
 }
 
 template<typename IgnMathPose3d>
-IgnMathPose3d CrowdSimInterface::getAgentPose(size_t id, double deltaSimTime) {
-  assert(id < getNumObjects());
+IgnMathPose3d CrowdSimInterface::get_agent_pose(size_t id, double deltaSimTime) {
+  assert(id < get_num_objects());
   auto agentPtr = _objects[id]->agentPtr;
-  return getAgentPose<IgnMathPose3d>(agentPtr, deltaSimTime);
+  return get_agent_pose<IgnMathPose3d>(agentPtr, deltaSimTime);
 }
 
 template<typename IgnMathPose3d>
-IgnMathPose3d CrowdSimInterface::getAgentPose(const AgentPtr agentPtr, double deltaSimTime) {
+IgnMathPose3d CrowdSimInterface::get_agent_pose(const AgentPtr agentPtr, double deltaSimTime) {
   //calculate future position in deltaSimTime. currently in 2d
   assert(agentPtr);
   double Px = static_cast<double>(agentPtr->_pos.x()) +
@@ -365,14 +364,14 @@ IgnMathPose3d CrowdSimInterface::getAgentPose(const AgentPtr agentPtr, double de
 }
 
 template<typename IgnMathPose3d>
-void CrowdSimInterface::updateExternalAgent(size_t id, const IgnMathPose3d& modelPose) {
-  assert(id < getNumObjects());
+void CrowdSimInterface::update_external_agent(size_t id, const IgnMathPose3d& modelPose) {
+  assert(id < get_num_objects());
   auto agentPtr = _objects[id]->agentPtr;
-  updateExternalAgent<IgnMathPose3d>(agentPtr, modelPose);
+  update_external_agent<IgnMathPose3d>(agentPtr, modelPose);
 }
 
 template<typename IgnMathPose3d>
-void CrowdSimInterface::updateExternalAgent(const AgentPtr agentPtr, const IgnMathPose3d& modelPose) {
+void CrowdSimInterface::update_external_agent(const AgentPtr agentPtr, const IgnMathPose3d& modelPose) {
   assert(agentPtr);
   agentPtr->_pos.setX(modelPose.Pos().X());
   agentPtr->_pos.setY(modelPose.Pos().Y());
