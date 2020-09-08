@@ -32,7 +32,7 @@ class QGraphicsScene;
 
 #include "building_level.h"
 #include "lift.h"
-#include "crowd_sim_impl.h"
+#include <traffic_editor/crowd_sim/crowd_sim_impl.h>
 
 class Building
 {
@@ -46,7 +46,7 @@ public:
   std::vector<Lift> lifts;
   std::mutex building_mutex;
 
-  mutable CrowdSimImplPtr crowd_sim_impl;
+  mutable crowd_sim::CrowdSimImplPtr crowd_sim_impl;
 
   std::string filename;
 

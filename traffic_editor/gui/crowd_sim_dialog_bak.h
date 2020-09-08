@@ -7,9 +7,10 @@
 #include <QComboBox>
 #include <QtWidgets>
 
-#include <traffic_editor/crowd_sim_impl.h>
+#include <traffic_editor/crowd_sim/crowd_sim_impl.h>
 #include <table_list.h>
 
+using namespace crowd_sim;
 class CrowdSimDialog : public QDialog
 {
 public:

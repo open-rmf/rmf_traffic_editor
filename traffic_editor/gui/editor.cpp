@@ -57,7 +57,6 @@
 #include "traffic_table.h"
 #include "ui_transform_dialog.h"
 
-#include "crowd_sim_table.h"
 
 using std::string;
 using std::isnan;
@@ -166,7 +165,7 @@ Editor::Editor()
       create_scene();
     });
 
-  crowd_sim_table = new CrowdSimTable(project);
+  crowd_sim_table = new CrowdSimEditorTable(project);
   connect(
     crowd_sim_table,
     &QTableWidget::cellClicked,

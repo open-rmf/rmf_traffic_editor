@@ -5,6 +5,8 @@
 #include <sstream>
 #include <string>
 
+using namespace crowd_sim;
+
 //========================================================
 CrowdSimDialog::CrowdSimDialog(CrowdSimImplPtr implPtr) 
 : crowd_sim_impl(implPtr)
