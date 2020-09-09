@@ -7,12 +7,17 @@
 #include "condition_dialog.h"
 
 //==================================================
-std::shared_ptr<TransitionTab> TransitionTab::init_and_make(CrowdSimImplPtr crowd_sim_impl) {
-  const QStringList labels = 
-    { "From State", "To State", "To-State edit", "Condition", "Condition edit", ""};
+std::shared_ptr<TransitionTab> TransitionTab::init_and_make(
+  CrowdSimImplPtr crowd_sim_impl)
+{
+  const QStringList labels =
+  { "From State", "To State", "To-State edit", "Condition", "Condition edit",
+    ""};
 
-  auto transition_tab_ptr = std::make_shared<TransitionTab>(crowd_sim_impl, labels);
-  if (!transition_tab_ptr) {
+  auto transition_tab_ptr = std::make_shared<TransitionTab>(crowd_sim_impl,
+      labels);
+  if (!transition_tab_ptr)
+  {
     printf("Failed to create goal set table! Exiting");
     return nullptr;
   }
@@ -107,12 +112,16 @@ void TransitionTab::save()
 
 //==================================================
 void TransitionTab::save_to_impl()
-{ 
+{
   save();
   std::vector<size_t> invalid_trasition;
-  for (size_t i = 0; i < _cache.size(); i++) {
-    if (!_cache[i].is_valid()) {
-      std::cout << _cache[i].get_from_state() << _cache[i].get_to_state().size() << _cache[i].get_condition()->get_condition_name() << std::endl;
+  for (size_t i = 0; i < _cache.size(); i++)
+  {
+    if (!_cache[i].is_valid())
+    {
+      std::cout << _cache[i].get_from_state() <<
+        _cache[i].get_to_state().size() <<
+        _cache[i].get_condition()->get_condition_name() << std::endl;
       invalid_trasition.push_back(i);
     }
   }
@@ -134,6 +143,7 @@ void TransitionTab::add_button_click()
 //==================================================
 void TransitionTab::delete_button_click(size_t row_number)
 {
-  if (row_number > _cache.size()) return;
+  if (row_number > _cache.size())
+    return;
   _cache.erase(_cache.begin() + row_number);
 }

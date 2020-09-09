@@ -169,7 +169,8 @@ Editor::Editor()
   connect(
     crowd_sim_table,
     &QTableWidget::cellClicked,
-    [&](){
+    [&]()
+    {
       crowd_sim_table->update();
       create_scene();
     }
@@ -1800,7 +1801,8 @@ void Editor::mouse_add_edge(
       return;
     }
 
-    if (edge_type != Edge::LANE) {
+    if (edge_type != Edge::LANE)
+    {
       project.building.add_edge(
         level_idx,
         prev_clicked_idx,
@@ -2370,7 +2372,8 @@ void Editor::set_mode(const EditorModeId _mode, const QString& mode_string)
   set_tool_visibility(TOOL_ADD_HUMAN_LANE, mode == MODE_CROWD_SIM);
 
   // "multi-purpose" tools
-  set_tool_visibility(TOOL_EDIT_POLYGON, mode != MODE_TRAFFIC && mode != MODE_CROWD_SIM);
+  set_tool_visibility(TOOL_EDIT_POLYGON,
+    mode != MODE_TRAFFIC && mode != MODE_CROWD_SIM);
 }
 
 void Editor::update_tables()

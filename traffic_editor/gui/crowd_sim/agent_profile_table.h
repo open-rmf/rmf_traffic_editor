@@ -11,15 +11,20 @@ class AgentProfileTab : public CrowdSimTableBase
 {
 public:
 
-  static std::shared_ptr<AgentProfileTab> init_and_make(CrowdSimImplPtr crowd_sim_impl);
+  static std::shared_ptr<AgentProfileTab> init_and_make(
+    CrowdSimImplPtr crowd_sim_impl);
+
   AgentProfileTab(CrowdSimImplPtr crowd_sim_impl, const QStringList& labels)
-    : CrowdSimTableBase(crowd_sim_impl, labels)
+  : CrowdSimTableBase(crowd_sim_impl, labels)
   {
     _cache = get_impl()->get_agent_profiles();
   }
   ~AgentProfileTab() {}
 
-  int get_cache_size() const override { return static_cast<int>(_cache.size()); }
+  int get_cache_size() const override
+  {
+    return static_cast<int>(_cache.size());
+  }
   void list_item_in_cache() override;
   void save() override;
   void save_to_impl() override;

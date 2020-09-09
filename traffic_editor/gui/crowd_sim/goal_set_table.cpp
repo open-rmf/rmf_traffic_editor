@@ -6,13 +6,16 @@
 using namespace crowd_sim;
 
 //======================================================
-std::shared_ptr<GoalSetTab> GoalSetTab::init_and_make(CrowdSimImplPtr crowd_sim_impl) {
+std::shared_ptr<GoalSetTab> GoalSetTab::init_and_make(
+  CrowdSimImplPtr crowd_sim_impl)
+{
 
-  const QStringList labels = 
-    { "Id", "Goal Area", "Capacity", ""};
+  const QStringList labels =
+  { "Id", "Goal Area", "Capacity", ""};
 
   auto goal_set_tab_ptr = std::make_shared<GoalSetTab>(crowd_sim_impl, labels);
-  if (!goal_set_tab_ptr) {
+  if (!goal_set_tab_ptr)
+  {
     printf("Failed to create goal set table! Exiting");
     return nullptr;
   }
@@ -27,29 +30,29 @@ void GoalSetTab::list_item_in_cache()
   {
     auto& goal_set = _cache[i];
     QTableWidget::setItem(
-      i, 
+      i,
       0,
       new QTableWidgetItem(
-        QString::number( static_cast<int>(goal_set.get_goal_set_id() ))));
+        QString::number(static_cast<int>(goal_set.get_goal_set_id() ))));
 
-    MultiSelectComboBox* multi_combo_box = 
+    MultiSelectComboBox* multi_combo_box =
       new MultiSelectComboBox(get_impl()->get_goal_areas());
     multi_combo_box->showCheckedItem(goal_set.get_goal_areas());
     QTableWidget::setCellWidget(
-      i, 
-      1, 
+      i,
+      1,
       multi_combo_box);
 
     QTableWidget::setItem(
-      i, 
+      i,
       2,
       new QTableWidgetItem(
-        QString::number( static_cast<int>(goal_set.get_capacity() ))));
+        QString::number(static_cast<int>(goal_set.get_capacity() ))));
   }
 }
 
 //======================================================
-// this function will save all the goal_set listed in the table widget into _cache, 
+// this function will save all the goal_set listed in the table widget into _cache,
 // and reassign goal_set_id as the row_number
 void GoalSetTab::save()
 {
@@ -67,7 +70,8 @@ void GoalSetTab::save()
         pItem_setid->text().toStdString() << "]" << std::endl;
       return;
     }
-    if (set_id != i) {
+    if (set_id != i)
+    {
       std::cout << "Reassign goal set id for row" << i << std::endl;
     }
 
@@ -84,7 +88,8 @@ void GoalSetTab::save()
       return;
     }
 
-    auto cur_it = tmp_cache.emplace(tmp_cache.end(), static_cast<size_t>(set_id));
+    auto cur_it =
+      tmp_cache.emplace(tmp_cache.end(), static_cast<size_t>(set_id));
     for (auto item : pItem_areas->getCheckResult() )
     {
       cur_it->add_goal_area(item);
@@ -110,6 +115,7 @@ void GoalSetTab::add_button_click()
 //======================================================
 void GoalSetTab::delete_button_click(size_t row_number)
 {
-  if (row_number > _cache.size()) return;
+  if (row_number > _cache.size())
+    return;
   _cache.erase(_cache.begin() + row_number);
 }

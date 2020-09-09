@@ -473,14 +473,16 @@ void Project::set_selected_line_item(
         continue;
     }
 
-    if (mode == MODE_CROWD_SIM) {
+    if (mode == MODE_CROWD_SIM)
+    {
       if (edge.type != Edge::HUMAN_LANE)
         continue;
       if (edge.get_graph_idx() != traffic_map_idx)
         continue;
     }
 
-    if (mode == MODE_BUILDING && (edge.type == Edge::LANE || edge.type == Edge::HUMAN_LANE) )
+    if (mode == MODE_BUILDING &&
+      (edge.type == Edge::LANE || edge.type == Edge::HUMAN_LANE) )
       continue;
 
     // look up the line's vertices

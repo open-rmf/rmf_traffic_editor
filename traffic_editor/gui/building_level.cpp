@@ -403,7 +403,7 @@ void BuildingLevel::draw_lane(
   const double dy = v_end.y - v_start.y;
   const double len = std::sqrt(dx*dx + dy*dy);
 
-  double pen_width_in_meters = edge.get_width() > 0? edge.get_width() : 1.0;
+  double pen_width_in_meters = edge.get_width() > 0 ? edge.get_width() : 1.0;
   const double lane_pen_width = pen_width_in_meters / drawing_meters_per_pixel;
 
   const QPen arrow_pen(

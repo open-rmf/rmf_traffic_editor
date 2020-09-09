@@ -172,9 +172,9 @@ bool CrowdSimImplementation::from_yaml(const YAML::Node& input)
   printf("crowd_sim loaded %lu goal_sets\n", this->_goal_sets.size());
 
   const YAML::Node& state_node = input["states"];
-  for (YAML::const_iterator it = state_node.begin(); 
-       it != state_node.end();
-       it++)
+  for (YAML::const_iterator it = state_node.begin();
+    it != state_node.end();
+    it++)
   {
     State state_temp(*it);
     this->_states.emplace_back(state_temp);
@@ -247,14 +247,15 @@ void CrowdSimImplementation::init_default_configure()
 }
 
 //=================================================
-void CrowdSimImplementation::save_goal_sets(const std::vector<GoalSet>& goal_sets) 
-{ 
+void CrowdSimImplementation::save_goal_sets(
+  const std::vector<GoalSet>& goal_sets)
+{
   _goal_sets.clear();
   _goal_sets = goal_sets;
 }
 
 //===================================================
-void CrowdSimImplementation::save_states(const std::vector<State>& states) 
+void CrowdSimImplementation::save_states(const std::vector<State>& states)
 {
   _states.clear();
   _states = states;
@@ -262,14 +263,16 @@ void CrowdSimImplementation::save_states(const std::vector<State>& states)
 }
 
 //===================================================
-void CrowdSimImplementation::save_transitions(const std::vector<Transition>& transitions) 
+void CrowdSimImplementation::save_transitions(
+  const std::vector<Transition>& transitions)
 {
   _transitions.clear();
   _transitions = transitions;
 }
 
 //=================================================
-void CrowdSimImplementation::save_agent_profiles(const std::vector<AgentProfile>& agent_profiles) 
+void CrowdSimImplementation::save_agent_profiles(
+  const std::vector<AgentProfile>& agent_profiles)
 {
   _agent_profiles.clear();
   _agent_profiles = agent_profiles;
@@ -277,14 +280,16 @@ void CrowdSimImplementation::save_agent_profiles(const std::vector<AgentProfile>
 }
 
 //=================================================
-void CrowdSimImplementation::save_agent_groups(const std::vector<AgentGroup>& agent_groups)
+void CrowdSimImplementation::save_agent_groups(
+  const std::vector<AgentGroup>& agent_groups)
 {
   _agent_groups.clear();
   _agent_groups = agent_groups;
 }
 
 //=================================================
-void CrowdSimImplementation::save_model_types(const std::vector<ModelType>& model_types) 
+void CrowdSimImplementation::save_model_types(
+  const std::vector<ModelType>& model_types)
 {
   _model_types.clear();
   _model_types = model_types;

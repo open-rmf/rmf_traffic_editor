@@ -7,13 +7,14 @@
 
 //=====================================================
 std::shared_ptr<ToStateTab> ToStateTab::init_and_make(
-  CrowdSimImplPtr crowd_sim_impl, 
+  CrowdSimImplPtr crowd_sim_impl,
   crowd_sim::Transition& transition)
 {
   const QStringList labels = {"To State Name", "Weight", ""};
 
-  auto to_state_tab_ptr = std::make_shared<ToStateTab>(crowd_sim_impl, transition, labels);
-  if (!to_state_tab_ptr) 
+  auto to_state_tab_ptr = std::make_shared<ToStateTab>(crowd_sim_impl,
+      transition, labels);
+  if (!to_state_tab_ptr)
   {
     printf("Failed to create goal set table! Exiting");
     return nullptr;
@@ -25,7 +26,7 @@ std::shared_ptr<ToStateTab> ToStateTab::init_and_make(
 void ToStateTab::list_item_in_cache()
 {
   auto cache_count = get_cache_size();
-  for (auto i = 0; i < cache_count; i++ )
+  for (auto i = 0; i < cache_count; i++)
   {
     auto to_state = _cache.at(i);
     auto to_state_name = to_state.first;
@@ -55,7 +56,8 @@ void ToStateTab::add_button_click()
 //=====================================================
 void ToStateTab::delete_button_click(size_t row_number)
 {
-  if (row_number > _cache.size()) return;
+  if (row_number > _cache.size())
+    return;
   _cache.erase(_cache.begin() + row_number);
 }
 
@@ -90,7 +92,8 @@ void ToStateTab::save_to_impl()
 {
   save();
   _current_transition.clear_to_state();
-  for (auto to_state : _cache) {
+  for (auto to_state : _cache)
+  {
     _current_transition.add_to_state(to_state.first, to_state.second);
   }
 }

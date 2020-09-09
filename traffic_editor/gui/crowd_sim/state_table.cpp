@@ -6,12 +6,15 @@
 using namespace crowd_sim;
 
 //========================================
-std::shared_ptr<StatesTab> StatesTab::init_and_make(CrowdSimImplPtr crowd_sim_impl) {
-  const QStringList labels = 
-    { "Name", "Is Final", "Navmesh File Name", "Goal Set Id", ""};
+std::shared_ptr<StatesTab> StatesTab::init_and_make(
+  CrowdSimImplPtr crowd_sim_impl)
+{
+  const QStringList labels =
+  { "Name", "Is Final", "Navmesh File Name", "Goal Set Id", ""};
 
   auto state_tab_ptr = std::make_shared<StatesTab>(crowd_sim_impl, labels);
-  if (!state_tab_ptr) {
+  if (!state_tab_ptr)
+  {
     printf("Failed to create state table! Exiting");
     return nullptr;
   }
@@ -62,12 +65,15 @@ void StatesTab::add_button_click()
 //========================================
 void StatesTab::delete_button_click(size_t row_number)
 {
-  if(row_number == 0) 
+  if (row_number == 0)
   {
-    std::cout << "Default state for external agent is not allowed to be deleted." << std::endl;
+    std::cout <<
+      "Default state for external agent is not allowed to be deleted." <<
+      std::endl;
     return;
   }
-  if (row_number > _cache.size()) return;
+  if (row_number > _cache.size())
+    return;
   _cache.erase(_cache.begin() + row_number);
 }
 
@@ -80,7 +86,7 @@ void StatesTab::save()
   tmp_cache.emplace_back("external_static");
 
   for (auto i = 1; i < rows_count - 1; i++)
-  { 
+  {
     auto name_item = item(i, 0)->text().toStdString();
 
     auto final_item =
@@ -91,13 +97,14 @@ void StatesTab::save()
 
     bool OK_status;
     auto goal_set_id =
-      static_cast<QComboBox*>(cellWidget(i,3))->currentText().toInt(&OK_status);
+      static_cast<QComboBox*>(cellWidget(i,
+      3))->currentText().toInt(&OK_status);
 
     tmp_cache.emplace_back(name_item);
     auto& cur_it = tmp_cache.back();
     cur_it.set_final_state(final_item == "1");
     cur_it.set_navmesh_file_name(navmesh_file_name);
-    cur_it.set_goal_set_id(static_cast<size_t>(goal_set_id));     
+    cur_it.set_goal_set_id(static_cast<size_t>(goal_set_id));
   }
 
   _cache = tmp_cache;
@@ -117,7 +124,8 @@ void StatesTab::_list_goal_sets_in_combo(
 {
   for (auto goal_set : get_impl()->get_goal_sets())
   {
-    comboBox->addItem(QString::number(static_cast<int>(goal_set.get_goal_set_id())));
+    comboBox->addItem(QString::number(
+        static_cast<int>(goal_set.get_goal_set_id())));
   }
   auto index =
     comboBox->findText(QString::number(static_cast<int>(current_goal_set_id) ));

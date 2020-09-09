@@ -33,7 +33,10 @@ public:
   void clear();
   void init_default_configure();
 
-  void set_navmesh_file_name(std::vector<std::string> navmesh_filename) { _navmesh_filename_list = navmesh_filename; }
+  void set_navmesh_file_name(std::vector<std::string> navmesh_filename)
+  {
+    _navmesh_filename_list = navmesh_filename;
+  }
   std::vector<std::string> get_navmesh_file_name() const
   {
     return _navmesh_filename_list;
@@ -42,10 +45,16 @@ public:
   void set_enable_crowd_sim(bool is_enable) { _enable_crowd_sim = is_enable; }
   bool get_enable_crowd_sim() const { return _enable_crowd_sim; }
 
-  void set_update_time_step(double update_time_step) { _update_time_step = update_time_step; }
+  void set_update_time_step(double update_time_step)
+  {
+    _update_time_step = update_time_step;
+  }
   double get_update_time_step() const { return _update_time_step; }
 
-  void set_goal_areas(std::set<std::string> goal_areas) { _goal_areas = goal_areas; }
+  void set_goal_areas(std::set<std::string> goal_areas)
+  {
+    _goal_areas = goal_areas;
+  }
   std::vector<std::string> get_goal_areas() const
   {
     return std::vector<std::string>(_goal_areas.begin(), _goal_areas.end());
@@ -61,7 +70,10 @@ public:
   std::vector<Transition> get_transitions() const { return _transitions; }
 
   void save_agent_profiles(const std::vector<AgentProfile>& agent_profiles);
-  std::vector<AgentProfile> get_agent_profiles() const { return _agent_profiles; }
+  std::vector<AgentProfile> get_agent_profiles() const
+  {
+    return _agent_profiles;
+  }
 
   void save_agent_groups(const std::vector<AgentGroup>& agent_groups);
   std::vector<AgentGroup> get_agent_groups() const { return _agent_groups; }

@@ -44,9 +44,10 @@ public:
 
   virtual bool is_valid() const { return false; }
   virtual YAML::Node to_yaml() const { return YAML::Node(YAML::NodeType::Map); }
-  virtual void from_yaml(const YAML::Node& input) { // default do nothing
+  virtual void from_yaml(const YAML::Node& input)   // default do nothing
+  {
     if (!input["type"]) printf("Invalid Condition yaml input. \n");
-  } 
+  }
 
 private:
   std::string _name;
@@ -62,13 +63,13 @@ public:
   LeafCondition(
     const std::string& condition_name,
     Condition::TYPE condition_type)
-  : Condition(condition_name, condition_type), 
+  : Condition(condition_name, condition_type),
     _value(0)
   {}
   LeafCondition(
     const std::string& condition_name,
     Condition::TYPE condition_type, double condition_value)
-  : Condition(condition_name, condition_type), 
+  : Condition(condition_name, condition_type),
     _value(condition_value)
   {}
   virtual ~LeafCondition() {}
@@ -89,8 +90,8 @@ public:
   BoolCondition(
     const std::string& condition_name,
     Condition::TYPE condition_type)
-  : Condition(condition_name, condition_type), 
-    _condition1(nullptr), 
+  : Condition(condition_name, condition_type),
+    _condition1(nullptr),
     _condition2(nullptr)
   {}
   BoolCondition(
@@ -104,7 +105,7 @@ public:
   BoolCondition(
     const std::string& condition_name,
     Condition::TYPE condition_type,
-    ConditionPtr condition_ptr_1, 
+    ConditionPtr condition_ptr_1,
     ConditionPtr condition_ptr_2)
   : Condition(condition_name, condition_type),
     _condition1(condition_ptr_1),
@@ -173,8 +174,8 @@ class ConditionAND final : public BoolCondition
 public:
   ConditionAND()
   : BoolCondition(
-      "and", 
-      AND, 
+      "and",
+      AND,
       std::make_shared<Condition>(),
       std::make_shared<Condition>())
   {}
@@ -189,8 +190,8 @@ class ConditionOR final : public BoolCondition
 public:
   ConditionOR()
   : BoolCondition(
-      "or", 
-      OR, 
+      "or",
+      OR,
       std::make_shared<Condition>(),
       std::make_shared<Condition>())
   {}
@@ -205,8 +206,8 @@ class ConditionNOT final : public BoolCondition
 public:
   ConditionNOT()
   : BoolCondition(
-      "not", 
-      NOT, 
+      "not",
+      NOT,
       std::make_shared<Condition>())
   {}
   ~ConditionNOT() {}

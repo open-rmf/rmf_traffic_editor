@@ -8,7 +8,7 @@ YAML::Node Transition::to_yaml() const
   YAML::Node transition_node(YAML::NodeType::Map);
   transition_node.SetStyle(YAML::EmitterStyle::Flow);
   transition_node["from"] = _from_state_name;
-  transition_node["to"] = 
+  transition_node["to"] =
     _to_state_name.size() == 1 ? _to_state_name.begin()->first : "";
   transition_node["Condition"] = _condition->to_yaml();
   transition_node["Target"] = YAML::Node(YAML::NodeType::Sequence);
@@ -37,7 +37,8 @@ void Transition::from_yaml(const YAML::Node& input)
     {
       throw std::runtime_error("Single Target expects a map");
     }
-    add_to_state((*it)["name"].as<std::string>(), (*it)["weight"].as<double>() );
+    add_to_state((*it)["name"].as<std::string>(),
+      (*it)["weight"].as<double>() );
   }
 
   //set condition from yaml

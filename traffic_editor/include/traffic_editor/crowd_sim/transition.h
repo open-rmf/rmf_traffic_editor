@@ -62,7 +62,7 @@ public:
 
   bool is_valid()
   {
-    if (_condition->is_valid() && 
+    if (_condition->is_valid() &&
       _to_state_name.size() > 0 &&
       _from_state_name.size() > 0)
       return true;

@@ -10,23 +10,26 @@ class ToStateTab : public CrowdSimTableBase
 {
 public:
   static std::shared_ptr<ToStateTab> init_and_make(
-    CrowdSimImplPtr crowd_sim_impl, 
+    CrowdSimImplPtr crowd_sim_impl,
     crowd_sim::Transition& transition);
 
   ToStateTab(
-    CrowdSimImplPtr crowd_sim_impl, 
-    crowd_sim::Transition& transition, 
+    CrowdSimImplPtr crowd_sim_impl,
+    crowd_sim::Transition& transition,
     const QStringList& labels)
-    : CrowdSimTableBase(crowd_sim_impl, labels),
-      _current_transition(transition)
+  : CrowdSimTableBase(crowd_sim_impl, labels),
+    _current_transition(transition)
   {
     _cache.clear();
     for (auto to_state : transition.get_to_state())
-    _cache.emplace_back(to_state);
+      _cache.emplace_back(to_state);
   }
   ~ToStateTab() {}
 
-  int get_cache_size() const override { return static_cast<int>(_cache.size()); }
+  int get_cache_size() const override
+  {
+    return static_cast<int>(_cache.size());
+  }
   void list_item_in_cache() override;
   void save() override;
   void save_to_impl() override;

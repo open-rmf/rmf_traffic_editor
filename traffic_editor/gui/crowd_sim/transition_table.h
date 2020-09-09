@@ -10,16 +10,20 @@ using namespace crowd_sim;
 class TransitionTab : public CrowdSimTableBase
 {
 public:
-  static std::shared_ptr<TransitionTab> init_and_make(CrowdSimImplPtr crowd_sim_impl);
+  static std::shared_ptr<TransitionTab> init_and_make(
+    CrowdSimImplPtr crowd_sim_impl);
 
   TransitionTab(CrowdSimImplPtr crowd_sim_impl, const QStringList& labels)
-    : CrowdSimTableBase(crowd_sim_impl, labels)
+  : CrowdSimTableBase(crowd_sim_impl, labels)
   {
     _cache = get_impl()->get_transitions();
   }
   ~TransitionTab() {}
 
-  int get_cache_size() const override { return static_cast<int>(_cache.size()); }
+  int get_cache_size() const override
+  {
+    return static_cast<int>(_cache.size());
+  }
   void list_item_in_cache() override;
   void save() override;
   void save_to_impl() override;

@@ -18,10 +18,10 @@ public:
     std::vector<double> initial_pose;
 
     GazeboConf(
-      std::string file = "", 
+      std::string file = "",
       std::vector<double> pose = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0})
-    : filename(file), 
-      initial_pose(pose) 
+    : filename(file),
+      initial_pose(pose)
     {}
 
     YAML::Node to_yaml() const;
@@ -33,10 +33,10 @@ public:
     std::string filename;
     std::vector<double> initial_pose;
     IgnConf(
-      std::string file = "", 
+      std::string file = "",
       std::vector<double> pose = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0})
     : filename(file),
-      initial_pose(pose) 
+      initial_pose(pose)
     {}
 
     YAML::Node to_yaml() const;

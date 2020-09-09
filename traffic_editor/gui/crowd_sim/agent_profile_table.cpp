@@ -6,15 +6,17 @@
 using namespace crowd_sim;
 
 //===================================================
-std::shared_ptr<AgentProfileTab> AgentProfileTab::init_and_make(CrowdSimImplPtr crowd_sim_impl)
+std::shared_ptr<AgentProfileTab> AgentProfileTab::init_and_make(
+  CrowdSimImplPtr crowd_sim_impl)
 {
   const QStringList labels =
   { "Name", "class", "max_accel", "max_angle_vel", "max_neighbors",
     "max_speed", "neighbor_dist", "obstacle_set", "pref_speed", "r",
     "ORCA_tau", "ORCA_tauObst", ""};
-  
-  auto agent_profile_tab = std::make_shared<AgentProfileTab>(crowd_sim_impl, labels);
-  if (!agent_profile_tab) 
+
+  auto agent_profile_tab = std::make_shared<AgentProfileTab>(crowd_sim_impl,
+      labels);
+  if (!agent_profile_tab)
   {
     printf("Failed to create agent_profile table! Exiting");
     return nullptr;
@@ -51,7 +53,7 @@ void AgentProfileTab::list_item_in_cache()
         static_cast<uint>(current_profile.obstacle_set))));
     setItem(i, 8,
       new QTableWidgetItem(QString::number(current_profile.pref_speed)));
-    setItem(i, 9, 
+    setItem(i, 9,
       new QTableWidgetItem(QString::number(current_profile.r)));
     setItem(i, 10,
       new QTableWidgetItem(QString::number(current_profile.ORCA_tau)));
@@ -69,12 +71,15 @@ void AgentProfileTab::add_button_click()
 //===================================================
 void AgentProfileTab::delete_button_click(size_t row_number)
 {
-  if (row_number == 0) 
+  if (row_number == 0)
   {
-    std::cout << "Default external agnet profile is not allowed to be deleted." << std::endl;
+    std::cout <<
+      "Default external agnet profile is not allowed to be deleted." <<
+      std::endl;
     return;
   }
-  if (row_number > _cache.size()) return;
+  if (row_number > _cache.size())
+    return;
   _cache.erase(_cache.begin() + row_number);
 }
 
@@ -106,9 +111,11 @@ void AgentProfileTab::save()
     if (OK_status)
     {
       current_profile.profile_class = static_cast<size_t>(profile_class);
-    } else {
+    }
+    else
+    {
       std::cout << "Error in saving profile_class for Agent Profile: ["
-          << profile_name << "], value remains as default." << std::endl;
+                << profile_name << "], value remains as default." << std::endl;
     }
 
     pItem = item(i, 2);
@@ -116,19 +123,23 @@ void AgentProfileTab::save()
     if (OK_status)
     {
       current_profile.max_accel = static_cast<double>(max_accel);
-    } else {
-      std::cout << "Error in saving max_accel for Agent Profile: ["
-          << profile_name << "]" << std::endl;
     }
-    
+    else
+    {
+      std::cout << "Error in saving max_accel for Agent Profile: ["
+                << profile_name << "]" << std::endl;
+    }
+
     pItem = item(i, 3);
     auto max_angle_vel = pItem->text().toDouble(&OK_status);
     if (OK_status)
     {
       current_profile.max_angle_vel = static_cast<double>(max_angle_vel);
-    } else {
+    }
+    else
+    {
       std::cout << "Error in saving max_angle_vel for Agent Profile: ["
-          << profile_name << "]" << std::endl;
+                << profile_name << "]" << std::endl;
     }
 
     pItem = item(i, 4);
@@ -136,9 +147,11 @@ void AgentProfileTab::save()
     if (OK_status)
     {
       current_profile.max_neighbors = static_cast<size_t>(max_neighbors);
-    } else {
+    }
+    else
+    {
       std::cout << "Error in saving max_neighbors for Agent Profile: ["
-            << profile_name << "]" << std::endl;
+                << profile_name << "]" << std::endl;
     }
 
     pItem = item(i, 5);
@@ -146,29 +159,35 @@ void AgentProfileTab::save()
     if (OK_status)
     {
       current_profile.max_speed = static_cast<double>(max_speed);
-    } else {
-      std::cout << "Error in saving max_speed for Agent Profile: ["
-          << profile_name << "]" << std::endl;
     }
-    
+    else
+    {
+      std::cout << "Error in saving max_speed for Agent Profile: ["
+                << profile_name << "]" << std::endl;
+    }
+
     pItem = item(i, 6);
     auto neighbor_dist = pItem->text().toDouble(&OK_status);
     if (OK_status)
     {
       current_profile.neighbor_dist = static_cast<double>(neighbor_dist);
-    } else {
-      std::cout << "Error in saving neighbor dist for Agent Profile: ["
-          << profile_name << "]" << std::endl;
     }
-    
+    else
+    {
+      std::cout << "Error in saving neighbor dist for Agent Profile: ["
+                << profile_name << "]" << std::endl;
+    }
+
     pItem = item(i, 7);
     auto obstacle_set = pItem->text().toInt(&OK_status);
     if (OK_status)
     {
       current_profile.obstacle_set = static_cast<double>(obstacle_set);
-    } else {
+    }
+    else
+    {
       std::cout << "Error in saving obstacle_set for Agent Profile: ["
-          << profile_name << "]" << std::endl;
+                << profile_name << "]" << std::endl;
     }
 
     pItem = item(i, 8);
@@ -176,9 +195,11 @@ void AgentProfileTab::save()
     if (OK_status)
     {
       current_profile.pref_speed = static_cast<double>(pref_speed);
-    } else {
+    }
+    else
+    {
       std::cout << "Error in saving pref_speed for Agent Profile: ["
-            << profile_name << "]" << std::endl;
+                << profile_name << "]" << std::endl;
     }
 
     pItem = item(i, 9);
@@ -186,19 +207,23 @@ void AgentProfileTab::save()
     if (OK_status)
     {
       current_profile.r = static_cast<double>(r);
-    } else {
-      std::cout << "Error in saving r for Agent Profile: ["
-          << profile_name << "]" << std::endl;
     }
-    
+    else
+    {
+      std::cout << "Error in saving r for Agent Profile: ["
+                << profile_name << "]" << std::endl;
+    }
+
     pItem = item(i, 10);
     auto ORCA_tau = pItem->text().toDouble(&OK_status);
     if (OK_status)
     {
       current_profile.ORCA_tau = static_cast<double>(ORCA_tau);
-    } else {
+    }
+    else
+    {
       std::cout << "Error in saving ORCA_tau for Agent Profile: ["
-          << profile_name << "]" << std::endl;
+                << profile_name << "]" << std::endl;
     }
 
     pItem = item(i, 11);
@@ -206,9 +231,11 @@ void AgentProfileTab::save()
     if (OK_status)
     {
       current_profile.ORCA_tauObst = static_cast<double>(ORCA_tauObst);
-    } else {
+    }
+    else
+    {
       std::cout << "Error in saving ORCA_tauObst for Agent Profile: ["
-          << profile_name << "]" << std::endl;
+                << profile_name << "]" << std::endl;
     }
 
     tmp_cache.push_back(current_profile);

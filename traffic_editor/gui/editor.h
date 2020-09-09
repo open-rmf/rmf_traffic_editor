@@ -320,7 +320,8 @@ private:
   void mouse_add_roi(const MouseType t, QMouseEvent* e, const QPointF& p);
   void mouse_edit_polygon(const MouseType t, QMouseEvent* e, const QPointF& p);
 
-  void mouse_add_human_lane(const MouseType t, QMouseEvent* e, const QPointF& p);
+  void mouse_add_human_lane(const MouseType t, QMouseEvent* e,
+    const QPointF& p);
 
   QPointF previous_mouse_point;
 

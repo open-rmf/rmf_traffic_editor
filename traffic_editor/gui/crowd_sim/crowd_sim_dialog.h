@@ -23,114 +23,115 @@ using namespace crowd_sim;
 class CrowdSimDialog : public QDialog
 {
 public:
-    CrowdSimDialog();
-    virtual ~CrowdSimDialog() {}
+  CrowdSimDialog();
+  virtual ~CrowdSimDialog() {}
 
-    QPushButton *ok_button, *cancel_button;
-    QHBoxLayout *bottom_buttons_hbox;
-    QVBoxLayout *top_vbox;
+  QPushButton* ok_button, * cancel_button;
+  QHBoxLayout* bottom_buttons_hbox;
+  QVBoxLayout* top_vbox;
 
-    virtual void ok_button_click() { accept(); }
-    void cancel_button_click() { reject(); }
+  virtual void ok_button_click() { accept(); }
+  void cancel_button_click() { reject(); }
 };
 
 //=======================================================
 class GoalSetDialog final : public CrowdSimDialog
 {
-public: 
-    GoalSetDialog(CrowdSimImplPtr crowd_sim_impl);
-    void ok_button_click() override
-    { 
-        _goal_set_tab->save_to_impl();
-        accept();
-    }
+public:
+  GoalSetDialog(CrowdSimImplPtr crowd_sim_impl);
+  void ok_button_click() override
+  {
+    _goal_set_tab->save_to_impl();
+    accept();
+  }
 
 private:
-    std::shared_ptr<GoalSetTab> _goal_set_tab;
+  std::shared_ptr<GoalSetTab> _goal_set_tab;
 };
 
 //=======================================================
 class StateDialog final : public CrowdSimDialog
 {
 public:
-    StateDialog(CrowdSimImplPtr crowd_sim_impl);
-    void ok_button_click() override
-    {
-        _state_tab->save_to_impl();
-        accept();
-    }
+  StateDialog(CrowdSimImplPtr crowd_sim_impl);
+  void ok_button_click() override
+  {
+    _state_tab->save_to_impl();
+    accept();
+  }
 private:
-    std::shared_ptr<StatesTab> _state_tab;
+  std::shared_ptr<StatesTab> _state_tab;
 };
 
 //=========================================================
 class TransitionDialog final : public CrowdSimDialog
 {
 public:
-    TransitionDialog(CrowdSimImplPtr crowd_sim_impl);
-    void ok_button_click() override
-    {
-        _transition_tab->save_to_impl();
-        accept();
-    }
+  TransitionDialog(CrowdSimImplPtr crowd_sim_impl);
+  void ok_button_click() override
+  {
+    _transition_tab->save_to_impl();
+    accept();
+  }
 private:
-    std::shared_ptr<TransitionTab> _transition_tab;
+  std::shared_ptr<TransitionTab> _transition_tab;
 };
 
 //=========================================================
 class ToStateDialog final : public CrowdSimDialog
 {
 public:
-    ToStateDialog(CrowdSimImplPtr crowd_sim_impl, crowd_sim::Transition& transition);
-    void ok_button_click() override
-    {
-        _to_state_tab->save_to_impl(); //save to current transition
-        accept();
-    }
+  ToStateDialog(CrowdSimImplPtr crowd_sim_impl,
+    crowd_sim::Transition& transition);
+  void ok_button_click() override
+  {
+    _to_state_tab->save_to_impl(); //save to current transition
+    accept();
+  }
 private:
-    std::shared_ptr<ToStateTab> _to_state_tab;
+  std::shared_ptr<ToStateTab> _to_state_tab;
 };
 
 //=========================================================
 class AgentProfileDialog final : public CrowdSimDialog
 {
 public:
-    AgentProfileDialog(CrowdSimImplPtr crowd_sim_impl);
-    void ok_button_click() override
-    {
-        _agent_profile_tab->save_to_impl();
-        accept();
-    }
+  AgentProfileDialog(CrowdSimImplPtr crowd_sim_impl);
+  void ok_button_click() override
+  {
+    _agent_profile_tab->save_to_impl();
+    accept();
+  }
 private:
-    std::shared_ptr<AgentProfileTab> _agent_profile_tab;
+  std::shared_ptr<AgentProfileTab> _agent_profile_tab;
 };
 
 //=========================================================
 class AgentGroupDialog final : public CrowdSimDialog
 {
 public:
-    AgentGroupDialog(CrowdSimImplPtr crowd_sim_impl);
-    void ok_button_click() override
-    {
-        _agent_group_tab->save_to_impl();
-        accept();
-    }
+  AgentGroupDialog(CrowdSimImplPtr crowd_sim_impl);
+  void ok_button_click() override
+  {
+    _agent_group_tab->save_to_impl();
+    accept();
+  }
 private:
-    std::shared_ptr<AgentGroupTab> _agent_group_tab;
+  std::shared_ptr<AgentGroupTab> _agent_group_tab;
 };
 
 //=========================================================
 class ModelTypeDialog final : public CrowdSimDialog
 {
 public:
-    ModelTypeDialog(CrowdSimImplPtr crowd_sim_impl);
-    void ok_button_click() override
-    {
-        _model_type_tab->save_to_impl();
-        accept();
-    }
+  ModelTypeDialog(CrowdSimImplPtr crowd_sim_impl);
+  void ok_button_click() override
+  {
+    _model_type_tab->save_to_impl();
+    accept();
+  }
 private:
-    std::shared_ptr<ModelTypeTab> _model_type_tab;
+  std::shared_ptr<ModelTypeTab> _model_type_tab;
 };
 
 
