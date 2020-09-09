@@ -64,7 +64,7 @@ TransitionDialog::TransitionDialog(CrowdSimImplPtr crowd_sim_impl)
 {
     _transition_tab = TransitionTab::init_and_make(crowd_sim_impl);
     if (!_transition_tab) {
-        throw std::runtime_error("Failed to initialize StateTab in StateDialog");
+        throw std::runtime_error("Failed to initialize TransitionTab in TransitionDialog");
     }
     _transition_tab->update();
 
@@ -80,7 +80,7 @@ ToStateDialog::ToStateDialog(CrowdSimImplPtr crowd_sim_impl, crowd_sim::Transiti
 {
     _to_state_tab = ToStateTab::init_and_make(crowd_sim_impl, transition);
     if (!_to_state_tab) {
-        throw std::runtime_error("Failed to initialize StateTab in StateDialog");
+        throw std::runtime_error("Failed to initialize ToStateTab in ToStateDialog");
     }
     _to_state_tab->update();
     std::string title = "from_state: " + transition.get_from_state();
@@ -92,4 +92,46 @@ ToStateDialog::ToStateDialog(CrowdSimImplPtr crowd_sim_impl, crowd_sim::Transiti
 }
 
 //=========================================================
+AgentProfileDialog::AgentProfileDialog(CrowdSimImplPtr crowd_sim_impl)
+{
+    _agent_profile_tab = AgentProfileTab::init_and_make(crowd_sim_impl);
+    if (!_agent_profile_tab) {
+        throw std::runtime_error("Failed to initialize AgentProfileTab in AgentProfileDialog");
+    }
+    _agent_profile_tab->update();
+    setWindowTitle( "AgentProfile" );
+    QHBoxLayout* table_box = new QHBoxLayout;
+    table_box->addWidget(_agent_profile_tab.get());
+    top_vbox->addLayout(table_box);
+    top_vbox->addLayout(bottom_buttons_hbox);
+}
 
+//=========================================================
+AgentGroupDialog::AgentGroupDialog(CrowdSimImplPtr crowd_sim_impl)
+{
+    _agent_group_tab = AgentGroupTab::init_and_make(crowd_sim_impl);
+    if (!_agent_group_tab) {
+        throw std::runtime_error("Failed to initialize AgentGroupTab in AgentGroupDialog");
+    }
+    _agent_group_tab->update();
+    setWindowTitle( "AgentGroup" );
+    QHBoxLayout* table_box = new QHBoxLayout;
+    table_box->addWidget(_agent_group_tab.get());
+    top_vbox->addLayout(table_box);
+    top_vbox->addLayout(bottom_buttons_hbox);
+}
+
+//=========================================================
+ModelTypeDialog::ModelTypeDialog(CrowdSimImplPtr crowd_sim_impl)
+{
+    _model_type_tab = ModelTypeTab::init_and_make(crowd_sim_impl);
+    if (!_model_type_tab) {
+        throw std::runtime_error("Failed to initialize ModelTypeTab in ModelTypeDialog");
+    }
+    _model_type_tab->update();
+    setWindowTitle( "ModelType" );
+    QHBoxLayout* table_box = new QHBoxLayout;
+    table_box->addWidget(_model_type_tab.get());
+    top_vbox->addLayout(table_box);
+    top_vbox->addLayout(bottom_buttons_hbox);
+}

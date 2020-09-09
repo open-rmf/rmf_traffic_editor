@@ -258,6 +258,7 @@ void CrowdSimImplementation::save_states(const std::vector<State>& states)
 {
   _states.clear();
   _states = states;
+  _initialize_state();
 }
 
 //===================================================
@@ -272,6 +273,7 @@ void CrowdSimImplementation::save_agent_profiles(const std::vector<AgentProfile>
 {
   _agent_profiles.clear();
   _agent_profiles = agent_profiles;
+  _initialize_agent_profile();
 }
 
 //=================================================

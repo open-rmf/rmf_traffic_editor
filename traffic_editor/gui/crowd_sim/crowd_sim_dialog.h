@@ -13,6 +13,9 @@
 #include "state_table.h"
 #include "transition_table.h"
 #include "to_state_table.h"
+#include "agent_profile_table.h"
+#include "agent_group_table.h"
+#include "model_type_table.h"
 
 using namespace crowd_sim;
 
@@ -86,6 +89,48 @@ public:
     }
 private:
     std::shared_ptr<ToStateTab> _to_state_tab;
+};
+
+//=========================================================
+class AgentProfileDialog final : public CrowdSimDialog
+{
+public:
+    AgentProfileDialog(CrowdSimImplPtr crowd_sim_impl);
+    void ok_button_click() override
+    {
+        _agent_profile_tab->save_to_impl();
+        accept();
+    }
+private:
+    std::shared_ptr<AgentProfileTab> _agent_profile_tab;
+};
+
+//=========================================================
+class AgentGroupDialog final : public CrowdSimDialog
+{
+public:
+    AgentGroupDialog(CrowdSimImplPtr crowd_sim_impl);
+    void ok_button_click() override
+    {
+        _agent_group_tab->save_to_impl();
+        accept();
+    }
+private:
+    std::shared_ptr<AgentGroupTab> _agent_group_tab;
+};
+
+//=========================================================
+class ModelTypeDialog final : public CrowdSimDialog
+{
+public:
+    ModelTypeDialog(CrowdSimImplPtr crowd_sim_impl);
+    void ok_button_click() override
+    {
+        _model_type_tab->save_to_impl();
+        accept();
+    }
+private:
+    std::shared_ptr<ModelTypeTab> _model_type_tab;
 };
 
 

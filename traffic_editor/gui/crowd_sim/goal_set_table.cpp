@@ -104,14 +104,12 @@ void GoalSetTab::save_to_impl()
 //======================================================
 void GoalSetTab::add_button_click()
 {
-  save();
   _cache.emplace_back(_cache.size());
 }
 
 //======================================================
 void GoalSetTab::delete_button_click(size_t row_number)
 {
-  save();
   if (row_number > _cache.size()) return;
   _cache.erase(_cache.begin() + row_number);
 }

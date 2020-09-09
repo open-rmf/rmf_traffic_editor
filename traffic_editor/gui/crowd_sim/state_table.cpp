@@ -62,6 +62,11 @@ void StatesTab::add_button_click()
 //========================================
 void StatesTab::delete_button_click(size_t row_number)
 {
+  if(row_number == 0) 
+  {
+    std::cout << "Default state for external agent is not allowed to be deleted." << std::endl;
+    return;
+  }
   if (row_number > _cache.size()) return;
   _cache.erase(_cache.begin() + row_number);
 }

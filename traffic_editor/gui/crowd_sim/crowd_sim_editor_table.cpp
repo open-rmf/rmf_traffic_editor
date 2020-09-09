@@ -50,12 +50,8 @@ CrowdSimEditorTable::CrowdSimEditorTable(const Project& input_project)
         [this]() {
             bool OK_status;
             double update_time_step = _update_time_step_value_item->text().toDouble(&OK_status);
-            if(OK_status) {
-                _impl->set_update_time_step(update_time_step);
-            } else {
-                _impl->set_update_time_step(0.1);
-                std::cout << "Invalid update_time_step provided for crowd_sim. default 0.1s will be used." << std::endl;
-            }
+            _impl->set_update_time_step(
+                OK_status ? update_time_step : 0.1 );
         }
     );
 
@@ -96,16 +92,16 @@ CrowdSimEditorTable::CrowdSimEditorTable(const Project& input_project)
             continue;
         }
         if ("AgentProfiles" == _required_components[i]) {
-            // connect(
-            //     edit_button,
-            //     &QAbstractButton::clicked,
-            //     [this]() {
-            //         update();
-            //         AgentProfileDialog agent_profile_dialog(this->crowd_sim_impl);
-            //         agent_profile_dialog.exec();
-            //         update();
-            //     }
-            // );
+            connect(
+                edit_button,
+                &QAbstractButton::clicked,
+                [this]() {
+                    update();
+                    AgentProfileDialog agent_profile_dialog(_impl);
+                    agent_profile_dialog.exec();
+                    update();
+                }
+            );
         }
         if ("Transitions" == _required_components[i]) {
             connect(
@@ -120,28 +116,28 @@ CrowdSimEditorTable::CrowdSimEditorTable(const Project& input_project)
             );
         }
         if ("AgentGroups" == _required_components[i]) {
-            // connect(
-            //     edit_button,
-            //     &QAbstractButton::clicked,
-            //     [this]() {
-            //         update();
-            //         AgentGroupDialog agent_group_dialog(this->crowd_sim_impl);
-            //         agent_group_dialog.exec();
-            //         update();
-            //     }
-            // );
+            connect(
+                edit_button,
+                &QAbstractButton::clicked,
+                [this]() {
+                    update();
+                    AgentGroupDialog agent_group_dialog(_impl);
+                    agent_group_dialog.exec();
+                    update();
+                }
+            );
         }
         if ("ModelTypes" == _required_components[i]) {
-            // connect(
-            //     edit_button,
-            //     &QAbstractButton::clicked,
-            //     [this]() {
-            //         update();
-            //         ModelTypeDialog model_type_dialog(this->crowd_sim_impl);
-            //         model_type_dialog.exec();
-            //         update();
-            //     }
-            // );
+            connect(
+                edit_button,
+                &QAbstractButton::clicked,
+                [this]() {
+                    update();
+                    ModelTypeDialog model_type_dialog(_impl);
+                    model_type_dialog.exec();
+                    update();
+                }
+            );
         }
     }
 
@@ -170,16 +166,16 @@ void CrowdSimEditorTable::update()
             status_number = _impl->get_goal_sets().size();
         }
         if ("AgentProfiles" == this->_required_components[i]) {
-            // status_number = crowd_sim_impl->agent_profiles.size();
+            status_number = _impl->get_agent_profiles().size();
         }
         if ("Transitions" == this->_required_components[i]) {
             status_number = _impl->get_transitions().size();
         }
         if ("AgentGroups" == this->_required_components[i]) {
-            // status_number = crowd_sim_impl->agent_groups.size();
+            status_number = _impl->get_agent_groups().size();
         }
         if ("ModelTypes" == this->_required_components[i]) {
-            // status_number = crowd_sim_impl->model_types.size();
+            status_number = _impl->get_model_types().size();
         }
 
         setItem(

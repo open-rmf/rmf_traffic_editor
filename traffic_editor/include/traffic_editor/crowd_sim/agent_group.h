@@ -61,7 +61,7 @@ public:
     _spawn_point_x = x;
     _spawn_point_y = y;
   }
-  void set_external_agent_name(std::vector<std::string>& external_name)
+  void set_external_agent_name(const std::vector<std::string>& external_name)
   {
     _external_agent_name.clear();
     _external_agent_name = external_name;

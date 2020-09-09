@@ -31,7 +31,7 @@ void CrowdSimTableBase::update() {
     );
     list_item_in_cache();
 
-    for (size_t i = 0; i < cache_item_size; i++) {
+    for (auto i = 0; i < cache_item_size; i++) {
         QPushButton* delete_button = new QPushButton("Del");
         setCellWidget(i, get_label_size() - 1, delete_button);
         connect(
