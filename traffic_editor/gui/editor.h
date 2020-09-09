@@ -34,6 +34,7 @@
 #include "traffic_editor/editor_model.h"
 #include "editor_mode_id.h"
 #include "sim_thread.h"
+#include "crowd_sim/crowd_sim_editor_table.h"
 
 class BuildingLevelTable;
 class MapView;
@@ -197,7 +198,7 @@ private:
   LiftTable* lift_table;
   ScenarioTable* scenario_table;
   TrafficTable* traffic_table;
-  CrowdSimTable* crowd_sim_table;
+  CrowdSimEditorTable* crowd_sim_table;
 
   QTableWidget* property_editor;
   void update_property_editor();
@@ -319,7 +320,8 @@ private:
   void mouse_add_roi(const MouseType t, QMouseEvent* e, const QPointF& p);
   void mouse_edit_polygon(const MouseType t, QMouseEvent* e, const QPointF& p);
 
-  void mouse_add_human_lane(const MouseType t, QMouseEvent* e, const QPointF& p);
+  void mouse_add_human_lane(const MouseType t, QMouseEvent* e,
+    const QPointF& p);
 
   QPointF previous_mouse_point;
 
