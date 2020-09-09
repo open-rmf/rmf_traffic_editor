@@ -149,13 +149,12 @@ if (menge_FOUND)
     ${IGNITION-COMMON_INCLUDE_DIRS}
   )
 
-  target_link_libraries(crowd_simulator_ign
-    PUBLIC
-    ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
-    ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
-    ${rclcpp_LIBRARIES}
-    ${building_sim_common_LIBRARIES}
-    ${menge_LIBRARIES}
+  ament_target_dependencies(crowd_simulator_ign
+    ignition-gazebo${IGN_GAZEBO_VER}
+    ignition-plugin${IGN_PLUGIN_VER}
+    rclcpp
+    building_sim_common
+    menge
   )
 
   #install
