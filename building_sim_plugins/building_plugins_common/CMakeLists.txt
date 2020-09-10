@@ -31,6 +31,7 @@ find_package(rmf_fleet_msgs REQUIRED)
 find_package(rmf_door_msgs REQUIRED)
 find_package(rmf_lift_msgs REQUIRED)
 find_package(building_map_msgs REQUIRED)
+find_package(menge QUIET)
 
 include(GNUInstallDirs)
 
@@ -92,6 +93,38 @@ target_include_directories(lift_common
    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
+
+###############################
+# crowd simulator stuff
+###############################
+if (menge_FOUND)
+  add_library(crowd_simulator_common
+    SHARED
+    src/crowd_simulator_common.cpp  
+  )
+
+  target_include_directories(crowd_simulator_common
+    PUBLIC
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+      $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+      ${menge_INCLUDE_DIRS}
+  )
+  
+  ament_target_dependencies(crowd_simulator_common
+    menge
+    rclcpp
+  )
+
+  #crowd_simulation_common_install
+  ament_export_libraries(crowd_simulator_common)
+  install(
+    TARGETS crowd_simulator_common
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  )
+else(NOT menge_FOUND)
+  message("menge-cmake not found, skipping crowd_simulation plugins")
+endif()
 
 ###############################
 # install stuff
