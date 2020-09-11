@@ -27,18 +27,6 @@ class LevelWithHumanLanes (Level) :
         self.transform_all_vertices()
         self.update_human_goals()
 
-    def get_transformed_vertices(self):
-        return self.transformed_vertices
-
-    def get_human_lanes(self):
-        return self.human_lanes
-
-    def get_human_goals(self):
-        return self.human_goals
-
-    def set_graph_idx(self, graph_idx):
-        self.current_graph_idx = graph_idx
-
     def update_human_goals(self):
         self.human_goals = []
         if len(self.transformed_vertices) == 0 :
@@ -67,21 +55,12 @@ class BuildingYamlParse:
 
         # crowd_sim for configuration
         if not 'crowd_sim' in self.yaml_node:
-            # TODO: add exit process
             print("Expected 'crowd_sim' tag for crowd simulation")
-            
+            return
+    
         self.crowd_sim_config = self.yaml_node['crowd_sim']
 
-    def GetLevelNames(self):
-        return self.levels_name
-
-    def GetLevelWithHumanLanes(self, level_name):
-        return self.levels_with_human_lanes[level_name]
-
-    def GetCrowdSimConfig(self) :
-        return self.crowd_sim_config
-
-    def GetHumanGoals(self) :
+    def get_human_goals(self) :
         human_goals = []
         for level_name in self.levels_name :
             current_level = self.GetLevelWithHumanLanes(level_name)
