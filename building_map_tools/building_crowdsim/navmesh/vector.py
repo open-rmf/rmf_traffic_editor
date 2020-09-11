@@ -1,8 +1,9 @@
 import math
 from .vertex import Vertex
 
+
 class Vector2d:
-    def __init__(self, coords = [0.0, 0.0]):
+    def __init__(self, coords=[0.0, 0.0]):
         self.x = coords[0]
         self.y = coords[1]
 
@@ -18,7 +19,7 @@ class Vector2d:
 
     def get_unit(self):
         norm = self.get_length()
-        return Vector2d([self.x/norm, self.y/norm])
+        return Vector2d([self.x / norm, self.y / norm])
 
     def get_normal_unit(self):
         unit = self.get_unit()
@@ -30,7 +31,7 @@ class Vector2d:
 
     def get_orientation(self):
         return math.atan2(self.y, self.x)
-    
+
     def get_cross(self, vector2d):
         assert(isinstance(vector2d, Vector2d))
         return self.x * vector2d.y - self.y * vector2d.x

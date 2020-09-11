@@ -9,12 +9,13 @@ from .obstacle import Obstacle
 from .polygon import HubPolygon, LanePolygon
 from .object_manager import Manager
 
+
 class PolygonFactory:
     def __init__(
-            self, 
+            self,
             connection_manager,
             polygon_vertex_manager,
-            edge_manager, 
+            edge_manager,
             obstacle_manager,
             polygon_manager):
         self.connection_manager = connection_manager
@@ -24,18 +25,19 @@ class PolygonFactory:
         self.edge_manager = edge_manager
         self.obstacle_manager = obstacle_manager
         self.polygon_manager = polygon_manager
-        # predefined scale factor, see self.intersectionPolygonUpdate() special case explaination
+        # predefined scale factor, see self.intersectionPolygonUpdate() special
+        # case explaination
         self.scale_special_case = 0.01
         self.dead_end_extension = 0.1
 
-    def hub_polygon_update(self, polygon) :
+    def hub_polygon_update(self, polygon):
         assert(isinstance(polygon, HubPolygon))
         assert(polygon.hub_vertex_id != -1)
 
         self.polygon_manager.update_polygon_set(polygon)
 
         hub_vertex = self.lane_vertex_manager.data[polygon.hub_vertex_id]
-        if (len(hub_vertex.related_lane_ids) == 2) :
+        if (len(hub_vertex.related_lane_ids) == 2):
             self.hub_polygon_special_case_with_2_lanes(polygon)
         else:
             self.hub_polygon_general_case(polygon)
@@ -46,7 +48,7 @@ class PolygonFactory:
         lane = self.lane_manager.data[polygon.related_lane_id]
         already_vertex_ids = lane.polygon_vertex_id
 
-        if(len(already_vertex_ids) == 0) :
+        if(len(already_vertex_ids) == 0):
             raise ValueError(
                 "You are getting a lane not connected with any other hub. Please check the building.yaml")
 
@@ -54,8 +56,8 @@ class PolygonFactory:
             self.lane_polygon_general_case(polygon, already_vertex_ids)
         else:
             self.lane_polygon_dead_end_case(polygon, already_vertex_ids)
-        
-        assert( len(polygon.vertex_ids) == 4)
+
+        assert(len(polygon.vertex_ids) == 4)
         self.link_polygon_edge(polygon)
         # only lane polygon has obstacles
         self.set_polygon_obstacle(polygon)
@@ -65,47 +67,51 @@ class PolygonFactory:
     Besides, this function sort the unit_vectors by their gradient angle.
     Return with a list of pairs (lane_id, lane_unit_vector) in orientation sequence
     """
-    def cal_unit_lane_vector_in_sequence_on_intersect_vertex(self, intersect_vertex_id):
+
+    def cal_unit_lane_vector_in_sequence_on_intersect_vertex(
+            self, intersect_vertex_id):
         base_vertex = self.lane_vertex_manager.data[intersect_vertex_id]
-        if( len(base_vertex.related_lane_ids) == 0):
+        if(len(base_vertex.related_lane_ids) == 0):
             print(
-                "This lane vertex: ", 
-                base_vertex.id, 
+                "This lane vertex: ",
+                base_vertex.id,
                 "has not been assigned to one lane. Check initialization!")
             return []
 
         unit_vectors = []
         for lane_id in base_vertex.related_lane_ids:
-            tmp_vector = self.connection_manager.get_lane_vector(lane_id, base_vertex.id)
-            unit_vectors.append( (lane_id, tmp_vector.get_unit() ) )
-        
+            tmp_vector = self.connection_manager.get_lane_vector(
+                lane_id, base_vertex.id)
+            unit_vectors.append((lane_id, tmp_vector.get_unit()))
+
         unit_vectors.sort(key=lambda x: x[1].get_orientation())
         return unit_vectors
-        
+
     """
     This function calculates all the polygon vertices for a HubPolygon.
     Return with the polygon vertices instance in sequence.
     """
+
     def construct_vertices(self, polygon_id):
         polygon = self.polygon_manager.data[polygon_id]
-        if(isinstance(polygon, LanePolygon)) :
+        if(isinstance(polygon, LanePolygon)):
             print(
                 "Only polygon with intersection lane vertex constructs polygon vertices.",
-                "Current processing polygon: [", 
-                polygon_id, 
+                "Current processing polygon: [",
+                polygon_id,
                 "]")
             return []
 
-        lane_vectors = \
-            self.cal_unit_lane_vector_in_sequence_on_intersect_vertex(polygon.hub_vertex_id)
+        lane_vectors = self.cal_unit_lane_vector_in_sequence_on_intersect_vertex(
+            polygon.hub_vertex_id)
         construct_vertices = []
 
         for i in range(len(lane_vectors)):
             new_polygon_vertex = \
                 self.connection_manager.cal_polygon_vertex_from_lane(
-                    lane_vectors[i-1][0],
+                    lane_vectors[i - 1][0],
                     lane_vectors[i][0])
-            new_polygon_vertex.related_lane_ids.add(lane_vectors[i-1][0])
+            new_polygon_vertex.related_lane_ids.add(lane_vectors[i - 1][0])
             new_polygon_vertex.related_lane_ids.add(lane_vectors[i][0])
             construct_vertices.append(new_polygon_vertex)
 
@@ -116,6 +122,7 @@ class PolygonFactory:
     In this case, only 2 polygon vertices will be generated from self.construct_vertices()
     This function added additional 2 polygon vertices for the HubPolygon
     """
+
     def hub_polygon_special_case_with_2_lanes(self, polygon):
         assert(isinstance(polygon, HubPolygon))
         vertices = self.construct_vertices(polygon.id)
@@ -123,10 +130,10 @@ class PolygonFactory:
         intersect_vertex = self.lane_vertex_manager.data[polygon.hub_vertex_id]
         v0 = vertices[0]
         v1 = vertices[1]
-        
+
         # lane_vector is a list in pair (lane_id, lane_unit_vector)
-        lane_vectors = \
-            self.cal_unit_lane_vector_in_sequence_on_intersect_vertex(intersect_vertex.id)
+        lane_vectors = self.cal_unit_lane_vector_in_sequence_on_intersect_vertex(
+            intersect_vertex.id)
         assert(len(lane_vectors) == 2)
         vector0 = lane_vectors[0][1]
         vector1 = lane_vectors[1][1]
@@ -134,12 +141,12 @@ class PolygonFactory:
         # v0_pair and v0 constructs an edge related to lane0
         v0_pair = Vertex(
             [v1.x + self.scale_special_case * vector0.x,
-            v1.y + self.scale_special_case * vector0.y])
+             v1.y + self.scale_special_case * vector0.y])
         v0_pair.related_lane_ids.add(lane_vectors[0][0])
         # v1_pair and v1 constructs an edge related to lane1
         v1_pair = Vertex(
             [v0.x + self.scale_special_case * vector1.x,
-            v0.y + self.scale_special_case * vector1.y])
+             v0.y + self.scale_special_case * vector1.y])
         v1_pair.related_lane_ids.add(lane_vectors[1][0])
 
         # make the vertices in sequence!! This is quite important!
@@ -149,7 +156,7 @@ class PolygonFactory:
         for v in vertices:
             self.polygon_vertex_manager.add_obj(v)
             polygon.add_vertex(v)
-        
+
         # update polygon edges
         for i in range(2):
             if i == 0:
@@ -165,27 +172,33 @@ class PolygonFactory:
             edge_cross_lane.polygon_vertex_id.append(id0)
             edge_cross_lane.polygon_vertex_id.append(id1)
             edge = Edge()
-            # the connected lane polygon is not generated yet, use the same polygon id
+            # the connected lane polygon is not generated yet, use the same
+            # polygon id
             edge.init_edge(id0, id1, polygon.id, polygon.id)
-            edge.cross_lane_id = edge_cross_lane.id 
+            edge.cross_lane_id = edge_cross_lane.id
             self.edge_manager.add_obj(edge)
             polygon.edge_ids.add(edge.id)
 
     def hub_polygon_general_case(self, polygon):
-        # update polygon vertices        
+        # update polygon vertices
         vertices = self.construct_vertices(polygon.id)
-        for v in vertices :
+        for v in vertices:
             self.polygon_vertex_manager.add_obj(v)
             polygon.add_vertex(v)
-            for related_lane_id in v.related_lane_ids :
-                self.lane_manager.data[related_lane_id].polygon_vertex_id.append(v.id)
+            for related_lane_id in v.related_lane_ids:
+                self.lane_manager.data[related_lane_id].polygon_vertex_id.append(
+                    v.id)
         # update edges
         for idx in range(len(vertices)):
-            common_lane = vertices[idx].related_lane_ids.intersection(vertices[idx-1].related_lane_ids)
+            common_lane = vertices[idx].related_lane_ids.intersection(
+                vertices[idx - 1].related_lane_ids)
             # only 1 common_lane expected
             assert(len(common_lane) == 1)
             edge = Edge()
-            edge.init_edge(vertices[idx].id, vertices[idx-1].id, polygon.id, polygon.id)
+            edge.init_edge(vertices[idx].id,
+                           vertices[idx - 1].id,
+                           polygon.id,
+                           polygon.id)
             edge.cross_lane_id = list(common_lane)[0]
             self.edge_manager.add_obj(edge)
             polygon.edge_ids.add(edge.id)
@@ -198,6 +211,7 @@ class PolygonFactory:
     If in the same side of lane, the sequence is (0, 2, 3, 1)
     If not, the sequence is (0, 1, 2, 3)
     """
+
     def lane_polygon_general_case(self, polygon, already_vertices):
         lane = self.lane_manager.data[polygon.related_lane_id]
         v0 = self.polygon_vertex_manager.data[already_vertices[0]]
@@ -205,10 +219,10 @@ class PolygonFactory:
 
         if self.connection_manager.is_on_same_side_of_lane(lane.id, v0, v2):
             already_vertices = [
-                already_vertices[0], 
-                already_vertices[2], 
-                already_vertices[3], 
-                already_vertices[1] ]
+                already_vertices[0],
+                already_vertices[2],
+                already_vertices[3],
+                already_vertices[1]]
 
         for v_id in already_vertices:
             polygon.add_vertex(self.polygon_vertex_manager.data[v_id])
@@ -219,6 +233,7 @@ class PolygonFactory:
     2 additional dead end polygon vertices should be generated.
     The sequence of polygon vertices will also be taken care of as general case.
     """
+
     def lane_polygon_dead_end_case(self, polygon, already_vertices):
         assert(isinstance(polygon, LanePolygon))
         assert(len(already_vertices) == 2)
@@ -229,10 +244,11 @@ class PolygonFactory:
         construct_vertices = []
         dead_end_id = -1
         for dead_end_id in lane.lane_vertex_id:
-            if( len(self.lane_vertex_manager.data[dead_end_id].related_lane_ids) == 1) :
+            if(len(self.lane_vertex_manager.data[dead_end_id].related_lane_ids) == 1):
                 break
-        construct_vertices = self.dead_end_lane_vertices(polygon.id, dead_end_id)
-        
+        construct_vertices = self.dead_end_lane_vertices(
+            polygon.id, dead_end_id)
+
         v2 = construct_vertices[0]
         v3 = construct_vertices[1]
         self.polygon_vertex_manager.add_obj(v2)
@@ -240,7 +256,7 @@ class PolygonFactory:
 
         if self.connection_manager.is_on_same_side_of_lane(lane.id, v0, v2):
             result = [v0, v2, v3, v1]
-        else :
+        else:
             result = [v0, v1, v2, v3]
 
         for v in result:
@@ -249,18 +265,20 @@ class PolygonFactory:
     """
     Generate 2 additional polygon vertices for dead end LanePolygon
     """
+
     def dead_end_lane_vertices(self, polygon_id, dead_end_vertex_id):
         polygon = self.polygon_manager.data[polygon_id]
         # must be a lane node
         assert(isinstance(polygon, LanePolygon))
         lane = self.lane_manager.data[polygon.related_lane_id]
-        
-        lane_vector = self.connection_manager.get_lane_vector(lane.id, dead_end_vertex_id)
+
+        lane_vector = self.connection_manager.get_lane_vector(
+            lane.id, dead_end_vertex_id)
         lane_vector_unit = lane_vector.get_unit()
         lane_normal_unit0 = lane_vector.get_normal_unit()
         lane_normal_unit1 = Vector2d(
-            [-lane_normal_unit0.x, 
-            -lane_normal_unit0.y])
+            [-lane_normal_unit0.x,
+             -lane_normal_unit0.y])
 
         dead_end_vertex = self.lane_vertex_manager.data[dead_end_vertex_id]
         base_vertex = Vertex([
@@ -270,11 +288,11 @@ class PolygonFactory:
         lane_width = lane.width
 
         new_vertex0 = Vertex(
-            [base_vertex.x + 0.5 * lane_width * lane_normal_unit0.x, 
-             base_vertex.y + 0.5 * lane_width * lane_normal_unit0.y ])
+            [base_vertex.x + 0.5 * lane_width * lane_normal_unit0.x,
+             base_vertex.y + 0.5 * lane_width * lane_normal_unit0.y])
         new_vertex1 = Vertex(
             [base_vertex.x + 0.5 * lane_width * lane_normal_unit1.x,
-             base_vertex.y + 0.5 * lane_width * lane_normal_unit1.y ])
+             base_vertex.y + 0.5 * lane_width * lane_normal_unit1.y])
 
         return [new_vertex0, new_vertex1]
 
@@ -283,30 +301,35 @@ class PolygonFactory:
     This function should be called after all the 4 polygon vertices are added
     This function aims to update the edge information between LanePolygon and HubPolygon
     """
+
     def link_polygon_edge(self, lane_polygon):
         assert(isinstance(lane_polygon, LanePolygon))
         assert(len(lane_polygon.vertex_ids) == 4)
         lane = self.lane_manager.data[lane_polygon.related_lane_id]
 
-        for v_id in lane.lane_vertex_id :
+        for v_id in lane.lane_vertex_id:
             # get the neighbor HubPolygon
             neighbor_polygon_id = \
                 self.polygon_manager.get_hub_polygon_from_hub_vertex(v_id)
             # ignore dead end case
-            if(neighbor_polygon_id < 0) :
+            if(neighbor_polygon_id < 0):
                 continue
 
             connection_edge = -1
             for edge_id in self.polygon_manager.data[neighbor_polygon_id].edge_ids:
-                if(self.edge_manager.data[edge_id].cross_lane_id == lane.id) :
+                if(self.edge_manager.data[edge_id].cross_lane_id == lane.id):
                     connection_edge = edge_id
                     break
             assert(connection_edge >= 0)
 
             edge = self.edge_manager.data[connection_edge]
-            edge.init_edge(edge.v0_id, edge.v1_id, edge.node0_id, lane_polygon.id)
+            edge.init_edge(
+                edge.v0_id,
+                edge.v1_id,
+                edge.node0_id,
+                lane_polygon.id)
             lane_polygon.edge_ids.add(edge.id)
-    
+
     """
     This function can only be called by LanePolygon, HubPolygon has no obstacles.
     Obstacle should be added after edge.
@@ -315,6 +338,7 @@ class PolygonFactory:
     The idea is 1 obstacle is constructed by 2 polygon vertices that on the same side of lane.
     2 cases by checking v0-v1 pair and v0-v3 pair
     """
+
     def set_polygon_obstacle(self, lane_polygon):
         assert(isinstance(lane_polygon, LanePolygon))
         assert(len(lane_polygon.vertex_ids) == 4)
@@ -328,34 +352,34 @@ class PolygonFactory:
         v3 = polygon_vertices[3]
 
         assert(v0.id >= 0
-            and v1.id >= 0
-            and v2.id >= 0
-            and v3.id >= 0)
+               and v1.id >= 0
+               and v2.id >= 0
+               and v3.id >= 0)
 
         obstacle_pairs = []
         # v0-v1 pair on the same side
-        if self.connection_manager.is_on_same_side_of_lane(lane.id, v0, v1) :
-            obstacle_pairs.append( (v0.id, v1.id) )
-            obstacle_pairs.append( (v2.id, v3.id) )
-        else : # v0-v3 pair on the same side
-            obstacle_pairs.append( (v0.id, v3.id) )
-            obstacle_pairs.append( (v1.id, v2.id) )
-        
-        for pair in obstacle_pairs :
+        if self.connection_manager.is_on_same_side_of_lane(lane.id, v0, v1):
+            obstacle_pairs.append((v0.id, v1.id))
+            obstacle_pairs.append((v2.id, v3.id))
+        else:  # v0-v3 pair on the same side
+            obstacle_pairs.append((v0.id, v3.id))
+            obstacle_pairs.append((v1.id, v2.id))
+
+        for pair in obstacle_pairs:
             obstacle = Obstacle()
             obstacle.init_obstacle(pair[0], pair[1], lane_polygon.id)
             self.obstacle_manager.add_obj(obstacle)
             lane_polygon.obstacle_ids.add(obstacle.id)
 
         # dead end case, one more obstacle added
-        if len(lane_polygon.edge_ids) == 1 :
+        if len(lane_polygon.edge_ids) == 1:
             edge_id = list(lane_polygon.edge_ids)[0]
             edge = self.edge_manager.data[edge_id]
             on_edge_vertex_ids = [edge.v0_id, edge.v1_id]
-            
+
             obstacle_pairs = []
-            for v in polygon_vertices :
-                if not v.id in on_edge_vertex_ids :
+            for v in polygon_vertices:
+                if v.id not in on_edge_vertex_ids:
                     obstacle_pairs.append(v.id)
 
             obstacle = Obstacle()

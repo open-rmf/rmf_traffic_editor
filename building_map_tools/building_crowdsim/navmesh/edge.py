@@ -1,6 +1,6 @@
 class Edge:
     # edge for polygon
-    
+
     def __init__(self):
         self.id = -1
         # polygon vertex id

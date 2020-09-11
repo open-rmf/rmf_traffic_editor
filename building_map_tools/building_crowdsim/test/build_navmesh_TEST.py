@@ -1,5 +1,6 @@
 from building_crowdsim.navmesh.build_navmesh import BuildNavmesh
 
+
 def test():
     build_navmesh = BuildNavmesh()
 
@@ -32,6 +33,7 @@ def test():
 
     build_navmesh.process()
     build_navmesh.output("test_navmesh_00.nav")
+
 
 if __name__ == "__main__":
     try:
