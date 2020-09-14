@@ -2,162 +2,173 @@ import xml.etree.ElementTree as ET
 
 from .leaf_element import LeafElement, Element
 
-class Plugin (Element) :
-    def __init__(self, model_env) :
+
+class Plugin (Element):
+    def __init__(self, model_env):
         Element.__init__(self, 'plugin')
-        if model_env == "gazebo" :
-            self.addAttribute('filename', 'libcrowd_simulator.so')
-        elif model_env == 'ign' :
-            self.addAttribute('filename', 'libcrowd_simulator_ign.so')
-        else :
-            raise ValueError("Unknown 'model_env' provided to initialize Plugin: [" + model_env + "]")
-        
-        self._model_env = model_env
-        
-        self.addAttribute('name', 'crowd_simulation')
+        if model_env == "gazebo":
+            self.attributes['filename'] = 'libcrowd_simulator.so'
+        elif model_env == 'ign':
+            self.attributes['filename'] = 'libcrowd_simulator_ign.so'
+        else:
+            raise ValueError(
+                "Unknown 'model_env' provided to initialize Plugin: [" +
+                model_env + "]")
 
-        self._behavior_file = LeafElement('behavior_file')
-        self._behavior_file.setText('behavior_file.xml')
+        self.model_env = model_env
+        self.attributes['name'] = 'crowd_simulation'
 
-        self._scene_file = LeafElement('scene_file')
-        self._scene_file.setText('scene_file.xml')
+        self.behavior_file_element = LeafElement('behavior_file')
+        self.behavior_file_element.text = 'behavior_file.xml'
 
-        self._update_time_step = LeafElement('update_time_step')
-        self._update_time_step.setText('0.1')
+        self.scene_file_element = LeafElement('scene_file')
+        self.scene_file_element.text = 'scene_file.xml'
 
-        self.addSubElement(self._behavior_file)
-        self.addSubElement(self._scene_file)
-        self.addSubElement(self._update_time_step)
+        self.update_time_step_element = LeafElement('update_time_step')
+        self.update_time_step_element.text = '0.1'
 
-        self._initialized = False
-    
-    def setBehaviorFileName(self, behavior_file_name) :
-        self._behavior_file.setText(str(behavior_file_name))
+        self.sub_elements.append(self.behavior_file_element)
+        self.sub_elements.append(self.scene_file_element)
+        self.sub_elements.append(self.update_time_step_element)
 
-    def setSceneFileName(self, scene_file_name) :
-        self._scene_file.setText(str(scene_file_name))
+    def load_from_yaml(self, yaml_node):
+        if 'enable' not in yaml_node:
+            raise ValueError("Missing 'enable' in yaml_node")
+        if 'update_time_step' not in yaml_node:
+            raise ValueError("Missing 'update_time_step' in yaml_node")
+        self.update_time_step_element.text = str(
+            float(yaml_node['update_time_step']))
 
-    def setUpdateTimeStep(self, update_time_step) :
-        self._update_time_step.setText(str(update_time_step))
+        if 'model_types' not in yaml_node:
+            raise ValueError("Invalid 'model_types' in yaml_node")
+        for model_type in yaml_node['model_types']:
+            cur_model_type = ModelType()
+            cur_model_type.load_from_yaml(model_type)
+            self.add_model_type(cur_model_type)
 
-    def addModelType(self, model_type) :
-        if not hasattr(model_type, "outputXmlElement") :
-            raise ValueError("model_type provided is not an element!")
-        model_type.setModelEnv(self._model_env)
-        self.addSubElement(model_type)
-    
-    def addExternalAgent(self, name) :
-        external_agent = LeafElement('external_agent')
-        external_agent.setText(name)
-        self.addSubElement(external_agent)
+        # get all the external agent names from 'agent_groups'
+        if 'agent_groups' not in yaml_node:
+            return
+        agent_groups = yaml_node['agent_groups']
+        for group in agent_groups:
+            if len(group['agents_name']) == 0:
+                continue
+            self.add_external_list(group['agents_name'])
 
-    def addExternalAgentList(self, name_list):
+    def add_model_type(self, model_type):
+        assert(isinstance(model_type, ModelType))
+        model_type.model_env = self.model_env
+        self.sub_elements.append(model_type)
+
+    def add_external_agent(self, name):
+        external_agent_element = LeafElement('external_agent')
+        external_agent_element.text = name
+        self.sub_elements.append(external_agent_element)
+
+    def add_external_list(self, name_list):
         for name in name_list:
-            self.addExternalAgent(name)
-    
+            self.add_external_agent(name)
 
-#########################################################
-class ModelType (Element) :
 
-    def __init__(self) :
+class ModelType (Element):
+    def __init__(self):
         Element.__init__(self, 'model_type')
-        self._type_name = LeafElement('typename')
-        self._animation_speed = LeafElement('animation_speed')
-        self._animation = LeafElement('animation')
+        self.type_name = LeafElement('typename')
+        self.animation_speed = LeafElement('animation_speed')
+        self.animation = LeafElement('animation')
         # for gazebo model
-        self._initial_pose_gazebo = LeafElement('initial_pose')
-        self._filename = LeafElement('filename') 
+        self.initial_pose_gazebo = LeafElement('initial_pose')
+        self.gazebo_filename = LeafElement('filename')
         # for ign model
-        self._initial_pose_ign = LeafElement('initial_pose')
-        self._model_file_path = LeafElement('filename')
+        self.initial_pose_ign = LeafElement('initial_pose')
+        self.ign_filename = LeafElement('filename')
 
-        self.addSubElement(self._type_name)
-        self.addSubElement(self._animation)
-        self.addSubElement(self._animation_speed)
-        
-        self._model_env = None
+        self.sub_elements.append(self.type_name)
+        self.sub_elements.append(self.animation)
+        self.sub_elements.append(self.animation_speed)
 
-    def setModelEnv(self, model_env) :
-        self._model_env = model_env
+        self.model_env = None
 
-    def setElement(self, key, value) :
-        if key == "typename" :
-            self._type_name.setText(value)
-            return
+    def load_from_yaml(self, yaml_node):
+        for key in yaml_node:
+            self.set_tags(key, yaml_node[key])
 
-        if key == "animation_speed" :
-            self._animation_speed.setText(value)
+    def set_tags(self, key, value):
+        if key == "typename":
+            self.type_name.text = str(value)
             return
-        
-        if key == "animation" :
-            self._animation.setText(value)
+        if key == "animation_speed":
+            self.animation_speed.text = str(value)
             return
-        
-        if key == "gazebo" :
-            for k in value :
-                self.setGazeboModel(k, value[k])
+        if key == "animation":
+            self.animation.text = str(value)
             return
-        
-        if key == "ign" :
-            for k in value :
-                self.setIgnModel(k, value[k])
+        if key == "gazebo":
+            for k in value:
+                self.set_gazebo_model(k, value[k])
             return
-        
-        raise ValueError("invalid params provided in model_type: [" + key + "]")
+        if key == "ign":
+            for k in value:
+                self.set_ign_model(k, value[k])
+            return
+        raise ValueError("Invalid params provided in model_type: [" + key + "]")
 
-    def setGazeboModel(self, key, value) :
-        if key == 'pose' :
-            # value would be [x, y, z, pitch, roll, yaw]
+    def set_gazebo_model(self, key, value):
+        if key == 'pose':
             content = ''
-            for number in value :
+            for number in value:
                 content += str(number) + ' '
-            content = content[0:-1] #delete the last ' '
-            self._initial_pose_gazebo.setText(content)
-            return
-        
-        if key == 'filename' :
-            self._filename.setText(value)
+            content = content[0:-1]
+            self.initial_pose_gazebo.text = content
             return
 
-        raise ValueError('invalid params provided for gazebo model:[' + key + ']')
+        if key == 'filename':
+            self.gazebo_filename.text = str(value)
+            return
 
-    def setIgnModel(self, key, value) :
-        if key == 'pose' :
-            # value would be [x, y, z, pitch, roll, yaw]
+        raise ValueError(
+            "invalid params provided for gazebo model:[" + key + "]")
+
+    def set_ign_model(self, key, value):
+        if key == 'pose':
             content = ''
-            for number in value :
+            for number in value:
                 content += str(number) + ' '
-            content = content[0:-1] #delete the last ' '
-            self._initial_pose_ign.setText(content)
-            return
-        
-        if key == 'model_file_path' :
-            self._model_file_path.setText(value)
+            content = content[0:-1]
+            self.initial_pose_ign.text = content
             return
 
-        raise ValueError('invalid params provided for gazebo model:[' + key + ']')
+        if key == 'model_file_path':
+            self.ign_filename.text = str(value)
+            return
 
-    def outputXmlElement(self):
-        if not self._type_name.getText() or not self._animation.getText() or not self._animation_speed.getText() :
+        raise ValueError(
+            "invalid params provided for gazebo model:[" + key + "]")
+
+    def output_xml_element(self):
+        if not self.type_name.text or\
+           not self.animation.text or\
+           not self.animation_speed.text:
             raise ValueError("Incomplete 'model_type' element")
 
-        if self._model_env != "gazebo" and self._model_env != "ign" :
-            raise ValueError("Unknown 'model_env' [" + self._model_env + "], please select 'gazebo' or 'ign'")
-        
-        if self._model_env == "gazebo" :
-            if not self._filename.getText() or not self._initial_pose_gazebo.getText() :
+        if self.model_env != "gazebo" and self.model_env != "ign":
+            raise ValueError(
+                "Unknown 'model_env' [" +
+                self.model_env +
+                "], please select 'gazebo' or 'ign'")
+
+        if self.model_env == "gazebo":
+            if not self.gazebo_filename.text or\
+               not self.initial_pose_gazebo.text:
                 raise ValueError("Incomplete 'gazebo' model in 'model_type'")
-            self.addSubElement(self._initial_pose_gazebo)
-            self.addSubElement(self._filename)
+            self.sub_elements.append(self.initial_pose_gazebo)
+            self.sub_elements.append(self.gazebo_filename)
+            return Element.output_xml_element(self)
 
-            return Element.outputXmlElement(self)
-            
-
-        if self._model_env == "ign" :
-            if not self._model_file_path.getText() or not self._initial_pose_ign.getText() :
+        if self.model_env == "ign":
+            if not self.ign_filename.text or\
+               not self.initial_pose_ign.text:
                 raise ValueError("Incomplete 'ign' model in 'model_type'")
-            self.addSubElement(self._initial_pose_ign)
-            self.addSubElement(self._model_file_path)
-
-            return Element.outputXmlElement(self)
-            
+            self.sub_elements.append(self.initial_pose_ign)
+            self.sub_elements.append(self.gazebo_filename)
+            return Element.output_xml_element(self)

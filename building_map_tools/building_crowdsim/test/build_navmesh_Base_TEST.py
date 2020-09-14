@@ -1,6 +1,5 @@
 from building_crowdsim.navmesh.build_navmesh import BuildNavmesh
 
-
 def test():
     build_navmesh = BuildNavmesh()
 

@@ -16,27 +16,32 @@ class LevelWithHumanLanes (Level):
 
         # add human_lanes variable
         self.human_lanes = []
+        self.human_goals = {}
         if 'human_lanes' in yaml_node:
             self.human_lanes = \
                 self.parse_edge_sequence(yaml_node['human_lanes'])
         else:
             print("Expected human_lanes tag for crowd simulation")
             raise ValueError("No 'human_lanes' found!")
-        self.human_goals = []
 
         self.calculate_scale_using_measurements()
         self.transform_all_vertices()
         self.update_human_goals()
 
     def update_human_goals(self):
-        self.human_goals = []
+        self.human_goals = {}
         if len(self.transformed_vertices) == 0:
             print("Please transform all the vertices" +
                   " before update the human goals")
         for vertex in self.transformed_vertices:
             if 'human_goal_set_name' not in vertex.params:
                 continue
-            self.human_goals.append(vertex)
+            if vertex.params['human_goal_set_name'].value not in self.human_goals:
+                self.human_goals[
+                    vertex.params['human_goal_set_name'].value] = []
+            self.human_goals[
+                vertex.params['human_goal_set_name'].value].append(
+                vertex.xy())
 
 
 class BuildingYamlParse:
@@ -64,8 +69,12 @@ class BuildingYamlParse:
         self.crowd_sim_config = self.yaml_node['crowd_sim']
 
     def get_human_goals(self):
-        human_goals = []
-        for level_name in self.levels_name:
-            current_level = self.levels_with_human_lanes[level_name]
-            human_goals.extend(current_level.get_human_goals())
-        return human_goals
+        result = {}
+        for level_name in self.levels_with_human_lanes:
+            cur_human_goals =\
+                self.levels_with_human_lanes[level_name].human_goals
+            for area in cur_human_goals:
+                if area not in result:
+                    result[area] = []
+                result[area].extend(cur_human_goals[area])
+        return result

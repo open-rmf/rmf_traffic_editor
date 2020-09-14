@@ -7,8 +7,6 @@ from building_map.vertex import Vertex
 from building_map.edge import Edge
 from building_map.transform import Transform
 
-"""Generate navmesh for one level based on 'human_lanes' """
-
 
 class NavmeshGenerator:
     def __init__(
