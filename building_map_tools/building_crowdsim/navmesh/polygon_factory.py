@@ -63,15 +63,15 @@ class PolygonFactory:
         # only lane polygon has obstacles
         self.set_polygon_obstacle(polygon)
 
-    """
-    This function caluates all the unit_vectors for lanes
-    that intersects at the same lane_vertex.
-    Besides, this function sort the unit_vectors by their gradient angle.
-    Return with a list of pairs (lane_id, lane_unit_vector)
-    in orientation sequence
-    """
     def cal_unit_lane_vector_in_sequence_on_intersect_vertex(
             self, intersect_vertex_id):
+        """
+        This function caluates all the unit_vectors for lanes
+        that intersects at the same lane_vertex.
+        Besides, this function sort the unit_vectors by their gradient angle.
+        Return with a list of pairs (lane_id, lane_unit_vector)
+        in orientation sequence
+        """
         base_vertex = self.lane_vertex_manager.data[intersect_vertex_id]
         if(len(base_vertex.related_lane_ids) == 0):
             print(
@@ -89,11 +89,11 @@ class PolygonFactory:
         unit_vectors.sort(key=lambda x: x[1].get_orientation())
         return unit_vectors
 
-    """
-    This function calculates all the polygon vertices for a HubPolygon.
-    Return with the polygon vertices instance in sequence.
-    """
     def construct_vertices(self, polygon_id):
+        """
+        This function calculates all the polygon vertices for a HubPolygon.
+        Return with the polygon vertices instance in sequence.
+        """
         polygon = self.polygon_manager.data[polygon_id]
         if(isinstance(polygon, LanePolygon)):
             print(
@@ -119,13 +119,13 @@ class PolygonFactory:
 
         return construct_vertices
 
-    """
-    Special case where HubPolygon is only connected with 2 LanePolygon.
-    In this case, only 2 polygon vertices will be generated from
-    self.construct_vertices()
-    This function added additional 2 polygon vertices for the HubPolygon
-    """
     def hub_polygon_special_case_with_2_lanes(self, polygon):
+        """
+        Special case where HubPolygon is only connected with 2 LanePolygon.
+        In this case, only 2 polygon vertices will be generated from
+        self.construct_vertices()
+        This function added additional 2 polygon vertices for the HubPolygon
+        """
         assert(isinstance(polygon, HubPolygon))
         vertices = self.construct_vertices(polygon.id)
         assert(len(vertices) == 2)
@@ -207,15 +207,15 @@ class PolygonFactory:
             self.edge_manager.add_obj(edge)
             polygon.edge_ids.add(edge.id)
 
-    """
-    LanePolygon general case does not generate new polygon vertex. This
-    function aims to rearrange the sequence of the 4 added polygon
-    vertices. 0 and 1 are added together; 2 and 3 are added together
-    The idea is checking whether the v0, v2 is in the same side of the lane
-    If in the same side of lane, the sequence is (0, 2, 3, 1)
-    If not, the sequence is (0, 1, 2, 3)
-    """
     def lane_polygon_general_case(self, polygon, already_vertices):
+        """
+        LanePolygon general case does not generate new polygon vertex. This
+        function aims to rearrange the sequence of the 4 added polygon
+        vertices. 0 and 1 are added together; 2 and 3 are added together
+        The idea is checking whether the v0, v2 is in the same side of the lane
+        If in the same side of lane, the sequence is (0, 2, 3, 1)
+        If not, the sequence is (0, 1, 2, 3)
+        """
         lane = self.lane_manager.data[polygon.related_lane_id]
         v0 = self.polygon_vertex_manager.data[already_vertices[0]]
         v2 = self.polygon_vertex_manager.data[already_vertices[2]]
@@ -230,14 +230,14 @@ class PolygonFactory:
         for v_id in already_vertices:
             polygon.add_vertex(self.polygon_vertex_manager.data[v_id])
 
-    """
-    LanePolygon dead end case, means this lane is only connected with
-    1 hub polygon. There are only 2 already generated vertices.
-    2 additional dead end polygon vertices should be generated.
-    The sequence of polygon vertices will also be taken care of
-    as general case.
-    """
     def lane_polygon_dead_end_case(self, polygon, already_vertices):
+        """
+        LanePolygon dead end case, means this lane is only connected with
+        1 hub polygon. There are only 2 already generated vertices.
+        2 additional dead end polygon vertices should be generated.
+        The sequence of polygon vertices will also be taken care of
+        as general case.
+        """
         assert(isinstance(polygon, LanePolygon))
         assert(len(already_vertices) == 2)
         v0 = self.polygon_vertex_manager.data[already_vertices[0]]
@@ -268,10 +268,10 @@ class PolygonFactory:
         for v in result:
             polygon.add_vertex(self.polygon_vertex_manager.data[v.id])
 
-    """
-    Generate 2 additional polygon vertices for dead end LanePolygon
-    """
     def dead_end_lane_vertices(self, polygon_id, dead_end_vertex_id):
+        """
+        Generate 2 additional polygon vertices for dead end LanePolygon
+        """
         polygon = self.polygon_manager.data[polygon_id]
         # must be a lane node
         assert(isinstance(polygon, LanePolygon))
@@ -301,12 +301,12 @@ class PolygonFactory:
 
         return [new_vertex0, new_vertex1]
 
-    """
-    This function can only be called by lane polygon. This function should be
-    called after all the 4 polygon vertices are added. This function aims to
-    update the edge information between LanePolygon and HubPolygon
-    """
     def link_polygon_edge(self, lane_polygon):
+        """
+        This function can only be called by lane polygon. This function should be
+        called after all the 4 polygon vertices are added. This function aims to
+        update the edge information between LanePolygon and HubPolygon
+        """
         assert(isinstance(lane_polygon, LanePolygon))
         assert(len(lane_polygon.vertex_ids) == 4)
         lane = self.lane_manager.data[lane_polygon.related_lane_id]
@@ -337,15 +337,15 @@ class PolygonFactory:
                 lane_polygon.id)
             lane_polygon.edge_ids.add(edge.id)
 
-    """
-    This function can only be called by LanePolygon, HubPolygon has no
-    obstacles. Obstacle should be added after edge.
-    There are 3 obstacles at most (3 is when the LanePolygon is a dead end)
-    There are 4 polygon vertices for LanePolygon.
-    The idea is 1 obstacle is constructed by 2 polygon vertices that
-    on the same side of lane. 2 cases by checking v0-v1 pair and v0-v3 pair
-    """
     def set_polygon_obstacle(self, lane_polygon):
+        """
+        This function can only be called by LanePolygon, HubPolygon has no
+        obstacles. Obstacle should be added after edge.
+        There are 3 obstacles at most (3 is when the LanePolygon is a dead end)
+        There are 4 polygon vertices for LanePolygon.
+        The idea is 1 obstacle is constructed by 2 polygon vertices that
+        on the same side of lane. 2 cases by checking v0-v1 pair and v0-v3 pair
+        """
         assert(isinstance(lane_polygon, LanePolygon))
         assert(len(lane_polygon.vertex_ids) == 4)
         assert(len(lane_polygon.edge_ids) != 0)
