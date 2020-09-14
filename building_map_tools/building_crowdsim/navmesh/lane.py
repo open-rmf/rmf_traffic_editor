@@ -1,50 +1,33 @@
+from .vector import Vector2d
+from .vertex import Vertex
+from .object_manager import Manager
+
+
 class Lane:
-
     def __init__(self, params):
-        # params for [lane_vertex0, lane_vertex1, width]
-        self.lane_vertices = params[0:2]
+        self.id = -1
+        # params for [lane_vertex0_id, lane_vertex1_id, width]
+        self.lane_vertex_id = params[0:2]
         self.width = params[2]
-        self.vertices = []
-        self.verticesSet = set()
+        self.polygon_vertex_id = []
 
-    def setId(self, id):
-        self.id = id
+    def get_lane_vector(
+            self,
+            lane_vertex_manager,
+            base_vertex_id):
+        assert(base_vertex_id in self.lane_vertex_id)
+        assert(isinstance(lane_vertex_manager, Manager))
 
-    def getId(self):
-        return self.id
+        base_vertex = lane_vertex_manager.data[base_vertex_id]
+        to_vertex_id = -1
+        for v_id in self.lane_vertex_id:
+            if v_id != base_vertex_id:
+                to_vertex_id = v_id
+                break
+        assert(to_vertex_id != -1)
+        to_vertex = lane_vertex_manager.data[to_vertex_id]
 
-    def getWidth(self):
-        return self.width
+        result = Vector2d()
+        result.init_with_2_vertex(base_vertex, to_vertex)
 
-    def addPolygonVertices(self, id):
-        if(id in self.verticesSet):
-            return
-        self.verticesSet.add(id)
-        self.vertices.append(id)
-
-    def getPolygonVertices(self):
-        return list(self.vertices)
-
-    def getLaneVertices(self):
-        if(self.lane_vertices[0] == self.lane_vertices[1]):
-            print("Lane: ", self.getId(), " has two same lane vertices: ",
-             self.lane_vertices[0], " and ", self.lane_vertices[1])
-        assert self.lane_vertices[0] != self.lane_vertices[1]
-        return list(self.lane_vertices)
-
-
-class LaneManager:
-    def __init__(self):
-        self.lanes = []
-
-    def addLane(self, lane):
-        id = len(self.lanes)
-        lane.setId(id)
-        self.lanes.append(lane)
-
-    def getSize(self):
-        return len(self.lanes)
-
-    def getLane(self, id):
-        assert(id < self.getSize())
-        return self.lanes[id]
+        return result

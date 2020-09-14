@@ -2,295 +2,286 @@ import xml.etree.ElementTree as ET
 
 from .leaf_element import LeafElement, Element
 
-#########################################################
+
 class BehaviorFile (Element):
-    
-    def __init__(self) :
+    def __init__(self):
         Element.__init__(self, 'BFSM')
 
-    def addState(self, state) :
-        if not hasattr(state, "outputXmlElement"):
+    def add_state(self, state):
+        if not hasattr(state, "output_xml_element"):
             raise ValueError("state provided is not an Element")
-        self.addSubElement(state)
+        self.sub_elements.append(state)
 
-    def addTransition(self, transition) :
-        if not hasattr(transition, "outputXmlElement"):
+    def add_transition(self, transition):
+        if not hasattr(transition, "output_xml_element"):
             raise ValueError("transition provided is not an Element")
-        self.addSubElement(transition)
+        self.sub_elements.append(transition)
 
-    def addGoalSet(self, goal_set) :
-        if not hasattr(goal_set, "outputXmlElement"):
+    def add_goal_set(self, goal_set):
+        if not hasattr(goal_set, "output_xml_element"):
             raise ValueError("transition provided is not an Element")
-        self.addSubElement(goal_set)
+        self.sub_elements.append(goal_set)
 
-#########################################################
+
 class BehaviorState (Element):
-    def __init__(self) :
+    def __init__(self):
         Element.__init__(self, 'State')
-        self.addAttribute('name', '')
-        self.addAttribute('final', 0)
-        self._goalSelector = GoalSelector()
-        self._velComponent = VelComponent()
+        self.attributes['name'] = ''
+        self.attributes['final'] = 0
+        self.goal_selector = GoalSelector()
+        self.vel_component = VelComponent()
 
-    def setStateName(self, name) :
-        if len(name) != 0 :
-            self.addAttribute('name', name)
-        else :
-            raise ValueError("invalid name provided for state name")
+    def is_valid(self):
+        if not self.attributes['name']:
+            return False
+        if self.attributes['final'] == 1:
+            return True
+        if self.goal_selector.attributes['goal_set'] < 0:
+            return False
+        if not self.vel_component.attributes['file_name']:
+            return False
+        return True
 
-    def getStateName(self) :
-        # from LeafElement
-        return self._attrib['name']
-
-    def setGoalSelector(self, goal_selector) :
-        if not hasattr(goal_selector, "outputXmlElement"):
-            raise ValueError("goal_selector provided is not an element!")
-        self._goalSelector = goal_selector
-        self.addSubElement(self._goalSelector)
-
-    def setVelComponent(self, vel_component) :
-        if not hasattr(vel_component, "outputXmlElement"):
-            raise ValueError("vel_component provided is not an element!")
-        self._velComponent = vel_component
-        self.addSubElement(self._velComponent)
-            
-    def setFinalState(self) : 
-        self.addAttribute('final', 1)
-    
-    def setUnFinalState(self) :
-        self.addAttribute('final', 0)
-    
-
-#########################################################
-class GoalSelector (LeafElement):
-
-    def __init__(self) : 
-        LeafElement.__init__(self, 'GoalSelector')
-        self.addAttribute('dist', 'u')
-        self.addAttribute('type', 'weighted')
-        self.addAttribute('goal_set', -1) # not set
-    
-    def setGoalSetId(self, goal_set_id) :
-        self.addAttribute('goal_set', goal_set_id)
-
-#########################################################
-class VelComponent (LeafElement): 
-
-    def __init__(self) : 
-        LeafElement.__init__(self, 'VelComponent')
-        self.addAttribute('type', 'nav_mesh')
-        self.addAttribute('heading_threshold', 15)
-        self.addAttribute('file_name', '') # not set
-
-    def setNavMeshFile(self, file_name) : 
-        self.addAttribute('file_name', file_name)
-
-#########################################################
-class StateTransition (Element):
-
-    def __init__(self) :
-        Element.__init__(self, 'Transition')
-        self.addAttribute('from', '')
-        self.addAttribute('to', '')
-        self._condition = TransitionCondition() 
-        self._target = TransitionTarget()
-    
-    def setFromState(self, state) :
-        if state.getStateName() != '' :
-            self.addAttribute('from', state.getStateName())
-        else :
-            raise ValueError("The transition FromState provided is not a xml element")
-
-    def setFromStateName(self, state_name) :
-        if len( state_name ) > 0 :
-            self.addAttribute('from', state_name)
-        else :
-            raise ValueError("Invalid state name for state transition")
-
-    def setToState(self, state):
-        if state.getStateName() != '' :
-            self.addAttribute('to', state.getStateName())
-        else :
-            raise ValueError("The transition ToState provided is not a xml element")
-    
-    def setToStateName(self, state_name) :
-        # to state can be None, as there might be a Target
-        if not state_name:
+    def load_from_yaml(self, yaml_node):
+        if 'name' not in yaml_node or\
+           'goal_set' not in yaml_node or\
+           'navmesh_file_name' not in yaml_node or\
+           'final' not in yaml_node:
+            raise ValueError("Invalid Behavior State Yaml Node!")
+        self.attributes['name'] = yaml_node['name']
+        if int(yaml_node['final']) == 1:
+            self.attributes['final'] = 1
             return
-        if len( state_name ) > 0 :
-            self.addAttribute('to', state_name)
-        else :
-            raise ValueError("Invalid state name for state transition")
-
-    def parseCondition(self, condition_params) :
-        # recommended method to set a condition for transition
-        self._condition.parseCondition(condition_params)
-        self.addSubElement(self._condition)
-
-    def parseTarget(self, target_params) :
-        self._target.parseTarget(target_params)
-        self.addSubElement(self._target)
-
-#########################################################
-class TransitionCondition (Element):
-
-    def __init__(self) :
-        Element.__init__(self, 'Condition')
-        self.addAttribute('type', 'auto')
-    
-    def setType(self, condition_type):
-        self.addAttribute('type', condition_type)
-
-    def parseCondition(self, params) :
-        # params in dictionary formate
-        if 'type' in params :
-            self.setType( params['type'] )
         else:
-            print("No condition type configure! 'auto' type will be configured instead!")
+            self.attributes['final'] = 0
+        self.goal_selector.attributes['goal_set'] = int(yaml_node['goal_set'])
+        self.vel_component.attributes['file_name'] =\
+            yaml_node['navmesh_file_name']
+        self.sub_elements.append(self.goal_selector)
+        self.sub_elements.append(self.vel_component)
+
+
+class GoalSelector (LeafElement):
+    def __init__(self):
+        LeafElement.__init__(self, 'GoalSelector')
+        self.attributes['dist'] = 'u'
+        self.attributes['type'] = 'weighted'
+        self.attributes['goal_set'] = -1
+
+
+class VelComponent (LeafElement):
+    def __init__(self):
+        LeafElement.__init__(self, 'VelComponent')
+        self.attributes['type'] = 'nav_mesh'
+        self.attributes['heading_threshold'] = 15
+        self.attributes['file_name'] = ''
+
+
+class StateTransition (Element):
+    def __init__(self):
+        Element.__init__(self, 'Transition')
+        # from state name
+        self.attributes['from'] = ''
+        # to state name
+        self.attributes['to'] = ''
+        self.condition = TransitionCondition()
+        self.target = TransitionTarget()
+        self.sub_elements.append(self.condition)
+        self.sub_elements.append(self.target)
+
+    def is_valid(self):
+        if not self.attributes['from']:
+            return False
+        if not self.attributes['to'] and\
+           not self.target.is_valid():
+            return False
+        return self.condition.is_valid()
+
+    def load_from_yaml(self, yaml_node):
+        if 'from' not in yaml_node or\
+           'Condition' not in yaml_node:
+            raise ValueError("Invalid Transition Yaml")
+        if 'to' not in yaml_node and\
+           'Target' not in yaml_node:
+            raise ValueError(
+                "Transition must provide either a valid 'to' State" +
+                "or a valid 'Target' Set")
+        self.attributes['from'] = yaml_node['from']
+        if yaml_node['to']:
+            self.attributes['to'] = yaml_node['to']
+        self.condition.parse_condition(yaml_node['Condition'])
+        if yaml_node['Target']:
+            self.target.parse_target(yaml_node['Target'])
+
+
+class TransitionCondition (Element):
+    def __init__(self):
+        Element.__init__(self, 'Condition')
+        # default type='auto' means condition always met
+        self.attributes['type'] = 'auto'
+
+    def parse_condition(self, params):
+        if 'type' in params:
+            self.attributes['type'] = params['type']
+        else:
+            print("No condition type configure!" +
+                  " 'auto' type will be configured instead!")
             return
-        
-        # leaf condition for goal_reached, only 'distance' provided
-        if params['type'] == 'goal_reached' :
-            if not 'distance' in params:
-                raise ValueError("missing 'distance' for 'goal_reached' type condition")
-            self.setGoalReachDistance(params['distance'])
+
+        if params['type'] == 'goal_reached':
+            if 'distance' not in params:
+                raise ValueError(
+                    "Missing 'distance' for 'goal_reached' type condition")
+            if float(params['distance']) < 0.0:
+                raise ValueError(
+                    "Invalid goal_reached distance provided: " +
+                    params['distance'])
+            self.attributes['distance'] = float(params['distance'])
             return
-        
-        # leaf condition for timer
-        if params['type'] == 'timer' :
-            if not 'per_agent' in params :
-                raise ValueError("missing 'per_agent' [bool] for 'timer' type condition.")
-            
-            self.addAttribute('per_agent', params['per_agent'])
-            
-            if not 'dist' in params:
-                raise ValueError("missing 'dist' ['u' for uniform and 'c' for const distribution] for 'timer' type condition.")
-            
-            self.addAttribute('dist', params['dist'])
-            if params['dist'] == 'u' :
-                if not 'min' in params:
-                    raise ValueError("missing 'min' for 'dist'='u'")
-                if not 'max' in params:
-                    raise ValueError("missing 'max' for 'dist'='u'")
-                if not float(params['min']) > 0 or not float(params['max']) > 0 or not float(params['max']) >= float(params['min']) :
-                    raise ValueError("invalid 'min' and 'max' value for 'timer' condition")
-                else :
-                    self.addAttribute('min', params['min'])
-                    self.addAttribute('max', params['max'])
-            elif params['dist'] == 'c' :
-                if not 'value' in params :
-                    raise ValueError("missing 'value' for 'dist'='c'")
-                if not float(params['value']) > 0 :
-                    raise ValueError("invalid 'value' for 'timer' condition")
-                self.addAttribute('value', params['value'])
-            else :
-                raise ValueError("'dist' must be configured as 'u' or 'c'")
+
+        if params['type'] == 'timer':
+            if 'per_agent' not in params:
+                raise ValueError(
+                    "Missing 'per_agent' [bool] for 'timer' type condition.")
+            self.attributes['per_agent'] = params['per_agent']
+            if 'dist' not in params:
+                raise ValueError(
+                    "Missing 'dist' for 'timer' type condition." +
+                    "'u' for uniform distribution, " +
+                    "'c' for constant value.")
+            self.attributes['dist'] = params['dist']
+            if params['dist'] == 'u':
+                if 'min' not in params:
+                    raise ValueError("Missing 'min' for 'dist'='u'")
+                if 'max' not in params:
+                    raise ValueError("Missing 'max' for 'dist'='u'")
+                if float(params['min']) < 0 or \
+                   float(params['max']) < 0 or \
+                   float(params['max']) <= float(params['min']):
+                    raise ValueError(
+                        "Invalid 'min' and 'max' value for 'timer' condition")
+                else:
+                    self.attributes['min'] = params['min']
+                    self.attributes['max'] = params['max']
+            elif params['dist'] == 'c':
+                if 'value' not in params:
+                    raise ValueError("Missing 'value' for 'dist'='c'")
+                if float(params['value']) < 0.0:
+                    raise ValueError("Invalid 'value' for 'timer' condition")
+                self.attributes['value'] = params['value']
+            else:
+                raise ValueError(
+                    "'dist' must be configured as either 'u' or 'c'")
             return
-        
+
         if params['type'] == 'not':
-            if not 'condition1' in params :
-                raise ValueError("a subcondition 'condition1' must be included.")
+            if 'condition1' not in params:
+                raise ValueError(
+                    "A subcondition 'condition1' must be included.")
             sub_condition = TransitionCondition()
-            sub_condition.parseCondition( params['condition1'] )
-            self.addSubElement(sub_condition)
-        
+            sub_condition.parse_condition(params['condition1'])
+            self.sub_elements.append(sub_condition)
+
         if params['type'] == 'and' or params['type'] == 'or':
-            if not 'condition1' in params or not 'condition2' in params:
-                raise ValueError("two subconditions 'condition1' and 'condition2' must be included.")
+            if 'condition1' not in params or 'condition2' not in params:
+                raise ValueError(
+                    "2 conditions 'condition1' and 'condition2' " +
+                    "must be included.")
             condition1 = TransitionCondition()
-            condition1.parseCondition( params['condition1'] )
+            condition1.parse_condition(params['condition1'])
             condition2 = TransitionCondition()
-            condition2.parseCondition( params['condition2'] )
-            self.addSubElement(condition1)
-            self.addSubElement(condition2)
-
-    
-    def setGoalReachDistance(self, dist) :
-        if(float(dist) > 0) :
-            self.addAttribute('distance', dist)
-        else :
-            raise ValueError('invalid condition distance provided for TransitionCondition')
+            condition2.parse_condition(params['condition2'])
+            self.sub_elements.append(condition1)
+            self.sub_elements.append(condition2)
 
 
-#########################################################
-class TransitionTarget (Element) :
-    
-    def __init__(self) :
+class TransitionTarget (Element):
+    def __init__(self):
         Element.__init__(self, 'Target')
-        self.addAttribute('type', 'prob')
+        self.attributes['type'] = 'prob'
 
-    def setType(self, target_type) :
-        # should not attempt to changeg the type of transition target
-        self.addAttribute('type', target_type)
+    def is_valid(self):
+        if len(self.sub_elements) == 0:
+            return False
+        return True
 
-    def parseTarget(self, params):
-        # params in [{}, {}, {}] format
+    def parse_target(self, params):
         if not params:
             return
-        
+
         for state_item in params:
             tmp = TargetState()
-            tmp.parseState(state_item)
-            self.addSubElement(tmp)
+            tmp.parse_state(state_item)
+            self.sub_elements.append(tmp)
 
-#########################################################
-class TargetState (LeafElement) :
 
+class TargetState (LeafElement):
     def __init__(self):
         LeafElement.__init__(self, 'State')
-        
-    def parseState(self, params):
-        if not 'weight' in params or not 'name' in params :
-            raise ValueError("'weight' and 'name' are required for Target State")
-        self.addAttribute('weight', params['weight'])
-        self.addAttribute('name', params['name'])
 
-#########################################################
-class GoalSet (Element): 
+    def parse_state(self, params):
+        if 'weight' in params and 'name' in params:
+            self.attributes['weight'] = params['weight']
+            self.attributes['name'] = params['name']
+        else:
+            raise ValueError(
+                "'weight' and 'name' are required for Target State")
 
-    def __init__(self) :
+
+class GoalSet (Element):
+    def __init__(self):
         Element.__init__(self, 'GoalSet')
-        self.addAttribute('id', -1)
-        self._goalList = []
-        self._goal_area = set()
-        self._capacity = 1
+        self.attributes['id'] = -1
+        self.goal_list = []
+        self.goal_area = set()
+        self.capacity = 1
 
-    def setId(self, id) :
-        self.addAttribute('id', str(id))
-    
-    def addGoalArea(self, area) :
-        self._goal_area.add(area)
+    def is_valid(self):
+        if self.attributes['id'] < 0:
+            return False
+        if len(self.goal_list) == 0:
+            return False
+        return True
 
-    def setCapacity(self, capacity) :
-        self._capacity = capacity
+    def add_goal(self, goal):
+        assert(isinstance(goal, Goal))
+        goal.attributes['id'] = len(self.goal_list)
+        goal.attributes['capacity'] = self.capacity
+        self.goal_list.append(goal)
+        self.sub_elements.append(goal)
 
-    def addGoal(self, goal) :
-        goal.setId( len(self._goalList) )
-        self._goalList.append(goal)
-        self.addSubElement(goal)
+    def load_from_yaml(self, yaml_node, human_goals):
+        if 'set_id' not in yaml_node or\
+           'set_area' not in yaml_node or\
+           'capacity' not in yaml_node:
+            raise ValueError("Invalid GoalSet Yaml!")
+        self.attributes['id'] = yaml_node['set_id']
+        for area in yaml_node['set_area']:
+            self.goal_area.add(area)
+        self.capacity = int(yaml_node['capacity'])
+
+        for area in self.goal_area:
+            if area not in human_goals:
+                raise ValueError(
+                    "Invalid goal area name: " +
+                    area +
+                    " please check the building.yaml")
+            for goal in human_goals[area]:
+                cur_goal = Goal()
+                cur_goal.attributes['x'] = float(goal[0])
+                cur_goal.attributes['y'] = float(goal[1])
+                self.add_goal(cur_goal)
 
 
-#########################################################
 class Goal (LeafElement):
-    def __init__(self, id = -1) :
-        # default id = -1, need to initialize
+    def __init__(self):
         LeafElement.__init__(self, 'Goal')
-        self.addAttribute('id', -1)
-        self.addAttribute('type', 'point')
-        self.addAttribute('x', 0.0)
-        self.addAttribute('y', 0.0)
-        self.addAttribute('weight', 1.0)
-        self.addAttribute('capacity', 1)
+        self.attributes['id'] = -1
+        self.attributes['type'] = 'point'
+        self.attributes['x'] = 0.0
+        self.attributes['y'] = 0.0
+        self.attributes['weight'] = 1.0
+        self.attributes['capacity'] = 1
 
-    def setCoord(self, x, y) :
-        self.addAttribute('x', float(x))
-        self.addAttribute('y', float(y))
-
-    def setWeight(self, weight) :
-        self.addAttribute('weight', float(weight))
-
-    def setId(self, id) :
-        self.addAttribute('id', int(id))
-
-    def setCapacity(self, capacity) : 
-        self.addAttribute('capacity', capacity)
+    def is_valid(self):
+        return self.attributes['id'] >= 0

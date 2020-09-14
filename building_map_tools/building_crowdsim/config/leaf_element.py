@@ -1,47 +1,47 @@
 import xml.etree.ElementTree as ET
 
+
 class LeafElement:
-    
-    def __init__(self, name) :
-        self._name = name
-        self._attrib = {}
-        self._text = None
-        
-    def addAttribute(self, key, value) :
-        self._attrib[str(key)] = str(value)
+    def __init__(self, name):
+        self.name = name
+        self.attributes = {}
+        self.text = None
 
-    def setAttributes(self, attributes) :
-        for key in attributes:
-            self.addAttribute(key, attributes[key])
+    def is_valid(self):
+        return True
 
-    def setText(self, text):
-        self._text = str(text)
-
-    def getText(self) :
-        return self._text
-
-    def outputXmlElement(self):
-        root = ET.Element(self._name, self._attrib)
-        if self._text :
-            root.text = self._text
+    def output_xml_element(self):
+        if not self.is_valid():
+            raise ValueError("Element " +
+                             self.name +
+                             " valid check failed")
+        for key in self.attributes:
+            self.attributes[key] = str(self.attributes[key])
+        root = ET.Element(self.name, self.attributes)
+        if self.text:
+            root.text = self.text
         return root
 
 
 class Element (LeafElement):
     def __init__(self, name):
         LeafElement.__init__(self, name)
-        self._subElements = []
+        self.sub_elements = []
 
-    def addSubElement(self, element) :
-        if not hasattr(element, "outputXmlElement"):
-            raise ValueError(element + " does not have method 'outputXmlElement' ")
-        
-        self._subElements.append(element)
-    
-    def outputXmlElement(self):
-        root = ET.Element(self._name, self._attrib)
+    def is_valid(self):
+        for sub_elem in self.sub_elements:
+            if not sub_elem.is_valid():
+                return False
+        return True
 
-        for element in self._subElements :
-            root.append(element.outputXmlElement())
-        
+    def output_xml_element(self):
+        if not self.is_valid():
+            raise ValueError("Element " +
+                             self.name +
+                             " valid check failed")
+        for key in self.attributes:
+            self.attributes[key] = str(self.attributes[key])
+        root = ET.Element(self.name, self.attributes)
+        for element in self.sub_elements:
+            root.append(element.output_xml_element())
         return root

@@ -2,176 +2,217 @@ import xml.etree.ElementTree as ET
 
 from .leaf_element import LeafElement, Element
 
-#########################################################
+
 class SceneFile (Element):
-    
-    def __init__(self) :
+    def __init__(self):
         Element.__init__(self, 'Experiment')
-        self.addAttribute('version', 2.0)
+        self.attributes['version'] = 2.0
 
-    def addSpatialQuery(self):
-        self._spatialQuery = SpatialQuery()
-        self.addSubElement(self._spatialQuery)
-    
-    def addCommon(self):
-        self._common = Common()
-        self.addSubElement(self._common)
+    def add_spatial_query(self):
+        self.spatial_query = SpatialQuery()
+        self.sub_elements.append(self.spatial_query)
 
-    def addObstacleSet(self, file_name, class_id):
-        self._obstacleSet = ObstacleSet()
-        self._obstacleSet.setNavMeshFile(file_name)
-        self._obstacleSet.setClassId(class_id)
-        self.addSubElement(self._obstacleSet)
+    def add_common(self):
+        self.common = Common()
+        self.sub_elements.append(self.common)
 
-    def addAgentProfile(self, profile_name) :
-        tmp = AgentProfile(profile_name)
-        self.addSubElement(tmp)
-        return tmp
+    def add_obstacle_set(self, file_name, class_id):
+        self.obstacle_set = ObstacleSet()
+        self.obstacle_set.attributes['file_name'] = file_name
+        self.obstacle_set.attributes['class'] = class_id
+        self.sub_elements.append(self.obstacle_set)
 
-    def addAgentGroup(self, profile_name, state_name) :
-        tmp = AgentGroup(profile_name, state_name)
-        self.addSubElement( tmp )
-        return tmp
+    def add_agent_profile(self, profile_name):
+        agent_profile = AgentProfile(profile_name)
+        self.sub_elements.append(agent_profile)
+        return agent_profile
 
-#########################################################
-class SpatialQuery (LeafElement) :
-    def __init__(self) :
+    def add_agent_group(self, profile_name, state_name):
+        agent_group = AgentGroup(profile_name, state_name)
+        self.sub_elements.append(agent_group)
+        return agent_group
+
+
+class SpatialQuery (LeafElement):
+    def __init__(self):
         LeafElement.__init__(self, 'SpatialQuery')
-        self.addAttribute('type', 'kd-tree')
-        self.addAttribute('test_visibility', 'false')
-    
-#########################################################
+        self.attributes['type'] = 'kd-tree'
+        self.attributes['test_visibility'] = 'false'
+
+
 class Common (LeafElement):
-    def __init__(self) :
+    def __init__(self):
         LeafElement.__init__(self, 'Common')
-        self.addAttribute('time_step', 0.1)
-    
-#########################################################
+        self.attributes['time_step'] = 0.1
+
+
 class ObstacleSet (LeafElement):
     def __init__(self):
         LeafElement.__init__(self, 'ObstacleSet')
-        self.addAttribute('type', 'nav_mesh')
-        self.addAttribute('file_name', '')
-        self.addAttribute('class', -1)
+        self.attributes['type'] = 'nav_mesh'
+        self.attributes['file_name'] = ''
+        self.attributes['class'] = -1
 
-    def setNavMeshFile(self, file_name):
-        self.addAttribute('file_name', file_name)
+    def is_valid(self):
+        if self.attributes['class'] < 0:
+            return False
+        if not self.attributes['file_name']:
+            return False
+        return True
 
-    def setClassId(self, id):
-        self.addAttribute('class', id)
+    def load_from_yaml(self, yaml_node):
+        if 'class' not in yaml_node or\
+           'file_name' not in yaml_node:
+            raise ValueError("Invalid ObstacleSet Yaml!")
+        self.attributes['class'] = int(yaml_node['class'])
+        self.attributes['file_name'] = yaml_node['file_name']
 
-#########################################################
-class ProfileCommon (LeafElement) :
+
+class ProfileCommon (LeafElement):
     def __init__(self):
         LeafElement.__init__(self, 'Common')
-        self.addAttribute('class', 0)
-        self.addAttribute('max_accel', 5)
-        self.addAttribute('max_angle_vel', 360)
-        self.addAttribute('max_neighbors', 10)
-        self.addAttribute('max_speed', 2)
-        self.addAttribute('neighbor_dist', 5)
-        # use default obstacleSet
-        self.addAttribute('obstacleSet', 1)
-        self.addAttribute('pref_speed', 0)
-        self.addAttribute('r', 0.2)
+        self.attributes['class'] = 0
+        self.attributes['max_accel'] = 5
+        self.attributes['max_angle_vel'] = 360
+        self.attributes['max_neighbors'] = 10
+        self.attributes['max_speed'] = 2
+        self.attributes['neighbor_dist'] = 5
+        self.attributes['pref_speed'] = 0
+        self.attributes['r'] = 0.2
+        # use default obstacleSet, should not be changed
+        self.attributes['obstacleSet'] = 1
 
-    def setMaxAccel(self, max_accel):
-        self.addAttribute('max_accel', max_accel)
+    def load_from_yaml(self, yaml_node):
+        if yaml_node['class']:
+            self.attributes['class'] = int(yaml_node['class'])
+        if yaml_node['max_accel']:
+            self.attributes['max_accel'] = float(yaml_node['max_accel'])
+        if yaml_node['max_angle_vel']:
+            self.attributes['max_angle_vel'] =\
+                float(yaml_node['max_angle_vel'])
+        if yaml_node['max_neighbors']:
+            self.attributes['max_neighbors'] = int(yaml_node['max_neighbors'])
+        if yaml_node['max_speed']:
+            self.attributes['max_speed'] = float(yaml_node['max_speed'])
+        if yaml_node['neighbor_dist']:
+            self.attributes['neighbor_dist'] =\
+                float(yaml_node['neighbor_dist'])
+        if yaml_node['pref_speed']:
+            self.attributes['pref_speed'] = float(yaml_node['pref_speed'])
+        if yaml_node['r']:
+            self.attributes['r'] = float(yaml_node['r'])
+        if yaml_node['obstacle_set']:
+            self.attributes['obstacleSet'] = int(yaml_node['obstacle_set'])
 
-    def setR(self, r):
-        self.addAttribute('r', 0.2)
 
-    def setPrefSpeed(self, pref_speed):
-        self.addAttribute('pref_speed', pref_speed)
-    
-    def setMaxSpeed(self, max_speed):
-        self.addAttribute('max_speed', max_speed)
-
-    def setClass(self, classid):
-        self.addAttribute('class', classid)
-    
-    def setObstacleSet(self, obstacle_set):
-        self.addAttribute('obstacle_set', obstacle_set)
-
-#########################################################
-class ProfileORCA (LeafElement) :
+class ProfileORCA (LeafElement):
     def __init__(self):
         LeafElement.__init__(self, 'ORCA')
-        self.addAttribute('tau', 3.0)
-        self.addAttribute('tauObst', 0.15)
+        self.attributes['tau'] = 3.0
+        self.attributes['tauObst'] = 0.15
 
-#########################################################
-class ProfileSelector (LeafElement) :
-    def __init__(self, name) :
+    def load_from_yaml(self, yaml_node):
+        if yaml_node['ORCA_tau']:
+            self.attributes['tau'] = float(yaml_node['ORCA_tau'])
+        if yaml_node['ORCA_tauObst']:
+            self.attributes['tauObst'] = float(yaml_node['ORCA_tauObst'])
+
+
+class ProfileSelector (LeafElement):
+    def __init__(self, name):
         LeafElement.__init__(self, 'ProfileSelector')
-        self.addAttribute('type', 'const')
-        self.addAttribute('name', name)
+        self.attributes['type'] = 'const'
+        self.attributes['name'] = name
 
-#########################################################
-class StateSelector (LeafElement) :
-    def __init__(self, name) :
+    def is_valid(self):
+        if not self.attributes['name']:
+            return False
+        return True
+
+
+class StateSelector (LeafElement):
+    def __init__(self, name):
         LeafElement.__init__(self, 'StateSelector')
-        self.addAttribute('type', 'const')
-        self.addAttribute('name', name)
+        self.attributes['type'] = 'const'
+        self.attributes['name'] = name
 
-#########################################################
-class Agent (LeafElement) :
-    def __init__(self, x, y) :
+    def is_valid(self):
+        if not self.attributes['name']:
+            return False
+        return True
+
+
+class Agent (LeafElement):
+    def __init__(self, x, y):
         LeafElement.__init__(self, 'Agent')
-        self.addAttribute('p_x', x)
-        self.addAttribute('p_y', y)
+        self.attributes['p_x'] = x
+        self.attributes['p_y'] = y
 
-#########################################################
-class AgentGenerator (Element) :
+
+class AgentGenerator (Element):
     def __init__(self):
         Element.__init__(self, 'Generator')
-        self.addAttribute('type', 'explicit')
-    
-    def addAgent(self, x, y):
-        self.addSubElement(Agent(x, y))
+        self.attributes['type'] = 'explicit'
 
-#########################################################
+    def is_valid(self):
+        if len(self.sub_elements) == 0:
+            return False
+        return Element.is_valid(self)
+
+    def add_agent(self, x, y):
+        self.sub_elements.append(Agent(x, y))
+
+
 class AgentProfile (Element):
-    def __init__(self, name):
+    def __init__(self, name=''):
         Element.__init__(self, 'AgentProfile')
-        self.addAttribute('name', name)
-        self._profileCommon = ProfileCommon()
-        self._profileORCA = ProfileORCA()
-        self.addSubElement(self._profileCommon)
-        self.addSubElement(self._profileORCA)
+        self.attributes['name'] = name
+        self.profile_common = ProfileCommon()
+        self.profile_orca = ProfileORCA()
+        self.sub_elements.append(self.profile_common)
+        self.sub_elements.append(self.profile_orca)
 
-    def setProfileCommon(self, key, value):
-        self._profileCommon.addAttribute(key, value)
+    def load_from_yaml(self, yaml_node):
+        required_items =\
+            ['name', 'class', 'max_accel', 'max_angle_vel', 'max_neighbors',
+             'max_speed', 'neighbor_dist', 'obstacle_set', 'pref_speed', 'r',
+             'ORCA_tau', 'ORCA_tauObst']
+        for key in required_items:
+            if key not in yaml_node:
+                raise ValueError("Invalid Agent Profile Yaml!")
 
-    def setProfileORCA(self, key, value):
-        self._profileORCA.addAttribute(key, value)
-        
-#########################################################
+        self.attributes['name'] = yaml_node['name']
+        self.profile_common.load_from_yaml(yaml_node)
+        self.profile_orca.load_from_yaml(yaml_node)
+
+
 class AgentGroup (Element):
-
-    def __init__(self, profile_type, state_name) :
+    def __init__(self, profile_type='', state_name=''):
         Element.__init__(self, 'AgentGroup')
-        self._profileSelector = ProfileSelector(profile_type)
-        self._stateSelector = StateSelector(state_name)
-        self._generator = AgentGenerator()
-        self.addSubElement(self._profileSelector)
-        self.addSubElement(self._stateSelector)
-        self.addSubElement(self._generator)
+        self.profile_selector = ProfileSelector(profile_type)
+        self.state_selector = StateSelector(state_name)
+        self.generator = AgentGenerator()
+        self.sub_elements.append(self.profile_selector)
+        self.sub_elements.append(self.state_selector)
+        self.sub_elements.append(self.generator)
 
-    def addAgent(self, x, y):
-        self._generator.addAgent(x, y)
+    def add_agent(self, x, y):
+        self.generator.add_agent(x, y)
 
+    def load_from_yaml(self, yaml_node):
+        if 'profile_selector' not in yaml_node or\
+           'state_selector' not in yaml_node:
+            raise ValueError("Invalid AgentGroup Yaml!")
 
-#########################################################
-if __name__ == '__main__':
+        self.profile_selector.attributes['name'] =\
+            yaml_node['profile_selector']
+        self.state_selector.attributes['name'] =\
+            yaml_node['state_selector']
 
-    root = SceneFile()
-    root.addSpatialQuery()
-    root.addCommon()
-    tmp = root.addAgentProfile('walking')
-    tmp.setProfileCommon('pref_speed', 2)
-    tmp = root.addAgentGroup('human', 'walking')
-    tmp.addAgent(0.1, 0.2)
-    tmp.addAgent(0.2, 0.3)
-
-    ET.dump(root.outputXmlElement())
+        if 'agents_number' not in yaml_node:
+            raise ValueError("Invalid agents_number provided in AgentGroup!")
+        number = int(yaml_node['agents_number'])
+        px = float(yaml_node['x'])
+        py = float(yaml_node['y'])
+        for _ in range(number):
+            self.generator.add_agent(px, py)
