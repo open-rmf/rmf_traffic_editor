@@ -10,7 +10,6 @@ setup(
         'building_crowdsim',
         'building_crowdsim.navmesh',
         'building_crowdsim.config',
-        'building_crowdsim.test',
         'building_map',
         'building_map.doors',
         'building_map_server',
