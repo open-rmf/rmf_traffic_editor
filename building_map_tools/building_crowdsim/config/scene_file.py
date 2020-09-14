@@ -204,8 +204,10 @@ class AgentGroup (Element):
            'state_selector' not in yaml_node:
             raise ValueError("Invalid AgentGroup Yaml!")
 
-        self.profile_selector.attributes['name'] = yaml_node['profile_selector']
-        self.state_selector.attributes['name'] = yaml_node['state_selector']
+        self.profile_selector.attributes['name'] =\
+            yaml_node['profile_selector']
+        self.state_selector.attributes['name'] =\
+            yaml_node['state_selector']
 
         if 'agents_number' not in yaml_node:
             raise ValueError("Invalid agents_number provided in AgentGroup!")

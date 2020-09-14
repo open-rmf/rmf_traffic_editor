@@ -2,7 +2,8 @@ import sys
 import os
 
 from .build_navmesh import BuildNavmesh
-from building_crowdsim.building_yaml_parse import BuildingYamlParse, LevelWithHumanLanes
+from building_crowdsim.building_yaml_parse import\
+    BuildingYamlParse, LevelWithHumanLanes
 from building_map.vertex import Vertex
 from building_map.edge import Edge
 from building_map.transform import Transform
@@ -55,20 +56,22 @@ class NavmeshGenerator:
 
     def load_human_lanes(self):
         count = 0
-        for l in self.level.human_lanes:
-            if l.params['graph_idx'].value != self.current_graph_idx:
+        for lane in self.level.human_lanes:
+            if lane.params['graph_idx'].value != self.current_graph_idx:
                 continue
             # get the width of human lanes
-            width = l.width()
-            if l.start_idx > self.lane_vertices_number or l.end_idx > self.lane_vertices_number:
+            width = lane.width()
+            if lane.start_idx > self.lane_vertices_number or\
+               lane.end_idx > self.lane_vertices_number:
                 print(
-                    "Error load lanes for lane, vertices_idx over stored vertices_number. [",
-                    l.start_idx,
+                    "Error load lanes for lane," +
+                    "vertices_idx over stored vertices_number. [",
+                    lane.start_idx,
                     ",",
-                    l.end_idx,
+                    lane.end_idx,
                     "]")
                 raise ValueError("edge is referencing invalid vertex.")
-            self.add_lane(l.start_idx, l.end_idx, width)
+            self.add_lane(lane.start_idx, lane.end_idx, width)
             count += 1
         self.lanes_number = count
         return count

@@ -111,7 +111,8 @@ class ModelType (Element):
             for k in value:
                 self.set_ign_model(k, value[k])
             return
-        raise ValueError("Invalid params provided in model_type: [" + key + "]")
+        raise ValueError(
+            "Invalid params provided in model_type: [" + key + "]")
 
     def set_gazebo_model(self, key, value):
         if key == 'pose':

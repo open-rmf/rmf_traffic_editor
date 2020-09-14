@@ -36,7 +36,8 @@ class ConnectionManager:
         vector1 = Vector2d()
         vector1.init_with_2_vertex(base_vertex, vertex1)
 
-        if(lane_vector.get_cross(vector0) * lane_vector.get_cross(vector1) > 0):
+        if lane_vector.get_cross(vector0) *\
+           lane_vector.get_cross(vector1) > 0:
             return True
         else:
             return False
@@ -54,7 +55,8 @@ class ConnectionManager:
         base_vertex_id_intersect = list(
             set(lane0.lane_vertex_id) & set(lane1.lane_vertex_id))
         assert(len(base_vertex_id_intersect) == 1)
-        base_vertex = self.lane_vertex_manager.data[base_vertex_id_intersect[0]]
+        base_vertex = self.lane_vertex_manager.data[
+            base_vertex_id_intersect[0]]
 
         vector0 = self.get_lane_vector(lane0.id, base_vertex.id).get_unit()
         vector1 = self.get_lane_vector(lane1.id, base_vertex.id).get_unit()

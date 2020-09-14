@@ -18,7 +18,8 @@ class ConfigFileGenerator:
         assert(isinstance(building_yaml_parse, BuildingYamlParse))
         self.crowd_sim_yaml = building_yaml_parse.crowd_sim_config
         if 'enable' not in self.crowd_sim_yaml:
-            raise ValueError("Missing 'enable' tag for crowdsim configuration.")
+            raise ValueError(
+                "Missing 'enable' tag for crowdsim configuration.")
         self.enable_crowdsim = int(self.crowd_sim_yaml['enable']) == 1
         self.human_goals = building_yaml_parse.get_human_goals()
         self.behavior_file = BehaviorFile()

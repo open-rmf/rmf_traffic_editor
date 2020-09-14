@@ -36,7 +36,8 @@ class LevelWithHumanLanes (Level):
         for vertex in self.transformed_vertices:
             if 'human_goal_set_name' not in vertex.params:
                 continue
-            if vertex.params['human_goal_set_name'].value not in self.human_goals:
+            if vertex.params['human_goal_set_name'].value\
+               not in self.human_goals:
                 self.human_goals[
                     vertex.params['human_goal_set_name'].value] = []
             self.human_goals[
