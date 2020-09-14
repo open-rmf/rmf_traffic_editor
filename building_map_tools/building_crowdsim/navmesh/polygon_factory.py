@@ -303,9 +303,9 @@ class PolygonFactory:
 
     def link_polygon_edge(self, lane_polygon):
         """
-        This function can only be called by lane polygon. This function should be
-        called after all the 4 polygon vertices are added. This function aims to
-        update the edge information between LanePolygon and HubPolygon
+        This function can only be called by lane polygon. This function should
+        be called after all the 4 polygon vertices are added. This function
+        aims to update the edge information between LanePolygon and HubPolygon
         """
         assert(isinstance(lane_polygon, LanePolygon))
         assert(len(lane_polygon.vertex_ids) == 4)
