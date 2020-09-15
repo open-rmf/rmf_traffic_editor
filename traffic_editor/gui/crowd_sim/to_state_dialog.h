@@ -15,38 +15,25 @@
  *
 */
 
-#ifndef CROWD_SIM_DIALOG__H
-#define CROWD_SIM_DIALOG__H
+#ifndef TO_STATE_DIALOG__H
+#define TO_STATE_DIALOG__H
 
-#include <memory>
-
-#include <QDialog>
-#include <QComboBox>
-#include <QtWidgets>
-
-#include <traffic_editor/crowd_sim/crowd_sim_impl.h>
-
-#include "crowd_sim_table_base.h"
+#include "crowd_sim_dialog.h"
+#include "to_state_table.h"
 
 using namespace crowd_sim;
 
-class CrowdSimDialog : public QDialog
+class ToStateDialog final : public CrowdSimDialog
 {
 public:
-  CrowdSimDialog(
+  ToStateDialog(
     CrowdSimImplPtr crowd_sim_impl,
-    const std::string& dialog_title);
-  virtual ~CrowdSimDialog() {}
-
-  QPushButton* ok_button, * cancel_button;
-  QHBoxLayout* bottom_buttons_hbox;
-  QVBoxLayout* top_vbox;
-
-  virtual void ok_button_click();
-  void cancel_button_click();
+    const std::string& dialog_title,
+    crowd_sim::Transition& transition);
+  void ok_button_click() override;
 
 private:
-  CrowdSimTablePtr _table_ptr;
+  std::shared_ptr<ToStateTab> _to_state_tab;
 };
 
 #endif
