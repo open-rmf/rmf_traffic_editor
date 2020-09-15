@@ -67,7 +67,7 @@ void TransitionTab::list_item_in_cache()
       &QAbstractButton::clicked,
       [this, &transition]()
       {
-        ConditionDialog condition_dialog(get_impl(), "Condition",transition);
+        ConditionDialog condition_dialog(get_impl(), "Condition", transition);
         condition_dialog.exec();
         update();
       }

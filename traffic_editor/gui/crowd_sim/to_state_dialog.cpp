@@ -6,7 +6,7 @@ ToStateDialog::ToStateDialog(
   CrowdSimImplPtr crowd_sim_impl,
   const std::string& dialog_title,
   crowd_sim::Transition& transition)
-  : CrowdSimDialog(crowd_sim_impl, dialog_title)
+: CrowdSimDialog(crowd_sim_impl, dialog_title)
 {
   _to_state_tab = ToStateTab::init_and_make(crowd_sim_impl, transition);
   if (!_to_state_tab)

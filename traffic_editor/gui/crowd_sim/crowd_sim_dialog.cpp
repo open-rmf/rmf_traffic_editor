@@ -36,7 +36,7 @@ CrowdSimDialog::CrowdSimDialog(
     }
   );
   top_vbox = new QVBoxLayout(this);
-   
+
   if ("States" == dialog_title)
   {
     _table_ptr = StatesTab::init_and_make(crowd_sim_impl);
@@ -61,13 +61,15 @@ CrowdSimDialog::CrowdSimDialog(
   {
     _table_ptr = ModelTypeTab::init_and_make(crowd_sim_impl);
   }
-  else {
+  else
+  {
     // stop constructing table with other type of dialog
     _table_ptr = nullptr;
     return;
   }
 
-  if (!_table_ptr){
+  if (!_table_ptr)
+  {
     throw std::runtime_error(
             "Failed to initialize table in Dialog " + dialog_title);
   }

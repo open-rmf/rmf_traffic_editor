@@ -7,8 +7,8 @@ ConditionDialog::ConditionDialog(
   CrowdSimImplPtr crowd_sim_impl,
   const std::string& dialog_title,
   Transition& transition)
-  : CrowdSimDialog(crowd_sim_impl, dialog_title),
-    _current_transition(transition)
+: CrowdSimDialog(crowd_sim_impl, dialog_title),
+  _current_transition(transition)
 {
   std::string title = "from_state:" + transition.get_from_state();
   setWindowTitle(QString::fromStdString(title) );
@@ -309,9 +309,9 @@ void ConditionDialog::_set_sub_condition_in_root_condition(
 }
 
 //===================================================
-  void ConditionDialog::ok_button_click()
-  {
-    save();
-    accept();
-  }
+void ConditionDialog::ok_button_click()
+{
+  save();
+  accept();
+}
 
