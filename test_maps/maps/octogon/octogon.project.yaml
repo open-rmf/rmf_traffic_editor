@@ -1,0 +1,6 @@
+building:
+  filename: octogon.building.yaml
+name: octogon
+traffic_maps:
+  {}
+version: 1
