@@ -32,7 +32,8 @@ private:
   const Project& _project;
   CrowdSimImplPtr _impl;
 
-  int _reserved_rows = 2; // checkbox for enable_crowd_sim, LineEdit for updtae_time_step
+  // reserved rows for checkbox for enable_crowd_sim, LineEdit for updtae_time_step
+  int _reserved_rows = 2;
   std::vector<std::string> _required_components {
     "GoalSets",
     "States",

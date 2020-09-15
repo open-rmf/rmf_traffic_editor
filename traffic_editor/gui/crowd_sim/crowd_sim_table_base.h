@@ -33,4 +33,6 @@ private:
   size_t _label_size;
 };
 
+using CrowdSimTablePtr = std::shared_ptr<CrowdSimTableBase>;
+
 #endif

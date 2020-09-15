@@ -95,6 +95,7 @@ add_executable(traffic-editor
   gui/crowd_sim/model_type_table.cpp
   gui/crowd_sim/state.cpp
   gui/crowd_sim/state_table.cpp
+  gui/crowd_sim/to_state_dialog.cpp
   gui/crowd_sim/to_state_table.cpp
   gui/crowd_sim/transition.cpp
   gui/crowd_sim/transition_table.cpp

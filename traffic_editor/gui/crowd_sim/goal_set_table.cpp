@@ -115,7 +115,7 @@ void GoalSetTab::add_button_click()
 //======================================================
 void GoalSetTab::delete_button_click(size_t row_number)
 {
-  if (row_number > _cache.size())
+  if (row_number >= _cache.size())
     return;
   _cache.erase(_cache.begin() + row_number);
 }

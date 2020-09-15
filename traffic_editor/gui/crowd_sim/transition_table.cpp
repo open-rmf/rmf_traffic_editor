@@ -3,7 +3,7 @@
 #include <QPushButton>
 
 #include "transition_table.h"
-#include "crowd_sim_dialog.h"
+#include "to_state_dialog.h"
 #include "condition_dialog.h"
 
 //==================================================
@@ -51,7 +51,7 @@ void TransitionTab::list_item_in_cache()
       &QAbstractButton::clicked,
       [this, &transition]()
       {
-        ToStateDialog to_state_dialog(get_impl(), transition);
+        ToStateDialog to_state_dialog(get_impl(), "To_State", transition);
         to_state_dialog.exec();
         update();
       }
@@ -67,7 +67,7 @@ void TransitionTab::list_item_in_cache()
       &QAbstractButton::clicked,
       [this, &transition]()
       {
-        ConditionDialog condition_dialog(transition);
+        ConditionDialog condition_dialog(get_impl(), "Condition",transition);
         condition_dialog.exec();
         update();
       }

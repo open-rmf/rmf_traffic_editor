@@ -77,91 +77,17 @@ CrowdSimEditorTable::CrowdSimEditorTable(const Project& input_project)
     setCellWidget(row_id, 2, edit_button);
     edit_button->setStyleSheet("QTableWidgetItem { background-color: red; }");
 
-    if ("States" == _required_components[i])
-    {
-      connect(
-        edit_button,
-        &QAbstractButton::clicked,
-        [this]()
-        {
-          update();
-          StateDialog states_dialog(_impl);
-          states_dialog.exec();
-          update();
-        }
-      );
-    }
-    if ("GoalSets" == _required_components[i])
-    {
-      connect(
-        edit_button,
-        &QAbstractButton::clicked,
-        [this]()
-        {
-          update();
-          GoalSetDialog goal_set_dialog(_impl);
-          goal_set_dialog.exec();
-          update();
-        }
-      );
-      continue;
-    }
-    if ("AgentProfiles" == _required_components[i])
-    {
-      connect(
-        edit_button,
-        &QAbstractButton::clicked,
-        [this]()
-        {
-          update();
-          AgentProfileDialog agent_profile_dialog(_impl);
-          agent_profile_dialog.exec();
-          update();
-        }
-      );
-    }
-    if ("Transitions" == _required_components[i])
-    {
-      connect(
-        edit_button,
-        &QAbstractButton::clicked,
-        [this]()
-        {
-          update();
-          TransitionDialog transition_dialog(_impl);
-          transition_dialog.exec();
-          update();
-        }
-      );
-    }
-    if ("AgentGroups" == _required_components[i])
-    {
-      connect(
-        edit_button,
-        &QAbstractButton::clicked,
-        [this]()
-        {
-          update();
-          AgentGroupDialog agent_group_dialog(_impl);
-          agent_group_dialog.exec();
-          update();
-        }
-      );
-    }
-    if ("ModelTypes" == _required_components[i])
-    {
-      connect(
-        edit_button,
-        &QAbstractButton::clicked,
-        [this]()
-        {
-          update();
-          ModelTypeDialog model_type_dialog(_impl);
-          model_type_dialog.exec();
-          update();
-        }
-      );
-    }
+    connect(
+      edit_button,
+      &QAbstractButton::clicked,
+      [this, i]()
+      {
+        update();
+        CrowdSimDialog dialog(_impl, _required_components[i]);
+        dialog.exec();
+        update();
+      }
+    );
   }
 
 }

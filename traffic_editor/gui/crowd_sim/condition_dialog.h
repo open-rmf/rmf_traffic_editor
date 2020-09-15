@@ -15,19 +15,17 @@ using namespace crowd_sim;
 class ConditionDialog : public CrowdSimDialog
 {
 public:
-  ConditionDialog(Transition& transition);
+  ConditionDialog(
+    CrowdSimImplPtr crowd_sim_impl,
+    const std::string& dialog_title,
+    Transition& transition);
   ~ConditionDialog() {}
 
   void save();
   void update();
-  void ok_button_click() override
-  {
-    save();
-    accept();
-  }
+  void ok_button_click() override;
 
 private:
-  CrowdSimImplPtr _impl;
   crowd_sim::Transition& _current_transition;
 
   QComboBox* _root_type;
