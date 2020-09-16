@@ -48,6 +48,7 @@ YAML::Node ModelType::GazeboConf::to_yaml() const
   YAML::Node result = YAML::Node(YAML::NodeType::Map);
   result.SetStyle(YAML::EmitterStyle::Flow);
   result["filename"] = filename;
+  result["idle_filename"] = idle_filename;
   result["pose"] = YAML::Node(YAML::NodeType::Sequence);
   result["pose"] = initial_pose;
   return result;
@@ -57,6 +58,10 @@ YAML::Node ModelType::GazeboConf::to_yaml() const
 void ModelType::GazeboConf::from_yaml(const YAML::Node& input)
 {
   filename = input["filename"].as<std::string>();
+  if (input["idle_filename"])
+    idle_filename = input["idle_filename"].as<std::string>();
+  else
+    idle_filename = "";
   const YAML::Node& pose_node = input["pose"];
   size_t i = 0;
   for (YAML::const_iterator it = pose_node.begin();

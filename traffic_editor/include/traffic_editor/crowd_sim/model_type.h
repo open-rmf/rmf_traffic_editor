@@ -32,12 +32,15 @@ public:
   struct GazeboConf
   {
     std::string filename;
+    std::string idle_filename;
     std::vector<double> initial_pose;
 
     GazeboConf(
       std::string file = "",
+      std::string idle_file = "",
       std::vector<double> pose = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0})
     : filename(file),
+      idle_filename(idle_file),
       initial_pose(pose)
     {}
 
@@ -91,9 +94,10 @@ public:
     _animation = animation_name;
   }
   void set_animation_speed(double speed) { _animation_speed = speed; }
-  void set_gazebo_conf(std::string file, std::vector<double> pose)
+  void set_gazebo_conf(std::string file, std::string idle_file,
+    std::vector<double> pose)
   {
-    _gazebo_conf = GazeboConf(file, pose);
+    _gazebo_conf = GazeboConf(file, idle_file, pose);
   }
   void set_ign_conf(std::string file, std::vector<double> pose)
   {
