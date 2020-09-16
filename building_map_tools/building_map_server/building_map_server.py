@@ -80,6 +80,7 @@ class BuildingMapServer(Node):
         if level.drawing_name:
             image = AffineImage()
             image_filename = level.drawing_name
+            image.name = image_filename.split('.')[0]
             image.encoding = image_filename.split('.')[-1]
             image.scale = level.transform.scale
             image.x_offset = level.transform.translation[0]
