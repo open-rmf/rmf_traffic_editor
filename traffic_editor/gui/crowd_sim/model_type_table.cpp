@@ -25,7 +25,7 @@ std::shared_ptr<ModelTypeTab> ModelTypeTab::init_and_make(
 {
   const QStringList labels =
   {"name", "animation", "anim_speed",
-    "gazebo_model", "x", "y", "z", "pitch", "roll", "yaw",
+    "gazebo_model", "gazebo_idle", "x", "y", "z", "pitch", "roll", "yaw",
     "ign_model", "x", "y", "z", "pitch", "roll", "yaw",
     ""};
 
@@ -59,42 +59,45 @@ void ModelTypeTab::list_item_in_cache()
       new QTableWidgetItem(QString::fromStdString(current_model_type.
       get_gazebo_conf().filename)));
     setItem(i, 4,
-      new QTableWidgetItem(QString::number(current_model_type.get_gazebo_conf().
-      initial_pose[0])));
+      new QTableWidgetItem(QString::fromStdString(current_model_type.
+      get_gazebo_conf().idle_filename)));
     setItem(i, 5,
       new QTableWidgetItem(QString::number(current_model_type.get_gazebo_conf().
-      initial_pose[1])));
+      initial_pose[0])));
     setItem(i, 6,
       new QTableWidgetItem(QString::number(current_model_type.get_gazebo_conf().
-      initial_pose[2])));
+      initial_pose[1])));
     setItem(i, 7,
       new QTableWidgetItem(QString::number(current_model_type.get_gazebo_conf().
-      initial_pose[3])));
+      initial_pose[2])));
     setItem(i, 8,
       new QTableWidgetItem(QString::number(current_model_type.get_gazebo_conf().
-      initial_pose[4])));
+      initial_pose[3])));
     setItem(i, 9,
       new QTableWidgetItem(QString::number(current_model_type.get_gazebo_conf().
-      initial_pose[5])));
+      initial_pose[4])));
     setItem(i, 10,
+      new QTableWidgetItem(QString::number(current_model_type.get_gazebo_conf().
+      initial_pose[5])));
+    setItem(i, 11,
       new QTableWidgetItem(QString::fromStdString(current_model_type.
       get_ign_conf().filename)));
-    setItem(i, 11,
-      new QTableWidgetItem(QString::number(current_model_type.get_ign_conf().
-      initial_pose[0])));
     setItem(i, 12,
       new QTableWidgetItem(QString::number(current_model_type.get_ign_conf().
-      initial_pose[1])));
+      initial_pose[0])));
     setItem(i, 13,
       new QTableWidgetItem(QString::number(current_model_type.get_ign_conf().
-      initial_pose[2])));
+      initial_pose[1])));
     setItem(i, 14,
       new QTableWidgetItem(QString::number(current_model_type.get_ign_conf().
-      initial_pose[3])));
+      initial_pose[2])));
     setItem(i, 15,
       new QTableWidgetItem(QString::number(current_model_type.get_ign_conf().
-      initial_pose[4])));
+      initial_pose[3])));
     setItem(i, 16,
+      new QTableWidgetItem(QString::number(current_model_type.get_ign_conf().
+      initial_pose[4])));
+    setItem(i, 17,
       new QTableWidgetItem(QString::number(current_model_type.get_ign_conf().
       initial_pose[5])));
   }
@@ -131,24 +134,28 @@ void ModelTypeTab::save()
       item(i, 2)->text().toDouble(&OK_status) );
 
     std::string filename = item(i, 3)->text().toStdString();
+    std::string idle_filename = item(i, 4)->text().toStdString();
     std::vector<double> initial_pose = {
-      item(i, 4)->text().toDouble(&OK_status),
       item(i, 5)->text().toDouble(&OK_status),
       item(i, 6)->text().toDouble(&OK_status),
       item(i, 7)->text().toDouble(&OK_status),
       item(i, 8)->text().toDouble(&OK_status),
-      item(i, 9)->text().toDouble(&OK_status)
+      item(i, 9)->text().toDouble(&OK_status),
+      item(i, 10)->text().toDouble(&OK_status)
     };
-    current_model_type.set_gazebo_conf(filename, initial_pose);
+    current_model_type.set_gazebo_conf(
+      filename,
+      idle_filename,
+      initial_pose);
 
-    filename = item(i, 10)->text().toStdString();
+    filename = item(i, 11)->text().toStdString();
     initial_pose = {
-      item(i, 11)->text().toDouble(&OK_status),
       item(i, 12)->text().toDouble(&OK_status),
       item(i, 13)->text().toDouble(&OK_status),
       item(i, 14)->text().toDouble(&OK_status),
       item(i, 15)->text().toDouble(&OK_status),
-      item(i, 16)->text().toDouble(&OK_status)
+      item(i, 16)->text().toDouble(&OK_status),
+      item(i, 17)->text().toDouble(&OK_status)
     };
     current_model_type.set_ign_conf(filename, initial_pose);
 

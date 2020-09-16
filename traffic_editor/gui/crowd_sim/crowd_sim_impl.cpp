@@ -59,6 +59,7 @@ void CrowdSimImplementation::_initialize_model_type()
   default_type.set_animation_speed(0.2);
   default_type.set_gazebo_conf(
     "walk.dae",
+    "stand.dae",
     {0, 0, 0, 0, 0, 0}
   );
   default_type.set_ign_conf(
