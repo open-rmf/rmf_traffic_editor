@@ -94,7 +94,8 @@ public:
     _animation = animation_name;
   }
   void set_animation_speed(double speed) { _animation_speed = speed; }
-  void set_gazebo_conf(std::string file, std::string idle_file, std::vector<double> pose)
+  void set_gazebo_conf(std::string file, std::string idle_file,
+    std::vector<double> pose)
   {
     _gazebo_conf = GazeboConf(file, idle_file, pose);
   }
