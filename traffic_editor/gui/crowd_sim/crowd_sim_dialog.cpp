@@ -72,7 +72,7 @@ CrowdSimDialog::CrowdSimDialog(
   }
   else if ("AgentGroups" == dialog_title)
   {
-    _table_ptr = AgentProfileTab::init_and_make(crowd_sim_impl);
+    _table_ptr = AgentGroupTab::init_and_make(crowd_sim_impl);
   }
   else if ("ModelTypes" == dialog_title)
   {
