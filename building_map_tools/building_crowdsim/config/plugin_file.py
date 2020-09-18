@@ -51,9 +51,8 @@ class Plugin (Element):
             return
         agent_groups = yaml_node['agent_groups']
         for group in agent_groups:
-            if len(group['agents_name']) == 0:
-                continue
-            self.add_external_list(group['agents_name'])
+            if len(group['agents_name']) > 0:
+                self.add_external_list(group['agents_name'])
 
     def add_model_type(self, model_type):
         assert(isinstance(model_type, ModelType))
@@ -96,23 +95,19 @@ class ModelType (Element):
     def set_tags(self, key, value):
         if key == "typename":
             self.type_name.text = str(value)
-            return
-        if key == "animation_speed":
+        elif key == "animation_speed":
             self.animation_speed.text = str(value)
-            return
-        if key == "animation":
+        elif key == "animation":
             self.animation.text = str(value)
-            return
-        if key == "gazebo":
+        elif key == "gazebo":
             for k in value:
                 self.set_gazebo_model(k, value[k])
-            return
-        if key == "ign":
+        elif key == "ign":
             for k in value:
                 self.set_ign_model(k, value[k])
-            return
-        raise ValueError(
-            "Invalid params provided in model_type: [" + key + "]")
+        else:
+            raise ValueError(
+                "Invalid params provided in model_type: [" + key + "]")
 
     def set_gazebo_model(self, key, value):
         if key == 'pose':
@@ -121,14 +116,11 @@ class ModelType (Element):
                 content += str(number) + ' '
             content = content[0:-1]
             self.initial_pose_gazebo.text = content
-            return
-
-        if key == 'filename':
+        elif key == 'filename':
             self.gazebo_filename.text = str(value)
-            return
-
-        raise ValueError(
-            "invalid params provided for gazebo model:[" + key + "]")
+        else:
+            raise ValueError(
+                "invalid params provided for gazebo model:[" + key + "]")
 
     def set_ign_model(self, key, value):
         if key == 'pose':
@@ -137,14 +129,11 @@ class ModelType (Element):
                 content += str(number) + ' '
             content = content[0:-1]
             self.initial_pose_ign.text = content
-            return
-
-        if key == 'model_file_path':
+        elif key == 'model_file_path':
             self.ign_filename.text = str(value)
-            return
-
-        raise ValueError(
-            "invalid params provided for gazebo model:[" + key + "]")
+        else:
+            raise ValueError(
+                "invalid params provided for gazebo model:[" + key + "]")
 
     def output_xml_element(self):
         if not self.type_name.text or\

@@ -32,7 +32,7 @@ class LevelWithHumanLanes (Level):
         self.human_goals = {}
         if len(self.transformed_vertices) == 0:
             print("Please transform all the vertices" +
-                  " before update the human goals")
+                  " before updating the human goals")
         for vertex in self.transformed_vertices:
             if 'human_goal_set_name' not in vertex.params:
                 continue

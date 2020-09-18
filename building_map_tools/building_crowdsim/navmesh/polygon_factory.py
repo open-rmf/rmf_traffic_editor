@@ -25,9 +25,27 @@ class PolygonFactory:
         self.edge_manager = edge_manager
         self.obstacle_manager = obstacle_manager
         self.polygon_manager = polygon_manager
-        # predefined scale factor, see self.intersectionPolygonUpdate() special
-        # case explaination
+        """
+        self.scale_special_case is used when a HubPolygon only has 2 related
+        human_lanes. Only 2 polygon vertices can be calculated with 2
+        lanes intersect, however 2 polygon vertices are not enough to
+        construct a HubPolygon. self.scale_special_case is a predefined
+        variable to help generate other 2 polygon vertices. You can check
+        self.hub_polygon_special_case_with_2_lanes for more details.
+        """
         self.scale_special_case = 0.01
+        """
+        self.dead_end_extension is used in a dead-end LanePolygon. Unlike a
+        general LanePolygon, which only has 2 obstacle edges (the 2 long
+        parallel edges), a dead-end LanePolygon has 3 obstacle edges (plus
+        the dead-end short edge). But the lane vertex on the dead end side
+        might be a goal for humans (like the pantry situation). That way, the
+        human will try to reach the target position, but the dead-end obstacle
+        keeps the human away from the target. As such, in the dead-end
+        LanPolygon case, the actual LanePolygon is 0.1 (dead_end_extension)
+        longer than the actual human lane to avoid above situation happens.
+        Check self.dead_end_lane_vertices for more details.
+        """
         self.dead_end_extension = 0.1
 
     def hub_polygon_update(self, polygon):
@@ -207,28 +225,35 @@ class PolygonFactory:
             self.edge_manager.add_obj(edge)
             polygon.edge_ids.add(edge.id)
 
-    def lane_polygon_general_case(self, polygon, already_vertices):
+    def rearrange_vertices_sequence_for_lane_polygon(
+            self, lane_id, polygon_vertex_ids):
         """
-        LanePolygon general case does not generate new polygon vertex. This
-        function aims to rearrange the sequence of the 4 added polygon
+        This function aims to rearrange the sequence of the 4 added polygon
         vertices. 0 and 1 are added together; 2 and 3 are added together
         The idea is checking whether the v0, v2 is in the same side of the lane
         If in the same side of lane, the sequence is (0, 2, 3, 1)
         If not, the sequence is (0, 1, 2, 3)
         """
+        v0 = self.polygon_vertex_manager.data[polygon_vertex_ids[0]]
+        v1 = self.polygon_vertex_manager.data[polygon_vertex_ids[1]]
+        v2 = self.polygon_vertex_manager.data[polygon_vertex_ids[2]]
+        v3 = self.polygon_vertex_manager.data[polygon_vertex_ids[3]]
+        result = [v0, v1, v2, v3]
+        if self.connection_manager.is_on_same_side_of_lane(lane_id, v0, v2):
+            result = [v0, v2, v3, v1]
+        return result
+
+    def lane_polygon_general_case(self, polygon, already_vertices):
+        """
+        LanePolygon general case does not generate new polygon vertex.
+        """
         lane = self.lane_manager.data[polygon.related_lane_id]
-        v0 = self.polygon_vertex_manager.data[already_vertices[0]]
-        v2 = self.polygon_vertex_manager.data[already_vertices[2]]
+        right_vertices_sequence =\
+            self.rearrange_vertices_sequence_for_lane_polygon(
+                lane.id, already_vertices)
 
-        if self.connection_manager.is_on_same_side_of_lane(lane.id, v0, v2):
-            already_vertices = [
-                already_vertices[0],
-                already_vertices[2],
-                already_vertices[3],
-                already_vertices[1]]
-
-        for v_id in already_vertices:
-            polygon.add_vertex(self.polygon_vertex_manager.data[v_id])
+        for v in right_vertices_sequence:
+            polygon.add_vertex(v)
 
     def lane_polygon_dead_end_case(self, polygon, already_vertices):
         """
@@ -240,8 +265,6 @@ class PolygonFactory:
         """
         assert(isinstance(polygon, LanePolygon))
         assert(len(already_vertices) == 2)
-        v0 = self.polygon_vertex_manager.data[already_vertices[0]]
-        v1 = self.polygon_vertex_manager.data[already_vertices[1]]
 
         lane = self.lane_manager.data[polygon.related_lane_id]
         construct_vertices = []
@@ -259,14 +282,14 @@ class PolygonFactory:
         v3 = construct_vertices[1]
         self.polygon_vertex_manager.add_obj(v2)
         self.polygon_vertex_manager.add_obj(v3)
+        already_vertices.extend([v2.id, v3.id])
 
-        if self.connection_manager.is_on_same_side_of_lane(lane.id, v0, v2):
-            result = [v0, v2, v3, v1]
-        else:
-            result = [v0, v1, v2, v3]
+        right_vertices_sequence =\
+            self.rearrange_vertices_sequence_for_lane_polygon(
+                lane.id, already_vertices)
 
-        for v in result:
-            polygon.add_vertex(self.polygon_vertex_manager.data[v.id])
+        for v in right_vertices_sequence:
+            polygon.add_vertex(v)
 
     def dead_end_lane_vertices(self, polygon_id, dead_end_vertex_id):
         """
@@ -383,10 +406,8 @@ class PolygonFactory:
             edge = self.edge_manager.data[edge_id]
             on_edge_vertex_ids = [edge.v0_id, edge.v1_id]
 
-            obstacle_pairs = []
-            for v in polygon_vertices:
-                if v.id not in on_edge_vertex_ids:
-                    obstacle_pairs.append(v.id)
+            obstacle_pairs = list(
+                lane_polygon.vertex_ids - set(on_edge_vertex_ids))
 
             obstacle = Obstacle()
             obstacle.init_obstacle(

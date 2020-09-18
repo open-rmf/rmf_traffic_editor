@@ -20,9 +20,6 @@ class NavmeshGenerator:
         self.level_name = level_name
         self.current_graph_idx = default_graph_idx
 
-    def set_graph_idx(self, graph_idx):
-        self.current_graph_idx = graph_idx
-
     def load(self):
         self.navmesh_manager = BuildNavmesh()
         lane_vertices_number = self.load_vertices()
@@ -47,12 +44,10 @@ class NavmeshGenerator:
 
     # add all lane vertices (actually load all the appeared vertices)
     def load_vertices(self):
-        count = 0
         for v in self.level.transformed_vertices:
             self.add_lane_vertex(v.xy())
-            count += 1
-        self.lane_vertices_number = count
-        return count
+        self.lane_vertices_number = len(self.level.transformed_vertices)
+        return self.lane_vertices_number
 
     def load_human_lanes(self):
         count = 0

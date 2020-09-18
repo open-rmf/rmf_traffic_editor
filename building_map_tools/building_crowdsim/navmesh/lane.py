@@ -19,12 +19,11 @@ class Lane:
         assert(isinstance(lane_vertex_manager, Manager))
 
         base_vertex = lane_vertex_manager.data[base_vertex_id]
-        to_vertex_id = -1
-        for v_id in self.lane_vertex_id:
-            if v_id != base_vertex_id:
-                to_vertex_id = v_id
-                break
-        assert(to_vertex_id != -1)
+        assert(len(self.lane_vertex_id) == 2)
+        to_vertex_id = self.lane_vertex_id[0]
+        if base_vertex_id == self.lane_vertex_id[0]:
+            to_vertex_id = self.lane_vertex_id[1]
+        assert(to_vertex_id != base_vertex_id)
         to_vertex = lane_vertex_manager.data[to_vertex_id]
 
         result = Vector2d()

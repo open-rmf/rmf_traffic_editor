@@ -34,18 +34,13 @@ def write_xml_file(root_element, output_dir='', file_name=''):
         output_dir = os.getcwd()
     else:
         if output_dir[0] == '/':
-            print("Generate",
-                  file_name,
-                  "to ",
-                  output_dir)
+            print("Generate", file_name,
+                  "to ", output_dir)
         else:
-            print("Generate",
-                  file_name,
-                  "to ",
-                  os.getcwd() + '/' + output_dir)
+            print("Generate", file_name,
+                  "to ", os.getcwd() + '/' + output_dir)
     write_xml_to_complete_file_path(
-        root_element,
-        output_dir + '/' + file_name)
+        root_element, output_dir + '/' + file_name)
 
 
 def write_xml_to_complete_file_path(root_element, file_name=''):

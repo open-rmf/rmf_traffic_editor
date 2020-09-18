@@ -23,7 +23,6 @@ def simple_unit_test():
     scene_file_root = root.output_xml_element()
 
     util.pretty_xml(scene_file_root, '\t', '\n')
-
     ET.dump(scene_file_root)
 
 
