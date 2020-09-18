@@ -660,3 +660,57 @@ bool Project::has_sim_plugin()
   }
   return false;
 }
+
+bool Project::set_filename(const std::string& _fn)
+{
+  const string suffix(".project.yaml");
+
+  // ensure there is at least one character in addition to the suffix length
+  if (_fn.size() <= suffix.size())
+  {
+    printf("Project::set_filename() too short: [%s]\n", _fn.c_str());
+    return false;
+  }
+
+  // ensure the filename ends in .project.yaml
+  // it should, because the "save as" dialog appends it, but...
+  if (_fn.compare(_fn.size() - suffix.size(), suffix.size(), suffix))
+  {
+    printf(
+      "Project::set_filename() filename had unexpected suffix: [%s]\n",
+      _fn.c_str());
+    return false;
+  }
+
+  const string no_suffix(_fn.substr(0, _fn.size() - suffix.size()));
+
+  const size_t last_slash_pos = no_suffix.rfind('/', no_suffix.size());
+
+  const string stem(
+    (last_slash_pos == string::npos) ?
+    no_suffix :
+    string(no_suffix, last_slash_pos + 1));
+
+  filename = _fn;
+
+  if (name.empty())
+  {
+    name = stem;
+  }
+
+  if (building.name.empty())
+  {
+    building.name = stem;
+  }
+  if (building.filename.empty())
+  {
+    building.filename = stem + std::string(".building.yaml");
+  }
+
+  printf(
+    "set project filename to [%s] stem: [%s] building filename: [%s]\n",
+    filename.c_str(),
+    stem.c_str(),
+    building.filename.c_str());
+  return true;
+}

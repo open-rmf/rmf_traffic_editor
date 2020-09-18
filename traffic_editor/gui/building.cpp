@@ -388,8 +388,9 @@ void Building::set_model_yaw(
 
 void Building::clear()
 {
-  name = "";
-  reference_level_name = "";
+  name.clear();
+  filename.clear();
+  reference_level_name.clear();
   levels.clear();
   lifts.clear();
   clear_transform_cache();

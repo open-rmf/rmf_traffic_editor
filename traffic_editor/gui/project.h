@@ -39,7 +39,6 @@ class Project
 {
 public:
   std::string name;
-  std::string filename;
 
   Building building;
   std::vector<std::unique_ptr<Scenario>> scenarios;
@@ -130,6 +129,9 @@ public:
 
   bool has_sim_plugin();
 
+  bool set_filename(const std::string& _filename);
+  std::string get_filename() { return filename; }
+
 private:
   bool load_yaml_file(const std::string& _filename);
   bool save_yaml_file() const;
@@ -139,6 +141,7 @@ private:
     QGraphicsLineItem* line_item,
     const EditorModeId mode);
 
+  std::string filename;
 };
 
 #endif
