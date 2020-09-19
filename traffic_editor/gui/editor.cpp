@@ -699,7 +699,7 @@ void Editor::project_new()
   std::string fn = file_info.fileName().toStdString();
 
   project.clear();
-  project.filename = file_info.absoluteFilePath().toStdString();
+  project.set_filename(file_info.absoluteFilePath().toStdString());
   QString dir_path = file_info.dir().path();
   QDir::setCurrent(dir_path);
 
@@ -710,7 +710,7 @@ void Editor::project_new()
   QSettings settings;
   settings.setValue(
     preferences_keys::previous_project_path,
-    QString::fromStdString(project.filename));
+    QString::fromStdString(project.get_filename()));
 }
 
 void Editor::project_open()
@@ -808,7 +808,7 @@ void Editor::mouse_event(const MouseType t, QMouseEvent* e)
   {
     if (t == MOUSE_RELEASE)
     {
-      if (project.filename.empty())
+      if (project.get_filename().empty())
       {
         QMessageBox::critical(
           this,
