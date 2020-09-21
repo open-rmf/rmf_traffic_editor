@@ -9,8 +9,8 @@
 
   <build_depend>ament_cmake</build_depend>
   <build_depend>ament_index_cpp</build_depend>
-  <build_depend>libignition-plugin-dev</build_depend>
-  <build_depend>libignition-common3-dev</build_depend>
+  <build_depend>ignition-plugin</build_depend>
+  <build_depend>ignition-common3</build_depend>
   <build_depend>yaml-cpp</build_depend>
   <build_depend>libqt5-concurrent</build_depend>
   <build_depend>libqt5-widgets</build_depend>
