@@ -1,6 +1,12 @@
 meters_per_pixel: 0.004
 models:
 - OpenRobotics/AdjTable
+- OpenRobotics/AirportBench
+- OpenRobotics/AirportSign1
+- OpenRobotics/AirportSign2
+- OpenRobotics/AirportSign3
+- OpenRobotics/AirportSign4
+- OpenRobotics/AirportSign5
 - OpenRobotics/Ambulance2
 - OpenRobotics/AnesthesiaMachine
 - OpenRobotics/ArmoredPillars
@@ -25,6 +31,7 @@ models:
 - OpenRobotics/Construction Cone
 - OpenRobotics/Desk
 - OpenRobotics/DeskChair
+- OpenRobotics/DigitalKiosk
 - OpenRobotics/Drawer
 - OpenRobotics/ElderLadyPatient
 - OpenRobotics/ElderMalePatient
