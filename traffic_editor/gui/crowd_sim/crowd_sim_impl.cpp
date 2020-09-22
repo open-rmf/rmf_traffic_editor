@@ -57,13 +57,8 @@ void CrowdSimImplementation::_initialize_model_type()
     _model_types[0] = ModelType("human", "walk");
   auto& default_type = _model_types.at(0);
   default_type.set_animation_speed(0.2);
-  default_type.set_gazebo_conf(
-    "walk.dae",
-    "stand.dae",
-    {0, 0, 0, 0, 0, 0}
-  );
-  default_type.set_ign_conf(
-    "https://fuel.ignitionrobotics.org/1.0/Mingfei/models/actor",
+  default_type.set_model_uri("model://MaleVisitorPhone");
+  default_type.set_init_pose(
     {0, 0, 0, 0, 0, 0}
   );
 }

@@ -102,6 +102,9 @@ void StatesTab::save()
   //row 0 is not allowed to be changed
   tmp_cache.emplace_back("external_static");
 
+  //check duplicate names
+  std::set<std::string> saved_names;
+
   for (auto i = 1; i < rows_count - 1; i++)
   {
     auto name_item = item(i, 0)->text().toStdString();
@@ -117,11 +120,20 @@ void StatesTab::save()
       static_cast<QComboBox*>(cellWidget(i,
       3))->currentText().toInt(&OK_status);
 
+    if (saved_names.find(name_item) != saved_names.end())
+    {
+      std::cout << "Defined duplicate state name for [" <<
+        name_item << "]. Skip saving this state." <<
+        std::endl;
+      continue;
+    }
+
     tmp_cache.emplace_back(name_item);
     auto& cur_it = tmp_cache.back();
     cur_it.set_final_state(final_item == "1");
     cur_it.set_navmesh_file_name(navmesh_file_name);
     cur_it.set_goal_set_id(static_cast<size_t>(goal_set_id));
+    saved_names.insert(name_item);
   }
 
   _cache = tmp_cache;
