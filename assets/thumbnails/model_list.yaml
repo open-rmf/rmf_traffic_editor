@@ -95,6 +95,10 @@ models:
 - OpenRobotics/StorageRack
 - OpenRobotics/StorageRackCovered
 - OpenRobotics/StorageRackCoverOpen
+- OpenRobotics/Suitcase1
+- OpenRobotics/Suitcase1H
+- OpenRobotics/Suitcase2
+- OpenRobotics/Suitcase2H
 - OpenRobotics/SurgicalTrolleyGuards
 - OpenRobotics/SurgicalTrolleyMed
 - OpenRobotics/SUV
