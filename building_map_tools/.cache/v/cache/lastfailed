@@ -1,6 +1,0 @@
-{
-  "building_crowdsim/test/test_build_configfile.py::test_behavior_from_yaml": true,
-  "building_crowdsim/test/test_build_configfile.py::test_plugin_from_yaml": true,
-  "building_crowdsim/test/test_build_configfile.py::test_scene_from_yaml": true,
-  "building_crowdsim/test/test_build_navmesh.py::test": true
-}
