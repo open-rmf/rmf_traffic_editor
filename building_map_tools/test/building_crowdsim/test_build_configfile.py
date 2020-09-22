@@ -11,7 +11,7 @@ import building_crowdsim.config.util as util
 from building_crowdsim.building_yaml_parse import BuildingYamlParse
 
 
-def simple_unit_test():
+def test_scene_file():
     root = SceneFile()
     root.add_spatial_query()
     root.add_common()
@@ -23,11 +23,11 @@ def simple_unit_test():
     scene_file_root = root.output_xml_element()
 
     util.pretty_xml(scene_file_root, '\t', '\n')
-
     ET.dump(scene_file_root)
 
 
-def scene_from_yaml_test(map_file):
+def test_scene_from_yaml():
+    map_file = os.getcwd() + '/test/building_crowdsim/config_test.yaml'
     yaml_parse = BuildingYamlParse(map_file)
     crowd_sim_yaml = yaml_parse.crowd_sim_config
 
@@ -54,7 +54,8 @@ def scene_from_yaml_test(map_file):
     ET.dump(scene_file_root)
 
 
-def behavior_from_yaml_test(map_file):
+def test_behavior_from_yaml():
+    map_file = os.getcwd() + '/test/building_crowdsim/config_test.yaml'
     yaml_parse = BuildingYamlParse(map_file)
     crowd_sim_yaml = yaml_parse.crowd_sim_config
 
@@ -80,7 +81,8 @@ def behavior_from_yaml_test(map_file):
     ET.dump(behavior_file_root)
 
 
-def plugin_from_yaml_test(map_file):
+def test_plugin_from_yaml():
+    map_file = os.getcwd() + '/test/building_crowdsim/config_test.yaml'
     yaml_parse = yaml_parse = BuildingYamlParse(map_file)
     crowd_sim_yaml = yaml_parse.crowd_sim_config
 
@@ -96,17 +98,15 @@ if __name__ == '__main__':
     print("simple_unit_test()")
     print("=========================")
     try:
-        simple_unit_test()
+        test_scene_file()
     except KeyboardInterrupt:
         pass
-
-    map_file = os.getcwd() + '/config_test.yaml'
 
     print("=========================")
     print("scene_from_yaml_test()")
     print("=========================")
     try:
-        scene_from_yaml_test(map_file)
+        test_scene_from_yaml()
     except KeyboardInterrupt:
         pass
 
@@ -114,7 +114,7 @@ if __name__ == '__main__':
     print("behavior_from_yaml_test()")
     print("=========================")
     try:
-        behavior_from_yaml_test(map_file)
+        test_behavior_from_yaml()
     except KeyboardInterrupt:
         pass
 
@@ -122,7 +122,7 @@ if __name__ == '__main__':
     print("plugin_from_yaml_test()")
     print("=========================")
     try:
-        plugin_from_yaml_test(map_file)
+        test_plugin_from_yaml()
     except KeyboardInterrupt:
         pass
 

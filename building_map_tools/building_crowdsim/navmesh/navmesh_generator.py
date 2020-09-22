@@ -20,9 +20,6 @@ class NavmeshGenerator:
         self.level_name = level_name
         self.current_graph_idx = default_graph_idx
 
-    def set_graph_idx(self, graph_idx):
-        self.current_graph_idx = graph_idx
-
     def load(self):
         self.navmesh_manager = BuildNavmesh()
         lane_vertices_number = self.load_vertices()
@@ -47,12 +44,10 @@ class NavmeshGenerator:
 
     # add all lane vertices (actually load all the appeared vertices)
     def load_vertices(self):
-        count = 0
         for v in self.level.transformed_vertices:
             self.add_lane_vertex(v.xy())
-            count += 1
-        self.lane_vertices_number = count
-        return count
+        self.lane_vertices_number = len(self.level.transformed_vertices)
+        return self.lane_vertices_number
 
     def load_human_lanes(self):
         count = 0
@@ -85,16 +80,13 @@ def navmesh_output(level_name, level_yaml_node, output_file_path):
     return navmesh_generator
 
 
-def navmesh_main(map_file, output_dir, output_file_prefix):
+def navmesh_main(map_file, output_dir):
     if not os.path.exists(map_file):
         raise ValueError('Map path not exist!')
 
     if not os.path.exists(output_dir):
         print("Creating output folder path: ", output_dir)
         os.makedirs(output_dir)
-
-    if len(output_file_prefix) == 0:
-        output_file_prefix = 'temp'
 
     # parse the yaml file
     yaml_parse = BuildingYamlParse(map_file)

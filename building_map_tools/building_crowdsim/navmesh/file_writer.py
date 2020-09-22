@@ -86,7 +86,7 @@ class FileWriter:
                 self.write_line(tmp)
             else:
                 self.write_line(0)
-            # obstalce
+            # obstacle
             if(len(result[4]) > 0):
                 tmp = list(result[4])
                 tmp.insert(0, len(result[4]))

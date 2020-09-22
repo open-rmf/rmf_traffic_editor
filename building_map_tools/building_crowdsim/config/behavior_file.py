@@ -52,8 +52,7 @@ class BehaviorState (Element):
         if int(yaml_node['final']) == 1:
             self.attributes['final'] = 1
             return
-        else:
-            self.attributes['final'] = 0
+        self.attributes['final'] = 0
         self.goal_selector.attributes['goal_set'] = int(yaml_node['goal_set'])
         self.vel_component.attributes['file_name'] =\
             yaml_node['navmesh_file_name']

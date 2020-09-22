@@ -1,5 +1,8 @@
 from building_crowdsim.navmesh.build_navmesh import BuildNavmesh
 
+import filecmp
+import os
+
 
 def test():
     build_navmesh = BuildNavmesh()
@@ -14,11 +17,23 @@ def test():
     build_navmesh.add_lane(2, 3, 2.0)
 
     build_navmesh.process()
-    build_navmesh.output("test_navmesh_unit_test.nav")
+
+    generate_file = os.getcwd() +\
+        "/test/building_crowdsim/test_navmesh_unit_test.nav"
+    standard_result = os.getcwd() +\
+        "/test/building_crowdsim/test_build_navmesh_result.nav"
+
+    build_navmesh.output(generate_file)
+
+    assert filecmp.cmp(
+            generate_file,
+            standard_result)
+
+    os.remove(generate_file)
 
 
 if __name__ == "__main__":
     try:
-        test()
+        assert test()
     except KeyboardInterrupt:
         pass

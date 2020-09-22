@@ -4,18 +4,9 @@ from .leaf_element import LeafElement, Element
 
 
 class Plugin (Element):
-    def __init__(self, model_env):
+    def __init__(self):
         Element.__init__(self, 'plugin')
-        if model_env == "gazebo":
-            self.attributes['filename'] = 'libcrowd_simulator.so'
-        elif model_env == 'ign':
-            self.attributes['filename'] = 'libcrowd_simulator_ign.so'
-        else:
-            raise ValueError(
-                "Unknown 'model_env' provided to initialize Plugin: [" +
-                model_env + "]")
-
-        self.model_env = model_env
+        self.attributes['filename'] = 'libcrowd_simulator.so'
         self.attributes['name'] = 'crowd_simulation'
 
         self.behavior_file_element = LeafElement('behavior_file')
@@ -51,13 +42,11 @@ class Plugin (Element):
             return
         agent_groups = yaml_node['agent_groups']
         for group in agent_groups:
-            if len(group['agents_name']) == 0:
-                continue
-            self.add_external_list(group['agents_name'])
+            if len(group['agents_name']) > 0:
+                self.add_external_list(group['agents_name'])
 
     def add_model_type(self, model_type):
         assert(isinstance(model_type, ModelType))
-        model_type.model_env = self.model_env
         self.sub_elements.append(model_type)
 
     def add_external_agent(self, name):
@@ -76,18 +65,14 @@ class ModelType (Element):
         self.type_name = LeafElement('typename')
         self.animation_speed = LeafElement('animation_speed')
         self.animation = LeafElement('animation')
-        # for gazebo model
-        self.initial_pose_gazebo = LeafElement('initial_pose')
-        self.gazebo_filename = LeafElement('filename')
-        # for ign model
-        self.initial_pose_ign = LeafElement('initial_pose')
-        self.ign_filename = LeafElement('filename')
+        self.model_uri = LeafElement('filename')
+        self.init_pose = LeafElement('initial_pose')
 
         self.sub_elements.append(self.type_name)
         self.sub_elements.append(self.animation)
         self.sub_elements.append(self.animation_speed)
-
-        self.model_env = None
+        self.sub_elements.append(self.model_uri)
+        self.sub_elements.append(self.init_pose)
 
     def load_from_yaml(self, yaml_node):
         for key in yaml_node:
@@ -96,80 +81,27 @@ class ModelType (Element):
     def set_tags(self, key, value):
         if key == "typename":
             self.type_name.text = str(value)
-            return
-        if key == "animation_speed":
+        elif key == "animation_speed":
             self.animation_speed.text = str(value)
-            return
-        if key == "animation":
+        elif key == "animation":
             self.animation.text = str(value)
-            return
-        if key == "gazebo":
-            for k in value:
-                self.set_gazebo_model(k, value[k])
-            return
-        if key == "ign":
-            for k in value:
-                self.set_ign_model(k, value[k])
-            return
-        raise ValueError(
-            "Invalid params provided in model_type: [" + key + "]")
-
-    def set_gazebo_model(self, key, value):
-        if key == 'pose':
-            content = ''
-            for number in value:
-                content += str(number) + ' '
-            content = content[0:-1]
-            self.initial_pose_gazebo.text = content
-            return
-
-        if key == 'filename':
-            self.gazebo_filename.text = str(value)
-            return
-
-        raise ValueError(
-            "invalid params provided for gazebo model:[" + key + "]")
-
-    def set_ign_model(self, key, value):
-        if key == 'pose':
-            content = ''
-            for number in value:
-                content += str(number) + ' '
-            content = content[0:-1]
-            self.initial_pose_ign.text = content
-            return
-
-        if key == 'model_file_path':
-            self.ign_filename.text = str(value)
-            return
-
-        raise ValueError(
-            "invalid params provided for gazebo model:[" + key + "]")
+        elif key == "model_uri":
+            self.model_uri.text = str(value)
+        elif key == "init_pose":
+            pose_str = ""
+            for num in value:
+                pose_str += str(num) + " "
+            self.init_pose.text = str(pose_str[0:-1])
+        else:
+            raise ValueError(
+                "Invalid params provided in model_type: [" + key + "]")
 
     def output_xml_element(self):
         if not self.type_name.text or\
            not self.animation.text or\
-           not self.animation_speed.text:
+           not self.animation_speed.text or\
+           not self.model_uri or\
+           not self.init_pose:
             raise ValueError("Incomplete 'model_type' element")
 
-        if self.model_env != "gazebo" and self.model_env != "ign":
-            raise ValueError(
-                "Unknown 'model_env' [" +
-                self.model_env +
-                "], please select 'gazebo' or 'ign'")
-
-        if self.model_env == "gazebo":
-            if not self.gazebo_filename.text or\
-               not self.initial_pose_gazebo.text:
-                raise ValueError("Incomplete 'gazebo' model in 'model_type'")
-            self.sub_elements.append(self.initial_pose_gazebo)
-            self.sub_elements.append(self.gazebo_filename)
-            return Element.output_xml_element(self)
-
-        if self.model_env == "ign":
-            if not self.ign_filename.text or\
-               not self.initial_pose_ign.text:
-                raise ValueError("Incomplete 'ign' model in 'model_type'")
-            self.sub_elements.append(self.initial_pose_ign)
-            self.sub_elements.append(self.gazebo_filename)
-            return Element.output_xml_element(self)
+        return Element.output_xml_element(self)

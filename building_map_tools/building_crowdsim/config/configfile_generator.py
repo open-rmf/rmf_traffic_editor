@@ -4,17 +4,20 @@ import yaml
 
 import xml.etree.ElementTree as ET
 
-from .behavior_file import *
-from .scene_file import *
-from .plugin_file import *
-from .util import *
+from .behavior_file import\
+    BehaviorFile, BehaviorState, StateTransition, GoalSet
+from .scene_file import\
+    SceneFile, ObstacleSet, AgentProfile, AgentGroup
+from .plugin_file import\
+    Plugin
+from .util import write_xml_file, write_xml_to_complete_file_path
 
 from building_crowdsim.building_yaml_parse import\
     BuildingYamlParse, LevelWithHumanLanes
 
 
 class ConfigFileGenerator:
-    def __init__(self, building_yaml_parse, simulation_platform="gazebo"):
+    def __init__(self, building_yaml_parse):
         assert(isinstance(building_yaml_parse, BuildingYamlParse))
         self.crowd_sim_yaml = building_yaml_parse.crowd_sim_config
         if 'enable' not in self.crowd_sim_yaml:
@@ -24,7 +27,7 @@ class ConfigFileGenerator:
         self.human_goals = building_yaml_parse.get_human_goals()
         self.behavior_file = BehaviorFile()
         self.scene_file = SceneFile()
-        self.plugin_file = Plugin(simulation_platform)
+        self.plugin_file = Plugin()
 
     def generate_behavior_file(self, output_dir=""):
         # must follow the sequence:
@@ -118,7 +121,7 @@ class ConfigFileGenerator:
             world_file_to_be_inserted)
 
 
-def configfile_main(map_file, output_dir, platform, world_file_to_be_inserted):
+def configfile_main(map_file, output_dir, world_file_to_be_inserted):
     if not os.path.exists(map_file):
         raise ValueError('Map path not exist!: ' + map_file)
 
@@ -126,16 +129,11 @@ def configfile_main(map_file, output_dir, platform, world_file_to_be_inserted):
         os.makedirs(output_dir)
         print("Create output dir for:", output_dir)
 
-    if not platform == "gazebo" and not platform == "ign":
-        print("Platform is expected to be either 'gazebo' or 'ign'.")
-        print("'", platform, "' is provided. Using default 'gazebo'")
-        platform = "gazebo"
-
     if not os.path.exists(world_file_to_be_inserted):
         world_file_to_be_inserted = ""
 
     yaml_parse = BuildingYamlParse(map_file)
-    configfile_generator = ConfigFileGenerator(yaml_parse, platform)
+    configfile_generator = ConfigFileGenerator(yaml_parse)
     configfile_generator.generate_behavior_file(output_dir)
     configfile_generator.generate_scene_file(output_dir)
     configfile_generator.insert_plugin_into_world_file(
