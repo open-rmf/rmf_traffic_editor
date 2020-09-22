@@ -61,8 +61,8 @@ public:
   void set_animation_speed(double speed) { _animation_speed = speed; }
   void set_model_uri(const std::string& model_uri) { _model_uri = model_uri; }
   void set_init_pose(const std::vector<double>& init_pose) 
-  { 
-    _init_pose = init_pose; 
+  {
+    _init_pose = init_pose;
   }
 
   // check model_uri is "model://"
