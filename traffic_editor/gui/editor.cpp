@@ -699,7 +699,7 @@ void Editor::project_new()
   std::string fn = file_info.fileName().toStdString();
 
   project.clear();
-  project.filename = file_info.absoluteFilePath().toStdString();
+  project.set_filename(file_info.absoluteFilePath().toStdString());
   QString dir_path = file_info.dir().path();
   QDir::setCurrent(dir_path);
 
@@ -710,7 +710,7 @@ void Editor::project_new()
   QSettings settings;
   settings.setValue(
     preferences_keys::previous_project_path,
-    QString::fromStdString(project.filename));
+    QString::fromStdString(project.get_filename()));
 }
 
 void Editor::project_open()
@@ -808,7 +808,7 @@ void Editor::mouse_event(const MouseType t, QMouseEvent* e)
   {
     if (t == MOUSE_RELEASE)
     {
-      if (project.filename.empty())
+      if (project.get_filename().empty())
       {
         QMessageBox::critical(
           this,
@@ -1345,8 +1345,8 @@ void Editor::populate_property_editor(const Vertex& vertex)
   property_editor->blockSignals(true);  // otherwise we get tons of callbacks
   property_editor->setRowCount(5 + vertex.params.size());
 
-  property_editor_set_row(0, "x (pixels)", vertex.x);
-  property_editor_set_row(1, "y (pixels)", vertex.y);
+  property_editor_set_row(0, "x (pixels)", vertex.x, 3, true);
+  property_editor_set_row(1, "y (pixels)", vertex.y, 3, true);
   property_editor_set_row(2, "x (m)", vertex.x * scale);
   property_editor_set_row(3, "y (m)", -1.0 * vertex.y * scale);
   property_editor_set_row(
@@ -1461,6 +1461,10 @@ void Editor::property_editor_cell_changed(int row, int column)
       continue;
     if (name == "name")
       v.name = value;
+    else if (name == "x (pixels)")
+      v.x = stof(value);
+    else if (name == "y (pixels)")
+      v.y = stof(value);
     else
       v.set_param(name, value);
     create_scene();

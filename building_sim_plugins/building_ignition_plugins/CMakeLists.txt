@@ -37,9 +37,9 @@ ign_find_package(ignition-plugin1 REQUIRED COMPONENTS register)
 set(IGN_PLUGIN_VER 1)
 ign_find_package(ignition-common3 REQUIRED)
 set(IGN_COMMON_VER 3)
-ign_find_package(ignition-math4 REQUIRED)
-ign_find_package(sdformat9 REQUIRED)
-set(IGN_MATH_VER 4)
+ign_find_package(ignition-math6 REQUIRED)
+ign_find_package(sdformat10 REQUIRED)
+set(IGN_MATH_VER 6)
 
 find_package(tf2_ros REQUIRED)
 find_package(geometry_msgs REQUIRED)
@@ -50,6 +50,7 @@ find_package(rmf_door_msgs REQUIRED)
 find_package(rmf_lift_msgs REQUIRED)
 find_package(building_map_msgs REQUIRED)
 find_package(building_sim_common REQUIRED)
+find_package(menge QUIET)
 
 include(GNUInstallDirs)
 
@@ -129,6 +130,42 @@ target_link_libraries(lift
     #${geometry_msgs_LIBRARIES}
     #${tf2_ros_LIBRARIES}
 )
+
+###############################
+# crowd simulator stuff
+###############################
+if (menge_FOUND)
+  add_library(crowd_simulator_ign
+    SHARED
+    src/crowd_simulator.cpp
+  )
+
+  target_include_directories(crowd_simulator_ign
+    PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    ${building_sim_common_INCLUDE_DIRS}
+    ${rclcpp_INCLUDE_DIRS}
+    ${menge_INCLUDE_DIRS}
+    ${IGNITION-COMMON_INCLUDE_DIRS}
+  )
+
+  ament_target_dependencies(crowd_simulator_ign
+    ignition-gazebo${IGN_GAZEBO_VER}
+    ignition-plugin${IGN_PLUGIN_VER}
+    rclcpp
+    building_sim_common
+    menge
+  )
+
+  #install
+  install(
+    TARGETS crowd_simulator_ign
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  )
+else (NOT menge_FOUND)
+  message("menge-cmake not found, skipping crowd_simulation ignition plugins")
+endif()
 
 ###############################
 # install stuff

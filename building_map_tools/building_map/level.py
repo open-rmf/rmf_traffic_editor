@@ -23,7 +23,7 @@ from .doors.double_sliding_door import DoubleSlidingDoor
 
 
 class Level:
-    def __init__(self, yaml_node, name):
+    def __init__(self, yaml_node, name, model_counts={}):
         self.name = name
         print(f'parsing level {name}')
 
@@ -49,7 +49,7 @@ class Level:
 
         self.transformed_vertices = []  # will be calculated in a later pass
 
-        self.lift_vert_lists = []  # will be calculated in a later pass
+        self.lift_vert_lists = {}  # will be calculated in a later pass
 
         self.meas = []
         if 'measurements' in yaml_node:
@@ -70,7 +70,6 @@ class Level:
             self.doors = self.parse_edge_sequence(yaml_node['doors'])
 
         self.models = []
-        model_counts = {}
         if 'models' in yaml_node:
             for model_yaml in yaml_node['models']:
                 name = model_yaml["name"]
@@ -102,8 +101,13 @@ class Level:
             v.z = self.elevation
             self.transformed_vertices.append(v)
 
-    def set_lift_vert_lists(self, lift_vert_lists):
-        self.lift_vert_lists = lift_vert_lists
+    def set_lift_vert_lists(self, lift_vert_lists, lifts):
+        for lift_name, lift in lifts.items():
+            if lift.level_doors and \
+                    self.elevation >= lift.lowest_elevation and \
+                    self.elevation <= lift.highest_elevation:
+                self.lift_vert_lists[lift_name] = \
+                    (lift_vert_lists[lift_name])
 
     def calculate_scale_using_measurements(self):
         # use the measurements to estimate scale for this level
@@ -153,10 +157,11 @@ class Level:
                 self.transformed_vertices)
 
     def generate_sdf_models(self, world_ele):
-        model_cnt = 0
         for model in self.models:
-            model_cnt += 1
-            model.generate(world_ele, model_cnt, self.transform)
+            model.generate(
+                world_ele,
+                self.transform,
+                self.elevation)
 
         # sniff around in our vertices and spawn robots if requested
         for vertex_idx, vertex in enumerate(self.vertices):
@@ -301,6 +306,22 @@ class Level:
             x1, y1, x2, y2, x3, y3, x4, y4))
         return True
 
+    def is_in_lift(self, p, lift_vert_list):
+        verts = np.array(lift_vert_list)
+        # array of vectors from the point to four rectangle vertices
+        a = verts - np.array(p)
+        # array of vectors for the four sides of the rectangle
+        b = []
+        for i in range(4):
+            b.append(verts[i-1] - verts[i])
+        # cross products of the four pairs of vectors. If the four cross
+        # products have the same sign, then the point is inside the rectangle
+        cross = np.cross(a, np.array(b))
+        if np.all(cross >= 0) or np.all(cross <= 0):
+            return True
+        else:
+            return False
+
     def generate_nav_graph(self, graph_idx, always_unidirectional=True):
         """ Generate a graph without unnecessary (non-lane) vertices """
         # first remap the vertices. Store both directions; we'll need them
@@ -329,6 +350,10 @@ class Level:
             p = {'name': v.name}
             for param_name, param_value in v.params.items():
                 p[param_name] = param_value.value
+            for lift_name, lift_vert_list in self.lift_vert_lists.items():
+                if self.is_in_lift([v.x, v.y], lift_vert_list):
+                    p['lift'] = lift_name
+                    break
             nav_data['vertices'].append([v.x, v.y, p])
 
         nav_data['lanes'] = []

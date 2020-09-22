@@ -217,7 +217,8 @@ class Wall:
 
         self.transformed_vertices = transformed_vertices
 
-        link_ele = SubElement(model_ele, 'link', {'name': 'walls'})
+        link_ele = SubElement(
+            model_ele, 'link', {'name': f'wall_{self.wall_cnt}'})
         self.generate_wall_visual_mesh(model_name, model_path)
 
         obj_path = f'model://{model_name}/meshes/wall_{self.wall_cnt}.obj'

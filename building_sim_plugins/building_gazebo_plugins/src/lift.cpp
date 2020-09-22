@@ -63,11 +63,11 @@ public:
     _update_connection = gazebo::event::Events::ConnectWorldUpdateBegin(
       std::bind(&LiftPlugin::on_update, this));
 
+    _cabin_joint_ptr->SetPosition(0, _lift_common->get_elevation());
+
     RCLCPP_INFO(_ros_node->get_logger(),
       "Finished loading [%s]",
       _model->GetName().c_str());
-
-    _cabin_joint_ptr->SetPosition(0, _lift_common->get_elevation());
 
     _initialized = true;
   }

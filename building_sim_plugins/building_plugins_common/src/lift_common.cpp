@@ -52,8 +52,7 @@ void LiftCommon::publish_door_request(const double time, std::string door_name,
 double LiftCommon::get_step_velocity(const double dt, const double position,
   const double velocity)
 {
-  double desired_elevation =
-    _floor_name_to_elevation[_lift_state.destination_floor];
+  double desired_elevation = get_elevation();
   double dz = desired_elevation - position;
 
   if (abs(dz) < _cabin_motion_params.dx_min / 2.0)
@@ -177,7 +176,7 @@ LiftCommon::LiftCommon(rclcpp::Node::SharedPtr node,
     std::string, std::vector<std::string>> floor_name_to_cabin_door_name,
   std::unordered_map<std::string, DoorState::SharedPtr> shaft_door_states,
   std::unordered_map<std::string, DoorState::SharedPtr> cabin_door_states,
-  const std::string reference_floor_name)
+  std::string initial_floor_name)
 : _ros_node(node),
   _lift_name(lift_name),
   _cabin_joint_name(joint_name),
@@ -246,7 +245,7 @@ LiftCommon::LiftCommon(rclcpp::Node::SharedPtr node,
   // Initial lift state
   _lift_state.lift_name = _lift_name;
   _lift_state.current_floor = _floor_names[0];
-  _lift_state.destination_floor = reference_floor_name;
+  _lift_state.destination_floor = initial_floor_name;
   _lift_state.door_state = LiftState::DOOR_CLOSED;
   _lift_state.motion_state = LiftState::MOTION_STOPPED;
   for (const std::string& floor_name : _floor_names)
@@ -284,6 +283,10 @@ LiftCommon::LiftUpdateResult LiftCommon::update(const double time,
   {
     std::string desired_floor = _lift_request->destination_floor;
     uint8_t desired_door_state = _lift_request->door_state;
+    if (_lift_request->request_type == LiftRequest::REQUEST_END_SESSION)
+      _lift_state.session_id = "";
+    else
+      _lift_state.session_id = _lift_request->session_id;
 
     if ((_lift_state.current_floor == desired_floor) &&
       (_lift_state.door_state == desired_door_state) &&

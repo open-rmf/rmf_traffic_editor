@@ -114,7 +114,7 @@ bool Building::load_yaml_file()
     for (YAML::const_iterator it = y_lifts.begin(); it != y_lifts.end(); ++it)
     {
       Lift lift;
-      lift.from_yaml(it->first.as<string>(), it->second);
+      lift.from_yaml(it->first.as<string>(), it->second, levels);
       lifts.push_back(lift);
     }
   }
@@ -388,8 +388,9 @@ void Building::set_model_yaw(
 
 void Building::clear()
 {
-  name = "";
-  reference_level_name = "";
+  name.clear();
+  filename.clear();
+  reference_level_name.clear();
   levels.clear();
   lifts.clear();
   clear_transform_cache();
@@ -430,6 +431,7 @@ void Building::draw_lifts(QGraphicsScene* scene, const int level_idx)
       scene,
       level.drawing_meters_per_pixel,
       level.name,
+      level.elevation,
       true,
       t.scale,
       t.dx,

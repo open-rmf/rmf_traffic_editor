@@ -19,8 +19,9 @@
 #include <QtWidgets>
 
 
-BuildingLevelDialog::BuildingLevelDialog(BuildingLevel& _level)
-: building_level(_level)
+BuildingLevelDialog::BuildingLevelDialog(BuildingLevel& _level,
+  Building& _building)
+: building_level(_level), building(_building)
 {
   ok_button = new QPushButton("OK", this);  // first button = [enter] button
   cancel_button = new QPushButton("Cancel", this);
@@ -180,8 +181,32 @@ void BuildingLevelDialog::ok_button_clicked()
       "Name must not be empty");
     return;
   }
+  auto original_name = building_level.name;
   building_level.name = name_line_edit->text().toStdString();
   building_level.elevation = elevation_line_edit->text().toDouble();
+  for (size_t i = 0; i < building.lifts.size(); i ++)
+  {
+    if (original_name != building_level.name)
+    {
+      if (building.lifts[i].level_doors.find(original_name) !=
+        building.lifts[i].level_doors.end())
+      {
+        building.lifts[i].level_doors[building_level.name] =
+          building.lifts[i].level_doors[original_name];
+        building.lifts[i].level_doors.erase(original_name);
+      }
+    }
+    if (building.lifts[i].highest_floor == original_name)
+    {
+      building.lifts[i].highest_floor = building_level.name;
+      building.lifts[i].highest_elevation = building_level.elevation;
+    }
+    if (building.lifts[i].lowest_floor == original_name)
+    {
+      building.lifts[i].lowest_floor = building_level.name;
+      building.lifts[i].lowest_elevation = building_level.elevation;
+    }
+  }
   building_level.drawing_filename =
     drawing_filename_line_edit->text().toStdString();
   if (building_level.drawing_filename.empty())

@@ -29,7 +29,8 @@ Lift::Lift()
 {
 }
 
-void Lift::from_yaml(const std::string& _name, const YAML::Node& data)
+void Lift::from_yaml(const std::string& _name, const YAML::Node& data,
+  const std::vector<BuildingLevel>& levels)
 {
   if (!data.IsMap())
     throw std::runtime_error("Lift::from_yaml() expected a map");
@@ -38,6 +39,10 @@ void Lift::from_yaml(const std::string& _name, const YAML::Node& data)
   yaw = data["yaw"].as<double>();
   name = _name;
   reference_floor_name = data["reference_floor_name"].as<string>();
+  if (data["initial_floor_name"])
+    initial_floor_name = data["initial_floor_name"].as<string>();
+  else
+    initial_floor_name = reference_floor_name;
   width = data["width"].as<double>();
   depth = data["depth"].as<double>();
 
@@ -50,6 +55,18 @@ void Lift::from_yaml(const std::string& _name, const YAML::Node& data)
       door.from_yaml(it->first.as<string>(), it->second);
       doors.push_back(door);
     }
+  }
+
+  if (data["highest_floor"])
+    highest_floor = data["highest_floor"].as<string>();
+  if (data["lowest_floor"])
+    lowest_floor = data["lowest_floor"].as<string>();
+  for (const auto& level : levels)
+  {
+    if (level.name == highest_floor)
+      highest_elevation = level.elevation;
+    if (level.name == lowest_floor)
+      lowest_elevation = level.elevation;
   }
 
   // for every level, load if every door can open
@@ -83,6 +100,9 @@ YAML::Node Lift::to_yaml() const
   // let's give yaw another decimal place because, I don't know, reasons (?)
   n["yaw"] = std::round(yaw * 10000.0) / 10000.0;
   n["reference_floor_name"] = reference_floor_name;
+  n["highest_floor"] = highest_floor;
+  n["lowest_floor"] = lowest_floor;
+  n["initial_floor_name"] = initial_floor_name;
   n["width"] = std::round(width * 1000.0) / 1000.0;
   n["depth"] = std::round(depth * 1000.0) / 1000.0;
 
@@ -113,12 +133,15 @@ YAML::Node Lift::to_yaml() const
 void Lift::draw(
   QGraphicsScene* scene,
   const double meters_per_pixel,
-  const string& /*level_name*/,
+  const string& level_name,
+  const double elevation,
   const bool apply_transformation,
   const double scale,
   const double translate_x,
   const double translate_y) const
 {
+  if (elevation > highest_elevation || elevation < lowest_elevation)
+    return;
   const double cabin_w = width / meters_per_pixel;
   const double cabin_d = depth / meters_per_pixel;
   QPen cabin_pen(Qt::black);
@@ -130,7 +153,11 @@ void Lift::draw(
     cabin_w,
     cabin_d);
   cabin_rect->setPen(cabin_pen);
-  cabin_rect->setBrush(QBrush(QColor::fromRgbF(0.5, 1.0, 0.5, 0.5)));
+  auto it = level_doors.find(level_name);
+  if (it == level_doors.end())
+    cabin_rect->setBrush(QBrush(QColor::fromRgbF(1.0, 0.3, 0.3, 0.3)));
+  else
+    cabin_rect->setBrush(QBrush(QColor::fromRgbF(0.5, 1.0, 0.5, 0.5)));
   scene->addItem(cabin_rect);
 
   QList<QGraphicsItem*> items;
@@ -150,26 +177,32 @@ void Lift::draw(
     items.append(text_item);
   }
 
-  for (const LiftDoor& door : doors)
+  if (it != level_doors.end())
   {
-    const double door_x = door.x / meters_per_pixel;
-    const double door_y = -door.y / meters_per_pixel;
-    const double door_w = door.width / meters_per_pixel;
-    const double door_thickness = 0.2 / meters_per_pixel;
-    QGraphicsRectItem* door_item = new QGraphicsRectItem(
-      -door_w / 2.0,
-      -door_thickness / 2.0,
-      door_w,
-      door_thickness);
-    door_item->setRotation(-180.0 / 3.1415926 * door.motion_axis_orientation);
-    door_item->setPos(door_x, door_y);
+    for (const LiftDoor& door : doors)
+    {
+      if (find(it->second.begin(), it->second.end(), door.name)
+        == it->second.end())
+        continue;
+      const double door_x = door.x / meters_per_pixel;
+      const double door_y = -door.y / meters_per_pixel;
+      const double door_w = door.width / meters_per_pixel;
+      const double door_thickness = 0.2 / meters_per_pixel;
+      QGraphicsRectItem* door_item = new QGraphicsRectItem(
+        -door_w / 2.0,
+        -door_thickness / 2.0,
+        door_w,
+        door_thickness);
+      door_item->setRotation(-180.0 / 3.1415926 * door.motion_axis_orientation);
+      door_item->setPos(door_x, door_y);
 
-    QPen door_pen(Qt::red);
-    door_pen.setWidth(0.05 / meters_per_pixel);
-    door_item->setPen(door_pen);
-    door_item->setBrush(QBrush(QColor::fromRgbF(1.0, 0.0, 0.0, 0.5)));
+      QPen door_pen(Qt::red);
+      door_pen.setWidth(0.05 / meters_per_pixel);
+      door_item->setPen(door_pen);
+      door_item->setBrush(QBrush(QColor::fromRgbF(1.0, 0.0, 0.0, 0.5)));
 
-    items.append(door_item);
+      items.append(door_item);
+    }
   }
 
   QGraphicsItemGroup* group = scene->createItemGroup(items);
@@ -183,11 +216,22 @@ void Lift::draw(
 
 bool Lift::level_door_opens(
   const std::string& level_name,
-  const std::string& door_name) const
+  const std::string& door_name,
+  const std::vector<BuildingLevel>& levels) const
 {
   LevelDoorMap::const_iterator level_it = level_doors.find(level_name);
   if (level_it == level_doors.end())
     return false;
+  for (const auto& level : levels)
+  {
+    if (level.name == level_name)
+    {
+      if (level.elevation < lowest_elevation ||
+        level.elevation > highest_elevation)
+        return false;
+      break;
+    }
+  }
   const DoorNameList& names = level_it->second;
   if (std::find(names.begin(), names.end(), door_name) == names.end())
     return false;
