@@ -25,8 +25,7 @@ std::shared_ptr<ModelTypeTab> ModelTypeTab::init_and_make(
 {
   const QStringList labels =
   {"name", "animation", "anim_speed",
-    "gazebo_model", "gazebo_idle", "x", "y", "z", "pitch", "roll", "yaw",
-    "ign_model", "x", "y", "z", "pitch", "roll", "yaw",
+    "model_uri", "x", "y", "z", "pitch", "roll", "yaw",
     ""};
 
   auto model_type_tab = std::make_shared<ModelTypeTab>(crowd_sim_impl, labels);
@@ -35,7 +34,7 @@ std::shared_ptr<ModelTypeTab> ModelTypeTab::init_and_make(
     printf("Failed to create model_type table! Exiting");
     return nullptr;
   }
-  model_type_tab->setMinimumSize(1600, 400);
+  model_type_tab->setMinimumSize(1200, 400);
   return model_type_tab;
 }
 
@@ -50,56 +49,32 @@ void ModelTypeTab::list_item_in_cache()
       new QTableWidgetItem(QString::fromStdString(
         current_model_type.get_name() )));
     setItem(i, 1,
-      new QTableWidgetItem(QString::fromStdString(current_model_type.
-      get_animation() )));
+      new QTableWidgetItem(QString::fromStdString(
+        current_model_type.get_animation() )));
     setItem(i, 2,
-      new QTableWidgetItem(QString::number(current_model_type.
-      get_animation_speed() )));
+      new QTableWidgetItem(QString::number(
+        current_model_type.get_animation_speed() )));
     setItem(i, 3,
-      new QTableWidgetItem(QString::fromStdString(current_model_type.
-      get_gazebo_conf().filename)));
+      new QTableWidgetItem(QString::fromStdString(
+        current_model_type.get_model_uri() )));
     setItem(i, 4,
-      new QTableWidgetItem(QString::fromStdString(current_model_type.
-      get_gazebo_conf().idle_filename)));
+      new QTableWidgetItem(QString::number(
+        current_model_type.get_init_pose()[0])));
     setItem(i, 5,
-      new QTableWidgetItem(QString::number(current_model_type.get_gazebo_conf().
-      initial_pose[0])));
+      new QTableWidgetItem(QString::number(
+        current_model_type.get_init_pose()[1])));
     setItem(i, 6,
-      new QTableWidgetItem(QString::number(current_model_type.get_gazebo_conf().
-      initial_pose[1])));
+      new QTableWidgetItem(QString::number(
+        current_model_type.get_init_pose()[2])));
     setItem(i, 7,
-      new QTableWidgetItem(QString::number(current_model_type.get_gazebo_conf().
-      initial_pose[2])));
+      new QTableWidgetItem(QString::number(
+        current_model_type.get_init_pose()[3])));
     setItem(i, 8,
-      new QTableWidgetItem(QString::number(current_model_type.get_gazebo_conf().
-      initial_pose[3])));
+      new QTableWidgetItem(QString::number(
+        current_model_type.get_init_pose()[4])));
     setItem(i, 9,
-      new QTableWidgetItem(QString::number(current_model_type.get_gazebo_conf().
-      initial_pose[4])));
-    setItem(i, 10,
-      new QTableWidgetItem(QString::number(current_model_type.get_gazebo_conf().
-      initial_pose[5])));
-    setItem(i, 11,
-      new QTableWidgetItem(QString::fromStdString(current_model_type.
-      get_ign_conf().filename)));
-    setItem(i, 12,
-      new QTableWidgetItem(QString::number(current_model_type.get_ign_conf().
-      initial_pose[0])));
-    setItem(i, 13,
-      new QTableWidgetItem(QString::number(current_model_type.get_ign_conf().
-      initial_pose[1])));
-    setItem(i, 14,
-      new QTableWidgetItem(QString::number(current_model_type.get_ign_conf().
-      initial_pose[2])));
-    setItem(i, 15,
-      new QTableWidgetItem(QString::number(current_model_type.get_ign_conf().
-      initial_pose[3])));
-    setItem(i, 16,
-      new QTableWidgetItem(QString::number(current_model_type.get_ign_conf().
-      initial_pose[4])));
-    setItem(i, 17,
-      new QTableWidgetItem(QString::number(current_model_type.get_ign_conf().
-      initial_pose[5])));
+      new QTableWidgetItem(QString::number(
+        current_model_type.get_init_pose()[5])));
   }
 }
 
@@ -132,33 +107,22 @@ void ModelTypeTab::save()
       item(i, 1)->text().toStdString() );
     current_model_type.set_animation_speed(
       item(i, 2)->text().toDouble(&OK_status) );
+    current_model_type.set_model_uri(
+      item(i, 3)->text().toStdString() );
 
-    std::string filename = item(i, 3)->text().toStdString();
-    std::string idle_filename = item(i, 4)->text().toStdString();
-    std::vector<double> initial_pose = {
+    std::vector<double> init_pose = {
+      item(i, 4)->text().toDouble(&OK_status),
       item(i, 5)->text().toDouble(&OK_status),
       item(i, 6)->text().toDouble(&OK_status),
       item(i, 7)->text().toDouble(&OK_status),
       item(i, 8)->text().toDouble(&OK_status),
-      item(i, 9)->text().toDouble(&OK_status),
-      item(i, 10)->text().toDouble(&OK_status)
+      item(i, 9)->text().toDouble(&OK_status)
     };
-    current_model_type.set_gazebo_conf(
-      filename,
-      idle_filename,
-      initial_pose);
+    current_model_type.set_init_pose(
+      init_pose);
 
-    filename = item(i, 11)->text().toStdString();
-    initial_pose = {
-      item(i, 12)->text().toDouble(&OK_status),
-      item(i, 13)->text().toDouble(&OK_status),
-      item(i, 14)->text().toDouble(&OK_status),
-      item(i, 15)->text().toDouble(&OK_status),
-      item(i, 16)->text().toDouble(&OK_status),
-      item(i, 17)->text().toDouble(&OK_status)
-    };
-    current_model_type.set_ign_conf(filename, initial_pose);
-
+    if (!current_model_type.is_valid())
+      continue;
     tmp_cache.push_back(current_model_type);
   }
   _cache = tmp_cache;
