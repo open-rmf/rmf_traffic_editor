@@ -426,4 +426,4 @@ IGNITION_ADD_PLUGIN(
 
 // TODO would prefer namespace
 IGNITION_ADD_PLUGIN_ALIAS(crowd_simulation_ign::CrowdSimulatorPlugin,
-  "crowd_simulator")
+  "crowd_simulation")

@@ -39,12 +39,10 @@ from ._init_argparse import parser
 def main():
     args = parser.parse_args()
 
-    if args.command == 'navmesh':
-        navmesh_main(args.INPUT, args.OUTPUT_DIR, args.OUT_PREFIX)
-
-    if args.command == 'configfile':
-        configfile_main(
-            args.INPUT,
-            args.OUTPUT_DIR,
-            args.PLATFORM,
-            args.WORLD_FILE_PROCESSED)
+    navmesh_main(
+        args.YAML_INPUT,
+        args.OUTPUT_DIR)
+    configfile_main(
+        args.YAML_INPUT,
+        args.OUTPUT_DIR,
+        args.WORLD_FILE)

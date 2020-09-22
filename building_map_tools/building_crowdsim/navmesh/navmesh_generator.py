@@ -80,16 +80,13 @@ def navmesh_output(level_name, level_yaml_node, output_file_path):
     return navmesh_generator
 
 
-def navmesh_main(map_file, output_dir, output_file_prefix):
+def navmesh_main(map_file, output_dir):
     if not os.path.exists(map_file):
         raise ValueError('Map path not exist!')
 
     if not os.path.exists(output_dir):
         print("Creating output folder path: ", output_dir)
         os.makedirs(output_dir)
-
-    if len(output_file_prefix) == 0:
-        output_file_prefix = 'temp'
 
     # parse the yaml file
     yaml_parse = BuildingYamlParse(map_file)
