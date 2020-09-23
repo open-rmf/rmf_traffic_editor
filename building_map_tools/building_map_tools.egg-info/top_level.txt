@@ -1,7 +1,0 @@
-building_crowdsim
-building_map
-building_map_generator
-building_map_model_downloader
-building_map_server
-model_downloader
-pit_crew

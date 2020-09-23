@@ -1,7 +1,0 @@
-[console_scripts]
-building_crowdsim = building_crowdsim.building_crowdsim:main
-building_map_generator = building_map_generator.building_map_generator:main
-building_map_model_downloader = building_map_model_downloader.building_map_model_downloader:main
-building_map_server = building_map_server.building_map_server:main
-model_downloader = model_downloader.model_downloader:main
-
