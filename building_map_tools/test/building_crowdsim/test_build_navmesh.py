@@ -25,11 +25,12 @@ def test():
 
     build_navmesh.output(generate_file)
 
-    assert filecmp.cmp(
-            generate_file,
-            standard_result)
+    result = filecmp.cmp(
+                generate_file,
+                standard_result)
 
     os.remove(generate_file)
+    assert(result)
 
 
 if __name__ == "__main__":

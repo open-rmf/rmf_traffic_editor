@@ -18,8 +18,7 @@ crowd_sim:
     - {capacity: 5, set_area: [conf2], set_id: 5}
     - {capacity: 2, set_area: [pantry], set_id: 6}
   model_types:
-    - {animation: walk, animation_speed: 0.2, gazebo: {filename: walk.dae, pose: [0, 0, 0, 0, 0, 0]}, ign: {model_file_path: https://fuel.ignitionrobotics.org/1.0/Mingfei/models/actor, pose: [0, 0, 0, 0, 0, 0]}, typename: human}
-    - {animation: walk, animation_speed: 0.2, gazebo: {filename: stand.dae, pose: [0, 0, 0, 0, 0, 0]}, ign: {model_file_path: https://fuel.ignitionrobotics.org/1.0/Mingfei/models/actor, pose: [0, 0, 0, 0, 0, 0]}, typename: random_human}
+    - {animation: walk, animation_speed: 0.2, init_pose: [0, 0, 0, 0, 0, 0], model_uri: model://MaleVisitorPhone, typename: human}
   obstacle_set: {class: 1, file_name: L1_navmesh.nav, type: nav_mesh}
   states:
     - {final: 1, goal_set: -1, name: external_static, navmesh_file_name: ""}
