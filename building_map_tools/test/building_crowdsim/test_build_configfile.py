@@ -86,7 +86,7 @@ def test_plugin_from_yaml():
     yaml_parse = yaml_parse = BuildingYamlParse(map_file)
     crowd_sim_yaml = yaml_parse.crowd_sim_config
 
-    plugin_file = Plugin('gazebo')
+    plugin_file = Plugin()
     plugin_file.load_from_yaml(crowd_sim_yaml)
     plugin_file_root = plugin_file.output_xml_element()
     util.pretty_xml(plugin_file_root, '\t', '\n')
