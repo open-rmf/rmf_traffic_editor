@@ -276,28 +276,26 @@ bool CrowdSimulatorPlugin::_create_model(
   const crowd_simulator::AgentPtr agent_ptr)
 {
   sdf::ElementPtr model_element(new sdf::Element());
-  model_element->SetName("actor");
-  model_element->AddAttribute("name", "string", model_name, true);
+  model_element->SetName("include");
 
-  sdf::ElementPtr skin_element(new sdf::Element());
-  skin_element->SetName("skin");
-  model_element->InsertElement(skin_element);
+  sdf::ElementPtr name_element(new sdf::Element());
+  name_element->SetName("name");
+  name_element->AddValue("string", model_name, true);
+  model_element->InsertElement(name_element);
 
-  sdf::ElementPtr anim_element(new sdf::Element());
-  anim_element->SetName("animation");
-  anim_element->AddAttribute("name", "string", "walk", true);
-  model_element->InsertElement(anim_element);
+  sdf::ElementPtr uri_element(new sdf::Element());
+  uri_element->SetName("uri");
+  uri_element->AddValue("string", model_type_ptr->file_name, true);
+  model_element->InsertElement(uri_element);
 
-  sdf::ElementPtr filename_element(new sdf::Element());
-  filename_element->SetName("filename");
-  filename_element->AddValue("string", model_type_ptr->file_name, true);
-  skin_element->InsertElement(filename_element);
-  anim_element->InsertElement(filename_element);
+  sdf::ElementPtr static_element(new sdf::Element());
+  static_element->SetName("static");
+  static_element->AddValue("string", "False", true);
+  model_element->InsertElement(static_element);
 
   sdf::ElementPtr pose_element(new sdf::Element());
   pose_element->SetName("pose");
   std::ostringstream oss;
-
   oss << agent_ptr->_pos.x() << " " << agent_ptr->_pos.y() << " " << "0 0 0 0";
   pose_element->AddValue("pose", oss.str(), true);
   model_element->InsertElement(pose_element);

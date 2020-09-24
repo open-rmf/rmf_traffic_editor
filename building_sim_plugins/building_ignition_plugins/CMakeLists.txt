@@ -135,12 +135,12 @@ target_link_libraries(lift
 # crowd simulator stuff
 ###############################
 if (menge_FOUND)
-  add_library(crowd_simulator_ign
+  add_library(crowd_simulator
     SHARED
     src/crowd_simulator.cpp
   )
 
-  target_include_directories(crowd_simulator_ign
+  target_include_directories(crowd_simulator
     PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     ${building_sim_common_INCLUDE_DIRS}
@@ -149,7 +149,7 @@ if (menge_FOUND)
     ${IGNITION-COMMON_INCLUDE_DIRS}
   )
 
-  ament_target_dependencies(crowd_simulator_ign
+  ament_target_dependencies(crowd_simulator
     ignition-gazebo${IGN_GAZEBO_VER}
     ignition-plugin${IGN_PLUGIN_VER}
     rclcpp
@@ -159,7 +159,7 @@ if (menge_FOUND)
 
   #install
   install(
-    TARGETS crowd_simulator_ign
+    TARGETS crowd_simulator
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
   )

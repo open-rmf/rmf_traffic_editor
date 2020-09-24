@@ -7,6 +7,9 @@ setup(
     name=package_name,
     version='0.0.0',
     packages=[
+        'building_crowdsim',
+        'building_crowdsim.navmesh',
+        'building_crowdsim.config',
         'building_map',
         'building_map.doors',
         'building_map_server',
@@ -47,6 +50,8 @@ setup(
     scripts=[],
     entry_points={
         'console_scripts': [
+            'building_crowdsim = '
+            'building_crowdsim.building_crowdsim:main',
             'building_map_server = '
             'building_map_server.building_map_server:main',
             'building_map_generator = '
