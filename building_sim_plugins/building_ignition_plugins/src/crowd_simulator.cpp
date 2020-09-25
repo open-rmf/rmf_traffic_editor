@@ -87,8 +87,8 @@ void CrowdSimulatorPlugin::PreUpdate(
   std::chrono::duration<double> delta_sim_time_tmp = info.simTime -
     _last_sim_time;
   double delta_sim_time = delta_sim_time_tmp.count();
-  if (_crowd_sim_interface->get_sim_time_step() > delta_sim_time)  // not reach one time sim update
-  {
+  if (_crowd_sim_interface->get_sim_time_step() - delta_sim_time > 1e-6)
+  { // not reach one time sim update
     delta_sim_time = 0.0;
   }
   else
@@ -376,6 +376,7 @@ void CrowdSimulatorPlugin::_update_internal_object(
     obj_ptr->agent_ptr, delta_sim_time);
   agent_pose += initial_pose;
 
+  // get components to be updated
   auto traj_pose_comp =
     ecm.Component<ignition::gazebo::components::TrajectoryPose>(entity);
   if (nullptr == traj_pose_comp)
@@ -384,33 +385,58 @@ void CrowdSimulatorPlugin::_update_internal_object(
       "Model [" + obj_ptr->model_name + "] has no TrajectoryPose component.");
     exit(EXIT_FAILURE);
   }
-  ignition::math::Pose3d current_pose = traj_pose_comp->Data();
+  auto anim_name_comp = 
+    ecm.Component<ignition::gazebo::components::AnimationName>(entity);
+  if (nullptr == anim_name_comp)
+  {
+    RCLCPP_ERROR(_crowd_sim_interface->logger(),
+      "Model [" + obj_ptr->model_name + "] has no AnimationName component.");
+    exit(EXIT_FAILURE);
+  }
+  auto anim_time_comp = 
+    ecm.Component<ignition::gazebo::components::AnimationTime>(entity);
+  if (nullptr == anim_name_comp)
+  {
+    RCLCPP_ERROR(_crowd_sim_interface->logger(),
+      "Model [" + obj_ptr->model_name + "] has no AnimationTime component.");
+    exit(EXIT_FAILURE);
+  }
+  auto actor_comp = 
+    ecm.Component<ignition::gazebo::components::Actor>(entity);
 
+  ignition::math::Pose3d current_pose = traj_pose_comp->Data();
   auto distance_traveled_vector = agent_pose.Pos() - current_pose.Pos();
   // might need future work on 3D case
   // the center of human has a z_elevation, which will make the human keep walking even if he reached the target
   distance_traveled_vector.Z(0.0);
   double distance_traveled = distance_traveled_vector.Length();
 
+  // switch animation
+  if (distance_traveled - _crowd_sim_interface->get_switch_anim_distance_th() < 1e-6 &&
+      actor_comp->Data().AnimationNameExists("idle") )
+  {
+    anim_name_comp->Data() = "idle";
+    anim_time_comp->Data() +=
+      std::chrono::duration_cast<std::chrono::steady_clock::duration>(
+      std::chrono::duration<double>(delta_sim_time));
+  } else
+  {
+    anim_name_comp->Data() = 
+      _crowd_sim_interface->_model_type_db_ptr->get(obj_ptr->type_name)
+      ->animation;
+    anim_time_comp->Data() +=
+      std::chrono::duration_cast<std::chrono::steady_clock::duration>(
+      std::chrono::duration<double>(distance_traveled / animation_speed));
+  }
+
   // set trajectory
-  *traj_pose_comp = ignition::gazebo::components::TrajectoryPose(agent_pose);
+  traj_pose_comp->Data() = agent_pose;
   ecm.SetChanged(entity,
     ignition::gazebo::components::TrajectoryPose::typeId,
     ignition::gazebo::ComponentState::OneTimeChange);
-  //set animation
-  auto anim_time_comp =
-    ecm.Component<ignition::gazebo::components::AnimationTime>(entity);
-  if (nullptr == anim_time_comp)
-  {
-    RCLCPP_ERROR(_crowd_sim_interface->logger(),
-      "Model [" + obj_ptr->model_name + "] has no AnimationTime component");
-    exit(EXIT_FAILURE);
-  }
-  auto anim_time = anim_time_comp->Data() +
-    std::chrono::duration_cast<std::chrono::steady_clock::duration>(
-    std::chrono::duration<double>(distance_traveled / animation_speed));
-
-  *anim_time_comp = ignition::gazebo::components::AnimationTime(anim_time);
+  ecm.SetChanged(entity,
+    ignition::gazebo::components::AnimationName::typeId,
+    ignition::gazebo::ComponentState::OneTimeChange);
   ecm.SetChanged(entity,
     ignition::gazebo::components::AnimationTime::typeId,
     ignition::gazebo::ComponentState::OneTimeChange);
