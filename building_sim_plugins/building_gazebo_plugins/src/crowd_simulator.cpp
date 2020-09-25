@@ -163,12 +163,25 @@ void CrowdSimulatorPlugin::_update_internal_object(
   delta_dist_vector.Z(0.0);
   double delta_dist = delta_dist_vector.Length();
 
-  // _simTimeStep is small, then deltaDist is small, the scriptTime is small than expected.
-  actor_ptr->SetScriptTime(
-    actor_ptr->ScriptTime() + delta_dist / type_ptr->animation_speed);
+  // switch animation, use "idle" animation as default
+  auto animation = actor_ptr->SkeletonAnimations().at(type_ptr->animation);
+  auto traj_info = actor_ptr->CustomTrajectory();
+  if (delta_dist - _crowd_sim_interface->get_switch_anim_distance_th() < 1e-6 &&
+      actor_ptr->SkeletonAnimations().find("idle") !=
+      actor_ptr->SkeletonAnimations().end() )
+  {
+    animation = actor_ptr->SkeletonAnimations().at("idle");
+    traj_info->type = "idle";
+    actor_ptr->SetScriptTime(
+      actor_ptr->ScriptTime() + delta_sim_time);
+  } else
+  {
+    traj_info->type = type_ptr->animation;
+    actor_ptr->SetScriptTime(
+        actor_ptr->ScriptTime() + delta_dist / type_ptr->animation_speed);
+  }
 
   //add on original loaded pose
-  auto animation = actor_ptr->SkeletonAnimations().at(type_ptr->animation);
   auto anim_pose = _animation_root_pose(actor_ptr, animation);
   auto init_pose = type_ptr->pose;
   anim_pose += ignition::math::Pose3d(
@@ -210,6 +223,8 @@ void CrowdSimulatorPlugin::_init_spawned_agents()
       crowd_simulator::ModelTypeDatabase::RecordPtr type_ptr =
         _crowd_sim_interface->_model_type_db_ptr->get(obj_ptr->type_name);
       trajectory_info->type = type_ptr->animation;
+      // set each keyframe duration as the sim_time_step
+      trajectory_info->duration = _crowd_sim_interface->get_sim_time_step();
       actor_ptr->SetCustomTrajectory(trajectory_info);
       actor_ptr->SetStatic(false);
     }

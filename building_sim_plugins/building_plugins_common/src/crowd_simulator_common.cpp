@@ -240,4 +240,9 @@ void CrowdSimInterface::one_step_sim() const
   _menge_handle->sim_step();
 }
 
+double CrowdSimInterface::get_switch_anim_distance_th() const
+{
+  return _switch_anim_distance_th;
+}
+
 } //namespace crowd_simulator
