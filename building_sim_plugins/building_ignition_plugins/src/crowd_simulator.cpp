@@ -430,7 +430,7 @@ void CrowdSimulatorPlugin::_update_internal_object(
   if (distance_traveled - _crowd_sim_interface->get_switch_anim_distance_th() < 1e-6 &&
       !idle_animation.empty() )
   {
-    anim_name_comp->Data() = "idle";
+    anim_name_comp->Data() = idle_animation;
     anim_time_comp->Data() +=
       std::chrono::duration_cast<std::chrono::steady_clock::duration>(
       std::chrono::duration<double>(delta_sim_time));
