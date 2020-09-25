@@ -164,14 +164,14 @@ void CrowdSimulatorPlugin::_update_internal_object(
   double delta_dist = delta_dist_vector.Length();
 
   // switch animation, use "idle" animation as default
+  std::string idle_animation = type_ptr->idle_animation;
   auto animation = actor_ptr->SkeletonAnimations().at(type_ptr->animation);
   auto traj_info = actor_ptr->CustomTrajectory();
   if (delta_dist - _crowd_sim_interface->get_switch_anim_distance_th() < 1e-6 &&
-      actor_ptr->SkeletonAnimations().find("idle") !=
-      actor_ptr->SkeletonAnimations().end() )
+      !idle_animation.empty())
   {
-    animation = actor_ptr->SkeletonAnimations().at("idle");
-    traj_info->type = "idle";
+    animation = actor_ptr->SkeletonAnimations().at(idle_animation);
+    traj_info->type = idle_animation;
     actor_ptr->SetScriptTime(
       actor_ptr->ScriptTime() + delta_sim_time);
   } else
@@ -227,6 +227,17 @@ void CrowdSimulatorPlugin::_init_spawned_agents()
       trajectory_info->duration = _crowd_sim_interface->get_sim_time_step();
       actor_ptr->SetCustomTrajectory(trajectory_info);
       actor_ptr->SetStatic(false);
+
+      //check actor has idle animation
+      for (auto idle_anim : _crowd_sim_interface->get_switch_anim_name())
+      {
+        if (actor_ptr->SkeletonAnimations().find(idle_anim) != 
+            actor_ptr->SkeletonAnimations().end())
+        {
+          type_ptr->idle_animation = idle_anim;
+          break;
+        }
+      }
     }
   }
   _initialized = true;

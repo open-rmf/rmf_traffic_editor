@@ -245,4 +245,9 @@ double CrowdSimInterface::get_switch_anim_distance_th() const
   return _switch_anim_distance_th;
 }
 
+std::vector<std::string> CrowdSimInterface::get_switch_anim_name() const
+{
+  return _switch_anim_name;
+}
+
 } //namespace crowd_simulator

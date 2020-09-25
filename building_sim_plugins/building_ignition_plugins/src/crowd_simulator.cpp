@@ -302,6 +302,19 @@ void CrowdSimulatorPlugin::_config_spawned_agents(
     *animation_name_comp = ignition::gazebo::components::AnimationName(
       animation_name);
   }
+  // check idle animation name
+  auto actor_comp = 
+    ecm.Component<ignition::gazebo::components::Actor>(entity);
+  for (auto idle_anim : _crowd_sim_interface->get_switch_anim_name())
+  {
+    if (actor_comp->Data().AnimationNameExists(idle_anim))
+    {
+      _crowd_sim_interface->_model_type_db_ptr
+        ->get(obj_ptr->type_name)->idle_animation = idle_anim;
+      break;
+    }
+  }
+  
   // mark as one-time-change
   ecm.SetChanged(
     entity,
@@ -412,8 +425,10 @@ void CrowdSimulatorPlugin::_update_internal_object(
   double distance_traveled = distance_traveled_vector.Length();
 
   // switch animation
+  auto idle_animation = 
+    _crowd_sim_interface->_model_type_db_ptr->get(obj_ptr->type_name)->idle_animation;
   if (distance_traveled - _crowd_sim_interface->get_switch_anim_distance_th() < 1e-6 &&
-      actor_comp->Data().AnimationNameExists("idle") )
+      !idle_animation.empty() )
   {
     anim_name_comp->Data() = "idle";
     anim_time_comp->Data() +=

@@ -132,6 +132,7 @@ public:
     std::string file_name;
     AgentPose3d pose;
     std::string animation;
+    std::string idle_animation = "";
     double animation_speed;
   };
 
@@ -167,7 +168,8 @@ public:
   CrowdSimInterface()
   : _model_type_db_ptr(std::make_shared<crowd_simulator::ModelTypeDatabase>()),
     _sdf_loaded(false),
-    _switch_anim_distance_th(0.01)
+    _switch_anim_distance_th(0.01),
+    _switch_anim_name({"idle", "stand"})
   {}
 
   std::shared_ptr<ModelTypeDatabase> _model_type_db_ptr;
@@ -180,6 +182,7 @@ public:
   ObjectPtr get_object_by_id(size_t id) const;
   void one_step_sim() const;
   double get_switch_anim_distance_th() const;
+  std::vector<std::string> get_switch_anim_name() const;
 
   template<typename SdfPtrT>
   bool read_sdf(SdfPtrT& sdf);
@@ -203,6 +206,7 @@ public:
 private:
   bool _sdf_loaded;
   double _switch_anim_distance_th;
+  std::vector<std::string> _switch_anim_name;
   std::vector<ObjectPtr> _objects; //Database, use id to access ObjectPtr
   std::shared_ptr<MengeHandle> _menge_handle;
   float _sim_time_step;
