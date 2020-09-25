@@ -78,6 +78,8 @@ ConditionDialog::ConditionDialog(
     }
   );
 
+  _condition1_type = new QComboBox;
+  _condition2_type = new QComboBox;
   _construct_leaf_condition_widget(_condition1_container, _condition1_type,
     _condition1_value, 1);
   _construct_leaf_condition_widget(_condition2_container, _condition2_type,
@@ -131,6 +133,8 @@ void ConditionDialog::update()
   auto root_condition_tmp = std::dynamic_pointer_cast<crowd_sim::BoolCondition>(
     root_condition);
   auto sub_condition_1 = root_condition_tmp->get_condition(1);
+  _condition1_type->setCurrentIndex(
+    sub_condition_1->get_type() - crowd_sim::Condition::GOAL);
   _condition1ValueD = std::dynamic_pointer_cast<crowd_sim::LeafCondition>(
     sub_condition_1)->get_value();
   _condition1_value->setText(QString::number(_condition1ValueD));
@@ -138,6 +142,8 @@ void ConditionDialog::update()
   if (Condition::NOT == root_condition->get_type())
     return;
   auto sub_condition_2 = root_condition_tmp->get_condition(2);
+  _condition2_type->setCurrentIndex(
+    sub_condition_2->get_type()- crowd_sim::Condition::GOAL);
   _condition2ValueD = std::dynamic_pointer_cast<crowd_sim::LeafCondition>(
     sub_condition_2)->get_value();
   _condition2_value->setText(QString::number(_condition2ValueD));
@@ -253,7 +259,6 @@ void ConditionDialog::_construct_leaf_condition_widget(
   int condition_index)
 {
   QHBoxLayout* condition_hbox = new QHBoxLayout(condition_container);
-  condition_type = new QComboBox;
   condition_type->addItem("goal_reached");
   condition_type->addItem("timer");
 
