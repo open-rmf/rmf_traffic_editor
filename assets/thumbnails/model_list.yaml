@@ -41,6 +41,8 @@ models:
 - OpenRobotics/Fountain
 - OpenRobotics/Fridge
 - OpenRobotics/Gazebo
+- OpenRobotics/HeadphonesRack1
+- OpenRobotics/HeadphonesRack2
 - OpenRobotics/InstrumentCart1
 - OpenRobotics/InstrumentCart2
 - OpenRobotics/IVStand
@@ -78,6 +80,7 @@ models:
 - OpenRobotics/ParkingTrolleyMin
 - OpenRobotics/PatientFSit
 - OpenRobotics/PatientWheelChair
+- OpenRobotics/PhonesDisplay
 - OpenRobotics/Pine Tree
 - OpenRobotics/Playground
 - OpenRobotics/Postbox
