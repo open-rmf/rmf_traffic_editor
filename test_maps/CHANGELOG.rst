@@ -9,7 +9,7 @@ Changelog for package test_maps
 * Using custom commands within if condition due to required OUTPUT or TARGET cmake variable
 * Invoking model downloading with a separate custom command
 * Fixing build dependency (`#172 <https://github.com/osrf/traffic_editor/issues/172>`_)
-* Contributors: Aaron Chong, Luca Della Vedova, Marco A. Gutiérre
+* Contributors: Aaron Chong, Luca Della Vedova, Marco A. Gutiérrez
 
 1.0.0 (2020-06-22)
 ------------------
