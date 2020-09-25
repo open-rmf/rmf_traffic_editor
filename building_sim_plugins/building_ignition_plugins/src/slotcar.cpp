@@ -9,6 +9,8 @@
 #include <ignition/gazebo/components/Pose.hh>
 #include <ignition/gazebo/components/Static.hh>
 #include <ignition/gazebo/components/AxisAlignedBox.hh>
+#include <ignition/gazebo/components/LinearVelocityCmd.hh>
+#include <ignition/gazebo/components/AngularVelocityCmd.hh>
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -41,30 +43,14 @@ private:
   rclcpp::Node::SharedPtr _ros_node;
   Entity _entity;
 
-  std::array<Entity, 2> joints;
   std::unique_ptr<rclcpp::executors::MultiThreadedExecutor> executor;
 
   std::unordered_set<Entity> _infrastructure;
 
   void send_control_signals(EntityComponentManager& ecm,
     const std::pair<double, double>& velocities,
-    const double dt)
-  {
-    std::array<double, 2> w_tire;
-    for (std::size_t i = 0; i < 2; ++i)
-      w_tire[i] =
-        ecm.Component<components::JointVelocity>(joints[i])->Data()[0];
-    auto joint_signals = dataPtr->calculate_control_signals(w_tire,
-        velocities, dt);
-    for (std::size_t i = 0; i < 2; ++i)
-    {
-      auto vel_cmd = ecm.Component<components::JointVelocityCmd>(joints[i]);
-      vel_cmd->Data()[0] = joint_signals[i];
-    }
-  }
-
+    const double dt);
   void init_infrastructure(EntityComponentManager& ecm);
-
   std::vector<Eigen::Vector3d> get_obstacle_positions(
     EntityComponentManager& ecm);
 };
@@ -100,35 +86,40 @@ void SlotcarPlugin::Configure(const Entity& entity,
   //executor->spin();
   dataPtr->init_ros_node(_ros_node);
 
-  joints[0] = model.JointByName(ecm, "joint_tire_left");
-  if (!joints[0])
-    RCLCPP_ERROR(dataPtr->logger(),
-      "Could not find tire for [joint_tire_left]");
-
-  joints[1] = model.JointByName(ecm, "joint_tire_right");
-  if (!joints[1])
-    RCLCPP_ERROR(dataPtr->logger(),
-      "Could not find tire for [joint_tire_right]");
-
-  // Initialise JointVelocityCmd / JointVelocity components for velocity control
-  for (const auto& joint : joints)
-  {
-    if (!ecm.EntityHasComponentType(joint,
-      components::JointVelocityCmd().TypeId()))
-      ecm.CreateComponent(joint, components::JointVelocityCmd({0}));
-    if (!ecm.EntityHasComponentType(joint,
-      components::JointVelocity().TypeId()))
-      ecm.CreateComponent(joint, components::JointVelocity({0}));
-  }
   // Initialize Pose3d component
   if (!ecm.EntityHasComponentType(entity, components::Pose().TypeId()))
     ecm.CreateComponent(entity, components::Pose());
   // Initialize Bounding Box component
   if (!ecm.EntityHasComponentType(entity,
     components::AxisAlignedBox().TypeId()))
-  {
     ecm.CreateComponent(entity, components::AxisAlignedBox());
-  }
+  // Initialize Linear/AngularVelocityCmd components to drive slotcar
+  if (!ecm.EntityHasComponentType(_entity,
+    components::LinearVelocityCmd().TypeId()))
+    ecm.CreateComponent(_entity, components::LinearVelocityCmd());
+  if (!ecm.EntityHasComponentType(_entity,
+    components::AngularVelocityCmd().TypeId()))
+    ecm.CreateComponent(_entity, components::AngularVelocityCmd());
+}
+
+// Send a combination of Linear and AngularVelocityCmds to move slotcar
+void SlotcarPlugin::send_control_signals(EntityComponentManager& ecm,
+  const std::pair<double, double>& velocities,
+  const double dt)
+{
+  // Get current velocities. Assumes rotation is about z-axis
+  double v_robot =
+    ecm.Component<components::LinearVelocityCmd>(_entity)->Data()[0];
+  double angv_robot =
+    ecm.Component<components::AngularVelocityCmd>(_entity)->Data()[2];
+
+  std::array<double, 2> target_vels;
+  target_vels = dataPtr->calculate_model_control_signals({v_robot, angv_robot},
+      velocities, dt);
+  ecm.Component<components::LinearVelocityCmd>(_entity)->Data() =
+  {target_vels[0], 0, 0};
+  ecm.Component<components::AngularVelocityCmd>(_entity)->Data() =
+  {0, 0, target_vels[1]};
 }
 
 void SlotcarPlugin::init_infrastructure(EntityComponentManager& ecm)
