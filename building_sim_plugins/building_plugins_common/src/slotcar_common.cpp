@@ -25,12 +25,28 @@ static Eigen::Vector3d compute_heading(const Eigen::Isometry3d& pose)
   return Eigen::Vector3d(std::cos(yaw), std::sin(yaw), 0.0);
 }
 
-static auto compute_dpos(const Eigen::Isometry3d& target,
+inline static Eigen::Vector3d compute_dist(const Eigen::Isometry3d& old_pos,
+  const Eigen::Isometry3d& new_pos)
+{
+  return new_pos.translation() - old_pos.translation();
+}
+
+inline static auto compute_dpos(const Eigen::Isometry3d& target,
   const Eigen::Isometry3d& actual)
 {
-  Eigen::Vector3d dpos(target.translation() - actual.translation());
+  Eigen::Vector3d dpos(compute_dist(actual, target));
   dpos(2) = 0.0;
   return dpos;
+}
+
+double compute_friction_energy(
+  const double f,
+  const double m,
+  const double v,
+  const double dt)
+{
+  const double g = 9.81; // ms-1
+  return f * m * g * v * dt;
 }
 
 rclcpp::Logger SlotcarCommon::logger() const
@@ -191,6 +207,7 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
   const uint32_t t_nsec =
     static_cast<uint32_t>((time-static_cast<double>(t_sec)) *1e9);
   const rclcpp::Time now{t_sec, t_nsec, RCL_ROS_TIME};
+  double dt = time - _last_update_time;
   _last_update_time = time;
 
   _pose = pose;
@@ -282,6 +299,22 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
     // Allow spinning but not translating
     velocities.first = 0.0;
   }
+
+  // Update battery state of charge
+  if(_initialized_pose)
+  {
+    const Eigen::Vector3d dist = compute_dist(_old_pose, pose);
+    const Eigen::Vector3d vel = dist / dt;
+    const Eigen::Vector3d acc = (vel - _old_vel) / dt;
+    //std::cout << "SOC: " << _soc << std::endl;
+    _soc -= compute_change_in_charge(vel, acc, dt);
+    _old_vel = vel;
+  }
+  else
+  {
+    _initialized_pose = true;
+  }
+  _old_pose = pose;
 
   return velocities;
 }
@@ -412,6 +445,7 @@ void SlotcarCommon::publish_state_topic(const rclcpp::Time& t)
 {
   rmf_fleet_msgs::msg::RobotState robot_state_msg;
   robot_state_msg.name = _model_name;
+  robot_state_msg.battery_percent = _soc;
 
   robot_state_msg.location.x = _pose.translation()[0];
   robot_state_msg.location.y = _pose.translation()[1];
@@ -453,4 +487,36 @@ void SlotcarCommon::map_cb(
   }
   _initialized_levels = true;
 
+}
+
+double SlotcarCommon::compute_change_in_charge(
+  const Eigen::Vector3d& velocity, const Eigen::Vector3d& acceleration, const double run_time) const
+{
+  const double v = velocity.norm();
+  const double w = velocity(2);
+  const double a = acceleration.norm();
+  const double alpha = acceleration(2);
+
+  // Loss through acceleration
+  const double EA = ((_params.mass * a * v) +
+    (_params.inertia * alpha * w)) * run_time;
+  //std::cout << "EA: " << EA << " alpha: " << alpha << " w: " << w << " v: " << v << std::endl;
+
+  // Loss through friction
+  const double EF = compute_friction_energy(_params.friction_coefficient,
+    _params.mass, v, run_time);
+
+  // Change in energy as a result of motion
+  const double dE = EA + EF;
+  // The charge consumed
+  const double dQ = dE / _params.nominal_voltage;
+  // The depleted state of charge
+  double dSOC = dQ / (_params.nominal_capacity * 3600.0);
+
+  // Change in energy due to any onboard device over the time period `run_time`
+  const double dE2 = _params.nominal_power * run_time;
+  const double dQ2 = dE2 / _params.nominal_voltage;
+  dSOC += dQ2 / (_params.nominal_capacity * 3600.0);
+
+  return dSOC;
 }

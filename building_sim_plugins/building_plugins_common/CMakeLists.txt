@@ -47,7 +47,6 @@ ament_target_dependencies(slotcar_common
     tf2_ros
 )
 
-
 target_include_directories(slotcar_common
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

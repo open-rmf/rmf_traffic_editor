@@ -10,6 +10,10 @@
 #include <rmf_fleet_msgs/msg/path_request.hpp>
 #include <rmf_fleet_msgs/msg/mode_request.hpp>
 #include <building_map_msgs/msg/building_map.hpp>
+//#include <rmf_battery/agv/BatterySystem.hpp>
+//#include <rmf_traffic/Motion.hpp>
+//#include <rmf_traffic/Time.hpp>
+//#include <rmf_utils/optional.hpp>
 
 namespace building_sim_common {
 
@@ -108,6 +112,18 @@ public:
   void publish_robot_state(const double time);
 
 private:
+  struct SlotcarParams
+  {
+    double nominal_voltage = 12;
+    double nominal_capacity = 24;
+    double charging_current = 2;
+    double mass = 20;
+    double inertia = 10;
+    double friction_coefficient = 0.3;
+    double nominal_power = 10;
+    double efficiency = 1;
+  };
+
   // Constants for update rate of tf2 and robot_state topic
   static constexpr float TF2_RATE = 100.0;
   static constexpr float STATE_TOPIC_RATE = 2.0;
@@ -166,6 +182,12 @@ private:
   double _stop_distance = 1.0;
   double _stop_radius = 1.0;
 
+  SlotcarParams _params;
+  double _soc = 100.0;
+  bool _initialized_pose = false;
+  Eigen::Isometry3d _old_pose;
+  Eigen::Vector3d _old_vel;
+
   std::string get_level_name(const double z);
 
   double compute_change_in_rotation(Eigen::Vector3d heading_vec,
@@ -184,6 +206,9 @@ private:
   void mode_request_cb(const rmf_fleet_msgs::msg::ModeRequest::SharedPtr msg);
 
   void map_cb(const building_map_msgs::msg::BuildingMap::SharedPtr msg);
+
+  double compute_change_in_charge(
+    const Eigen::Vector3d& velocity, const Eigen::Vector3d& acceleration, const double run_time) const;
 };
 
 template<typename SdfPtrT>
