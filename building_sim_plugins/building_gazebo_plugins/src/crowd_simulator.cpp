@@ -182,8 +182,11 @@ void CrowdSimulatorPlugin::_update_internal_object(
       actor_ptr->ScriptTime() + delta_dist / type_ptr->animation_speed);
   }
 
-  //update the initial pose
-  auto anim_pose = type_ptr->pose;
+  //add on original loaded pose
+  auto init_pose = type_ptr->pose;
+  ignition::math::Pose3d anim_pose(
+    init_pose.x(), init_pose.y(), init_pose.z(),
+    init_pose.pitch(), init_pose.roll(), init_pose.yaw());
 
   //update x and y coordinates
   anim_pose.Pos().X(pose.Pos().X());
