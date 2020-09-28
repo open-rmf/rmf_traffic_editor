@@ -160,8 +160,6 @@ public:
   {
     WALK,
     IDLE,
-    TO_WALK,
-    TO_IDLE,
   };
 
   struct Object
