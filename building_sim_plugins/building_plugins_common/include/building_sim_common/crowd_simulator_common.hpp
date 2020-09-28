@@ -132,7 +132,7 @@ public:
     std::string file_name;
     AgentPose3d pose;
     std::string animation;
-    std::string idle_animation = "";
+    std::string idle_animation;
     double animation_speed;
   };
 
@@ -156,12 +156,22 @@ private:
 class CrowdSimInterface
 {
 public:
+  enum class AnimState
+  {
+    WALK,
+    IDLE,
+    TO_WALK,
+    TO_IDLE,
+  };
+
   struct Object
   {
     AgentPtr agent_ptr;
     std::string model_name;
     std::string type_name;
     bool is_external = false;
+    AnimState current_state;
+    AnimState get_next_state(bool condition);
   };
   using ObjectPtr = std::shared_ptr<Object>;
 

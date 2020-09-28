@@ -220,7 +220,8 @@ void CrowdSimInterface::_add_object(AgentPtr agent_ptr,
     assert(!model_name.empty());
   }
   _objects.emplace_back(
-    new Object{agent_ptr, model_name, type_name, is_external});
+    new Object{agent_ptr, model_name, type_name, is_external,
+      AnimState::WALK});
 }
 
 size_t CrowdSimInterface::get_num_objects() const
@@ -248,6 +249,18 @@ double CrowdSimInterface::get_switch_anim_distance_th() const
 std::vector<std::string> CrowdSimInterface::get_switch_anim_name() const
 {
   return _switch_anim_name;
+}
+
+//=============================================
+CrowdSimInterface::AnimState CrowdSimInterface::Object::get_next_state(
+  bool condition)
+{
+  if (condition)
+    return AnimState::IDLE;
+  else
+    return AnimState::WALK;
+
+  return current_state;
 }
 
 } //namespace crowd_simulator

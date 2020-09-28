@@ -47,7 +47,7 @@ using ObjectPtr = crowd_simulator::CrowdSimInterface::ObjectPtr;
 
 class CrowdSimulatorPlugin : public gazebo::WorldPlugin
 {
-
+using AnimState = crowd_simulator::CrowdSimInterface::AnimState;
 public:
   CrowdSimulatorPlugin()
   : _crowd_sim_interface(std::make_shared<crowd_simulator::CrowdSimInterface>()),
@@ -73,7 +73,7 @@ private:
   void _update_internal_object(
     double delta_time,
     double delta_sim_time,
-    const crowd_simulator::AgentPtr agent_ptr,
+    const ObjectPtr object_ptr,
     const gazebo::physics::ModelPtr model_ptr,
     const crowd_simulator::ModelTypeDatabase::RecordPtr type_ptr);
   bool _create_model(

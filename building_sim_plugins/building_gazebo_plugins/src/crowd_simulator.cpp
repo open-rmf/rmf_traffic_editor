@@ -123,7 +123,7 @@ void CrowdSimulatorPlugin::_update_all_objects(
       continue;
     auto type_ptr = _crowd_sim_interface->_model_type_db_ptr->get(
       obj_ptr->type_name);
-    _update_internal_object(delta_time, delta_sim_time, obj_ptr->agent_ptr,
+    _update_internal_object(delta_time, delta_sim_time, obj_ptr,
       model_ptr, type_ptr);
   }
 }
@@ -132,14 +132,14 @@ void CrowdSimulatorPlugin::_update_all_objects(
 void CrowdSimulatorPlugin::_update_internal_object(
   double delta_time,
   double delta_sim_time,
-  const crowd_simulator::AgentPtr agent_ptr,
+  const ObjectPtr object_ptr,
   const gazebo::physics::ModelPtr model_ptr,
   const crowd_simulator::ModelTypeDatabase::RecordPtr type_ptr)
 {
-  if (!agent_ptr)
+  if (!object_ptr)
   {
     RCLCPP_ERROR(
-      _crowd_sim_interface->logger(), "Null agentPtr when update Object!");
+      _crowd_sim_interface->logger(), "Null objectPtr when update Object!");
     return;
   }
   if (!model_ptr)
@@ -151,7 +151,8 @@ void CrowdSimulatorPlugin::_update_internal_object(
 
   //update pose from menge to gazebo
   ignition::math::Pose3d pose =
-    _crowd_sim_interface->get_agent_pose<ignition::math::Pose3d>(agent_ptr,
+    _crowd_sim_interface->get_agent_pose<ignition::math::Pose3d>(
+      object_ptr->agent_ptr,
       delta_sim_time);
 
   gazebo::physics::ActorPtr actor_ptr =
@@ -171,27 +172,29 @@ void CrowdSimulatorPlugin::_update_internal_object(
   anim_pose.Pos().X(pose.Pos().X());
   anim_pose.Pos().Y(pose.Pos().Y());
 
-  // switch animation, use "idle" animation as default
-  std::string idle_animation = type_ptr->idle_animation;
-  auto animation = actor_ptr->SkeletonAnimations().at(type_ptr->animation);
-  auto traj_info = actor_ptr->CustomTrajectory();
-  if (delta_dist - _crowd_sim_interface->get_switch_anim_distance_th() < 1e-6 &&
-    !idle_animation.empty())
-  {
-    animation = actor_ptr->SkeletonAnimations().at(idle_animation);
-    traj_info->type = idle_animation;
-    actor_ptr->SetScriptTime(
-      actor_ptr->ScriptTime() + delta_sim_time);
-    anim_pose.Rot() = actor_ptr->WorldPose().Rot();
-  }
-  else
-  {
-    traj_info->type = type_ptr->animation;
-    actor_ptr->SetScriptTime(
-      actor_ptr->ScriptTime() + delta_dist / type_ptr->animation_speed);
-    anim_pose.Rot() = pose.Rot() * anim_pose.Rot();
-  }
+  AnimState next_state = object_ptr->get_next_state(
+    delta_dist < _crowd_sim_interface->get_switch_anim_distance_th());
 
+  auto traj_info = actor_ptr->CustomTrajectory();
+  switch(next_state)
+  {
+    case AnimState::WALK:
+      actor_ptr->SetScriptTime(
+        actor_ptr->ScriptTime() + delta_dist / type_ptr->animation_speed);
+      anim_pose.Rot() = pose.Rot();
+      if (object_ptr->current_state != next_state)
+        traj_info->type = type_ptr->animation;
+      break;
+    
+    case AnimState::IDLE:
+      actor_ptr->SetScriptTime(
+        actor_ptr->ScriptTime() + delta_sim_time);
+      anim_pose.Rot() = actor_ptr->WorldPose().Rot();
+      if (object_ptr->current_state != next_state)
+        traj_info->type = type_ptr->idle_animation;
+      break;
+  }
+  object_ptr->current_state = next_state;
   actor_ptr->SetWorldPose(anim_pose);
 }
 

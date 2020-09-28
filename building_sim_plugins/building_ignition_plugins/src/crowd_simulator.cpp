@@ -425,37 +425,40 @@ void CrowdSimulatorPlugin::_update_internal_object(
   double distance_traveled = distance_traveled_vector.Length();
 
   // switch animation
-  auto idle_animation =
-    _crowd_sim_interface->_model_type_db_ptr->get(obj_ptr->type_name)->
-    idle_animation;
-  if (distance_traveled - _crowd_sim_interface->get_switch_anim_distance_th() <
-    1e-6 &&
-    !idle_animation.empty() )
+  auto model_type = _crowd_sim_interface->_model_type_db_ptr->get(obj_ptr->type_name);
+  AnimState next_state = obj_ptr->get_next_state(
+    distance_traveled < _crowd_sim_interface->get_switch_anim_distance_th());
+
+  switch(next_state)
   {
-    anim_name_comp->Data() = idle_animation;
-    anim_time_comp->Data() +=
-      std::chrono::duration_cast<std::chrono::steady_clock::duration>(
-      std::chrono::duration<double>(delta_sim_time));
-    // lock yaw angle
-    agent_pose.Rot() = current_pose.Rot();
-  }
-  else
-  {
-    anim_name_comp->Data() =
-      _crowd_sim_interface->_model_type_db_ptr->get(obj_ptr->type_name)
-      ->animation;
-    anim_time_comp->Data() +=
-      std::chrono::duration_cast<std::chrono::steady_clock::duration>(
-      std::chrono::duration<double>(distance_traveled / animation_speed));
+    case AnimState::WALK:
+      anim_time_comp->Data() +=
+        std::chrono::duration_cast<std::chrono::steady_clock::duration>(
+        std::chrono::duration<double>(distance_traveled / animation_speed));
+      if (obj_ptr->current_state != next_state)
+        anim_name_comp->Data() = model_type->animation;
+      break;
+    
+    case AnimState::IDLE:
+      anim_time_comp->Data() +=
+        std::chrono::duration_cast<std::chrono::steady_clock::duration>(
+        std::chrono::duration<double>(delta_sim_time));
+      agent_pose.Rot() = current_pose.Rot();
+      if (obj_ptr->current_state != next_state)
+        anim_name_comp->Data() = model_type->idle_animation;
+      break;
   }
 
+  if (obj_ptr->current_state != next_state)
+    ecm.SetChanged(entity,
+      ignition::gazebo::components::AnimationName::typeId,
+      ignition::gazebo::ComponentState::OneTimeChange);
+  obj_ptr->current_state = next_state;
+  
   // set trajectory
   traj_pose_comp->Data() = agent_pose;
   ecm.SetChanged(entity,
     ignition::gazebo::components::TrajectoryPose::typeId,
-    ignition::gazebo::ComponentState::OneTimeChange);
-  ecm.SetChanged(entity,
-    ignition::gazebo::components::AnimationName::typeId,
     ignition::gazebo::ComponentState::OneTimeChange);
   ecm.SetChanged(entity,
     ignition::gazebo::components::AnimationTime::typeId,
