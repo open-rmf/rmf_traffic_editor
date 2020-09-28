@@ -2,8 +2,15 @@
 Changelog for package building_gazebo_plugins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.1.0 (2020-09-24)
+------------------
+* Implement model visibility toggling (`#226 <https://github.com/osrf/traffic_editor/issues/226>`_)
+* Add crowd simulation plugin (`#218 <https://github.com/osrf/traffic_editor/issues/218>`_)
+* Foxy support (`#194 <https://github.com/osrf/traffic_editor/issues/194>`_)
+* Add field in lift dialog for initial floor, handle invalid initial floor
+* Modularization of doors and slotcar `#138 <https://github.com/osrf/traffic_editor/issues/138>`_
+* Add gazebo lift plugin
+* Contributors: Charayaphan Nakorn Boon Han, Guoliang (Fred) Shao, Kevin_Skywalker, Luca Della Vedova, MakinoharaShouko, Yadu
 
 1.0.0 (2020-06-22)
 ------------------

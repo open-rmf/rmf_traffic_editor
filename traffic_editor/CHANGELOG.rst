@@ -2,8 +2,25 @@
 Changelog for package traffic_editor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.1.0 (2020-09-24)
+------------------
+* Focal / Ignition dome support (`#230 <https://github.com/osrf/traffic_editor/issues/230>`_)
+* Adding lift operation range selection (`#220 <https://github.com/osrf/traffic_editor/issues/220>`_)
+* Add field in lift dialog for initial floor, handle invalid initial floor
+* Update lift display (`#216 <https://github.com/osrf/traffic_editor/issues/216>`_)
+* Allowing modification on vertex coordinates (`#215 <https://github.com/osrf/traffic_editor/issues/215>`_)
+* Merge pull request `#212 <https://github.com/osrf/traffic_editor/issues/212>`_ from osrf/feature/model-list-sort-script
+  Feature/model list sort script
+* Added helper script to sort model_list yamls
+* Support for adding and recognizing lift waypoints for multi-level navigation `#201 <https://github.com/osrf/traffic_editor/issues/201>`_
+* fix initial model angle, so it doesn't rotate 90 when placed (`#202 <https://github.com/osrf/traffic_editor/issues/202>`_)
+* Add button to generate lift waypoints in the GUI
+* Configurable texture and transparency for wall `#200 <https://github.com/osrf/traffic_editor/issues/200>`_
+* fix lifts not cleared when opening another project `#196 <https://github.com/osrf/traffic_editor/issues/196>`_ 
+* New traffic editor thumbnail generator `#191 <https://github.com/osrf/traffic_editor/issues/191>`_
+* View menu option to show/hide models `#174 <https://github.com/osrf/traffic_editor/issues/174>`_
+* Add add_edge shift alignment feature `#173 <https://github.com/osrf/traffic_editor/issues/173>`_
+* Contributors: Aaron Chong, Chen Bainian, Geoffrey Biggs, Kevin_Skywalker, Luca Della Vedova, MakinoharaShouko, Marco A. Gutierrez, Morgan Quigley, Yadu, Yadunund, kevinskwk, methylDragon, youliang
 
 1.0.0 (2020-06-22)
 ------------------

@@ -2,9 +2,6 @@
 Changelog for package building_map_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
-
 1.0.0 (2020-06-22)
 ------------------
 * merging master
