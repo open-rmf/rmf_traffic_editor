@@ -168,17 +168,18 @@ void CrowdSimulatorPlugin::_update_internal_object(
   auto animation = actor_ptr->SkeletonAnimations().at(type_ptr->animation);
   auto traj_info = actor_ptr->CustomTrajectory();
   if (delta_dist - _crowd_sim_interface->get_switch_anim_distance_th() < 1e-6 &&
-      !idle_animation.empty())
+    !idle_animation.empty())
   {
     animation = actor_ptr->SkeletonAnimations().at(idle_animation);
     traj_info->type = idle_animation;
     actor_ptr->SetScriptTime(
       actor_ptr->ScriptTime() + delta_sim_time);
-  } else
+  }
+  else
   {
     traj_info->type = type_ptr->animation;
     actor_ptr->SetScriptTime(
-        actor_ptr->ScriptTime() + delta_dist / type_ptr->animation_speed);
+      actor_ptr->ScriptTime() + delta_dist / type_ptr->animation_speed);
   }
 
   //add on original loaded pose
@@ -194,7 +195,8 @@ void CrowdSimulatorPlugin::_update_internal_object(
   if (delta_dist - _crowd_sim_interface->get_switch_anim_distance_th() < 1e-6)
   { //lock yaw angle
     anim_pose.Rot() = actor_ptr->WorldPose().Rot();
-  } else
+  }
+  else
   {
     anim_pose.Rot() = pose.Rot() * anim_pose.Rot();
   }
@@ -237,8 +239,8 @@ void CrowdSimulatorPlugin::_init_spawned_agents()
       //check actor has idle animation
       for (auto idle_anim : _crowd_sim_interface->get_switch_anim_name())
       {
-        if (actor_ptr->SkeletonAnimations().find(idle_anim) != 
-            actor_ptr->SkeletonAnimations().end())
+        if (actor_ptr->SkeletonAnimations().find(idle_anim) !=
+          actor_ptr->SkeletonAnimations().end())
         {
           type_ptr->idle_animation = idle_anim;
           break;

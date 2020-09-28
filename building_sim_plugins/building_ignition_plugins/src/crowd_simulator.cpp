@@ -303,18 +303,18 @@ void CrowdSimulatorPlugin::_config_spawned_agents(
       animation_name);
   }
   // check idle animation name
-  auto actor_comp = 
+  auto actor_comp =
     ecm.Component<ignition::gazebo::components::Actor>(entity);
   for (auto idle_anim : _crowd_sim_interface->get_switch_anim_name())
   {
     if (actor_comp->Data().AnimationNameExists(idle_anim))
     {
       _crowd_sim_interface->_model_type_db_ptr
-        ->get(obj_ptr->type_name)->idle_animation = idle_anim;
+      ->get(obj_ptr->type_name)->idle_animation = idle_anim;
       break;
     }
   }
-  
+
   // mark as one-time-change
   ecm.SetChanged(
     entity,
@@ -398,7 +398,7 @@ void CrowdSimulatorPlugin::_update_internal_object(
       "Model [" + obj_ptr->model_name + "] has no TrajectoryPose component.");
     exit(EXIT_FAILURE);
   }
-  auto anim_name_comp = 
+  auto anim_name_comp =
     ecm.Component<ignition::gazebo::components::AnimationName>(entity);
   if (nullptr == anim_name_comp)
   {
@@ -406,7 +406,7 @@ void CrowdSimulatorPlugin::_update_internal_object(
       "Model [" + obj_ptr->model_name + "] has no AnimationName component.");
     exit(EXIT_FAILURE);
   }
-  auto anim_time_comp = 
+  auto anim_time_comp =
     ecm.Component<ignition::gazebo::components::AnimationTime>(entity);
   if (nullptr == anim_name_comp)
   {
@@ -414,7 +414,7 @@ void CrowdSimulatorPlugin::_update_internal_object(
       "Model [" + obj_ptr->model_name + "] has no AnimationTime component.");
     exit(EXIT_FAILURE);
   }
-  auto actor_comp = 
+  auto actor_comp =
     ecm.Component<ignition::gazebo::components::Actor>(entity);
 
   ignition::math::Pose3d current_pose = traj_pose_comp->Data();
@@ -425,10 +425,12 @@ void CrowdSimulatorPlugin::_update_internal_object(
   double distance_traveled = distance_traveled_vector.Length();
 
   // switch animation
-  auto idle_animation = 
-    _crowd_sim_interface->_model_type_db_ptr->get(obj_ptr->type_name)->idle_animation;
-  if (distance_traveled - _crowd_sim_interface->get_switch_anim_distance_th() < 1e-6 &&
-      !idle_animation.empty() )
+  auto idle_animation =
+    _crowd_sim_interface->_model_type_db_ptr->get(obj_ptr->type_name)->
+    idle_animation;
+  if (distance_traveled - _crowd_sim_interface->get_switch_anim_distance_th() <
+    1e-6 &&
+    !idle_animation.empty() )
   {
     anim_name_comp->Data() = idle_animation;
     anim_time_comp->Data() +=
@@ -436,9 +438,10 @@ void CrowdSimulatorPlugin::_update_internal_object(
       std::chrono::duration<double>(delta_sim_time));
     // lock yaw angle
     agent_pose.Rot() = current_pose.Rot();
-  } else
+  }
+  else
   {
-    anim_name_comp->Data() = 
+    anim_name_comp->Data() =
       _crowd_sim_interface->_model_type_db_ptr->get(obj_ptr->type_name)
       ->animation;
     anim_time_comp->Data() +=
