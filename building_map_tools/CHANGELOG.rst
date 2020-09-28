@@ -2,6 +2,10 @@
 Changelog for package building_map_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming (2020-09-28)
+------------------
+* Add building_crowdsim to generate navmesh and config files for crowd simulation (`#224 <https://github.com/osrf/traffic_editor/pull/224>`_)
+
 1.1.0 (2020-09-24)
 ------------------
 * Implement model visibility toggling (`#226 <https://github.com/osrf/traffic_editor/issues/226>`_)
