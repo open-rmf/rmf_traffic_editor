@@ -35,7 +35,7 @@ class IGNITION_GAZEBO_VISIBLE CrowdSimulatorPlugin
   public ignition::gazebo::ISystemConfigure,
   public ignition::gazebo::ISystemPreUpdate
 {
-using AnimState = crowd_simulator::CrowdSimInterface::AnimState;
+  using AnimState = crowd_simulator::CrowdSimInterface::AnimState;
 public:
   CrowdSimulatorPlugin()
   : _transport_node_ptr(std::make_shared<ignition::transport::Node>()),

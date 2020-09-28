@@ -152,8 +152,8 @@ void CrowdSimulatorPlugin::_update_internal_object(
   //update pose from menge to gazebo
   ignition::math::Pose3d pose =
     _crowd_sim_interface->get_agent_pose<ignition::math::Pose3d>(
-      object_ptr->agent_ptr,
-      delta_sim_time);
+    object_ptr->agent_ptr,
+    delta_sim_time);
 
   gazebo::physics::ActorPtr actor_ptr =
     boost::dynamic_pointer_cast<gazebo::physics::Actor>(model_ptr);
@@ -176,7 +176,7 @@ void CrowdSimulatorPlugin::_update_internal_object(
     delta_dist < _crowd_sim_interface->get_switch_anim_distance_th());
 
   auto traj_info = actor_ptr->CustomTrajectory();
-  switch(next_state)
+  switch (next_state)
   {
     case AnimState::WALK:
       actor_ptr->SetScriptTime(
@@ -185,7 +185,7 @@ void CrowdSimulatorPlugin::_update_internal_object(
       if (object_ptr->current_state != next_state)
         traj_info->type = type_ptr->animation;
       break;
-    
+
     case AnimState::IDLE:
       actor_ptr->SetScriptTime(
         actor_ptr->ScriptTime() + delta_sim_time);

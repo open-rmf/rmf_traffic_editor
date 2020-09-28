@@ -47,7 +47,7 @@ using ObjectPtr = crowd_simulator::CrowdSimInterface::ObjectPtr;
 
 class CrowdSimulatorPlugin : public gazebo::WorldPlugin
 {
-using AnimState = crowd_simulator::CrowdSimInterface::AnimState;
+  using AnimState = crowd_simulator::CrowdSimInterface::AnimState;
 public:
   CrowdSimulatorPlugin()
   : _crowd_sim_interface(std::make_shared<crowd_simulator::CrowdSimInterface>()),
