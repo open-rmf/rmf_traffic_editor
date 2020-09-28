@@ -163,6 +163,14 @@ void CrowdSimulatorPlugin::_update_internal_object(
   delta_dist_vector.Z(0.0);
   double delta_dist = delta_dist_vector.Length();
 
+  auto init_pose = type_ptr->pose;
+  ignition::math::Pose3d anim_pose(
+    init_pose.x(), init_pose.y(), init_pose.z(),
+    init_pose.pitch(), init_pose.roll(), init_pose.yaw());
+  //update x and y coordinates
+  anim_pose.Pos().X(pose.Pos().X());
+  anim_pose.Pos().Y(pose.Pos().Y());
+
   // switch animation, use "idle" animation as default
   std::string idle_animation = type_ptr->idle_animation;
   auto animation = actor_ptr->SkeletonAnimations().at(type_ptr->animation);
@@ -174,29 +182,13 @@ void CrowdSimulatorPlugin::_update_internal_object(
     traj_info->type = idle_animation;
     actor_ptr->SetScriptTime(
       actor_ptr->ScriptTime() + delta_sim_time);
+    anim_pose.Rot() = actor_ptr->WorldPose().Rot();
   }
   else
   {
     traj_info->type = type_ptr->animation;
     actor_ptr->SetScriptTime(
       actor_ptr->ScriptTime() + delta_dist / type_ptr->animation_speed);
-  }
-
-  //add on original loaded pose
-  auto init_pose = type_ptr->pose;
-  ignition::math::Pose3d anim_pose(
-    init_pose.x(), init_pose.y(), init_pose.z(),
-    init_pose.pitch(), init_pose.roll(), init_pose.yaw());
-
-  //update x and y coordinates
-  anim_pose.Pos().X(pose.Pos().X());
-  anim_pose.Pos().Y(pose.Pos().Y());
-  if (delta_dist - _crowd_sim_interface->get_switch_anim_distance_th() < 1e-6)
-  { //lock yaw angle
-    anim_pose.Rot() = actor_ptr->WorldPose().Rot();
-  }
-  else
-  {
     anim_pose.Rot() = pose.Rot() * anim_pose.Rot();
   }
 
