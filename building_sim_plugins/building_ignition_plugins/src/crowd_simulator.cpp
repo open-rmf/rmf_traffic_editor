@@ -428,7 +428,8 @@ void CrowdSimulatorPlugin::_update_internal_object(
   auto model_type = _crowd_sim_interface->_model_type_db_ptr->get(
     obj_ptr->type_name);
   AnimState next_state = obj_ptr->get_next_state(
-    distance_traveled < _crowd_sim_interface->get_switch_anim_distance_th());
+    distance_traveled < _crowd_sim_interface->get_switch_anim_distance_th() &&
+    !model_type->idle_animation.empty());
 
   switch (next_state)
   {

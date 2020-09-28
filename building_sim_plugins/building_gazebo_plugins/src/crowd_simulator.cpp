@@ -173,7 +173,8 @@ void CrowdSimulatorPlugin::_update_internal_object(
   anim_pose.Pos().Y(pose.Pos().Y());
 
   AnimState next_state = object_ptr->get_next_state(
-    delta_dist < _crowd_sim_interface->get_switch_anim_distance_th());
+    delta_dist < _crowd_sim_interface->get_switch_anim_distance_th() &&
+    !type_ptr->idle_animation.empty());
 
   auto traj_info = actor_ptr->CustomTrajectory();
   switch (next_state)
