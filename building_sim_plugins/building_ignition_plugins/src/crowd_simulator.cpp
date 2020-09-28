@@ -434,6 +434,8 @@ void CrowdSimulatorPlugin::_update_internal_object(
     anim_time_comp->Data() +=
       std::chrono::duration_cast<std::chrono::steady_clock::duration>(
       std::chrono::duration<double>(delta_sim_time));
+    // lock yaw angle
+    agent_pose.Rot() = current_pose.Rot();
   } else
   {
     anim_name_comp->Data() = 

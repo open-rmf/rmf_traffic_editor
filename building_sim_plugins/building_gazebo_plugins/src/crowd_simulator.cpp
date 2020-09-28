@@ -191,7 +191,13 @@ void CrowdSimulatorPlugin::_update_internal_object(
   //update x and y coordinates
   anim_pose.Pos().X(pose.Pos().X());
   anim_pose.Pos().Y(pose.Pos().Y());
-  anim_pose.Rot() = pose.Rot() * anim_pose.Rot();
+  if (delta_dist - _crowd_sim_interface->get_switch_anim_distance_th() < 1e-6)
+  { //lock yaw angle
+    anim_pose.Rot() = actor_ptr->WorldPose().Rot();
+  } else
+  {
+    anim_pose.Rot() = pose.Rot() * anim_pose.Rot();
+  }
 
   actor_ptr->SetWorldPose(anim_pose);
 }
