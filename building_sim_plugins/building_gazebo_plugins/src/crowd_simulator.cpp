@@ -182,12 +182,8 @@ void CrowdSimulatorPlugin::_update_internal_object(
       actor_ptr->ScriptTime() + delta_dist / type_ptr->animation_speed);
   }
 
-  //add on original loaded pose
-  auto anim_pose = _animation_root_pose(actor_ptr, animation);
-  auto init_pose = type_ptr->pose;
-  anim_pose += ignition::math::Pose3d(
-    init_pose.x(), init_pose.y(), init_pose.z(),
-    init_pose.pitch(), init_pose.roll(), init_pose.yaw());
+  //update the initial pose
+  auto anim_pose = type_ptr->pose;
 
   //update x and y coordinates
   anim_pose.Pos().X(pose.Pos().X());
@@ -253,29 +249,6 @@ void CrowdSimulatorPlugin::_init_spawned_agents()
     _crowd_sim_interface->logger(),
     "Gazebo models all loaded! Start simulating...");
 }
-
-//============================================
-ignition::math::Pose3d CrowdSimulatorPlugin::_animation_root_pose(
-  const gazebo::physics::ActorPtr actor_ptr,
-  const gazebo::common::SkeletonAnimation* animation)
-{
-  auto* root_node = actor_ptr->Mesh()->GetSkeleton()->GetRootNode();
-  auto root_node_name = root_node->GetName();
-  if (!animation->HasNode(root_node_name))
-  {
-    throw std::runtime_error("unable to find root node pose");
-  }
-  //get the animation trans for current time
-  auto anim_trans = animation->PoseAt(actor_ptr->ScriptTime(), true); //map<string, matrix4d>
-  auto& root_anim_trans = anim_trans[root_node_name];
-
-  auto scale_trans = ignition::math::Matrix4d::Identity;
-  auto actor_scale = actor_ptr->Scale();
-  scale_trans.Scale(actor_scale.X(), actor_scale.Y(), actor_scale.Z());
-  root_anim_trans = scale_trans * root_anim_trans;
-  return root_anim_trans.Pose();
-}
-
 
 //============================================
 bool CrowdSimulatorPlugin::_spawn_agents_in_world()

@@ -76,11 +76,6 @@ private:
     const crowd_simulator::AgentPtr agent_ptr,
     const gazebo::physics::ModelPtr model_ptr,
     const crowd_simulator::ModelTypeDatabase::RecordPtr type_ptr);
-
-  ignition::math::Pose3d _animation_root_pose(
-    const gazebo::physics::ActorPtr actor_ptr,
-    const gazebo::common::SkeletonAnimation* animation);
-
   bool _create_model(
     const std::string& model_name,
     const crowd_simulator::ModelTypeDatabase::RecordPtr model_type_ptr,
