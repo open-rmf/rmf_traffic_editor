@@ -80,24 +80,15 @@ void CrowdSimulatorPlugin::PreUpdate(
     return;
   }
 
-  std::chrono::duration<double> delta_time_tmp = info.simTime - _last_time;
-  double delta_time = delta_time_tmp.count();
-  _last_time = info.simTime;
-
   std::chrono::duration<double> delta_sim_time_tmp = info.simTime -
     _last_sim_time;
   double delta_sim_time = delta_sim_time_tmp.count();
-  if (_crowd_sim_interface->get_sim_time_step() - delta_sim_time > 1e-6)
-  { // not reach one time sim update
-    delta_sim_time = 0.0;
-  }
-  else
+  if (_crowd_sim_interface->get_sim_time_step() <= delta_sim_time)
   {
-    this->_last_sim_time = info.simTime;
-    this->_crowd_sim_interface->one_step_sim();
+    _last_sim_time = info.simTime;
+    _crowd_sim_interface->one_step_sim();
+    _update_all_objects(delta_sim_time, ecm);
   }
-
-  this->_update_all_objects(delta_time, delta_sim_time, ecm);
 }
 
 //==========================================================
@@ -259,6 +250,7 @@ void CrowdSimulatorPlugin::_config_spawned_agents(
 {
   assert(obj_ptr);
   auto agent_ptr = obj_ptr->agent_ptr;
+  auto model_type = _crowd_sim_interface->_model_type_db_ptr->get(obj_ptr->type_name);
   // different from gazebo plugin, the pose component is the origin of the trajPose
   ignition::math::Pose3d actor_pose(
     static_cast<double>(agent_ptr->_pos.x()),
@@ -272,8 +264,7 @@ void CrowdSimulatorPlugin::_config_spawned_agents(
   {
     // use the initial_pose for actor type
     ignition::math::Pose3d initial_pose =
-      _crowd_sim_interface->_model_type_db_ptr->get(obj_ptr->type_name)->pose.
-      convert_to_ign_math_pose_3d<ignition::math::Pose3d>();
+      model_type->pose.convert_to_ign_math_pose_3d<ignition::math::Pose3d>();
     ecm.CreateComponent(entity,
       ignition::gazebo::components::Pose(initial_pose));
   }
@@ -286,8 +277,7 @@ void CrowdSimulatorPlugin::_config_spawned_agents(
   }
 
   // initialize agent animationName
-  std::string animation_name = _crowd_sim_interface->_model_type_db_ptr->get(
-    obj_ptr->type_name)->animation;
+  std::string animation_name = model_type->animation;
   assert(!animation_name.empty());
 
   auto animation_name_comp =
@@ -309,8 +299,7 @@ void CrowdSimulatorPlugin::_config_spawned_agents(
   {
     if (actor_comp->Data().AnimationNameExists(idle_anim))
     {
-      _crowd_sim_interface->_model_type_db_ptr
-      ->get(obj_ptr->type_name)->idle_animation = idle_anim;
+      model_type->idle_animation = idle_anim;
       break;
     }
   }
@@ -339,7 +328,6 @@ void CrowdSimulatorPlugin::_config_spawned_agents(
 
 //============================================================================
 void CrowdSimulatorPlugin::_update_all_objects(
-  double delta_time,
   double delta_sim_time,
   ignition::gazebo::EntityComponentManager& ecm) const
 {
@@ -367,8 +355,6 @@ void CrowdSimulatorPlugin::_update_all_objects(
     }
 
     // for internal agent
-    if (delta_sim_time - 0.0 < 1e-6)
-      continue;// not yet reach the simulation update time
     _update_internal_object(delta_sim_time, obj_ptr, entity, ecm);
   }
 }

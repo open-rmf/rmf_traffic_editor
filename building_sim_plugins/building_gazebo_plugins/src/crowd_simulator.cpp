@@ -71,7 +71,6 @@ void CrowdSimulatorPlugin::_update(
   if (_last_sim_time == gazebo::common::Time::Zero)
   {
     _last_sim_time = update_info.simTime;
-    _last_time = update_info.simTime;
   }
 
   if (!_initialized)
@@ -81,26 +80,17 @@ void CrowdSimulatorPlugin::_update(
     return;
   }
 
-  auto delta_time = (update_info.simTime - _last_time).Double();
-  _last_time = update_info.simTime;
-
   auto delta_sim_time = (update_info.simTime - _last_sim_time).Double();
-  if (delta_sim_time - _crowd_sim_interface->get_sim_time_step() < 1e-6)
-  {
-    delta_sim_time = 0.0;
-  }
-  else
+  if (delta_sim_time > _crowd_sim_interface->get_sim_time_step())
   {
     _last_sim_time = update_info.simTime;
     _crowd_sim_interface->one_step_sim();
+    _update_all_objects(delta_sim_time);
   }
-  _update_all_objects(delta_time, delta_sim_time);
 }
 
 //============================================
-void CrowdSimulatorPlugin::_update_all_objects(
-  double delta_time,
-  double delta_sim_time)
+void CrowdSimulatorPlugin::_update_all_objects(double delta_sim_time)
 {
   for (size_t id = 0; id < _objects_count; id++)
   {
@@ -118,19 +108,15 @@ void CrowdSimulatorPlugin::_update_all_objects(
     }
 
     //update internal agents
-    //not yet reach the simulation time step, the internal agent position only updated at simulation time step
-    if (delta_sim_time - 0.0 < 1e-6)
-      continue;
     auto type_ptr = _crowd_sim_interface->_model_type_db_ptr->get(
       obj_ptr->type_name);
-    _update_internal_object(delta_time, delta_sim_time, obj_ptr,
+    _update_internal_object(delta_sim_time, obj_ptr,
       model_ptr, type_ptr);
   }
 }
 
 //============================================
 void CrowdSimulatorPlugin::_update_internal_object(
-  double delta_time,
   double delta_sim_time,
   const ObjectPtr object_ptr,
   const gazebo::physics::ModelPtr model_ptr,

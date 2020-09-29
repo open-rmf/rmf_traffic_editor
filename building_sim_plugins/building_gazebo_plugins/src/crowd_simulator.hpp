@@ -63,15 +63,13 @@ private:
   size_t _objects_count;
   gazebo::physics::WorldPtr _world;
   gazebo::event::ConnectionPtr _update_connection_ptr;
-  gazebo::common::Time _last_time;
   gazebo::common::Time _last_sim_time;
 
   bool _spawn_agents_in_world();
   void _init_spawned_agents();
   void _update(const gazebo::common::UpdateInfo& update_info); //Update trigger function
-  void _update_all_objects(double delta_time, double delta_sim_time);
+  void _update_all_objects(double delta_sim_time);
   void _update_internal_object(
-    double delta_time,
     double delta_sim_time,
     const ObjectPtr object_ptr,
     const gazebo::physics::ModelPtr model_ptr,
