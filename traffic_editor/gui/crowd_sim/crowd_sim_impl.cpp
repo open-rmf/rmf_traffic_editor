@@ -56,7 +56,7 @@ void CrowdSimImplementation::_initialize_model_type()
   else
     _model_types[0] = ModelType("human", "walk");
   auto& default_type = _model_types.at(0);
-  default_type.set_animation_speed(0.2);
+  default_type.set_animation_speed(1.0);
   default_type.set_model_uri("model://MaleVisitorPhone");
   default_type.set_init_pose(
     {0, 0, 0, 0, 0, 0}
@@ -256,7 +256,6 @@ void CrowdSimImplementation::init_default_configure()
   _initialize_state();
   _initialize_agent_profile();
   _initialize_agent_group();
-  _initialize_model_type();
 }
 
 //=================================================
