@@ -3,6 +3,8 @@ import numpy as np
 import os
 from xml.etree.ElementTree import Element, SubElement, parse
 from ament_index_python.packages import get_package_share_directory
+from shapely.geometry import box
+import shapely.ops as ops
 
 from .level import Level
 from .lift import Lift
@@ -270,8 +272,68 @@ class Building:
             plugin_ele = gui_ele.find('.//plugin[@filename="GzScene3D"]')
             camera_pose_ele = plugin_ele.find('camera_pose')
             camera_pose_ele.text = camera_pose
+            level_plugin_ele = world.find('.//plugin[@filename="dummy"]')
+            # Dict with key level_name_x_idx_y_idx
+            ign_levels = {}
+            # Size of each level
+            LEVEL_THRESHOLD = 10
+            BUFFER = 2
+            # Get the bounds from the first level
+            first_level_name, first_level = next(iter(self.levels.items()))
+            full_floor = ops.cascaded_union([floor.polygon for floor in first_level.floors])
+            bounds = full_floor.bounds
+            #bounds = first_level.floors[0].polygon.bounds
+            xmin = int(bounds[0])
+            xmax = int(bounds[2])
+            ymin = int(bounds[1])
+            ymax = int(bounds[3])
+            # Add levels
+            for level_name, level in self.levels.items():
+                # Models
+                for model in level.models:
+                    if model.static:
+                        # Check if a level already exists, otherwise create a new one
+                        (x, y) = level.transform.transform_point((model.x, model.y))
+                        x_idx = int((x-xmin) // LEVEL_THRESHOLD)
+                        y_idx = int((y-ymin) // LEVEL_THRESHOLD)
+                        dict_key = f'{level_name}_{x_idx}_{y_idx}'
+                        if dict_key in ign_levels:
+                            ign_level = ign_levels[dict_key]
+                        else:
+                            ign_level = SubElement(level_plugin_ele, 'level', {'name' : dict_key})
+                            level_pose = SubElement(ign_level, 'pose')
+                            x_center = xmin + x_idx * LEVEL_THRESHOLD + LEVEL_THRESHOLD / 2
+                            y_center = ymin + y_idx * LEVEL_THRESHOLD + LEVEL_THRESHOLD / 2
+                            level_pose.text = f'{x_center} {y_center} {level.elevation}'
+                            geometry_ele = SubElement(ign_level, 'geometry')
+                            box_ele = SubElement(geometry_ele, 'box')
+                            buffer_ele = SubElement(ign_level, 'buffer')
+                            buffer_ele.text = f'{BUFFER}'
+                            size_ele = SubElement(box_ele, 'size')
+                            # TODO don't hardcode Z
+                            size_ele.text = f'{LEVEL_THRESHOLD} {LEVEL_THRESHOLD} {2}'
+                            ign_levels[dict_key] = ign_level
+                        ref_ele = SubElement(ign_level, 'ref')
+                        ref_ele.text = model.name
+                    else:
+                        pass
+                        # Non static models are ignored (might be set to performers)
+                # Robots are performers
+                for robot_name in level.robot_names:
+                    self.create_ign_performer_tag(level_plugin_ele, robot_name)
 
         return sdf
+
+    def create_ign_performer_tag(self, plugin_ele, model_name):
+        perf_ele = SubElement(plugin_ele,
+                'performer',
+                {'name' : model_name})
+        geometry_ele = SubElement(perf_ele, 'geometry')
+        box_ele = SubElement(geometry_ele, 'box')
+        size_ele = SubElement(box_ele, 'size')
+        size_ele.text = f'1 1 1'
+        ref_ele = SubElement(perf_ele, 'ref')
+        ref_ele.text = model_name
 
     def generate_sdf_models(self, models_path):
         for level_name, level in self.levels.items():

@@ -91,6 +91,8 @@ class Level:
             for hole_yaml in yaml_node['holes']:
                 self.holes.append(Hole(hole_yaml))
 
+        self.robot_names = []
+
     def transform_all_vertices(self):
         self.transformed_vertices = []
 
@@ -215,6 +217,7 @@ class Level:
         uri_ele.text = f'model://{robot_type}'
         pose_ele = SubElement(include_ele, 'pose')
         pose_ele.text = f'{vertex.x} {vertex.y} {vertex.z} 0 0 {yaw}'
+        self.robot_names.append(robot_name)
 
     def generate_floors(self, world_ele, model_name, model_path):
         i = 0
