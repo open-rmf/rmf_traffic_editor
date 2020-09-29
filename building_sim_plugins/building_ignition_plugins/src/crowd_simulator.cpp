@@ -250,7 +250,8 @@ void CrowdSimulatorPlugin::_config_spawned_agents(
 {
   assert(obj_ptr);
   auto agent_ptr = obj_ptr->agent_ptr;
-  auto model_type = _crowd_sim_interface->_model_type_db_ptr->get(obj_ptr->type_name);
+  auto model_type = _crowd_sim_interface->_model_type_db_ptr->get(
+    obj_ptr->type_name);
   // different from gazebo plugin, the pose component is the origin of the trajPose
   ignition::math::Pose3d actor_pose(
     static_cast<double>(agent_ptr->_pos.x()),
