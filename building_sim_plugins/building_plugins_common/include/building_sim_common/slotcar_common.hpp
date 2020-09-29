@@ -1,4 +1,22 @@
-// TODO header guards
+/*
+ * Copyright (C) 2020 Open Source Robotics Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+*/
+
+#ifndef BUILDING_SIM_COMMON__SLOTCAR_COMMON_HPP
+#define BUILDING_SIM_COMMON__SLOTCAR_COMMON_HPP
 
 #include <rclcpp/rclcpp.hpp>
 #include <Eigen/Geometry>
@@ -10,10 +28,10 @@
 #include <rmf_fleet_msgs/msg/path_request.hpp>
 #include <rmf_fleet_msgs/msg/mode_request.hpp>
 #include <building_map_msgs/msg/building_map.hpp>
+#include <charge_msgs/msg/charge_state.hpp>
 //#include <rmf_battery/agv/BatterySystem.hpp>
 //#include <rmf_traffic/Motion.hpp>
 //#include <rmf_traffic/Time.hpp>
-//#include <rmf_utils/optional.hpp>
 
 namespace building_sim_common {
 
@@ -157,6 +175,7 @@ private:
   rclcpp::Subscription<rmf_fleet_msgs::msg::ModeRequest>::SharedPtr _mode_sub;
   rclcpp::Subscription<building_map_msgs::msg::BuildingMap>::SharedPtr
     _building_map_sub;
+  rclcpp::Subscription<charge_msgs::msg::ChargeState>::SharedPtr _charge_state_sub;
 
   rmf_fleet_msgs::msg::RobotMode _current_mode;
 
@@ -183,6 +202,8 @@ private:
   double _stop_radius = 1.0;
 
   SlotcarParams _params;
+  bool _enable_charge = false;
+  bool _enable_drain = false;
   double _soc = 100.0;
   bool _initialized_pose = false;
   Eigen::Isometry3d _old_pose;
@@ -207,8 +228,11 @@ private:
 
   void map_cb(const building_map_msgs::msg::BuildingMap::SharedPtr msg);
 
+  void charge_state_cb(const charge_msgs::msg::ChargeState::SharedPtr msg);
+
   double compute_change_in_charge(
-    const Eigen::Vector3d& velocity, const Eigen::Vector3d& acceleration, const double run_time) const;
+    const Eigen::Vector3d& velocity, const Eigen::Vector3d& acceleration,
+    const double run_time) const;
 };
 
 template<typename SdfPtrT>
@@ -275,3 +299,5 @@ void SlotcarCommon::read_sdf(SdfPtrT& sdf)
   RCLCPP_INFO(logger(), "Setting name to: " + _model_name);
 }
 } // namespace building_sim_common
+
+#endif // BUILDING_SIM_COMMON__SLOTCAR_COMMON_HPP

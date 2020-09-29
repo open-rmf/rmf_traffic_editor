@@ -230,6 +230,11 @@ class Building:
             camera_pose_ele = gui_ele.find('camera').find('pose')
             camera_pose_ele.text = camera_pose
 
+            toggle_charge_ele = SubElement(
+                gui_ele,
+                'plugin',
+                {'name': 'toggle_charging', 'filename': 'libtoggle_charging.so'})
+
             toggle_ele = SubElement(
                 gui_ele,
                 'plugin',

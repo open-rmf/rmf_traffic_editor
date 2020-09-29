@@ -93,6 +93,11 @@ void SlotcarCommon::init_ros_node(const rclcpp::Node::SharedPtr node)
     10,
     std::bind(&SlotcarCommon::mode_request_cb, this, std::placeholders::_1));
 
+  _charge_state_sub = _ros_node->create_subscription<charge_msgs::msg::ChargeState>(
+    "/charge_state",
+    10,
+    std::bind(&SlotcarCommon::charge_state_cb, this, std::placeholders::_1));
+
 }
 
 bool SlotcarCommon::path_request_valid(
@@ -301,13 +306,16 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
   }
 
   // Update battery state of charge
-  if(_initialized_pose)
+  if (_initialized_pose)
   {
     const Eigen::Vector3d dist = compute_dist(_old_pose, pose);
     const Eigen::Vector3d vel = dist / dt;
-    const Eigen::Vector3d acc = (vel - _old_vel) / dt;
     //std::cout << "SOC: " << _soc << std::endl;
-    _soc -= compute_change_in_charge(vel, acc, dt);
+    if(_enable_drain)
+    {
+      const Eigen::Vector3d acc = (vel - _old_vel) / dt;
+      _soc -= compute_change_in_charge(vel, acc, dt);
+    }
     _old_vel = vel;
   }
   else
@@ -489,8 +497,16 @@ void SlotcarCommon::map_cb(
 
 }
 
+void SlotcarCommon::charge_state_cb(
+  const charge_msgs::msg::ChargeState::SharedPtr msg)
+{
+  _enable_charge = msg->enable_charge;
+  _enable_drain = msg->enable_drain;
+}
+
 double SlotcarCommon::compute_change_in_charge(
-  const Eigen::Vector3d& velocity, const Eigen::Vector3d& acceleration, const double run_time) const
+  const Eigen::Vector3d& velocity, const Eigen::Vector3d& acceleration,
+  const double run_time) const
 {
   const double v = velocity.norm();
   const double w = velocity(2);
@@ -504,7 +520,7 @@ double SlotcarCommon::compute_change_in_charge(
 
   // Loss through friction
   const double EF = compute_friction_energy(_params.friction_coefficient,
-    _params.mass, v, run_time);
+      _params.mass, v, run_time);
 
   // Change in energy as a result of motion
   const double dE = EA + EF;

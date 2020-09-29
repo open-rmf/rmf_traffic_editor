@@ -49,6 +49,7 @@ find_package(rmf_fleet_msgs REQUIRED)
 find_package(rmf_door_msgs REQUIRED)
 find_package(rmf_lift_msgs REQUIRED)
 find_package(building_map_msgs REQUIRED)
+find_package(charge_msgs)
 find_package(building_sim_common REQUIRED)
 find_package(menge QUIET)
 
@@ -76,6 +77,7 @@ target_include_directories(slotcar
     ${std_msgs_INCLUDE_DIRS}
     ${rmf_fleet_msgs_INCLUDE_DIRS}
     ${building_map_msgs_INCLUDE_DIRS}
+    ${charge_msgs_INCLUDE_DIRS}
     ${tf2_ros_INCLUDE_DIRS}
 )
 

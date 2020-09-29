@@ -18,6 +18,7 @@
   <depend>rmf_lift_msgs</depend>
   <depend>tf2_ros</depend>
   <depend>geometry_msgs</depend>
+  <depend>charge_msgs</depend>
   <depend>std_msgs</depend>
   <depend>std_srvs</depend>
 
