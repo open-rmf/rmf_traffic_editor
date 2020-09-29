@@ -305,16 +305,35 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
     velocities.first = 0.0;
   }
 
-  // Update battery state of charge
   if (_initialized_pose)
   {
-    const Eigen::Vector3d dist = compute_dist(_old_pose, pose);
+    const Eigen::Vector3d dist = compute_dist(_old_pose, _pose);
     const Eigen::Vector3d vel = dist / dt;
+
+    // Try charging battery
+    double eps = 0.01;
+    bool stationary = std::abs(vel.norm()) < eps;
+    bool in_charger_vicinity = near_charger(_pose);
+    if(stationary && in_charger_vicinity)
+    {
+      if (_enable_instant_charge)
+      {
+        _soc = 100;
+        //std::cout << "Restored charge " << std::endl;
+      }
+      else if (_enable_charge)
+      {
+        //std::cout << "charging... " << std::endl;
+        _soc += compute_charge(dt);
+      }
+    }
+
     //std::cout << "SOC: " << _soc << std::endl;
+    // Discharge battery
     if(_enable_drain)
     {
       const Eigen::Vector3d acc = (vel - _old_vel) / dt;
-      _soc -= compute_change_in_charge(vel, acc, dt);
+      _soc -= compute_discharge(vel, acc, dt);
     }
     _old_vel = vel;
   }
@@ -322,7 +341,7 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
   {
     _initialized_pose = true;
   }
-  _old_pose = pose;
+  _old_pose = _pose;
 
   return velocities;
 }
@@ -360,7 +379,7 @@ bool SlotcarCommon::emergency_stop(
   return _emergency_stop;
 }
 
-std::string SlotcarCommon::get_level_name(const double z)
+std::string SlotcarCommon::get_level_name(const double z) const
 {
   std::string level_name = "";
   if (!_initialized_levels)
@@ -501,10 +520,39 @@ void SlotcarCommon::charge_state_cb(
   const charge_msgs::msg::ChargeState::SharedPtr msg)
 {
   _enable_charge = msg->enable_charge;
+  _enable_instant_charge = msg->enable_instant_charge;
   _enable_drain = msg->enable_drain;
 }
 
-double SlotcarCommon::compute_change_in_charge(
+bool SlotcarCommon::near_charger(const Eigen::Isometry3d& pose) const
+{
+  std::string lvl_name = get_level_name(pose.translation()[2]);
+  auto waypoints_it = charger_waypoints.find(lvl_name);
+  if(waypoints_it != charger_waypoints.end())
+  {
+    const std::vector<ChargerWaypoint>& waypoints = waypoints_it->second;
+    for(const ChargerWaypoint& waypoint : waypoints)
+    {
+      // Assumes it is on the same Z-plane
+      double dist = sqrt(pow(waypoint.x - pose.translation()[0], 2) + pow(waypoint.y - pose.translation()[1],2));
+      //std::cout << "dist to waypoint: " << dist << std::endl;
+      if(dist < _charger_dist_thres)
+      {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+double SlotcarCommon::compute_charge(const double run_time) const
+{
+  const double dQ = _params.charging_current * run_time; // Coulombs
+  const double dSOC = dQ / (_params.nominal_capacity * 3600.0);
+  return dSOC;
+}
+
+double SlotcarCommon::compute_discharge(
   const Eigen::Vector3d& velocity, const Eigen::Vector3d& acceleration,
   const double run_time) const
 {

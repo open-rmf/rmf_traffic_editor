@@ -18,6 +18,8 @@
 #ifndef BUILDING_SIM_COMMON__SLOTCAR_COMMON_HPP
 #define BUILDING_SIM_COMMON__SLOTCAR_COMMON_HPP
 
+#include <sstream>
+
 #include <rclcpp/rclcpp.hpp>
 #include <Eigen/Geometry>
 #include <tf2_ros/transform_broadcaster.h>
@@ -132,14 +134,23 @@ public:
 private:
   struct SlotcarParams
   {
-    double nominal_voltage = 12;
-    double nominal_capacity = 24;
-    double charging_current = 2;
+    double nominal_voltage = 12; // V
+    double nominal_capacity = 24; // Ah
+    double charging_current = 2; // A
     double mass = 20;
     double inertia = 10;
     double friction_coefficient = 0.3;
     double nominal_power = 10;
     double efficiency = 1;
+  };
+
+  struct ChargerWaypoint
+  {
+    double x;
+    double y;
+    ChargerWaypoint(double x, double y) : x(x), y(y)
+    {
+    }
   };
 
   // Constants for update rate of tf2 and robot_state topic
@@ -161,9 +172,13 @@ private:
   std::vector<rclcpp::Time> _hold_times;
 
   std::string _model_name;
-  Eigen::Isometry3d _pose;
   bool _emergency_stop = false;
   bool _adapter_error = false;
+
+  bool _initialized_pose = false; // True if at least 1 call to update() has been made
+  Eigen::Isometry3d _old_pose; // Pose at previous time step
+  Eigen::Vector3d _old_vel;
+  Eigen::Isometry3d _pose; // Pose at current time step
 
   std::unordered_map<std::string, double> _level_to_elevation;
   bool _initialized_levels = false;
@@ -203,13 +218,13 @@ private:
 
   SlotcarParams _params;
   bool _enable_charge = false;
+  bool _enable_instant_charge = false;
   bool _enable_drain = false;
   double _soc = 100.0;
-  bool _initialized_pose = false;
-  Eigen::Isometry3d _old_pose;
-  Eigen::Vector3d _old_vel;
+  std::unordered_map<std::string, std::vector<ChargerWaypoint>> charger_waypoints;
+  static constexpr double _charger_dist_thres = 1; // Straight line distance to charging waypoint within which charging can occur
 
-  std::string get_level_name(const double z);
+  std::string get_level_name(const double z) const;
 
   double compute_change_in_rotation(Eigen::Vector3d heading_vec,
     const Eigen::Vector3d& dpos,
@@ -230,7 +245,11 @@ private:
 
   void charge_state_cb(const charge_msgs::msg::ChargeState::SharedPtr msg);
 
-  double compute_change_in_charge(
+  bool near_charger(const Eigen::Isometry3d& pose) const;
+
+  double compute_charge(const double run_time) const;
+
+  double compute_discharge(
     const Eigen::Vector3d& velocity, const Eigen::Vector3d& acceleration,
     const double run_time) const;
 };
@@ -295,6 +314,39 @@ void SlotcarCommon::read_sdf(SdfPtrT& sdf)
   if (sdf->HasElement("base_width"))
     _base_width = sdf->template Get<double>("base_width");
   RCLCPP_INFO(logger(), "Setting base width to:" + std::to_string(_base_width));
+
+  if (sdf->GetParent() && sdf->GetParent()->GetParent())
+  {
+    auto parent = sdf->GetParent()->GetParent(); // Brittle, perhaps change
+    //std::cout << "parent is ....................... " << parent->GetName() << std::endl;
+    if(parent->HasElement("charger_waypoints"))
+    {
+      auto waypoints = parent->GetElement("charger_waypoints");
+      if(waypoints->HasElement("Vertex"))
+      {
+        auto waypoint = waypoints->GetElement("Vertex");
+        while(waypoint)
+        {
+          //std::cout << "waypoint: " << waypoint->GetName() << std::endl;
+          if(waypoint->HasAttribute("x") && waypoint->HasAttribute("y") && waypoint->HasAttribute("level"))
+          {
+            std::string x_val, y_val, lvl_name;
+            waypoint->GetAttribute("x")->Get(x_val);
+            waypoint->GetAttribute("y")->Get(y_val);
+            waypoint->GetAttribute("level")->Get(lvl_name);
+
+            double x,y;
+            std::stringstream ss;
+            ss << x_val << y_val;
+            ss >> x >> y; // to set precision
+            charger_waypoints[lvl_name].push_back(ChargerWaypoint(x,y));
+            //std::cout << "x value: " << x_val << "y: " << y_val << " level: " << lvl_name << std::endl;
+          }
+          waypoint = waypoint->GetNextElement("Vertex");
+        }
+      }
+    }
+  }
 
   RCLCPP_INFO(logger(), "Setting name to: " + _model_name);
 }

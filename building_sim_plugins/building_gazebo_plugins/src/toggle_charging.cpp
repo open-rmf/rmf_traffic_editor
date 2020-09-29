@@ -17,6 +17,7 @@ class ToggleCharging : public gazebo::GUIPlugin
   gazebo_ros::Node::SharedPtr _ros_node;
 
   bool _enable_charge = false;
+  bool _enable_instant_charge = false;
   bool _enable_drain = false;
   rclcpp::Publisher<ChargeState>::SharedPtr _charge_state_pub;
 
@@ -49,6 +50,20 @@ public:
       });
     hbox->addWidget(charge_button);
 
+    QPushButton* instant_charge_button =
+      new QPushButton(QString::fromStdString("Instant Charging"));
+    instant_charge_button->setCheckable(true);
+    instant_charge_button->setChecked(false);
+    connect(
+      instant_charge_button,
+      &QAbstractButton::clicked,
+      [this]()
+      {
+        this->_enable_instant_charge = !this->_enable_instant_charge;
+        this->button_clicked();
+      });
+    hbox->addWidget(instant_charge_button);
+
     QPushButton* drain_button =
       new QPushButton(QString::fromStdString("Allow Battery Drain"));
     drain_button->setCheckable(true);
@@ -73,6 +88,7 @@ public:
     _state.time = rclcpp::Time {0, 0, RCL_ROS_TIME};
     _state.enable_charge = _enable_charge;
     _state.enable_drain = _enable_drain;
+    _state.enable_instant_charge = _enable_instant_charge;
     _charge_state_pub->publish(_state);
   }
 };

@@ -222,6 +222,22 @@ class Building:
             lift.generate_shaft_doors(world)
             lift.generate_cabin(world, options)
 
+        charger_waypoints_ele = SubElement(
+          world,
+          'charger_waypoints',
+          {'name' : 'charger_waypoints'}
+        )
+
+        for level_name, level in self.levels.items():
+          for vertex in level.transformed_vertices:
+              if 'is_charger' in vertex.params:
+                SubElement(
+                  charger_waypoints_ele,
+                  'vertex',
+                  {'name' : vertex.name, 'x' : str(vertex.x), 'y' : str(vertex.y),
+                  'level' : level_name}
+                )
+
         gui_ele = world.find('gui')
         c = self.center()
         camera_pose = f'{c[0]} {c[1]-20} 10 0 0.6 1.57'
