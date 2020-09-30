@@ -319,12 +319,12 @@ void SlotcarCommon::read_sdf(SdfPtrT& sdf)
   {
     auto parent = sdf->GetParent()->GetParent(); // Brittle, perhaps change
     //std::cout << "parent is ....................... " << parent->GetName() << std::endl;
-    if(parent->HasElement("charger_waypoints"))
+    if(parent->HasElement("rmf:charger_waypoints"))
     {
-      auto waypoints = parent->GetElement("charger_waypoints");
-      if(waypoints->HasElement("Vertex"))
+      auto waypoints = parent->GetElement("rmf:charger_waypoints");
+      if(waypoints->HasElement("rmf:vertex"))
       {
-        auto waypoint = waypoints->GetElement("Vertex");
+        auto waypoint = waypoints->GetElement("rmf:vertex");
         while(waypoint)
         {
           //std::cout << "waypoint: " << waypoint->GetName() << std::endl;
@@ -342,7 +342,7 @@ void SlotcarCommon::read_sdf(SdfPtrT& sdf)
             charger_waypoints[lvl_name].push_back(ChargerWaypoint(x,y));
             //std::cout << "x value: " << x_val << "y: " << y_val << " level: " << lvl_name << std::endl;
           }
-          waypoint = waypoint->GetNextElement("Vertex");
+          waypoint = waypoint->GetNextElement("rmf:vertex");
         }
       }
     }

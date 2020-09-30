@@ -224,7 +224,7 @@ class Building:
 
         charger_waypoints_ele = SubElement(
           world,
-          'charger_waypoints',
+          'rmf:charger_waypoints',
           {'name' : 'charger_waypoints'}
         )
 
@@ -233,7 +233,7 @@ class Building:
               if 'is_charger' in vertex.params:
                 SubElement(
                   charger_waypoints_ele,
-                  'vertex',
+                  'rmf:vertex',
                   {'name' : vertex.name, 'x' : str(vertex.x), 'y' : str(vertex.y),
                   'level' : level_name}
                 )

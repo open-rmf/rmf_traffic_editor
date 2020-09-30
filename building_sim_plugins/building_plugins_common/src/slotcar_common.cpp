@@ -325,6 +325,7 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
       {
         //std::cout << "charging... " << std::endl;
         _soc += compute_charge(dt);
+        _soc = max(100, _soc);
       }
     }
 
