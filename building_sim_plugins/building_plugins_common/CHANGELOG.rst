@@ -2,7 +2,7 @@
 Changelog for package building_sim_common
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1.0.0 (2020-09-24)
+1.1.0 (2020-09-24)
 ------------------
 * Crowd simulation plugin (`#218 <https://github.com/osrf/traffic_editor/issues/218>`_)
 * Improve lift initial floor definition `#221 <https://github.com/osrf/traffic_editor/issues/221>`_

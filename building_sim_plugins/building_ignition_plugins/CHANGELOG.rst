@@ -2,7 +2,7 @@
 Changelog for package building_ignition_plugins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1.0.0 (2020-09-24)
+1.1.0 (2020-09-24)
 ------------------
 * Focal / Ignition dome dependencies update (`#230 <https://github.com/osrf/traffic_editor/issues/230>`_)
 * Ignition crowd simulation plugin (`#218 <https://github.com/osrf/traffic_editor/issues/218>`_)
