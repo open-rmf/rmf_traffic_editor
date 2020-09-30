@@ -28,6 +28,7 @@
   <depend>std_srvs</depend>
   <depend>menge</depend>
   <depend>libqt5-widgets</depend>
+  <depend>qtbase5-dev</depend>
 
   <export>
     <build_type>ament_cmake</build_type>
