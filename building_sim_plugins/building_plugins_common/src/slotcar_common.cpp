@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2020 Open Source Robotics Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+*/
+
 #include <memory>
 
 #include <geometry_msgs/msg/transform_stamped.hpp>
@@ -93,7 +110,8 @@ void SlotcarCommon::init_ros_node(const rclcpp::Node::SharedPtr node)
     10,
     std::bind(&SlotcarCommon::mode_request_cb, this, std::placeholders::_1));
 
-  _charge_state_sub = _ros_node->create_subscription<charge_msgs::msg::ChargeState>(
+  _charge_state_sub =
+    _ros_node->create_subscription<charge_msgs::msg::ChargeState>(
     "/charge_state",
     10,
     std::bind(&SlotcarCommon::charge_state_cb, this, std::placeholders::_1));
@@ -218,6 +236,43 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
   _pose = pose;
   publish_robot_state(time);
 
+  // Update battery state of charge
+  if (_initialized_pose)
+  {
+    const Eigen::Vector3d dist = compute_dist(_old_pose, _pose);
+    const Eigen::Vector3d vel = dist / dt;
+
+    // Try charging battery
+    double eps = 0.01;
+    bool stationary = std::abs(vel.norm()) < eps;
+    bool in_charger_vicinity = near_charger(_pose);
+    if (stationary && in_charger_vicinity)
+    {
+      if (_enable_instant_charge)
+      {
+        _soc = 100;
+      }
+      else if (_enable_charge)
+      {
+        _soc += compute_charge(dt);
+        _soc = std::min(100.0, _soc);
+      }
+    }
+
+    // Discharge battery
+    if (_enable_drain)
+    {
+      const Eigen::Vector3d acc = (vel - _old_vel) / dt;
+      _soc -= compute_discharge(vel, acc, dt);
+    }
+    _old_vel = vel;
+  }
+  else
+  {
+    _initialized_pose = true;
+  }
+  _old_pose = _pose;
+
   if (trajectory.empty())
     return velocities;
 
@@ -304,45 +359,6 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
     // Allow spinning but not translating
     velocities.first = 0.0;
   }
-
-  if (_initialized_pose)
-  {
-    const Eigen::Vector3d dist = compute_dist(_old_pose, _pose);
-    const Eigen::Vector3d vel = dist / dt;
-
-    // Try charging battery
-    double eps = 0.01;
-    bool stationary = std::abs(vel.norm()) < eps;
-    bool in_charger_vicinity = near_charger(_pose);
-    if(stationary && in_charger_vicinity)
-    {
-      if (_enable_instant_charge)
-      {
-        _soc = 100;
-        //std::cout << "Restored charge " << std::endl;
-      }
-      else if (_enable_charge)
-      {
-        //std::cout << "charging... " << std::endl;
-        _soc += compute_charge(dt);
-        _soc = max(100, _soc);
-      }
-    }
-
-    //std::cout << "SOC: " << _soc << std::endl;
-    // Discharge battery
-    if(_enable_drain)
-    {
-      const Eigen::Vector3d acc = (vel - _old_vel) / dt;
-      _soc -= compute_discharge(vel, acc, dt);
-    }
-    _old_vel = vel;
-  }
-  else
-  {
-    _initialized_pose = true;
-  }
-  _old_pose = _pose;
 
   return velocities;
 }
@@ -529,15 +545,16 @@ bool SlotcarCommon::near_charger(const Eigen::Isometry3d& pose) const
 {
   std::string lvl_name = get_level_name(pose.translation()[2]);
   auto waypoints_it = charger_waypoints.find(lvl_name);
-  if(waypoints_it != charger_waypoints.end())
+  if (waypoints_it != charger_waypoints.end())
   {
     const std::vector<ChargerWaypoint>& waypoints = waypoints_it->second;
-    for(const ChargerWaypoint& waypoint : waypoints)
+    for (const ChargerWaypoint& waypoint : waypoints)
     {
       // Assumes it is on the same Z-plane
-      double dist = sqrt(pow(waypoint.x - pose.translation()[0], 2) + pow(waypoint.y - pose.translation()[1],2));
-      //std::cout << "dist to waypoint: " << dist << std::endl;
-      if(dist < _charger_dist_thres)
+      double dist =
+        sqrt(pow(waypoint.x - pose.translation()[0], 2)
+          + pow(waypoint.y - pose.translation()[1], 2));
+      if (dist < _charger_dist_thres)
       {
         return true;
       }
@@ -565,7 +582,6 @@ double SlotcarCommon::compute_discharge(
   // Loss through acceleration
   const double EA = ((_params.mass * a * v) +
     (_params.inertia * alpha * w)) * run_time;
-  //std::cout << "EA: " << EA << " alpha: " << alpha << " w: " << w << " v: " << v << std::endl;
 
   // Loss through friction
   const double EF = compute_friction_energy(_params.friction_coefficient,

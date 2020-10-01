@@ -13,7 +13,6 @@ if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 17)
 endif()
 
-
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
@@ -63,8 +62,6 @@ find_package (Qt5
   REQUIRED
 )
 find_package(menge QUIET)
-
-QT5_ADD_RESOURCES(resources_RCC src/toggle_charging/hello.qrc)
 
 include(GNUInstallDirs)
 
@@ -185,6 +182,8 @@ endif()
 ###############################
 # toggle charging
 ###############################
+
+QT5_ADD_RESOURCES(resources_RCC src/toggle_charging/toggle_charging.qrc)
 
 add_library(toggle_charging SHARED ${headers_MOC}
   src/toggle_charging/toggle_charging.cpp

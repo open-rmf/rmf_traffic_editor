@@ -225,8 +225,7 @@ class Building:
         charger_waypoints_ele = SubElement(
           world,
           'rmf:charger_waypoints',
-          {'name' : 'charger_waypoints'}
-        )
+          {'name': 'charger_waypoints'})
 
         for level_name, level in self.levels.items():
           for vertex in level.transformed_vertices:
@@ -234,9 +233,8 @@ class Building:
                 SubElement(
                   charger_waypoints_ele,
                   'rmf:vertex',
-                  {'name' : vertex.name, 'x' : str(vertex.x), 'y' : str(vertex.y),
-                  'level' : level_name}
-                )
+                  {'name': vertex.name, 'x': str(vertex.x), 'y': str(vertex.y),
+                  'level': level_name})
 
         gui_ele = world.find('gui')
         c = self.center()

@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Open Source Robotics Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+*/
 
 #include <string>
 #include <iostream>
@@ -20,25 +36,25 @@ class toggle_charging : public Plugin
 {
   Q_OBJECT
 
-  private:
-    rclcpp::Node::SharedPtr _ros_node;
-    bool _enable_charge = false;
-    bool _enable_instant_charge = false;
-    bool _enable_drain = false;
-    rclcpp::Publisher<ChargeState>::SharedPtr _charge_state_pub;
+private:
+  rclcpp::Node::SharedPtr _ros_node;
+  bool _enable_charge = true;
+  bool _enable_instant_charge = false;
+  bool _enable_drain = true;
+  rclcpp::Publisher<ChargeState>::SharedPtr _charge_state_pub;
 
-    void checkbox_checked();
+  void checkbox_checked();
 
-  protected slots:
-    void OnEnableCharge(bool);
-    void OnEnableInstantCharge(bool);
-    void OnEnableDrain(bool);
+protected slots:
+  void OnEnableCharge(bool);
+  void OnEnableInstantCharge(bool);
+  void OnEnableDrain(bool);
 
-  public:
-    toggle_charging();
+public:
+  toggle_charging();
 
-    virtual void LoadConfig(const tinyxml2::XMLElement *_pluginElem)
-        override;
+  virtual void LoadConfig(const tinyxml2::XMLElement* _pluginElem)
+  override;
 };
 
 toggle_charging::toggle_charging()
@@ -51,11 +67,11 @@ toggle_charging::toggle_charging()
     "/charge_state", rclcpp::SystemDefaultsQoS());
 }
 
-void toggle_charging::LoadConfig(const tinyxml2::XMLElement *_pluginElem)
+void toggle_charging::LoadConfig(const tinyxml2::XMLElement* _pluginElem)
 {
   if (!_pluginElem)
     return;
-  
+
   if (this->title.empty())
     this->title = "Toggle Charging";
 }
@@ -81,7 +97,6 @@ void toggle_charging::OnEnableDrain(bool checked)
 void toggle_charging::checkbox_checked()
 {
   ChargeState _state;
-  _state.time = rclcpp::Time {0, 0, RCL_ROS_TIME};
   _state.enable_charge = _enable_charge;
   _state.enable_drain = _enable_drain;
   _state.enable_instant_charge = _enable_instant_charge;
@@ -90,7 +105,7 @@ void toggle_charging::checkbox_checked()
 
 // Register this plugin
 IGNITION_ADD_PLUGIN(toggle_charging,
-                    ignition::gui::Plugin)
+  ignition::gui::Plugin)
 
 
 #include "toggle_charging.moc"

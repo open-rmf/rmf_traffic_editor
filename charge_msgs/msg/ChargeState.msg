@@ -1,5 +1,3 @@
-builtin_interfaces/Time time
-
 # Flag that toggles whether charging can happen
 bool enable_charge
 
