@@ -161,6 +161,7 @@ private:
   Project project;
   int level_idx = 0;  // level that we are currently editing
   int clicked_idx = -1;  // point most recently clicked
+  bool added_vertex = false;  // we added a new vertex when drawing the edge
   //int polygon_idx = -1;  // currently selected polygon
   Polygon* selected_polygon = nullptr;
 

@@ -897,9 +897,10 @@ void Editor::keyPressEvent(QKeyEvent* e)
       break;
     case Qt::Key_S:
     case Qt::Key_Escape:
-      if (clicked_idx > -1)
+      if (clicked_idx > -1 && added_vertex)
         project.building.remove_vertex(level_idx, clicked_idx);
       clicked_idx = -1;
+      added_vertex = false;
       tool_button_group->button(TOOL_SELECT)->click();
       project.clear_selection(level_idx);
       update_property_editor();
@@ -985,6 +986,7 @@ void Editor::tool_toggled(int id, bool checked)
     return;
 
   clicked_idx = -1;
+  added_vertex = false;
   remove_mouse_motion_item();
 
   tool_id = static_cast<ToolId>(id);
@@ -1752,9 +1754,10 @@ void Editor::mouse_add_edge(
     if (e->buttons() & Qt::RightButton)
     {
       // right button means "exit edge drawing mode please"
-      if (clicked_idx > -1)
+      if (clicked_idx > -1 && added_vertex)
         project.building.remove_vertex(level_idx, clicked_idx);
       clicked_idx = -1;
+      added_vertex = false;
       remove_mouse_motion_item();
       return;
     }
@@ -1767,6 +1770,7 @@ void Editor::mouse_add_edge(
     {
       // current click is not on an existing vertex. Add one.
       project.building.add_vertex(level_idx, p_aligned.x(), p_aligned.y());
+      added_vertex = true;
 
       // set the new vertex as "clicked_idx"  todo: encapsulate better
       clicked_idx =
@@ -1800,6 +1804,7 @@ void Editor::mouse_add_edge(
     if (edge_type == Edge::DOOR || edge_type == Edge::MEAS)
     {
       clicked_idx = -1;  // doors and measurements don't usually chain
+      added_vertex = false;
       remove_mouse_motion_item();
     }
 
