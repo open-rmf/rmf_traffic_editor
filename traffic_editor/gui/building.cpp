@@ -149,7 +149,8 @@ bool Building::save_yaml_file()
   return true;
 }
 
-void Building::remove_vertex(int level_index, int vertex_index) {
+void Building::remove_vertex(int level_index, int vertex_index)
+{
   if (level_index >= static_cast<int>(levels.size())
     || vertex_index >= static_cast<int>(levels[level_index].vertices.size()))
     return;
@@ -159,7 +160,7 @@ void Building::remove_vertex(int level_index, int vertex_index) {
       return;
   }
   levels[level_index].vertices
-    .erase(levels[level_index].vertices.begin() + vertex_index);
+  .erase(levels[level_index].vertices.begin() + vertex_index);
 }
 
 void Building::add_vertex(int level_index, double x, double y)
