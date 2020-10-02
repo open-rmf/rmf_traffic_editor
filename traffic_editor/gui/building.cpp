@@ -154,7 +154,8 @@ void Building::remove_vertex(int level_index, int vertex_index)
   if (level_index >= static_cast<int>(levels.size())
     || vertex_index >= static_cast<int>(levels[level_index].vertices.size()))
     return;
-  for (auto edge : levels[level_index].edges) {
+  for (auto edge : levels[level_index].edges)
+  {
     // cannot remove a vertex on an edge
     if (edge.start_idx == vertex_index || edge.end_idx == vertex_index)
       return;
