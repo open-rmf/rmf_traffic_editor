@@ -53,7 +53,7 @@ public:
   void clear();  // clear all internal data structures
 
   void add_level(const BuildingLevel& level);
-  void remove_vertex(int level_idx, int vertex_idx);
+  void remove_last_vertex(int level_idx);
   void add_vertex(int level_index, double x, double y);
   void add_fiducial(int level_index, double x, double y);
 

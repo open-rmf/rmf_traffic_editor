@@ -898,7 +898,7 @@ void Editor::keyPressEvent(QKeyEvent* e)
     case Qt::Key_S:
     case Qt::Key_Escape:
       if (clicked_idx > -1 && added_vertex)
-        project.building.remove_vertex(level_idx, clicked_idx);
+        project.building.remove_last_vertex(level_idx);
       clicked_idx = -1;
       added_vertex = false;
       tool_button_group->button(TOOL_SELECT)->click();
@@ -1755,7 +1755,7 @@ void Editor::mouse_add_edge(
     {
       // right button means "exit edge drawing mode please"
       if (clicked_idx > -1 && added_vertex)
-        project.building.remove_vertex(level_idx, clicked_idx);
+        project.building.remove_last_vertex(level_idx);
       clicked_idx = -1;
       added_vertex = false;
       remove_mouse_motion_item();

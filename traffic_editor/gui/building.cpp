@@ -149,10 +149,10 @@ bool Building::save_yaml_file()
   return true;
 }
 
-void Building::remove_vertex(int level_index, int vertex_index)
+void Building::remove_last_vertex(int level_index)
 {
-  if (level_index >= static_cast<int>(levels.size())
-    || vertex_index >= static_cast<int>(levels[level_index].vertices.size()))
+  int vertex_index = levels[level_index].vertices.size() - 1;
+  if (level_index >= static_cast<int>(levels.size()))
     return;
   for (auto edge : levels[level_index].edges)
   {
@@ -160,8 +160,14 @@ void Building::remove_vertex(int level_index, int vertex_index)
     if (edge.start_idx == vertex_index || edge.end_idx == vertex_index)
       return;
   }
-  levels[level_index].vertices
-  .erase(levels[level_index].vertices.begin() + vertex_index);
+  for (auto polygon : levels[level_index].polygons)
+  {
+    // cannot remove a vertex on a polygon
+    if (find(polygon.vertices.begin(), polygon.vertices.end(), vertex_index)
+      != polygon.vertices.end())
+      return;
+  }
+  levels[level_index].vertices.pop_back();
 }
 
 void Building::add_vertex(int level_index, double x, double y)
