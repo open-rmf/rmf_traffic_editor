@@ -30,7 +30,6 @@
 #include <rmf_fleet_msgs/msg/path_request.hpp>
 #include <rmf_fleet_msgs/msg/mode_request.hpp>
 #include <building_map_msgs/msg/building_map.hpp>
-#include <charge_msgs/msg/charge_state.hpp>
 
 namespace building_sim_common {
 
@@ -126,6 +125,8 @@ public:
     const std::pair<double, double>& velocities,
     const double dt) const;
 
+  void charge_state_cb(const std::string& name, bool selected);
+
   void publish_robot_state(const double time);
 
 private:
@@ -190,8 +191,6 @@ private:
   rclcpp::Subscription<rmf_fleet_msgs::msg::ModeRequest>::SharedPtr _mode_sub;
   rclcpp::Subscription<building_map_msgs::msg::BuildingMap>::SharedPtr
     _building_map_sub;
-  rclcpp::Subscription<charge_msgs::msg::ChargeState>::SharedPtr
-    _charge_state_sub;
 
   rmf_fleet_msgs::msg::RobotMode _current_mode;
 
@@ -221,10 +220,15 @@ private:
   bool _enable_charge = true;
   bool _enable_instant_charge = false;
   bool _enable_drain = true;
+  // Used for comparing with name argument of charge_state_cb to identify button selected
+  const std::string _enable_charge_str = "_enable_charge";
+  const std::string _enable_instant_charge_str = "_enable_instant_charge";
+  const std::string _enable_drain_str = "_enable_drain";
   double _soc = 100.0;
   std::unordered_map<std::string, std::vector<ChargerWaypoint>>
   charger_waypoints;
-  static constexpr double _charger_dist_thres = 1; // Straight line distance to charging waypoint within which charging can occur
+  // Straight line distance to charging waypoint within which charging can occur
+  static constexpr double _charger_dist_thres = 1;
 
   std::string get_level_name(const double z) const;
 
@@ -244,8 +248,6 @@ private:
   void mode_request_cb(const rmf_fleet_msgs::msg::ModeRequest::SharedPtr msg);
 
   void map_cb(const building_map_msgs::msg::BuildingMap::SharedPtr msg);
-
-  void charge_state_cb(const charge_msgs::msg::ChargeState::SharedPtr msg);
 
   bool near_charger(const Eigen::Isometry3d& pose) const;
 

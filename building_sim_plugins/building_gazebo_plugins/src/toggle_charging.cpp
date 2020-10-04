@@ -16,39 +16,42 @@
 */
 
 #include <functional>
+
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/gui/GuiPlugin.hh>
 
+#include <gazebo/transport/transport.hh>
+#include <gazebo/msgs/msgs.hh>
+
 #include <rclcpp/rclcpp.hpp>
 #include <gazebo_ros/node.hpp>
+
 #include <rmf_fleet_msgs/msg/fleet_state.hpp>
 #include <rmf_fleet_msgs/msg/robot_state.hpp>
-#include <charge_msgs/msg/charge_state.hpp>
 
-using ChargeState = charge_msgs::msg::ChargeState;
-
+// GUI Plugin that creates buttons for enabling/disabling slotcar charging
+// and publishes any change in state
 class ToggleCharging : public gazebo::GUIPlugin
 {
   Q_OBJECT
-  gazebo_ros::Node::SharedPtr _ros_node;
+  gazebo::transport::NodePtr _node;
+  gazebo::transport::PublisherPtr _charge_state_pub;
 
   bool _enable_charge = true;
   bool _enable_instant_charge = false;
   bool _enable_drain = true;
-  rclcpp::Publisher<ChargeState>::SharedPtr _charge_state_pub;
+  const std::string _enable_charge_str = "_enable_charge";
+  const std::string _enable_instant_charge_str = "_enable_instant_charge";
+  const std::string _enable_drain_str = "_enable_drain";
 
 public:
-  virtual ~ToggleCharging()
+  ToggleCharging()
   {
-  }
-
-  void Load(sdf::ElementPtr sdf)
-  {
-    printf("ToggleCharging::Load()\n");
-    _ros_node = gazebo_ros::Node::Get(sdf);
-
-    _charge_state_pub = _ros_node->create_publisher<ChargeState>(
-      "/charge_state", rclcpp::SystemDefaultsQoS());
+    printf("ToggleCharging::ToggleCharging()\n");
+    _node = gazebo::transport::NodePtr(new gazebo::transport::Node());
+    _node->Init();
+    _charge_state_pub = _node->Advertise<gazebo::msgs::Selection>(
+      "/charge_state");
 
     QVBoxLayout* vbox = new QVBoxLayout;
 
@@ -60,7 +63,7 @@ public:
       [this]()
       {
         this->_enable_charge = !this->_enable_charge;
-        this->button_clicked();
+        this->button_clicked(_enable_charge_str, this->_enable_charge);
       });
     vbox->addWidget(charge_button);
 
@@ -72,7 +75,8 @@ public:
       [this]()
       {
         this->_enable_instant_charge = !this->_enable_instant_charge;
-        this->button_clicked();
+        this->button_clicked(_enable_instant_charge_str,
+        this->_enable_instant_charge);
       });
     vbox->addWidget(instant_charge_button);
 
@@ -84,7 +88,7 @@ public:
       [this]()
       {
         this->_enable_drain = !this->_enable_drain;
-        this->button_clicked();
+        this->button_clicked(_enable_drain_str, this->_enable_drain);
       });
     vbox->addWidget(drain_button);
 
@@ -92,13 +96,17 @@ public:
     this->move(0, 50);
   }
 
-  void button_clicked()
+  virtual ~ToggleCharging()
   {
-    ChargeState _state;
-    _state.enable_charge = _enable_charge;
-    _state.enable_drain = _enable_drain;
-    _state.enable_instant_charge = _enable_instant_charge;
-    _charge_state_pub->publish(_state);
+  }
+
+  void button_clicked(const std::string& name, bool selected)
+  {
+    gazebo::msgs::Selection charge_state_msg;
+    charge_state_msg.set_name(name);
+    charge_state_msg.set_selected(selected);
+    charge_state_msg.set_id(1); // id not necessary for current use case
+    _charge_state_pub->Publish(charge_state_msg);
   }
 
 private:

@@ -228,13 +228,13 @@ class Building:
           {'name': 'charger_waypoints'})
 
         for level_name, level in self.levels.items():
-          for vertex in level.transformed_vertices:
-              if 'is_charger' in vertex.params:
-                SubElement(
-                  charger_waypoints_ele,
-                  'rmf:vertex',
-                  {'name': vertex.name, 'x': str(vertex.x), 'y': str(vertex.y),
-                  'level': level_name})
+            for vertex in level.transformed_vertices:
+                if 'is_charger' in vertex.params:
+                    SubElement(
+                      charger_waypoints_ele,
+                      'rmf:vertex',
+                      {'name': vertex.name, 'x': str(vertex.x),
+                       'y': str(vertex.y), 'level': level_name})
 
         gui_ele = world.find('gui')
         c = self.center()
@@ -247,7 +247,8 @@ class Building:
             toggle_charge_ele = SubElement(
                 gui_ele,
                 'plugin',
-                {'name': 'toggle_charging', 'filename': 'libtoggle_charging.so'})
+                {'name': 'toggle_charging',
+                 'filename': 'libtoggle_charging.so'})
 
             toggle_ele = SubElement(
                 gui_ele,

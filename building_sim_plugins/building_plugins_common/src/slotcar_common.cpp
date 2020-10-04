@@ -109,13 +109,6 @@ void SlotcarCommon::init_ros_node(const rclcpp::Node::SharedPtr node)
     "/robot_mode_requests",
     10,
     std::bind(&SlotcarCommon::mode_request_cb, this, std::placeholders::_1));
-
-  _charge_state_sub =
-    _ros_node->create_subscription<charge_msgs::msg::ChargeState>(
-    "/charge_state",
-    10,
-    std::bind(&SlotcarCommon::charge_state_cb, this, std::placeholders::_1));
-
 }
 
 bool SlotcarCommon::path_request_valid(
@@ -533,12 +526,26 @@ void SlotcarCommon::map_cb(
 
 }
 
+// Enables/disables charge when called from Ignition/Gazebo plugin
 void SlotcarCommon::charge_state_cb(
-  const charge_msgs::msg::ChargeState::SharedPtr msg)
+  const std::string& name, bool selected)
 {
-  _enable_charge = msg->enable_charge;
-  _enable_instant_charge = msg->enable_instant_charge;
-  _enable_drain = msg->enable_drain;
+  if (name == _enable_charge_str)
+  {
+    _enable_charge = selected;
+  }
+  else if (name == _enable_instant_charge_str)
+  {
+    _enable_instant_charge = selected;
+  }
+  else if (name == _enable_drain_str)
+  {
+    _enable_drain = selected;
+  }
+  else
+  {
+    std::cerr << "Invalid button selected. " << std::endl;
+  }
 }
 
 bool SlotcarCommon::near_charger(const Eigen::Isometry3d& pose) const

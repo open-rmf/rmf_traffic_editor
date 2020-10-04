@@ -31,7 +31,6 @@ find_package(rmf_fleet_msgs REQUIRED)
 find_package(rmf_door_msgs REQUIRED)
 find_package(rmf_lift_msgs REQUIRED)
 find_package(building_map_msgs REQUIRED)
-find_package(charge_msgs REQUIRED)
 find_package(menge QUIET)
 
 include(GNUInstallDirs)
@@ -45,7 +44,6 @@ ament_target_dependencies(slotcar_common
     rclcpp
     std_msgs
     geometry_msgs
-    charge_msgs
     tf2_ros
 )
 

@@ -42,6 +42,10 @@ ign_find_package(ignition-math6 REQUIRED)
 set(IGN_MATH_VER 6)
 ign_find_package(ignition-gui4 REQUIRED)
 set(IGN_GUI_VER 4)
+ign_find_package(ignition-msgs6 REQUIRED)
+set(IGN_MSGS_VER 6)
+ign_find_package(ignition-transport9 REQUIRED)
+set(IGN_TRANSPORT_VER 9)
 ign_find_package(sdformat10 REQUIRED)
 
 find_package(tf2_ros REQUIRED)
@@ -52,7 +56,6 @@ find_package(rmf_fleet_msgs REQUIRED)
 find_package(rmf_door_msgs REQUIRED)
 find_package(rmf_lift_msgs REQUIRED)
 find_package(building_map_msgs REQUIRED)
-find_package(charge_msgs)
 find_package(building_sim_common REQUIRED)
 find_package (Qt5
   COMPONENTS
@@ -87,7 +90,6 @@ target_include_directories(slotcar
     ${std_msgs_INCLUDE_DIRS}
     ${rmf_fleet_msgs_INCLUDE_DIRS}
     ${building_map_msgs_INCLUDE_DIRS}
-    ${charge_msgs_INCLUDE_DIRS}
     ${tf2_ros_INCLUDE_DIRS}
 )
 
@@ -192,10 +194,11 @@ add_library(toggle_charging SHARED ${headers_MOC}
 
 target_link_libraries(toggle_charging
   ignition-gui${IGN_GUI_VER}::ignition-gui${IGN_GUI_VER}
+  ignition-msgs${IGN_MSGS_VER}::ignition-msgs${IGN_MSGS_VER}
+  ignition-transport${IGN_TRANSPORT_VER}::ignition-transport${IGN_TRANSPORT_VER}
   ${Qt5Core_LIBRARIES}
   ${Qt5Qml_LIBRARIES}
   ${Qt5Quick_LIBRARIES}
-  ${charge_msgs_LIBRARIES}
   ${rclcpp_LIBRARIES}
 )
 
@@ -204,7 +207,6 @@ target_include_directories(toggle_charging
   ${Qt5Core_INCLUDE_DIRS}
   ${Qt5Qml_INCLUDE_DIRS}
   ${Qt5Quick_INCLUDE_DIRS}
-  ${charge_msgs_INCLUDE_DIRS}
 )
 
 ###############################
