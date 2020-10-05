@@ -38,6 +38,10 @@ models:
 - OpenRobotics/ElectronicsRecycling
 - OpenRobotics/FemaleVisitor
 - OpenRobotics/FemaleVisitorSit
+- OpenRobotics/FoodCourtBarricade
+- OpenRobotics/FoodCourtBenchLong
+- OpenRobotics/FoodCourtBenchShort
+- OpenRobotics/FoodCourtTable1
 - OpenRobotics/Fountain
 - OpenRobotics/Fridge
 - OpenRobotics/Gazebo
@@ -121,5 +125,6 @@ models:
 - OpenRobotics/VisitorKidSit
 - OpenRobotics/WhiteCabinet
 - OpenRobotics/WhiteChipChair
+- OpenRobotics/WoodenChair
 - OpenRobotics/XRayMachine
 - OpenRobotics/XRayMachineSmall
