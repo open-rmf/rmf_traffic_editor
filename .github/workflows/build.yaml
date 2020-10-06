@@ -16,15 +16,9 @@ jobs:
         wget https://packages.osrfoundation.org/gazebo.key -O - | apt-key add -
         sudo apt-get update
 
-    - name: ros-deps
-      run: |
-        mkdir -p ws/src
-        cd ws
-        rosdep update
-        rosdep install --from-paths src --ignore-src --rosdistro foxy -yr
-
     - name: ros-workspace
       run: |
+        mkdir -p ws/src
         cd ws/src
         git clone https://github.com/osrf/rmf_core
 
@@ -32,6 +26,12 @@ jobs:
       uses: actions/checkout@v2
       with:
         path: ws/src/traffic_editor
+
+    - name: ros-deps
+      run: |
+        cd ws
+        rosdep update
+        rosdep install --from-paths src --ignore-src --rosdistro foxy -yr
 
     - name: non-ros-deps
       run: |
