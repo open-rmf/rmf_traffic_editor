@@ -131,9 +131,6 @@ endif()
 ###############################
 ament_export_dependencies(Eigen3)
 ament_export_include_directories(include)
-ament_export_libraries(slotcar_common)
-ament_export_libraries(door_common)
-ament_export_libraries(lift_common)
 
 
 install(
