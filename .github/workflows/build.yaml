@@ -2,9 +2,9 @@ name: build
 on: [push, pull_request]
 jobs:
   build:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     container:
-      image: docker://ros:eloquent-ros-base-bionic
+      image: docker://ros:foxy-ros-base-focal
     
     steps:
     - name: osrf-repo
@@ -12,14 +12,21 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y wget
-        echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable bionic main" > /etc/apt/sources.list.d/gazebo-stable.list
+        sudo sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-stable.list'
         wget https://packages.osrfoundation.org/gazebo.key -O - | apt-key add -
         sudo apt-get update
-        sudo apt-get install -y libignition-plugin-dev libignition-common3-dev
+
+    - name: ros-deps
+      run: |
+        cd ws
+        rosdep update
+        rosdep install --from-paths src --ignore-src --rosdistro foxy -yr
 
     - name: ros-workspace
       run: |
         mkdir -p ws/src
+        cd ws/src
+        git clone https://github.com/osrf/rmf_core
 
     - name: checkout
       uses: actions/checkout@v2
@@ -29,12 +36,14 @@ jobs:
     - name: non-ros-deps
       run: |
         sudo apt-get update
-        sudo apt-get install -y git cmake wget libyaml-cpp-dev qt5-default \
+        sudo apt-get install -y git cmake wget qt5-default \
           libopencv-dev libopencv-videoio-dev
 
     - name: build
       shell: bash
       run: |
         cd ws
-        source /opt/ros/eloquent/setup.bash
+        source /opt/ros/foxy/setup.bash
         colcon build --packages-select traffic_editor --cmake-args -DNO_DOWNLOAD_MODELS=True
+        colcon build --packages-up-to building_gazebo_plugins
+        colcon build --packages-up-to building_ignition_plugins
