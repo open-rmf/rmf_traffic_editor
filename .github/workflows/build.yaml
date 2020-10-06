@@ -18,13 +18,13 @@ jobs:
 
     - name: ros-deps
       run: |
+        mkdir -p ws/src
         cd ws
         rosdep update
         rosdep install --from-paths src --ignore-src --rosdistro foxy -yr
 
     - name: ros-workspace
       run: |
-        mkdir -p ws/src
         cd ws/src
         git clone https://github.com/osrf/rmf_core
 
