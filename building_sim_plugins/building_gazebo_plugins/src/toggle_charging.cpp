@@ -93,7 +93,7 @@ public:
     vbox->addWidget(drain_button);
 
     setLayout(vbox);
-    this->move(0, 50);
+    this->move(0, 80);
   }
 
   virtual ~ToggleCharging()

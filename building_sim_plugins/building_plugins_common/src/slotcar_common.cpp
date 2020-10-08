@@ -36,6 +36,27 @@ static double compute_yaw(const Eigen::Isometry3d& pose)
   return yaw;
 }
 
+// Computes change in yaw angle from old_pose to pose
+static double compute_yaw(const Eigen::Isometry3d& pose,
+  const Eigen::Isometry3d& old_pose, int rot_dir)
+{
+  const double yaw = compute_yaw(pose);
+  const double old_yaw = compute_yaw(old_pose);
+
+  double disp = yaw - old_yaw;
+  double eps = 0.01;
+  // Account for edge cases where the robot rotates past -PI rad to PI rad, or vice versa
+  if (rot_dir > 0 && yaw < (old_yaw - eps))
+  {
+    disp = (M_PI - old_yaw) + (yaw + M_PI);
+  }
+  else if (rot_dir < 0 && yaw > (old_yaw + eps))
+  {
+    disp = (M_PI - yaw) + (old_yaw + M_PI);
+  }
+  return disp;
+}
+
 static Eigen::Vector3d compute_heading(const Eigen::Isometry3d& pose)
 {
   double yaw = compute_yaw(pose);
@@ -232,39 +253,50 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
   // Update battery state of charge
   if (_initialized_pose)
   {
-    const Eigen::Vector3d dist = compute_dist(_old_pose, _pose);
-    const Eigen::Vector3d vel = dist / dt;
+    const Eigen::Vector3d dist = compute_dpos(_old_pose, _pose); // Ignore movement along z-axis
+    const Eigen::Vector3d lin_vel = dist / dt;
+    double ang_disp = compute_yaw(_pose, _old_pose, _rot_dir);
+    const double ang_vel = ang_disp / dt;
 
     // Try charging battery
     double eps = 0.01;
-    bool stationary = std::abs(vel.norm()) < eps;
+    bool stationary = lin_vel.norm() < eps && std::abs(ang_vel) < eps;
     bool in_charger_vicinity = near_charger(_pose);
     if (stationary && in_charger_vicinity)
     {
       if (_enable_instant_charge)
       {
-        _soc = 100;
+        _soc = _soc_max;
       }
       else if (_enable_charge)
       {
         _soc += compute_charge(dt);
-        _soc = std::min(100.0, _soc);
+        _soc = std::min(_soc_max, _soc);
       }
     }
-
     // Discharge battery
     if (_enable_drain)
     {
-      const Eigen::Vector3d acc = (vel - _old_vel) / dt;
-      _soc -= compute_discharge(vel, acc, dt);
+      const Eigen::Vector3d lin_acc = (lin_vel - _old_lin_vel) / dt;
+      const double ang_acc = (ang_vel - _old_ang_vel) / dt;
+      _soc -= compute_discharge(lin_vel, ang_vel, lin_acc, ang_acc, dt);
+      _soc = std::max(0.0, _soc);
     }
-    _old_vel = vel;
-  }
-  else
-  {
-    _initialized_pose = true;
+    // Update mode
+    if (stationary && in_charger_vicinity &&
+      (_enable_instant_charge || _enable_charge))
+    {
+      _current_mode.mode = rmf_fleet_msgs::msg::RobotMode::MODE_CHARGING;
+    }
+    else
+    {
+      _current_mode.mode = rmf_fleet_msgs::msg::RobotMode::MODE_MOVING;
+    }
+    _old_lin_vel = lin_vel;
+    _old_ang_vel = ang_vel;
   }
   _old_pose = _pose;
+  _initialized_pose = true;
 
   if (trajectory.empty())
     return velocities;
@@ -353,6 +385,7 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
     velocities.first = 0.0;
   }
 
+  _rot_dir = velocities.second >= 0 ? 1 : -1;
   return velocities;
 }
 
@@ -551,8 +584,8 @@ void SlotcarCommon::charge_state_cb(
 bool SlotcarCommon::near_charger(const Eigen::Isometry3d& pose) const
 {
   std::string lvl_name = get_level_name(pose.translation()[2]);
-  auto waypoints_it = charger_waypoints.find(lvl_name);
-  if (waypoints_it != charger_waypoints.end())
+  auto waypoints_it = _charger_waypoints.find(lvl_name);
+  if (waypoints_it != _charger_waypoints.end())
   {
     const std::vector<ChargerWaypoint>& waypoints = waypoints_it->second;
     for (const ChargerWaypoint& waypoint : waypoints)
@@ -578,19 +611,20 @@ double SlotcarCommon::compute_charge(const double run_time) const
 }
 
 double SlotcarCommon::compute_discharge(
-  const Eigen::Vector3d& velocity, const Eigen::Vector3d& acceleration,
+  const Eigen::Vector3d lin_vel, const double ang_vel,
+  const Eigen::Vector3d lin_acc, const double ang_acc,
   const double run_time) const
 {
-  const double v = velocity.norm();
-  const double w = velocity(2);
-  const double a = acceleration.norm();
-  const double alpha = acceleration(2);
+  const double v = lin_vel.norm();
+  const double w = std::abs(ang_vel);
+  const double a = lin_acc.norm();
+  const double alpha = std::abs(ang_acc);
 
   // Loss through acceleration
   const double EA = ((_params.mass * a * v) +
     (_params.inertia * alpha * w)) * run_time;
 
-  // Loss through friction
+  // Loss through friction. Ignores friction due to rotation in place
   const double EF = compute_friction_energy(_params.friction_coefficient,
       _params.mass, v, run_time);
 

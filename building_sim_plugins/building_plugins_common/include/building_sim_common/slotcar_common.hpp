@@ -141,7 +141,6 @@ private:
     double inertia = 10;
     double friction_coefficient = 0.3;
     double nominal_power = 10;
-    double efficiency = 1;
   };
 
   struct ChargerWaypoint
@@ -178,8 +177,10 @@ private:
 
   bool _initialized_pose = false; // True if at least 1 call to update() has been made
   Eigen::Isometry3d _old_pose; // Pose at previous time step
-  Eigen::Vector3d _old_vel;
+  Eigen::Vector3d _old_lin_vel; // Linear velocity at previous time step
+  double _old_ang_vel; // Angular velocity at previous time step
   Eigen::Isometry3d _pose; // Pose at current time step
+  int _rot_dir = 1; // Current direction of rotation
 
   std::unordered_map<std::string, double> _level_to_elevation;
   bool _initialized_levels = false;
@@ -224,11 +225,12 @@ private:
   const std::string _enable_charge_str = "_enable_charge";
   const std::string _enable_instant_charge_str = "_enable_instant_charge";
   const std::string _enable_drain_str = "_enable_drain";
-  double _soc = 100.0;
+  const double _soc_max = 1.0;
+  double _soc = _soc_max;
   std::unordered_map<std::string, std::vector<ChargerWaypoint>>
-  charger_waypoints;
+  _charger_waypoints;
   // Straight line distance to charging waypoint within which charging can occur
-  static constexpr double _charger_dist_thres = 1;
+  static constexpr double _charger_dist_thres = 0.2;
 
   std::string get_level_name(const double z) const;
 
@@ -254,7 +256,8 @@ private:
   double compute_charge(const double run_time) const;
 
   double compute_discharge(
-    const Eigen::Vector3d& velocity, const Eigen::Vector3d& acceleration,
+    const Eigen::Vector3d lin_vel, const double ang_vel,
+    const Eigen::Vector3d lin_acc, const double ang_acc,
     const double run_time) const;
 };
 
@@ -266,8 +269,6 @@ bool get_element_val_if_present(
 {
   if (!_sdf->HasElement(_element_name))
   {
-    std::cerr << "Element [" << _element_name << "] not found. " <<
-      "Using default value instead." << std::endl;
     return false;
   }
   _val = _sdf->template Get<valueT>(_element_name);
@@ -367,11 +368,6 @@ void SlotcarCommon::read_sdf(SdfPtrT& sdf)
   RCLCPP_INFO(logger(),
     "Setting nominal power to: " + std::to_string(_params.nominal_power));
 
-  get_element_val_if_present<SdfPtrT, double>(sdf,
-    "efficiency", this->_params.efficiency);
-  RCLCPP_INFO(logger(),
-    "Setting efficiency to: " + std::to_string(_params.efficiency));
-
   // Charger Waypoint coordinates are in child element of top level world element
   if (sdf->GetParent() && sdf->GetParent()->GetParent())
   {
@@ -396,7 +392,7 @@ void SlotcarCommon::read_sdf(SdfPtrT& sdf)
             std::stringstream ss;
             ss << x_val << y_val;
             ss >> x >> y;
-            charger_waypoints[lvl_name].push_back(ChargerWaypoint(x, y));
+            _charger_waypoints[lvl_name].push_back(ChargerWaypoint(x, y));
           }
           waypoint = waypoint->GetNextElement("rmf:vertex");
         }
