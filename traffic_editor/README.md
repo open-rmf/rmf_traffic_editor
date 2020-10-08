@@ -5,6 +5,11 @@ A graphical editor for robot traffic flows. The intent is to make it easy
 to annotate building floorplans with the desired robot traffic lanes and
 generate simulation models to test and evaluate different traffic schemes.
 
+## Quality Declaration
+
+This package claims to be in the **Quality Level 3** category.
+See the [Quality Declaration](./QUALITY_DECLARATION.md) for more details.
+
 ## System Requirements
 
 This program is developed and tested on
