@@ -515,7 +515,7 @@ void SlotcarCommon::publish_state_topic(const rclcpp::Time& t)
 {
   rmf_fleet_msgs::msg::RobotState robot_state_msg;
   robot_state_msg.name = _model_name;
-  robot_state_msg.battery_percent = _soc;
+  robot_state_msg.battery_percent = 100 * _soc;
 
   robot_state_msg.location.x = _pose.translation()[0];
   robot_state_msg.location.y = _pose.translation()[1];
@@ -629,16 +629,14 @@ double SlotcarCommon::compute_discharge(
       _params.mass, v, run_time);
 
   // Change in energy as a result of motion
-  const double dE = EA + EF;
-  // The charge consumed
-  const double dQ = dE / _params.nominal_voltage;
-  // The depleted state of charge
-  double dSOC = dQ / (_params.nominal_capacity * 3600.0);
-
+  const double dEM = EA + EF;
   // Change in energy due to any onboard device over the time period `run_time`
-  const double dE2 = _params.nominal_power * run_time;
-  const double dQ2 = dE2 / _params.nominal_voltage;
-  dSOC += dQ2 / (_params.nominal_capacity * 3600.0);
+  const double dED = _params.nominal_power * run_time;
+
+  // The charge consumed
+  const double dQ = (dEM + dED) / _params.nominal_voltage;
+  // The depleted state of charge as a fraction in range [0,1]
+  double dSOC = dQ / (_params.nominal_capacity * 3600.0);
 
   return dSOC;
 }
