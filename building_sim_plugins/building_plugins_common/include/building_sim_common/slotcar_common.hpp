@@ -383,15 +383,11 @@ void SlotcarCommon::read_sdf(SdfPtrT& sdf)
           if (waypoint->HasAttribute("x") && waypoint->HasAttribute("y") &&
             waypoint->HasAttribute("level"))
           {
-            std::string x_val, y_val, lvl_name;
-            waypoint->GetAttribute("x")->Get(x_val);
-            waypoint->GetAttribute("y")->Get(y_val);
-            waypoint->GetAttribute("level")->Get(lvl_name);
-
+            std::string lvl_name;
             double x, y;
-            std::stringstream ss;
-            ss << x_val << y_val;
-            ss >> x >> y;
+            waypoint->GetAttribute("x")->Get(x);
+            waypoint->GetAttribute("y")->Get(y);
+            waypoint->GetAttribute("level")->Get(lvl_name);
             _charger_waypoints[lvl_name].push_back(ChargerWaypoint(x, y));
           }
           waypoint = waypoint->GetNextElement("rmf:vertex");
