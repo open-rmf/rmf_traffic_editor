@@ -63,14 +63,21 @@ private:
     const std::unordered_set<Entity> payloads,
     const double dt)
   {
-    double v_robot = ecm.Component<components::LinearVelocityCmd>(_entity)->Data()[0];
-    double w_robot = ecm.Component<components::AngularVelocityCmd>(_entity)->Data()[2];
+
+    ignition::math::Vector3d old_lin_vel_cmd = ecm.Component<components::LinearVelocityCmd>(_entity)->Data();
+    ignition::math::Vector3d old_ang_vel_cmd = ecm.Component<components::AngularVelocityCmd>(_entity)->Data();
+    double v_robot =
+      ecm.Component<components::LinearVelocityCmd>(_entity)->Data()[0];
+    double w_robot =
+      ecm.Component<components::AngularVelocityCmd>(_entity)->Data()[2];
 
     std::array<double, 2> target_vels;
     target_vels = dataPtr->calculate_model_control_signals({v_robot, w_robot},
       velocities, dt);
-    ecm.Component<components::LinearVelocityCmd>(_entity)->Data() = {target_vels[0], 0, 0};
-    ecm.Component<components::AngularVelocityCmd>(_entity)->Data() = {0, 0, target_vels[1]};
+    ecm.Component<components::LinearVelocityCmd>(_entity)->Data() = {target_vels[0], old_lin_vel_cmd[1], old_lin_vel_cmd[2]};
+    ecm.Component<components::AngularVelocityCmd>(_entity)->Data() = {old_ang_vel_cmd[0], old_ang_vel_cmd[1], target_vels[1]};
+    //std::cout << "Linear angular velocity cmd: " << old_lin_vel_cmd << std::endl;
+    //std::cout << "Angular velocity cmd: " << old_ang_vel_cmd << std::endl;
 
     if(phys_plugin == TPE) // Need to manually move the payload
     {
@@ -83,8 +90,8 @@ private:
           components::AngularVelocityCmd().TypeId()))
           ecm.CreateComponent(payload, components::AngularVelocityCmd({0, 0, 0}));
 
-        ecm.Component<components::LinearVelocityCmd>(payload)->Data() = {target_vels[0], 0, 0};
-        ecm.Component<components::AngularVelocityCmd>(payload)->Data() = {0, 0, target_vels[1]};
+        ecm.Component<components::LinearVelocityCmd>(payload)->Data() = {target_vels[0], old_lin_vel_cmd[1], old_lin_vel_cmd[2]};
+        ecm.Component<components::AngularVelocityCmd>(payload)->Data() = {old_ang_vel_cmd[0], old_ang_vel_cmd[1], target_vels[1]};
       }
     }
   }
