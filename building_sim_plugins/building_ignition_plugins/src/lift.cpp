@@ -78,9 +78,9 @@ private:
       {
         // Object should not be static
         const auto payload_position = pose->Data().Pos();
-        if (is_static->Data() == false && entity != lift)
+        if (!(is_static->Data()) && entity != lift)
         {
-          if(lift_aabb->Data().Contains(payload_position))
+          if (lift_aabb->Data().Contains(payload_position))
           {
             payloads.insert(entity);
           }
@@ -141,7 +141,6 @@ public:
       _cabin_joint);
     position_cmd->Data()[0] = _lift_common->get_elevation();
 
-    // Initialize Bounding Box component
     if (!ecm.EntityHasComponentType(_lift_en,
       components::AxisAlignedBox().TypeId()))
     {
@@ -178,15 +177,18 @@ public:
       _cabin_joint);
     vel_cmd->Data()[0] = result.velocity;
 
-    // Move any payloads in the lift, if the payloads need to be manually moved (i.e. have a LinearVelocityCmd component that exists)
-    std::unordered_set<Entity> curr_payloads = get_payloads(_lift_en, ecm);
-    for (const Entity& payload : curr_payloads)
+    // For TPE: Move any payloads that need to be manually moved
+    // (i.e. have a LinearVelocityCmd component that exists)
+    std::unordered_set<Entity> payloads = get_payloads(_lift_en, ecm);
+    for (const Entity& payload : payloads)
     {
       if (ecm.EntityHasComponentType(payload,
         components::LinearVelocityCmd().TypeId()))
       {
-        ignition::math::Vector3d old_lin_vel_cmd = ecm.Component<components::LinearVelocityCmd>(payload)->Data();
-        ecm.Component<components::LinearVelocityCmd>(payload)->Data() = {old_lin_vel_cmd[0], old_lin_vel_cmd[1], result.velocity};
+        ignition::math::Vector3d old_lin_vel_cmd =
+          ecm.Component<components::LinearVelocityCmd>(payload)->Data();
+        ecm.Component<components::LinearVelocityCmd>(payload)->Data() = {
+          old_lin_vel_cmd[0], old_lin_vel_cmd[1], result.velocity};
       }
     }
   }

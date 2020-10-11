@@ -1,3 +1,5 @@
+#include <unordered_map>
+
 #include <ignition/plugin/Register.hh>
 
 #include <ignition/gazebo/System.hh>
@@ -26,6 +28,8 @@ using namespace ignition::gazebo;
 using namespace building_sim_common;
 
 enum PhysicsEnginePlugin {DEFAULT, TPE};
+std::unordered_map<std::string, PhysicsEnginePlugin> plugin_names
+  {{"ignition-physics-tpe-plugin", TPE}};
 
 class IGNITION_GAZEBO_VISIBLE SlotcarPlugin
   : public System,
@@ -50,56 +54,19 @@ private:
 
   Entity _entity;
   std::unordered_set<Entity> _payloads;
-
-  std::unique_ptr<rclcpp::executors::MultiThreadedExecutor> executor;
-
   std::unordered_set<Entity> _infrastructure;
+
   PhysicsEnginePlugin phys_plugin = DEFAULT;
 
-  bool first_iteration = true;
+  bool first_iteration = true; // Flag for checking if it is first PreUpdate() call
 
   void send_control_signals(EntityComponentManager& ecm,
     const std::pair<double, double>& velocities,
     const std::unordered_set<Entity> payloads,
-    const double dt)
-  {
-
-    ignition::math::Vector3d old_lin_vel_cmd = ecm.Component<components::LinearVelocityCmd>(_entity)->Data();
-    ignition::math::Vector3d old_ang_vel_cmd = ecm.Component<components::AngularVelocityCmd>(_entity)->Data();
-    double v_robot =
-      ecm.Component<components::LinearVelocityCmd>(_entity)->Data()[0];
-    double w_robot =
-      ecm.Component<components::AngularVelocityCmd>(_entity)->Data()[2];
-
-    std::array<double, 2> target_vels;
-    target_vels = dataPtr->calculate_model_control_signals({v_robot, w_robot},
-      velocities, dt);
-    ecm.Component<components::LinearVelocityCmd>(_entity)->Data() = {target_vels[0], old_lin_vel_cmd[1], old_lin_vel_cmd[2]};
-    ecm.Component<components::AngularVelocityCmd>(_entity)->Data() = {old_ang_vel_cmd[0], old_ang_vel_cmd[1], target_vels[1]};
-    //std::cout << "Linear angular velocity cmd: " << old_lin_vel_cmd << std::endl;
-    //std::cout << "Angular velocity cmd: " << old_ang_vel_cmd << std::endl;
-
-    if(phys_plugin == TPE) // Need to manually move the payload
-    {
-      for (const Entity& payload : payloads)
-      {
-        if (!ecm.EntityHasComponentType(payload,
-          components::LinearVelocityCmd().TypeId()))
-          ecm.CreateComponent(payload, components::LinearVelocityCmd({0, 0, 0}));
-        if (!ecm.EntityHasComponentType(payload,
-          components::AngularVelocityCmd().TypeId()))
-          ecm.CreateComponent(payload, components::AngularVelocityCmd({0, 0, 0}));
-
-        ecm.Component<components::LinearVelocityCmd>(payload)->Data() = {target_vels[0], old_lin_vel_cmd[1], old_lin_vel_cmd[2]};
-        ecm.Component<components::AngularVelocityCmd>(payload)->Data() = {old_ang_vel_cmd[0], old_ang_vel_cmd[1], target_vels[1]};
-      }
-    }
-  }
-
+    const double dt);
   void init_infrastructure(EntityComponentManager& ecm);
   void item_dispensed_cb(const ignition::msgs::UInt64_V& msg);
   void item_ingested_cb(const ignition::msgs::UInt64& msg);
-
   std::vector<Eigen::Vector3d> get_obstacle_positions(
     EntityComponentManager& ecm);
 };
@@ -123,6 +90,7 @@ void SlotcarPlugin::Configure(const Entity& entity,
   std::string model_name = model.Name(ecm);
   dataPtr->set_model_name(model_name);
   dataPtr->read_sdf(sdf);
+
   // TODO proper argc argv
   char const** argv = NULL;
   if (!rclcpp::is_initialized())
@@ -151,7 +119,7 @@ void SlotcarPlugin::Configure(const Entity& entity,
     ecm.CreateComponent(_entity, components::AngularVelocityCmd());
 
   // Keep track of when a payload is dispensed onto/ingested from slotcar
-  // Needed for TPE Plugin in order to manually move payload by setting velocities
+  // Needed for TPE Plugin to know when to manually move payload via this plugin
   if (!_ign_node.Subscribe("/item_dispensed", &SlotcarPlugin::item_dispensed_cb,
     this))
   {
@@ -161,6 +129,50 @@ void SlotcarPlugin::Configure(const Entity& entity,
     this))
   {
     std::cerr << "Error subscribing to topic [/item_ingested]" << std::endl;
+  }
+}
+
+void SlotcarPlugin::send_control_signals(EntityComponentManager& ecm,
+  const std::pair<double, double>& velocities,
+  const std::unordered_set<Entity> payloads,
+  const double dt)
+{
+  ignition::math::Vector3d old_lin_vel_cmd =
+    ecm.Component<components::LinearVelocityCmd>(_entity)->Data();
+  ignition::math::Vector3d old_ang_vel_cmd =
+    ecm.Component<components::AngularVelocityCmd>(_entity)->Data();
+  double v_robot = old_lin_vel_cmd[0];
+  double w_robot = old_ang_vel_cmd[2];
+
+  std::array<double, 2> target_vels;
+  target_vels = dataPtr->calculate_model_control_signals({v_robot, w_robot},
+      velocities, dt);
+  ecm.Component<components::LinearVelocityCmd>(_entity)->Data() = {
+    target_vels[0], old_lin_vel_cmd[1], old_lin_vel_cmd[2]};
+  ecm.Component<components::AngularVelocityCmd>(_entity)->Data() = {
+    old_ang_vel_cmd[0], old_ang_vel_cmd[1], target_vels[1]};
+
+  if (phys_plugin == TPE) // Need to manually move any payloads
+  {
+    for (const Entity& payload : payloads)
+    {
+      if (!ecm.EntityHasComponentType(payload,
+        components::LinearVelocityCmd().TypeId()))
+      {
+        ecm.CreateComponent(payload,
+          components::LinearVelocityCmd({0, 0, 0}));
+      }
+      if (!ecm.EntityHasComponentType(payload,
+        components::AngularVelocityCmd().TypeId()))
+      {
+        ecm.CreateComponent(payload,
+          components::AngularVelocityCmd({0, 0, 0}));
+      }
+      ecm.Component<components::LinearVelocityCmd>(payload)->Data() = {
+        target_vels[0], old_lin_vel_cmd[1], old_lin_vel_cmd[2]};
+      ecm.Component<components::AngularVelocityCmd>(payload)->Data() = {
+        old_ang_vel_cmd[0], old_ang_vel_cmd[1], target_vels[1]};
+    }
   }
 }
 
@@ -220,6 +232,7 @@ std::vector<Eigen::Vector3d> SlotcarPlugin::get_obstacle_positions(
   return obstacle_positions;
 }
 
+// First element of msg should be the slotcar, and the second should be the payload
 void SlotcarPlugin::item_dispensed_cb(const ignition::msgs::UInt64_V& msg)
 {
   if (msg.data_size() == 2 && msg.data(0) == _entity)
@@ -240,22 +253,23 @@ void SlotcarPlugin::item_ingested_cb(const ignition::msgs::UInt64& msg)
 void SlotcarPlugin::PreUpdate(const UpdateInfo& info,
   EntityComponentManager& ecm)
 {
-  if(first_iteration){
+  // Can only read from some components in the first PreUpdate() call
+  if (first_iteration)
+  {
     Entity parent = _entity;
-    while(ecm.ParentEntity(parent)){
+    while (ecm.ParentEntity(parent))
+    {
       parent = ecm.ParentEntity(parent);
     }
     if (ecm.EntityHasComponentType(parent,
-        components::PhysicsEnginePlugin().TypeId())){
-          std::string _physics_plugin_name = ecm.Component<components::PhysicsEnginePlugin>(parent)->Data();
-          if(_physics_plugin_name == "ignition-physics-tpe-plugin")
-          {
-            phys_plugin = TPE;
-          }
-          else
-          {
-            phys_plugin = DEFAULT;
-          }
+      components::PhysicsEnginePlugin().TypeId()))
+    {
+      std::string physics_plugin_name =
+        ecm.Component<components::PhysicsEnginePlugin>(parent)->Data();
+      if (plugin_names.count(physics_plugin_name))
+      {
+        phys_plugin = plugin_names[physics_plugin_name];
+      }
     }
     first_iteration = false;
   }
