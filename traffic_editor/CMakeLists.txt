@@ -23,8 +23,8 @@ if(CMAKE_VERSION VERSION_LESS "3.7.0")
 endif()
 
 find_package(Qt5 COMPONENTS Widgets Concurrent REQUIRED)
-find_package(ignition-plugin1 REQUIRED COMPONENTS all)
-find_package(ignition-common3 REQUIRED)
+find_package(ignition-plugin1 QUIET COMPONENTS all)
+find_package(ignition-common3 QUIET)
 find_package(ament_index_cpp REQUIRED)
 
 # OpenCV is an optional dependency, only needed if you want to make videos
@@ -36,7 +36,7 @@ include_directories(gui)
 include_directories(include)
 include_directories(${ament_index_cpp_INCLUDE_DIRS})
 
-add_executable(traffic-editor
+set(traffic_editor_sources
   gui/add_param_dialog.cpp
   gui/building.cpp
   gui/building_dialog.cpp
@@ -68,7 +68,6 @@ add_executable(traffic-editor
   gui/scenario_dialog.cpp
   gui/scenario_level.cpp
   gui/scenario_table.cpp
-  gui/sim_thread.cpp
   gui/table_list.cpp
   gui/traffic_table.cpp
   gui/traffic_map.cpp
@@ -78,16 +77,35 @@ add_executable(traffic-editor
   resources/resource.qrc
 )
 
-target_link_libraries(traffic-editor
+set(traffic_editor_libs
   Qt5::Widgets
   Qt5::Concurrent
-  ignition-plugin1::core
-  ignition-plugin1::loader
-  ignition-common3::core
   yaml-cpp
   ${ament_index_cpp_LIBRARIES}
   ${OpenCV_LIBS}
 )
+
+if (ignition-plugin1_VERSION)
+  set(traffic_editor_sources
+    ${traffic_editor_sources}
+    gui/sim_thread.cpp
+  )
+  set(traffic_editor_libs
+    ${traffic_editor_libs}
+    ignition-plugin1::core
+    ignition-plugin1::loader
+    ignition-common3::core
+  )
+endif()
+
+add_executable(traffic-editor ${traffic_editor_sources})
+target_link_libraries(traffic-editor ${traffic_editor_libs})
+
+if (ignition-plugin1_VERSION)
+  # sadly this if() block has to come after add_executable(), but
+  # the if() block determining the sources has to go before add_executable()
+  target_compile_definitions(traffic-editor PUBLIC "HAS_IGNITION_PLUGIN")
+endif()
 
 if (OpenCV_VERSION)
   target_compile_definitions(traffic-editor PUBLIC "HAS_OPENCV")
