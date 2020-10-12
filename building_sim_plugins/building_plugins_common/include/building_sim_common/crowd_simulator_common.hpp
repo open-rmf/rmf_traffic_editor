@@ -132,6 +132,7 @@ public:
     std::string file_name;
     AgentPose3d pose;
     std::string animation;
+    std::string idle_animation;
     double animation_speed;
   };
 
@@ -155,18 +156,28 @@ private:
 class CrowdSimInterface
 {
 public:
+  enum class AnimState
+  {
+    WALK,
+    IDLE,
+  };
+
   struct Object
   {
     AgentPtr agent_ptr;
     std::string model_name;
     std::string type_name;
     bool is_external = false;
+    AnimState current_state;
+    AnimState get_next_state(bool condition);
   };
   using ObjectPtr = std::shared_ptr<Object>;
 
   CrowdSimInterface()
   : _model_type_db_ptr(std::make_shared<crowd_simulator::ModelTypeDatabase>()),
-    _sdf_loaded(false)
+    _sdf_loaded(false),
+    _switch_anim_distance_th(0.01),
+    _switch_anim_name({"idle", "stand"})
   {}
 
   std::shared_ptr<ModelTypeDatabase> _model_type_db_ptr;
@@ -178,6 +189,8 @@ public:
   size_t get_num_objects() const;
   ObjectPtr get_object_by_id(size_t id) const;
   void one_step_sim() const;
+  double get_switch_anim_distance_th() const;
+  std::vector<std::string> get_switch_anim_name() const;
 
   template<typename SdfPtrT>
   bool read_sdf(SdfPtrT& sdf);
@@ -200,6 +213,8 @@ public:
 
 private:
   bool _sdf_loaded;
+  double _switch_anim_distance_th;
+  std::vector<std::string> _switch_anim_name;
   std::vector<ObjectPtr> _objects; //Database, use id to access ObjectPtr
   std::shared_ptr<MengeHandle> _menge_handle;
   float _sim_time_step;

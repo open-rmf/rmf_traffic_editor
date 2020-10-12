@@ -47,7 +47,7 @@ using ObjectPtr = crowd_simulator::CrowdSimInterface::ObjectPtr;
 
 class CrowdSimulatorPlugin : public gazebo::WorldPlugin
 {
-
+  using AnimState = crowd_simulator::CrowdSimInterface::AnimState;
 public:
   CrowdSimulatorPlugin()
   : _crowd_sim_interface(std::make_shared<crowd_simulator::CrowdSimInterface>()),
@@ -63,24 +63,17 @@ private:
   size_t _objects_count;
   gazebo::physics::WorldPtr _world;
   gazebo::event::ConnectionPtr _update_connection_ptr;
-  gazebo::common::Time _last_time;
   gazebo::common::Time _last_sim_time;
 
   bool _spawn_agents_in_world();
   void _init_spawned_agents();
   void _update(const gazebo::common::UpdateInfo& update_info); //Update trigger function
-  void _update_all_objects(double delta_time, double delta_sim_time);
+  void _update_all_objects(double delta_sim_time);
   void _update_internal_object(
-    double delta_time,
     double delta_sim_time,
-    const crowd_simulator::AgentPtr agent_ptr,
+    const ObjectPtr object_ptr,
     const gazebo::physics::ModelPtr model_ptr,
     const crowd_simulator::ModelTypeDatabase::RecordPtr type_ptr);
-
-  ignition::math::Pose3d _animation_root_pose(
-    const gazebo::physics::ActorPtr actor_ptr,
-    const gazebo::common::SkeletonAnimation* animation);
-
   bool _create_model(
     const std::string& model_name,
     const crowd_simulator::ModelTypeDatabase::RecordPtr model_type_ptr,
