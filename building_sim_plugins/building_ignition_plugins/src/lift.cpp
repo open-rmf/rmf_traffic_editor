@@ -79,7 +79,7 @@ private:
         // Object should not be static
         const auto payload_position = pose->Data().Pos();
         if (!(is_static->Data()) && entity != lift)
-        {
+        { // Could possibly check bounding box intersection too, but this suffices
           if (lift_aabb->Data().Contains(payload_position))
           {
             payloads.insert(entity);
@@ -179,16 +179,20 @@ public:
 
     // For TPE: Move any payloads that need to be manually moved
     // (i.e. have a LinearVelocityCmd component that exists)
-    std::unordered_set<Entity> payloads = get_payloads(_lift_en, ecm);
-    for (const Entity& payload : payloads)
+    if (std::abs(vel_cmd->Data()[0]) > 0.001)
     {
-      if (ecm.EntityHasComponentType(payload,
-        components::LinearVelocityCmd().TypeId()))
+      // TODO: Possibly optimize further by caching positions/entities if required
+      std::unordered_set<Entity> payloads = get_payloads(_lift_en, ecm);
+      for (const Entity& payload : payloads)
       {
-        ignition::math::Vector3d old_lin_vel_cmd =
-          ecm.Component<components::LinearVelocityCmd>(payload)->Data();
-        ecm.Component<components::LinearVelocityCmd>(payload)->Data() = {
-          old_lin_vel_cmd[0], old_lin_vel_cmd[1], result.velocity};
+        if (ecm.EntityHasComponentType(payload,
+          components::LinearVelocityCmd().TypeId()))
+        {
+          ignition::math::Vector3d old_lin_vel_cmd =
+            ecm.Component<components::LinearVelocityCmd>(payload)->Data();
+          ecm.Component<components::LinearVelocityCmd>(payload)->Data() = {
+            old_lin_vel_cmd[0], old_lin_vel_cmd[1], result.velocity};
+        }
       }
     }
   }
