@@ -10,6 +10,8 @@
 #include <ignition/gazebo/components/Static.hh>
 #include <ignition/gazebo/components/AxisAlignedBox.hh>
 
+#include <ignition/msgs.hh>
+#include <ignition/transport.hh>
 #include <rclcpp/rclcpp.hpp>
 
 #include <building_sim_common/utils.hpp>
@@ -31,20 +33,20 @@ public:
   void Configure(const Entity& entity,
     const std::shared_ptr<const sdf::Element>& sdf,
     EntityComponentManager& ecm, EventManager& eventMgr) override;
-  void path_request_cb(const rmf_fleet_msgs::msg::PathRequest::SharedPtr msg);
-  void mode_request_cb(const rmf_fleet_msgs::msg::ModeRequest::SharedPtr msg);
   void PreUpdate(const UpdateInfo& info, EntityComponentManager& ecm) override;
 
 private:
   std::unique_ptr<SlotcarCommon> dataPtr;
 
   rclcpp::Node::SharedPtr _ros_node;
-  Entity _entity;
+  ignition::transport::Node _ign_node;
 
+  Entity _entity;
   std::array<Entity, 2> joints;
   std::unique_ptr<rclcpp::executors::MultiThreadedExecutor> executor;
-
   std::unordered_set<Entity> _infrastructure;
+
+  void charge_state_cb(const ignition::msgs::Selection& msg);
 
   void send_control_signals(EntityComponentManager& ecm,
     const std::pair<double, double>& velocities,
@@ -72,7 +74,13 @@ private:
 SlotcarPlugin::SlotcarPlugin()
 : dataPtr(std::make_unique<SlotcarCommon>())
 {
-  // We do initialization only during ::Configure
+  // Listen for messages that enable/disable charging
+  if (!_ign_node.Subscribe("/charge_state", &SlotcarPlugin::charge_state_cb,
+    this))
+  {
+    std::cerr << "Error subscribing to topic [/charge_state]" << std::endl;
+  }
+  // We do rest of initialization during ::Configure
 }
 
 SlotcarPlugin::~SlotcarPlugin()
@@ -88,6 +96,7 @@ void SlotcarPlugin::Configure(const Entity& entity,
   std::string model_name = model.Name(ecm);
   dataPtr->set_model_name(model_name);
   dataPtr->read_sdf(sdf);
+
   // TODO proper argc argv
   char const** argv = NULL;
   if (!rclcpp::is_initialized())
@@ -129,6 +138,11 @@ void SlotcarPlugin::Configure(const Entity& entity,
   {
     ecm.CreateComponent(entity, components::AxisAlignedBox());
   }
+}
+
+void SlotcarPlugin::charge_state_cb(const ignition::msgs::Selection& msg)
+{
+  dataPtr->charge_state_cb(msg.name(), msg.selected());
 }
 
 void SlotcarPlugin::init_infrastructure(EntityComponentManager& ecm)

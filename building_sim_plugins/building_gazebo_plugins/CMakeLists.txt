@@ -129,6 +129,26 @@ target_include_directories(toggle_floors
 )
 
 ###############################
+# toggle charging
+###############################
+
+add_library(toggle_charging SHARED src/toggle_charging.cpp)
+
+ament_target_dependencies(toggle_charging
+    Qt5
+    gazebo_ros
+    rmf_fleet_msgs
+    rclcpp
+)
+
+target_include_directories(toggle_charging
+  PUBLIC
+    ${GAZEBO_INCLUDE_DIRS}
+    ${Qt5Core_INCLUDE_DIRS}
+)
+
+
+###############################
 # thumbnail generation stuff
 ###############################
 
@@ -183,7 +203,7 @@ endif()
 ###############################
 
 install(
-  TARGETS slotcar door lift toggle_floors thumbnail_generator
+  TARGETS slotcar door lift toggle_floors toggle_charging thumbnail_generator
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
