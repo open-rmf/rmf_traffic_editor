@@ -222,6 +222,20 @@ class Building:
             lift.generate_shaft_doors(world)
             lift.generate_cabin(world, options)
 
+        charger_waypoints_ele = SubElement(
+          world,
+          'rmf:charger_waypoints',
+          {'name': 'charger_waypoints'})
+
+        for level_name, level in self.levels.items():
+            for vertex in level.transformed_vertices:
+                if 'is_charger' in vertex.params:
+                    SubElement(
+                      charger_waypoints_ele,
+                      'rmf:vertex',
+                      {'name': vertex.name, 'x': str(vertex.x),
+                       'y': str(vertex.y), 'level': level_name})
+
         gui_ele = world.find('gui')
         c = self.center()
         camera_pose = f'{c[0]} {c[1]-20} 10 0 0.6 1.57'
@@ -229,6 +243,12 @@ class Building:
         if 'gazebo' in options:
             camera_pose_ele = gui_ele.find('camera').find('pose')
             camera_pose_ele.text = camera_pose
+
+            toggle_charge_ele = SubElement(
+                gui_ele,
+                'plugin',
+                {'name': 'toggle_charging',
+                 'filename': 'libtoggle_charging.so'})
 
             toggle_ele = SubElement(
                 gui_ele,

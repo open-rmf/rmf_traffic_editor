@@ -1,11 +1,12 @@
 <package format="3">
   <name>building_ignition_plugins</name>
-  <version>0.0.0</version>
+  <version>1.0.0</version>
   <description>
     Ignition gazebo plugins for building infrastructure simulation
   </description>
   <author>Luca Della Vedova</author>
   <author>Kevin Ma</author>
+  <author>Rushyendra Maganty</author>
   <maintainer email="luca@openrobotics.org">Luca Della Vedova</maintainer>
   <license>Apache 2.0</license>
 

@@ -18,6 +18,8 @@
 #include <ignition/msgs.hh>
 #include <ignition/transport.hh>
 
+#include <ignition/msgs.hh>
+#include <ignition/transport.hh>
 #include <rclcpp/rclcpp.hpp>
 
 #include <building_sim_common/utils.hpp>
@@ -43,8 +45,6 @@ public:
   void Configure(const Entity& entity,
     const std::shared_ptr<const sdf::Element>& sdf,
     EntityComponentManager& ecm, EventManager& eventMgr) override;
-  void path_request_cb(const rmf_fleet_msgs::msg::PathRequest::SharedPtr msg);
-  void mode_request_cb(const rmf_fleet_msgs::msg::ModeRequest::SharedPtr msg);
   void PreUpdate(const UpdateInfo& info, EntityComponentManager& ecm) override;
 
 private:
@@ -60,6 +60,8 @@ private:
 
   bool first_iteration = true; // Flag for checking if it is first PreUpdate() call
 
+  void charge_state_cb(const ignition::msgs::Selection& msg);
+
   void send_control_signals(EntityComponentManager& ecm,
     const std::pair<double, double>& velocities,
     const std::unordered_set<Entity> payloads,
@@ -74,7 +76,13 @@ private:
 SlotcarPlugin::SlotcarPlugin()
 : dataPtr(std::make_unique<SlotcarCommon>())
 {
-  // We do initialization during ::Configure
+  // Listen for messages that enable/disable charging
+  if (!_ign_node.Subscribe("/charge_state", &SlotcarPlugin::charge_state_cb,
+    this))
+  {
+    std::cerr << "Error subscribing to topic [/charge_state]" << std::endl;
+  }
+  // We do rest of initialization during ::Configure
 }
 
 SlotcarPlugin::~SlotcarPlugin()
@@ -232,6 +240,11 @@ std::vector<Eigen::Vector3d> SlotcarPlugin::get_obstacle_positions(
   return obstacle_positions;
 }
 
+void SlotcarPlugin::charge_state_cb(const ignition::msgs::Selection& msg)
+{
+  dataPtr->charge_state_cb(msg.name(), msg.selected());
+}
+
 // First element of msg should be the slotcar, and the second should be the payload
 void SlotcarPlugin::item_dispensed_cb(const ignition::msgs::UInt64_V& msg)
 {
@@ -253,7 +266,7 @@ void SlotcarPlugin::item_ingested_cb(const ignition::msgs::Entity& msg)
 void SlotcarPlugin::PreUpdate(const UpdateInfo& info,
   EntityComponentManager& ecm)
 {
-  // Can only read from some components in the first PreUpdate() call
+  // Read from components that may not have been initialized in configure()
   if (first_iteration)
   {
     Entity parent = _entity;

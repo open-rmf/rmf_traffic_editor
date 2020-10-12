@@ -35,6 +35,7 @@ class IGNITION_GAZEBO_VISIBLE CrowdSimulatorPlugin
   public ignition::gazebo::ISystemConfigure,
   public ignition::gazebo::ISystemPreUpdate
 {
+  using AnimState = crowd_simulator::CrowdSimInterface::AnimState;
 public:
   CrowdSimulatorPlugin()
   : _transport_node_ptr(std::make_shared<ignition::transport::Node>()),
@@ -57,7 +58,6 @@ private:
   std::shared_ptr<crowd_simulator::CrowdSimInterface> _crowd_sim_interface;
   bool _initialized;
   std::chrono::steady_clock::duration _last_sim_time{0};
-  std::chrono::steady_clock::duration _last_time{0};
 
   std::shared_ptr<ignition::gazebo::Model> _world;
   std::string _world_name;
@@ -78,7 +78,6 @@ private:
     const std::string& model_name,
     const crowd_simulator::ModelTypeDatabase::RecordPtr model_type_ptr) const;
   void _update_all_objects(
-    double delta_time,
     double delta_sim_time,
     ignition::gazebo::EntityComponentManager& ecm) const;
   void _update_internal_object(

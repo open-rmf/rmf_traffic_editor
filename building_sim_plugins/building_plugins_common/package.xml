@@ -1,6 +1,6 @@
 <package format="3">
   <name>building_sim_common</name>
-  <version>0.0.0</version>
+  <version>1.0.0</version>
   <description>
     Common utility functions for Gazebo and ignition building plugins
   </description>
@@ -10,6 +10,7 @@
   <author>Aaron Chong</author>
   <author>Brandon Ong</author>
   <author>Kevin Ma</author>
+  <author>Rushyendra Maganty</author>
   <maintainer email="morgan@openrobotics.org">Morgan Quigley</maintainer>
   <license>Apache 2.0</license>
 

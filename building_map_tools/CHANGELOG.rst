@@ -2,8 +2,30 @@
 Changelog for package building_map_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+Forthcoming (2020-09-28)
+------------------
+* Add building_crowdsim to generate navmesh and config files for crowd simulation (`#224 <https://github.com/osrf/traffic_editor/pull/224>`_)
+
+1.1.0 (2020-09-24)
+------------------
+* Implement model visibility toggling (`#226 <https://github.com/osrf/traffic_editor/issues/226>`_)
+* Adding lift operation range selection (`#220 <https://github.com/osrf/traffic_editor/issues/220>`_)
+* Add field in lift dialog for initial floor, handle invalid initial floor
+* added inertia for lift cabin platform (`#217 <https://github.com/osrf/traffic_editor/issues/217>`_)
+* Model counts to be owned by Building, and passed to each Level `#211 <https://github.com/osrf/traffic_editor/issues/211>`_
+* Support for adding and recognizing lift waypoints for multi-level navigatio `#201 <https://github.com/osrf/traffic_editor/issues/201>`_ 
+* Fixed the wrong naming of reference_floor (`#209 <https://github.com/osrf/traffic_editor/issues/209>`_)
+* Fixing building failure when fiducial values are integers (`#208 <https://github.com/osrf/traffic_editor/issues/208>`_)
+* Generate models at the correct Z height of their level `#207 <https://github.com/osrf/traffic_editor/issues/207>`_
+* Configurable texture and transparency for wall `#200 <https://github.com/osrf/traffic_editor/issues/200>`_ 
+* Added wall tex in building map generation
+* Handle situation when lifts key is not present `#188 <https://github.com/osrf/traffic_editor/issues/188>`_ 
+* Ignition plugins and modularization of doors and slotcar `#138 <https://github.com/osrf/traffic_editor/issues/138>`_
+* Adding lift pluting for ignition `#171 <https://github.com/osrf/traffic_editor/issues/171>`_
+* Implement automatic lift waypoint setting
+* Implement convenience script (`#185 <https://github.com/osrf/traffic_editor/issues/185>`_)
+* Implement model downloader: a script to assist in model downloading without needing to also build the worldfile from a specified traffic_editor file. `#180 <https://github.com/osrf/traffic_editor/issues/180>`_
+* Contributors: Aaron Chong, Chen Bainian, Geoffrey Biggs, Kevin_Skywalker, Luca Della Vedova, MakinoharaShouko, Morgan Quigley, kevinskwk, methylDragon, youliang
 
 1.0.0 (2020-06-22)
 ------------------

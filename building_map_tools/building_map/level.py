@@ -230,7 +230,7 @@ class Level:
                 self.lift_vert_lists)
 
     def write_sdf(self, model_name, model_path):
-        sdf_ele = Element('sdf', {'version': '1.6'})
+        sdf_ele = Element('sdf', {'version': '1.7'})
 
         model_ele = SubElement(sdf_ele, 'model', {'name': model_name})
 

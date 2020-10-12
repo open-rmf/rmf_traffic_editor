@@ -4,6 +4,8 @@
 #include <gazebo_ros/node.hpp>
 
 #include <gazebo/common/Plugin.hh>
+#include <gazebo/transport/transport.hh>
+#include <gazebo/msgs/msgs.hh>
 
 #include <building_sim_common/utils.hpp>
 #include <building_sim_common/slotcar_common.hpp>
@@ -22,6 +24,9 @@ public:
 private:
   std::unique_ptr<SlotcarCommon> dataPtr;
 
+  gazebo::transport::NodePtr _gazebo_node;
+  gazebo::transport::SubscriberPtr _charge_state_sub;
+
   gazebo::event::ConnectionPtr _update_connection;
   gazebo::physics::ModelPtr _model;
 
@@ -36,6 +41,8 @@ private:
 
   std::vector<Eigen::Vector3d> get_obstacle_positions(
     const gazebo::physics::WorldPtr& world);
+
+  void charge_state_cb(ConstSelectionPtr& msg);
 
   void send_control_signals(const std::pair<double, double>& velocities,
     const double dt)
@@ -56,7 +63,12 @@ private:
 SlotcarPlugin::SlotcarPlugin()
 : dataPtr(std::make_unique<SlotcarCommon>())
 {
-  // We do initialization only during ::Load
+  // Listen for messages that enable/disable charging
+  _gazebo_node = gazebo::transport::NodePtr(new gazebo::transport::Node());
+  _gazebo_node->Init();
+  _charge_state_sub = _gazebo_node->Subscribe("/charge_state",
+      &SlotcarPlugin::charge_state_cb, this);
+  // We do rest of initialization during ::Load
 }
 
 SlotcarPlugin::~SlotcarPlugin()
@@ -87,6 +99,11 @@ void SlotcarPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf)
     RCLCPP_ERROR(dataPtr->logger(),
       "Could not find tire for [joint_tire_right]");
 
+}
+
+void SlotcarPlugin::charge_state_cb(ConstSelectionPtr& msg)
+{
+  dataPtr->charge_state_cb(msg->name(), msg->selected());
 }
 
 void SlotcarPlugin::init_infrastructure()
