@@ -28,8 +28,8 @@ using namespace ignition::gazebo;
 using namespace building_sim_common;
 
 enum PhysicsEnginePlugin {DEFAULT, TPE};
-std::unordered_map<std::string, PhysicsEnginePlugin> plugin_names
-  {{"ignition-physics-tpe-plugin", TPE}};
+std::unordered_map<std::string, PhysicsEnginePlugin> plugin_names {
+  {"ignition-physics-tpe-plugin", TPE}};
 
 class IGNITION_GAZEBO_VISIBLE SlotcarPlugin
   : public System,
@@ -66,7 +66,7 @@ private:
     const double dt);
   void init_infrastructure(EntityComponentManager& ecm);
   void item_dispensed_cb(const ignition::msgs::UInt64_V& msg);
-  void item_ingested_cb(const ignition::msgs::UInt64& msg);
+  void item_ingested_cb(const ignition::msgs::Entity& msg);
   std::vector<Eigen::Vector3d> get_obstacle_positions(
     EntityComponentManager& ecm);
 };
@@ -242,11 +242,11 @@ void SlotcarPlugin::item_dispensed_cb(const ignition::msgs::UInt64_V& msg)
   }
 }
 
-void SlotcarPlugin::item_ingested_cb(const ignition::msgs::UInt64& msg)
+void SlotcarPlugin::item_ingested_cb(const ignition::msgs::Entity& msg)
 {
-  if (msg.IsInitialized() && _payloads.find(msg.data()) != _payloads.end())
+  if (msg.IsInitialized() && _payloads.find(msg.id()) != _payloads.end())
   {
-    _payloads.erase(msg.data());
+    _payloads.erase(msg.id());
   }
 }
 
