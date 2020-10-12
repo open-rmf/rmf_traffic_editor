@@ -101,7 +101,7 @@ void SlotcarPlugin::Configure(const Entity& entity,
 
   // TODO proper argc argv
   char const** argv = NULL;
-  if (!rclcpp::is_initialized())
+  if (!rclcpp::ok())
     rclcpp::init(0, argv);
   std::string plugin_name("plugin_" + model_name);
   _ros_node = std::make_shared<rclcpp::Node>(plugin_name);
@@ -145,20 +145,19 @@ void SlotcarPlugin::send_control_signals(EntityComponentManager& ecm,
   const std::unordered_set<Entity> payloads,
   const double dt)
 {
-  ignition::math::Vector3d old_lin_vel_cmd =
-    ecm.Component<components::LinearVelocityCmd>(_entity)->Data();
-  ignition::math::Vector3d old_ang_vel_cmd =
-    ecm.Component<components::AngularVelocityCmd>(_entity)->Data();
-  double v_robot = old_lin_vel_cmd[0];
-  double w_robot = old_ang_vel_cmd[2];
+  auto lin_vel_cmd =
+    ecm.Component<components::LinearVelocityCmd>(_entity);
+  auto ang_vel_cmd =
+    ecm.Component<components::AngularVelocityCmd>(_entity);
 
+  double v_robot = lin_vel_cmd->Data()[0];
+  double w_robot = ang_vel_cmd->Data()[2];
   std::array<double, 2> target_vels;
   target_vels = dataPtr->calculate_model_control_signals({v_robot, w_robot},
       velocities, dt);
-  ecm.Component<components::LinearVelocityCmd>(_entity)->Data() = {
-    target_vels[0], old_lin_vel_cmd[1], old_lin_vel_cmd[2]};
-  ecm.Component<components::AngularVelocityCmd>(_entity)->Data() = {
-    old_ang_vel_cmd[0], old_ang_vel_cmd[1], target_vels[1]};
+
+  lin_vel_cmd->Data()[0] = target_vels[0];
+  ang_vel_cmd->Data()[2] = target_vels[1];
 
   if (phys_plugin == TPE) // Need to manually move any payloads
   {
@@ -176,10 +175,10 @@ void SlotcarPlugin::send_control_signals(EntityComponentManager& ecm,
         ecm.CreateComponent(payload,
           components::AngularVelocityCmd({0, 0, 0}));
       }
-      ecm.Component<components::LinearVelocityCmd>(payload)->Data() = {
-        target_vels[0], old_lin_vel_cmd[1], old_lin_vel_cmd[2]};
-      ecm.Component<components::AngularVelocityCmd>(payload)->Data() = {
-        old_ang_vel_cmd[0], old_ang_vel_cmd[1], target_vels[1]};
+      ecm.Component<components::LinearVelocityCmd>(payload)->Data() =
+        lin_vel_cmd->Data();
+      ecm.Component<components::AngularVelocityCmd>(payload)->Data() =
+        ang_vel_cmd->Data();
     }
   }
 }
