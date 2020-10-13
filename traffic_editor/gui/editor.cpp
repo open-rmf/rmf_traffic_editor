@@ -370,6 +370,7 @@ Editor::Editor()
 
   toolbar->addSeparator();
 
+#ifdef HAS_IGNITION_PLUGIN
   sim_reset_action = toolbar->addAction(
     "Reset",
     this,
@@ -388,7 +389,9 @@ Editor::Editor()
     this,
     &Editor::record_start_stop);
   record_start_stop_action->setVisible(false);
-#endif
+#endif  // HAS_OPENCV
+
+#endif  // HAS_IGNITION_PLUGIN
 
   toolbar->setStyleSheet(
     "QToolBar {background-color: #404040; border: none; spacing: 5px} QToolButton {background-color: #c0c0c0; color: blue; border: 1px solid black;} QToolButton:checked {background-color: #808080; color: red; border: 1px solid black;}");
@@ -426,6 +429,7 @@ Editor::Editor()
   load_model_names();
   level_table->setCurrentCell(level_idx, 0);
 
+#ifdef HAS_IGNITION_PLUGIN
   scene_update_timer = new QTimer;
   connect(
     scene_update_timer,
@@ -433,11 +437,12 @@ Editor::Editor()
     this,
     &Editor::scene_update_timer_timeout);
   scene_update_timer->start(1000 / 30);
+#endif
 }
 
 Editor::~Editor()
 {
-#ifdef HAS_OPENCV
+#if defined(HAS_OPENCV) && defined(HAS_IGNITION_PLUGIN)
   if (video_writer)
   {
     delete video_writer;
@@ -446,6 +451,7 @@ Editor::~Editor()
 #endif
 }
 
+#ifdef HAS_IGNITION_PLUGIN
 void Editor::scene_update_timer_timeout()
 {
   if (project.building.levels.empty())
@@ -484,8 +490,9 @@ void Editor::scene_update_timer_timeout()
 
 #ifdef HAS_OPENCV
   record_frame_to_video();
-#endif
+#endif  // HAS_OPENCV
 }
+#endif  // HAS_IGNITION_PLUGIN
 
 void Editor::load_model_names()
 {
@@ -599,6 +606,7 @@ bool Editor::load_project(const QString& filename)
 
   update_tables();
 
+#ifdef HAS_IGNITION_PLUGIN
   if (project.has_sim_plugin())
   {
     printf("project has a sim plugin\n");
@@ -610,6 +618,7 @@ bool Editor::load_project(const QString& filename)
   }
   else
     printf("project does not have a sim plugin\n");
+#endif
 
   QSettings settings;
   settings.setValue(preferences_keys::previous_project_path, filename);
@@ -1515,7 +1524,9 @@ void Editor::property_editor_cell_changed(int row, int column)
 bool Editor::create_scene()
 {
   scene->clear();  // destroys the mouse_motion_* items if they are there
+#ifdef HAS_IGNITION_PLUGIN
   project.clear_scene();  // forget all pointers to the graphics items
+#endif
   mouse_motion_line = nullptr;
   mouse_motion_model = nullptr;
   mouse_motion_ellipse = nullptr;
@@ -2257,15 +2268,19 @@ bool Editor::maybe_save()
 void Editor::showEvent(QShowEvent* event)
 {
   QMainWindow::showEvent(event);
+#ifdef HAS_IGNITION_PLUGIN
   sim_thread.start();
+#endif
 }
 
 void Editor::closeEvent(QCloseEvent* event)
 {
+#ifdef HAS_IGNITION_PLUGIN
   printf("waiting on sim_thread...\n");
   sim_thread.requestInterruption();
   sim_thread.quit();
   sim_thread.wait();
+#endif
 
   // save window geometry
   QSettings settings;
@@ -2350,6 +2365,7 @@ void Editor::update_tables()
   traffic_table->update(project);
 }
 
+#ifdef HAS_IGNITION_PLUGIN
 void Editor::sim_reset()
 {
   printf("TODO: sim_reset()\n");
@@ -2360,6 +2376,14 @@ void Editor::sim_play_pause()
 {
   printf("sim_play_pause()\n");
   project.sim_is_paused = !project.sim_is_paused;
+}
+
+void Editor::sim_tick()
+{
+  // called from sim thread
+
+  if (!project.sim_is_paused)
+    project.sim_tick();
 }
 
 #ifdef HAS_OPENCV
@@ -2400,12 +2424,6 @@ void Editor::record_frame_to_video()
 
   video_writer->write(mat_rgb_swap);
 }
-#endif
+#endif  // HAS_OPENCV
 
-void Editor::sim_tick()
-{
-  // called from sim thread
-
-  if (!project.sim_is_paused)
-    project.sim_tick();
-}
+#endif  // HAS_IGNITION_PLUGIN

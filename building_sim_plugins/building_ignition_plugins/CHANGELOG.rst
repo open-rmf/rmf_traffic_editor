@@ -2,6 +2,10 @@
 Changelog for package building_ignition_plugins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming (2020-09-28)
+------------------
+* Add animation switch to crowd simulation plugin (`#238 <https://github.com/osrf/traffic_editor/pull/238>`_)
+
 1.0.0 (2020-09-24)
 ------------------
 * Focal / Ignition dome dependencies update (`#230 <https://github.com/osrf/traffic_editor/issues/230>`_)

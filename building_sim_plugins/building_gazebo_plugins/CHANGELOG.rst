@@ -2,6 +2,10 @@
 Changelog for package building_gazebo_plugins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming (2020-09-28)
+------------------
+* Add animation switch to crowd simulation plugin (`#238 <https://github.com/osrf/traffic_editor/pull/238>`_)
+
 1.1.0 (2020-09-24)
 ------------------
 * Implement model visibility toggling (`#226 <https://github.com/osrf/traffic_editor/issues/226>`_)

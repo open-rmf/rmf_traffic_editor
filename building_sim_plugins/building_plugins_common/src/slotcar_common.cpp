@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2020 Open Source Robotics Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+*/
+
 #include <memory>
 
 #include <geometry_msgs/msg/transform_stamped.hpp>
@@ -19,18 +36,55 @@ static double compute_yaw(const Eigen::Isometry3d& pose)
   return yaw;
 }
 
+// Computes change in yaw angle from old_pose to pose
+static double compute_yaw(const Eigen::Isometry3d& pose,
+  const Eigen::Isometry3d& old_pose, int rot_dir)
+{
+  const double yaw = compute_yaw(pose);
+  const double old_yaw = compute_yaw(old_pose);
+
+  double disp = yaw - old_yaw;
+  double eps = 0.01;
+  // Account for edge cases where the robot rotates past -PI rad to PI rad, or vice versa
+  if (rot_dir > 0 && yaw < (old_yaw - eps))
+  {
+    disp = (M_PI - old_yaw) + (yaw + M_PI);
+  }
+  else if (rot_dir < 0 && yaw > (old_yaw + eps))
+  {
+    disp = (M_PI - yaw) + (old_yaw + M_PI);
+  }
+  return disp;
+}
+
 static Eigen::Vector3d compute_heading(const Eigen::Isometry3d& pose)
 {
   double yaw = compute_yaw(pose);
   return Eigen::Vector3d(std::cos(yaw), std::sin(yaw), 0.0);
 }
 
-static auto compute_dpos(const Eigen::Isometry3d& target,
+inline static Eigen::Vector3d compute_dist(const Eigen::Isometry3d& old_pos,
+  const Eigen::Isometry3d& new_pos)
+{
+  return new_pos.translation() - old_pos.translation();
+}
+
+inline static auto compute_dpos(const Eigen::Isometry3d& target,
   const Eigen::Isometry3d& actual)
 {
-  Eigen::Vector3d dpos(target.translation() - actual.translation());
+  Eigen::Vector3d dpos(compute_dist(actual, target));
   dpos(2) = 0.0;
   return dpos;
+}
+
+double compute_friction_energy(
+  const double f,
+  const double m,
+  const double v,
+  const double dt)
+{
+  const double g = 9.81; // ms-1
+  return f * m * g * v * dt;
 }
 
 rclcpp::Logger SlotcarCommon::logger() const
@@ -76,7 +130,6 @@ void SlotcarCommon::init_ros_node(const rclcpp::Node::SharedPtr node)
     "/robot_mode_requests",
     10,
     std::bind(&SlotcarCommon::mode_request_cb, this, std::placeholders::_1));
-
 }
 
 bool SlotcarCommon::path_request_valid(
@@ -191,10 +244,59 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
   const uint32_t t_nsec =
     static_cast<uint32_t>((time-static_cast<double>(t_sec)) *1e9);
   const rclcpp::Time now{t_sec, t_nsec, RCL_ROS_TIME};
+  double dt = time - _last_update_time;
   _last_update_time = time;
 
   _pose = pose;
   publish_robot_state(time);
+
+  // Update battery state of charge
+  if (_initialized_pose)
+  {
+    const Eigen::Vector3d dist = compute_dpos(_old_pose, _pose); // Ignore movement along z-axis
+    const Eigen::Vector3d lin_vel = dist / dt;
+    double ang_disp = compute_yaw(_pose, _old_pose, _rot_dir);
+    const double ang_vel = ang_disp / dt;
+
+    // Try charging battery
+    double eps = 0.01;
+    bool stationary = lin_vel.norm() < eps && std::abs(ang_vel) < eps;
+    bool in_charger_vicinity = near_charger(_pose);
+    if (stationary && in_charger_vicinity)
+    {
+      if (_enable_instant_charge)
+      {
+        _soc = _soc_max;
+      }
+      else if (_enable_charge)
+      {
+        _soc += compute_charge(dt);
+        _soc = std::min(_soc_max, _soc);
+      }
+    }
+    // Discharge battery
+    if (_enable_drain)
+    {
+      const Eigen::Vector3d lin_acc = (lin_vel - _old_lin_vel) / dt;
+      const double ang_acc = (ang_vel - _old_ang_vel) / dt;
+      _soc -= compute_discharge(lin_vel, ang_vel, lin_acc, ang_acc, dt);
+      _soc = std::max(0.0, _soc);
+    }
+    // Update mode
+    if (stationary && in_charger_vicinity &&
+      (_enable_instant_charge || _enable_charge))
+    {
+      _current_mode.mode = rmf_fleet_msgs::msg::RobotMode::MODE_CHARGING;
+    }
+    else
+    {
+      _current_mode.mode = rmf_fleet_msgs::msg::RobotMode::MODE_MOVING;
+    }
+    _old_lin_vel = lin_vel;
+    _old_ang_vel = ang_vel;
+  }
+  _old_pose = _pose;
+  _initialized_pose = true;
 
   if (trajectory.empty())
     return velocities;
@@ -283,6 +385,7 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
     velocities.first = 0.0;
   }
 
+  _rot_dir = velocities.second >= 0 ? 1 : -1;
   return velocities;
 }
 
@@ -319,7 +422,7 @@ bool SlotcarCommon::emergency_stop(
   return _emergency_stop;
 }
 
-std::string SlotcarCommon::get_level_name(const double z)
+std::string SlotcarCommon::get_level_name(const double z) const
 {
   std::string level_name = "";
   if (!_initialized_levels)
@@ -412,6 +515,7 @@ void SlotcarCommon::publish_state_topic(const rclcpp::Time& t)
 {
   rmf_fleet_msgs::msg::RobotState robot_state_msg;
   robot_state_msg.name = _model_name;
+  robot_state_msg.battery_percent = 100 * _soc;
 
   robot_state_msg.location.x = _pose.translation()[0];
   robot_state_msg.location.y = _pose.translation()[1];
@@ -453,4 +557,86 @@ void SlotcarCommon::map_cb(
   }
   _initialized_levels = true;
 
+}
+
+// Enables/disables charge when called from Ignition/Gazebo plugin
+void SlotcarCommon::charge_state_cb(
+  const std::string& name, bool selected)
+{
+  if (name == _enable_charge_str)
+  {
+    _enable_charge = selected;
+  }
+  else if (name == _enable_instant_charge_str)
+  {
+    _enable_instant_charge = selected;
+  }
+  else if (name == _enable_drain_str)
+  {
+    _enable_drain = selected;
+  }
+  else
+  {
+    std::cerr << "Invalid button selected. " << std::endl;
+  }
+}
+
+bool SlotcarCommon::near_charger(const Eigen::Isometry3d& pose) const
+{
+  std::string lvl_name = get_level_name(pose.translation()[2]);
+  auto waypoints_it = _charger_waypoints.find(lvl_name);
+  if (waypoints_it != _charger_waypoints.end())
+  {
+    const std::vector<ChargerWaypoint>& waypoints = waypoints_it->second;
+    for (const ChargerWaypoint& waypoint : waypoints)
+    {
+      // Assumes it is on the same Z-plane
+      double dist =
+        sqrt(pow(waypoint.x - pose.translation()[0], 2)
+          + pow(waypoint.y - pose.translation()[1], 2));
+      if (dist < _charger_dist_thres)
+      {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+double SlotcarCommon::compute_charge(const double run_time) const
+{
+  const double dQ = _params.charging_current * run_time; // Coulombs
+  const double dSOC = dQ / (_params.nominal_capacity * 3600.0);
+  return dSOC;
+}
+
+double SlotcarCommon::compute_discharge(
+  const Eigen::Vector3d lin_vel, const double ang_vel,
+  const Eigen::Vector3d lin_acc, const double ang_acc,
+  const double run_time) const
+{
+  const double v = lin_vel.norm();
+  const double w = std::abs(ang_vel);
+  const double a = lin_acc.norm();
+  const double alpha = std::abs(ang_acc);
+
+  // Loss through acceleration
+  const double EA = ((_params.mass * a * v) +
+    (_params.inertia * alpha * w)) * run_time;
+
+  // Loss through friction. Ignores friction due to rotation in place
+  const double EF = compute_friction_energy(_params.friction_coefficient,
+      _params.mass, v, run_time);
+
+  // Change in energy as a result of motion
+  const double dEM = EA + EF;
+  // Change in energy due to any onboard device over the time period `run_time`
+  const double dED = _params.nominal_power * run_time;
+
+  // The charge consumed
+  const double dQ = (dEM + dED) / _params.nominal_voltage;
+  // The depleted state of charge as a fraction in range [0,1]
+  double dSOC = dQ / (_params.nominal_capacity * 3600.0);
+
+  return dSOC;
 }

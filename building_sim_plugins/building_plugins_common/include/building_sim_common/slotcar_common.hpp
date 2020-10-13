@@ -1,4 +1,24 @@
-// TODO header guards
+/*
+ * Copyright (C) 2020 Open Source Robotics Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+*/
+
+#ifndef BUILDING_SIM_COMMON__SLOTCAR_COMMON_HPP
+#define BUILDING_SIM_COMMON__SLOTCAR_COMMON_HPP
+
+#include <sstream>
 
 #include <rclcpp/rclcpp.hpp>
 #include <Eigen/Geometry>
@@ -105,9 +125,34 @@ public:
     const std::pair<double, double>& velocities,
     const double dt) const;
 
+  void charge_state_cb(const std::string& name, bool selected);
+
   void publish_robot_state(const double time);
 
 private:
+  // Paramters needed for power dissipation and charging calculations
+  // Default values may be overriden using values from sdf file
+  struct PowerParams
+  {
+    double nominal_voltage = 12; // V
+    double nominal_capacity = 24; // Ah
+    double charging_current = 2; // A
+    double mass = 20;
+    double inertia = 10;
+    double friction_coefficient = 0.3;
+    double nominal_power = 10;
+  };
+
+  struct ChargerWaypoint
+  {
+    double x;
+    double y;
+    ChargerWaypoint(double x, double y)
+    : x(x), y(y)
+    {
+    }
+  };
+
   // Constants for update rate of tf2 and robot_state topic
   static constexpr float TF2_RATE = 100.0;
   static constexpr float STATE_TOPIC_RATE = 2.0;
@@ -127,9 +172,15 @@ private:
   std::vector<rclcpp::Time> _hold_times;
 
   std::string _model_name;
-  Eigen::Isometry3d _pose;
   bool _emergency_stop = false;
   bool _adapter_error = false;
+
+  bool _initialized_pose = false; // True if at least 1 call to update() has been made
+  Eigen::Isometry3d _old_pose; // Pose at previous time step
+  Eigen::Vector3d _old_lin_vel; // Linear velocity at previous time step
+  double _old_ang_vel; // Angular velocity at previous time step
+  Eigen::Isometry3d _pose; // Pose at current time step
+  int _rot_dir = 1; // Current direction of rotation
 
   std::unordered_map<std::string, double> _level_to_elevation;
   bool _initialized_levels = false;
@@ -166,7 +217,22 @@ private:
   double _stop_distance = 1.0;
   double _stop_radius = 1.0;
 
-  std::string get_level_name(const double z);
+  PowerParams _params;
+  bool _enable_charge = true;
+  bool _enable_instant_charge = false;
+  bool _enable_drain = true;
+  // Used for comparing with name argument of charge_state_cb to identify button selected
+  const std::string _enable_charge_str = "_enable_charge";
+  const std::string _enable_instant_charge_str = "_enable_instant_charge";
+  const std::string _enable_drain_str = "_enable_drain";
+  const double _soc_max = 1.0;
+  double _soc = _soc_max;
+  std::unordered_map<std::string, std::vector<ChargerWaypoint>>
+  _charger_waypoints;
+  // Straight line distance to charging waypoint within which charging can occur
+  static constexpr double _charger_dist_thres = 0.2;
+
+  std::string get_level_name(const double z) const;
 
   double compute_change_in_rotation(Eigen::Vector3d heading_vec,
     const Eigen::Vector3d& dpos,
@@ -184,69 +250,158 @@ private:
   void mode_request_cb(const rmf_fleet_msgs::msg::ModeRequest::SharedPtr msg);
 
   void map_cb(const building_map_msgs::msg::BuildingMap::SharedPtr msg);
+
+  bool near_charger(const Eigen::Isometry3d& pose) const;
+
+  double compute_charge(const double run_time) const;
+
+  double compute_discharge(
+    const Eigen::Vector3d lin_vel, const double ang_vel,
+    const Eigen::Vector3d lin_acc, const double ang_acc,
+    const double run_time) const;
 };
+
+template<typename SdfPtrT, typename valueT>
+bool get_element_val_if_present(
+  SdfPtrT& _sdf,
+  const std::string& _element_name,
+  valueT& _val)
+{
+  if (!_sdf->HasElement(_element_name))
+  {
+    return false;
+  }
+  _val = _sdf->template Get<valueT>(_element_name);
+  return true;
+}
 
 template<typename SdfPtrT>
 void SlotcarCommon::read_sdf(SdfPtrT& sdf)
 {
-  if (sdf->HasElement("nominal_drive_speed"))
-    _nominal_drive_speed = sdf->template Get<double>("nominal_drive_speed");
+  get_element_val_if_present<SdfPtrT, double>(sdf, "nominal_drive_speed",
+    this->_nominal_drive_speed);
   RCLCPP_INFO(logger(),
     "Setting nominal drive speed to: " +
     std::to_string(_nominal_drive_speed));
 
-  if (sdf->HasElement("nominal_drive_acceleration"))
-    _nominal_drive_acceleration = sdf->template Get<double>(
-      "nominal_drive_acceleration");
-  RCLCPP_INFO(
-    logger(),
+  get_element_val_if_present<SdfPtrT, double>(sdf,
+    "nominal_drive_acceleration", this->_nominal_drive_acceleration);
+  RCLCPP_INFO(logger(),
     "Setting nominal drive acceleration to: " + std::to_string(
       _nominal_drive_acceleration));
 
-  if (sdf->HasElement("max_drive_acceleration"))
-    _max_drive_acceleration =
-      sdf->template Get<double>("max_drive_acceleration");
+  get_element_val_if_present<SdfPtrT, double>(sdf,
+    "max_drive_acceleration", this->_max_drive_acceleration);
   RCLCPP_INFO(logger(),
     "Setting max drive acceleration to: "
     + std::to_string(_max_drive_acceleration));
 
-  if (sdf->HasElement("nominal_turn_speed"))
-    _nominal_turn_speed = sdf->template Get<double>("nominal_turn_speed");
+  get_element_val_if_present<SdfPtrT, double>(sdf,
+    "nominal_turn_speed", this->_nominal_turn_speed);
   RCLCPP_INFO(logger(),
     "Setting nominal turn speed to:"
     + std::to_string(_nominal_turn_speed));
 
-  if (sdf->HasElement("nominal_turn_acceleration"))
-    _nominal_turn_acceleration = sdf->template Get<double>(
-      "nominal_turn_acceleration");
+  get_element_val_if_present<SdfPtrT, double>(sdf,
+    "nominal_turn_acceleration", this->_nominal_turn_acceleration);
   RCLCPP_INFO(logger(), "Setting nominal turn acceleration to:" + std::to_string(
       _nominal_turn_acceleration));
 
-  if (sdf->HasElement("max_turn_acceleration"))
-    _max_turn_acceleration = sdf->template Get<double>("max_turn_acceleration");
+  get_element_val_if_present<SdfPtrT, double>(sdf,
+    "max_turn_acceleration", this->_max_turn_acceleration);
   RCLCPP_INFO(logger(),
     "Setting max turn acceleration to:"
     + std::to_string(_max_turn_acceleration));
 
-  if (sdf->HasElement("stop_distance"))
-    _stop_distance = sdf->template Get<double>("stop_distance");
+  get_element_val_if_present<SdfPtrT, double>(sdf,
+    "stop_distance", this->_stop_distance);
   RCLCPP_INFO(logger(),
     "Setting stop distance to:" + std::to_string(_stop_distance));
 
-  if (sdf->HasElement("stop_radius"))
-    _stop_radius = sdf->template Get<double>("stop_radius");
+  get_element_val_if_present<SdfPtrT, double>(sdf,
+    "stop_radius", this->_stop_radius);
   RCLCPP_INFO(logger(),
     "Setting stop radius to:" + std::to_string(_stop_radius));
 
-  if (sdf->HasElement("tire_radius"))
-    _tire_radius = sdf->template Get<double>("tire_radius");
+  get_element_val_if_present<SdfPtrT, double>(sdf,
+    "tire_radius", this->_tire_radius);
   RCLCPP_INFO(logger(),
     "Setting tire radius to:" + std::to_string(_tire_radius));
 
-  if (sdf->HasElement("base_width"))
-    _base_width = sdf->template Get<double>("base_width");
-  RCLCPP_INFO(logger(), "Setting base width to:" + std::to_string(_base_width));
+  get_element_val_if_present<SdfPtrT, double>(sdf,
+    "base_width", this->_base_width);
+  RCLCPP_INFO(logger(),
+    "Setting base width to: " + std::to_string(_base_width));
+
+  get_element_val_if_present<SdfPtrT, double>(sdf,
+    "nominal_voltage", this->_params.nominal_voltage);
+  RCLCPP_INFO(logger(),
+    "Setting nominal voltage to: " + std::to_string(_params.nominal_voltage));
+
+  get_element_val_if_present<SdfPtrT, double>(sdf,
+    "nominal_capacity", this->_params.nominal_capacity);
+  RCLCPP_INFO(logger(),
+    "Setting nominal capacity to: " + std::to_string(_params.nominal_capacity));
+
+  get_element_val_if_present<SdfPtrT, double>(sdf,
+    "charging_current", this->_params.charging_current);
+  RCLCPP_INFO(logger(),
+    "Setting charging current to: " + std::to_string(_params.charging_current));
+
+  get_element_val_if_present<SdfPtrT, double>(sdf,
+    "mass", this->_params.mass);
+  RCLCPP_INFO(logger(), "Setting mass to: " + std::to_string(_params.mass));
+
+  get_element_val_if_present<SdfPtrT, double>(sdf,
+    "inertia", this->_params.inertia);
+  RCLCPP_INFO(logger(),
+    "Setting inertia to: " + std::to_string(_params.inertia));
+
+  get_element_val_if_present<SdfPtrT, double>(sdf,
+    "friction_coefficient", this->_params.friction_coefficient);
+  RCLCPP_INFO(logger(),
+    "Setting friction coefficient to: "
+    + std::to_string(_params.friction_coefficient));
+
+  get_element_val_if_present<SdfPtrT, double>(sdf,
+    "nominal_power", this->_params.nominal_power);
+  RCLCPP_INFO(logger(),
+    "Setting nominal power to: " + std::to_string(_params.nominal_power));
+
+  // Charger Waypoint coordinates are in child element of top level world element
+  if (sdf->GetParent() && sdf->GetParent()->GetParent())
+  {
+    auto parent = sdf->GetParent()->GetParent();
+    if (parent->HasElement("rmf:charger_waypoints"))
+    {
+      auto waypoints = parent->GetElement("rmf:charger_waypoints");
+      if (waypoints->HasElement("rmf:vertex"))
+      {
+        auto waypoint = waypoints->GetElement("rmf:vertex");
+        while (waypoint)
+        {
+          if (waypoint->HasAttribute("x") && waypoint->HasAttribute("y") &&
+            waypoint->HasAttribute("level"))
+          {
+            std::string lvl_name;
+            double x, y;
+            waypoint->GetAttribute("x")->Get(x);
+            waypoint->GetAttribute("y")->Get(y);
+            waypoint->GetAttribute("level")->Get(lvl_name);
+            _charger_waypoints[lvl_name].push_back(ChargerWaypoint(x, y));
+          }
+          waypoint = waypoint->GetNextElement("rmf:vertex");
+        }
+      }
+    }
+    else
+    {
+      RCLCPP_INFO(logger(), "No charger waypoints found.");
+    }
+  }
 
   RCLCPP_INFO(logger(), "Setting name to: " + _model_name);
 }
 } // namespace building_sim_common
+
+#endif // BUILDING_SIM_COMMON__SLOTCAR_COMMON_HPP
