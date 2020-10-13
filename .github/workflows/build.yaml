@@ -84,5 +84,5 @@ jobs:
       shell: bash
       run: |
         cd ws
-        source /opt/ros/eloquent/setup.bash
+        source /opt/ros/foxy/setup.bash
         colcon build --packages-select traffic_editor --cmake-args -DNO_DOWNLOAD_MODELS=True
