@@ -612,6 +612,7 @@ void Project::clear()
   scenario_idx = -1;
 }
 
+#ifdef HAS_IGNITION_PLUGIN
 void Project::sim_tick()
 {
   if (scenario_idx < 0 || scenario_idx >= static_cast<int>(scenarios.size()))
@@ -625,13 +626,16 @@ void Project::sim_reset()
     return;
   scenarios[scenario_idx]->sim_reset(building);
 }
+#endif
 
 void Project::clear_scene()
 {
   building.clear_scene();
 
+#ifdef HAS_IGNITION_PLUGIN
   for (auto& scenario : scenarios)
     scenario->clear_scene();
+#endif
 }
 
 void Project::add_lane(
@@ -642,6 +646,7 @@ void Project::add_lane(
   building.add_lane(level_idx, start_idx, end_idx, traffic_map_idx);
 }
 
+#ifdef HAS_IGNITION_PLUGIN
 void Project::scenario_scene_update(
   QGraphicsScene* scene,
   const int level_idx)
@@ -660,6 +665,7 @@ bool Project::has_sim_plugin()
   }
   return false;
 }
+#endif
 
 bool Project::set_filename(const std::string& _fn)
 {

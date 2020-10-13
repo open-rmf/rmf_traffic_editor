@@ -25,8 +25,10 @@
 #include "traffic_editor/vertex.h"
 #include "plugins/simulation.h"
 
+#ifdef HAS_IGNITION_PLUGIN
 #include <ignition/plugin/SpecializedPluginPtr.hh>
 #include <ignition/plugin/Loader.hh>
+#endif
 
 #include <map>
 #include <memory>
@@ -80,7 +82,9 @@ public:
 
   std::vector<std::string> behavior_signals;
 
+#ifdef HAS_IGNITION_PLUGIN
   ignition::plugin::SpecializedPluginPtr<Simulation> sim_plugin;
+#endif
 };
 
 #endif
