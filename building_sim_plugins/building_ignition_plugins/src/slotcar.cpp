@@ -29,9 +29,9 @@ using namespace ignition::gazebo;
 
 using namespace building_sim_common;
 
-enum PhysicsEnginePlugin {DEFAULT, TPE};
-std::unordered_map<std::string, PhysicsEnginePlugin> plugin_names {
-  {"ignition-physics-tpe-plugin", TPE}};
+enum class PhysEnginePlugin {DEFAULT, TPE};
+std::unordered_map<std::string, PhysEnginePlugin> plugin_names {
+  {"ignition-physics-tpe-plugin", PhysEnginePlugin::TPE}};
 
 class IGNITION_GAZEBO_VISIBLE SlotcarPlugin
   : public System,
@@ -56,7 +56,7 @@ private:
   std::unordered_set<Entity> _payloads;
   std::unordered_set<Entity> _infrastructure;
 
-  PhysicsEnginePlugin phys_plugin = DEFAULT;
+  PhysEnginePlugin phys_plugin = PhysEnginePlugin::DEFAULT;
 
   bool first_iteration = true; // Flag for checking if it is first PreUpdate() call
 
@@ -159,7 +159,7 @@ void SlotcarPlugin::send_control_signals(EntityComponentManager& ecm,
   lin_vel_cmd->Data()[0] = target_vels[0];
   ang_vel_cmd->Data()[2] = target_vels[1];
 
-  if (phys_plugin == TPE) // Need to manually move any payloads
+  if (phys_plugin == PhysEnginePlugin::TPE) // Need to manually move any payloads
   {
     for (const Entity& payload : payloads)
     {
@@ -256,9 +256,13 @@ void SlotcarPlugin::item_dispensed_cb(const ignition::msgs::UInt64_V& msg)
 
 void SlotcarPlugin::item_ingested_cb(const ignition::msgs::Entity& msg)
 {
-  if (msg.IsInitialized() && _payloads.find(msg.id()) != _payloads.end())
+  if (msg.IsInitialized())
   {
-    _payloads.erase(msg.id());
+    const std::unordered_set<Entity>::iterator it = _payloads.find(msg.id());
+    if (it != _payloads.end())
+    {
+      _payloads.erase(it);
+    }
   }
 }
 
@@ -276,11 +280,12 @@ void SlotcarPlugin::PreUpdate(const UpdateInfo& info,
     if (ecm.EntityHasComponentType(parent,
       components::PhysicsEnginePlugin().TypeId()))
     {
-      std::string physics_plugin_name =
+      const std::string physics_plugin_name =
         ecm.Component<components::PhysicsEnginePlugin>(parent)->Data();
-      if (plugin_names.count(physics_plugin_name))
+      const auto it = plugin_names.find(physics_plugin_name);
+      if (it != plugin_names.end())
       {
-        phys_plugin = plugin_names[physics_plugin_name];
+        phys_plugin = it->second;
       }
     }
     first_iteration = false;
