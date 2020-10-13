@@ -348,7 +348,7 @@ void LiftDialog::ok_button_clicked()
     QMessageBox::critical(this, "Error", "Lowest floor above highest floor");
     return;
   }
-  
+
   _lift.name = _name_line_edit->text().toStdString();
   _lift.reference_floor_name =
     _reference_floor_combo_box->currentText().toStdString();
@@ -363,7 +363,7 @@ void LiftDialog::ok_button_clicked()
 
   _lift.width = _width_line_edit->text().toDouble();
   _lift.depth = _depth_line_edit->text().toDouble();
-  
+
   // grab all the level-door checkbox matrix states and save them
   for (int level_row = 0; level_row < _level_table->rowCount(); level_row++)
   {
