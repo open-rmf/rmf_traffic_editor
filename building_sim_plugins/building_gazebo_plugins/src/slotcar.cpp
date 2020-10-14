@@ -50,7 +50,7 @@ private:
     std::array<double, 2> w_tire;
     for (std::size_t i = 0; i < 2; ++i)
       w_tire[i] = joints[i]->GetVelocity(0);
-    auto joint_signals = dataPtr->calculate_control_signals(w_tire,
+    auto joint_signals = dataPtr->calculate_joint_control_signals(w_tire,
         velocities, dt);
     for (std::size_t i = 0; i < 2; ++i)
     {

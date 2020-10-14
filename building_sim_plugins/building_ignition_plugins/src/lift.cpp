@@ -2,11 +2,18 @@
 
 #include <ignition/gazebo/System.hh>
 #include <ignition/gazebo/Model.hh>
+#include <ignition/gazebo/components/Model.hh>
+#include <ignition/gazebo/components/Name.hh>
+#include <ignition/gazebo/components/Pose.hh>
+#include <ignition/gazebo/components/Static.hh>
+#include <ignition/gazebo/components/AxisAlignedBox.hh>
 #include <ignition/gazebo/components/JointAxis.hh>
 #include <ignition/gazebo/components/JointPosition.hh>
 #include <ignition/gazebo/components/JointVelocity.hh>
 #include <ignition/gazebo/components/JointVelocityCmd.hh>
 #include <ignition/gazebo/components/JointPositionReset.hh>
+#include <ignition/gazebo/components/LinearVelocityCmd.hh>
+#include <ignition/gazebo/components/AngularVelocityCmd.hh>
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -32,6 +39,8 @@ class IGNITION_GAZEBO_VISIBLE LiftPlugin
 private:
   rclcpp::Node::SharedPtr _ros_node;
   Entity _cabin_joint;
+  Entity _lift_entity;
+  std::vector<Entity> _payloads;
 
   std::unique_ptr<LiftCommon> _lift_common = nullptr;
 
@@ -53,6 +62,33 @@ private:
       ecm.CreateComponent(entity, components::JointVelocityCmd({0}));
   }
 
+  std::vector<Entity> get_payloads(
+    Entity& lift,
+    EntityComponentManager& ecm)
+  {
+    const auto lift_aabb = ecm.Component<components::AxisAlignedBox>(
+      _lift_entity);
+    std::vector<Entity> payloads;
+    ecm.Each<components::Model, components::Pose>(
+      [&](const Entity& entity,
+      const components::Model*,
+      const components::Pose* pose
+      ) -> bool
+      {
+        // Object should not be static
+        const auto payload_position = pose->Data().Pos();
+        if (entity != lift)
+        { // Could possibly check bounding box intersection too, but this suffices
+          if (lift_aabb->Data().Contains(payload_position))
+          {
+            payloads.push_back(entity);
+          }
+        }
+        return true;
+      });
+    return payloads;
+  }
+
 public:
   LiftPlugin()
   {
@@ -64,6 +100,7 @@ public:
     const std::shared_ptr<const sdf::Element>& sdf,
     EntityComponentManager& ecm, EventManager& /*_eventMgr*/) override
   {
+    _lift_entity = entity;
     //_ros_node = gazebo_ros::Node::Get(sdf);
     // TODO get properties from sdf instead of hardcoded (will fail for multiple instantiations)
     // TODO proper rclcpp init (only once and pass args)
@@ -95,12 +132,19 @@ public:
         _lift_common->get_joint_name().c_str());
       return;
     }
+
     create_entity_components(joint, ecm);
     _cabin_joint = joint;
 
     auto position_cmd = ecm.Component<components::JointPositionReset>(
       _cabin_joint);
     position_cmd->Data()[0] = _lift_common->get_elevation();
+
+    if (!ecm.EntityHasComponentType(_lift_entity,
+      components::AxisAlignedBox().TypeId()))
+    {
+      ecm.CreateComponent(_lift_entity, components::AxisAlignedBox());
+    }
 
     _initialized = true;
 
@@ -131,8 +175,27 @@ public:
     auto vel_cmd = ecm.Component<components::JointVelocityCmd>(
       _cabin_joint);
     vel_cmd->Data()[0] = result.velocity;
+
+    // For TPE: Move any payloads that need to be manually moved
+    // (i.e. have a LinearVelocityCmd component that exists)
+    if (_lift_common->motion_state_changed())
+    {
+      _payloads = get_payloads(_lift_entity, ecm);
+    }
+
+    for (const Entity& payload : _payloads)
+    {
+      if (ecm.EntityHasComponentType(payload,
+        components::LinearVelocityCmd().TypeId()))
+      {
+        auto lin_vel_cmd =
+          ecm.Component<components::LinearVelocityCmd>(payload);
+        lin_vel_cmd->Data()[2] = result.velocity;
+      }
+    }
   }
 };
+
 
 IGNITION_ADD_PLUGIN(
   LiftPlugin,

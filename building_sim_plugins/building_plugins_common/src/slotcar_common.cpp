@@ -210,13 +210,12 @@ void SlotcarCommon::path_request_cb(
 }
 
 std::array<double, 2> SlotcarCommon::calculate_control_signals(
-  const std::array<double, 2>& w_tire,
+  const std::array<double, 2>& curr_velocities,
   const std::pair<double, double>& velocities,
   const double dt) const
 {
-  std::array<double, 2> joint_signals;
-  const double v_robot = (w_tire[0] + w_tire[1]) * _tire_radius / 2.0;
-  const double w_robot = (w_tire[1] - w_tire[0]) * _tire_radius / _base_width;
+  const double v_robot = curr_velocities[0];
+  const double w_robot = curr_velocities[1];
 
   const double v_target = compute_ds(velocities.first, v_robot,
       _nominal_drive_speed,
@@ -225,11 +224,36 @@ std::array<double, 2> SlotcarCommon::calculate_control_signals(
   const double w_target = compute_ds(velocities.second, w_robot,
       _nominal_turn_speed,
       _nominal_turn_acceleration, _max_turn_acceleration, dt);
+
+  return std::array<double, 2>{v_target, w_target};
+}
+
+std::array<double, 2> SlotcarCommon::calculate_model_control_signals(
+  const std::array<double, 2>& curr_velocities,
+  const std::pair<double, double>& velocities,
+  const double dt) const
+{
+  return calculate_control_signals(curr_velocities, velocities, dt);
+}
+
+std::array<double, 2> SlotcarCommon::calculate_joint_control_signals(
+  const std::array<double, 2>& w_tire,
+  const std::pair<double, double>& velocities,
+  const double dt) const
+{
+  std::array<double, 2> curr_velocities;
+  curr_velocities[0] = (w_tire[0] + w_tire[1]) * _tire_radius / 2.0;
+  curr_velocities[1] = (w_tire[1] - w_tire[0]) * _tire_radius / _base_width;
+
+  std::array<double, 2> new_velocities = calculate_control_signals(
+    curr_velocities, velocities, dt);
+
+  std::array<double, 2> joint_signals;
   for (std::size_t i = 0; i < 2; ++i)
   {
     const double yaw_sign = i == 0 ? -1.0 : 1.0;
-    joint_signals[i] = v_target / _tire_radius + yaw_sign * w_target *
-      _base_width / (2.0 * _tire_radius);
+    joint_signals[i] = (new_velocities[0] / _tire_radius) + (yaw_sign *
+      new_velocities[1] * _base_width / (2.0 * _tire_radius));
   }
   return joint_signals;
 }
@@ -351,7 +375,6 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
         compute_change_in_rotation(current_heading, dpos, &dir);
       if (dir < 0.0)
         current_heading *= -1.0;
-
       // If d_yaw is less than a certain tolerance (i.e. we don't need to spin
       // too much), then we'll include the forward velocity. Otherwise, we will
       // only spin in place until we are oriented in the desired direction.
