@@ -242,6 +242,8 @@ private:
   // Straight line distance to charging waypoint within which charging can occur
   static constexpr double _charger_dist_thres = 0.2;
 
+  bool _docking = false;
+
   std::string get_level_name(const double z) const;
 
   double compute_change_in_rotation(Eigen::Vector3d heading_vec,
