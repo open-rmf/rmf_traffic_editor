@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <sdf version="1.7">
-  <world name="world" xmlns:rmf="rmf">
+  <world name="world">
     <scene>
       <ambient>0.8 0.8 0.8 1.0</ambient>
       <background>0 0 0</background>

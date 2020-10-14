@@ -200,7 +200,10 @@ class Building:
         tree = parse(template_path)
         sdf = tree.getroot()
 
+        xmlns = {'name': 'rmf', 'value': 'rmf'}  # For any custom elements
+
         world = sdf.find('world')
+        world.attrib['xmlns:' + xmlns['name']] = xmlns['value']
 
         for level_name, level in self.levels.items():
             level.generate_sdf_models(world)  # todo: a better name
@@ -224,7 +227,7 @@ class Building:
 
         charger_waypoints_ele = SubElement(
           world,
-          'rmf:charger_waypoints',
+          xmlns['name'] + ':charger_waypoints',
           {'name': 'charger_waypoints'})
 
         for level_name, level in self.levels.items():
@@ -232,7 +235,7 @@ class Building:
                 if 'is_charger' in vertex.params:
                     SubElement(
                       charger_waypoints_ele,
-                      'rmf:vertex',
+                      xmlns['name'] + ':vertex',
                       {'name': vertex.name, 'x': str(vertex.x),
                        'y': str(vertex.y), 'level': level_name})
 
