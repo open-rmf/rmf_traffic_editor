@@ -75,6 +75,29 @@ set(traffic_editor_sources
   gui/vertex.cpp
   gui/yaml_utils.cpp
   resources/resource.qrc
+
+  #crowd_sim related
+  gui/multi_select_combo_box.cpp
+  gui/crowd_sim/agent_group.cpp
+  gui/crowd_sim/agent_group_table.cpp
+  gui/crowd_sim/agent_profile.cpp
+  gui/crowd_sim/agent_profile_table.cpp
+  gui/crowd_sim/condition.cpp
+  gui/crowd_sim/condition_dialog.cpp
+  gui/crowd_sim/crowd_sim_dialog.cpp
+  gui/crowd_sim/crowd_sim_editor_table.cpp
+  gui/crowd_sim/crowd_sim_impl.cpp
+  gui/crowd_sim/crowd_sim_table_base.cpp
+  gui/crowd_sim/goal_set.cpp
+  gui/crowd_sim/goal_set_table.cpp
+  gui/crowd_sim/model_type.cpp
+  gui/crowd_sim/model_type_table.cpp
+  gui/crowd_sim/state.cpp
+  gui/crowd_sim/state_table.cpp
+  gui/crowd_sim/to_state_dialog.cpp
+  gui/crowd_sim/to_state_table.cpp
+  gui/crowd_sim/transition.cpp
+  gui/crowd_sim/transition_table.cpp
 )
 
 set(traffic_editor_libs

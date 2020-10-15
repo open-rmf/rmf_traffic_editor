@@ -22,7 +22,7 @@ TableList::TableList(const int num_cols)
 {
   const char* style =
     "QTableWidget { background-color: #e0e0e0; color: black; } "
-    "QHeaderView::section { color: white; } "
+    "QHeaderView::section { color: black; } "
     "QLineEdit { background:white; } "
     "QCheckBox { padding-left: 5px; background-color: #e0e0e0; } "
     "QPushButton { margin: 5px; background-color: #c0c0c0; border: 1px solid black; } "
