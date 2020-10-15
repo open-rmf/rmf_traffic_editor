@@ -622,6 +622,7 @@ void Project::clear()
   scenario_idx = -1;
 }
 
+#ifdef HAS_IGNITION_PLUGIN
 void Project::sim_tick()
 {
   if (scenario_idx < 0 || scenario_idx >= static_cast<int>(scenarios.size()))
@@ -635,13 +636,16 @@ void Project::sim_reset()
     return;
   scenarios[scenario_idx]->sim_reset(building);
 }
+#endif
 
 void Project::clear_scene()
 {
   building.clear_scene();
 
+#ifdef HAS_IGNITION_PLUGIN
   for (auto& scenario : scenarios)
     scenario->clear_scene();
+#endif
 }
 
 void Project::add_lane(
@@ -652,6 +656,7 @@ void Project::add_lane(
   building.add_lane(level_idx, start_idx, end_idx, traffic_map_idx);
 }
 
+#ifdef HAS_IGNITION_PLUGIN
 void Project::scenario_scene_update(
   QGraphicsScene* scene,
   const int level_idx)
@@ -669,4 +674,59 @@ bool Project::has_sim_plugin()
       return true;
   }
   return false;
+}
+#endif
+
+bool Project::set_filename(const std::string& _fn)
+{
+  const string suffix(".project.yaml");
+
+  // ensure there is at least one character in addition to the suffix length
+  if (_fn.size() <= suffix.size())
+  {
+    printf("Project::set_filename() too short: [%s]\n", _fn.c_str());
+    return false;
+  }
+
+  // ensure the filename ends in .project.yaml
+  // it should, because the "save as" dialog appends it, but...
+  if (_fn.compare(_fn.size() - suffix.size(), suffix.size(), suffix))
+  {
+    printf(
+      "Project::set_filename() filename had unexpected suffix: [%s]\n",
+      _fn.c_str());
+    return false;
+  }
+
+  const string no_suffix(_fn.substr(0, _fn.size() - suffix.size()));
+
+  const size_t last_slash_pos = no_suffix.rfind('/', no_suffix.size());
+
+  const string stem(
+    (last_slash_pos == string::npos) ?
+    no_suffix :
+    string(no_suffix, last_slash_pos + 1));
+
+  filename = _fn;
+
+  if (name.empty())
+  {
+    name = stem;
+  }
+
+  if (building.name.empty())
+  {
+    building.name = stem;
+  }
+  if (building.filename.empty())
+  {
+    building.filename = stem + std::string(".building.yaml");
+  }
+
+  printf(
+    "set project filename to [%s] stem: [%s] building filename: [%s]\n",
+    filename.c_str(),
+    stem.c_str(),
+    building.filename.c_str());
+  return true;
 }

@@ -1,0 +1,5 @@
+<!DOCTYPE RCC><RCC version="1.0">
+  <qresource prefix="toggle_charging/">
+    <file>toggle_charging.qml</file>
+  </qresource>
+</RCC>

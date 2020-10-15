@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.5)
 project(building_ignition_plugins)
 
+set (CMAKE_AUTOMOC ON)
+
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
   set(CMAKE_C_STANDARD 99)
@@ -10,7 +12,6 @@ endif()
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 17)
 endif()
-
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -37,9 +38,15 @@ ign_find_package(ignition-plugin1 REQUIRED COMPONENTS register)
 set(IGN_PLUGIN_VER 1)
 ign_find_package(ignition-common3 REQUIRED)
 set(IGN_COMMON_VER 3)
-ign_find_package(ignition-math4 REQUIRED)
-ign_find_package(sdformat9 REQUIRED)
-set(IGN_MATH_VER 4)
+ign_find_package(ignition-math6 REQUIRED)
+set(IGN_MATH_VER 6)
+ign_find_package(ignition-gui4 REQUIRED)
+set(IGN_GUI_VER 4)
+ign_find_package(ignition-msgs6 REQUIRED)
+set(IGN_MSGS_VER 6)
+ign_find_package(ignition-transport9 REQUIRED)
+set(IGN_TRANSPORT_VER 9)
+ign_find_package(sdformat10 REQUIRED)
 
 find_package(tf2_ros REQUIRED)
 find_package(geometry_msgs REQUIRED)
@@ -50,6 +57,14 @@ find_package(rmf_door_msgs REQUIRED)
 find_package(rmf_lift_msgs REQUIRED)
 find_package(building_map_msgs REQUIRED)
 find_package(building_sim_common REQUIRED)
+find_package (Qt5
+  COMPONENTS
+    Core
+    Qml
+    Quick
+  REQUIRED
+)
+find_package(menge QUIET)
 
 include(GNUInstallDirs)
 
@@ -131,11 +146,75 @@ target_link_libraries(lift
 )
 
 ###############################
+# crowd simulator stuff
+###############################
+if (menge_FOUND)
+  add_library(crowd_simulator
+    SHARED
+    src/crowd_simulator.cpp
+  )
+
+  target_include_directories(crowd_simulator
+    PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    ${building_sim_common_INCLUDE_DIRS}
+    ${rclcpp_INCLUDE_DIRS}
+    ${menge_INCLUDE_DIRS}
+    ${IGNITION-COMMON_INCLUDE_DIRS}
+  )
+
+  ament_target_dependencies(crowd_simulator
+    ignition-gazebo${IGN_GAZEBO_VER}
+    ignition-plugin${IGN_PLUGIN_VER}
+    rclcpp
+    building_sim_common
+    menge
+  )
+
+  #install
+  install(
+    TARGETS crowd_simulator
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  )
+else (NOT menge_FOUND)
+  message("menge-cmake not found, skipping crowd_simulation ignition plugins")
+endif()
+
+###############################
+# toggle charging
+###############################
+
+QT5_ADD_RESOURCES(resources_RCC src/toggle_charging/toggle_charging.qrc)
+
+add_library(toggle_charging SHARED ${headers_MOC}
+  src/toggle_charging/toggle_charging.cpp
+  ${resources_RCC}
+)
+
+target_link_libraries(toggle_charging
+  ignition-gui${IGN_GUI_VER}::ignition-gui${IGN_GUI_VER}
+  ignition-msgs${IGN_MSGS_VER}::ignition-msgs${IGN_MSGS_VER}
+  ignition-transport${IGN_TRANSPORT_VER}::ignition-transport${IGN_TRANSPORT_VER}
+  ${Qt5Core_LIBRARIES}
+  ${Qt5Qml_LIBRARIES}
+  ${Qt5Quick_LIBRARIES}
+  ${rclcpp_LIBRARIES}
+)
+
+target_include_directories(toggle_charging
+  PUBLIC
+  ${Qt5Core_INCLUDE_DIRS}
+  ${Qt5Qml_INCLUDE_DIRS}
+  ${Qt5Quick_INCLUDE_DIRS}
+)
+
+###############################
 # install stuff
 ###############################
 
 install(
-  TARGETS slotcar door lift
+  TARGETS slotcar door lift toggle_charging
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

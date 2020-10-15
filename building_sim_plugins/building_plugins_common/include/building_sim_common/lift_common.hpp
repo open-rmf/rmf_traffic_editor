@@ -68,6 +68,8 @@ public:
 
   double get_elevation() const;
 
+  bool motion_state_changed();
+
 private:
 
   rclcpp::Node::SharedPtr _ros_node;
@@ -80,6 +82,7 @@ private:
   std::string _cabin_joint_name;
 
   MotionParams _cabin_motion_params;
+  LiftState::_motion_state_type _old_motion_state;
 
   std::vector<std::string> _floor_names;
   std::unordered_map<std::string, double> _floor_name_to_elevation;
@@ -112,7 +115,7 @@ private:
       std::string, std::vector<std::string>> floor_name_to_cabin_door_name,
     std::unordered_map<std::string, DoorState::SharedPtr> shaft_door_states,
     std::unordered_map<std::string, DoorState::SharedPtr> cabin_door_states,
-    const std::string reference_floor_name);
+    std::string initial_floor_name);
 
   double get_step_velocity(const double dt, const double position,
     const double velocity);
@@ -228,9 +231,19 @@ std::unique_ptr<LiftCommon> LiftCommon::make(
   }
 
   assert(!floor_names.empty());
-  std::string& reference_floor_name = floor_names[0];
-  get_sdf_param_if_available<std::string>(sdf_clone, "reference_floor",
-    reference_floor_name);
+  std::string initial_floor_name = floor_names[0];
+  get_sdf_param_if_available<std::string>(sdf_clone, "initial_floor",
+    initial_floor_name);
+
+  if (std::find(floor_names.begin(), floor_names.end(), initial_floor_name) ==
+    floor_names.end())
+  {
+    RCLCPP_WARN(
+      node->get_logger(),
+      "Initial floor [%s] is not available, changing to deafult",
+      initial_floor_name.c_str());
+    initial_floor_name = floor_names[0];
+  }
 
   std::unique_ptr<LiftCommon> lift(new LiftCommon(
       node,
@@ -243,7 +256,7 @@ std::unique_ptr<LiftCommon> LiftCommon::make(
       floor_name_to_cabin_door_name,
       shaft_door_states,
       cabin_door_states,
-      reference_floor_name));
+      initial_floor_name));
 
   return lift;
 }

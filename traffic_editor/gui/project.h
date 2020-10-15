@@ -39,7 +39,6 @@ class Project
 {
 public:
   std::string name;
-  std::string filename;
 
   Building building;
   std::vector<std::unique_ptr<Scenario>> scenarios;
@@ -121,14 +120,18 @@ public:
     const int start_idx,
     const int end_idx);
 
+#ifdef HAS_IGNITION_PLUGIN
   // simulation stuff
   void sim_reset();
   void sim_tick();
   bool sim_is_paused = true;
+  bool has_sim_plugin();
+#endif
 
   RenderingOptions rendering_options;
 
-  bool has_sim_plugin();
+  bool set_filename(const std::string& _filename);
+  std::string get_filename() { return filename; }
 
 private:
   bool load_yaml_file(const std::string& _filename);
@@ -139,6 +142,7 @@ private:
     QGraphicsLineItem* line_item,
     const EditorModeId mode);
 
+  std::string filename;
 };
 
 #endif

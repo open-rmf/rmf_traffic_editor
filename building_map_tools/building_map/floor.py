@@ -161,7 +161,7 @@ class Floor:
             hole_polygon = shapely.geometry.Polygon(hole_vert_list)
             self.polygon = self.polygon.difference(hole_polygon)
 
-        for lift_vert_list in lift_vert_lists:
+        for lift_vert_list in lift_vert_lists.values():
             lift_polygon = shapely.geometry.Polygon(lift_vert_list)
             self.polygon = self.polygon.difference(lift_polygon)
 

@@ -33,7 +33,11 @@
 #include "project.h"
 #include "traffic_editor/editor_model.h"
 #include "editor_mode_id.h"
+
+#ifdef HAS_IGNITION_PLUGIN
 #include "sim_thread.h"
+#endif
+
 #include "crowd_sim/crowd_sim_editor_table.h"
 
 class BuildingLevelTable;
@@ -232,23 +236,27 @@ private:
   void add_param_button_clicked();
   void delete_param_button_clicked();
 
+#ifdef HAS_IGNITION_PLUGIN
   QAction* sim_reset_action;
   QAction* sim_play_pause_action;
   void sim_reset();
   void sim_play_pause();
   SimThread sim_thread;
+#endif
 
 public:
   void sim_tick();  // called by SimThread
 
 private:
 
-#ifdef HAS_OPENCV
+#if defined(HAS_IGNITION_PLUGIN) && defined(HAS_OPENCV)
   QAction* record_start_stop_action;
   bool is_recording = false;
   void record_start_stop();
   void record_frame_to_video();
   cv::VideoWriter* video_writer = nullptr;
+  QTimer* scene_update_timer;
+  void scene_update_timer_timeout();
 #endif
 
   std::vector<EditorModel> editor_models;
@@ -324,9 +332,6 @@ private:
     const QPointF& p);
 
   QPointF previous_mouse_point;
-
-  QTimer* scene_update_timer;
-  void scene_update_timer_timeout();
 };
 
 #endif

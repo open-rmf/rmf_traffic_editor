@@ -9,9 +9,9 @@ if(NOT CMAKE_C_STANDARD)
   set(CMAKE_C_STANDARD 99)
 endif()
 
-# Default to C++14
+# Default to C++17
 if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 14)
+  set(CMAKE_CXX_STANDARD 17)
 endif()
 
 
@@ -36,6 +36,7 @@ find_package(rmf_door_msgs REQUIRED)
 find_package(rmf_lift_msgs REQUIRED)
 find_package(building_map_msgs REQUIRED)
 find_package(building_sim_common REQUIRED)
+find_package(menge QUIET)
 
 # TODO this is a dependency of building_sim_common, it shouldn't be needed
 find_package(Eigen3 REQUIRED)
@@ -113,6 +114,13 @@ target_include_directories(lift
 
 add_library(toggle_floors SHARED src/toggle_floors.cpp)
 
+ament_target_dependencies(toggle_floors
+    Qt5
+    gazebo_ros
+    rmf_fleet_msgs
+    rclcpp
+)
+
 target_include_directories(toggle_floors
   PUBLIC
     ${GAZEBO_INCLUDE_DIRS}
@@ -120,10 +128,25 @@ target_include_directories(toggle_floors
     ${Qt5Core_INCLUDE_DIRS}
 )
 
-target_link_libraries(toggle_floors
-  PUBLIC
-    Qt5::Widgets
+###############################
+# toggle charging
+###############################
+
+add_library(toggle_charging SHARED src/toggle_charging.cpp)
+
+ament_target_dependencies(toggle_charging
+    Qt5
+    gazebo_ros
+    rmf_fleet_msgs
+    rclcpp
 )
+
+target_include_directories(toggle_charging
+  PUBLIC
+    ${GAZEBO_INCLUDE_DIRS}
+    ${Qt5Core_INCLUDE_DIRS}
+)
+
 
 ###############################
 # thumbnail generation stuff
@@ -143,11 +166,44 @@ target_link_libraries(thumbnail_generator
 )
 
 ###############################
+# crowd simulator stuff
+###############################
+if (menge_FOUND)
+  add_library(crowd_simulator
+    SHARED
+      src/crowd_simulator.cpp
+  )
+
+  ament_target_dependencies(crowd_simulator
+    building_sim_common
+    rclcpp
+    menge
+  )
+
+  target_include_directories(crowd_simulator
+    PUBLIC
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+      ${GAZEBO_INCLUDE_DIRS}
+      ${menge_INCLUDE_DIRS}
+      ${building_sim_common_INCLUDE_DIRS}   
+  )
+
+  #install
+  install(
+    TARGETS crowd_simulator
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  )
+else (NOT menge_FOUND)
+  message("menge-cmake not found, skipping crowd_simulation gazebo plugins")
+endif()
+
+###############################
 # install stuff
 ###############################
 
 install(
-  TARGETS slotcar door lift toggle_floors thumbnail_generator
+  TARGETS slotcar door lift toggle_floors toggle_charging thumbnail_generator
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
