@@ -6,6 +6,7 @@ class Door:
     def __init__(self, door_edge, level_elevation=0.0):
         self.name = door_edge.params['name'].value
         self.type = door_edge.params['type'].value
+        self.remove_plugin = door_edge.params['remove_plugin'].value
         self.length = door_edge.length
         self.cx = door_edge.x
         self.cy = door_edge.y

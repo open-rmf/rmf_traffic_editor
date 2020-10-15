@@ -31,24 +31,25 @@ class DoubleSwingDoor(Door):
             (x_flip_sign * self.length / 4, 0, 0),
             options)
 
-        plugin_ele = SubElement(self.model_ele, 'plugin')
-        plugin_ele.set('name', 'door')
-        plugin_ele.set('filename', 'libdoor.so')
-        plugin_params = {
-          'v_max_door': '0.5',
-          'a_max_door': '0.3',
-          'a_nom_door': '0.15',
-          'dx_min_door': '0.01',
-          'f_max_door': '500.0'
-        }
-        for param_name, param_value in plugin_params.items():
-            ele = SubElement(plugin_ele, param_name)
-            ele.text = param_value
+        if not self.remove_plugin:
+            plugin_ele = SubElement(self.model_ele, 'plugin')
+            plugin_ele.set('name', 'door')
+            plugin_ele.set('filename', 'libdoor.so')
+            plugin_params = {
+            'v_max_door': '0.5',
+            'a_max_door': '0.3',
+            'a_nom_door': '0.15',
+            'dx_min_door': '0.01',
+            'f_max_door': '500.0'
+            }
+            for param_name, param_value in plugin_params.items():
+                ele = SubElement(plugin_ele, param_name)
+                ele.text = param_value
 
-        door_ele = SubElement(plugin_ele, 'door')
-        door_ele.set('name', self.name)
-        door_ele.set('type', 'DoubleSwingDoor')
-        door_ele.set('left_joint_name', 'left_joint')
-        door_ele.set('right_joint_name', 'right_joint')
+            door_ele = SubElement(plugin_ele, 'door')
+            door_ele.set('name', self.name)
+            door_ele.set('type', 'DoubleSwingDoor')
+            door_ele.set('left_joint_name', 'left_joint')
+            door_ele.set('right_joint_name', 'right_joint')
 
         world_ele.append(self.model_ele)
