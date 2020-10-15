@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Open Source Robotics Foundation
+ * Copyright (C) 2020 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,15 +15,25 @@
  *
 */
 
-#ifndef EDITOR_MODE_ID_H
-#define EDITOR_MODE_ID_H
+#ifndef TO_STATE_DIALOG__H
+#define TO_STATE_DIALOG__H
 
-enum EditorModeId
+#include "crowd_sim_dialog.h"
+#include "to_state_table.h"
+
+using namespace crowd_sim;
+
+class ToStateDialog final : public CrowdSimDialog
 {
-  MODE_BUILDING = 1,
-  MODE_TRAFFIC = 2,
-  MODE_SCENARIO = 3,
-  MODE_CROWD_SIM = 4
+public:
+  ToStateDialog(
+    CrowdSimImplPtr crowd_sim_impl,
+    const std::string& dialog_title,
+    crowd_sim::Transition& transition);
+  void ok_button_click() override;
+
+private:
+  std::shared_ptr<ToStateTab> _to_state_tab;
 };
 
 #endif

@@ -396,7 +396,7 @@ void Project::mouse_select_press(
       }
     }
   }
-  else if (mode == MODE_TRAFFIC)
+  else if (mode == MODE_TRAFFIC || mode == MODE_CROWD_SIM)
   {
     // todo: keep traffic-map vertices separate from building vertices
     // for now, they're using the same vertex list.
@@ -472,7 +472,17 @@ void Project::set_selected_line_item(
       if (edge.get_graph_idx() != traffic_map_idx)
         continue;
     }
-    if (mode == MODE_BUILDING && edge.type == Edge::LANE)
+
+    if (mode == MODE_CROWD_SIM)
+    {
+      if (edge.type != Edge::HUMAN_LANE)
+        continue;
+      if (edge.get_graph_idx() != traffic_map_idx)
+        continue;
+    }
+
+    if (mode == MODE_BUILDING &&
+      (edge.type == Edge::LANE || edge.type == Edge::HUMAN_LANE) )
       continue;
 
     // look up the line's vertices

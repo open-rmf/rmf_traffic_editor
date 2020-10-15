@@ -137,6 +137,16 @@ void Edge::create_required_parameters()
     create_param_if_needed("motion_direction", Param::INT, 1);
     create_param_if_needed("motion_degrees", Param::DOUBLE, 90.0);  // hinged
   }
+  else if (type == HUMAN_LANE)
+  {
+    create_param_if_needed("width", Param::DOUBLE, 1.0);
+    create_param_if_needed("bidirectional", Param::BOOL, true);
+    create_param_if_needed("orientation", Param::STRING, std::string());
+    create_param_if_needed("graph_idx", Param::INT, 9);
+    create_param_if_needed("demo_mock_floor_name", Param::STRING,
+      std::string());
+    create_param_if_needed("demo_mock_lift_name", Param::STRING, std::string());
+  }
 }
 
 std::string Edge::type_to_string() const
@@ -149,6 +159,8 @@ std::string Edge::type_to_string() const
     return string("measurement");
   else if (type == DOOR)
     return string("door");
+  else if (type == HUMAN_LANE)
+    return string("human_lane");
   return string("undefined");
 }
 
@@ -159,17 +171,27 @@ QString Edge::type_to_qstring() const
 
 void Edge::set_graph_idx(const int idx)
 {
-  if (type != LANE)
+  if (type != LANE && type != HUMAN_LANE)
     return;// for now at least, only lanes have graph indices
   params["graph_idx"] = Param(idx);
 }
 
 int Edge::get_graph_idx() const
 {
-  if (type != LANE)
+  if (type != LANE && type != HUMAN_LANE)
     return 0;// for now, only lanes have indices defined
   auto it = params.find("graph_idx");
   if (it == params.end() || it->second.type != Param::INT)
     return 0;// shouldn't get here
   return it->second.value_int;
+}
+
+double Edge::get_width() const
+{
+  if (type != HUMAN_LANE)
+    return -1.0;
+  auto it = params.find("width");
+  if (it == params.end() || it->second.type != Param::DOUBLE)
+    return -1.0;// shouldn't get here
+  return it->second.value_double;
 }

@@ -62,6 +62,14 @@ double LiftCommon::get_step_velocity(const double dt, const double position,
     dz, velocity, _cabin_motion_params, dt);
 }
 
+// Compares current lift motion state to the last time this function was called
+bool LiftCommon::motion_state_changed()
+{
+  bool changed = _lift_state.motion_state != _old_motion_state;
+  _old_motion_state = _lift_state.motion_state;
+  return changed;
+}
+
 void LiftCommon::update_cabin_state(const double position,
   const double velocity)
 {
