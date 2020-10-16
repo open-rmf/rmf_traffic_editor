@@ -234,8 +234,12 @@ LiftDialog::LiftDialog(Lift& lift, Building& building)
   QHBoxLayout* plugin_hbox = new QHBoxLayout;
   plugin_hbox->addWidget(new QLabel("Plugin:"));
   _plugin_yes_radio_button = new QRadioButton("Yes");
-  _plugin_yes_radio_button->setChecked(true);
   _plugin_no_radio_button = new QRadioButton("No");
+  if (_lift.plugins)
+    _plugin_yes_radio_button->setChecked(true);
+  else
+    _plugin_no_radio_button->setChecked(true);
+
   plugin_hbox->addWidget(_plugin_yes_radio_button);
   plugin_hbox->addWidget(_plugin_no_radio_button);
 
@@ -374,18 +378,9 @@ void LiftDialog::ok_button_clicked()
   _lift.depth = _depth_line_edit->text().toDouble();
 
   if (_plugin_yes_radio_button->isChecked())
-  {
     _lift.plugins = true;
-    for (const auto& d : _lift.doors)
-    {
-      d.plugin = true;
-    }
-  }
   else if (_plugin_no_radio_button->isChecked())
-  {
     _lift.plugins = false;
-    d.plugin = false;
-  }
 
   // grab all the level-door checkbox matrix states and save them
   for (int level_row = 0; level_row < _level_table->rowCount(); level_row++)
