@@ -19,11 +19,11 @@ class SlidingDoor(Door):
             plugin_ele.set('name', 'door')
             plugin_ele.set('filename', 'libdoor.so')
             plugin_params = {
-            'v_max_door': '0.2',
-            'a_max_door': '0.2',
-            'a_nom_door': '0.08',
-            'dx_min_door': '0.001',
-            'f_max_door': '100.0'
+                'v_max_door': '0.2',
+                'a_max_door': '0.2',
+                'a_nom_door': '0.08',
+                'dx_min_door': '0.001',
+                'f_max_door': '100.0'
             }
             for param_name, param_value in plugin_params.items():
                 ele = SubElement(plugin_ele, param_name)
