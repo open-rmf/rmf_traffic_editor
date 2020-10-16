@@ -431,6 +431,9 @@ class Lift:
 
             cabin_joint_ele = SubElement(plugin_ele, 'cabin_joint_name')
             cabin_joint_ele.text = 'cabin_joint'
+        else:
+            static_lift_ele = SubElement(lift_model_ele, 'static')
+            static_lift_ele.text = 'true'
 
         # pose
         model_pose = SubElement(lift_model_ele, 'pose')
