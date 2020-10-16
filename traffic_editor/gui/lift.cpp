@@ -45,6 +45,7 @@ void Lift::from_yaml(const std::string& _name, const YAML::Node& data,
     initial_floor_name = reference_floor_name;
   width = data["width"].as<double>();
   depth = data["depth"].as<double>();
+  plugins = data["plugins"].as<bool>();
 
   if (data["doors"] && data["doors"].IsMap())
   {
@@ -105,6 +106,7 @@ YAML::Node Lift::to_yaml() const
   n["initial_floor_name"] = initial_floor_name;
   n["width"] = std::round(width * 1000.0) / 1000.0;
   n["depth"] = std::round(depth * 1000.0) / 1000.0;
+  n["plugins"] = plugins;
 
   n["doors"] = YAML::Node(YAML::NodeType::Map);
   for (const auto& door : doors)

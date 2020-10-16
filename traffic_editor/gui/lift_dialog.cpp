@@ -231,6 +231,14 @@ LiftDialog::LiftDialog(Lift& lift, Building& building)
     });
   depth_hbox->addWidget(_depth_line_edit);
 
+  QHBoxLayout* plugin_hbox = new QHBoxLayout;
+  plugin_hbox->addWidget(new QLabel("Plugin:"));
+  _plugin_yes_radio_button = new QRadioButton("Yes");
+  _plugin_yes_radio_button->setChecked(true);
+  _plugin_no_radio_button = new QRadioButton("No");
+  plugin_hbox->addWidget(_plugin_yes_radio_button);
+  plugin_hbox->addWidget(_plugin_no_radio_button);
+
   QHBoxLayout* add_wp_hbox = new QHBoxLayout;
   _add_wp_button = new QPushButton("Add lift waypoints", this);
   add_wp_hbox->addWidget(_add_wp_button);
@@ -293,6 +301,7 @@ LiftDialog::LiftDialog(Lift& lift, Building& building)
   left_vbox->addLayout(yaw_hbox);
   left_vbox->addLayout(width_hbox);
   left_vbox->addLayout(depth_hbox);
+  left_vbox->addLayout(plugin_hbox);
   left_vbox->addLayout(add_wp_hbox);
   left_vbox->addWidget(_level_table);
 
@@ -363,6 +372,20 @@ void LiftDialog::ok_button_clicked()
 
   _lift.width = _width_line_edit->text().toDouble();
   _lift.depth = _depth_line_edit->text().toDouble();
+
+  if (_plugin_yes_radio_button->isChecked())
+  {
+    _lift.plugins = true;
+    for (const auto& d : _lift.doors)
+    {
+      d.plugin = true;
+    }
+  }
+  else if (_plugin_no_radio_button->isChecked())
+  {
+    _lift.plugins = false;
+    d.plugin = false;
+  }
 
   // grab all the level-door checkbox matrix states and save them
   for (int level_row = 0; level_row < _level_table->rowCount(); level_row++)

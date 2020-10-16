@@ -7,7 +7,7 @@ from .utils import lift_material, visual, collision, box_link, joint
 
 
 class LiftDoor:
-    def __init__(self, yaml_node, name, lift_size, gap):
+    def __init__(self, yaml_node, name, lift_size, gap, plugin=True):
         self.name = name
         self.door_type = yaml_node['door_type']
         # x & y coordinates are with respect to the centre of the cabin
@@ -19,6 +19,7 @@ class LiftDoor:
         self.height = lift_size[2]
         self.thickness = 0.03
         self.gap = gap    # gap between cabin_door and shaft_door
+        self.plugin = plugin
         self.params = {'v_max_door': 0.3,
                        'a_max_door': 0.2,
                        'a_nom_door': 0.1,
@@ -57,7 +58,8 @@ class LiftDoor:
 
         self.generate_door_link_and_joint(door_model_ele, parent='platform')
 
-        self.generate_door_plugin(door_model_ele, name)
+        if self.plugin:
+            self.generate_door_plugin(door_model_ele, name)
 
     def generate_shaft_door(self, world_ele, x, y, z, yaw, name):
         model_ele = SubElement(world_ele, 'model')
@@ -84,7 +86,8 @@ class LiftDoor:
                                   bitmask='0x02'))
         model_ele.append(joint('ramp_joint', 'fixed', 'world', 'ramp'))
 
-        self.generate_door_plugin(model_ele, name)
+        if self.plugin:
+            self.generate_door_plugin(model_ele, name)
 
     def generate_door_link_and_joint(self, model_ele, parent='world'):
         door_size = [self.width / 2, self.thickness, self.height]
@@ -227,6 +230,10 @@ class Lift:
                 self.lowest_elevation = -float('inf')
         else:
             self.lowest_elevation = -float('inf')
+
+        self.plugins = True
+        if 'plugins' in yaml_node:
+            self.plugins = bool(yaml_node['plugins'])
 
         raw_pos = (float(yaml_node['x']), -float(yaml_node['y']))
         self.x, self.y = transform.transform_point(raw_pos)
@@ -392,35 +399,36 @@ class Lift:
                     lift_model_ele, f'CabinDoor_{self.name}_{lift_door.name}')
 
         # lift cabin plugin
-        plugin_ele = SubElement(lift_model_ele, 'plugin')
-        plugin_ele.set('name', 'lift')
-        plugin_ele.set('filename', 'liblift.so')
+        if self.plugins:
+            plugin_ele = SubElement(lift_model_ele, 'plugin')
+            plugin_ele.set('name', 'lift')
+            plugin_ele.set('filename', 'liblift.so')
 
-        lift_name_ele = SubElement(plugin_ele, 'lift_name')
-        lift_name_ele.text = f'{self.name}'
+            lift_name_ele = SubElement(plugin_ele, 'lift_name')
+            lift_name_ele.text = f'{self.name}'
 
-        for level_name, door_names in self.level_doors.items():
-            floor_ele = SubElement(plugin_ele, 'floor')
-            floor_ele.set('name', f'{level_name}')
-            floor_ele.set('elevation', f'{self.level_elevation[level_name]}')
-            for door in self.doors:
-                if door.name in door_names:
-                    door_pair_ele = SubElement(floor_ele, 'door_pair')
-                    door_pair_ele.set(
-                        'cabin_door',
-                        f'CabinDoor_{self.name}_{door.name}')
-                    door_pair_ele.set(
-                        'shaft_door',
-                        f'ShaftDoor_{self.name}_{level_name}_{door.name}')
+            for level_name, door_names in self.level_doors.items():
+                floor_ele = SubElement(plugin_ele, 'floor')
+                floor_ele.set('name', f'{level_name}')
+                floor_ele.set('elevation', f'{self.level_elevation[level_name]}')
+                for door in self.doors:
+                    if door.name in door_names:
+                        door_pair_ele = SubElement(floor_ele, 'door_pair')
+                        door_pair_ele.set(
+                            'cabin_door',
+                            f'CabinDoor_{self.name}_{door.name}')
+                        door_pair_ele.set(
+                            'shaft_door',
+                            f'ShaftDoor_{self.name}_{level_name}_{door.name}')
 
-        initial_floor_ele = SubElement(plugin_ele, 'initial_floor')
-        initial_floor_ele.text = f'{self.initial_floor_name}'
-        for param_name, param_value in self.params.items():
-            ele = SubElement(plugin_ele, param_name)
-            ele.text = f'{param_value}'
+            initial_floor_ele = SubElement(plugin_ele, 'initial_floor')
+            initial_floor_ele.text = f'{self.initial_floor_name}'
+            for param_name, param_value in self.params.items():
+                ele = SubElement(plugin_ele, param_name)
+                ele.text = f'{param_value}'
 
-        cabin_joint_ele = SubElement(plugin_ele, 'cabin_joint_name')
-        cabin_joint_ele.text = 'cabin_joint'
+            cabin_joint_ele = SubElement(plugin_ele, 'cabin_joint_name')
+            cabin_joint_ele.text = 'cabin_joint'
 
         # pose
         model_pose = SubElement(lift_model_ele, 'pose')
