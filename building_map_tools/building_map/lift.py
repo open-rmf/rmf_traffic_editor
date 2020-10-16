@@ -186,17 +186,18 @@ class LiftDoor:
                                     lower_limit=-self.width / 2,
                                     upper_limit=0))
 
-        plugin_ele = SubElement(lift_model_ele, 'plugin')
-        plugin_ele.set('name', 'door')
-        plugin_ele.set('filename', 'libdoor.so')
-        for param_name, param_value in self.params.items():
-            ele = SubElement(plugin_ele, param_name)
-            ele.text = f'{param_value}'
-        door_ele = SubElement(plugin_ele, 'door')
-        door_ele.set('left_joint_name', f'{name}_left_joint')
-        door_ele.set('name', f'{name}')
-        door_ele.set('right_joint_name', f'{name}_right_joint')
-        door_ele.set('type', 'DoubleSlidingDoor')
+        if self.plugin:
+            plugin_ele = SubElement(lift_model_ele, 'plugin')
+            plugin_ele.set('name', 'door')
+            plugin_ele.set('filename', 'libdoor.so')
+            for param_name, param_value in self.params.items():
+                ele = SubElement(plugin_ele, param_name)
+                ele.text = f'{param_value}'
+            door_ele = SubElement(plugin_ele, 'door')
+            door_ele.set('left_joint_name', f'{name}_left_joint')
+            door_ele.set('name', f'{name}')
+            door_ele.set('right_joint_name', f'{name}_right_joint')
+            door_ele.set('type', 'DoubleSlidingDoor')
 
 
 class Lift:
@@ -290,7 +291,8 @@ class Lift:
             doors.append(LiftDoor(lift_door_yaml,
                                   lift_door_name,
                                   (self.width, self.depth, self.cabin_height),
-                                  self.gap))
+                                  self.gap,
+                                  self.plugins))
         return doors
 
     def get_lift_vertices(self):

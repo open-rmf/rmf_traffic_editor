@@ -31,7 +31,7 @@ class DoubleSwingDoor(Door):
             (x_flip_sign * self.length / 4, 0, 0),
             options)
 
-        if not self.remove_plugin:
+        if not self.plugin == 'none':
             plugin_ele = SubElement(self.model_ele, 'plugin')
             plugin_ele.set('name', 'door')
             plugin_ele.set('filename', 'libdoor.so')

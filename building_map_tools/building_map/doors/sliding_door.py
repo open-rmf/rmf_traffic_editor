@@ -14,7 +14,7 @@ class SlidingDoor(Door):
             (0.0, self.length),
             options)
 
-        if not self.remove_plugin:
+        if not self.plugin == 'none':
             plugin_ele = SubElement(self.model_ele, 'plugin')
             plugin_ele.set('name', 'door')
             plugin_ele.set('filename', 'libdoor.so')

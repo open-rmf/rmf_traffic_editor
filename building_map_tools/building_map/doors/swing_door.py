@@ -11,7 +11,7 @@ class SwingDoor(Door):
 
     def generate(self, world_ele, options):
         door_ele = None
-        if not self.remove_plugin:
+        if not self.plugin == 'none':
             plugin_ele = SubElement(self.model_ele, 'plugin')
             plugin_ele.set('name', 'door')
             plugin_ele.set('filename', 'libdoor.so')
@@ -38,7 +38,7 @@ class SwingDoor(Door):
                 (-self.motion_radians, 0),
                 (self.length / 2, 0, 0),
                 options)
-            if door_ele:
+            if door_ele is not None:
                 door_ele.set('left_joint_name', 'left_joint')
                 door_ele.set('right_joint_name', 'empty_joint')
         else:
@@ -49,7 +49,7 @@ class SwingDoor(Door):
                 (0, self.motion_radians),
                 (self.length / 2, 0, 0),
                 options)
-            if door_ele:
+            if door_ele is not None:
                 door_ele.set('left_joint_name', 'empty_joint')
                 door_ele.set('right_joint_name', 'right_joint')
 
