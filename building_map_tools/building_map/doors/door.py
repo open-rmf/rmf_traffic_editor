@@ -21,6 +21,10 @@ class Door:
         pose_ele = SubElement(self.model_ele, 'pose')
         pose_ele.text = f'{self.cx} {self.cy} {self.cz} 0 0 {self.yaw}'
 
+        if self.plugin == 'none':
+            static_ele = SubElement(self.model_ele, 'static')
+            static_ele.text = 'true'
+
     def generate_section(self, name, width, x_offset, options):
         pose_ele = Element('pose')
         pose_ele.text = f'{x_offset} 0 {self.height/2+0.01} 0 0 0'
