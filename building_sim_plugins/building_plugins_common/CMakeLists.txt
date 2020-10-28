@@ -167,7 +167,7 @@ install(
 )
 
 install(
-  DIRECTORY include
+  DIRECTORY include/building_sim_common
   DESTINATION include
 )
 
