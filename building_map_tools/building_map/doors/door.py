@@ -6,6 +6,7 @@ class Door:
     def __init__(self, door_edge, level_elevation=0.0):
         self.name = door_edge.params['name'].value
         self.type = door_edge.params['type'].value
+        self.plugin = door_edge.params['plugin'].value
         self.length = door_edge.length
         self.cx = door_edge.x
         self.cy = door_edge.y
@@ -19,6 +20,10 @@ class Door:
         self.model_ele.set('name', self.name)
         pose_ele = SubElement(self.model_ele, 'pose')
         pose_ele.text = f'{self.cx} {self.cy} {self.cz} 0 0 {self.yaw}'
+
+        if self.plugin == 'none':
+            static_ele = SubElement(self.model_ele, 'static')
+            static_ele.text = 'true'
 
     def generate_section(self, name, width, x_offset, options):
         pose_ele = Element('pose')
