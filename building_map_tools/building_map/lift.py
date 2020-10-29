@@ -412,7 +412,8 @@ class Lift:
             for level_name, door_names in self.level_doors.items():
                 floor_ele = SubElement(plugin_ele, 'floor')
                 floor_ele.set('name', f'{level_name}')
-                floor_ele.set('elevation', f'{self.level_elevation[level_name]}')
+                floor_ele.set(
+                    'elevation', f'{self.level_elevation[level_name]}')
                 for door in self.doors:
                     if door.name in door_names:
                         door_pair_ele = SubElement(floor_ele, 'door_pair')
