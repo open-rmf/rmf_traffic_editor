@@ -7,6 +7,15 @@
       <grid>false</grid>
     </scene>
 
+    <physics type="ode">
+      <max_step_size>0.01</max_step_size>
+      <ode>
+        <solver>
+          <iters>30</iters>
+        </solver>
+      </ode>
+    </physics>
+
     <include>
       <uri>model://sun</uri>
     </include>
