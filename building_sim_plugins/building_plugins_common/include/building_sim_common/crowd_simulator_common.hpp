@@ -129,10 +129,9 @@ public:
   struct Record
   {
     std::string type_name;
-    std::string file_name;
-    AgentPose3d pose;
     std::string animation;
     std::string idle_animation;
+    AgentPose3d pose;
     double animation_speed;
   };
 
@@ -222,6 +221,7 @@ private:
   std::string _behavior_file;
   std::string _scene_file;
   std::vector<std::string> _external_agents;
+  std::vector<std::string> _internal_agents;
   rclcpp::Node::SharedPtr _ros_node;
 
   template<typename SdfPtrT>
@@ -238,6 +238,7 @@ template<typename SdfPtrT>
 bool CrowdSimInterface::read_sdf(
   SdfPtrT& sdf)
 {
+  sdf = sdf->template GetElementImpl("floor");
   if (!sdf->template HasElement("resource_path"))
   {
     char* menge_resource_path;
@@ -297,17 +298,19 @@ bool CrowdSimInterface::read_sdf(
       return false;
     }
 
+
     auto model_type_ptr = this->_model_type_db_ptr->emplace(s,
         std::make_shared<ModelTypeDatabase::Record>() ); //unordered_map
     model_type_ptr->type_name = s;
 
+/*
     if (!model_type_element->template Get<std::string>("filename",
       model_type_ptr->file_name, ""))
     {
       RCLCPP_ERROR(logger(),
         "No actor skin configured in <model_type>! <filename> Required");
       return false;
-    }
+    }*/
 
     if (!model_type_element->template Get<std::string>("animation",
       model_type_ptr->animation, ""))
@@ -326,6 +329,7 @@ bool CrowdSimInterface::read_sdf(
       return false;
     }
 
+/*
     if (!model_type_element->template HasElement("initial_pose"))
     {
       RCLCPP_ERROR(
@@ -341,7 +345,7 @@ bool CrowdSimInterface::read_sdf(
         "Error loading model initial pose in <model_type>! Check <initial_pose> in [" + s +
         "]");
       return false;
-    }
+    }*/
 
     model_type_element = model_type_element->template GetNextElement(
       "model_type");
@@ -362,6 +366,23 @@ bool CrowdSimInterface::read_sdf(
     _external_agents.emplace_back(ex_agent_name); //just store the name
     external_agent_element = external_agent_element->template GetNextElement(
       "external_agent");
+  }
+
+  if (!sdf->template HasElement("internal_agent"))
+  {
+    RCLCPP_ERROR(
+      logger(),
+      "No internal agent provided. <internal_agent> is needed with a unique name defined above.");
+  }
+  auto internal_agent_element = sdf->template GetElementImpl("internal_agent");
+  while (internal_agent_element)
+  {
+    auto in_agent_name = internal_agent_element->template Get<std::string>();
+    RCLCPP_INFO(logger(),
+      "Added internal agent: [ " + in_agent_name + " ].");
+    _internal_agents.emplace_back(in_agent_name); //just store the name
+    internal_agent_element = internal_agent_element->template GetNextElement(
+      "internal_agent");
   }
 
   _sdf_loaded = true;

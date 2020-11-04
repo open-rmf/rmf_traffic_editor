@@ -65,7 +65,6 @@ private:
   gazebo::event::ConnectionPtr _update_connection_ptr;
   gazebo::common::Time _last_sim_time;
 
-  bool _spawn_agents_in_world();
   void _init_spawned_agents();
   void _update(const gazebo::common::UpdateInfo& update_info); //Update trigger function
   void _update_all_objects(double delta_sim_time);
@@ -74,10 +73,6 @@ private:
     const ObjectPtr object_ptr,
     const gazebo::physics::ModelPtr model_ptr,
     const crowd_simulator::ModelTypeDatabase::RecordPtr type_ptr);
-  bool _create_model(
-    const std::string& model_name,
-    const crowd_simulator::ModelTypeDatabase::RecordPtr model_type_ptr,
-    const crowd_simulator::AgentPtr agent_ptr);
 };
 
 } //namespace crowd_simulation_gazebo

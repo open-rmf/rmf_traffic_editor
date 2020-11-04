@@ -54,20 +54,29 @@ class BuildingYamlParse:
         with open(self.building_file) as f:
             self.yaml_node = yaml.load(f, yaml.SafeLoader)
 
+        crowd_sim_exist = False
         # human_lanes for navmesh
         self.levels_with_human_lanes = {}
         self.levels_name = []
+        self.crowd_sim_config = []
+        self.crowd_sim_human = []
         for level_name, level_yaml in self.yaml_node['levels'].items():
             self.levels_with_human_lanes[level_name] = LevelWithHumanLanes(
                 level_yaml, level_name)
             self.levels_name.append(level_name)
+            if 'crowd_sim' in level_yaml:
+                self.crowd_sim_config.append(level_yaml['crowd_sim'])
+                crowd_sim_exist = True
+                level_human = []
+                for model_yaml in level_yaml['models']:
+                    if 'agent_group_id' in model_yaml:
+                        level_human.append(model_yaml)
+                self.crowd_sim_human.append(level_human)
 
         # crowd_sim for configuration
-        if 'crowd_sim' not in self.yaml_node:
+        if not crowd_sim_exist:
             print("Expected 'crowd_sim' tag for crowd simulation")
             return
-
-        self.crowd_sim_config = self.yaml_node['crowd_sim']
 
     def get_human_goals(self):
         result = {}

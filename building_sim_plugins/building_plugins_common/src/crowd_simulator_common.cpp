@@ -160,11 +160,7 @@ void CrowdSimInterface::init_ros_node(const rclcpp::Node::SharedPtr node)
 
 bool CrowdSimInterface::init_crowd_sim()
 {
-  _menge_handle = MengeHandle::init_and_make(
-    _resource_path,
-    _behavior_file,
-    _scene_file,
-    _sim_time_step);
+  _menge_handle = MengeHandle::init_and_make(_resource_path, _behavior_file, _scene_file, _sim_time_step);
 
   if (!_sdf_loaded)
   {
@@ -202,8 +198,7 @@ bool CrowdSimInterface::_spawn_object()
   {
     auto agent_ptr = this->_menge_handle->get_agent(i);
     agent_ptr->_external = false;
-    std::string model_name = "agent" + std::to_string(i);
-    _add_object(agent_ptr, model_name, agent_ptr->_typeName, false);
+    _add_object(agent_ptr, _internal_agents[i-external_count], agent_ptr->_typeName, false);
   }
   return true;
 }

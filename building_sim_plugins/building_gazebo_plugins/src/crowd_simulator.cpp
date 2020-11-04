@@ -47,13 +47,15 @@ void CrowdSimulatorPlugin::Load(
     exit(EXIT_FAILURE);
   }
 
+/*
   if (!_spawn_agents_in_world())
   {
     RCLCPP_ERROR(
       _crowd_sim_interface->logger(),
       "Crowd simulation failed to spawn agents in the world.");
     exit(EXIT_FAILURE);
-  }
+  }*/
+
 
   _update_connection_ptr = gazebo::event::Events::ConnectWorldUpdateBegin(
     [this](gazebo::common::UpdateInfo update_info)
@@ -79,7 +81,7 @@ void CrowdSimulatorPlugin::_update(
     _init_spawned_agents();
     return;
   }
-
+  
   auto delta_sim_time = (update_info.simTime - _last_sim_time).Double();
   if (delta_sim_time > _crowd_sim_interface->get_sim_time_step())
   {
@@ -233,74 +235,6 @@ void CrowdSimulatorPlugin::_init_spawned_agents()
   RCLCPP_INFO(
     _crowd_sim_interface->logger(),
     "Gazebo models all loaded! Start simulating...");
-}
-
-//============================================
-bool CrowdSimulatorPlugin::_spawn_agents_in_world()
-{
-  //create model in world for each internal agents
-  _objects_count = _crowd_sim_interface->get_num_objects();
-  for (size_t id = 0; id < _objects_count; id++)
-  {
-    if (!_crowd_sim_interface->get_object_by_id(id)->is_external)
-    {
-      auto object_ptr = _crowd_sim_interface->get_object_by_id(id);
-      assert(object_ptr);
-      auto type_ptr = _crowd_sim_interface->_model_type_db_ptr->get(
-        object_ptr->type_name);
-      assert(type_ptr);
-      if (!_create_model(object_ptr->model_name, type_ptr,
-        object_ptr->agent_ptr) )
-      {
-        RCLCPP_INFO(_crowd_sim_interface->logger(),
-          "Failed to insert model [" + object_ptr->model_name + "] in world");
-        return false;
-      }
-    }
-  }
-  return true;
-}
-
-//============================================
-bool CrowdSimulatorPlugin::_create_model(
-  const std::string& model_name,
-  const crowd_simulator::ModelTypeDatabase::RecordPtr model_type_ptr,
-  const crowd_simulator::AgentPtr agent_ptr)
-{
-  sdf::ElementPtr model_element(new sdf::Element());
-  model_element->SetName("include");
-
-  sdf::ElementPtr name_element(new sdf::Element());
-  name_element->SetName("name");
-  name_element->AddValue("string", model_name, true);
-  model_element->InsertElement(name_element);
-
-  sdf::ElementPtr uri_element(new sdf::Element());
-  uri_element->SetName("uri");
-  uri_element->AddValue("string", model_type_ptr->file_name, true);
-  model_element->InsertElement(uri_element);
-
-  sdf::ElementPtr static_element(new sdf::Element());
-  static_element->SetName("static");
-  static_element->AddValue("string", "False", true);
-  model_element->InsertElement(static_element);
-
-  sdf::ElementPtr pose_element(new sdf::Element());
-  pose_element->SetName("pose");
-  std::ostringstream oss;
-  oss << agent_ptr->_pos.x() << " " << agent_ptr->_pos.y() << " " << "0 0 0 0";
-  pose_element->AddValue("pose", oss.str(), true);
-  model_element->InsertElement(pose_element);
-
-  sdf::SDFPtr sdf(new sdf::SDF());
-  sdf->Root(model_element);
-
-  assert(sdf);
-  _world->InsertModelSDF(*sdf);
-  RCLCPP_INFO(_crowd_sim_interface->logger(),
-    "Insert actor for crowd simulator agent: [" + model_name + "] at ["+ oss.str() +
-    "].");
-  return true;
 }
 
 // insert the plugin
