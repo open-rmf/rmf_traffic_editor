@@ -568,7 +568,7 @@ void SlotcarCommon::publish_state_topic(const rclcpp::Time& t)
 void SlotcarCommon::mode_request_cb(
   const rmf_fleet_msgs::msg::ModeRequest::SharedPtr msg)
 {
-    // Request is for another robot
+  // Request is for another robot
   if (msg->robot_name != _model_name)
     return;
 
