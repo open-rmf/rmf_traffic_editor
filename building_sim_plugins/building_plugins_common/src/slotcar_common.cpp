@@ -568,6 +568,10 @@ void SlotcarCommon::publish_state_topic(const rclcpp::Time& t)
 void SlotcarCommon::mode_request_cb(
   const rmf_fleet_msgs::msg::ModeRequest::SharedPtr msg)
 {
+    // Request is for another robot
+  if (msg->robot_name != _model_name)
+    return;
+
   _current_mode = msg->mode;
   if (msg->mode.mode == msg->mode.MODE_DOCKING)
     _docking = true;
