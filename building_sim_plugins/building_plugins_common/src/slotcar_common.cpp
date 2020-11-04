@@ -568,6 +568,10 @@ void SlotcarCommon::publish_state_topic(const rclcpp::Time& t)
 void SlotcarCommon::mode_request_cb(
   const rmf_fleet_msgs::msg::ModeRequest::SharedPtr msg)
 {
+  // Request is for another robot
+  if (msg->robot_name != _model_name)
+    return;
+
   _current_mode = msg->mode;
   if (msg->mode.mode == msg->mode.MODE_DOCKING)
     _docking = true;
@@ -648,10 +652,10 @@ double SlotcarCommon::compute_discharge(
   const Eigen::Vector3d lin_acc, const double ang_acc,
   const double run_time) const
 {
-  const double v = lin_vel.norm();
-  const double w = std::abs(ang_vel);
-  const double a = lin_acc.norm();
-  const double alpha = std::abs(ang_acc);
+  const double v = std::min(lin_vel.norm(), _nominal_drive_speed);
+  const double w = std::min(std::abs(ang_vel), _nominal_turn_speed);
+  const double a = std::min(lin_acc.norm(), _max_drive_acceleration);
+  const double alpha = std::min(std::abs(ang_acc), _max_turn_acceleration);
 
   // Loss through acceleration
   const double EA = ((_params.mass * a * v) +
