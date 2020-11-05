@@ -70,15 +70,15 @@ include(GNUInstallDirs)
 
 add_library(slotcar SHARED ${PROJECT_SOURCE_DIR}/src/slotcar.cpp)
 
-target_link_libraries(slotcar
+ament_target_dependencies(slotcar
   PUBLIC
-    ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
-    ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
-    ${building_sim_common_LIBRARIES}
-    ${rmf_fleet_msgs_LIBRARIES}
-    ${rclcpp_LIBRARIES}
-    ${geometry_msgs_LIBRARIES}
-    ${tf2_ros_LIBRARIES}
+    ignition-gazebo${IGN_GAZEBO_VER}
+    ignition-plugin${IGN_PLUGIN_VER}
+    building_sim_common
+    rmf_fleet_msgs
+    rclcpp
+    geometry_msgs
+    tf2_ros
 )
 
 target_include_directories(slotcar
@@ -106,16 +106,14 @@ target_include_directories(door
     ${rmf_door_msgs_INCLUDE_DIRS}
 )
 
-target_link_libraries(door
+ament_target_dependencies(door
   PUBLIC
-    ${rclcpp_LIBRARIES}
-    ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
-    ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
-    ${building_sim_common_LIBRARIES}
-    ${rmf_door_msgs_LIBRARIES}
-    ${rmf_fleet_msgs_LIBRARIES}
-    #${geometry_msgs_LIBRARIES}
-    #${tf2_ros_LIBRARIES}
+    rclcpp
+    ignition-gazebo${IGN_GAZEBO_VER}
+    ignition-plugin${IGN_PLUGIN_VER}
+    building_sim_common
+    rmf_door_msgs
+    rmf_fleet_msgs
 )
 
 ###############################
@@ -132,17 +130,15 @@ target_include_directories(lift
     ${rmf_lift_msgs_INCLUDE_DIRS}
 )
 
-target_link_libraries(lift
+ament_target_dependencies(lift
   PUBLIC
-    ${rclcpp_LIBRARIES}
-    ignition-gazebo${IGN_GAZEBO_VER}::ignition-gazebo${IGN_GAZEBO_VER}
-    ignition-plugin${IGN_PLUGIN_VER}::ignition-plugin${IGN_PLUGIN_VER}
-    ${building_sim_common_LIBRARIES}
-    ${rmf_door_msgs_LIBRARIES}
-    ${rmf_lift_msgs_LIBRARIES}
-    ${rmf_fleet_msgs_LIBRARIES}
-    #${geometry_msgs_LIBRARIES}
-    #${tf2_ros_LIBRARIES}
+    rclcpp
+    ignition-gazebo${IGN_GAZEBO_VER}
+    ignition-plugin${IGN_PLUGIN_VER}
+    building_sim_common
+    rmf_door_msgs
+    rmf_lift_msgs
+    rmf_fleet_msgs
 )
 
 ###############################
@@ -192,14 +188,14 @@ add_library(toggle_charging SHARED ${headers_MOC}
   ${resources_RCC}
 )
 
-target_link_libraries(toggle_charging
-  ignition-gui${IGN_GUI_VER}::ignition-gui${IGN_GUI_VER}
-  ignition-msgs${IGN_MSGS_VER}::ignition-msgs${IGN_MSGS_VER}
-  ignition-transport${IGN_TRANSPORT_VER}::ignition-transport${IGN_TRANSPORT_VER}
-  ${Qt5Core_LIBRARIES}
-  ${Qt5Qml_LIBRARIES}
-  ${Qt5Quick_LIBRARIES}
-  ${rclcpp_LIBRARIES}
+ament_target_dependencies(toggle_charging
+  ignition-gui${IGN_GUI_VER}
+  ignition-msgs${IGN_MSGS_VER}
+  ignition-transport${IGN_TRANSPORT_VER}
+  Qt5Core
+  Qt5Qml
+  Qt5Quick
+  rclcpp
 )
 
 target_include_directories(toggle_charging
