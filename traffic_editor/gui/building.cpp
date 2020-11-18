@@ -156,7 +156,8 @@ bool Building::save_yaml_file()
   for (const auto& lift : lifts)
     y["lifts"][lift.name] = lift.to_yaml();
 
-  y["crowd_sim"] = crowd_sim_impl->to_yaml();
+  if (crowd_sim_impl == nullptr)
+    y["crowd_sim"] = crowd_sim_impl->to_yaml();
 
   YAML::Emitter emitter;
   yaml_utils::write_node(y, emitter);
