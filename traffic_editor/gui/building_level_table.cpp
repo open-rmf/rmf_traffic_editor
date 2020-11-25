@@ -20,7 +20,7 @@
 #include <QtWidgets>
 
 BuildingLevelTable::BuildingLevelTable()
-: TableList(6)
+: TableList(6), _cwdsimtable(nullptr)
 {
   const QStringList labels =
   { "Name", "Scale", "X", "Y", "Z", "" };
@@ -109,6 +109,13 @@ void BuildingLevelTable::update(Building& building)
         emit redraw_scene();
       }
     });
-
+  
+  if(_cwdsimtable)
+    _cwdsimtable->update();
   blockSignals(false);
+}
+
+void BuildingLevelTable::add_crowdsim_update(CrowdSimEditorTable* cwdsimtable)
+{
+  _cwdsimtable = cwdsimtable;
 }

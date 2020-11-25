@@ -35,7 +35,6 @@ const vector<pair<string, Param::Type>> Vertex::allowed_params
   { "spawn_robot_name", Param::Type::STRING },
   { "is_holding_point", Param::Type::BOOL },
   { "is_passthrough_point", Param::Type::BOOL },
-  { "human_goal_set_name", Param::Type::STRING },
 };
 
 
@@ -68,7 +67,8 @@ void Vertex::from_yaml(const YAML::Node& data)
     {
       Param p;
       p.from_yaml(it->second);
-      params[it->first.as<string>()] = p;
+      std::string key = it->first.as<string>();
+      params[key] = p;
     }
   }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2020 Open Source Robotics Foundation
+ * Copyright (C) 2020 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,30 +15,28 @@
  *
 */
 
-#ifndef BUILDING_LEVEL_TABLE_H
-#define BUILDING_LEVEL_TABLE_H
+#ifndef CALLBACKS__H
+#define CALLBACKS__H
 
-#include <QTableWidget>
+#include <iostream>
 
-#include "table_list.h"
-#include "traffic_editor/building.h"
-#include "crowd_sim/crowd_sim_editor_table.h"
-
-class BuildingLevelTable : public TableList
+template <typename T>
+class Callbacks
 {
-  Q_OBJECT
+  public:
+  Callbacks(std::vector<std::pair<void (T::*)(), T*>> callbacks):_callbacks(callbacks){}
+  ~Callbacks(){}
+  
+  void initiate(){
+    for(auto callback: _callbacks)
+    {
+      auto obj = callback.second;
+      auto func = callback.first;
+      (obj->*func)();
+    }
+  }
 
-public:
-  BuildingLevelTable();
-  ~BuildingLevelTable();
-
-  void update(Building& building);
-  void add_crowdsim_update(CrowdSimEditorTable* cwdsimtable);
-private:
-  CrowdSimEditorTable* _cwdsimtable;
-
-signals:
-  void redraw_scene();
+  std::vector<std::pair<void (T::*)(), T*>> _callbacks;
 };
 
 #endif

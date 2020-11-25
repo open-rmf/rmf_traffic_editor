@@ -31,6 +31,7 @@
 #include "traffic_editor/polygon.h"
 #include "traffic_editor/rendering_options.h"
 #include "traffic_editor/vertex.h"
+#include <traffic_editor/crowd_sim/crowd_sim_impl.h>
 
 #include <QPixmap>
 #include <QPainterPath>
@@ -62,6 +63,8 @@ public:
   std::vector<Fiducial> fiducials;
 
   QPixmap floorplan_pixmap;
+
+  mutable crowd_sim::CrowdSimImplPtr crowd_sim_impl;
 
   bool from_yaml(const std::string& name, const YAML::Node& data);
   YAML::Node to_yaml() const;

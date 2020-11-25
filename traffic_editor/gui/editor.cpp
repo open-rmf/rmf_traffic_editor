@@ -177,19 +177,29 @@ Editor::Editor()
   );
 
 
+  level_table->add_crowdsim_update(crowd_sim_table);
+
+  const QString tabStyle = "QWidget{ background-color: #a0a0a0;}\
+  QTabBar::tab { color: black; }\
+  QTableWidget { background-color: #e0e0e0; color: black; gridline-color: #606060; }\
+  QLineEdit { background:white; }\
+  QComboBox QAbstractItemView{background-color: white;}\
+  QComboBox {selection-background-color: #1D8CC2;}\
+  ";
+
   right_tab_widget = new QTabWidget;
-  right_tab_widget->setStyleSheet("QTabBar::tab { color: black; }");
+  right_tab_widget->setStyleSheet(tabStyle);
   right_tab_widget->addTab(level_table, "levels");
   right_tab_widget->addTab(layers_table, "layers");
   right_tab_widget->addTab(lift_table, "lifts");
   right_tab_widget->addTab(traffic_table, "traffic");
   right_tab_widget->addTab(scenario_table, "scenarios");
-  right_tab_widget->addTab(crowd_sim_table, "crowd_sim");
+  right_tab_widget->addTab(crowd_sim_table, "crowd_sim"); 
 
+  prop_editor_widget = new QTabWidget;
+  prop_editor_widget->setStyleSheet(tabStyle);
   property_editor = new QTableWidget;
-  property_editor->setStyleSheet(
-    "QTableWidget { background-color: #e0e0e0; color: black; gridline-color: #606060; } QLineEdit { background:white; }");
-  property_editor->setMinimumSize(600, 200);
+  property_editor->setMinimumSize(600, 600);
   property_editor->setSizePolicy(
     QSizePolicy::Fixed,
     QSizePolicy::MinimumExpanding);
@@ -204,10 +214,15 @@ Editor::Editor()
     QHeaderView::Stretch);
   property_editor->verticalHeader()->setSectionResizeMode(
     QHeaderView::ResizeToContents);
-  property_editor->setAutoFillBackground(true);
+
+  prop_editor_widget->addTab(property_editor, "General");
   connect(
     property_editor, &QTableWidget::cellChanged,
     this, &Editor::property_editor_cell_changed);
+
+  human_prop_editor = new HumanVtxPropTable(this, project);
+  human_prop_editor->storeWidget(prop_editor_widget);
+  human_prop_editor->storeTabStyle(tabStyle);
 
   QHBoxLayout* param_button_layout = new QHBoxLayout;
 
@@ -232,7 +247,7 @@ Editor::Editor()
   QLabel* properties_label = new QLabel("Properties");
   properties_label->setStyleSheet("QLabel { color: white; }");
   right_column_layout->addWidget(properties_label);
-  right_column_layout->addWidget(property_editor);
+  right_column_layout->addWidget(prop_editor_widget);
   right_column_layout->addLayout(param_button_layout);
 
   QHBoxLayout* hbox_layout = new QHBoxLayout;
@@ -578,6 +593,10 @@ void Editor::load_model_names()
   for (YAML::const_iterator it = ym.begin(); it != ym.end(); ++it)
     editor_models.push_back(
       EditorModel(it->as<std::string>(), model_meters_per_pixel));
+  const YAML::Node yam = y["actor_models"];
+  for (YAML::const_iterator it = yam.begin(); it != yam.end(); ++it)
+    editor_actor_models.push_back(it->as<std::string>());
+  human_prop_editor->setActorModels(editor_actor_models);
 }
 
 QToolButton* Editor::create_tool_button(
@@ -1102,6 +1121,7 @@ void Editor::update_property_editor()
   {
     if (p.selected)
     {
+      human_prop_editor->close();
       populate_property_editor(p);
       return;
     }
@@ -1111,6 +1131,7 @@ void Editor::update_property_editor()
   {
     if (e.selected)
     {
+      human_prop_editor->close();
       populate_property_editor(e);
       return;  // stop after finding the first one
     }
@@ -1120,16 +1141,18 @@ void Editor::update_property_editor()
   {
     if (m.selected)
     {
+      human_prop_editor->close();
       populate_property_editor(m);
       return;  // stop after finding the first one
     }
   }
 
-  for (const auto& v : project.building.levels[level_idx].vertices)
+  for (auto& v : project.building.levels[level_idx].vertices)
   {
     if (v.selected)
     {
       populate_property_editor(v);
+      human_prop_editor->populate(v);
       return;  // stop after finding the first one
     }
   }
@@ -1138,6 +1161,7 @@ void Editor::update_property_editor()
   {
     if (f.selected)
     {
+      human_prop_editor->close();
       populate_property_editor(f);
       return;  // stop after finding the first one
     }
@@ -1379,28 +1403,31 @@ void Editor::populate_property_editor(const Vertex& vertex)
   const double scale = level.drawing_meters_per_pixel;
 
   property_editor->blockSignals(true);  // otherwise we get tons of callbacks
-  property_editor->setRowCount(5 + vertex.params.size());
+
+  // only get row entries relevant to properties, filter out those from human
+  std::map<QString,QString> row_entries;
+  const std::vector<std::string> human_vec = HumanVtxPropTable::_required_components;
+  for (const auto& param : vertex.params)
+  {
+    if(std::find(human_vec.begin(), human_vec.end(), param.first) == human_vec.end() )
+      row_entries[QString::fromStdString(param.first)] = param.second.to_qstring();
+  }
+
+  property_editor->setRowCount(5 + row_entries.size());
 
   property_editor_set_row(0, "x (pixels)", vertex.x, 3, true);
   property_editor_set_row(1, "y (pixels)", vertex.y, 3, true);
   property_editor_set_row(2, "x (m)", vertex.x * scale);
   property_editor_set_row(3, "y (m)", -1.0 * vertex.y * scale);
-  property_editor_set_row(
-    4,
-    "name",
-    QString::fromStdString(vertex.name),
-    true);
+  property_editor_set_row(4, "name", QString::fromStdString(vertex.name), true);
 
   int row = 5;
-  for (const auto& param : vertex.params)
+  for(auto& [prop,val]:row_entries)
   {
-    property_editor_set_row(
-      row,
-      QString::fromStdString(param.first),
-      param.second.to_qstring(),
-      true);
+    property_editor_set_row(row, prop, val, true);
     row++;
   }
+
 
   add_param_button->setEnabled(true);
   add_param_button->setProperty("object_type", QVariant("vertex"));
@@ -1498,9 +1525,37 @@ void Editor::property_editor_cell_changed(int row, int column)
     if (name == "name")
       v.name = value;
     else if (name == "x (pixels)")
+    {
+      if(auto& impl = project.building.levels[level_idx].crowd_sim_impl)
+      {
+        auto& agent_groups = impl->get_agent_groups();
+        for(auto& agent_group:agent_groups)
+        {
+          auto p = agent_group.get_spawn_point();
+          if(p.first == v.x)
+          {
+            agent_group.set_spawn_point(stod(value), p.second);
+          }
+        }
+      }
       v.x = stof(value);
+    }
     else if (name == "y (pixels)")
+    {
+      if(auto& impl = project.building.levels[level_idx].crowd_sim_impl)
+      {
+        auto& agent_groups = impl->get_agent_groups();
+        for(auto& agent_group:agent_groups)
+        {
+          auto p = agent_group.get_spawn_point();
+          if(p.second == v.y)
+          {
+            agent_group.set_spawn_point(p.first, stod(value));
+          }
+        }
+      }
       v.y = stof(value);
+    }
     else
       v.set_param(name, value);
     create_scene();

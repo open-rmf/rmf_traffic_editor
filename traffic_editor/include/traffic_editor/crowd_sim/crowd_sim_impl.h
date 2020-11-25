@@ -46,7 +46,9 @@ public:
 
 
   YAML::Node to_yaml();
+  void internal_agents_to_yaml(YAML::Node&& models_yaml_node);
   bool from_yaml(const YAML::Node& input);
+  bool internal_agents_from_yaml(const YAML::Node& models_yaml_node);
   void clear();
   void init_default_configure();
 
@@ -93,10 +95,10 @@ public:
   }
 
   void save_agent_groups(const std::vector<AgentGroup>& agent_groups);
-  std::vector<AgentGroup> get_agent_groups() const { return _agent_groups; }
+  std::vector<AgentGroup>& get_agent_groups() { return _agent_groups; }
 
   void save_model_types(const std::vector<ModelType>& model_types);
-  std::vector<ModelType> get_model_types() const { return _model_types; }
+  std::vector<ModelType> get_model_types() { return _model_types; }
 
 private:
   // update from project.building in crowd_sim_table
@@ -110,8 +112,8 @@ private:
   std::vector<GoalSet> _goal_sets;
   std::vector<Transition> _transitions;
   std::vector<AgentProfile> _agent_profiles;
-  std::vector<AgentGroup> _agent_groups;
   std::vector<ModelType> _model_types;
+  std::vector<AgentGroup> _agent_groups;
 
   void _initialize_state();
   void _initialize_agent_profile();

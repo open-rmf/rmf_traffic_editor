@@ -27,22 +27,41 @@ using namespace crowd_sim;
 //=====================================================================
 CrowdSimEditorTable::CrowdSimEditorTable(const Project& input_project)
 : TableList(3),
+  initialised(false),
   _project(input_project)
 {
-  if (_project.building.crowd_sim_impl == nullptr)
-  {
-    printf("Initialize crowd_sim_implementation for project.building\n");
-    _impl = std::make_shared<crowd_sim::CrowdSimImplementation>();
-    _project.building.crowd_sim_impl = _impl;
-  }
-  else
-  {
-    _impl = _project.building.crowd_sim_impl;
-  }
-
   const QStringList labels =
   { "Name", "Status", "" };
   setHorizontalHeaderLabels(labels);
+
+  if (_project.building.levels.empty())
+    return;
+
+  initialise();
+}
+
+//=====================================================================
+bool CrowdSimEditorTable::initialise()
+{
+  if (initialised) //already initialised
+    return true;
+
+  if (_project.building.levels.empty())
+    return false;
+
+  BuildingLevel L1 = _project.building.levels.front();
+  
+  if (L1.crowd_sim_impl == nullptr)
+  {
+    printf("Initialize crowd_sim_implementation for project.building\n");
+    _impl = std::make_shared<crowd_sim::CrowdSimImplementation>();
+    L1.crowd_sim_impl = _impl;
+  }
+  else
+  {
+    _impl = L1.crowd_sim_impl;
+  }
+
   setRowCount(
     _reserved_rows +  // checkbox for enable_crowd_sim, LineEdit for updtae_time_step
     _required_components.size());
@@ -81,7 +100,51 @@ CrowdSimEditorTable::CrowdSimEditorTable(const Project& input_project)
     }
   );
 
-  update();
+    QTableWidgetItem* _external_agent_name_item =
+    new QTableWidgetItem(QString::fromStdString("ExtAgentNames"));
+  setItem(2, 0, _external_agent_name_item);
+  auto agent_groups = _impl->get_agent_groups();
+  auto external_agent_groups = agent_groups[0];
+  std::vector<std::string> external_agent_names = external_agent_groups.get_external_agent_name();
+  std::string external_agent_name_string("");
+  
+  if (external_agent_names.size() > 0)
+    {
+      for (auto name : external_agent_names)
+      {
+        external_agent_name_string += name + ";";
+      }
+    }
+  _external_agent_value_item =
+    new QLineEdit(QString::fromStdString(external_agent_name_string), this);
+  setCellWidget(2, 1, _external_agent_value_item);
+  connect(
+    _external_agent_value_item,
+    &QLineEdit::textChanged,
+    [this](const QString& text)
+    {
+      auto& agent_groups = _impl->get_agent_groups();
+      auto& external_agent_groups = agent_groups[0];
+
+      std::string name{""};
+      std::vector<std::string> agent_names;
+      
+      for(auto n:text.toStdString())
+      {
+        if(n != ';')
+          name += n;
+        else if(n == ';' && name != "")
+        {
+          agent_names.push_back(name);
+          name = "";
+        }
+      }
+      if(name != "")
+        agent_names.push_back(name);
+
+      external_agent_groups.set_external_agent_name(agent_names);
+    }
+  );
 
   for (size_t i = 0; i < _required_components.size(); ++i)
   {
@@ -106,12 +169,15 @@ CrowdSimEditorTable::CrowdSimEditorTable(const Project& input_project)
       }
     );
   }
-
+  return initialised = true;
 }
 
 //=================================================
 void CrowdSimEditorTable::update()
 {
+  if (!initialise())
+    return;
+  
   update_goal_area();
   update_navmesh_level();
   update_external_agent_from_spawn_point();
@@ -143,10 +209,6 @@ void CrowdSimEditorTable::update()
     {
       status_number = _impl->get_transitions().size();
     }
-    if ("AgentGroups" == this->_required_components[i])
-    {
-      status_number = _impl->get_agent_groups().size();
-    }
     if ("ModelTypes" == this->_required_components[i])
     {
       status_number = _impl->get_model_types().size();
@@ -165,22 +227,10 @@ void CrowdSimEditorTable::update()
 void CrowdSimEditorTable::update_goal_area()
 {
   _goal_areas_cache.clear();
-  for (auto level : _project.building.levels)
-  {
-    auto vertex_list = level.vertices;
-    for (auto vertex : vertex_list)
-    {
-      if (vertex.params.find("human_goal_set_name") == vertex.params.end() )
-        continue;
-      auto param = vertex.params["human_goal_set_name"];
-      if (param.type != param.STRING)
-      {
-        std::cout << "Error param type for human_goal_set_name." << std::endl;
-        return;
-      }
-      _goal_areas_cache.insert(param.value_string);
-    }
-  }
+  auto& L1 = _project.building.levels.front();
+  auto states = _impl->get_states();
+  for(auto state:states)
+    _goal_areas_cache.insert(state.get_name());
   _impl->set_goal_areas(_goal_areas_cache);
 }
 
@@ -215,7 +265,7 @@ void CrowdSimEditorTable::update_external_agent_from_spawn_point()
   auto agent_groups = _impl->get_agent_groups();
   if (agent_groups.size() == 0)
   {
-    agent_groups.emplace_back(0, true);
+    agent_groups.emplace_back(0);
   }
   auto& external_group = agent_groups.at(0);
   external_group.set_external_agent_name(spawn_point_name);

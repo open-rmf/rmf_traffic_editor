@@ -79,13 +79,13 @@ set(traffic_editor_sources
   #crowd_sim related
   gui/multi_select_combo_box.cpp
   gui/crowd_sim/agent_group.cpp
-  gui/crowd_sim/agent_group_table.cpp
   gui/crowd_sim/agent_profile.cpp
   gui/crowd_sim/agent_profile_table.cpp
   gui/crowd_sim/condition.cpp
   gui/crowd_sim/condition_dialog.cpp
   gui/crowd_sim/crowd_sim_dialog.cpp
   gui/crowd_sim/crowd_sim_editor_table.cpp
+  gui/crowd_sim/human_vtx_prop_table.cpp
   gui/crowd_sim/crowd_sim_impl.cpp
   gui/crowd_sim/crowd_sim_table_base.cpp
   gui/crowd_sim/goal_set.cpp

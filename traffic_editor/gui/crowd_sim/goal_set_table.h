@@ -50,6 +50,7 @@ public:
   void save_to_impl() override;
   void add_button_click() override;
   void delete_button_click(size_t row_number) override;
+  void test() {std::cout << "all good" << std::endl;};
 
 private:
   std::vector<crowd_sim::GoalSet> _cache;

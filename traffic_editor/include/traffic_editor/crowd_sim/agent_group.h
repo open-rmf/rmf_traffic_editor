@@ -29,34 +29,46 @@ namespace crowd_sim {
 class AgentGroup
 {
 public:
-  AgentGroup(size_t group_id, bool is_external_group = false)
+  AgentGroup(size_t group_id)
   : _group_id(group_id),
-    _is_external_group(is_external_group),
     _spawn_point_x(0.0),
     _spawn_point_y(0.0),
     _spawn_number(0),
     _external_agent_name({}),
+    _internal_agent_model_name(""),
+    _agent_profile(""),
+    _initial_state("")
+  {}
+  AgentGroup(size_t group_id, double x, double y)
+  : _group_id(group_id),
+    _spawn_point_x(x),
+    _spawn_point_y(y),
+    _spawn_number(0),
+    _external_agent_name({}),
+    _internal_agent_model_name(""),
     _agent_profile(""),
     _initial_state("")
   {}
   AgentGroup(const YAML::Node& input)
   : _group_id(65535),
-    _is_external_group(false),
     _spawn_point_x(0.0),
     _spawn_point_y(0.0),
     _spawn_number(0),
     _external_agent_name({}),
+    _internal_agent_model_name(""),
     _agent_profile(""),
     _initial_state("")
   {
-    from_yaml(input);
+    if(input["agent_group_id"]) // internal_agent
+      internal_from_yaml(input);
+    else
+      external_from_yaml(input);
   }
 
   bool is_valid() const
   {
     return _agent_profile.size() > 0 && _initial_state.size() > 0;
   }
-  bool is_external_group() const { return _is_external_group; }
   size_t get_group_id() const { return _group_id; }
   std::pair<double, double> get_spawn_point() const
   {
@@ -66,12 +78,19 @@ public:
   {
     return _external_agent_name;
   }
+  std::string get_internal_agent_model_name() const
+  {
+    return _internal_agent_model_name;
+  }
   int get_spawn_number() const { return _spawn_number; }
   std::string get_agent_profile() const { return _agent_profile; }
   std::string get_initial_state() const { return _initial_state; }
 
-  YAML::Node to_yaml() const;
-  void from_yaml(const YAML::Node& input);
+  YAML::Node to_yaml(YAML::Node& node) const;
+  YAML::Node external_to_yaml() const;
+  std::vector<YAML::Node> internal_to_yaml(int group_id) const;
+  void internal_from_yaml(const YAML::Node& input);
+  void external_from_yaml(const YAML::Node& input);
 
   void set_spawn_point(double x, double y)
   {
@@ -83,6 +102,10 @@ public:
     _external_agent_name.clear();
     _external_agent_name = external_name;
     _spawn_number = _external_agent_name.size();
+  }
+  void set_internal_agent_model_name(const std::string& model_name)
+  {
+    _internal_agent_model_name = model_name;
   }
   void set_spawn_number(int number)
   {
@@ -96,13 +119,16 @@ public:
   {
     _initial_state = state;
   }
-
+  void increment_spawn_number()
+  {
+    _spawn_number++;
+  }
 private:
   size_t _group_id;
-  bool _is_external_group;
   double _spawn_point_x, _spawn_point_y;
   size_t _spawn_number;
   std::vector<std::string> _external_agent_name;
+  std::string _internal_agent_model_name;
   std::string _agent_profile, _initial_state;
 };
 

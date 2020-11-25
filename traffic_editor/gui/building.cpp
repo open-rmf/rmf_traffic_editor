@@ -83,21 +83,6 @@ bool Building::load_yaml_file()
   if (y["reference_level_name"])
     reference_level_name = y["reference_level_name"].as<string>();
 
-  // crowd_sim_impl is initialized when creating crowd_sim_table in editor.cpp
-  // just in case the pointer is not initialized
-  if (crowd_sim_impl == nullptr)
-    crowd_sim_impl = std::make_shared<crowd_sim::CrowdSimImplementation>();
-  if (y["crowd_sim"] && y["crowd_sim"].IsMap())
-  {
-    if (!crowd_sim_impl->from_yaml(y["crowd_sim"]))
-    {
-      printf(
-        "Error in loading crowd_sim configuration from yaml, re-initialize crowd_sim");
-      crowd_sim_impl->clear();
-      crowd_sim_impl->init_default_configure();
-    }
-  }
-
   if (!y["levels"] || !y["levels"].IsMap())
   {
     printf("expected top-level dictionary named 'levels'");
@@ -106,6 +91,7 @@ bool Building::load_yaml_file()
 
   levels.clear();
   const YAML::Node yl = y["levels"];
+  bool first_level = true;
   for (YAML::const_iterator it = yl.begin(); it != yl.end(); ++it)
   {
     BuildingLevel level;
@@ -150,13 +136,13 @@ bool Building::save_yaml_file()
 
   y["levels"] = YAML::Node(YAML::NodeType::Map);
   for (const auto& level : levels)
+  {
     y["levels"][level.name] = level.to_yaml();
+  }
 
   y["lifts"] = YAML::Node(YAML::NodeType::Map);
   for (const auto& lift : lifts)
     y["lifts"][lift.name] = lift.to_yaml();
-
-  y["crowd_sim"] = crowd_sim_impl->to_yaml();
 
   YAML::Emitter emitter;
   yaml_utils::write_node(y, emitter);

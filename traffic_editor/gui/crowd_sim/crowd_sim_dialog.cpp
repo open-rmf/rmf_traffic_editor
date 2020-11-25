@@ -21,7 +21,6 @@
 #include "transition_table.h"
 #include "to_state_table.h"
 #include "agent_profile_table.h"
-#include "agent_group_table.h"
 #include "model_type_table.h"
 
 using namespace crowd_sim;
@@ -69,14 +68,6 @@ CrowdSimDialog::CrowdSimDialog(
   else if ("Transitions" == dialog_title)
   {
     _table_ptr = TransitionTab::init_and_make(crowd_sim_impl);
-  }
-  else if ("AgentGroups" == dialog_title)
-  {
-    _table_ptr = AgentGroupTab::init_and_make(crowd_sim_impl);
-  }
-  else if ("ModelTypes" == dialog_title)
-  {
-    _table_ptr = ModelTypeTab::init_and_make(crowd_sim_impl);
   }
   else
   {

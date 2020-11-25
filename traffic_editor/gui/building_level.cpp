@@ -48,6 +48,23 @@ bool BuildingLevel::from_yaml(
   if (!_data.IsMap())
     throw std::runtime_error("level " + name + " YAML invalid");
 
+  // crowd_sim_impl is initialized when creating crowd_sim_table in editor.cpp
+  // just in case the pointer is not initialized
+  if (crowd_sim_impl == nullptr)
+    crowd_sim_impl = std::make_shared<crowd_sim::CrowdSimImplementation>();
+
+  if (_data["crowd_sim"] && _data["crowd_sim"].IsMap())
+  {
+    if (!(crowd_sim_impl->from_yaml(_data["crowd_sim"]) && crowd_sim_impl->internal_agents_from_yaml(_data["models"])))
+    {
+      printf(
+        "Error in loading crowd_sim configuration from yaml, re-initialize crowd_sim");
+      crowd_sim_impl->clear();
+      crowd_sim_impl->init_default_configure();
+    }
+  }
+
+
   if (_data["drawing"] && _data["drawing"].IsMap())
   {
     const YAML::Node& drawing_data = _data["drawing"];
@@ -105,6 +122,9 @@ bool BuildingLevel::from_yaml(
     const YAML::Node& ys = _data["models"];
     for (YAML::const_iterator it = ys.begin(); it != ys.end(); ++it)
     {
+      if((*it)["agent_group_id"])
+        continue;
+
       Model m;
       m.from_yaml(*it, this->name);
       models.push_back(m);
@@ -229,6 +249,12 @@ YAML::Node BuildingLevel::to_yaml() const
         break;
     }
     y[dict_name].push_back(n);
+  }
+
+  if(crowd_sim_impl)
+  {
+    y["crowd_sim"] = crowd_sim_impl->to_yaml();
+    crowd_sim_impl->internal_agents_to_yaml(y["models"]);
   }
 
   for (const auto& model : models)

@@ -151,11 +151,19 @@ void StatesTab::_list_goal_sets_in_combo(
   QComboBox* comboBox,
   size_t current_goal_set_id)
 {
-  for (auto goal_set : get_impl()->get_goal_sets())
+  int i = 0;
+  auto size = get_impl()->get_states().size() - 1; // ignore the external agent, limit goal sets number <= state number 
+  for (i; i < size; i++)
   {
-    comboBox->addItem(QString::number(
-        static_cast<int>(goal_set.get_goal_set_id())));
+    comboBox->addItem(QString::number(i));
   }
+
+  size_t new_num = _cache.size() - get_impl()->get_states().size();
+  for (int j = 0; j < new_num;j++)
+  {
+    comboBox->addItem(QString::number(i+j));
+  }
+
   auto index =
     comboBox->findText(QString::number(static_cast<int>(current_goal_set_id) ));
   if (index >= 0)

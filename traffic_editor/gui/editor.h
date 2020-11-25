@@ -39,6 +39,7 @@
 #endif
 
 #include "crowd_sim/crowd_sim_editor_table.h"
+#include "crowd_sim/human_vtx_prop_table.h"
 
 class BuildingLevelTable;
 class MapView;
@@ -47,6 +48,7 @@ class LiftTable;
 class ScenarioTable;
 class TrafficTable;
 class CrowdSimTable;
+class HumanVtxPropTable;
 
 #ifdef HAS_OPENCV
 namespace cv {
@@ -204,6 +206,8 @@ private:
   TrafficTable* traffic_table;
   CrowdSimEditorTable* crowd_sim_table;
 
+  QTabWidget* prop_editor_widget;
+  HumanVtxPropTable* human_prop_editor;
   QTableWidget* property_editor;
   void update_property_editor();
   void clear_property_editor();
@@ -260,6 +264,7 @@ private:
 #endif
 
   std::vector<EditorModel> editor_models;
+  std::vector<std::string> editor_actor_models;
   EditorModel* mouse_motion_editor_model = nullptr;
   void load_model_names();
 
