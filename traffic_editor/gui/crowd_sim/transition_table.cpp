@@ -111,7 +111,7 @@ void TransitionTab::_list_from_states_in_combo(
   connect(
     comboBox,
     &QComboBox::currentTextChanged,
-    [this](const QString &text)
+    [this](const QString& text)
     {
       save();
     }
