@@ -98,6 +98,7 @@ bool BuildingLevel::from_yaml(
   load_yaml_edge_sequence(_data, "walls", Edge::WALL);
   load_yaml_edge_sequence(_data, "measurements", Edge::MEAS);
   load_yaml_edge_sequence(_data, "doors", Edge::DOOR);
+  load_yaml_edge_sequence(_data, "human_lanes", Edge::HUMAN_LANE);
 
   if (_data["models"] && _data["models"].IsSequence())
   {
@@ -218,6 +219,9 @@ YAML::Node BuildingLevel::to_yaml() const
         break;
       case Edge::DOOR:
         dict_name = "doors";
+        break;
+      case Edge::HUMAN_LANE:
+        dict_name = "human_lanes";
         break;
       default:
         printf("tried to save unknown edge type: %d\n",
@@ -399,7 +403,8 @@ void BuildingLevel::draw_lane(
   const double dy = v_end.y - v_start.y;
   const double len = std::sqrt(dx*dx + dy*dy);
 
-  const double lane_pen_width = 1.0 / drawing_meters_per_pixel;
+  double pen_width_in_meters = edge.get_width() > 0 ? edge.get_width() : 1.0;
+  const double lane_pen_width = pen_width_in_meters / drawing_meters_per_pixel;
 
   const QPen arrow_pen(
     QBrush(QColor::fromRgbF(0.0, 0.0, 0.0, 0.5)),
@@ -447,6 +452,7 @@ void BuildingLevel::draw_lane(
     case 3: color.setRgbF(0.5, 0.5, 0.0); break;
     case 4: color.setRgbF(0.5, 0.0, 0.5); break;
     case 5: color.setRgbF(0.8, 0.0, 0.0); break;
+    case 9: color.setRgbF(0.3, 0.3, 0.3); break;
     default: break;  // will render as dark grey
   }
 
@@ -873,6 +879,7 @@ void BuildingLevel::draw(
       case Edge::WALL: draw_wall(scene, edge); break;
       case Edge::MEAS: draw_meas(scene, edge); break;
       case Edge::DOOR: draw_door(scene, edge); break;
+      case Edge::HUMAN_LANE: draw_lane(scene, edge, rendering_options); break;
       default:
         printf("tried to draw unknown edge type: %d\n",
           static_cast<int>(edge.type));

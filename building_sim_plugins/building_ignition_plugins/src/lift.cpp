@@ -2,11 +2,20 @@
 
 #include <ignition/gazebo/System.hh>
 #include <ignition/gazebo/Model.hh>
+#include <ignition/gazebo/components/Model.hh>
+#include <ignition/gazebo/components/Name.hh>
+#include <ignition/gazebo/components/Pose.hh>
+#include <ignition/gazebo/components/Static.hh>
+#include <ignition/gazebo/components/AxisAlignedBox.hh>
 #include <ignition/gazebo/components/JointAxis.hh>
 #include <ignition/gazebo/components/JointPosition.hh>
 #include <ignition/gazebo/components/JointVelocity.hh>
 #include <ignition/gazebo/components/JointVelocityCmd.hh>
 #include <ignition/gazebo/components/JointPositionReset.hh>
+#include <ignition/gazebo/components/LinearVelocityCmd.hh>
+#include <ignition/gazebo/components/AngularVelocityCmd.hh>
+#include <ignition/gazebo/components/PoseCmd.hh>
+#include <ignition/gazebo/components/PhysicsEnginePlugin.hh>
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -22,6 +31,10 @@ using namespace building_sim_common;
 
 namespace building_sim_ign {
 
+enum class PhysEnginePlugin {DEFAULT, TPE};
+std::unordered_map<std::string, PhysEnginePlugin> plugin_names {
+  {"ignition-physics-tpe-plugin", PhysEnginePlugin::TPE}};
+
 //==============================================================================
 
 class IGNITION_GAZEBO_VISIBLE LiftPlugin
@@ -32,12 +45,37 @@ class IGNITION_GAZEBO_VISIBLE LiftPlugin
 private:
   rclcpp::Node::SharedPtr _ros_node;
   Entity _cabin_joint;
+  Entity _lift_entity;
+  std::vector<Entity> _payloads;
+
+  PhysEnginePlugin _phys_plugin = PhysEnginePlugin::DEFAULT;
+  bool _first_iteration = true;
 
   std::unique_ptr<LiftCommon> _lift_common = nullptr;
 
   bool _initialized = false;
 
   void create_entity_components(Entity entity, EntityComponentManager& ecm)
+  {
+    if (!ecm.EntityHasComponentType(entity,
+      components::LinearVelocityCmd().TypeId()))
+      ecm.CreateComponent(entity, components::LinearVelocityCmd({0, 0, 0}));
+    if (!ecm.EntityHasComponentType(entity,
+      components::WorldPoseCmd().TypeId()))
+    {
+      auto pos = ecm.Component<components::Pose>(entity);
+      if (pos) // Set Pose cmd to current pose, instead of default location
+      {
+        ecm.CreateComponent(entity, components::WorldPoseCmd(pos->Data()));
+      }
+      else
+      {
+        ecm.CreateComponent(entity, components::WorldPoseCmd());
+      }
+    }
+  }
+
+  void create_joint_components(Entity entity, EntityComponentManager& ecm)
   {
     if (!ecm.EntityHasComponentType(entity,
       components::JointPosition().TypeId()))
@@ -53,6 +91,53 @@ private:
       ecm.CreateComponent(entity, components::JointVelocityCmd({0}));
   }
 
+  void fill_physics_engine(Entity entity, EntityComponentManager& ecm)
+  {
+    Entity parent = entity;
+    while (ecm.ParentEntity(parent))
+    {
+      parent = ecm.ParentEntity(parent);
+    }
+    if (ecm.EntityHasComponentType(parent,
+      components::PhysicsEnginePlugin().TypeId()))
+    {
+      const std::string physics_plugin_name =
+        ecm.Component<components::PhysicsEnginePlugin>(parent)->Data();
+      const auto it = plugin_names.find(physics_plugin_name);
+      if (it != plugin_names.end())
+      {
+        _phys_plugin = it->second;
+      }
+    }
+  }
+
+  std::vector<Entity> get_payloads(
+    Entity& lift,
+    EntityComponentManager& ecm)
+  {
+    const auto lift_aabb = ecm.Component<components::AxisAlignedBox>(
+      _lift_entity);
+    std::vector<Entity> payloads;
+    ecm.Each<components::Model, components::Pose>(
+      [&](const Entity& entity,
+      const components::Model*,
+      const components::Pose* pose
+      ) -> bool
+      {
+        // Object should not be static
+        const auto payload_position = pose->Data().Pos();
+        if (entity != lift)
+        { // Could possibly check bounding box intersection too, but this suffices
+          if (lift_aabb->Data().Contains(payload_position))
+          {
+            payloads.push_back(entity);
+          }
+        }
+        return true;
+      });
+    return payloads;
+  }
+
 public:
   LiftPlugin()
   {
@@ -64,12 +149,13 @@ public:
     const std::shared_ptr<const sdf::Element>& sdf,
     EntityComponentManager& ecm, EventManager& /*_eventMgr*/) override
   {
+    _lift_entity = entity;
     //_ros_node = gazebo_ros::Node::Get(sdf);
     // TODO get properties from sdf instead of hardcoded (will fail for multiple instantiations)
     // TODO proper rclcpp init (only once and pass args)
     auto model = Model(entity);
     char const** argv = NULL;
-    if (!rclcpp::is_initialized())
+    if (!rclcpp::ok())
       rclcpp::init(0, argv);
     std::string plugin_name("plugin_" + model.Name(ecm));
     ignwarn << "Initializing plugin with name " << plugin_name << std::endl;
@@ -87,20 +173,20 @@ public:
     if (!_lift_common)
       return;
 
-    const auto joint = model.JointByName(ecm, _lift_common->get_joint_name());
-    if (!joint)
+    if (!ecm.EntityHasComponentType(_lift_entity,
+      components::AxisAlignedBox().TypeId()))
+    {
+      ecm.CreateComponent(_lift_entity, components::AxisAlignedBox());
+    }
+
+    _cabin_joint = model.JointByName(ecm, _lift_common->get_joint_name());
+    if (!_cabin_joint)
     {
       RCLCPP_ERROR(_ros_node->get_logger(),
         " -- Model is missing the joint [%s]",
         _lift_common->get_joint_name().c_str());
       return;
     }
-    create_entity_components(joint, ecm);
-    _cabin_joint = joint;
-
-    auto position_cmd = ecm.Component<components::JointPositionReset>(
-      _cabin_joint);
-    position_cmd->Data()[0] = _lift_common->get_elevation();
 
     _initialized = true;
 
@@ -111,6 +197,30 @@ public:
 
   void PreUpdate(const UpdateInfo& info, EntityComponentManager& ecm) override
   {
+    // Read from components that may not have been initialized in configure()
+    if (_first_iteration)
+    {
+      fill_physics_engine(_lift_entity, ecm);
+
+      double lift_elevation = _lift_common->get_elevation();
+      if (_phys_plugin == PhysEnginePlugin::DEFAULT)
+      {
+        create_joint_components(_cabin_joint, ecm);
+        auto position_cmd = ecm.Component<components::JointPositionReset>(
+          _cabin_joint);
+        position_cmd->Data()[0] = lift_elevation;
+      }
+      else
+      {
+        create_entity_components(_lift_entity, ecm);
+        auto position_cmd = ecm.Component<components::WorldPoseCmd>(
+          _lift_entity);
+        position_cmd->Data().Pos().Z() = lift_elevation;
+      }
+
+      _first_iteration = false;
+    }
+
     // TODO parallel thread executor?
     rclcpp::spin_some(_ros_node);
     if (!_initialized)
@@ -120,19 +230,62 @@ public:
     const double t =
       (std::chrono::duration_cast<std::chrono::nanoseconds>(info.simTime).
       count()) * 1e-9;
-    const double position = ecm.Component<components::JointPosition>(
-      _cabin_joint)->Data()[0];
-    const double velocity = ecm.Component<components::JointVelocity>(
-      _cabin_joint)->Data()[0];
+    double position = 0.0;
+    double velocity = 0.0;
+
+    // Read from either joint data or model data based on physics engine
+    if (_phys_plugin == PhysEnginePlugin::DEFAULT)
+    {
+      position = ecm.Component<components::JointPosition>(
+        _cabin_joint)->Data()[0];
+      velocity = ecm.Component<components::JointVelocity>(
+        _cabin_joint)->Data()[0];
+    }
+    else
+    {
+      position = ecm.Component<components::Pose>(
+        _lift_entity)->Data().Pos().Z();
+      auto lift_vel_cmd = ecm.Component<components::LinearVelocityCmd>(
+        _lift_entity);
+      velocity = lift_vel_cmd->Data()[2];
+    }
 
     auto result = _lift_common->update(t, position, velocity);
 
-    // Apply motion to the joint
-    auto vel_cmd = ecm.Component<components::JointVelocityCmd>(
-      _cabin_joint);
-    vel_cmd->Data()[0] = result.velocity;
+    // Move either joint or lift cabin based on physics engine used
+    if (_phys_plugin == PhysEnginePlugin::DEFAULT)
+    {
+      auto vel_cmd = ecm.Component<components::JointVelocityCmd>(
+        _cabin_joint);
+      vel_cmd->Data()[0] = result.velocity;
+    }
+    else
+    {
+      auto lift_vel_cmd = ecm.Component<components::LinearVelocityCmd>(
+        _lift_entity);
+      lift_vel_cmd->Data()[2] = result.velocity;
+    }
+
+    // Move any payloads that need to be manually moved
+    // (i.e. have a LinearVelocityCmd component that exists)
+    if (_lift_common->motion_state_changed())
+    {
+      _payloads = get_payloads(_lift_entity, ecm);
+    }
+
+    for (const Entity& payload : _payloads)
+    {
+      if (ecm.EntityHasComponentType(payload,
+        components::LinearVelocityCmd().TypeId()))
+      {
+        auto lin_vel_cmd =
+          ecm.Component<components::LinearVelocityCmd>(payload);
+        lin_vel_cmd->Data()[2] = result.velocity;
+      }
+    }
   }
 };
+
 
 IGNITION_ADD_PLUGIN(
   LiftPlugin,

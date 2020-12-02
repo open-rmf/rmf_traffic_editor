@@ -231,6 +231,18 @@ LiftDialog::LiftDialog(Lift& lift, Building& building)
     });
   depth_hbox->addWidget(_depth_line_edit);
 
+  QHBoxLayout* plugin_hbox = new QHBoxLayout;
+  plugin_hbox->addWidget(new QLabel("Plugin:"));
+  _plugin_yes_radio_button = new QRadioButton("Yes");
+  _plugin_no_radio_button = new QRadioButton("No");
+  if (_lift.plugins)
+    _plugin_yes_radio_button->setChecked(true);
+  else
+    _plugin_no_radio_button->setChecked(true);
+
+  plugin_hbox->addWidget(_plugin_yes_radio_button);
+  plugin_hbox->addWidget(_plugin_no_radio_button);
+
   QHBoxLayout* add_wp_hbox = new QHBoxLayout;
   _add_wp_button = new QPushButton("Add lift waypoints", this);
   add_wp_hbox->addWidget(_add_wp_button);
@@ -293,6 +305,7 @@ LiftDialog::LiftDialog(Lift& lift, Building& building)
   left_vbox->addLayout(yaw_hbox);
   left_vbox->addLayout(width_hbox);
   left_vbox->addLayout(depth_hbox);
+  left_vbox->addLayout(plugin_hbox);
   left_vbox->addLayout(add_wp_hbox);
   left_vbox->addWidget(_level_table);
 
@@ -348,12 +361,14 @@ void LiftDialog::ok_button_clicked()
     QMessageBox::critical(this, "Error", "Lowest floor above highest floor");
     return;
   }
-  /*
+
   _lift.name = _name_line_edit->text().toStdString();
   _lift.reference_floor_name =
     _reference_floor_combo_box->currentText().toStdString();
   _lift.highest_floor = _highest_floor_combo_box->currentText().toStdString();
   _lift.lowest_floor = _lowest_floor_combo_box->currentText().toStdString();
+  _lift.initial_floor_name =
+    _initial_floor_combo_box->currentText().toStdString();
 
   _lift.x = _x_line_edit->text().toDouble();
   _lift.y = _y_line_edit->text().toDouble();
@@ -361,7 +376,12 @@ void LiftDialog::ok_button_clicked()
 
   _lift.width = _width_line_edit->text().toDouble();
   _lift.depth = _depth_line_edit->text().toDouble();
-  */
+
+  if (_plugin_yes_radio_button->isChecked())
+    _lift.plugins = true;
+  else if (_plugin_no_radio_button->isChecked())
+    _lift.plugins = false;
+
   // grab all the level-door checkbox matrix states and save them
   for (int level_row = 0; level_row < _level_table->rowCount(); level_row++)
   {

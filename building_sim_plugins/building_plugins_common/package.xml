@@ -1,6 +1,6 @@
 <package format="3">
   <name>building_sim_common</name>
-  <version>1.0.0</version>
+  <version>1.1.0</version>
   <description>
     Common utility functions for Gazebo and ignition building plugins
   </description>
@@ -28,6 +28,8 @@
   <depend>std_msgs</depend>
   <depend>std_srvs</depend>
   <depend>menge</depend>
+  <depend>libqt5-widgets</depend>
+  <depend>qtbase5-dev</depend>
 
   <export>
     <build_type>ament_cmake</build_type>

@@ -38,12 +38,15 @@
 #include "sim_thread.h"
 #endif
 
+#include "crowd_sim/crowd_sim_editor_table.h"
+
 class BuildingLevelTable;
 class MapView;
 class Level;
 class LiftTable;
 class ScenarioTable;
 class TrafficTable;
+class CrowdSimTable;
 
 #ifdef HAS_OPENCV
 namespace cv {
@@ -121,6 +124,7 @@ private:
     TOOL_ADD_FIDUCIAL,
     TOOL_ADD_ROI,
     TOOL_ADD_HOLE,
+    TOOL_ADD_HUMAN_LANE,
   } tool_id = TOOL_SELECT;
 
   std::map<ToolId, QAction*> tools;
@@ -198,6 +202,7 @@ private:
   LiftTable* lift_table;
   ScenarioTable* scenario_table;
   TrafficTable* traffic_table;
+  CrowdSimEditorTable* crowd_sim_table;
 
   QTableWidget* property_editor;
   void update_property_editor();
@@ -322,6 +327,9 @@ private:
   void mouse_add_hole(const MouseType t, QMouseEvent* e, const QPointF& p);
   void mouse_add_roi(const MouseType t, QMouseEvent* e, const QPointF& p);
   void mouse_edit_polygon(const MouseType t, QMouseEvent* e, const QPointF& p);
+
+  void mouse_add_human_lane(const MouseType t, QMouseEvent* e,
+    const QPointF& p);
 
   QPointF previous_mouse_point;
 };

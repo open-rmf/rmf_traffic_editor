@@ -22,6 +22,7 @@
 
 #include <QDialog>
 #include <QObject>
+#include <QRadioButton>
 
 #include "traffic_editor/lift.h"
 #include "traffic_editor/building.h"
@@ -56,6 +57,8 @@ private:
   QLineEdit* _yaw_line_edit;
   QLineEdit* _width_line_edit;
   QLineEdit* _depth_line_edit;
+  QRadioButton* _plugin_yes_radio_button;
+  QRadioButton* _plugin_no_radio_button;
 
   QTableWidget* _door_table;
   QTableWidget* _level_table;
