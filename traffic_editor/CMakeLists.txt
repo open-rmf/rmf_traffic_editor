@@ -46,6 +46,7 @@ set(traffic_editor_sources
   gui/edge.cpp
   gui/editor.cpp
   gui/editor_model.cpp
+  gui/editor_action.cpp
   gui/fiducial.cpp
   gui/layer.cpp
   gui/layer_dialog.cpp

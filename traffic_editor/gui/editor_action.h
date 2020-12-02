@@ -20,10 +20,38 @@
 
 #include <string>
 #include <vector>
-#include <option
+#include <functional>
+#include <unordered_map>
 
-class EditorAction {
-    std::string action_id;
-    std::string params; // Think about it later    
+enum ParameterType 
+{
+    FLOAT=1,
+    STRING=2,
+    INT=3
+};
+
+struct EditorParam 
+{
+    ParameterType pt;
+    std::string str_val;
+    float flt_val;
+    int int_val;
+};
+
+
+typedef std::unordered_map<std::string, EditorParam> EditorParams;
+
+class EditorAction 
+{
+public:
+    EditorAction(std::function<void(EditorParams)> action, std::function<void(EditorParams)> undo_action, EditorParams type);
+    void undo();
+    void redo();
+
+private:
+
+    std::function<void(EditorParams)> _action;
+    std::function<void(EditorParams)> _undo_action;
+    EditorParams _params; // Think about it later
 };
 #endif

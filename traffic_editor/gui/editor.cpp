@@ -280,7 +280,8 @@ Editor::Editor()
   edit_menu->addAction(
     "&undo",
     this,
-    &Editor::edit_undo);
+    &Editor::edit_undo,
+    QKeySequence(Qt::CTRL + Qt::Key_Z));
   edit_menu->addAction(
     "&redo",
     this,
@@ -790,7 +791,13 @@ void Editor::help_about()
 
 void Editor::edit_undo()
 {
-
+  if(historical_actions.empty()) 
+    return;
+  
+  EditorAction action = historical_actions.top();
+  action.undo();
+  historical_actions.pop();
+  redo_stack.push(action); //TODO: Limit redo stack
 }
 
 void Editor::edit_redo()

@@ -130,7 +130,7 @@ private:
   } tool_id = TOOL_SELECT;
 
   std::map<ToolId, QAction*> tools;
-  std::stack<EditorAction> historical_actions;
+  std::stack<EditorAction> historical_actions, redo_stack;
 
   void set_tool_visibility(const ToolId id, const bool visible);
 
