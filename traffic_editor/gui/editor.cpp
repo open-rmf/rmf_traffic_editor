@@ -278,6 +278,15 @@ Editor::Editor()
   // EDIT MENU
   QMenu* edit_menu = menuBar()->addMenu("&Edit");
   edit_menu->addAction(
+    "&undo",
+    this,
+    &Editor::edit_undo);
+  edit_menu->addAction(
+    "&redo",
+    this,
+    &Editor::edit_redo);
+  edit_menu->addSeparator();
+  edit_menu->addAction(
     "&Building properties...",
     this,
     &Editor::edit_building_properties);
@@ -777,6 +786,16 @@ bool Editor::project_save()
 void Editor::help_about()
 {
   QMessageBox::about(this, "About", "Welcome to the Traffic Editor");
+}
+
+void Editor::edit_undo()
+{
+
+}
+
+void Editor::edit_redo()
+{
+  
 }
 
 void Editor::edit_preferences()

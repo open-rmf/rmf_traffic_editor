@@ -19,6 +19,7 @@
 #define EDITOR_H
 
 #include <map>
+#include <stack>
 #include <string>
 #include <vector>
 
@@ -33,6 +34,7 @@
 #include "project.h"
 #include "traffic_editor/editor_model.h"
 #include "editor_mode_id.h"
+#include "editor_action.h"
 
 #ifdef HAS_IGNITION_PLUGIN
 #include "sim_thread.h"
@@ -128,6 +130,8 @@ private:
   } tool_id = TOOL_SELECT;
 
   std::map<ToolId, QAction*> tools;
+  std::stack<EditorAction> historical_actions;
+
   void set_tool_visibility(const ToolId id, const bool visible);
 
   /////////////////
@@ -137,6 +141,8 @@ private:
   bool project_save();
 
   bool maybe_save();
+  void edit_undo();
+  void edit_redo();
   void edit_preferences();
   void edit_building_properties();
   void edit_project_properties();
