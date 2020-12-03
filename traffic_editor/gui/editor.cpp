@@ -1711,7 +1711,9 @@ void Editor::mouse_add_vertex(
       }
     }
 
-    AddVertexCommand* command = new AddVertexCommand(&project, mode, level_idx, p.x(), p.y());
+    AddVertexCommand* command = new AddVertexCommand(&project, mode, level_idx,
+      p.x(), p.y());
+    
     undo_stack.push(command);
 
     setWindowModified(true);
