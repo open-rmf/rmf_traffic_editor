@@ -37,7 +37,7 @@ include_directories(include)
 include_directories(${ament_index_cpp_INCLUDE_DIRS})
 
 set(traffic_editor_sources
-  gui/add_vertex.cpp
+  gui/actions/add_vertex.cpp
   gui/add_param_dialog.cpp
   gui/building.cpp
   gui/building_dialog.cpp
