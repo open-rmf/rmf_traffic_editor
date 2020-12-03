@@ -280,11 +280,13 @@ Editor::Editor()
   edit_menu->addAction(
     "&undo",
     this,
-    &Editor::edit_undo);
+    &Editor::edit_undo,
+    QKeySequence::Undo);
   edit_menu->addAction(
     "&redo",
     this,
-    &Editor::edit_redo);
+    &Editor::edit_redo,
+    QKeySequence::Redo);
   edit_menu->addSeparator();
   edit_menu->addAction(
     "&Building properties...",
