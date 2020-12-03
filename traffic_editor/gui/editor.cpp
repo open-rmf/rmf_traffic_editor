@@ -1684,21 +1684,6 @@ void Editor::mouse_add_vertex(
 {
   if (t == MOUSE_PRESS)
   {
-    /*if (mode == MODE_BUILDING || mode == MODE_TRAFFIC)
-      project.building.add_vertex(level_idx, p.x(), p.y());
-    else if (mode == MODE_SCENARIO)
-    {
-      if (project.scenario_idx < 0)
-      {
-        QMessageBox::warning(
-          this,
-          "Add Vertex",
-          "No scenario currently defined.");
-        return;
-      }
-      project.add_scenario_vertex(level_idx, p.x(), p.y());
-    }*/
-
     if (mode == MODE_SCENARIO)
     {
       if (project.scenario_idx < 0)
@@ -1712,8 +1697,8 @@ void Editor::mouse_add_vertex(
     }
 
     AddVertexCommand* command = new AddVertexCommand(&project, mode, level_idx,
-      p.x(), p.y());
-    
+        p.x(), p.y());
+
     undo_stack.push(command);
 
     setWindowModified(true);
