@@ -41,6 +41,7 @@
 #include "ament_index_cpp/get_package_prefix.hpp"
 #include "ament_index_cpp/get_resource.hpp"
 
+#include "add_vertex.h"
 #include "add_param_dialog.h"
 #include "building_dialog.h"
 #include "building_level_dialog.h"
@@ -792,12 +793,16 @@ void Editor::help_about()
 
 void Editor::edit_undo()
 {
-
+  undo_stack.undo();
+  create_scene();
+  setWindowModified(true);
 }
 
 void Editor::edit_redo()
 {
-  
+  undo_stack.redo();
+  create_scene();
+  setWindowModified(true);
 }
 
 void Editor::edit_preferences()
@@ -1679,7 +1684,7 @@ void Editor::mouse_add_vertex(
 {
   if (t == MOUSE_PRESS)
   {
-    if (mode == MODE_BUILDING || mode == MODE_TRAFFIC)
+    /*if (mode == MODE_BUILDING || mode == MODE_TRAFFIC)
       project.building.add_vertex(level_idx, p.x(), p.y());
     else if (mode == MODE_SCENARIO)
     {
@@ -1692,7 +1697,23 @@ void Editor::mouse_add_vertex(
         return;
       }
       project.add_scenario_vertex(level_idx, p.x(), p.y());
+    }*/
+
+    if (mode == MODE_SCENARIO)
+    {
+      if (project.scenario_idx < 0)
+      {
+        QMessageBox::warning(
+          this,
+          "Add Vertex",
+          "No scenario currently defined.");
+        return;
+      }
     }
+
+    AddVertexCommand* command = new AddVertexCommand(&project, mode, level_idx, p.x(), p.y());
+    undo_stack.push(command);
+
     setWindowModified(true);
     create_scene();
   }
@@ -1819,6 +1840,7 @@ void Editor::mouse_add_edge(
 
     if (clicked_idx < 0)
     {
+      //TODO: Add an undo command here
       // current click is not on an existing vertex. Add one.
       project.building.add_vertex(level_idx, p_aligned.x(), p_aligned.y());
 
@@ -1839,6 +1861,7 @@ void Editor::mouse_add_edge(
 
     if (edge_type != Edge::LANE)
     {
+      //TODO: Add an undo command here
       project.building.add_edge(
         level_idx,
         prev_clicked_idx,
@@ -1847,6 +1870,7 @@ void Editor::mouse_add_edge(
     }
     else
     {
+      //TODO: Add an undo command here
       project.add_lane(
         level_idx,
         prev_clicked_idx,

@@ -19,7 +19,6 @@
 #define EDITOR_H
 
 #include <map>
-#include <stack>
 #include <string>
 #include <vector>
 
@@ -30,11 +29,11 @@
 #include <QGraphicsScene>
 #include <QMainWindow>
 #include <QSettings>
+#include <QUndoStack>
 
 #include "project.h"
 #include "traffic_editor/editor_model.h"
 #include "editor_mode_id.h"
-#include "editor_action.h"
 
 #ifdef HAS_IGNITION_PLUGIN
 #include "sim_thread.h"
@@ -105,6 +104,8 @@ protected:
   void showEvent(QShowEvent* event) override;
 
 private:
+
+  QUndoStack undo_stack;
   EditorModeId mode = MODE_BUILDING;
 
   void set_mode(const EditorModeId _mode, const QString& mode_string);
@@ -130,7 +131,6 @@ private:
   } tool_id = TOOL_SELECT;
 
   std::map<ToolId, QAction*> tools;
-  std::stack<EditorAction> historical_actions;
 
   void set_tool_visibility(const ToolId id, const bool visible);
 
