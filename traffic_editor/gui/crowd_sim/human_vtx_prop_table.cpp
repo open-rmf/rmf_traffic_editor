@@ -21,6 +21,7 @@
 #include <QString>
 
 #include "human_vtx_prop_table.h"
+#include "line_edit.h"
 
 using namespace crowd_sim;
 
@@ -28,6 +29,7 @@ const std::vector<std::string> HumanVtxPropTable::_required_components = {
     "model_type",
     "spawn_number",
     "profile",
+    "initial_state",
     "human_goal_set_name"};
 
 //=====================================================================
@@ -92,7 +94,7 @@ void HumanVtxPropTable::update(Vertex& vertex)
   }
 
   int edges_count = L1.edges.size();
-  std::set<int> idxs;
+  std::set<int> idxs; // set to keep only unique idx(s)
   for (int i = 0; i < edges_count; i++)
   {
     const auto& edge = L1.edges.at(i);
@@ -105,10 +107,14 @@ void HumanVtxPropTable::update(Vertex& vertex)
 
   int vertices_count = idxs.size();
   std::vector<std::pair<double, double>> human_lane_vertices;
+  QSet<QString> unique_human_goals;
   for (auto& idx:idxs)
   {
-    const auto& v = L1.vertices.at(idx);
+    auto& v = L1.vertices.at(idx);
     human_lane_vertices.push_back({v.x,v.y});
+    const auto& it = v.params.find("human_goal_set_name");
+    if(it != vertex.params.end())
+      unique_human_goals.insert(QString::fromStdString(v.params["human_goal_set_name"].value_string));
   }
 
   if(std::find(human_lane_vertices.begin(), human_lane_vertices.end(), std::pair<double, double>({vertex.x, vertex.y})) == human_lane_vertices.end())
@@ -116,6 +122,16 @@ void HumanVtxPropTable::update(Vertex& vertex)
     close();
     return;
   }
+
+  QCompleter* completer;
+  QList<QString> unique_human_goals_str_list;
+  unique_human_goals_str_list = QList<QString>::fromSet(unique_human_goals);
+  QStringListModel* unique_human_goals_str_list_model = new QStringListModel(unique_human_goals_str_list);
+  completer = new QCompleter();
+  unique_human_goals_str_list_model->sort(0);
+  completer->setModel(unique_human_goals_str_list_model);
+  completer->setModelSorting(QCompleter::CaseInsensitivelySortedModel);
+  completer->setCompletionMode(QCompleter::UnfilteredPopupCompletion);
   
   const auto& agent_groups = _impl->get_agent_groups();
   int spawn_number = 0;
@@ -138,7 +154,7 @@ void HumanVtxPropTable::update(Vertex& vertex)
   blockSignals(true);
   const QStringList labels ={ "Property", "Value"};
   setHorizontalHeaderLabels(labels);
-  setRowCount(4);
+  setRowCount(5);
   int row_idx = 0;
   for (auto& prop:_required_components)
   {
@@ -147,6 +163,29 @@ void HumanVtxPropTable::update(Vertex& vertex)
     setItem(row_idx, 0, label_item);
 
     if(prop == "human_goal_set_name") // human_goal_set_name and state_selector (spawn location) have the same location name
+    {
+      const auto& it = vertex.params.find("human_goal_set_name");
+      std::string human_goal_set_name_str = (it != vertex.params.end()) ? vertex.params["human_goal_set_name"].value_string:"";
+      LineEdit* goal_line = new LineEdit(QString::fromStdString(human_goal_set_name_str));
+      goal_line->setCompleter(completer);
+      setCellWidget(row_idx, 1, goal_line);
+      connect(
+        goal_line,
+        &QLineEdit::textChanged,
+        [this, &vertex](const QString& text)
+        {
+          if(text.toStdString() == "")
+          {
+            const auto& it = vertex.params.find("human_goal_set_name");
+            vertex.params.erase(it);
+          }
+          else
+            vertex.params["human_goal_set_name"] = Param(text.toStdString());
+        }
+      );
+    }
+
+    if(prop == "initial_state") // human_goal_set_name and state_selector (spawn location) have the same location name
     {
       const auto& states = _impl->get_states();
       auto states_count = states.size();
@@ -187,13 +226,6 @@ void HumanVtxPropTable::update(Vertex& vertex)
         &QComboBox::currentTextChanged,
         [this, &vertex](const QString& text)
         {
-          if(text.toStdString() == "")
-          {
-            const auto& it = vertex.params.find("human_goal_set_name");
-            vertex.params.erase(it);
-          }
-          else
-            vertex.params["human_goal_set_name"] = Param(text.toStdString());
           auto& agent_groups = _impl->get_agent_groups();
           bool found = false;
           for(auto& group:agent_groups)

@@ -158,7 +158,7 @@ void StatesTab::_list_goal_sets_in_combo(
     comboBox->addItem(QString::number(i));
   }
 
-  size_t new_num = _cache.size() - get_impl()->get_states().size();
+  int new_num = static_cast<int>(_cache.size()) - static_cast<int>(get_impl()->get_states().size());
   for (int j = 0; j < new_num;j++)
   {
     comboBox->addItem(QString::number(i+j));

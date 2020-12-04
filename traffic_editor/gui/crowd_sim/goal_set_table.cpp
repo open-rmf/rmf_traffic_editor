@@ -53,17 +53,6 @@ void GoalSetTab::list_item_in_cache()
       temp_states.insert(state_name);
   }
 
-  for (size_t j = 0; j < cache_count; j++)
-  {
-    auto& goal_set = _cache[j];
-    for(auto goal_area:goal_set.get_goal_areas())
-    {
-      auto it = temp_states.find(goal_area);
-      if(it != temp_states.end())
-        temp_states.erase(it);
-    }
-  }
-
   for (size_t i = 0; i < cache_count; i++)
   {
     auto& goal_set = _cache[i];
@@ -73,13 +62,11 @@ void GoalSetTab::list_item_in_cache()
       new QTableWidgetItem(
         QString::number(static_cast<int>(goal_set.get_goal_set_id() ))));
 
-    std::vector<std::pair<void (GoalSetTab::*)(), GoalSetTab*>> callbacks;
-    callbacks.push_back(std::make_pair(&GoalSetTab::save,this));
-    callbacks.push_back(std::make_pair(&GoalSetTab::update,this));
+
     auto goal_areas = goal_set.get_goal_areas();
     goal_areas.insert(temp_states.begin(), temp_states.end());
     MultiSelectComboBox* multi_combo_box =
-      new MultiSelectComboBox(goal_areas, callbacks); // include all unselected, available states together with those already selected
+      new MultiSelectComboBox(goal_areas);
     multi_combo_box->showCheckedItem(goal_set.get_goal_areas());
     QTableWidget::setCellWidget(
       i,

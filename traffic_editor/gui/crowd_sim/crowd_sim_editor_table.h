@@ -55,7 +55,8 @@ private:
     "GoalSets",
     "States",
     "Transitions",
-    "AgentProfiles"};
+    "ProfileModelTypes"
+    };
   std::set<std::string> _goal_areas_cache;
   std::vector<std::string> _navmesh_filename_cache;
 

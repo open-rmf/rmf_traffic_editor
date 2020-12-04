@@ -201,15 +201,11 @@ void CrowdSimEditorTable::update()
     {
       status_number = _impl->get_goal_sets().size();
     }
-    if ("AgentProfiles" == this->_required_components[i])
-    {
-      status_number = _impl->get_agent_profiles().size();
-    }
     if ("Transitions" == this->_required_components[i])
     {
       status_number = _impl->get_transitions().size();
     }
-    if ("ModelTypes" == this->_required_components[i])
+    if ("ProfileModelTypes" == this->_required_components[i])
     {
       status_number = _impl->get_model_types().size();
     }

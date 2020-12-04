@@ -80,18 +80,18 @@ set(traffic_editor_sources
   gui/multi_select_combo_box.cpp
   gui/crowd_sim/agent_group.cpp
   gui/crowd_sim/agent_profile.cpp
-  gui/crowd_sim/agent_profile_table.cpp
   gui/crowd_sim/condition.cpp
   gui/crowd_sim/condition_dialog.cpp
   gui/crowd_sim/crowd_sim_dialog.cpp
   gui/crowd_sim/crowd_sim_editor_table.cpp
-  gui/crowd_sim/human_vtx_prop_table.cpp
   gui/crowd_sim/crowd_sim_impl.cpp
+  gui/crowd_sim/crowd_sim_layout_base.cpp
   gui/crowd_sim/crowd_sim_table_base.cpp
   gui/crowd_sim/goal_set.cpp
   gui/crowd_sim/goal_set_table.cpp
+  gui/crowd_sim/human_vtx_prop_table.cpp
   gui/crowd_sim/model_type.cpp
-  gui/crowd_sim/model_type_table.cpp
+  gui/crowd_sim/profile_model_type_layout.cpp
   gui/crowd_sim/state.cpp
   gui/crowd_sim/state_table.cpp
   gui/crowd_sim/to_state_dialog.cpp

@@ -13,28 +13,26 @@
 class MultiSelectComboBox : public QComboBox
 {
 public:
-  template<typename ITEM_TYPE, typename T>
-  MultiSelectComboBox(const std::vector<ITEM_TYPE>& selection_list, std::vector<std::pair<void (T::*)(), T*>> callbacks)
+  template<typename ITEM_TYPE>
+  MultiSelectComboBox(const std::vector<ITEM_TYPE>& selection_list)
   {
-    _callbacks = std::shared_ptr<void>(new Callbacks<T>(callbacks));
     selections.clear();
     for (auto item : selection_list)
     {
       selections.emplace_back(type_to_string(item), false);
     }
-    build_list<T>();
+    build_list();
   }
 
-  template<typename ITEM_TYPE, typename T>
-  MultiSelectComboBox(const std::set<ITEM_TYPE>& selection_list, std::vector<std::pair<void (T::*)(), T*>> callbacks)
+  template<typename ITEM_TYPE>
+  MultiSelectComboBox(const std::set<ITEM_TYPE>& selection_list)
   {
-    _callbacks = std::shared_ptr<void>(new Callbacks<T>(callbacks));
     selections.clear();
     for (auto item : selection_list)
     {
       selections.emplace_back(type_to_string(item), false);
     }
-    build_list<T>();
+    build_list();
   }
 
   ~MultiSelectComboBox() {}
@@ -81,7 +79,6 @@ public:
   void line_update();
   std::vector<std::string> getCheckResult();
 private:
-  template<typename T>
   void build_list()
   {
     pListWidget = new QListWidget(this);
@@ -110,7 +107,7 @@ private:
         &QAbstractButton::clicked,
         [&](int state)
         {
-          box_checked<T>(state);
+          box_checked(state);
         }
       );
     }
@@ -120,19 +117,15 @@ private:
     this->setLineEdit(pLineEdit);
   }
 
-  template<typename T>
   void box_checked(int state)
   {
     blockSignals(true);
-    auto callbacks_ptr = std::static_pointer_cast<Callbacks<T>>(_callbacks);
     line_update();
-    callbacks_ptr->initiate();
     blockSignals(false);
   }
 
   void text_changed(const QString& text);
 
-  std::shared_ptr<void> _callbacks;
   std::vector<std::pair<std::string, bool>> selections;
   QString selectedText;
 

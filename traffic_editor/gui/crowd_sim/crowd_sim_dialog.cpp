@@ -20,8 +20,7 @@
 #include "goal_set_table.h"
 #include "transition_table.h"
 #include "to_state_table.h"
-#include "agent_profile_table.h"
-#include "model_type_table.h"
+#include "profile_model_type_layout.h"
 
 using namespace crowd_sim;
 
@@ -61,29 +60,40 @@ CrowdSimDialog::CrowdSimDialog(
   {
     _table_ptr = GoalSetTab::init_and_make(crowd_sim_impl);
   }
-  else if ("AgentProfiles" == dialog_title)
-  {
-    _table_ptr = AgentProfileTab::init_and_make(crowd_sim_impl);
-  }
   else if ("Transitions" == dialog_title)
   {
     _table_ptr = TransitionTab::init_and_make(crowd_sim_impl);
+  }
+  else if ("ProfileModelTypes" == dialog_title)
+  {
+    _layout_ptr = ProfileModelTypeLayout::init_and_make(crowd_sim_impl);
   }
   else
   {
     // stop constructing table with other type of dialog
     _table_ptr = nullptr;
+    _layout_ptr = nullptr;
     return;
   }
 
-  if (!_table_ptr)
+  if (!_table_ptr && !_layout_ptr)
   {
+
     throw std::runtime_error(
-            "Failed to initialize table in Dialog " + dialog_title);
+            "Failed to initialize table/layout in Dialog " + dialog_title);
   }
-  _table_ptr->update();
   QHBoxLayout* table_box = new QHBoxLayout;
-  table_box->addWidget(_table_ptr.get());
+  if(_table_ptr)
+  {
+    _table_ptr->update();
+    table_box->addWidget(_table_ptr.get());
+  }
+  else
+  {
+    _layout_ptr->initialise();
+    table_box->addLayout(_layout_ptr.get());
+  }
+  
   top_vbox->addLayout(table_box);
   top_vbox->addLayout(bottom_buttons_hbox);
   setWindowTitle(QString::fromStdString(dialog_title));
@@ -94,6 +104,8 @@ void CrowdSimDialog::ok_button_click()
 {
   if (_table_ptr)
     _table_ptr->save_to_impl();
+  if (_layout_ptr)
+    _layout_ptr->save_to_impl();
   accept();
 }
 
