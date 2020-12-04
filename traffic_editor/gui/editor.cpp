@@ -279,12 +279,12 @@ Editor::Editor()
   // EDIT MENU
   QMenu* edit_menu = menuBar()->addMenu("&Edit");
   edit_menu->addAction(
-    "&undo",
+    "&Undo",
     this,
     &Editor::edit_undo,
     QKeySequence::Undo);
   edit_menu->addAction(
-    "&redo",
+    "&Redo",
     this,
     &Editor::edit_redo,
     QKeySequence::Redo);

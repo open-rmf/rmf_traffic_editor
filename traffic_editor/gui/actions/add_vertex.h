@@ -9,7 +9,11 @@ class AddVertexCommand : public QUndoCommand
 {
 
 public:
-  AddVertexCommand(Project* project, EditorModeId mode, int level_idx, double x,
+  AddVertexCommand(
+    Project* project, 
+    EditorModeId mode, 
+    int level_idx, 
+    double x,
     double y);
   virtual ~AddVertexCommand();
   void undo() override;

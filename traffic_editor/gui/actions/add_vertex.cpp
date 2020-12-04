@@ -1,7 +1,11 @@
 #include "add_vertex.h"
 
-AddVertexCommand::AddVertexCommand(Project* project, EditorModeId mode,
-  int level_idx, double x, double y)
+AddVertexCommand::AddVertexCommand(
+  Project* project,
+  EditorModeId mode,
+  int level_idx,
+  double x,
+  double y)
 {
   _mode = mode;
   _x = x;

@@ -2,8 +2,7 @@
 #define MOVE_VERTEX_H
 
 #include <QUndoCommand>
-#include "editor_mode_id.h"
-#include "../project.h"
+#include "project.h"
 #include "traffic_editor/vertex.h"
 
 class MoveVertexCommand : public QUndoCommand

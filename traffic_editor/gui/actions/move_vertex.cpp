@@ -1,6 +1,8 @@
 #include "move_vertex.h"
 
-MoveVertexCommand::MoveVertexCommand(Project* project, int level_idx,
+MoveVertexCommand::MoveVertexCommand(
+  Project* project, 
+  int level_idx,
   int mouse_vertex_idx)
 {
   _to_move = project->building.levels[level_idx].vertices[mouse_vertex_idx];
