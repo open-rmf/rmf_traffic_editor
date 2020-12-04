@@ -1,7 +1,7 @@
 #include "move_vertex.h"
 
 MoveVertexCommand::MoveVertexCommand(
-  Project* project, 
+  Project* project,
   int level_idx,
   int mouse_vertex_idx)
 {
