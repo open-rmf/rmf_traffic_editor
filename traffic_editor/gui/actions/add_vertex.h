@@ -11,8 +11,7 @@ class AddVertexCommand: public QUndoCommand
 public:
   AddVertexCommand(Project* project, EditorModeId mode, int level_idx, double x,
     double y);
-  virtual ~AddVertexCommand() {
-  }
+  virtual ~AddVertexCommand();
   void undo() override;
   void redo() override;
 private:

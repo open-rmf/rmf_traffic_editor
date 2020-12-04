@@ -10,6 +10,11 @@ AddVertexCommand::AddVertexCommand(Project* project, EditorModeId mode,
   _project = project;
 }
 
+AddVertexCommand::~AddVertexCommand() 
+{
+  //Empty to make linker happy
+}
+
 void AddVertexCommand::undo()
 {
   if (_mode == MODE_BUILDING || _mode == MODE_TRAFFIC)

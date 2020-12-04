@@ -32,6 +32,7 @@
 #include <QUndoStack>
 
 #include "project.h"
+#include "actions/move_vertex.h"
 #include "traffic_editor/editor_model.h"
 #include "editor_mode_id.h"
 
@@ -338,6 +339,9 @@ private:
     const QPointF& p);
 
   QPointF previous_mouse_point;
+
+  // For undo related support
+  MoveVertexCommand* latest_move_vertex;
 };
 
 #endif

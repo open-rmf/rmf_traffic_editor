@@ -1741,6 +1741,8 @@ void Editor::mouse_move(
     else if (ni.vertex_idx >= 0 && ni.vertex_dist < 10.0)
     {
       mouse_vertex_idx = ni.vertex_idx;
+      
+      latest_move_vertex = new MoveVertexCommand(&project, level_idx, mouse_vertex_idx);  
       // todo: save the QGrahpicsEllipse or group, to avoid full repaints?
     }
     else if (ni.fiducial_idx >= 0 && ni.fiducial_dist < 10.0)
@@ -1751,6 +1753,10 @@ void Editor::mouse_move(
   }
   else if (t == MOUSE_RELEASE)
   {
+    if (mouse_vertex_idx >= 0 && latest_move_vertex->has_moved) //Add mouse move vertex.
+    {
+      undo_stack.push(latest_move_vertex);
+    }
     mouse_vertex_idx = -1;
     mouse_fiducial_idx = -1;
     create_scene();  // this will free mouse_motion_model
@@ -1780,6 +1786,7 @@ void Editor::mouse_move(
         project.building.levels[level_idx].vertices[mouse_vertex_idx];
       pt.x = p.x();
       pt.y = p.y();
+      latest_move_vertex->set_final_destination(p.x(), p.y());
       create_scene();
     }
     else if (mouse_fiducial_idx >= 0)
