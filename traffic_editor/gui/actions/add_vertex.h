@@ -5,7 +5,7 @@
 #include "editor_mode_id.h"
 #include "project.h"
 
-class AddVertexCommand: public QUndoCommand
+class AddVertexCommand : public QUndoCommand
 {
 
 public:
