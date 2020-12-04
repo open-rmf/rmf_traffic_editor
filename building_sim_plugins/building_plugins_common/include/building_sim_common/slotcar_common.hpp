@@ -246,9 +246,11 @@ private:
 
   std::string get_level_name(const double z) const;
 
-  double compute_change_in_rotation(Eigen::Vector3d heading_vec,
+  double compute_change_in_rotation(
+    const Eigen::Vector3d& heading_vec,
     const Eigen::Vector3d& dpos,
-    double* permissive = nullptr);
+    const Eigen::Vector3d* traj_vec = nullptr,
+    double* const dir = nullptr) const;
 
   void publish_tf2(const rclcpp::Time& t);
 

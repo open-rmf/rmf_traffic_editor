@@ -6,7 +6,7 @@ Forthcoming (2020-09-28)
 ------------------
 * Add animation switch to crowd simulation plugin (`#238 <https://github.com/osrf/traffic_editor/pull/238>`_)
 
-1.0.0 (2020-09-24)
+1.1.0 (2020-09-24)
 ------------------
 * Crowd simulation plugin (`#218 <https://github.com/osrf/traffic_editor/issues/218>`_)
 * Improve lift initial floor definition `#221 <https://github.com/osrf/traffic_editor/issues/221>`_

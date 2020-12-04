@@ -70,6 +70,12 @@ public:
   typedef std::map<std::string, DoorNameList> LevelDoorMap;
   LevelDoorMap level_doors;
 
+  // When this option is false, it indicates that a lift plugin and its lift
+  // door plugins should not be included when building the simulation world.
+  // This will help speed up the simulation as well as represent lifts that are
+  // not accessible by AGVs.
+  bool plugins = true;
+
   ////////////////////////////////////////////////////////////////////////
 
   Lift();

@@ -18,6 +18,7 @@
 #ifndef VERTEX_H
 #define VERTEX_H
 
+#include <QUuid>
 #include <map>
 #include <string>
 #include <vector>
@@ -39,6 +40,7 @@ public:
 
   bool selected;
 
+  QUuid uuid;
   std::map<std::string, Param> params;
 
   Vertex();

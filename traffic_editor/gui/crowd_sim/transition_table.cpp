@@ -108,6 +108,14 @@ void TransitionTab::_list_from_states_in_combo(
   auto index =
     comboBox->findText(QString::fromStdString(transition.get_from_state()) );
   comboBox->setCurrentIndex(index >= 0 ? index : 0);
+  connect(
+    comboBox,
+    &QComboBox::currentTextChanged,
+    [this](const QString& text)
+    {
+      save();
+    }
+  );
 }
 
 //==================================================

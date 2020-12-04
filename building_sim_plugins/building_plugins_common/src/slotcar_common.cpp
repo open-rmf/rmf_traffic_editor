@@ -373,10 +373,10 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
     if (!rotate_towards_next_target)
     {
       const double d_yaw_tolerance = 5.0 * M_PI / 180.0;
-
+      auto goal_heading = compute_heading(trajectory[_traj_wp_idx]);
       double dir = 1.0;
       velocities.second =
-        compute_change_in_rotation(current_heading, dpos, &dir);
+        compute_change_in_rotation(current_heading, dpos, &goal_heading, &dir);
       if (dir < 0.0)
         current_heading *= -1.0;
       // If d_yaw is less than a certain tolerance (i.e. we don't need to spin
@@ -469,9 +469,10 @@ std::string SlotcarCommon::get_level_name(const double z) const
 }
 
 double SlotcarCommon::compute_change_in_rotation(
-  Eigen::Vector3d heading_vec,
+  const Eigen::Vector3d& heading_vec,
   const Eigen::Vector3d& dpos,
-  double* permissive)
+  const Eigen::Vector3d* traj_vec,
+  double* const dir) const
 {
   if (dpos.norm() < 1e-3)
   {
@@ -480,22 +481,23 @@ double SlotcarCommon::compute_change_in_rotation(
     return 0.0;
   }
 
-  // Flip the heading vector if the dot product is less than zero. That way,
-  // the robot will turn towards the heading that's closer.
-  const double dot = heading_vec.dot(dpos);
-  if (permissive && dot < 0.0)
+  Eigen::Vector3d target = dpos;
+  // If a traj_vec is provided, of the two possible headings (dpos/-dpos),
+  // choose the one closest to traj_vec
+  if (traj_vec)
   {
-    heading_vec = -1.0 * heading_vec;
-    *permissive = -1.0;
-  }
-  else if (permissive)
-  {
-    *permissive = 1.0;
+    const double dot = traj_vec->dot(dpos);
+    target = dot < 0 ? -dpos : dpos;
+    // dir is negative if slotcar will need to reverse to go towards target
+    if (dir)
+    {
+      *dir = dot < 0 ? -1.0 : 1.0;
+    }
   }
 
-  const auto cross = heading_vec.cross(dpos);
+  const auto cross = heading_vec.cross(target);
   const double direction = cross(2) < 0.0 ? -1.0 : 1.0;
-  const double denom = heading_vec.norm() * dpos.norm();
+  const double denom = heading_vec.norm() * target.norm();
   const double d_yaw = direction * std::asin(cross.norm() / denom);
 
   return d_yaw;
@@ -566,6 +568,10 @@ void SlotcarCommon::publish_state_topic(const rclcpp::Time& t)
 void SlotcarCommon::mode_request_cb(
   const rmf_fleet_msgs::msg::ModeRequest::SharedPtr msg)
 {
+  // Request is for another robot
+  if (msg->robot_name != _model_name)
+    return;
+
   _current_mode = msg->mode;
   if (msg->mode.mode == msg->mode.MODE_DOCKING)
     _docking = true;
@@ -646,10 +652,10 @@ double SlotcarCommon::compute_discharge(
   const Eigen::Vector3d lin_acc, const double ang_acc,
   const double run_time) const
 {
-  const double v = lin_vel.norm();
-  const double w = std::abs(ang_vel);
-  const double a = lin_acc.norm();
-  const double alpha = std::abs(ang_acc);
+  const double v = std::min(lin_vel.norm(), _nominal_drive_speed);
+  const double w = std::min(std::abs(ang_vel), _nominal_turn_speed);
+  const double a = std::min(lin_acc.norm(), _max_drive_acceleration);
+  const double alpha = std::min(std::abs(ang_acc), _max_turn_acceleration);
 
   // Loss through acceleration
   const double EA = ((_params.mass * a * v) +
