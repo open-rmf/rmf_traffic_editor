@@ -1741,8 +1741,9 @@ void Editor::mouse_move(
     else if (ni.vertex_idx >= 0 && ni.vertex_dist < 10.0)
     {
       mouse_vertex_idx = ni.vertex_idx;
-      
-      latest_move_vertex = new MoveVertexCommand(&project, level_idx, mouse_vertex_idx);  
+
+      latest_move_vertex = new MoveVertexCommand(&project, level_idx,
+          mouse_vertex_idx);
       // todo: save the QGrahpicsEllipse or group, to avoid full repaints?
     }
     else if (ni.fiducial_idx >= 0 && ni.fiducial_dist < 10.0)
@@ -1755,7 +1756,7 @@ void Editor::mouse_move(
   {
     if (mouse_vertex_idx >= 0) //Add mouse move vertex.
     {
-      if(latest_move_vertex->has_moved)
+      if (latest_move_vertex->has_moved)
       {
         undo_stack.push(latest_move_vertex);
       }

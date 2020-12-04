@@ -10,7 +10,7 @@ AddVertexCommand::AddVertexCommand(Project* project, EditorModeId mode,
   _project = project;
 }
 
-AddVertexCommand::~AddVertexCommand() 
+AddVertexCommand::~AddVertexCommand()
 {
   //Empty to make linker happy
 }

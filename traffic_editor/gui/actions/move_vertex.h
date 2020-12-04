@@ -6,7 +6,7 @@
 #include "../project.h"
 #include "traffic_editor/vertex.h"
 
-class MoveVertexCommand: public QUndoCommand
+class MoveVertexCommand : public QUndoCommand
 {
 public:
   bool has_moved;
