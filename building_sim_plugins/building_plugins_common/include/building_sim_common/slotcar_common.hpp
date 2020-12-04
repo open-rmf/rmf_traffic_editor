@@ -28,6 +28,7 @@
 #include <rmf_fleet_msgs/msg/robot_mode.hpp>
 #include <rmf_fleet_msgs/msg/robot_state.hpp>
 #include <rmf_fleet_msgs/msg/path_request.hpp>
+#include <rmf_fleet_msgs/msg/pause_request.hpp>
 #include <rmf_fleet_msgs/msg/mode_request.hpp>
 #include <building_map_msgs/msg/building_map.hpp>
 
@@ -102,6 +103,8 @@ typedef struct TrajectoryPoint
 class SlotcarCommon
 {
 public:
+  SlotcarCommon();
+
   rclcpp::Logger logger() const;
 
   template<typename SdfPtrT>
@@ -175,11 +178,16 @@ private:
   double _last_update_time = 0.0;
   double last_tf2_pub = 0.0;
   double last_topic_pub = 0.0;
+  std::size_t _sequence = 0;
 
   std::vector<Eigen::Isometry3d> trajectory;
   std::size_t _traj_wp_idx;
 
+  rmf_fleet_msgs::msg::PauseRequest pause_request;
+
   std::vector<rclcpp::Time> _hold_times;
+
+  std::mutex _mutex;
 
   std::string _model_name;
   bool _emergency_stop = false;
@@ -199,6 +207,7 @@ private:
   rclcpp::Publisher<rmf_fleet_msgs::msg::RobotState>::SharedPtr _robot_state_pub;
 
   rclcpp::Subscription<rmf_fleet_msgs::msg::PathRequest>::SharedPtr _traj_sub;
+  rclcpp::Subscription<rmf_fleet_msgs::msg::PauseRequest>::SharedPtr _pause_sub;
   rclcpp::Subscription<rmf_fleet_msgs::msg::ModeRequest>::SharedPtr _mode_sub;
   rclcpp::Subscription<building_map_msgs::msg::BuildingMap>::SharedPtr
     _building_map_sub;
@@ -260,6 +269,8 @@ private:
     const rmf_fleet_msgs::msg::PathRequest::SharedPtr msg);
 
   void path_request_cb(const rmf_fleet_msgs::msg::PathRequest::SharedPtr msg);
+
+  void pause_request_cb(const rmf_fleet_msgs::msg::PauseRequest::SharedPtr msg);
 
   void mode_request_cb(const rmf_fleet_msgs::msg::ModeRequest::SharedPtr msg);
 
