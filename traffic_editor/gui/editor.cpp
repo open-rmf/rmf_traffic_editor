@@ -1753,9 +1753,17 @@ void Editor::mouse_move(
   }
   else if (t == MOUSE_RELEASE)
   {
-    if (mouse_vertex_idx >= 0 && latest_move_vertex->has_moved) //Add mouse move vertex.
+    if (mouse_vertex_idx >= 0) //Add mouse move vertex.
     {
-      undo_stack.push(latest_move_vertex);
+      if(latest_move_vertex->has_moved)
+      {
+        undo_stack.push(latest_move_vertex);
+      }
+      else
+      {
+        delete latest_move_vertex;
+        latest_move_vertex = NULL;
+      }
     }
     mouse_vertex_idx = -1;
     mouse_fiducial_idx = -1;
