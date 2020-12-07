@@ -244,6 +244,7 @@ private:
   QPushButton* add_param_button, * delete_param_button;
   void add_param_button_clicked();
   void delete_param_button_clicked();
+  void clear_current_tool_buffer(); // Necessary for tools like edge drawing that store temporary states
 
 #ifdef HAS_IGNITION_PLUGIN
   QAction* sim_reset_action;

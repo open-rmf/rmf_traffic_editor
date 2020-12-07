@@ -794,6 +794,14 @@ void Editor::help_about()
 void Editor::edit_undo()
 {
   undo_stack.undo();
+  if(
+    tool_id == TOOL_ADD_LANE
+    || tool_id == TOOL_ADD_WALL
+  )
+  {
+    clicked_idx = -1;
+    prev_clicked_idx = -1;
+  }
   create_scene();
   setWindowModified(true);
 }
@@ -960,16 +968,20 @@ void Editor::keyPressEvent(QKeyEvent* e)
     case Qt::Key_Escape:
       tool_button_group->button(TOOL_SELECT)->click();
       project.clear_selection(level_idx);
+      clear_current_tool_buffer();
       update_property_editor();
       create_scene();
       break;
     case Qt::Key_V:
+      clear_current_tool_buffer();
       tool_button_group->button(TOOL_ADD_VERTEX)->click();
       break;
     case Qt::Key_M:
+      clear_current_tool_buffer();
       tool_button_group->button(TOOL_MOVE)->click();
       break;
     case Qt::Key_L:
+      clear_current_tool_buffer();
       tool_button_group->button(TOOL_ADD_LANE)->click();
       break;
     case Qt::Key_W:
@@ -2442,6 +2454,23 @@ void Editor::update_tables()
   scenario_table->update(project);
   traffic_table->update(project);
   crowd_sim_table->update();
+}
+
+void Editor::clear_current_tool_buffer()
+{
+  if(
+    tool_id == TOOL_ADD_WALL 
+    || tool_id == TOOL_ADD_LANE
+    || tool_id == TOOL_ADD_MEAS
+    || tool_id == TOOL_ADD_HUMAN_LANE
+    || tool_id == TOOL_ADD_DOOR
+  )
+  {
+    prev_clicked_idx = -1;
+    clicked_idx = -1;
+    delete latest_add_edge;
+    latest_add_edge = NULL;
+  }
 }
 
 #ifdef HAS_IGNITION_PLUGIN
