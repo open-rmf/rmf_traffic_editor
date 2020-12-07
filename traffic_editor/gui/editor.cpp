@@ -794,10 +794,9 @@ void Editor::help_about()
 void Editor::edit_undo()
 {
   undo_stack.undo();
-  if(
+  if (
     tool_id == TOOL_ADD_LANE
-    || tool_id == TOOL_ADD_WALL
-  )
+    || tool_id == TOOL_ADD_WALL)
   {
     clicked_idx = -1;
     prev_clicked_idx = -1;
@@ -1846,7 +1845,7 @@ void Editor::mouse_add_edge(
       // right button means "exit edge drawing mode please"
       clicked_idx = -1;
       prev_clicked_idx = -1;
-      if(latest_add_edge != NULL)
+      if (latest_add_edge != NULL)
       {
         //Need to check if new vertex was added.
         delete latest_add_edge;
@@ -1856,18 +1855,20 @@ void Editor::mouse_add_edge(
       return;
     }
 
-    if (prev_clicked_idx < 0) 
+    if (prev_clicked_idx < 0)
     {
       latest_add_edge = new AddEdgeCommand(&project, level_idx);
-      clicked_idx = latest_add_edge->set_first_point(p_aligned.x(), p_aligned.y());
+      clicked_idx = latest_add_edge->set_first_point(p_aligned.x(),
+          p_aligned.y());
       latest_add_edge->set_edge_type(edge_type);
       prev_clicked_idx = clicked_idx;
       create_scene();
       setWindowModified(true);
-      return;// no previous vertex click happened; nothing else to do
+      return; // no previous vertex click happened; nothing else to do
     }
-    
-    clicked_idx = latest_add_edge->set_second_point(p_aligned.x(), p_aligned.y());
+
+    clicked_idx =
+      latest_add_edge->set_second_point(p_aligned.x(), p_aligned.y());
 
     if (clicked_idx == prev_clicked_idx)  // don't create self edge loops
     {
@@ -1885,8 +1886,8 @@ void Editor::mouse_add_edge(
     else
     {
       latest_add_edge = new AddEdgeCommand(&project, level_idx);
-      latest_add_edge->set_first_point(p_aligned.x() , p_aligned.y()); 
-      latest_add_edge->set_edge_type(edge_type); 
+      latest_add_edge->set_first_point(p_aligned.x(), p_aligned.y());
+      latest_add_edge->set_edge_type(edge_type);
     }
     prev_clicked_idx = clicked_idx;
     create_scene();
@@ -2458,13 +2459,12 @@ void Editor::update_tables()
 
 void Editor::clear_current_tool_buffer()
 {
-  if(
-    tool_id == TOOL_ADD_WALL 
+  if (
+    tool_id == TOOL_ADD_WALL
     || tool_id == TOOL_ADD_LANE
     || tool_id == TOOL_ADD_MEAS
     || tool_id == TOOL_ADD_HUMAN_LANE
-    || tool_id == TOOL_ADD_DOOR
-  )
+    || tool_id == TOOL_ADD_DOOR)
   {
     prev_clicked_idx = -1;
     clicked_idx = -1;
