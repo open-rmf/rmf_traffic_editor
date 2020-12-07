@@ -177,9 +177,9 @@ void Level::add_vertex(const double x, const double y)
 
 size_t Level::get_vertex_by_id(QUuid vertex_id)
 {
-  for(size_t i = 0; i < vertices.size(); i++)
+  for (size_t i = 0; i < vertices.size(); i++)
   {
-    if(vertices[i].uuid == vertex_id)
+    if (vertices[i].uuid == vertex_id)
     {
       return i;
     }
