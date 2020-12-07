@@ -29,8 +29,24 @@ void AddEdgeCommand::redo()
     _vert_id_second = _project->building.levels[_level_idx].vertices.rbegin()->uuid;
   }
 
-  int prev_idx = _project->building.levels[_level_idx].get_vertex_by_id(_vert_id_first);
-  int curr_idx = _project->building.levels[_level_idx].get_vertex_by_id(_vert_id_second);
+  size_t prev_idx = _project->building.levels[_level_idx].get_vertex_by_id(_vert_id_first);
+  size_t curr_idx = _project->building.levels[_level_idx].get_vertex_by_id(_vert_id_second);
+
+  //Hackjob to fix wierd redo behaviour
+  if(prev_idx > _project->building.levels[_level_idx].vertices.size())
+  {
+    _project->building.add_vertex(_level_idx, _first_x, _first_y);
+    _vert_id_first = _project->building.levels[_level_idx].vertices.rbegin()->uuid;
+    prev_idx = _project->building.levels[_level_idx].vertices.size()-1;
+  }
+
+  if(curr_idx > _project->building.levels[_level_idx].vertices.size())
+  {
+    _project->building.add_vertex(_level_idx, _first_x, _first_y);
+    _vert_id_second = _project->building.levels[_level_idx].vertices.rbegin()->uuid;
+    curr_idx = _project->building.levels[_level_idx].vertices.size()-1;
+  }
+ 
   if (_type != Edge::LANE)
   {
     _project->building.add_edge(
