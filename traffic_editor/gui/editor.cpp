@@ -1833,8 +1833,10 @@ void Editor::mouse_add_edge(
     {
       // right button means "exit edge drawing mode please"
       clicked_idx = -1;
+      prev_clicked_idx = -1;
       if(latest_add_edge != NULL)
       {
+        //Need to check if new vertex was added.
         delete latest_add_edge;
         latest_add_edge = NULL;
       }
@@ -1857,7 +1859,6 @@ void Editor::mouse_add_edge(
 
     if (clicked_idx == prev_clicked_idx)  // don't create self edge loops
     {
-      std::cout << "Same ID" <<std::endl;
       remove_mouse_motion_item();
       return;
     }
@@ -1871,7 +1872,6 @@ void Editor::mouse_add_edge(
     }
     else
     {
-      std::cout << "Chaining "<<std::endl;
       latest_add_edge = new AddEdgeCommand(&project, level_idx);
       latest_add_edge->set_first_point(p_aligned.x() , p_aligned.y()); 
       latest_add_edge->set_edge_type(edge_type); 

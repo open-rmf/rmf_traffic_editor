@@ -17,7 +17,6 @@ AddEdgeCommand::~AddEdgeCommand()
 
 void AddEdgeCommand::redo()
 {
-  std::cout << "Redo" <<std::endl;
   if(!_first_point_drawn)
   {
     _project->building.add_vertex(_level_idx, _first_x, _first_y);
@@ -51,7 +50,6 @@ void AddEdgeCommand::redo()
 
 void AddEdgeCommand::undo()
 {
-  std::cout << "Undo" <<std::endl;
   int first_idx = _project->building.levels[_level_idx].get_vertex_by_id(_vert_id_first);
   int second_idx = _project->building.levels[_level_idx].get_vertex_by_id(_vert_id_second);
 
@@ -95,7 +93,6 @@ void AddEdgeCommand::undo()
 
 int AddEdgeCommand::set_first_point(double x, double y)
 {
-  std::cout << "adding first point" <<std::endl;
   _first_x = x;
   _first_y = y;
 
@@ -119,8 +116,6 @@ int AddEdgeCommand::set_first_point(double x, double y)
 
 int AddEdgeCommand::set_second_point(double x, double y)
 {
-    std::cout << "adding second point" <<std::endl;
-
   _second_x = x;
   _second_y = y;
 
@@ -135,6 +130,7 @@ int AddEdgeCommand::set_second_point(double x, double y)
     _second_point_drawn = true;
     _project->building.add_vertex(_level_idx, x, y);
     _vert_id_second = _project->building.levels[_level_idx].vertices.rbegin()->uuid;
+    clicked_idx = _project->building.levels[_level_idx].vertices.size()-1;
   }
   else
   {
