@@ -33,6 +33,7 @@
 
 #include "project.h"
 #include "actions/move_vertex.h"
+#include "actions/add_edge.h"
 #include "traffic_editor/editor_model.h"
 #include "editor_mode_id.h"
 
@@ -175,6 +176,7 @@ private:
   Project project;
   int level_idx = 0;  // level that we are currently editing
   int clicked_idx = -1;  // point most recently clicked
+  int prev_clicked_idx = -1; // Previously clicked ID.
   //int polygon_idx = -1;  // currently selected polygon
   Polygon* selected_polygon = nullptr;
 
@@ -342,6 +344,7 @@ private:
 
   // For undo related support
   MoveVertexCommand* latest_move_vertex;
+  AddEdgeCommand* latest_add_edge;
 };
 
 #endif

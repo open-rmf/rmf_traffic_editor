@@ -1833,59 +1833,50 @@ void Editor::mouse_add_edge(
     {
       // right button means "exit edge drawing mode please"
       clicked_idx = -1;
+      if(latest_add_edge != NULL)
+      {
+        delete latest_add_edge;
+        latest_add_edge = NULL;
+      }
       remove_mouse_motion_item();
       return;
     }
 
-    const int prev_clicked_idx = clicked_idx;
-    clicked_idx = project.building.nearest_item_index_if_within_distance(
-      level_idx, p_aligned.x(), p_aligned.y(), 10.0, Building::VERTEX);
-
-    if (clicked_idx < 0)
+    if (prev_clicked_idx < 0) 
     {
-      //TODO: Add an undo command here
-      // current click is not on an existing vertex. Add one.
-      project.building.add_vertex(level_idx, p_aligned.x(), p_aligned.y());
-
-      // set the new vertex as "clicked_idx"  todo: encapsulate better
-      clicked_idx =
-        static_cast<int>(
-        project.building.levels[level_idx].vertices.size() - 1);
-    }
-
-    if (prev_clicked_idx < 0)
+      latest_add_edge = new AddEdgeCommand(&project, level_idx);
+      clicked_idx = latest_add_edge->set_first_point(p_aligned.x(), p_aligned.y());
+      latest_add_edge->set_edge_type(edge_type);
+      prev_clicked_idx = clicked_idx;
+      create_scene();
+      setWindowModified(true);
       return;// no previous vertex click happened; nothing else to do
+    }
+    
+    clicked_idx = latest_add_edge->set_second_point(p_aligned.x(), p_aligned.y());
 
     if (clicked_idx == prev_clicked_idx)  // don't create self edge loops
     {
+      std::cout << "Same ID" <<std::endl;
       remove_mouse_motion_item();
       return;
     }
-
-    if (edge_type != Edge::LANE)
-    {
-      //TODO: Add an undo command here
-      project.building.add_edge(
-        level_idx,
-        prev_clicked_idx,
-        clicked_idx,
-        edge_type);
-    }
-    else
-    {
-      //TODO: Add an undo command here
-      project.add_lane(
-        level_idx,
-        prev_clicked_idx,
-        clicked_idx);
-    }
+    undo_stack.push(latest_add_edge);
 
     if (edge_type == Edge::DOOR || edge_type == Edge::MEAS)
     {
       clicked_idx = -1;  // doors and measurements don't usually chain
+      latest_add_edge = NULL;
       remove_mouse_motion_item();
     }
-
+    else
+    {
+      std::cout << "Chaining "<<std::endl;
+      latest_add_edge = new AddEdgeCommand(&project, level_idx);
+      latest_add_edge->set_first_point(p_aligned.x() , p_aligned.y()); 
+      latest_add_edge->set_edge_type(edge_type); 
+    }
+    prev_clicked_idx = clicked_idx;
     create_scene();
     setWindowModified(true);
   }
