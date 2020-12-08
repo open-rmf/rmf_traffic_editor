@@ -78,7 +78,7 @@ class QToolButton;
 QT_END_NAMESPACE
 
 
-class Editor: public QMainWindow
+class Editor : public QMainWindow
 {
   Q_OBJECT
 
