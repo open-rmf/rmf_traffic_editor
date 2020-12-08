@@ -1748,6 +1748,7 @@ void Editor::mouse_move(
       mouse_motion_model = get_closest_pixmap_item(
         QPointF(model.state.x, model.state.y));
       mouse_model_idx = ni.model_idx;
+      latest_move_model = new MoveModelCommand(&project, level_idx, mouse_model_idx);
     }
     else if (ni.vertex_idx >= 0 && ni.vertex_dist < 10.0)
     {
@@ -1777,6 +1778,19 @@ void Editor::mouse_move(
         latest_move_vertex = NULL;
       }
     }
+
+    if (mouse_model_idx >= 0) //Add mouse move model
+    {
+      if (latest_move_model->has_moved)
+      {
+        undo_stack.push(latest_move_model);
+      }
+      else
+      {
+        delete latest_move_model;
+        latest_move_model = NULL;
+      }
+    }
     mouse_vertex_idx = -1;
     mouse_fiducial_idx = -1;
     create_scene();  // this will free mouse_motion_model
@@ -1798,6 +1812,7 @@ void Editor::mouse_move(
       model.state.x = p.x();
       model.state.y = p.y();
       mouse_motion_model->setPos(p);
+      latest_move_model->set_final_destination(p.x(), p.y());
     }
     else if (mouse_vertex_idx >= 0)
     {

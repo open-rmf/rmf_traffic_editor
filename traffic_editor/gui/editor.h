@@ -32,8 +32,9 @@
 #include <QUndoStack>
 
 #include "project.h"
-#include "actions/move_vertex.h"
 #include "actions/add_edge.h"
+#include "actions/move_model.h"
+#include "actions/move_vertex.h"
 #include "traffic_editor/editor_model.h"
 #include "editor_mode_id.h"
 
@@ -344,8 +345,10 @@ private:
   QPointF previous_mouse_point;
 
   // For undo related support
-  MoveVertexCommand* latest_move_vertex;
   AddEdgeCommand* latest_add_edge;
+  MoveModelCommand* latest_move_model;
+  MoveVertexCommand* latest_move_vertex;
+  
 };
 
 #endif
