@@ -43,6 +43,7 @@
 
 #include "actions/add_vertex.h"
 #include "actions/add_fiducial.h"
+#include "actions/add_model.h"
 #include "add_param_dialog.h"
 #include "building_dialog.h"
 #include "building_level_dialog.h"
@@ -1977,19 +1978,15 @@ void Editor::mouse_add_model(
   {
     if (mouse_motion_editor_model == nullptr)
       return;
-    project.building.add_model(
+
+    AddModelCommand* cmd = new AddModelCommand(
+      &project,
       level_idx,
       p.x(),
       p.y(),
-      0.0,
-      M_PI / 2.0,
-      mouse_motion_editor_model->name);
-    /*
-    const int model_row = model_name_list_widget->currentRow();
-    if (model_row < 0)
-      return;  // nothing currently selected. nothing to do.
-    .add_model(level_idx, p.x(), p.y(), 0.0, editor_models[model_row].name);
-    */
+      mouse_motion_editor_model->name
+    );
+    undo_stack.push(cmd);
     setWindowModified(true);
     create_scene();
   }

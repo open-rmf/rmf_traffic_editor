@@ -99,7 +99,7 @@ public:
     const int end_idx,
     const int graph_idx);
 
-  void add_model(
+  QUuid add_model(
     const int level_idx,
     const double x,
     const double y,
