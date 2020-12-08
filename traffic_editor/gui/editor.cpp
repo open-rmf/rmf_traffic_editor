@@ -2032,6 +2032,8 @@ void Editor::mouse_rotate(
     if (clicked_idx < 0)
       return;// nothing to do. click wasn't on a model.
 
+    latest_rotate_model = new RotateModelCommand(&project, level_idx,
+        clicked_idx);
     const Model& model =
       project.building.levels[level_idx].models[clicked_idx];
     mouse_motion_model = get_closest_pixmap_item(
@@ -2064,7 +2066,8 @@ void Editor::mouse_rotate(
     double mouse_yaw = atan2(dy, dx);
     if (mouse_event->modifiers() & Qt::ShiftModifier)
       mouse_yaw = discretize_angle(mouse_yaw);
-    project.building.set_model_yaw(level_idx, clicked_idx, mouse_yaw);
+    latest_rotate_model->set_final_destination(mouse_yaw);
+    undo_stack.push(latest_rotate_model);
     clicked_idx = -1;  // we're done rotating it now
     setWindowModified(true);
     // now re-render the whole scene (could optimize in the future...)

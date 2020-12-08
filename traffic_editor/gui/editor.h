@@ -36,6 +36,7 @@
 #include "actions/move_fiducial.h"
 #include "actions/move_model.h"
 #include "actions/move_vertex.h"
+#include "actions/rotate_model.h"
 #include "traffic_editor/editor_model.h"
 #include "editor_mode_id.h"
 
@@ -350,6 +351,7 @@ private:
   MoveFiducialCommand* latest_move_fiducial;
   MoveModelCommand* latest_move_model;
   MoveVertexCommand* latest_move_vertex;
+  RotateModelCommand* latest_rotate_model;
 };
 
 #endif

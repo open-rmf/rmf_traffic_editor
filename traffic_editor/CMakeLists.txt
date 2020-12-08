@@ -42,6 +42,7 @@ set(traffic_editor_sources
   gui/actions/move_fiducial.cpp
   gui/actions/move_model.cpp
   gui/actions/move_vertex.cpp
+  gui/actions/rotate_model.cpp
   gui/add_param_dialog.cpp
   gui/building.cpp
   gui/building_dialog.cpp
