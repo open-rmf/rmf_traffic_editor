@@ -1,10 +1,10 @@
 #include "move_model.h"
 
 MoveModelCommand::MoveModelCommand(
-    Project* project,
-    int level,
-    int model_id
-  )
+  Project* project,
+  int level,
+  int model_id
+)
 {
   _project = project;
   Model model = project->building.levels[level].models[model_id];
