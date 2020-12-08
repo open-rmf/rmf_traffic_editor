@@ -54,7 +54,7 @@ class CrowdSimTable;
 
 #ifdef HAS_OPENCV
 namespace cv {
-class VideoWriter;
+  class VideoWriter;
 }
 #endif
 
@@ -78,7 +78,7 @@ class QToolButton;
 QT_END_NAMESPACE
 
 
-class Editor : public QMainWindow
+class Editor: public QMainWindow
 {
   Q_OBJECT
 
@@ -133,7 +133,7 @@ private:
     TOOL_ADD_HUMAN_LANE,
   } tool_id = TOOL_SELECT;
 
-  std::map<ToolId, QAction*> tools;
+  std::map < ToolId, QAction* > tools;
 
   void set_tool_visibility(const ToolId id, const bool visible);
 
@@ -270,7 +270,7 @@ private:
   void scene_update_timer_timeout();
 #endif
 
-  std::vector<EditorModel> editor_models;
+  std::vector < EditorModel > editor_models;
   EditorModel* mouse_motion_editor_model = nullptr;
   void load_model_names();
 
@@ -285,7 +285,7 @@ private:
   int mouse_model_idx = -1;
   int mouse_vertex_idx = -1;
   int mouse_fiducial_idx = -1;
-  std::vector<int> mouse_motion_polygon_vertices;
+  std::vector < int > mouse_motion_polygon_vertices;
   //int mouse_motion_polygon_vertex_idx = -1;
   Polygon::EdgeDragPolygon mouse_edge_drag_polygon;
 
@@ -348,7 +348,7 @@ private:
   AddEdgeCommand* latest_add_edge;
   MoveModelCommand* latest_move_model;
   MoveVertexCommand* latest_move_vertex;
-  
+
 };
 
 #endif

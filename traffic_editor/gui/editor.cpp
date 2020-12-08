@@ -1748,7 +1748,8 @@ void Editor::mouse_move(
       mouse_motion_model = get_closest_pixmap_item(
         QPointF(model.state.x, model.state.y));
       mouse_model_idx = ni.model_idx;
-      latest_move_model = new MoveModelCommand(&project, level_idx, mouse_model_idx);
+      latest_move_model = new MoveModelCommand(&project, level_idx,
+          mouse_model_idx);
     }
     else if (ni.vertex_idx >= 0 && ni.vertex_dist < 10.0)
     {
