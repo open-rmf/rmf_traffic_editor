@@ -42,6 +42,7 @@
 #include "ament_index_cpp/get_resource.hpp"
 
 #include "actions/add_vertex.h"
+#include "actions/add_fiducial.h"
 #include "add_param_dialog.h"
 #include "building_dialog.h"
 #include "building_level_dialog.h"
@@ -1722,7 +1723,12 @@ void Editor::mouse_add_fiducial(
 {
   if (t == MOUSE_PRESS)
   {
-    project.building.add_fiducial(level_idx, p.x(), p.y());
+    AddFiducialCommand* command = new AddFiducialCommand(
+      &project,
+      level_idx,
+      p.x(),
+      p.y());
+    undo_stack.push(command);
     setWindowModified(true);
     create_scene();
   }

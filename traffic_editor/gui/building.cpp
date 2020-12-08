@@ -174,11 +174,12 @@ void Building::add_vertex(int level_index, double x, double y)
   levels[level_index].add_vertex(x, y);
 }
 
-void Building::add_fiducial(int level_index, double x, double y)
+QUuid Building::add_fiducial(int level_index, double x, double y)
 {
   if (level_index >= static_cast<int>(levels.size()))
-    return;
+    return NULL;
   levels[level_index].fiducials.push_back(Fiducial(x, y));
+  return levels[level_index].fiducials.rbegin()->uuid;
 }
 
 int Building::find_nearest_vertex_index(

@@ -38,6 +38,7 @@ include_directories(${ament_index_cpp_INCLUDE_DIRS})
 
 set(traffic_editor_sources
   gui/actions/add_edge.cpp
+  gui/actions/add_fiducial.cpp
   gui/actions/add_vertex.cpp
   gui/actions/move_fiducial.cpp
   gui/actions/move_model.cpp
