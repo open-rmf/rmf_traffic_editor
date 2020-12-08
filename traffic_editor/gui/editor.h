@@ -33,6 +33,7 @@
 
 #include "project.h"
 #include "actions/add_edge.h"
+#include "actions/move_fiducial.h"
 #include "actions/move_model.h"
 #include "actions/move_vertex.h"
 #include "traffic_editor/editor_model.h"
@@ -54,7 +55,7 @@ class CrowdSimTable;
 
 #ifdef HAS_OPENCV
 namespace cv {
-  class VideoWriter;
+class VideoWriter;
 }
 #endif
 
@@ -133,7 +134,7 @@ private:
     TOOL_ADD_HUMAN_LANE,
   } tool_id = TOOL_SELECT;
 
-  std::map < ToolId, QAction* > tools;
+  std::map<ToolId, QAction*> tools;
 
   void set_tool_visibility(const ToolId id, const bool visible);
 
@@ -270,7 +271,7 @@ private:
   void scene_update_timer_timeout();
 #endif
 
-  std::vector < EditorModel > editor_models;
+  std::vector<EditorModel> editor_models;
   EditorModel* mouse_motion_editor_model = nullptr;
   void load_model_names();
 
@@ -285,7 +286,7 @@ private:
   int mouse_model_idx = -1;
   int mouse_vertex_idx = -1;
   int mouse_fiducial_idx = -1;
-  std::vector < int > mouse_motion_polygon_vertices;
+  std::vector<int> mouse_motion_polygon_vertices;
   //int mouse_motion_polygon_vertex_idx = -1;
   Polygon::EdgeDragPolygon mouse_edge_drag_polygon;
 
@@ -346,9 +347,9 @@ private:
 
   // For undo related support
   AddEdgeCommand* latest_add_edge;
+  MoveFiducialCommand* latest_move_fiducial;
   MoveModelCommand* latest_move_model;
   MoveVertexCommand* latest_move_vertex;
-
 };
 
 #endif

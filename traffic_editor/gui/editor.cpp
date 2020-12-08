@@ -1762,6 +1762,8 @@ void Editor::mouse_move(
     else if (ni.fiducial_idx >= 0 && ni.fiducial_dist < 10.0)
     {
       mouse_fiducial_idx = ni.fiducial_idx;
+      latest_move_fiducial = new MoveFiducialCommand(&project, level_idx,
+          mouse_fiducial_idx);
       // todo: save the QGrahpicsEllipse or group, to avoid full repaints?
     }
   }
@@ -1790,6 +1792,19 @@ void Editor::mouse_move(
       {
         delete latest_move_model;
         latest_move_model = NULL;
+      }
+    }
+
+    if (mouse_fiducial_idx >= 0) //Add mouse move fiducial
+    {
+      if (latest_move_fiducial->has_moved)
+      {
+        undo_stack.push(latest_move_fiducial);
+      }
+      else
+      {
+        delete latest_move_fiducial;
+        latest_move_fiducial = NULL;
       }
     }
     mouse_vertex_idx = -1;
@@ -1831,6 +1846,7 @@ void Editor::mouse_move(
         project.building.levels[level_idx].fiducials[mouse_fiducial_idx];
       f.x = p.x();
       f.y = p.y();
+      latest_move_fiducial->set_final_destination(p.x(), p.y());
       printf("moved fiducial %d to (%.1f, %.1f)\n",
         mouse_fiducial_idx,
         f.x,
