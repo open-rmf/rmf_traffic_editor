@@ -180,13 +180,14 @@ Editor::Editor()
 
   level_table->add_crowdsim_update(crowd_sim_table);
 
-  const QString tabStyle = "QWidget{ background-color: #a0a0a0;}\
-  QTabBar::tab { color: black; }\
-  QTableWidget { background-color: #e0e0e0; color: black; gridline-color: #606060; }\
-  QLineEdit { background:white; }\
-  QComboBox QAbstractItemView{background-color: white;}\
-  QComboBox {selection-background-color: #1D8CC2;}\
-  ";
+  const QString tabStyle =
+    "QWidget{ background-color: #a0a0a0;}\
+    QTabBar::tab { color: black; }\
+    QTableWidget { background-color: #e0e0e0; color: black; gridline-color: #606060; }\
+    QLineEdit { background:white; }\
+    QComboBox QAbstractItemView{background-color: white;}\
+    QComboBox {selection-background-color: #1D8CC2;}\
+    ";
 
   right_tab_widget = new QTabWidget;
   right_tab_widget->setStyleSheet(tabStyle);
@@ -195,7 +196,7 @@ Editor::Editor()
   right_tab_widget->addTab(lift_table, "lifts");
   right_tab_widget->addTab(traffic_table, "traffic");
   right_tab_widget->addTab(scenario_table, "scenarios");
-  right_tab_widget->addTab(crowd_sim_table, "crowd_sim"); 
+  right_tab_widget->addTab(crowd_sim_table, "crowd_sim");
 
   prop_editor_widget = new QTabWidget;
   prop_editor_widget->setStyleSheet(tabStyle);
@@ -1431,12 +1432,15 @@ void Editor::populate_property_editor(const Vertex& vertex)
   property_editor->blockSignals(true);  // otherwise we get tons of callbacks
 
   // only get row entries relevant to properties, filter out those from human
-  std::map<QString,QString> row_entries;
-  const std::vector<std::string> human_vec = HumanVtxPropTable::_required_components;
+  std::map<QString, QString> row_entries;
+  const std::vector<std::string> human_vec =
+    HumanVtxPropTable::_required_components;
   for (const auto& param : vertex.params)
   {
-    if(std::find(human_vec.begin(), human_vec.end(), param.first) == human_vec.end() )
-      row_entries[QString::fromStdString(param.first)] = param.second.to_qstring();
+    if (std::find(human_vec.begin(), human_vec.end(),
+      param.first) == human_vec.end() )
+      row_entries[QString::fromStdString(param.first)] =
+        param.second.to_qstring();
   }
 
   property_editor->setRowCount(5 + row_entries.size());
@@ -1448,7 +1452,7 @@ void Editor::populate_property_editor(const Vertex& vertex)
   property_editor_set_row(4, "name", QString::fromStdString(vertex.name), true);
 
   int row = 5;
-  for(auto& [prop,val]:row_entries)
+  for (auto& [prop, val]:row_entries)
   {
     property_editor_set_row(row, prop, val, true);
     row++;
@@ -1552,13 +1556,13 @@ void Editor::property_editor_cell_changed(int row, int column)
       v.name = value;
     else if (name == "x (pixels)")
     {
-      if(auto& impl = project.building.levels[level_idx].crowd_sim_impl)
+      if (auto& impl = project.building.levels[level_idx].crowd_sim_impl)
       {
         auto& agent_groups = impl->get_agent_groups();
-        for(auto& agent_group:agent_groups)
+        for (auto& agent_group:agent_groups)
         {
           auto p = agent_group.get_spawn_point();
-          if(p.first == v.x)
+          if (p.first == v.x)
           {
             agent_group.set_spawn_point(stod(value), p.second);
           }
@@ -1568,13 +1572,13 @@ void Editor::property_editor_cell_changed(int row, int column)
     }
     else if (name == "y (pixels)")
     {
-      if(auto& impl = project.building.levels[level_idx].crowd_sim_impl)
+      if (auto& impl = project.building.levels[level_idx].crowd_sim_impl)
       {
         auto& agent_groups = impl->get_agent_groups();
-        for(auto& agent_group:agent_groups)
+        for (auto& agent_group:agent_groups)
         {
           auto p = agent_group.get_spawn_point();
-          if(p.second == v.y)
+          if (p.second == v.y)
           {
             agent_group.set_spawn_point(p.first, stod(value));
           }

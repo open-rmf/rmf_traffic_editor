@@ -59,7 +59,7 @@ public:
     _agent_profile(""),
     _initial_state("")
   {
-    if(input["agent_group_id"]) // internal_agent
+    if (input["agent_group_id"]) // internal_agent
       internal_from_yaml(input);
     else
       external_from_yaml(input);

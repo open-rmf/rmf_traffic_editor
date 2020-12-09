@@ -55,7 +55,8 @@ bool BuildingLevel::from_yaml(
 
   if (_data["crowd_sim"] && _data["crowd_sim"].IsMap())
   {
-    if (!(crowd_sim_impl->from_yaml(_data["crowd_sim"]) && crowd_sim_impl->internal_agents_from_yaml(_data["models"])))
+    if (!(crowd_sim_impl->from_yaml(_data["crowd_sim"]) &&
+      crowd_sim_impl->internal_agents_from_yaml(_data["models"])))
     {
       printf(
         "Error in loading crowd_sim configuration from yaml, re-initialize crowd_sim");
@@ -122,7 +123,7 @@ bool BuildingLevel::from_yaml(
     const YAML::Node& ys = _data["models"];
     for (YAML::const_iterator it = ys.begin(); it != ys.end(); ++it)
     {
-      if((*it)["agent_group_id"])
+      if ((*it)["agent_group_id"])
         continue;
 
       Model m;
@@ -251,7 +252,7 @@ YAML::Node BuildingLevel::to_yaml() const
     y[dict_name].push_back(n);
   }
 
-  if(crowd_sim_impl)
+  if (crowd_sim_impl)
   {
     y["crowd_sim"] = crowd_sim_impl->to_yaml();
     crowd_sim_impl->internal_agents_to_yaml(y["models"]);

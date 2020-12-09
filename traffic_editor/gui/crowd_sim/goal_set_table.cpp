@@ -45,11 +45,11 @@ void GoalSetTab::list_item_in_cache()
   auto states = get_impl()->get_states();
   std::set<std::string> temp_states;
   auto cache_count = _cache.size();
-  
-  for(auto state:states)
+
+  for (auto state:states)
   {
     auto state_name = state.get_name();
-    if(state_name != "external_static")
+    if (state_name != "external_static")
       temp_states.insert(state_name);
   }
 

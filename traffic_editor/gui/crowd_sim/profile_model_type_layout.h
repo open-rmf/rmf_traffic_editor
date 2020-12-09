@@ -36,12 +36,12 @@ public:
     CrowdSimImplPtr crowd_sim_impl);
 
   ProfileModelTypeLayout(CrowdSimImplPtr crowd_sim_impl)
-  :CrowdSimLayoutBase(crowd_sim_impl),
-  _profile_table(nullptr),
-  _model_type_table(nullptr),
-  _tab_widget(nullptr),
-  _name_layout(nullptr),
-  _name_value(nullptr)
+  : CrowdSimLayoutBase(crowd_sim_impl),
+    _profile_table(nullptr),
+    _model_type_table(nullptr),
+    _tab_widget(nullptr),
+    _name_layout(nullptr),
+    _name_value(nullptr)
   {
     _profile_cache = get_impl()->get_agent_profiles();
     _model_cache = get_impl()->get_model_types();

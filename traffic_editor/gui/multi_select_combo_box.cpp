@@ -22,7 +22,7 @@ std::vector<std::string> MultiSelectComboBox::getCheckResult()
 
 void MultiSelectComboBox::line_update()
 {
-      size_t list_count = pListWidget->count();
+  size_t list_count = pListWidget->count();
   selectedText.clear();
 
   for (size_t i = 0; i < list_count; i++)

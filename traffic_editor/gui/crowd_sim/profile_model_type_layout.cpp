@@ -27,7 +27,8 @@ using namespace crowd_sim;
 std::shared_ptr<ProfileModelTypeLayout> ProfileModelTypeLayout::init_and_make(
   CrowdSimImplPtr crowd_sim_impl)
 {
-  auto profile_model_type_layout = std::make_shared<ProfileModelTypeLayout>(crowd_sim_impl);
+  auto profile_model_type_layout = std::make_shared<ProfileModelTypeLayout>(
+    crowd_sim_impl);
   if (!profile_model_type_layout)
   {
     printf("Failed to create profile_model_type layout! Exiting");
@@ -40,9 +41,9 @@ std::shared_ptr<ProfileModelTypeLayout> ProfileModelTypeLayout::init_and_make(
 void ProfileModelTypeLayout::list_item_in_cache()
 {
   blockSignals(true);
-  for(auto& profile:_profile_cache)
+  for (auto& profile:_profile_cache)
   {
-    _list_widget->addItem(QString::fromStdString(profile.profile_name)); 
+    _list_widget->addItem(QString::fromStdString(profile.profile_name));
   }
   blockSignals(false);
 }
@@ -51,11 +52,11 @@ void ProfileModelTypeLayout::list_item_in_cache()
 void ProfileModelTypeLayout::load_item_name()
 {
   auto current_profile = _profile_cache[_current_index];
-  if(current_profile.profile_name == "external_agent")
+  if (current_profile.profile_name == "external_agent")
     _name_value->setReadOnly(true);
   else
     _name_value->setReadOnly(false);
-  
+
   _name_value->setText(QString::fromStdString(current_profile.profile_name));
 }
 
@@ -73,9 +74,9 @@ void ProfileModelTypeLayout::load_profile_structure()
     "max_speed", "neighbor_dist", "obstacle_set", "pref_speed", "r",
     "ORCA_tau", "ORCA_tauObst"};
 
-  const QStringList labels ={ "Property", "Value"};
+  const QStringList labels = {"Property", "Value"};
 
-  if(!_profile_table)
+  if (!_profile_table)
     _profile_table = new TableList;
   _profile_table->setHorizontalHeaderLabels(labels);
   _profile_table->setRowCount(profile_labels.size());
@@ -87,7 +88,7 @@ void ProfileModelTypeLayout::load_profile_structure()
     _profile_table->setItem(row_idx, 0, label_item);
     row_idx++;
   }
-  _profile_table->setMinimumSize(700,550);
+  _profile_table->setMinimumSize(700, 550);
   _tab_widget->addTab(_profile_table, "Profile");
 }
 
@@ -96,13 +97,16 @@ void ProfileModelTypeLayout::load_item_profile()
 {
   auto current_profile = _profile_cache[_current_index];
   std::vector<QString> profile_values;
-  profile_values.push_back(QString::number(static_cast<uint>(current_profile.profile_class)));
+  profile_values.push_back(QString::number(static_cast<uint>(current_profile.
+    profile_class)));
   profile_values.push_back(QString::number(current_profile.max_accel));
   profile_values.push_back(QString::number(current_profile.max_angle_vel));
-  profile_values.push_back(QString::number(static_cast<uint>(current_profile.max_neighbors)));
+  profile_values.push_back(QString::number(static_cast<uint>(current_profile.
+    max_neighbors)));
   profile_values.push_back(QString::number(current_profile.max_speed));
   profile_values.push_back(QString::number(current_profile.neighbor_dist));
-  profile_values.push_back(QString::number(static_cast<uint>(current_profile.obstacle_set)));
+  profile_values.push_back(QString::number(static_cast<uint>(current_profile.
+    obstacle_set)));
   profile_values.push_back(QString::number(current_profile.pref_speed));
   profile_values.push_back(QString::number(current_profile.r));
   profile_values.push_back(QString::number(current_profile.ORCA_tau));
@@ -113,7 +117,7 @@ void ProfileModelTypeLayout::load_item_profile()
     QTableWidgetItem* item = new QTableWidgetItem(profile_value);
     if (current_profile.profile_name == "external_agent")
       item->setFlags(Qt::NoItemFlags);
-    
+
     _profile_table->setItem(row_idx, 1, item);
     row_idx++;
   }
@@ -124,11 +128,11 @@ void ProfileModelTypeLayout::load_model_structure()
   const QStringList model_type_labels =
   {"animation", "anim_speed"};
 
-  const QStringList labels ={ "Property", "Value"};
+  const QStringList labels = {"Property", "Value"};
 
   auto current_profile = _profile_cache[_current_index];
 
-  if(!_model_type_table)
+  if (!_model_type_table)
   {
     _model_type_table = new TableList;
     _model_type_table->setHorizontalHeaderLabels(labels);
@@ -142,7 +146,7 @@ void ProfileModelTypeLayout::load_model_structure()
       row_idx++;
     }
 
-    _model_type_table->setMinimumSize(700,550);
+    _model_type_table->setMinimumSize(700, 550);
     _tab_widget->addTab(_model_type_table, "Model Type");
   }
 }
@@ -151,28 +155,31 @@ void ProfileModelTypeLayout::load_model_structure()
 void ProfileModelTypeLayout::load_item_model()
 {
   auto current_profile = _profile_cache[_current_index];
-  if(current_profile.profile_name != "external_agent")
+  if (current_profile.profile_name != "external_agent")
   {
     load_model_structure();
     auto current_model_type = _model_cache[_current_index-1];
-    _model_type_table->setItem(0, 1,new QTableWidgetItem(QString::fromStdString(current_model_type.get_animation())));
-    _model_type_table->setItem(1, 1,new QTableWidgetItem(QString::number(current_model_type.get_animation_speed())));
+    _model_type_table->setItem(0, 1,
+      new QTableWidgetItem(QString::fromStdString(current_model_type.
+      get_animation())));
+    _model_type_table->setItem(1, 1,
+      new QTableWidgetItem(QString::number(current_model_type.
+      get_animation_speed())));
   }
   else
   {
-    if(_model_type_table)
+    if (_model_type_table)
     {
       _tab_widget->removeTab(1);
       delete _model_type_table;
       _model_type_table = nullptr;
     }
   }
-  
 }
 
 void ProfileModelTypeLayout::load_name_structure()
 {
-  if(!_name_layout)
+  if (!_name_layout)
   {
     _name_layout = new QHBoxLayout();
     QLabel* name_label = new QLabel();
@@ -180,43 +187,45 @@ void ProfileModelTypeLayout::load_name_structure()
     _name_layout->addWidget(name_label);
   }
 
-  if(!_name_value)
+  if (!_name_value)
   {
     _name_value = new QLineEdit();
     _name_layout->addWidget(_name_value);
     _right_panel->addLayout(_name_layout);
   }
 
-  connect(_name_value, &QLineEdit::editingFinished, [this](){
-    if(_current_index > 0)
+  connect(_name_value, &QLineEdit::editingFinished, [this]()
     {
-      auto& current_profile = _profile_cache[_current_index];
-      auto& current_model = _model_cache[_current_index - 1];
-
-      auto profile_name = _name_value->text().toStdString();
-
-      if (profile_name == "")
+      if (_current_index > 0)
       {
-        std::cout << "Error in saving profile_name for Agent Profile: ["
-                  << current_profile.profile_name << "], value remains as default." << std::endl;
+        auto& current_profile = _profile_cache[_current_index];
+        auto& current_model = _model_cache[_current_index - 1];
+
+        auto profile_name = _name_value->text().toStdString();
+
+        if (profile_name == "")
+        {
+          std::cout << "Error in saving profile_name for Agent Profile: ["
+                    << current_profile.profile_name << "], value remains as default." << std::endl;
+        }
+        else
+        {
+          current_profile.profile_name = profile_name;
+          current_model.set_name(profile_name);
+          QListWidgetItem* item_name = _list_widget->item(_current_index);
+          item_name->setText(QString::fromStdString(
+            current_profile.profile_name));
+        }
       }
-      else
-      {
-        current_profile.profile_name = profile_name;
-        current_model.set_name(profile_name);
-        QListWidgetItem* item_name = _list_widget->item(_current_index);
-        item_name->setText(QString::fromStdString(current_profile.profile_name));
-      }
-    }
-  });
+    });
 }
 
 //===================================================
 void ProfileModelTypeLayout::initialise_item_detail()
 {
-  const QStringList labels ={ "Property", "Value"};
+  const QStringList labels = {"Property", "Value"};
 
-  if(!_tab_widget)
+  if (!_tab_widget)
     _tab_widget = new QTabWidget();
 
 
@@ -246,15 +255,15 @@ void ProfileModelTypeLayout::add_button_click()
 //===================================================
 void ProfileModelTypeLayout::delete_button_click()
 {
-  if(_current_index > 0)
+  if (_current_index > 0)
   {
     _to_delete = true;
     _profile_cache.erase(_profile_cache.begin() + _current_index);
     _model_cache.erase(_model_cache.begin() + _current_index-1);
     delete _list_widget->item(_current_index);
     uint last_index = _profile_cache.size() - 1;
-    if(_current_index > last_index)
-      _current_index = last_index; // move up
+    if (_current_index > last_index)
+      _current_index = last_index;// move up
     _to_delete = false;
     update();
   }
@@ -263,21 +272,24 @@ void ProfileModelTypeLayout::delete_button_click()
 //===================================================
 void ProfileModelTypeLayout::save()
 {
-  if(_model_type_table && _current_index > 0)
+  if (_model_type_table && _current_index > 0)
   {
     auto& current_model_type = _model_cache[_current_index-1]; // 1 index lagging behind profile due to external_static excluded
     bool OK_status;
-    current_model_type.set_animation(_model_type_table->item(0, 1)->text().toStdString());
-    current_model_type.set_animation_speed(_model_type_table->item(1, 1)->text().toDouble(&OK_status));
+    current_model_type.set_animation(_model_type_table->item(0,
+      1)->text().toStdString());
+    current_model_type.set_animation_speed(_model_type_table->item(1,
+      1)->text().toDouble(&OK_status));
   }
 
-  if(_profile_table)
+  if (_profile_table)
   {
     auto& current_profile = _profile_cache[_current_index];
     bool OK_status;
     QTableWidgetItem* pItem;
 
-    auto profile_name = _list_widget->item(_current_index)->text().toStdString();
+    auto profile_name =
+      _list_widget->item(_current_index)->text().toStdString();
 
     pItem = _profile_table->item(0, 1);
     auto profile_class = pItem->text().toInt(&OK_status);

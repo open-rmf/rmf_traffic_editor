@@ -20,15 +20,17 @@
 
 #include <iostream>
 
-template <typename T>
+template<typename T>
 class Callbacks
 {
-  public:
-  Callbacks(std::vector<std::pair<void (T::*)(), T*>> callbacks):_callbacks(callbacks){}
-  ~Callbacks(){}
-  
-  void initiate(){
-    for(auto callback: _callbacks)
+public:
+  Callbacks(std::vector<std::pair<void(T::*)(), T*>> callbacks)
+  : _callbacks(callbacks) {}
+  ~Callbacks() {}
+
+  void initiate()
+  {
+    for (auto callback: _callbacks)
     {
       auto obj = callback.second;
       auto func = callback.first;

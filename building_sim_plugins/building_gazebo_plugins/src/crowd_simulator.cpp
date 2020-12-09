@@ -81,7 +81,7 @@ void CrowdSimulatorPlugin::_update(
     _init_spawned_agents();
     return;
   }
-  
+
   auto delta_sim_time = (update_info.simTime - _last_sim_time).Double();
   if (delta_sim_time > _crowd_sim_interface->get_sim_time_step())
   {

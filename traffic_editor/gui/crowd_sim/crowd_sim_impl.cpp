@@ -106,7 +106,8 @@ YAML::Node CrowdSimImplementation::to_yaml()
   top_node["obstacle_set"] = _output_obstacle_node();
 
   top_node["external_agent_groups"] = YAML::Node(YAML::NodeType::Sequence);
-  top_node["external_agent_groups"].push_back(_agent_groups[0].external_to_yaml());
+  top_node["external_agent_groups"].push_back(
+    _agent_groups[0].external_to_yaml());
 
   top_node["model_types"] = YAML::Node(YAML::NodeType::Sequence);
   for (auto model_type : _model_types)
@@ -117,15 +118,17 @@ YAML::Node CrowdSimImplementation::to_yaml()
   return top_node;
 }
 
-void CrowdSimImplementation::internal_agents_to_yaml(YAML::Node&& models_yaml_node)
+void CrowdSimImplementation::internal_agents_to_yaml(
+  YAML::Node&& models_yaml_node)
 {
   int i = 1; // 0 being the external agent group
   for (const auto& _agent_group : _agent_groups)
   {
     if (_agent_group.get_internal_agent_model_name() != "") // skip first one (external_agent group)
     {
-      std::vector<YAML::Node> internal_agent_nodes =_agent_group.internal_to_yaml(i);
-      if(internal_agent_nodes.size() > 0)
+      std::vector<YAML::Node> internal_agent_nodes =
+        _agent_group.internal_to_yaml(i);
+      if (internal_agent_nodes.size() > 0)
       {
         for (const auto& node: internal_agent_nodes)
           models_yaml_node.push_back(node);
@@ -136,7 +139,8 @@ void CrowdSimImplementation::internal_agents_to_yaml(YAML::Node&& models_yaml_no
 }
 
 //=================================================
-bool CrowdSimImplementation::internal_agents_from_yaml(const YAML::Node& models_yaml_node)
+bool CrowdSimImplementation::internal_agents_from_yaml(
+  const YAML::Node& models_yaml_node)
 {
   int existing_size = this->_agent_groups.size();
   std::vector<AgentGroup> internal_groups;
@@ -144,44 +148,48 @@ bool CrowdSimImplementation::internal_agents_from_yaml(const YAML::Node& models_
   for (YAML::const_iterator it = models_yaml_node.begin();
     it != models_yaml_node.end(); it++) // Go through each model node
   {
-    if(!(*it)["agent_group_id"]) // only get those that are human
-        continue;
+    if (!(*it)["agent_group_id"]) // only get those that are human
+      continue;
 
     AgentGroup internal_group_temp(*it);
     bool internal_groups_exist = false;
     size_t group_id = internal_group_temp.get_group_id();
-    for(auto& group: internal_groups) // check the current populated group pool as see if it matches any in there
+    for (auto& group: internal_groups) // check the current populated group pool as see if it matches any in there
     {
-      if(group_id == group.get_group_id()) // same group id should mean its properties match that of the group
+      if (group_id == group.get_group_id()) // same group id should mean its properties match that of the group
       {
-        if (internal_group_temp.get_agent_profile() == group.get_agent_profile()  &&\
-        internal_group_temp.get_internal_agent_model_name() == group.get_internal_agent_model_name()  &&\
-        internal_group_temp.get_initial_state() == group.get_initial_state()  &&\
-        internal_group_temp.get_spawn_point() == group.get_spawn_point()
-        )
+        if (internal_group_temp.get_agent_profile() ==
+          group.get_agent_profile()  &&\
+          internal_group_temp.get_internal_agent_model_name() ==
+          group.get_internal_agent_model_name()  &&\
+          internal_group_temp.get_initial_state() ==
+          group.get_initial_state()  &&\
+          internal_group_temp.get_spawn_point() == group.get_spawn_point())
         {
           group.increment_spawn_number();
           internal_groups_exist = true;
         }
         else
         {
-          printf("Error in internal_agent_groups dataset due to inconsistencies.\n");
+          printf(
+            "Error in internal_agent_groups dataset due to inconsistencies.\n");
           return false;
         }
         break;
       }
     }
-    
-    if(!internal_groups_exist) // create new group in the pool if it is new
+
+    if (!internal_groups_exist) // create new group in the pool if it is new
       internal_groups.push_back(internal_group_temp);
   }
 
-  for(const auto& internal_group:internal_groups)
+  for (const auto& internal_group:internal_groups)
   {
     this->_agent_groups.emplace_back(internal_group);
   }
 
-  printf("crowd_sim loaded %lu internal_agent_groups\n", this->_agent_groups.size() - existing_size);
+  printf("crowd_sim loaded %lu internal_agent_groups\n",
+    this->_agent_groups.size() - existing_size);
   return true;
 }
 
@@ -208,7 +216,8 @@ bool CrowdSimImplementation::from_yaml(const YAML::Node& input)
     printf("Error in load agent_profiles\n");
     return false;
   }
-  if (!input["external_agent_groups"] || !input["external_agent_groups"].IsSequence())
+  if (!input["external_agent_groups"] ||
+    !input["external_agent_groups"].IsSequence())
   {
     printf("Error in load external_agent_groups\n");
     return false;
@@ -270,7 +279,8 @@ bool CrowdSimImplementation::from_yaml(const YAML::Node& input)
     AgentProfile agent_profile_temp(*it);
     this->_agent_profiles.emplace_back(agent_profile_temp);
   }
-  printf("crowd_sim loaded %lu agent_profiles\n", this->_agent_profiles.size());
+  printf("crowd_sim loaded %lu agent_profiles\n",
+    this->_agent_profiles.size());
 
   const YAML::Node& agent_group_node = input["external_agent_groups"];
   for (YAML::const_iterator it = agent_group_node.begin();
@@ -279,7 +289,8 @@ bool CrowdSimImplementation::from_yaml(const YAML::Node& input)
     AgentGroup agent_group_temp(*it);
     this->_agent_groups.emplace_back(agent_group_temp);
   }
-  printf("crowd_sim loaded %lu external_agent_groups\n", this->_agent_groups.size());
+  printf("crowd_sim loaded %lu external_agent_groups\n",
+    this->_agent_groups.size());
 
   const YAML::Node& model_type_node = input["model_types"];
   for (YAML::const_iterator it = model_type_node.begin();

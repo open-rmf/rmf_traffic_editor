@@ -39,14 +39,14 @@ class HumanVtxPropTable : public TableList
 
 public:
   HumanVtxPropTable(const Editor* editor, const Project& input_project);
-  ~HumanVtxPropTable() {};
+  ~HumanVtxPropTable() {}
 
   void setActorModels(std::vector<std::string>& am);
   void populate(Vertex& vertex);
   void close();
   void update(Vertex& vertex);
-  void storeWidget(QTabWidget* widget) {_widget = widget;};
-  void storeTabStyle(QString tabStyle) {_tabStyle = tabStyle;};
+  void storeWidget(QTabWidget* widget) {_widget = widget;}
+  void storeTabStyle(QString tabStyle) {_tabStyle = tabStyle;}
 
   static const std::vector<std::string> _required_components;
 

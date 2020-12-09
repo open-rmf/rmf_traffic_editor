@@ -51,7 +51,8 @@ std::vector<YAML::Node> AgentGroup::internal_to_yaml(int group_id) const
   //e.g. {agent_group_id: 1, model_name: OpenRobotics/MaleVisitorPhone, name: MaleVisitorPhone, profile_selector: human, state_selector: entry_lane, static: false, x: 1554.184, y: 434.535, yaw: 0, z: 0}
   for (size_t i = 0; i < _spawn_number; i++)
   {
-    if(_internal_agent_model_name == "" || _agent_profile == "" || _initial_state == "")
+    if (_internal_agent_model_name == "" || _agent_profile == "" ||
+      _initial_state == "")
       break;
     YAML::Node node = YAML::Node(YAML::NodeType::Map);
     node["agent_group_id"] = group_id; // use generated group_id, not the original _group_id to avoid skipped group id in case we have malformed agent groups and we decided to skip them

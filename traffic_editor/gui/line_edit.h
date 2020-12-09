@@ -21,16 +21,18 @@
 #include <QLineEdit>
 #include <iostream>
 #include <thread>
-#include <chrono> 
+#include <chrono>
 
 class LineEdit : public QLineEdit
 {
 public:
-  explicit LineEdit(QWidget *parent = nullptr):QLineEdit(parent){};
-  explicit LineEdit(const QString &s, QWidget *parent = nullptr):QLineEdit(s,parent){};
+  explicit LineEdit(QWidget* parent = nullptr)
+  : QLineEdit(parent) {}
+  explicit LineEdit(const QString& s, QWidget* parent = nullptr)
+  : QLineEdit(s, parent) {}
 
 protected:
-  void mousePressEvent(QMouseEvent *e) override
+  void mousePressEvent(QMouseEvent* e) override
   {
     completer()->complete();
     QLineEdit::mousePressEvent(e);

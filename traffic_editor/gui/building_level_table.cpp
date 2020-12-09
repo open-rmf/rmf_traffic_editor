@@ -109,8 +109,8 @@ void BuildingLevelTable::update(Building& building)
         emit redraw_scene();
       }
     });
-  
-  if(_cwdsimtable)
+
+  if (_cwdsimtable)
     _cwdsimtable->update();
   blockSignals(false);
 }

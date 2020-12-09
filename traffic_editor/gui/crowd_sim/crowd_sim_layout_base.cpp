@@ -27,9 +27,9 @@
 //========================================
 CrowdSimLayoutBase::CrowdSimLayoutBase(CrowdSimImplPtr impl)
 : QHBoxLayout(),
-_crowd_sim_impl(impl),
-_current_index(0),
-_to_delete(false)
+  _crowd_sim_impl(impl),
+  _current_index(0),
+  _to_delete(false)
 {
   _right_panel = new QVBoxLayout();
 }
@@ -43,10 +43,11 @@ void CrowdSimLayoutBase::initialise()
   list_item_in_cache();
   _list_widget->setCurrentItem(_list_widget->item(_current_index));
   connect(
-  _list_widget,
-  &QListWidget::currentRowChanged,
-  [this](int row){
-      if(!_to_delete) // don't do anything if we delete
+    _list_widget,
+    &QListWidget::currentRowChanged,
+    [this](int row)
+    {
+      if (!_to_delete) // don't do anything if we delete
       {
         save(); // save first before switching
         _current_index = row;
@@ -57,8 +58,10 @@ void CrowdSimLayoutBase::initialise()
   QStatusBar* statusMenu = new QStatusBar();
   QPushButton* add = new QPushButton("+");
   QPushButton* minus = new QPushButton("-");
-  connect(add, &QAbstractButton::clicked, this, &CrowdSimLayoutBase::add_button_click);
-  connect(minus, &QAbstractButton::clicked, this, &CrowdSimLayoutBase::delete_button_click);
+  connect(add, &QAbstractButton::clicked, this,
+    &CrowdSimLayoutBase::add_button_click);
+  connect(minus, &QAbstractButton::clicked, this,
+    &CrowdSimLayoutBase::delete_button_click);
   statusMenu->addWidget(add);
   statusMenu->addWidget(minus);
   leftPanel->addWidget(statusMenu);

@@ -26,18 +26,19 @@
 using namespace crowd_sim;
 
 const std::vector<std::string> HumanVtxPropTable::_required_components = {
-    "model_type",
-    "spawn_number",
-    "profile",
-    "initial_state",
-    "human_goal_set_name"};
+  "model_type",
+  "spawn_number",
+  "profile",
+  "initial_state",
+  "human_goal_set_name"};
 
 //=====================================================================
-HumanVtxPropTable::HumanVtxPropTable(const Editor* editor, const Project& input_project)
+HumanVtxPropTable::HumanVtxPropTable(const Editor* editor,
+  const Project& input_project)
 : TableList(2),
-_tab_is_opened(false),
-_actor_models({}),
-_editor(editor),
+  _tab_is_opened(false),
+  _actor_models({}),
+  _editor(editor),
   _project(input_project)
 {
   horizontalHeader()->setVisible(false);
@@ -64,7 +65,7 @@ void HumanVtxPropTable::populate(Vertex& vertex)
 //==================================
 void HumanVtxPropTable::close()
 {
-  if(_tab_is_opened)
+  if (_tab_is_opened)
   {
     _widget->removeTab(1);
     _tab_is_opened = false;
@@ -81,7 +82,7 @@ void HumanVtxPropTable::update(Vertex& vertex)
   }
 
   BuildingLevel L1 = _project.building.levels.front();
-  
+
   if (L1.crowd_sim_impl == nullptr)
   {
     printf("Initialize crowd_sim_implementation for project.building\n");
@@ -98,7 +99,7 @@ void HumanVtxPropTable::update(Vertex& vertex)
   for (int i = 0; i < edges_count; i++)
   {
     const auto& edge = L1.edges.at(i);
-    if(edge.type == Edge::Type::HUMAN_LANE)
+    if (edge.type == Edge::Type::HUMAN_LANE)
     {
       idxs.insert(edge.start_idx);
       idxs.insert(edge.end_idx);
@@ -111,13 +112,16 @@ void HumanVtxPropTable::update(Vertex& vertex)
   for (auto& idx:idxs)
   {
     auto& v = L1.vertices.at(idx);
-    human_lane_vertices.push_back({v.x,v.y});
+    human_lane_vertices.push_back({v.x, v.y});
     const auto& it = v.params.find("human_goal_set_name");
-    if(it != vertex.params.end())
-      unique_human_goals.insert(QString::fromStdString(v.params["human_goal_set_name"].value_string));
+    if (it != vertex.params.end())
+      unique_human_goals.insert(QString::fromStdString(v.params[
+          "human_goal_set_name"].value_string));
   }
 
-  if(std::find(human_lane_vertices.begin(), human_lane_vertices.end(), std::pair<double, double>({vertex.x, vertex.y})) == human_lane_vertices.end())
+  if (std::find(human_lane_vertices.begin(), human_lane_vertices.end(),
+    std::pair<double, double>({vertex.x,
+      vertex.y})) == human_lane_vertices.end())
   {
     close();
     return;
@@ -126,22 +130,23 @@ void HumanVtxPropTable::update(Vertex& vertex)
   QCompleter* completer;
   QList<QString> unique_human_goals_str_list;
   unique_human_goals_str_list = QList<QString>::fromSet(unique_human_goals);
-  QStringListModel* unique_human_goals_str_list_model = new QStringListModel(unique_human_goals_str_list);
+  QStringListModel* unique_human_goals_str_list_model = new QStringListModel(
+    unique_human_goals_str_list);
   completer = new QCompleter();
   unique_human_goals_str_list_model->sort(0);
   completer->setModel(unique_human_goals_str_list_model);
   completer->setModelSorting(QCompleter::CaseInsensitivelySortedModel);
   completer->setCompletionMode(QCompleter::UnfilteredPopupCompletion);
-  
+
   const auto& agent_groups = _impl->get_agent_groups();
   int spawn_number = 0;
   std::string profile = "";
   std::string model_type = "";
   bool found = false;
-  for(const auto& group:agent_groups)
+  for (const auto& group:agent_groups)
   {
     const auto& sp = group.get_spawn_point();
-    if(sp.first == vertex.x && sp.second == vertex.y)
+    if (sp.first == vertex.x && sp.second == vertex.y)
     {
       spawn_number = group.get_spawn_number();
       profile = group.get_agent_profile();
@@ -152,21 +157,27 @@ void HumanVtxPropTable::update(Vertex& vertex)
   }
 
   blockSignals(true);
-  const QStringList labels ={ "Property", "Value"};
+  const QStringList labels = {"Property", "Value"};
   setHorizontalHeaderLabels(labels);
   setRowCount(5);
   int row_idx = 0;
   for (auto& prop:_required_components)
   {
-    QTableWidgetItem* label_item = new QTableWidgetItem(QString::fromStdString(prop));
+    QTableWidgetItem* label_item =
+      new QTableWidgetItem(QString::fromStdString(prop));
     label_item->setFlags(Qt::NoItemFlags);
     setItem(row_idx, 0, label_item);
 
-    if(prop == "human_goal_set_name") // human_goal_set_name and state_selector (spawn location) have the same location name
+    if (prop == "human_goal_set_name") // human_goal_set_name and state_selector (spawn location) have the same location name
     {
       const auto& it = vertex.params.find("human_goal_set_name");
-      std::string human_goal_set_name_str = (it != vertex.params.end()) ? vertex.params["human_goal_set_name"].value_string:"";
-      LineEdit* goal_line = new LineEdit(QString::fromStdString(human_goal_set_name_str));
+      std::string human_goal_set_name_str =
+        (it !=
+        vertex.params.end()) ? vertex.params["human_goal_set_name"].value_string
+        :
+        "";
+      LineEdit* goal_line =
+        new LineEdit(QString::fromStdString(human_goal_set_name_str));
       goal_line->setCompleter(completer);
       setCellWidget(row_idx, 1, goal_line);
       connect(
@@ -174,7 +185,7 @@ void HumanVtxPropTable::update(Vertex& vertex)
         &QLineEdit::textChanged,
         [this, &vertex](const QString& text)
         {
-          if(text.toStdString() == "")
+          if (text.toStdString() == "")
           {
             const auto& it = vertex.params.find("human_goal_set_name");
             vertex.params.erase(it);
@@ -185,7 +196,7 @@ void HumanVtxPropTable::update(Vertex& vertex)
       );
     }
 
-    if(prop == "initial_state") // human_goal_set_name and state_selector (spawn location) have the same location name
+    if (prop == "initial_state") // human_goal_set_name and state_selector (spawn location) have the same location name
     {
       const auto& states = _impl->get_states();
       auto states_count = states.size();
@@ -196,25 +207,25 @@ void HumanVtxPropTable::update(Vertex& vertex)
         auto& current_state = states.at(i);
         const auto& state_name = current_state.get_name();
         goal_combo->addItem(QString::fromStdString(state_name));
-        if(vertex.params[prop].value_string == state_name) // assume a vertex having this property is the prerequisite of state_selector
+        if (vertex.params[prop].value_string == state_name) // assume a vertex having this property is the prerequisite of state_selector
         {
           goal_combo->setCurrentIndex(i);
 
           auto& agent_groups = _impl->get_agent_groups();
           bool found = false;
-          for(auto& group:agent_groups)
+          for (auto& group:agent_groups)
           {
             const auto& sp = group.get_spawn_point();
-            if(sp.first == vertex.x && sp.second == vertex.y)
+            if (sp.first == vertex.x && sp.second == vertex.y)
             {
               group.set_initial_state(state_name);
               found = true;
               break;
             }
           }
-          if(!found)
+          if (!found)
           {
-            AgentGroup agrp(agent_groups.size(),vertex.x,vertex.y);
+            AgentGroup agrp(agent_groups.size(), vertex.x, vertex.y);
             agrp.set_initial_state(state_name);
             agent_groups.push_back(agrp);
           }
@@ -228,19 +239,19 @@ void HumanVtxPropTable::update(Vertex& vertex)
         {
           auto& agent_groups = _impl->get_agent_groups();
           bool found = false;
-          for(auto& group:agent_groups)
+          for (auto& group:agent_groups)
           {
             const auto& sp = group.get_spawn_point();
-            if(sp.first == vertex.x && sp.second == vertex.y)
+            if (sp.first == vertex.x && sp.second == vertex.y)
             {
               group.set_initial_state(text.toStdString());
               found = true;
               break;
             }
           }
-          if(!found)
+          if (!found)
           {
-            AgentGroup agrp(agent_groups.size(),vertex.x,vertex.y);
+            AgentGroup agrp(agent_groups.size(), vertex.x, vertex.y);
             agrp.set_initial_state(text.toStdString());
             agent_groups.push_back(agrp);
           }
@@ -248,9 +259,12 @@ void HumanVtxPropTable::update(Vertex& vertex)
       );
     }
 
-    if(prop == "spawn_number")
+    if (prop == "spawn_number")
     {
-      _spawn_number = new QLineEdit(((spawn_number > 0) ? QString::number(spawn_number):QString::fromStdString("")),this);
+      _spawn_number =
+        new QLineEdit(((spawn_number >
+          0) ? QString::number(spawn_number) : QString::fromStdString("")),
+          this);
       setCellWidget(row_idx, 1, _spawn_number);
       connect(
         _spawn_number,
@@ -259,19 +273,19 @@ void HumanVtxPropTable::update(Vertex& vertex)
         {
           auto& agent_groups = _impl->get_agent_groups();
           bool found = false;
-          for(auto& group:agent_groups)
+          for (auto& group:agent_groups)
           {
             const auto& sp = group.get_spawn_point();
-            if(sp.first == vertex.x && sp.second == vertex.y)
+            if (sp.first == vertex.x && sp.second == vertex.y)
             {
               group.set_spawn_number(text.toInt());
               found = true;
               break;
             }
           }
-          if(!found)
+          if (!found)
           {
-            AgentGroup agrp(agent_groups.size(),vertex.x,vertex.y);
+            AgentGroup agrp(agent_groups.size(), vertex.x, vertex.y);
             agrp.set_spawn_number(text.toInt());
             agent_groups.push_back(agrp);
           }
@@ -279,7 +293,7 @@ void HumanVtxPropTable::update(Vertex& vertex)
       );
     }
 
-    if(prop == "profile")
+    if (prop == "profile")
     {
       const auto& profiles = _impl->get_agent_profiles();
       auto profiles_count = profiles.size();
@@ -290,30 +304,30 @@ void HumanVtxPropTable::update(Vertex& vertex)
         auto& current_profile = profiles.at(i);
         auto& profile_name = current_profile.profile_name;
         profile_combo->addItem(QString::fromStdString(profile_name));
-        if(profile == profile_name)
+        if (profile == profile_name)
           profile_combo->setCurrentIndex(i);
       }
       setCellWidget(row_idx, 1, profile_combo);
-        connect(
+      connect(
         profile_combo,
         &QComboBox::currentTextChanged,
         [this, vertex](const QString& text)
         {
           auto& agent_groups = _impl->get_agent_groups();
           bool found = false;
-          for(auto& group:agent_groups)
+          for (auto& group:agent_groups)
           {
             const auto& sp = group.get_spawn_point();
-            if(sp.first == vertex.x && sp.second == vertex.y)
+            if (sp.first == vertex.x && sp.second == vertex.y)
             {
               group.set_agent_profile(text.toStdString());
               found = true;
               break;
             }
           }
-          if(!found)
+          if (!found)
           {
-            AgentGroup agrp(agent_groups.size(),vertex.x,vertex.y);
+            AgentGroup agrp(agent_groups.size(), vertex.x, vertex.y);
             agrp.set_agent_profile(text.toStdString());
             agent_groups.push_back(agrp);
           }
@@ -321,7 +335,7 @@ void HumanVtxPropTable::update(Vertex& vertex)
       );
     }
 
-    if(prop == "model_type")
+    if (prop == "model_type")
     {
       auto actors_count = _actor_models.size();
       QComboBox* actor_combo = new QComboBox;
@@ -330,7 +344,7 @@ void HumanVtxPropTable::update(Vertex& vertex)
       {
         auto& actor_name = _actor_models.at(i);
         actor_combo->addItem(QString::fromStdString(actor_name));
-        if(model_type == actor_name)
+        if (model_type == actor_name)
           actor_combo->setCurrentIndex(i+1);
       }
       setCellWidget(row_idx, 1, actor_combo);
@@ -341,19 +355,19 @@ void HumanVtxPropTable::update(Vertex& vertex)
         {
           auto& agent_groups = _impl->get_agent_groups();
           bool found = false;
-          for(auto& group:agent_groups)
+          for (auto& group:agent_groups)
           {
             const auto& sp = group.get_spawn_point();
-            if(sp.first == vertex.x && sp.second == vertex.y)
+            if (sp.first == vertex.x && sp.second == vertex.y)
             {
               group.set_internal_agent_model_name(text.toStdString());
               found = true;
               break;
             }
           }
-          if(!found)
+          if (!found)
           {
-            AgentGroup agrp(agent_groups.size(),vertex.x,vertex.y);
+            AgentGroup agrp(agent_groups.size(), vertex.x, vertex.y);
             agrp.set_internal_agent_model_name(text.toStdString());
             agent_groups.push_back(agrp);
           }
@@ -363,7 +377,7 @@ void HumanVtxPropTable::update(Vertex& vertex)
     row_idx++;
   }
 
-  if(!_tab_is_opened)
+  if (!_tab_is_opened)
   {
     _widget->addTab(this, "Human");
     _tab_is_opened = true;

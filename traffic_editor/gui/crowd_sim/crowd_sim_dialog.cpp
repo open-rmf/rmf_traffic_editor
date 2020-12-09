@@ -83,7 +83,7 @@ CrowdSimDialog::CrowdSimDialog(
             "Failed to initialize table/layout in Dialog " + dialog_title);
   }
   QHBoxLayout* table_box = new QHBoxLayout;
-  if(_table_ptr)
+  if (_table_ptr)
   {
     _table_ptr->update();
     table_box->addWidget(_table_ptr.get());
@@ -93,7 +93,7 @@ CrowdSimDialog::CrowdSimDialog(
     _layout_ptr->initialise();
     table_box->addLayout(_layout_ptr.get());
   }
-  
+
   top_vbox->addLayout(table_box);
   top_vbox->addLayout(bottom_buttons_hbox);
   setWindowTitle(QString::fromStdString(dialog_title));
