@@ -401,7 +401,6 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
           + std::to_string(_hold_times.size()) + "]");
 
     auto dpos_mag = dpos.norm();
-    auto lin_vel_mag = lin_vel.norm();
     
     // TODO(MXG): Some kind of crazy nonsense bug is somehow altering the
     // clock type value for the _hold_times. I don't know where this could
@@ -421,7 +420,7 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
 
     const bool rotate_towards_next_target = close_enough && (hold || pause);
 
-    bool colinear = false;
+    bool colinear_and_miss_target = false;
 
     if(_traj_wp_idx+1 < trajectory.size())
     {
@@ -429,13 +428,13 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
       auto angle = next_target.dot(dpos)/(next_target.norm()*dpos.norm());
       if(abs(angle-1) < 1e-9)
       {
-        colinear = true;
         double time_left = dpos_mag/_nominal_drive_speed;
         int32_t seconds = time_left;
 
         rclcpp::Duration dur(seconds, (time_left-(double)seconds)*1e9);
         if(dur + now > hold_time)
         {
+          colinear_and_miss_target = true;
           RCLCPP_INFO(logger(), "Next target is colinear and we are about to miss the desired time");
         }
       } 
@@ -498,11 +497,19 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
       if (dir < 0.0)
         current_heading *= -1.0;
 
+      // If the points are colinear, we do not want to slow down when we approach a target
+      // rather we will just continue driving on in order to try to meet the timing.
+      auto vel_mag = dpos_mag;
+      if(colinear_and_miss_target)
+      {
+        vel_mag = compute_dpos(trajectory.at(_traj_wp_idx + 1), _pose).norm();
+      } 
+
       // If d_yaw is less than a certain tolerance (i.e. we don't need to spin
       // too much), then we'll include the forward velocity. Otherwise, we will
       // only spin in place until we are oriented in the desired direction.
       velocities.first = std::abs(velocities.second) <
-        d_yaw_tolerance ? dir * dpos_mag : 0.0;
+        d_yaw_tolerance ? dir * vel_mag : 0.0;
     }
   }
   else
