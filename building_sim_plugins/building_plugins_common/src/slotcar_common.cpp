@@ -313,6 +313,35 @@ std::string to_str(uint32_t type)
   return "UNKNOWN: " + std::to_string(type) + "??";
 }
 
+int SlotcarCommon::get_next_noncolinear_target(const rclcpp::Time current_time)
+{
+  const Eigen::Vector3d dpos = compute_dpos(
+      trajectory.at(_traj_wp_idx), _pose);
+  auto dpos_mag = dpos.norm();
+
+  bool colinear = true;
+  int target_idx = _traj_wp_idx;
+  
+  while(colinear && target_idx+1 < trajectory.size())
+  {
+    colinear = false;
+    const Eigen::Vector3d next_target = compute_dpos(trajectory.at(target_idx+1), trajectory.at(target_idx));
+    auto angle = next_target.dot(dpos)/(next_target.norm()*dpos_mag);
+    if(abs(angle-1) < 1e-9)
+    {
+      double time_left = dpos_mag/_nominal_drive_speed;
+      int32_t seconds = time_left;
+      auto hold_time = rclcpp::Time(_hold_times.at(target_idx), RCL_ROS_TIME);
+      rclcpp::Duration dur(seconds, (time_left-(double)seconds)*1e9);
+      if(dur + current_time > hold_time)
+      {
+        colinear = true;
+      }
+    }
+    if(colinear) target_idx++; 
+  }
+  return target_idx;
+}
 // First value of par is x_target, second is yaw_target
 std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
   const std::vector<Eigen::Vector3d>& obstacle_positions,
@@ -420,25 +449,7 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
 
     const bool rotate_towards_next_target = close_enough && (hold || pause);
 
-    bool colinear_and_miss_target = false;
-
-    if(_traj_wp_idx+1 < trajectory.size())
-    {
-      const Eigen::Vector3d next_target = compute_dpos(trajectory.at(_traj_wp_idx+1), trajectory.at(_traj_wp_idx));
-      auto angle = next_target.dot(dpos)/(next_target.norm()*dpos.norm());
-      if(abs(angle-1) < 1e-9)
-      {
-        double time_left = dpos_mag/_nominal_drive_speed;
-        int32_t seconds = time_left;
-
-        rclcpp::Duration dur(seconds, (time_left-(double)seconds)*1e9);
-        if(dur + now > hold_time)
-        {
-          colinear_and_miss_target = true;
-          RCLCPP_INFO(logger(), "Next target is colinear and we are about to miss the desired time");
-        }
-      } 
-    }
+    int next_non_colinear_target = get_next_noncolinear_target(now);
 
     if (rotate_towards_next_target)
     {
@@ -500,9 +511,9 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
       // If the points are colinear, we do not want to slow down when we approach a target
       // rather we will just continue driving on in order to try to meet the timing.
       auto vel_mag = dpos_mag;
-      if(colinear_and_miss_target)
+      if(next_non_colinear_target != _traj_wp_idx)
       {
-        vel_mag = compute_dpos(trajectory.at(_traj_wp_idx + 1), _pose).norm();
+        vel_mag = compute_dpos(trajectory.at(next_non_colinear_target + 1), _pose).norm();
       } 
 
       // If d_yaw is less than a certain tolerance (i.e. we don't need to spin

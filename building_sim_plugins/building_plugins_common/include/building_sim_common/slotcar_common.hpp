@@ -280,6 +280,8 @@ private:
 
   double compute_charge(const double run_time) const;
 
+  int get_next_noncolinear_target(const rclcpp::Time current_time);
+
   double compute_discharge(
     const Eigen::Vector3d lin_vel, const double ang_vel,
     const Eigen::Vector3d lin_acc, const double ang_acc,
