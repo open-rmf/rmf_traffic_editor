@@ -208,7 +208,7 @@ void SlotcarCommon::path_request_cb(
     Eigen::Quaterniond quat(
       Eigen::AngleAxisd(msg->path[i].yaw, Eigen::Vector3d::UnitZ()));
     trajectory.at(i).translation() = v3;
-    trajectory[i].linear() = Eigen::Matrix3d(quat);
+    trajectory.at(i).linear() = Eigen::Matrix3d(quat);
 
     _hold_times.at(i) = msg->path[i].t;
   }
