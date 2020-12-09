@@ -330,14 +330,15 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
   _pose = pose;
   publish_robot_state(time);
 
+  //get commonly used info
+  const Eigen::Vector3d dist = compute_dpos(_old_pose, _pose); // Ignore movement along z-axis
+  const Eigen::Vector3d lin_vel = dist / dt;
+  double ang_disp = compute_yaw(_pose, _old_pose, _rot_dir);
+  const double ang_vel = ang_disp / dt;
+
   // Update battery state of charge
   if (_initialized_pose)
   {
-    const Eigen::Vector3d dist = compute_dpos(_old_pose, _pose); // Ignore movement along z-axis
-    const Eigen::Vector3d lin_vel = dist / dt;
-    double ang_disp = compute_yaw(_pose, _old_pose, _rot_dir);
-    const double ang_vel = ang_disp / dt;
-
     // Try charging battery
     double eps = 0.01;
     bool stationary = lin_vel.norm() < eps && std::abs(ang_vel) < eps;
@@ -379,6 +380,7 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
     _old_lin_vel = lin_vel;
     _old_ang_vel = ang_vel;
   }
+  
   _old_pose = _pose;
   _initialized_pose = true;
 
@@ -399,6 +401,8 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
           + std::to_string(_hold_times.size()) + "]");
 
     auto dpos_mag = dpos.norm();
+    auto lin_vel_mag = lin_vel.norm();
+    
     // TODO(MXG): Some kind of crazy nonsense bug is somehow altering the
     // clock type value for the _hold_times. I don't know where this could
     // possibly be happening, but I suspect it must be caused by undefined
@@ -416,6 +420,26 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
     const bool hold = now < hold_time;
 
     const bool rotate_towards_next_target = close_enough && (hold || pause);
+
+    bool colinear = false;
+
+    if(_traj_wp_idx+1 < trajectory.size())
+    {
+      const Eigen::Vector3d next_target = compute_dpos(trajectory.at(_traj_wp_idx+1), trajectory.at(_traj_wp_idx));
+      auto angle = next_target.dot(dpos)/(next_target.norm()*dpos.norm());
+      if(abs(angle-1) < 1e-9)
+      {
+        colinear = true;
+        double time_left = dpos_mag/_nominal_drive_speed;
+        int32_t seconds = time_left;
+
+        rclcpp::Duration dur(seconds, (time_left-(double)seconds)*1e9);
+        if(dur + now > hold_time)
+        {
+          RCLCPP_INFO(logger(), "Next target is colinear and we are about to miss the desired time");
+        }
+      } 
+    }
 
     if (rotate_towards_next_target)
     {
