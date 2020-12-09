@@ -92,11 +92,11 @@ SlotcarCommon::SlotcarCommon()
   // Make sure we initialize this message to TYPE_RESUME, or else the robot
   // might just sit and wait around unintentionally.
   pause_request = rmf_fleet_msgs::build<rmf_fleet_msgs::msg::PauseRequest>()
-      .fleet_name("")
-      .robot_name("")
-      .mode_request_id(0)
-      .type(rmf_fleet_msgs::msg::PauseRequest::TYPE_RESUME)
-      .at_checkpoint(0);
+    .fleet_name("")
+    .robot_name("")
+    .mode_request_id(0)
+    .type(rmf_fleet_msgs::msg::PauseRequest::TYPE_RESUME)
+    .at_checkpoint(0);
 }
 
 rclcpp::Logger SlotcarCommon::logger() const
@@ -243,7 +243,7 @@ void SlotcarCommon::path_request_cb(
 }
 
 void SlotcarCommon::pause_request_cb(
-    const rmf_fleet_msgs::msg::PauseRequest::SharedPtr msg)
+  const rmf_fleet_msgs::msg::PauseRequest::SharedPtr msg)
 {
   if (msg->robot_name != _model_name)
     return;
@@ -393,10 +393,12 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
       trajectory.at(_traj_wp_idx), _pose);
 
     if (_hold_times.size() != trajectory.size())
+    {
       throw std::runtime_error(
-          "Mismatch between trajectory size ["
-          + std::to_string(trajectory.size()) + "] and holding time size ["
-          + std::to_string(_hold_times.size()) + "]");
+              "Mismatch between trajectory size ["
+              + std::to_string(trajectory.size()) + "] and holding time size ["
+              + std::to_string(_hold_times.size()) + "]");
+    }
 
     auto dpos_mag = dpos.norm();
     // TODO(MXG): Some kind of crazy nonsense bug is somehow altering the
@@ -404,14 +406,16 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
     // possibly be happening, but I suspect it must be caused by undefined
     // behavior. For now we deal with this by explicitly setting the clock type.
     const auto hold_time =
-        rclcpp::Time(_hold_times.at(_traj_wp_idx), RCL_ROS_TIME);
+      rclcpp::Time(_hold_times.at(_traj_wp_idx), RCL_ROS_TIME);
 
     const bool close_enough = (dpos_mag < 0.02);
 
-    const bool pause =
-        pause_request.type == pause_request.TYPE_PAUSE_IMMEDIATELY
-        || (pause_request.type == pause_request.TYPE_PAUSE_AT_CHECKPOINT
-            && pause_request.at_checkpoint <= _remaining_path.front().index);
+    const bool checkpoint_pause =
+      pause_request.type == pause_request.TYPE_PAUSE_AT_CHECKPOINT
+      && pause_request.at_checkpoint <= _remaining_path.front().index;
+    const bool immediate_pause =
+      pause_request.type == pause_request.TYPE_PAUSE_IMMEDIATELY;
+    const bool pause = checkpoint_pause || immediate_pause;
 
     const bool hold = now < hold_time;
 
@@ -422,15 +426,15 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
       if (_traj_wp_idx+1 < trajectory.size())
       {
         const auto dpos_next =
-            compute_dpos(trajectory.at(_traj_wp_idx+1), _pose);
+          compute_dpos(trajectory.at(_traj_wp_idx+1), _pose);
 
         const auto goal_heading =
-            compute_heading(trajectory.at(_traj_wp_idx+1));
+          compute_heading(trajectory.at(_traj_wp_idx+1));
 
         double dir = 1.0;
-        velocities.second =
-            compute_change_in_rotation(
-              current_heading, dpos_next, &goal_heading, &dir);
+        velocities.second = compute_change_in_rotation(
+          current_heading, dpos_next, &goal_heading, &dir);
+
         if (dir < 0.0)
           current_heading *= -1.0;
       }
@@ -499,10 +503,10 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
   }
 
   const bool immediate_pause =
-      pause_request.type == pause_request.TYPE_PAUSE_IMMEDIATELY;
+    pause_request.type == pause_request.TYPE_PAUSE_IMMEDIATELY;
 
   const bool stop =
-      immediate_pause || emergency_stop(obstacle_positions, current_heading);
+    immediate_pause || emergency_stop(obstacle_positions, current_heading);
 
   if (immediate_pause)
   {
