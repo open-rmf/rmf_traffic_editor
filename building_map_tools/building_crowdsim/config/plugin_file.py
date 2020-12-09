@@ -55,17 +55,18 @@ class Floor (Element):
         for group in external_agent_groups:
             if len(group['agents_name']) > 0:
                 self.add_external_list(group['agents_name'])
-        
+
         # get all the internal agent names from 'human_yaml'
-        internal_agent_names={}
+        internal_agent_names = {}
         for internal_agent in human_yaml_node:
             if 'agent_group_id' in internal_agent:
                 name = internal_agent['name']
-                if not name in internal_agent_names:
+                if name not in internal_agent_names:
                     internal_agent_names[name] = 0
                 else:
                     internal_agent_names[name] += 1
-                suffix = '_'+str(internal_agent_names[name]+1) if internal_agent_names[name] > 0 else ''
+                suffix = '_' + str(internal_agent_names[name] + 1)\
+                    if internal_agent_names[name] > 0 else ''
                 self.add_internal_agent(name+suffix)
 
     def add_model_type(self, model_type):
@@ -85,6 +86,7 @@ class Floor (Element):
     def add_external_list(self, name_list):
         for name in name_list:
             self.add_external_agent(name)
+
 
 class ModelType (Element):
     def __init__(self):

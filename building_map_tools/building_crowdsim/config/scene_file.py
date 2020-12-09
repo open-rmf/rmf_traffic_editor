@@ -2,6 +2,7 @@ import xml.etree.ElementTree as ET
 
 from .leaf_element import LeafElement, Element
 
+
 class SceneFile (Element):
     def __init__(self):
         Element.__init__(self, 'Experiment')
@@ -198,7 +199,7 @@ class AgentGroup (Element):
     def add_agent(self, x, y):
         self.generator.add_agent(x, y)
 
-    def load_an_agent_from_yaml(self, yaml_node): # only for agent in model
+    def load_an_agent_from_yaml(self, yaml_node):  # only for agent in model
         if 'profile_selector' not in yaml_node or\
            'state_selector' not in yaml_node:
             raise ValueError("Invalid AgentGroup Yaml!")
@@ -208,18 +209,19 @@ class AgentGroup (Element):
 
         if len(self.generator.sub_elements) > 0:
             first_agent_in_group = self.generator.sub_elements[0]
-            assert(px == first_agent_in_group.attributes['p_x'] and\
-                    py == first_agent_in_group.attributes['p_y'] and\
-                    self.profile_selector.attributes['name'] == yaml_node['profile_selector'] and\
-                    self.state_selector.attributes['name'] == yaml_node['state_selector'])
+            assert(px == first_agent_in_group.attributes['p_x'] and
+                   py == first_agent_in_group.attributes['p_y'] and
+                   self.profile_selector.attributes['name'] ==
+                   yaml_node['profile_selector'] and
+                   self.state_selector.attributes['name'] ==
+                   yaml_node['state_selector'])
         else:
             self.profile_selector.attributes['name'] =\
-            yaml_node['profile_selector']
+                yaml_node['profile_selector']
             self.state_selector.attributes['name'] =\
                 yaml_node['state_selector']
 
         self.add_agent(px, py)
-
 
     def load_from_yaml(self, yaml_node):
         if 'profile_selector' not in yaml_node or\

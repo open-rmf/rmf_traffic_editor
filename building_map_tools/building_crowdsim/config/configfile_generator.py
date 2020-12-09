@@ -16,16 +16,20 @@ from building_crowdsim.building_yaml_parse import\
     BuildingYamlParse, LevelWithHumanLanes
 from building_map.level import Level
 
+
 class ConfigFileGenerator:
     def __init__(self, building_yaml_parse):
         assert(isinstance(building_yaml_parse, BuildingYamlParse))
-        self.level_yaml = building_yaml_parse.yaml_node['levels'] # only level L1
+        # only level L1
+        self.level_yaml = building_yaml_parse.yaml_node['levels']
         self.level = {}
         L1 = next(iter(self.level_yaml))
         self.level[L1] = Level(self.level_yaml[L1], L1)
         self.level[L1].calculate_scale_using_measurements()
-        self.crowd_sim_yaml = building_yaml_parse.crowd_sim_config[0] # assume only level 1 for now
-        self.crowd_sim_human_yaml  = building_yaml_parse.crowd_sim_human[0] # assume only level 1 for now
+        # assume only level 1 for now
+        self.crowd_sim_yaml = building_yaml_parse.crowd_sim_config[0]
+        # assume only level 1 for now
+        self.crowd_sim_human_yaml = building_yaml_parse.crowd_sim_human[0]
         if 'enable' not in self.crowd_sim_yaml:
             raise ValueError(
                 "Missing 'enable' tag for crowdsim configuration.")
@@ -62,7 +66,8 @@ class ConfigFileGenerator:
     def transform_point_modify_yaml(self, yaml_node):
         x = yaml_node['x']
         y = yaml_node['y']
-        yaml_node['x'], yaml_node['y'] = self.level['L1'].transform.transform_point((x,-y))
+        yaml_node['x'], yaml_node['y'] = \
+            self.level['L1'].transform.transform_point((x, -y))
 
     def generate_scene_file(self, output_dir):
         # add default configuration
@@ -97,10 +102,9 @@ class ConfigFileGenerator:
                 self.transform_point_modify_yaml(item)
                 cur_group.load_an_agent_from_yaml(item)
                 agent_groups[group_id] = cur_group
-        
-        for group_id, agent_group in agent_groups.items(): 
-            self.scene_file.sub_elements.append(agent_group)
 
+        for group_id, agent_group in agent_groups.items():
+            self.scene_file.sub_elements.append(agent_group)
 
         write_xml_file(
             self.scene_file.output_xml_element(),
@@ -108,7 +112,8 @@ class ConfigFileGenerator:
             file_name='scene_file.xml')
 
     def generate_plugin_file(self):
-        self.plugin_file.load_from_yaml(self.crowd_sim_yaml, self.crowd_sim_human_yaml)
+        self.plugin_file.load_from_yaml(self.crowd_sim_yaml,
+                                        self.crowd_sim_human_yaml)
 
     def insert_plugin_into_world_file(self, world_file_to_be_inserted):
         self.generate_plugin_file()
