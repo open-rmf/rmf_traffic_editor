@@ -208,7 +208,7 @@ void SlotcarCommon::path_request_cb(
     Eigen::Quaterniond quat(
       Eigen::AngleAxisd(msg->path[i].yaw, Eigen::Vector3d::UnitZ()));
     trajectory.at(i).translation() = v3;
-    trajectory[i].linear() = Eigen::Matrix3d(quat);
+    trajectory.at(i).linear() = Eigen::Matrix3d(quat);
 
     _hold_times.at(i) = msg->path[i].t;
   }
@@ -427,13 +427,14 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
       trajectory.at(_traj_wp_idx), _pose);
 
     if (_hold_times.size() != trajectory.size())
+    {
       throw std::runtime_error(
               "Mismatch between trajectory size ["
               + std::to_string(trajectory.size()) + "] and holding time size ["
               + std::to_string(_hold_times.size()) + "]");
+    }
 
     auto dpos_mag = dpos.norm();
-
     // TODO(MXG): Some kind of crazy nonsense bug is somehow altering the
     // clock type value for the _hold_times. I don't know where this could
     // possibly be happening, but I suspect it must be caused by undefined
@@ -443,10 +444,12 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
 
     const bool close_enough = (dpos_mag < 0.02);
 
-    const bool pause =
-      pause_request.type == pause_request.TYPE_PAUSE_IMMEDIATELY
-      || (pause_request.type == pause_request.TYPE_PAUSE_AT_CHECKPOINT
-      && pause_request.at_checkpoint <= _remaining_path.front().index);
+    const bool checkpoint_pause =
+      pause_request.type == pause_request.TYPE_PAUSE_AT_CHECKPOINT
+      && pause_request.at_checkpoint <= _remaining_path.front().index;
+    const bool immediate_pause =
+      pause_request.type == pause_request.TYPE_PAUSE_IMMEDIATELY;
+    const bool pause = checkpoint_pause || immediate_pause;
 
     const bool hold = now < hold_time;
 
@@ -465,9 +468,9 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
           compute_heading(trajectory.at(_traj_wp_idx+1));
 
         double dir = 1.0;
-        velocities.second =
-          compute_change_in_rotation(
+        velocities.second = compute_change_in_rotation(
           current_heading, dpos_next, &goal_heading, &dir);
+
         if (dir < 0.0)
           current_heading *= -1.0;
       }

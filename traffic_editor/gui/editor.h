@@ -29,8 +29,10 @@
 #include <QGraphicsScene>
 #include <QMainWindow>
 #include <QSettings>
+#include <QUndoStack>
 
 #include "project.h"
+#include "actions/move_vertex.h"
 #include "traffic_editor/editor_model.h"
 #include "editor_mode_id.h"
 
@@ -103,6 +105,8 @@ protected:
   void showEvent(QShowEvent* event) override;
 
 private:
+
+  QUndoStack undo_stack;
   EditorModeId mode = MODE_BUILDING;
 
   void set_mode(const EditorModeId _mode, const QString& mode_string);
@@ -128,6 +132,7 @@ private:
   } tool_id = TOOL_SELECT;
 
   std::map<ToolId, QAction*> tools;
+
   void set_tool_visibility(const ToolId id, const bool visible);
 
   /////////////////
@@ -137,6 +142,8 @@ private:
   bool project_save();
 
   bool maybe_save();
+  void edit_undo();
+  void edit_redo();
   void edit_preferences();
   void edit_building_properties();
   void edit_project_properties();
@@ -332,6 +339,9 @@ private:
     const QPointF& p);
 
   QPointF previous_mouse_point;
+
+  // For undo related support
+  MoveVertexCommand* latest_move_vertex;
 };
 
 #endif

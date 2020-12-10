@@ -41,6 +41,7 @@
 #include "ament_index_cpp/get_package_prefix.hpp"
 #include "ament_index_cpp/get_resource.hpp"
 
+#include "actions/add_vertex.h"
 #include "add_param_dialog.h"
 #include "building_dialog.h"
 #include "building_level_dialog.h"
@@ -277,6 +278,17 @@ Editor::Editor()
 
   // EDIT MENU
   QMenu* edit_menu = menuBar()->addMenu("&Edit");
+  edit_menu->addAction(
+    "&Undo",
+    this,
+    &Editor::edit_undo,
+    QKeySequence::Undo);
+  edit_menu->addAction(
+    "&Redo",
+    this,
+    &Editor::edit_redo,
+    QKeySequence::Redo);
+  edit_menu->addSeparator();
   edit_menu->addAction(
     "&Building properties...",
     this,
@@ -777,6 +789,20 @@ bool Editor::project_save()
 void Editor::help_about()
 {
   QMessageBox::about(this, "About", "Welcome to the Traffic Editor");
+}
+
+void Editor::edit_undo()
+{
+  undo_stack.undo();
+  create_scene();
+  setWindowModified(true);
+}
+
+void Editor::edit_redo()
+{
+  undo_stack.redo();
+  create_scene();
+  setWindowModified(true);
 }
 
 void Editor::edit_preferences()
@@ -1658,9 +1684,7 @@ void Editor::mouse_add_vertex(
 {
   if (t == MOUSE_PRESS)
   {
-    if (mode == MODE_BUILDING || mode == MODE_TRAFFIC)
-      project.building.add_vertex(level_idx, p.x(), p.y());
-    else if (mode == MODE_SCENARIO)
+    if (mode == MODE_SCENARIO)
     {
       if (project.scenario_idx < 0)
       {
@@ -1670,8 +1694,13 @@ void Editor::mouse_add_vertex(
           "No scenario currently defined.");
         return;
       }
-      project.add_scenario_vertex(level_idx, p.x(), p.y());
     }
+
+    AddVertexCommand* command = new AddVertexCommand(&project, mode, level_idx,
+        p.x(), p.y());
+
+    undo_stack.push(command);
+
     setWindowModified(true);
     create_scene();
   }
@@ -1712,6 +1741,9 @@ void Editor::mouse_move(
     else if (ni.vertex_idx >= 0 && ni.vertex_dist < 10.0)
     {
       mouse_vertex_idx = ni.vertex_idx;
+
+      latest_move_vertex = new MoveVertexCommand(&project, level_idx,
+          mouse_vertex_idx);
       // todo: save the QGrahpicsEllipse or group, to avoid full repaints?
     }
     else if (ni.fiducial_idx >= 0 && ni.fiducial_dist < 10.0)
@@ -1722,6 +1754,18 @@ void Editor::mouse_move(
   }
   else if (t == MOUSE_RELEASE)
   {
+    if (mouse_vertex_idx >= 0) //Add mouse move vertex.
+    {
+      if (latest_move_vertex->has_moved)
+      {
+        undo_stack.push(latest_move_vertex);
+      }
+      else
+      {
+        delete latest_move_vertex;
+        latest_move_vertex = NULL;
+      }
+    }
     mouse_vertex_idx = -1;
     mouse_fiducial_idx = -1;
     create_scene();  // this will free mouse_motion_model
@@ -1751,6 +1795,7 @@ void Editor::mouse_move(
         project.building.levels[level_idx].vertices[mouse_vertex_idx];
       pt.x = p.x();
       pt.y = p.y();
+      latest_move_vertex->set_final_destination(p.x(), p.y());
       create_scene();
     }
     else if (mouse_fiducial_idx >= 0)
@@ -1798,6 +1843,7 @@ void Editor::mouse_add_edge(
 
     if (clicked_idx < 0)
     {
+      //TODO: Add an undo command here
       // current click is not on an existing vertex. Add one.
       project.building.add_vertex(level_idx, p_aligned.x(), p_aligned.y());
 
@@ -1818,6 +1864,7 @@ void Editor::mouse_add_edge(
 
     if (edge_type != Edge::LANE)
     {
+      //TODO: Add an undo command here
       project.building.add_edge(
         level_idx,
         prev_clicked_idx,
@@ -1826,6 +1873,7 @@ void Editor::mouse_add_edge(
     }
     else
     {
+      //TODO: Add an undo command here
       project.add_lane(
         level_idx,
         prev_clicked_idx,
