@@ -372,6 +372,10 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
     {
       _current_mode.mode = rmf_fleet_msgs::msg::RobotMode::MODE_DOCKING;
     }
+    else if (stationary)
+    {
+      _current_mode.mode = rmf_fleet_msgs::msg::RobotMode::MODE_IDLE;
+    }
     else
     {
       _current_mode.mode = rmf_fleet_msgs::msg::RobotMode::MODE_MOVING;

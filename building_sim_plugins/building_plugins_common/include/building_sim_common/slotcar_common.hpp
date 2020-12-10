@@ -249,7 +249,7 @@ private:
   std::unordered_map<std::string, std::vector<ChargerWaypoint>>
   _charger_waypoints;
   // Straight line distance to charging waypoint within which charging can occur
-  static constexpr double _charger_dist_thres = 0.2;
+  static constexpr double _charger_dist_thres = 0.3;
 
   bool _docking = false;
 
