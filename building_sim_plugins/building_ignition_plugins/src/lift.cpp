@@ -47,6 +47,9 @@ private:
   Entity _cabin_joint;
   Entity _lift_entity;
   std::vector<Entity> _payloads;
+  ignition::math::AxisAlignedBox _initial_aabb;
+  ignition::math::Pose3d _initial_pose;
+  bool _read_aabb_dimensions = true;
 
   PhysEnginePlugin _phys_plugin = PhysEnginePlugin::DEFAULT;
   bool _first_iteration = true;
@@ -111,12 +114,15 @@ private:
     }
   }
 
-  std::vector<Entity> get_payloads(
-    Entity& lift,
-    EntityComponentManager& ecm)
+  std::vector<Entity> get_payloads(EntityComponentManager& ecm)
   {
-    const auto lift_aabb = ecm.Component<components::AxisAlignedBox>(
-      _lift_entity);
+    const auto& lift_pose =
+      ecm.Component<components::Pose>(_lift_entity)->Data();
+    const ignition::math::Vector3d displacement =
+      lift_pose.CoordPositionSub(_initial_pose);
+    // Calculate current AABB of lift assuming it hasn't tilted/deformed
+    ignition::math::AxisAlignedBox lift_aabb = _initial_aabb + displacement;
+
     std::vector<Entity> payloads;
     ecm.Each<components::Model, components::Pose>(
       [&](const Entity& entity,
@@ -124,11 +130,10 @@ private:
       const components::Pose* pose
       ) -> bool
       {
-        // Object should not be static
         const auto payload_position = pose->Data().Pos();
-        if (entity != lift)
+        if (entity != _lift_entity)
         { // Could possibly check bounding box intersection too, but this suffices
-          if (lift_aabb->Data().Contains(payload_position))
+          if (lift_aabb.Contains(payload_position))
           {
             payloads.push_back(entity);
           }
@@ -221,6 +226,30 @@ public:
       _first_iteration = false;
     }
 
+    // Optimization: Read and store lift's pose and AABB whenever available, then
+    // delete the AABB component once read. Not deleting it causes rtf to drop by
+    // a 3-4x factor whenever the lift moves.
+    if (_read_aabb_dimensions)
+    {
+      const auto& aabb_component =
+        ecm.Component<components::AxisAlignedBox>(_lift_entity);
+      const auto& pose_component =
+        ecm.Component<components::Pose>(_lift_entity);
+
+      if (aabb_component && pose_component)
+      {
+        const double volume = aabb_component->Data().Volume();
+        if (volume > 0 && volume != std::numeric_limits<double>::infinity())
+        {
+          _initial_aabb = aabb_component->Data();
+          _initial_pose = pose_component->Data();
+          ecm.RemoveComponent(_lift_entity,
+            components::AxisAlignedBox().TypeId());
+          _read_aabb_dimensions = false;
+        }
+      }
+    }
+
     // TODO parallel thread executor?
     rclcpp::spin_some(_ros_node);
     if (!_initialized)
@@ -270,7 +299,7 @@ public:
     // (i.e. have a LinearVelocityCmd component that exists)
     if (_lift_common->motion_state_changed())
     {
-      _payloads = get_payloads(_lift_entity, ecm);
+      _payloads = get_payloads(ecm);
     }
 
     for (const Entity& payload : _payloads)

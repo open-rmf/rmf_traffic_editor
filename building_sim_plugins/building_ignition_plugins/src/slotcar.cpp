@@ -17,9 +17,6 @@
 
 #include <ignition/msgs.hh>
 #include <ignition/transport.hh>
-
-#include <ignition/msgs.hh>
-#include <ignition/transport.hh>
 #include <rclcpp/rclcpp.hpp>
 
 #include <building_sim_common/utils.hpp>
@@ -55,10 +52,12 @@ private:
   Entity _entity;
   std::unordered_set<Entity> _payloads;
   std::unordered_set<Entity> _infrastructure;
+  double _height = 0;
 
   PhysEnginePlugin phys_plugin = PhysEnginePlugin::DEFAULT;
 
   bool first_iteration = true; // Flag for checking if it is first PreUpdate() call
+  bool _read_aabb_dimensions = true;
 
   void charge_state_cb(const ignition::msgs::Selection& msg);
 
@@ -69,6 +68,8 @@ private:
   void init_infrastructure(EntityComponentManager& ecm);
   void item_dispensed_cb(const ignition::msgs::UInt64_V& msg);
   void item_ingested_cb(const ignition::msgs::Entity& msg);
+  bool get_slotcar_height(const ignition::msgs::Entity& req,
+    ignition::msgs::Double& rep);
   std::vector<Eigen::Vector3d> get_obstacle_positions(
     EntityComponentManager& ecm);
 };
@@ -137,6 +138,14 @@ void SlotcarPlugin::Configure(const Entity& entity,
     this))
   {
     std::cerr << "Error subscribing to topic [/item_ingested]" << std::endl;
+  }
+  // Respond to requests asking for height (e.g. for dispenser to dispense object)
+  const std::string height_srv_name =
+    "/slotcar_height_" + std::to_string(entity);
+  if (!_ign_node.Advertise(height_srv_name, &SlotcarPlugin::get_slotcar_height,
+    this))
+  {
+    std::cerr << "Error subscribing to topic [/slotcar_height]" << std::endl;
   }
 }
 
@@ -266,6 +275,17 @@ void SlotcarPlugin::item_ingested_cb(const ignition::msgs::Entity& msg)
   }
 }
 
+bool SlotcarPlugin::get_slotcar_height(const ignition::msgs::Entity& req,
+  ignition::msgs::Double& rep)
+{
+  if (req.id() == _entity)
+  {
+    rep.set_data(_height);
+    return true;
+  }
+  return false;
+}
+
 void SlotcarPlugin::PreUpdate(const UpdateInfo& info,
   EntityComponentManager& ecm)
 {
@@ -289,6 +309,25 @@ void SlotcarPlugin::PreUpdate(const UpdateInfo& info,
       }
     }
     first_iteration = false;
+  }
+
+  // Optimization: Read and store slotcar's dimensions whenever available, then
+  // delete the AABB component once read. Not deleting it causes rtf to drop by
+  // a 3-4x factor whenever the slotcar moves.
+  if (_read_aabb_dimensions)
+  {
+    const auto& aabb_component =
+      ecm.Component<components::AxisAlignedBox>(_entity);
+    if (aabb_component)
+    {
+      const double volume = aabb_component->Data().Volume();
+      if (volume > 0 && volume != std::numeric_limits<double>::infinity())
+      {
+        _height = aabb_component->Data().ZLength();
+        ecm.RemoveComponent(_entity, components::AxisAlignedBox().TypeId());
+        _read_aabb_dimensions = false;
+      }
+    }
   }
 
   // TODO parallel thread executor?
