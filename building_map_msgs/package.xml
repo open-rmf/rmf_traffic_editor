@@ -11,7 +11,7 @@
 
   <buildtool_depend>rosidl_default_generators_rolling</buildtool_depend>
 
-  <build_depend>builtin_interfaces_rollling</build_depend>
+  <build_depend>builtin_interfaces_rolling</build_depend>
   <build_depend>geometry_msgs_rolling</build_depend>
 
   <exec_depend>builtin_interfaces_rolling</exec_depend>
