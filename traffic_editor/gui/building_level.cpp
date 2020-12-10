@@ -258,6 +258,40 @@ YAML::Node BuildingLevel::to_yaml() const
   return y;
 }
 
+bool BuildingLevel::can_delete_current_selection()
+{
+  int selected_vertex_idx = -1;
+  for (int i = 0; i < static_cast<int>(vertices.size()); i++)
+  {
+    if (vertices[i].selected)
+    {
+      selected_vertex_idx = i;
+      break;  // just grab the index of the first selected vertex
+    }
+  }
+
+  if (selected_vertex_idx < 0) return true;
+
+  bool vertex_used = false;
+  for (const auto& edge : edges)
+  {
+    if (edge.start_idx == selected_vertex_idx ||
+      edge.end_idx == selected_vertex_idx)
+      vertex_used = true;
+  }
+  for (const auto& polygon : polygons)
+  {
+    for (const int& vertex_idx : polygon.vertices)
+    {
+      if (vertex_idx == selected_vertex_idx)
+        vertex_used = true;
+    }
+  }
+  if (vertex_used)
+    return false;// don't try to delete a vertex used in a shape
+  return true;
+}
+
 bool BuildingLevel::delete_selected()
 {
   edges.erase(

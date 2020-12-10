@@ -950,8 +950,20 @@ void Editor::keyPressEvent(QKeyEvent* e)
   switch (e->key())
   {
     case Qt::Key_Delete:
-      undo_stack.push(new DeleteCommand(&project, level_idx));
-      create_scene();
+      if(project.can_delete_current_selection(level_idx))
+      {
+        undo_stack.push(new DeleteCommand(&project, level_idx));
+        create_scene();
+      }
+      else
+      {
+        QMessageBox::critical(
+          this,
+          "Could not delete item",
+          "If deleting a vertex, it must not be in any edges or polygons.");
+
+        project.clear_selection(level_idx);
+      }
       break;
     case Qt::Key_S:
     case Qt::Key_Escape:

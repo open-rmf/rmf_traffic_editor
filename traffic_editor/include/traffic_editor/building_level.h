@@ -75,6 +75,7 @@ public:
     int polygon_idx = -1;
   };
 
+  bool can_delete_current_selection();
   bool delete_selected();
   void calculate_scale();
   void clear_selection();

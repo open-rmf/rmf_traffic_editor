@@ -227,6 +227,13 @@ void Project::clear_selection(const int level_idx)
     scenarios[scenario_idx]->clear_selection(building.levels[level_idx].name);
 }
 
+bool Project::can_delete_current_selection(const int level_idx)
+{
+  if(level_idx >= static_cast<int>(building.levels.size()))
+    return false;
+  return building.levels[level_idx].can_delete_current_selection();
+}
+
 bool Project::delete_selected(const int level_idx)
 {
   if (building.levels.empty())
