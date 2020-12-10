@@ -92,11 +92,11 @@ SlotcarCommon::SlotcarCommon()
   // Make sure we initialize this message to TYPE_RESUME, or else the robot
   // might just sit and wait around unintentionally.
   pause_request = rmf_fleet_msgs::build<rmf_fleet_msgs::msg::PauseRequest>()
-      .fleet_name("")
-      .robot_name("")
-      .mode_request_id(0)
-      .type(rmf_fleet_msgs::msg::PauseRequest::TYPE_RESUME)
-      .at_checkpoint(0);
+    .fleet_name("")
+    .robot_name("")
+    .mode_request_id(0)
+    .type(rmf_fleet_msgs::msg::PauseRequest::TYPE_RESUME)
+    .at_checkpoint(0);
 }
 
 rclcpp::Logger SlotcarCommon::logger() const
@@ -243,7 +243,7 @@ void SlotcarCommon::path_request_cb(
 }
 
 void SlotcarCommon::pause_request_cb(
-    const rmf_fleet_msgs::msg::PauseRequest::SharedPtr msg)
+  const rmf_fleet_msgs::msg::PauseRequest::SharedPtr msg)
 {
   if (msg->robot_name != _model_name)
     return;
@@ -313,32 +313,34 @@ std::string to_str(uint32_t type)
   return "UNKNOWN: " + std::to_string(type) + "??";
 }
 
-int SlotcarCommon::get_next_noncolinear_target(const rclcpp::Time current_time)
+size_t SlotcarCommon::get_next_noncolinear_target(const rclcpp::Time current_time)
 {
   const Eigen::Vector3d dpos = compute_dpos(
-      trajectory.at(_traj_wp_idx), _pose);
+    trajectory.at(_traj_wp_idx), _pose);
   auto dpos_mag = dpos.norm();
 
   bool colinear = true;
-  int target_idx = _traj_wp_idx;
-  
-  while(colinear && target_idx+1 < trajectory.size())
+  size_t target_idx = _traj_wp_idx;
+
+  while (colinear && target_idx+1 < trajectory.size())
   {
     colinear = false;
-    const Eigen::Vector3d next_target = compute_dpos(trajectory.at(target_idx+1), trajectory.at(target_idx));
+    const Eigen::Vector3d next_target = compute_dpos(trajectory.at(
+          target_idx+1), trajectory.at(target_idx));
     auto angle = next_target.dot(dpos)/(next_target.norm()*dpos_mag);
-    if(abs(angle-1) < 1e-9)
+    if (abs(angle-1) < 1e-9)
     {
       double time_left = dpos_mag/_nominal_drive_speed;
       int32_t seconds = time_left;
       auto hold_time = rclcpp::Time(_hold_times.at(target_idx), RCL_ROS_TIME);
       rclcpp::Duration dur(seconds, (time_left-(double)seconds)*1e9);
-      if(dur + current_time > hold_time)
+      if (dur + current_time > hold_time)
       {
         colinear = true;
       }
     }
-    if(colinear) target_idx++; 
+    if (colinear)
+      target_idx++;
   }
   return target_idx;
 }
@@ -409,7 +411,7 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
     _old_lin_vel = lin_vel;
     _old_ang_vel = ang_vel;
   }
-  
+
   _old_pose = _pose;
   _initialized_pose = true;
 
@@ -425,46 +427,46 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
 
     if (_hold_times.size() != trajectory.size())
       throw std::runtime_error(
-          "Mismatch between trajectory size ["
-          + std::to_string(trajectory.size()) + "] and holding time size ["
-          + std::to_string(_hold_times.size()) + "]");
+              "Mismatch between trajectory size ["
+              + std::to_string(trajectory.size()) + "] and holding time size ["
+              + std::to_string(_hold_times.size()) + "]");
 
     auto dpos_mag = dpos.norm();
-    
+
     // TODO(MXG): Some kind of crazy nonsense bug is somehow altering the
     // clock type value for the _hold_times. I don't know where this could
     // possibly be happening, but I suspect it must be caused by undefined
     // behavior. For now we deal with this by explicitly setting the clock type.
     const auto hold_time =
-        rclcpp::Time(_hold_times.at(_traj_wp_idx), RCL_ROS_TIME);
+      rclcpp::Time(_hold_times.at(_traj_wp_idx), RCL_ROS_TIME);
 
     const bool close_enough = (dpos_mag < 0.02);
 
     const bool pause =
-        pause_request.type == pause_request.TYPE_PAUSE_IMMEDIATELY
-        || (pause_request.type == pause_request.TYPE_PAUSE_AT_CHECKPOINT
-            && pause_request.at_checkpoint <= _remaining_path.front().index);
+      pause_request.type == pause_request.TYPE_PAUSE_IMMEDIATELY
+      || (pause_request.type == pause_request.TYPE_PAUSE_AT_CHECKPOINT
+      && pause_request.at_checkpoint <= _remaining_path.front().index);
 
     const bool hold = now < hold_time;
 
     const bool rotate_towards_next_target = close_enough && (hold || pause);
 
-    int next_non_colinear_target = get_next_noncolinear_target(now);
+    size_t next_non_colinear_target = get_next_noncolinear_target(now);
 
     if (rotate_towards_next_target)
     {
       if (_traj_wp_idx+1 < trajectory.size())
       {
         const auto dpos_next =
-            compute_dpos(trajectory.at(_traj_wp_idx+1), _pose);
+          compute_dpos(trajectory.at(_traj_wp_idx+1), _pose);
 
         const auto goal_heading =
-            compute_heading(trajectory.at(_traj_wp_idx+1));
+          compute_heading(trajectory.at(_traj_wp_idx+1));
 
         double dir = 1.0;
         velocities.second =
-            compute_change_in_rotation(
-              current_heading, dpos_next, &goal_heading, &dir);
+          compute_change_in_rotation(
+          current_heading, dpos_next, &goal_heading, &dir);
         if (dir < 0.0)
           current_heading *= -1.0;
       }
@@ -511,10 +513,11 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
       // If the points are colinear, we do not want to slow down when we approach a target
       // rather we will just continue driving on in order to try to meet the timing.
       auto vel_mag = dpos_mag;
-      if(next_non_colinear_target != _traj_wp_idx)
+      if (next_non_colinear_target != _traj_wp_idx)
       {
-        vel_mag = compute_dpos(trajectory.at(next_non_colinear_target + 1), _pose).norm();
-      } 
+        vel_mag = compute_dpos(trajectory.at(
+              next_non_colinear_target + 1), _pose).norm();
+      }
 
       // If d_yaw is less than a certain tolerance (i.e. we don't need to spin
       // too much), then we'll include the forward velocity. Otherwise, we will
@@ -541,10 +544,10 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
   }
 
   const bool immediate_pause =
-      pause_request.type == pause_request.TYPE_PAUSE_IMMEDIATELY;
+    pause_request.type == pause_request.TYPE_PAUSE_IMMEDIATELY;
 
   const bool stop =
-      immediate_pause || emergency_stop(obstacle_positions, current_heading);
+    immediate_pause || emergency_stop(obstacle_positions, current_heading);
 
   if (immediate_pause)
   {
