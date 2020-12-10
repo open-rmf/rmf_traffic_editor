@@ -67,7 +67,7 @@ void DeleteCommand::redo()
 
   for (auto& item: selected_items)
   {
-    if(item.model_idx > 0)
+    if(item.model_idx >= 0)
     {
       _models.push_back(
         _project->building.levels[_level_idx].models[item.model_idx]
@@ -75,7 +75,7 @@ void DeleteCommand::redo()
       _model_idx.push_back(item.model_idx);
     }
 
-    if(item.vertex_idx > 0)
+    if(item.vertex_idx >= 0)
     {
       _vertices.push_back(
         _project->building.levels[_level_idx].vertices[item.vertex_idx]
@@ -83,7 +83,7 @@ void DeleteCommand::redo()
       _vertex_idx.push_back(item.vertex_idx);
     }
 
-    if(item.fiducial_idx > 0)
+    if(item.fiducial_idx >= 0)
     {
       _fiducials.push_back(
         _project->building.levels[_level_idx].fiducials[item.fiducial_idx]
@@ -91,7 +91,7 @@ void DeleteCommand::redo()
       _fiducial_idx.push_back(item.fiducial_idx);
     }
 
-    if(item.edge_idx > 0)
+    if(item.edge_idx >= 0)
     {
       _edges.push_back(
         _project->building.levels[_level_idx].edges[item.edge_idx]
@@ -99,7 +99,7 @@ void DeleteCommand::redo()
       _edge_idx.push_back(item.edge_idx);
     }
 
-    if(item.polygon_idx > 0)
+    if(item.polygon_idx >= 0)
     {
       _polygons.push_back(
         _project->building.levels[_level_idx].polygons[item.polygon_idx]
