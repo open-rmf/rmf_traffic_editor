@@ -72,7 +72,7 @@ public:
     int vertex_idx = -1;
     int fiducial_idx = -1;
     int edge_idx = -1;
-    int polygon_idx =-1;
+    int polygon_idx = -1;
   };
 
   bool delete_selected();
