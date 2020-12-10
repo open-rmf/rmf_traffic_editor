@@ -13,16 +13,16 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <!-- TODO fix dependencies -->
-  <depend>rclcpp</depend>
-  <depend>rmf_fleet_msgs</depend>
-  <depend>rmf_door_msgs</depend>
-  <depend>rmf_lift_msgs</depend>
-  <depend>tf2_ros</depend>
-  <depend>geometry_msgs</depend>
-  <depend>std_msgs</depend>
-  <depend>std_srvs</depend>
+  <depend>rclcpp_rolling</depend>
+  <depend>rmf_fleet_msgs_rolling</depend>
+  <depend>rmf_door_msgs_rolling</depend>
+  <depend>rmf_lift_msgs_rolling</depend>
+  <depend>tf2_ros_rolling</depend>
+  <depend>geometry_msgs_rolling</depend>
+  <depend>std_msgs_rolling</depend>
+  <depend>std_srvs_rolling</depend>
 
-  <depend>building_sim_common</depend>
+  <depend>building_sim_common_rolling</depend>
 
   <export>
     <build_type>ament_cmake</build_type>
