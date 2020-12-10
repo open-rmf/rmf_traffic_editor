@@ -85,7 +85,7 @@ void DeleteCommand::redo()
 
     if(item.fiducial_idx > 0)
     {
-s      _fiducials.push_back(
+      _fiducials.push_back(
         _project->building.levels[_level_idx].fiducials[item.fiducial_idx]
       );
       _fiducial_idx.push_back(item.fiducial_idx);
