@@ -10,7 +10,7 @@
   <maintainer email="luca@openrobotics.org">Luca Della Vedova</maintainer>
   <license>Apache 2.0</license>
 
-  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_rolling</buildtool_depend>
 
   <!-- TODO fix dependencies -->
   <depend>rclcpp_rolling</depend>
