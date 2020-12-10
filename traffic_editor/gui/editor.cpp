@@ -950,7 +950,7 @@ void Editor::keyPressEvent(QKeyEvent* e)
   switch (e->key())
   {
     case Qt::Key_Delete:
-      if(project.can_delete_current_selection(level_idx))
+      if (project.can_delete_current_selection(level_idx))
       {
         undo_stack.push(new DeleteCommand(&project, level_idx));
         create_scene();

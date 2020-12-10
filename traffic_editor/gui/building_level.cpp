@@ -270,7 +270,8 @@ bool BuildingLevel::can_delete_current_selection()
     }
   }
 
-  if (selected_vertex_idx < 0) return true;
+  if (selected_vertex_idx < 0)
+    return true;
 
   bool vertex_used = false;
   for (const auto& edge : edges)

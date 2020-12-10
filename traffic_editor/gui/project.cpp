@@ -229,7 +229,7 @@ void Project::clear_selection(const int level_idx)
 
 bool Project::can_delete_current_selection(const int level_idx)
 {
-  if(level_idx >= static_cast<int>(building.levels.size()))
+  if (level_idx >= static_cast<int>(building.levels.size()))
     return false;
   return building.levels[level_idx].can_delete_current_selection();
 }
