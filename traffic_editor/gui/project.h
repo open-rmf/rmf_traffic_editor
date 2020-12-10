@@ -73,6 +73,9 @@ public:
   void clear_selection(const int level_idx);
   bool delete_selected(const int level_idx);
 
+  void get_selected_items(const int level_idx, 
+    std::vector<BuildingLevel::SelectedItem>& selected);
+
   struct NearestItem
   {
     double model_dist = 1e100;

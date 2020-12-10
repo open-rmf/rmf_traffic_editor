@@ -44,6 +44,7 @@
 #include "actions/add_vertex.h"
 #include "actions/add_fiducial.h"
 #include "actions/add_model.h"
+#include "actions/delete.h"
 #include "add_param_dialog.h"
 #include "building_dialog.h"
 #include "building_level_dialog.h"
@@ -949,20 +950,7 @@ void Editor::keyPressEvent(QKeyEvent* e)
   switch (e->key())
   {
     case Qt::Key_Delete:
-      if (project.delete_selected(level_idx))
-      {
-        clear_property_editor();
-        setWindowModified(true);
-      }
-      else
-      {
-        QMessageBox::critical(
-          this,
-          "Could not delete item",
-          "If deleting a vertex, it must not be in any edges or polygons.");
-
-        project.clear_selection(level_idx);
-      }
+      undo_stack.push(new DeleteCommand(&project, level_idx));
       create_scene();
       break;
     case Qt::Key_S:

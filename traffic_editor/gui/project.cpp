@@ -240,6 +240,13 @@ bool Project::delete_selected(const int level_idx)
   return true;
 }
 
+void Project::get_selected_items(
+  const int level_idx,
+  std::vector<BuildingLevel::SelectedItem>& selected)
+{
+  building.levels[level_idx].get_selected_items(selected);
+}
+
 Project::NearestItem Project::nearest_items(
   EditorModeId mode,
   const int level_index,

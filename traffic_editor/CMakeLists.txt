@@ -41,6 +41,7 @@ set(traffic_editor_sources
   gui/actions/add_fiducial.cpp
   gui/actions/add_model.cpp
   gui/actions/add_vertex.cpp
+  gui/actions/delete.cpp
   gui/actions/move_fiducial.cpp
   gui/actions/move_model.cpp
   gui/actions/move_vertex.cpp

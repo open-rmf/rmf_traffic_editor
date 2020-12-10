@@ -66,10 +66,20 @@ public:
   bool from_yaml(const std::string& name, const YAML::Node& data);
   YAML::Node to_yaml() const;
 
+  struct SelectedItem
+  {
+    int model_idx = -1;
+    int vertex_idx = -1;
+    int fiducial_idx = -1;
+    int edge_idx = -1;
+    int polygon_idx =-1;
+  };
+
   bool delete_selected();
   void calculate_scale();
-
   void clear_selection();
+  void get_selected_items(std::vector<SelectedItem>& selected_items);
+
 
   void draw(
     QGraphicsScene* scene,
