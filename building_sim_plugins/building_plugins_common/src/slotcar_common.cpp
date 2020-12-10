@@ -327,7 +327,7 @@ size_t SlotcarCommon::get_next_noncolinear_target(
   {
     colinear = false;
     const Eigen::Vector3d next_target = compute_dpos(trajectory.at(
-          target_idx+1), trajectory.at(target_idx));
+          target_idx+1), _pose);
     auto angle = next_target.dot(dpos)/(next_target.norm()*dpos_mag);
     if (abs(angle-1) < 1e-9)
     {
