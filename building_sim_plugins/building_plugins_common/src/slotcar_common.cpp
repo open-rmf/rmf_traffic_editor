@@ -313,7 +313,8 @@ std::string to_str(uint32_t type)
   return "UNKNOWN: " + std::to_string(type) + "??";
 }
 
-size_t SlotcarCommon::get_next_noncolinear_target(const rclcpp::Time current_time)
+size_t SlotcarCommon::get_next_noncolinear_target(
+  const rclcpp::Time current_time)
 {
   const Eigen::Vector3d dpos = compute_dpos(
     trajectory.at(_traj_wp_idx), _pose);
