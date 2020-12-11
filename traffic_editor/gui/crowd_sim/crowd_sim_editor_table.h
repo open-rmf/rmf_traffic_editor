@@ -39,16 +39,21 @@ public:
   CrowdSimEditorTable(const Project& input_project);
   ~CrowdSimEditorTable() {}
 
-  bool initialise();
-  void update();
+  void update(int level = 0);
   void update_goal_area();
   void update_navmesh_level();
   void update_external_agent_from_spawn_point();
   void update_external_agent_state();
+  void setParentTabWidget(QTabWidget* parentwidget)
+  {
+    _parentwidget = parentwidget;
+  }
+  int getCurrentLevel() {return _level;}
 private:
   const Project& _project;
   CrowdSimImplPtr _impl;
 
+  int _level;
   // reserved rows for checkbox for enable_crowd_sim, LineEdit for updtae_time_step
   int _reserved_rows = 3;
   std::vector<std::string> _required_components {
@@ -65,7 +70,7 @@ private:
   QTableWidgetItem* _update_time_step_name_item;
   QLineEdit* _external_agent_value_item;
   QLineEdit* _update_time_step_value_item;
-  bool initialised;
+  QTabWidget* _parentwidget;
 };
 
 #endif

@@ -33,7 +33,10 @@ public:
   ~BuildingLevelTable();
 
   void update(Building& building);
-  void add_crowdsim_update(CrowdSimEditorTable* cwdsimtable);
+  void setCrowdSimTable(CrowdSimEditorTable* cwdsimtable)
+  {
+    _cwdsimtable = cwdsimtable;
+  }
 private:
   CrowdSimEditorTable* _cwdsimtable;
 

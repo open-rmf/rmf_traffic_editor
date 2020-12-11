@@ -83,6 +83,12 @@ void HumanVtxPropTable::update(Vertex& vertex)
 
   BuildingLevel L1 = _project.building.levels.front();
 
+  if (strcmp(L1.name.c_str(), "L1") != 0)
+  {
+    close();
+    return;
+  }
+
   if (L1.crowd_sim_impl == nullptr)
   {
     printf("Initialize crowd_sim_implementation for project.building\n");
@@ -142,6 +148,7 @@ void HumanVtxPropTable::update(Vertex& vertex)
   int spawn_number = 0;
   std::string profile = "";
   std::string model_type = "";
+  std::string initial_state = "";
   bool found = false;
   for (const auto& group:agent_groups)
   {
@@ -151,6 +158,7 @@ void HumanVtxPropTable::update(Vertex& vertex)
       spawn_number = group.get_spawn_number();
       profile = group.get_agent_profile();
       model_type = group.get_internal_agent_model_name();
+      initial_state = group.get_initial_state();
       found = true;
       break;
     }
@@ -200,40 +208,19 @@ void HumanVtxPropTable::update(Vertex& vertex)
     {
       const auto& states = _impl->get_states();
       auto states_count = states.size();
-      QComboBox* goal_combo = new QComboBox;
-      goal_combo->addItem(QString::fromStdString(""));
+      QComboBox* state_combo = new QComboBox;
+      state_combo->addItem(QString::fromStdString(""));
       for (size_t i = 1; i < states_count; i++)
       {
         auto& current_state = states.at(i);
-        const auto& state_name = current_state.get_name();
-        goal_combo->addItem(QString::fromStdString(state_name));
-        if (vertex.params[prop].value_string == state_name) // assume a vertex having this property is the prerequisite of state_selector
-        {
-          goal_combo->setCurrentIndex(i);
-
-          auto& agent_groups = _impl->get_agent_groups();
-          bool found = false;
-          for (auto& group:agent_groups)
-          {
-            const auto& sp = group.get_spawn_point();
-            if (sp.first == vertex.x && sp.second == vertex.y)
-            {
-              group.set_initial_state(state_name);
-              found = true;
-              break;
-            }
-          }
-          if (!found)
-          {
-            AgentGroup agrp(agent_groups.size(), vertex.x, vertex.y);
-            agrp.set_initial_state(state_name);
-            agent_groups.push_back(agrp);
-          }
-        }
+        auto state_name = current_state.get_name();
+        state_combo->addItem(QString::fromStdString(state_name));
+        if (initial_state == state_name)
+          state_combo->setCurrentIndex(i);
       }
-      setCellWidget(row_idx, 1, goal_combo);
+      setCellWidget(row_idx, 1, state_combo);
       connect(
-        goal_combo,
+        state_combo,
         &QComboBox::currentTextChanged,
         [this, &vertex](const QString& text)
         {

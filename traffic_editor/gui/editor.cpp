@@ -85,6 +85,8 @@ Editor::Editor()
 
   layers_table = new TableList;  // todo: replace with specific subclass?
 
+  crowd_sim_table = new CrowdSimEditorTable(project);
+
   level_table = new BuildingLevelTable;
   connect(
     level_table, &QTableWidget::cellClicked,
@@ -120,6 +122,7 @@ Editor::Editor()
         }
 
         level_idx = row;
+        crowd_sim_table->update(row);
         create_scene();
 
         QTransform t;
@@ -166,7 +169,7 @@ Editor::Editor()
       create_scene();
     });
 
-  crowd_sim_table = new CrowdSimEditorTable(project);
+  /*
   connect(
     crowd_sim_table,
     &QTableWidget::cellClicked,
@@ -175,10 +178,7 @@ Editor::Editor()
       crowd_sim_table->update();
       create_scene();
     }
-  );
-
-
-  level_table->add_crowdsim_update(crowd_sim_table);
+  );*/
 
   const QString tabStyle =
     "QWidget{ background-color: #a0a0a0;}\
@@ -197,6 +197,9 @@ Editor::Editor()
   right_tab_widget->addTab(traffic_table, "traffic");
   right_tab_widget->addTab(scenario_table, "scenarios");
   right_tab_widget->addTab(crowd_sim_table, "crowd_sim");
+
+  level_table->setCrowdSimTable(crowd_sim_table);
+  crowd_sim_table->setParentTabWidget(right_tab_widget);
 
   prop_editor_widget = new QTabWidget;
   prop_editor_widget->setStyleSheet(tabStyle);
@@ -699,6 +702,8 @@ void Editor::restore_previous_viewport()
         level_idx = i;
         create_scene();
         level_table->setCurrentCell(i, 0);
+        if (i != crowd_sim_table->getCurrentLevel())
+          crowd_sim_table->update(i);
         break;
       }
     }
@@ -963,6 +968,7 @@ void Editor::keyPressEvent(QKeyEvent* e)
       if (project.delete_selected(level_idx))
       {
         clear_property_editor();
+        human_prop_editor->close();
         setWindowModified(true);
       }
       else

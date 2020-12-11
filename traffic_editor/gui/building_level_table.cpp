@@ -69,7 +69,6 @@ void BuildingLevelTable::update(Building& building)
 
     QPushButton* edit_button = new QPushButton("Edit...", this);
     setCellWidget(i, 5, edit_button);
-    edit_button->setStyleSheet("QTableWidgetItem { background-color: red; }");
 
     connect(
       edit_button,
@@ -110,12 +109,5 @@ void BuildingLevelTable::update(Building& building)
       }
     });
 
-  if (_cwdsimtable)
-    _cwdsimtable->update();
   blockSignals(false);
-}
-
-void BuildingLevelTable::add_crowdsim_update(CrowdSimEditorTable* cwdsimtable)
-{
-  _cwdsimtable = cwdsimtable;
 }
