@@ -408,7 +408,8 @@ void SlotcarCommon::read_sdf(SdfPtrT& sdf)
   get_element_val_if_present<SdfPtrT, double>(sdf,
     "colinearity_threshold", this->_colinearity_threshold);
   RCLCPP_INFO(logger(),
-    "Setting colinearity threshold to: " + std::to_string(_colinearity_threshold));
+    "Setting colinearity threshold to: "
+    + std::to_string(_colinearity_threshold));
 
   get_element_val_if_present<SdfPtrT, double>(sdf,
     "goal_tolerance", this->_colinearity_threshold);
