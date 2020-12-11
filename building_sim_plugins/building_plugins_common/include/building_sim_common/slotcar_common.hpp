@@ -168,6 +168,8 @@ private:
 
   // use this to check the colinearity threshold when chaining items together
   double _colinearity_threshold = 3*M_PI/180;
+  //tolerance of the controller when achieving a goal
+  double _goal_tolerance = 0.02;
 
   // Constants for update rate of tf2 and robot_state topic
   static constexpr float TF2_RATE = 100.0;
@@ -286,6 +288,10 @@ private:
 
   std::size_t get_last_colinear_target(const rclcpp::Time current_time);
 
+  void predict_pop_off_targets(
+    std::size_t last_colinear_target,
+    double distance_travelled);
+
   double compute_discharge(
     const Eigen::Vector3d lin_vel, const double ang_vel,
     const Eigen::Vector3d lin_acc, const double ang_acc,
@@ -403,6 +409,11 @@ void SlotcarCommon::read_sdf(SdfPtrT& sdf)
     "colinearity_threshold", this->_colinearity_threshold);
     RCLCPP_INFO(logger(),
     "Setting colinearity threshold to: " + std::to_string(_colinearity_threshold));
+
+  get_element_val_if_present<SdfPtrT, double>(sdf,
+    "goal_tolerance", this->_colinearity_threshold);
+    RCLCPP_INFO(logger(),
+    "Setting colinearity threshold to: " + std::to_string(_goal_tolerance));
 
   // Charger Waypoint coordinates are in child element of top level world element
   if (sdf->GetParent() && sdf->GetParent()->GetParent())

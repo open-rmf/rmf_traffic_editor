@@ -318,6 +318,12 @@ std::string to_str(uint32_t type)
 std::size_t SlotcarCommon::get_last_colinear_target(
   const rclcpp::Time current_time)
 {
+  if(_traj_wp_idx >= trajectory.size()) 
+    throw  std::runtime_error(
+              "slotcar_common.cpp (line "
+              +std::to_string(__LINE__)
+              +"):Trajectory ID out of bounds.");
+
   const Eigen::Vector3d dpos = compute_dpos(
     trajectory.at(_traj_wp_idx), _pose);
   auto dpos_mag = dpos.norm();
@@ -354,7 +360,7 @@ std::size_t SlotcarCommon::get_last_colinear_target(
       //The two points are not colinear 
       return last_colinear_idx;
     }
-    
+
     //We need to check hold times. Calculate the ETA at target.
     double time_left = dpos_mag/_nominal_drive_speed;
     int32_t seconds = time_left;
@@ -379,6 +385,33 @@ std::size_t SlotcarCommon::get_last_colinear_target(
   //Will reach here if all candidates are colinear.
   return last_colinear_idx;
 }
+
+void SlotcarCommon::predict_pop_off_targets(
+  std::size_t last_colinear_target, 
+  double dist_travelled)
+{
+  //Assuming same time step and similar velocity, we 
+  //can get the predicted distance travelled
+  for(size_t i = _traj_wp_idx;
+    i <= last_colinear_target 
+    && i < trajectory.size(); 
+    i++)
+  {
+    auto dist_to_target = compute_dpos(trajectory.at(i), _pose);
+    if(dist_to_target.norm() <= dist_travelled+_goal_tolerance)
+    {
+      RCLCPP_INFO(logger(),
+        "%s reached waypoint %d/%d",
+        _model_name.c_str(),
+        _traj_wp_idx,
+        (int)trajectory.size());
+      _traj_wp_idx++;
+      if (!_remaining_path.empty()) 
+        _remaining_path.erase(_remaining_path.begin());
+
+    }
+  }
+}
 // First value of par is x_target, second is yaw_target
 std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
   const std::vector<Eigen::Vector3d>& obstacle_positions,
@@ -391,6 +424,7 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
     static_cast<uint32_t>((time-static_cast<double>(t_sec)) *1e9);
   const rclcpp::Time now{t_sec, t_nsec, RCL_ROS_TIME};
   double dt = time - _last_update_time;
+  double distance_travelled = 0;
   _last_update_time = time;
 
   _pose = pose;
@@ -402,6 +436,7 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
     //get commonly used info
     const Eigen::Vector3d dist = compute_dpos(_old_pose, _pose); // Ignore movement along z-axis
     const Eigen::Vector3d lin_vel = dist / dt;
+    distance_travelled = dist.norm();
     double ang_disp = compute_yaw(_pose, _old_pose, _rot_dir);
     const double ang_vel = ang_disp / dt;
     // Try charging battery
@@ -475,7 +510,7 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
     const auto hold_time =
       rclcpp::Time(_hold_times.at(_traj_wp_idx), RCL_ROS_TIME);
 
-    const bool close_enough = (dpos_mag < 0.02);
+    const bool close_enough = (dpos_mag < _goal_tolerance);
 
     const bool checkpoint_pause =
       pause_request.type == pause_request.TYPE_PAUSE_AT_CHECKPOINT
@@ -513,30 +548,11 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
         velocities.second = compute_change_in_rotation(
           current_heading, goal_heading);
       }
-
       _current_mode.mode = rmf_fleet_msgs::msg::RobotMode::MODE_PAUSED;
     }
-    else if (close_enough)
-    {
-      _traj_wp_idx++;
-      if (_remaining_path.empty())
-        return velocities;
-
-      _remaining_path.erase(_remaining_path.begin());
-      RCLCPP_INFO(logger(),
-        "%s reached waypoint %d/%d",
-        _model_name.c_str(),
-        _traj_wp_idx,
-        (int)trajectory.size());
-      if (_traj_wp_idx == trajectory.size())
-      {
-        RCLCPP_INFO(
-          logger(),
-          "%s reached goal -- rotating to face target",
-          _model_name.c_str());
-      }
-    }
-
+    
+    if(_initialized_pose && !rotate_towards_next_target)
+        predict_pop_off_targets(last_colinear_target, distance_travelled);
     if (!rotate_towards_next_target && _traj_wp_idx < trajectory.size())
     {
       const double d_yaw_tolerance = 5.0 * M_PI / 180.0;
