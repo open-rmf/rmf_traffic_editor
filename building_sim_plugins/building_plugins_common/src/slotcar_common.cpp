@@ -87,6 +87,18 @@ double compute_friction_energy(
   return f * m * g * v * dt;
 }
 
+SlotcarCommon::SlotcarCommon()
+{
+  // Make sure we initialize this message to TYPE_RESUME, or else the robot
+  // might just sit and wait around unintentionally.
+  pause_request = rmf_fleet_msgs::build<rmf_fleet_msgs::msg::PauseRequest>()
+    .fleet_name("")
+    .robot_name("")
+    .mode_request_id(0)
+    .type(rmf_fleet_msgs::msg::PauseRequest::TYPE_RESUME)
+    .at_checkpoint(0);
+}
+
 rclcpp::Logger SlotcarCommon::logger() const
 {
   return rclcpp::get_logger("slotcar_" + _model_name);
@@ -126,6 +138,12 @@ void SlotcarCommon::init_ros_node(const rclcpp::Node::SharedPtr node)
     10,
     std::bind(&SlotcarCommon::path_request_cb, this, std::placeholders::_1));
 
+  using PauseRequest = rmf_fleet_msgs::msg::PauseRequest;
+  _pause_sub = _ros_node->create_subscription<PauseRequest>(
+    "/robot_pause_requests",
+    10,
+    std::bind(&SlotcarCommon::pause_request_cb, this, std::placeholders::_1));
+
   _mode_sub = _ros_node->create_subscription<rmf_fleet_msgs::msg::ModeRequest>(
     "/robot_mode_requests",
     10,
@@ -164,11 +182,14 @@ void SlotcarCommon::path_request_cb(
   if (path_request_valid(msg) == false)
     return;
 
+  const auto old_path = _remaining_path;
+
   RCLCPP_INFO(
     logger(),
     "%s received a path request with %d waypoints",
     _model_name.c_str(), (int)msg->path.size());
 
+  std::lock_guard<std::mutex> lock(_mutex);
   // Reset this if we aren't at the final waypoint
   trajectory.resize(msg->path.size());
   _hold_times.resize(msg->path.size());
@@ -186,11 +207,10 @@ void SlotcarCommon::path_request_cb(
 
     Eigen::Quaterniond quat(
       Eigen::AngleAxisd(msg->path[i].yaw, Eigen::Vector3d::UnitZ()));
-    trajectory[i].translation() = v3;
-    trajectory[i].linear() = Eigen::Matrix3d(quat);
+    trajectory.at(i).translation() = v3;
+    trajectory.at(i).linear() = Eigen::Matrix3d(quat);
 
-    _hold_times[i] = msg->path[i].t;
-
+    _hold_times.at(i) = msg->path[i].t;
   }
   _remaining_path = msg->path;
   _traj_wp_idx = 0;
@@ -205,8 +225,31 @@ void SlotcarCommon::path_request_cb(
     trajectory.clear();
     trajectory.push_back(_pose);
 
+    _hold_times.clear();
+    _hold_times.push_back(rclcpp::Time((int64_t)0, RCL_ROS_TIME));
+
+    // We'll stick with the old path when an adapter error happens so that the
+    // fleet adapter knows where the robot currently is along its previous path.
+    _remaining_path = old_path;
+
     _adapter_error = true;
   }
+  else
+  {
+    trajectory.erase(trajectory.begin());
+    _hold_times.erase(_hold_times.begin());
+    _remaining_path.erase(_remaining_path.begin());
+  }
+}
+
+void SlotcarCommon::pause_request_cb(
+  const rmf_fleet_msgs::msg::PauseRequest::SharedPtr msg)
+{
+  if (msg->robot_name != _model_name)
+    return;
+
+  std::lock_guard<std::mutex> lock(_mutex);
+  pause_request = *msg;
 }
 
 std::array<double, 2> SlotcarCommon::calculate_control_signals(
@@ -258,11 +301,24 @@ std::array<double, 2> SlotcarCommon::calculate_joint_control_signals(
   return joint_signals;
 }
 
+std::string to_str(uint32_t type)
+{
+  if (rmf_fleet_msgs::msg::PauseRequest::TYPE_RESUME == type)
+    return "resume";
+  else if (rmf_fleet_msgs::msg::PauseRequest::TYPE_PAUSE_IMMEDIATELY == type)
+    return "pause immediately";
+  else if (rmf_fleet_msgs::msg::PauseRequest::TYPE_PAUSE_AT_CHECKPOINT == type)
+    return "pause at checkpoint";
+
+  return "UNKNOWN: " + std::to_string(type) + "??";
+}
+
 // First value of par is x_target, second is yaw_target
 std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
   const std::vector<Eigen::Vector3d>& obstacle_positions,
   const double time)
 {
+  std::lock_guard<std::mutex> lock(_mutex);
   std::pair<double, double> velocities;
   const int32_t t_sec = static_cast<int32_t>(time);
   const uint32_t t_nsec =
@@ -316,6 +372,10 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
     {
       _current_mode.mode = rmf_fleet_msgs::msg::RobotMode::MODE_DOCKING;
     }
+    else if (stationary)
+    {
+      _current_mode.mode = rmf_fleet_msgs::msg::RobotMode::MODE_IDLE;
+    }
     else
     {
       _current_mode.mode = rmf_fleet_msgs::msg::RobotMode::MODE_MOVING;
@@ -331,23 +391,65 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
 
   Eigen::Vector3d current_heading = compute_heading(_pose);
 
-  if ((unsigned int)_traj_wp_idx < trajectory.size())
+  if (_traj_wp_idx < trajectory.size())
   {
     const Eigen::Vector3d dpos = compute_dpos(
-      trajectory[_traj_wp_idx], _pose);
+      trajectory.at(_traj_wp_idx), _pose);
+
+    if (_hold_times.size() != trajectory.size())
+    {
+      throw std::runtime_error(
+              "Mismatch between trajectory size ["
+              + std::to_string(trajectory.size()) + "] and holding time size ["
+              + std::to_string(_hold_times.size()) + "]");
+    }
 
     auto dpos_mag = dpos.norm();
-    const auto hold_time = _hold_times[_traj_wp_idx];
+    // TODO(MXG): Some kind of crazy nonsense bug is somehow altering the
+    // clock type value for the _hold_times. I don't know where this could
+    // possibly be happening, but I suspect it must be caused by undefined
+    // behavior. For now we deal with this by explicitly setting the clock type.
+    const auto hold_time =
+      rclcpp::Time(_hold_times.at(_traj_wp_idx), RCL_ROS_TIME);
 
     const bool close_enough = (dpos_mag < 0.02);
-    const bool rotate_towards_next_target = close_enough && (now < hold_time);
+
+    const bool checkpoint_pause =
+      pause_request.type == pause_request.TYPE_PAUSE_AT_CHECKPOINT
+      && pause_request.at_checkpoint <= _remaining_path.front().index;
+    const bool immediate_pause =
+      pause_request.type == pause_request.TYPE_PAUSE_IMMEDIATELY;
+    const bool pause = checkpoint_pause || immediate_pause;
+
+    const bool hold = now < hold_time;
+
+    const bool rotate_towards_next_target = close_enough && (hold || pause);
 
     if (rotate_towards_next_target)
     {
-      auto goal_heading = compute_heading(trajectory[_traj_wp_idx]);
+      if (_traj_wp_idx+1 < trajectory.size())
+      {
+        const auto dpos_next =
+          compute_dpos(trajectory.at(_traj_wp_idx+1), _pose);
 
-      velocities.second = compute_change_in_rotation(
-        current_heading, goal_heading);
+        const auto goal_heading =
+          compute_heading(trajectory.at(_traj_wp_idx+1));
+
+        double dir = 1.0;
+        velocities.second = compute_change_in_rotation(
+          current_heading, dpos_next, &goal_heading, &dir);
+
+        if (dir < 0.0)
+          current_heading *= -1.0;
+      }
+      else
+      {
+        const auto goal_heading = compute_heading(trajectory.at(_traj_wp_idx));
+        velocities.second = compute_change_in_rotation(
+          current_heading, goal_heading);
+      }
+
+      _current_mode.mode = rmf_fleet_msgs::msg::RobotMode::MODE_PAUSED;
     }
     else if (close_enough)
     {
@@ -370,15 +472,16 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
       }
     }
 
-    if (!rotate_towards_next_target)
+    if (!rotate_towards_next_target && _traj_wp_idx < trajectory.size())
     {
       const double d_yaw_tolerance = 5.0 * M_PI / 180.0;
-      auto goal_heading = compute_heading(trajectory[_traj_wp_idx]);
+      auto goal_heading = compute_heading(trajectory.at(_traj_wp_idx));
       double dir = 1.0;
       velocities.second =
         compute_change_in_rotation(current_heading, dpos, &goal_heading, &dir);
       if (dir < 0.0)
         current_heading *= -1.0;
+
       // If d_yaw is less than a certain tolerance (i.e. we don't need to spin
       // too much), then we'll include the forward velocity. Otherwise, we will
       // only spin in place until we are oriented in the desired direction.
@@ -403,8 +506,24 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
     velocities.first = 0.0;
   }
 
-  // Check if we are too close to any obstacle
-  bool stop = emergency_stop(obstacle_positions, current_heading);
+  const bool immediate_pause =
+    pause_request.type == pause_request.TYPE_PAUSE_IMMEDIATELY;
+
+  const bool stop =
+    immediate_pause || emergency_stop(obstacle_positions, current_heading);
+
+  if (immediate_pause)
+  {
+    // If we are required to immediately pause, report that we are in paused
+    // mode
+    _current_mode.mode = _current_mode.MODE_PAUSED;
+  }
+  else if (stop)
+  {
+    // If we are not required to pause but we are being forced to emergency stop
+    // because of an obstacle, report that we are in waiting mode.
+    _current_mode.mode = _current_mode.MODE_WAITING;
+  }
 
   if (stop)
   {
@@ -426,7 +545,8 @@ bool SlotcarCommon::emergency_stop(
   bool need_to_stop = false;
   for (const auto& obstacle_pos : obstacle_positions)
   {
-    if ((obstacle_pos - stop_zone).norm() < _stop_radius)
+    const double dist = (obstacle_pos - stop_zone).norm();
+    if (dist < _stop_radius)
     {
       need_to_stop = true;
       break;
@@ -555,6 +675,7 @@ void SlotcarCommon::publish_state_topic(const rclcpp::Time& t)
   robot_state_msg.task_id = _current_task_id;
   robot_state_msg.path = _remaining_path;
   robot_state_msg.mode = _current_mode;
+  robot_state_msg.mode.mode_request_id = pause_request.mode_request_id;
 
   if (_adapter_error)
   {
@@ -562,6 +683,7 @@ void SlotcarCommon::publish_state_topic(const rclcpp::Time& t)
       rmf_fleet_msgs::msg::RobotMode::MODE_ADAPTER_ERROR;
   }
 
+  robot_state_msg.seq = ++_sequence;
   _robot_state_pub->publish(robot_state_msg);
 }
 
