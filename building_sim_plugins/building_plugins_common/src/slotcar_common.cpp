@@ -554,8 +554,6 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
       _current_mode.mode = rmf_fleet_msgs::msg::RobotMode::MODE_PAUSED;
     }
 
-    if (_initialized_pose && !rotate_towards_next_target)
-      predict_pop_off_targets(last_colinear_target, distance_travelled);
     if (!rotate_towards_next_target && _traj_wp_idx < trajectory.size())
     {
       const double d_yaw_tolerance = 5.0 * M_PI / 180.0;
@@ -577,6 +575,10 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
       // only spin in place until we are oriented in the desired direction.
       velocities.first = std::abs(velocities.second) <
         d_yaw_tolerance ? dir * vel_mag : 0.0;
+
+      //Predict which targets to pop of in next time step.
+      if (_initialized_pose)
+        predict_pop_off_targets(last_colinear_target, distance_travelled);
     }
   }
   else
@@ -595,7 +597,7 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
 
     velocities.first = 0.0;
   }
-
+  
   const bool immediate_pause =
     pause_request.type == pause_request.TYPE_PAUSE_IMMEDIATELY;
 
