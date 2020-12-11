@@ -597,7 +597,7 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
 
     velocities.first = 0.0;
   }
-  
+
   const bool immediate_pause =
     pause_request.type == pause_request.TYPE_PAUSE_IMMEDIATELY;
 
