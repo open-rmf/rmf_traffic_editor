@@ -249,6 +249,8 @@ private:
   void sim_reset();
   void sim_play_pause();
   SimThread sim_thread;
+  QTimer* scene_update_timer;
+  void scene_update_timer_timeout();
 #endif
 
 public:
@@ -262,8 +264,6 @@ private:
   void record_start_stop();
   void record_frame_to_video();
   cv::VideoWriter* video_writer = nullptr;
-  QTimer* scene_update_timer;
-  void scene_update_timer_timeout();
 #endif
 
   std::vector<EditorModel> editor_models;
