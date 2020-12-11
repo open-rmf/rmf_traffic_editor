@@ -219,6 +219,7 @@ private:
 
   std::string _current_task_id;
   std::vector<rmf_fleet_msgs::msg::Location> _remaining_path;
+  std::vector<rmf_fleet_msgs::msg::Location> _full_path;
 
   // Vehicle dynamic constants
   // TODO(MXG): Consider fetching these values from model data

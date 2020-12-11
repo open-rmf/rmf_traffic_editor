@@ -213,6 +213,7 @@ void SlotcarCommon::path_request_cb(
     _hold_times.at(i) = msg->path[i].t;
   }
   _remaining_path = msg->path;
+  _full_path = msg->path;
   _traj_wp_idx = 0;
 
   _current_task_id = msg->task_id;
@@ -239,6 +240,7 @@ void SlotcarCommon::path_request_cb(
     trajectory.erase(trajectory.begin());
     _hold_times.erase(_hold_times.begin());
     _remaining_path.erase(_remaining_path.begin());
+    _full_path.erase(_full_path.begin());
   }
 }
 
@@ -352,6 +354,24 @@ std::size_t SlotcarCommon::get_last_colinear_target(
       //The two points are not colinear 
       return last_colinear_idx;
     }
+    
+    //We need to check hold times. Calculate the ETA at target.
+    double time_left = dpos_mag/_nominal_drive_speed;
+    int32_t seconds = time_left;
+    rclcpp::Duration dur(seconds, static_cast<uint32_t>((time_left-seconds)*1e9));
+    auto hold_time = rclcpp::Time(_hold_times.at(last_colinear_idx), RCL_ROS_TIME);
+    if (dur + current_time < hold_time)
+    {
+      return last_colinear_idx;
+    }
+
+    //Finally we shall check for pause requests
+    if(pause_request.type == pause_request.TYPE_PAUSE_AT_CHECKPOINT
+      && pause_request.at_checkpoint == _full_path.at(last_colinear_idx).index)
+    {
+      return last_colinear_idx;
+    }
+
     //The angle was less. The next point should also be colinear.
     prev_mag = dto_candidate_norm;
     last_colinear_idx++;
