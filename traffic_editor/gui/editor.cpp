@@ -2276,7 +2276,8 @@ void Editor::mouse_edit_polygon(
       {
         printf("removing vertex %d\n", ni.vertex_idx);
       }
-      PolygonRemoveVertCommand* command =  new PolygonRemoveVertCommand(selected_polygon, ni.vertex_idx);
+      PolygonRemoveVertCommand* command = new PolygonRemoveVertCommand(
+        selected_polygon, ni.vertex_idx);
       undo_stack.push(command);
       setWindowModified(true);
       create_scene();
@@ -2331,7 +2332,7 @@ void Editor::mouse_edit_polygon(
         selected_polygon->vertices.end(),
         release_vertex_idx) != selected_polygon->vertices.end())
       return;// Release vertex is already in the polygon. Don't do anything.
-      
+
     PolygonAddVertCommand* command = new PolygonAddVertCommand(
       selected_polygon,
       mouse_edge_drag_polygon.movable_vertex,

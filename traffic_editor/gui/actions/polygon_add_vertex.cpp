@@ -18,24 +18,24 @@
 #include "polygon_add_vertex.h"
 
 PolygonAddVertCommand::PolygonAddVertCommand(
-  Polygon* polygon, 
+  Polygon* polygon,
   int position,
   int vert_id)
 {
   _polygon = polygon;
   _old_vertices = polygon->vertices;
   _position = position;
-  _vert_id = vert_id; 
+  _vert_id = vert_id;
 }
 
 PolygonAddVertCommand::~PolygonAddVertCommand()
 {
-  
+
 }
 
 void PolygonAddVertCommand::undo()
 {
-  _polygon->vertices.erase(_polygon->vertices.begin() + _position); 
+  _polygon->vertices.erase(_polygon->vertices.begin() + _position);
 }
 
 void PolygonAddVertCommand::redo()
