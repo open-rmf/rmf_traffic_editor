@@ -2191,7 +2191,7 @@ void Editor::mouse_add_polygon(
           mode,
           polygon,
           level_idx);
-        
+
         undo_stack.push(command);
       }
       scene->removeItem(mouse_motion_polygon);
