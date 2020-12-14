@@ -15,27 +15,32 @@
  *
 */
 
-#ifndef _POLYGON_REMOVE_H_
-#define _POLYGON_REMOVE_H_
+#include "polygon_add_vertex.h"
 
-#include <QUndoCommand>
-#include "editor_mode_id.h"
-#include "project.h"
-
-class PolygonRemoveVertCommand : public QUndoCommand
+PolygonAddVertCommand::PolygonAddVertCommand(
+  Polygon* polygon, 
+  int position,
+  int vert_id)
 {
+  _polygon = polygon;
+  _old_vertices = polygon->vertices;
+  _position = position;
+  _vert_id = vert_id; 
+}
 
-public:
-  PolygonRemoveVertCommand(
-    Polygon* polygon,
-    int vert_id);
-  virtual ~PolygonRemoveVertCommand();
-  void undo() override;
-  void redo() override;
-private:
-  Polygon* _polygon;
-  int _vert_id;
-  std::vector<int> _old_vertices;
-};
+PolygonAddVertCommand::~PolygonAddVertCommand()
+{
+  
+}
 
-#endif
+void PolygonAddVertCommand::undo()
+{
+  _polygon->vertices.erase(_polygon->vertices.begin() + _position); 
+}
+
+void PolygonAddVertCommand::redo()
+{
+  _polygon->vertices.insert(
+    _polygon->vertices.begin() + _position,
+    _vert_id);
+}
