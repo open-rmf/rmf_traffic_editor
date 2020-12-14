@@ -41,9 +41,11 @@
 #include "ament_index_cpp/get_package_prefix.hpp"
 #include "ament_index_cpp/get_resource.hpp"
 
-#include "actions/add_vertex.h"
+
 #include "actions/add_fiducial.h"
 #include "actions/add_model.h"
+#include "actions/add_polygon.h"
+#include "actions/add_vertex.h"
 #include "actions/delete.h"
 #include "add_param_dialog.h"
 #include "building_dialog.h"
@@ -2183,10 +2185,14 @@ void Editor::mouse_add_polygon(
         {
           polygon.vertices.push_back(i);
         }
-        if (mode == MODE_BUILDING)
-          project.building.levels[level_idx].polygons.push_back(polygon);
-        else if (mode == MODE_SCENARIO)
-          project.scenario_level(level_idx)->polygons.push_back(polygon);
+
+        AddPolygonCommand* command = new AddPolygonCommand(
+          &project,
+          mode,
+          polygon,
+          level_idx);
+        
+        undo_stack.push(command);
       }
       scene->removeItem(mouse_motion_polygon);
       delete mouse_motion_polygon;

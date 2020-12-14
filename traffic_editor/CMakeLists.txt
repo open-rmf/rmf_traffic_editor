@@ -40,6 +40,7 @@ set(traffic_editor_sources
   gui/actions/add_edge.cpp
   gui/actions/add_fiducial.cpp
   gui/actions/add_model.cpp
+  gui/actions/add_polygon.cpp
   gui/actions/add_vertex.cpp
   gui/actions/delete.cpp
   gui/actions/move_fiducial.cpp
