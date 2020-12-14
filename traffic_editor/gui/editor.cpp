@@ -47,6 +47,7 @@
 #include "actions/add_polygon.h"
 #include "actions/add_vertex.h"
 #include "actions/delete.h"
+#include "actions/polygon_remove_vertices.h"
 #include "add_param_dialog.h"
 #include "building_dialog.h"
 #include "building_level_dialog.h"
@@ -2274,7 +2275,9 @@ void Editor::mouse_edit_polygon(
       {
         printf("removing vertex %d\n", ni.vertex_idx);
       }
-      selected_polygon->remove_vertex(ni.vertex_idx);
+      //selected_polygon->remove_vertex(ni.vertex_idx);
+      PolygonRemoveVertCommand* command =  new PolygonRemoveVertCommand(selected_polygon, ni.vertex_idx);
+      undo_stack.push(command);
       setWindowModified(true);
       create_scene();
     }
