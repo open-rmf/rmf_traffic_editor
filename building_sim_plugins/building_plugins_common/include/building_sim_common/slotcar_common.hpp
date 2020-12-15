@@ -195,8 +195,9 @@ private:
 
   bool _initialized_pose = false; // True if at least 1 call to update() has been made
   Eigen::Isometry3d _old_pose; // Pose at previous time step
-  Eigen::Vector3d _old_lin_vel; // Linear velocity at previous time step
-  double _old_ang_vel; // Angular velocity at previous time step
+  // Assumes robot is stationary upon initialization
+  Eigen::Vector3d _old_lin_vel = Eigen::Vector3d::Zero(); // Linear velocity at previous time step
+  double _old_ang_vel = 0.0; // Angular velocity at previous time step
   Eigen::Isometry3d _pose; // Pose at current time step
   int _rot_dir = 1; // Current direction of rotation
 
