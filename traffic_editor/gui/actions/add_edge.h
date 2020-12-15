@@ -39,7 +39,9 @@ private:
   bool _first_point_not_exist, _first_point_drawn;
   bool _second_point_not_exist, _second_point_drawn;
   int _level_idx;
-  QUuid _vert_id_first, _vert_id_second;
+  std::vector<Edge> _edge_snapshot;
+  std::vector<Vertex> _vert_snapshot, _final_snapshot;
+  int _vert_id_first, _vert_id_second;
   Edge::Type _type;
 };
 

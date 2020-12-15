@@ -25,6 +25,8 @@ AddEdgeCommand::AddEdgeCommand(Project* project, int level_idx)
   _first_point_drawn = false;
   _second_point_not_exist = false;
   _second_point_drawn = false;
+  _edge_snapshot = _project->building.levels[_level_idx].edges;
+  _vert_snapshot = _project->building.levels[_level_idx].vertices;
 }
 
 AddEdgeCommand::~AddEdgeCommand()
@@ -34,107 +36,29 @@ AddEdgeCommand::~AddEdgeCommand()
 
 void AddEdgeCommand::redo()
 {
-  if (!_first_point_drawn)
-  {
-    _project->building.add_vertex(_level_idx, _first_x, _first_y);
-    _vert_id_first =
-      _project->building.levels[_level_idx].vertices.rbegin()->uuid;
-  }
-
-  if (!_second_point_drawn)
-  {
-    _project->building.add_vertex(_level_idx, _second_x, _second_y);
-    _vert_id_second =
-      _project->building.levels[_level_idx].vertices.rbegin()->uuid;
-  }
-
-  size_t prev_idx = _project->building.levels[_level_idx].get_vertex_by_id(
-    _vert_id_first);
-  size_t curr_idx = _project->building.levels[_level_idx].get_vertex_by_id(
-    _vert_id_second);
-
-  //Hackjob to fix wierd redo behaviour
-  if (prev_idx > _project->building.levels[_level_idx].vertices.size())
-  {
-    _project->building.add_vertex(_level_idx, _first_x, _first_y);
-    _vert_id_first =
-      _project->building.levels[_level_idx].vertices.rbegin()->uuid;
-    prev_idx = _project->building.levels[_level_idx].vertices.size()-1;
-  }
-
-  if (curr_idx > _project->building.levels[_level_idx].vertices.size())
-  {
-    _project->building.add_vertex(_level_idx, _first_x, _first_y);
-    _vert_id_second =
-      _project->building.levels[_level_idx].vertices.rbegin()->uuid;
-    curr_idx = _project->building.levels[_level_idx].vertices.size()-1;
-  }
-
+  _project->building.levels[_level_idx].vertices = _final_snapshot;
   if (_type != Edge::LANE)
   {
     _project->building.add_edge(
       _level_idx,
-      prev_idx,
-      curr_idx,
+      _vert_id_first,
+      _vert_id_second,
       _type);
   }
   else
   {
     _project->add_lane(
       _level_idx,
-      prev_idx,
-      curr_idx);
+      _vert_id_first,
+      _vert_id_second);
   }
 }
 
 void AddEdgeCommand::undo()
 {
-  int first_idx = _project->building.levels[_level_idx].get_vertex_by_id(
-    _vert_id_first);
-  int second_idx = _project->building.levels[_level_idx].get_vertex_by_id(
-    _vert_id_second);
-
-  size_t to_be_removed = _project->building.levels[_level_idx].edges.size()+1;
-
-
-  for (size_t i = 0; i < _project->building.levels[_level_idx].edges.size();
-    i++)
-  {
-    if (
-      _project->building.levels[_level_idx].edges[i].start_idx == first_idx
-      && _project->building.levels[_level_idx].edges[i].end_idx == second_idx
-      && _project->building.levels[_level_idx].edges[i].type == _type)
-    {
-      to_be_removed = i;
-    }
-  }
-  if (to_be_removed > _project->building.levels[_level_idx].edges.size())
-  {
-    //Something must have gone wrong
-
-    return;
-  }
-  _project->building.levels[_level_idx].edges.erase(_project->building.levels[
-      _level_idx].edges.begin() + to_be_removed);
-
-
-  if (_first_point_not_exist)
-  {
-    //delete the vertex as it was added while drawing
-    _project->building.levels[_level_idx].vertices.erase(
-      _project->building.levels[_level_idx].vertices.begin() + first_idx);
-    _first_point_drawn = false;
-  }
-  if (_second_point_not_exist)
-  {
-    //delete the vertex as it was added while drawing
-    //If the previous vertex has been deleted then the index of the second vertex would change
-    second_idx = _project->building.levels[_level_idx].get_vertex_by_id(
-      _vert_id_second);
-    _project->building.levels[_level_idx].vertices.erase(
-      _project->building.levels[_level_idx].vertices.begin() + second_idx);
-    _second_point_drawn = false;
-  }
+  //Just use snapshots to keep things simpler
+  _project->building.levels[_level_idx].edges = _edge_snapshot;
+  _project->building.levels[_level_idx].vertices = _vert_snapshot;
 }
 
 int AddEdgeCommand::set_first_point(double x, double y)
@@ -150,15 +74,10 @@ int AddEdgeCommand::set_first_point(double x, double y)
   {
     _first_point_not_exist = true;
     _project->building.add_vertex(_level_idx, x, y);
-    _vert_id_first =
-      _project->building.levels[_level_idx].vertices.rbegin()->uuid;
     clicked_idx = _project->building.levels[_level_idx].vertices.size()-1;
   }
-  else
-  {
-    _vert_id_first =
-      _project->building.levels[_level_idx].vertices[clicked_idx].uuid;
-  }
+  _vert_id_first = clicked_idx;
+  _final_snapshot = _project->building.levels[_level_idx].vertices;
   return clicked_idx;
 }
 
@@ -177,15 +96,10 @@ int AddEdgeCommand::set_second_point(double x, double y)
     _second_point_not_exist = true;
     _second_point_drawn = true;
     _project->building.add_vertex(_level_idx, x, y);
-    _vert_id_second =
-      _project->building.levels[_level_idx].vertices.rbegin()->uuid;
     clicked_idx = _project->building.levels[_level_idx].vertices.size()-1;
   }
-  else
-  {
-    _vert_id_second =
-      _project->building.levels[_level_idx].vertices[clicked_idx].uuid;
-  }
+  _vert_id_second = clicked_idx;
+  _final_snapshot = _project->building.levels[_level_idx].vertices;
   return clicked_idx;
 }
 
