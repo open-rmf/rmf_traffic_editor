@@ -41,7 +41,11 @@ public:
 
   void update(int level = 0);
   void update_goal_area();
-  void update_navmesh_level();
+  void set_navmesh_file_name(const std::string& level_name)
+  {
+    _navmesh_filename = level_name+"_navmesh.nav";
+    _impl->set_navmesh_file_name(_navmesh_filename);
+  }
   void update_external_agent_from_spawn_point();
   void update_external_agent_state();
   void setParentTabWidget(QTabWidget* parentwidget)
@@ -63,8 +67,8 @@ private:
     "ProfileModelTypes"
   };
   std::set<std::string> _goal_areas_cache;
-  std::vector<std::string> _navmesh_filename_cache;
 
+  std::string _navmesh_filename;
   QTableWidgetItem* _enable_crowd_sim_name_item;
   QCheckBox* _enable_crowd_sim_checkbox;
   QTableWidgetItem* _update_time_step_name_item;

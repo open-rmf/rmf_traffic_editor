@@ -42,17 +42,7 @@ std::shared_ptr<GoalSetTab> GoalSetTab::init_and_make(
 //======================================================
 void GoalSetTab::list_item_in_cache()
 {
-  auto states = get_impl()->get_states();
-  std::set<std::string> temp_states;
   auto cache_count = _cache.size();
-
-  for (auto state:states)
-  {
-    auto state_name = state.get_name();
-    if (state_name != "external_static")
-      temp_states.insert(state_name);
-  }
-
   for (size_t i = 0; i < cache_count; i++)
   {
     auto& goal_set = _cache[i];
@@ -62,11 +52,8 @@ void GoalSetTab::list_item_in_cache()
       new QTableWidgetItem(
         QString::number(static_cast<int>(goal_set.get_goal_set_id() ))));
 
-
-    auto goal_areas = goal_set.get_goal_areas();
-    goal_areas.insert(temp_states.begin(), temp_states.end());
     MultiSelectComboBox* multi_combo_box =
-      new MultiSelectComboBox(goal_areas);
+      new MultiSelectComboBox(get_impl()->get_goal_areas());
     multi_combo_box->showCheckedItem(goal_set.get_goal_areas());
     QTableWidget::setCellWidget(
       i,

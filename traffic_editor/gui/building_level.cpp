@@ -50,23 +50,20 @@ bool BuildingLevel::from_yaml(
 
   // crowd_sim_impl is initialized when creating crowd_sim_table in editor.cpp
   // just in case the pointer is not initialized
-  if (strcmp(_name.c_str(), "L1") == 0)
+  crowd_sim_impl = std::make_shared<crowd_sim::CrowdSimImplementation>();
+
+  crowd_sim_impl->clear();
+  crowd_sim_impl->init_default_configure();
+
+  if (_data["crowd_sim"] && _data["crowd_sim"].IsMap())
   {
-    crowd_sim_impl = std::make_shared<crowd_sim::CrowdSimImplementation>();
-
-    crowd_sim_impl->clear();
-    crowd_sim_impl->init_default_configure();
-
-    if (_data["crowd_sim"] && _data["crowd_sim"].IsMap())
+    if (!(crowd_sim_impl->from_yaml(_data["crowd_sim"]) &&
+      crowd_sim_impl->internal_agents_from_yaml(_data["models"])))
     {
-      if (!(crowd_sim_impl->from_yaml(_data["crowd_sim"]) &&
-        crowd_sim_impl->internal_agents_from_yaml(_data["models"])))
-      {
-        printf(
-          "Error in loading crowd_sim configuration from yaml, re-initialize crowd_sim");
-        crowd_sim_impl->clear();
-        crowd_sim_impl->init_default_configure();
-      }
+      printf(
+        "Error in loading crowd_sim configuration from yaml, re-initialize crowd_sim");
+      crowd_sim_impl->clear();
+      crowd_sim_impl->init_default_configure();
     }
   }
 

@@ -17,6 +17,7 @@
 
 #include <QWidget>
 #include <QComboBox>
+#include <QLabel>
 
 #include "state_table.h"
 
@@ -27,7 +28,7 @@ std::shared_ptr<StatesTab> StatesTab::init_and_make(
   CrowdSimImplPtr crowd_sim_impl)
 {
   const QStringList labels =
-  { "Name", "Is Final", "Navmesh File Name", "Goal Set Id", ""};
+  { "Name", "Is Final", "Goal Set Id", ""};
 
   auto state_tab_ptr = std::make_shared<StatesTab>(crowd_sim_impl, labels);
   if (!state_tab_ptr)
@@ -46,7 +47,7 @@ void StatesTab::list_item_in_cache()
   //row 0 for external_state
   auto external_state = _cache[0];
   setItem(0, 0,
-    new QTableWidgetItem(QString::fromStdString(external_state.get_name() )));
+    new QTableWidgetItem(QString::fromStdString(external_state.get_name())));
   setItem(0, 1,
     new QTableWidgetItem(QString::number(
       external_state.get_final_state() ? 1 : 0)));
@@ -55,21 +56,16 @@ void StatesTab::list_item_in_cache()
   {
     auto& current_state = _cache.at(i);
     setItem(i, 0,
-      new QTableWidgetItem(QString::fromStdString(current_state.get_name()) ) );
+      new QTableWidgetItem(QString::fromStdString(current_state.get_name())));
 
     QComboBox* final_state_combo = new QComboBox;
     _list_final_states_in_combo(final_state_combo,
       current_state.get_final_state());
     setCellWidget(i, 1, final_state_combo);
 
-    QComboBox* navmesh_list_combo = new QComboBox;
-    _list_navmesh_file_in_combo(navmesh_list_combo,
-      current_state.get_navmesh_file_name() );
-    setCellWidget(i, 2, navmesh_list_combo);
-
     QComboBox* goal_set_combo = new QComboBox;
     _list_goal_sets_in_combo(goal_set_combo, current_state.get_goal_set_id());
-    setCellWidget(i, 3, goal_set_combo);
+    setCellWidget(i, 2, goal_set_combo);
   }
 }
 
@@ -112,13 +108,10 @@ void StatesTab::save()
     auto final_item =
       static_cast<QComboBox*>(cellWidget(i, 1))->currentText().toStdString();
 
-    auto navmesh_file_name =
-      static_cast<QComboBox*>(cellWidget(i, 2))->currentText().toStdString();
-
     bool OK_status;
     auto goal_set_id =
       static_cast<QComboBox*>(cellWidget(i,
-      3))->currentText().toInt(&OK_status);
+      2))->currentText().toInt(&OK_status);
 
     if (saved_names.find(name_item) != saved_names.end())
     {
@@ -131,7 +124,7 @@ void StatesTab::save()
     tmp_cache.emplace_back(name_item);
     auto& cur_it = tmp_cache.back();
     cur_it.set_final_state(final_item == "1");
-    cur_it.set_navmesh_file_name(navmesh_file_name);
+    cur_it.set_navmesh_file_name(get_impl()->get_navmesh_file_name());
     cur_it.set_goal_set_id(static_cast<size_t>(goal_set_id));
     saved_names.insert(name_item);
   }
@@ -151,9 +144,9 @@ void StatesTab::_list_goal_sets_in_combo(
   QComboBox* comboBox,
   size_t current_goal_set_id)
 {
-  int i = 0;
+  int i;
   auto size = get_impl()->get_states().size() - 1; // ignore the external agent, limit goal sets number <= state number
-  for (i; i < size; i++)
+  for (i = 0; i < size; i++)
   {
     comboBox->addItem(QString::number(i));
   }
@@ -187,21 +180,5 @@ void StatesTab::_list_final_states_in_combo(
   else
   {
     comboBox->setCurrentIndex(0);
-  }
-}
-
-//========================================
-void StatesTab::_list_navmesh_file_in_combo(
-  QComboBox* comboBox,
-  std::string navmesh_filename)
-{
-  auto navmesh_list = get_impl()->get_navmesh_file_name();
-  for (size_t i = 0; i < navmesh_list.size(); i++)
-  {
-    comboBox->addItem(QString::fromStdString(navmesh_list[i]));
-    if (navmesh_list[i] == navmesh_filename)
-    {
-      comboBox->setCurrentIndex(i);
-    }
   }
 }

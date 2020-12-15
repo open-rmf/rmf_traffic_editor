@@ -132,7 +132,7 @@ CrowdSimEditorTable::CrowdSimEditorTable(const Project& input_project)
         {
           CrowdSimDialog dialog(_impl, _required_components[i]);
           dialog.exec();
-          update();
+          update(_level);
         }
       }
     );
@@ -144,22 +144,23 @@ CrowdSimEditorTable::CrowdSimEditorTable(const Project& input_project)
 void CrowdSimEditorTable::update(int level)
 {
   blockSignals(true);
-  if (!_project.building.levels.empty())
+  std::string level_name = "";
+  if (!_project.building.levels.empty() &&
+    level < _project.building.levels.size())
   {
     BuildingLevel lvl = _project.building.levels[level];
-    if (strcmp(lvl.name.c_str(), "L1") == 0)
-    {
-      if (lvl.crowd_sim_impl)
-        _impl = lvl.crowd_sim_impl;
-      else
-      {
-        printf("Initialize crowd_sim_implementation for project.building\n");
-        _impl = std::make_shared<crowd_sim::CrowdSimImplementation>();
-        lvl.crowd_sim_impl = _impl;
-      }
-    }
+    level_name = lvl.name;
+    if (lvl.crowd_sim_impl)
+      _impl = lvl.crowd_sim_impl;
     else
-      _impl = nullptr;
+    {
+      printf(
+        "Initialize crowd_sim_implementation for project.building level %d\n",
+        level + 1);
+      _impl = std::make_shared<crowd_sim::CrowdSimImplementation>();
+      lvl.crowd_sim_impl = _impl;
+    }
+    _level = level;
   }
 
 
@@ -184,7 +185,7 @@ void CrowdSimEditorTable::update(int level)
   }
 
   update_goal_area();
-  update_navmesh_level();
+  set_navmesh_file_name(level_name);
   update_external_agent_from_spawn_point();
   update_external_agent_state();
 
@@ -247,17 +248,6 @@ void CrowdSimEditorTable::update_goal_area()
   for (auto state:states)
     _goal_areas_cache.insert(state.get_name());
   _impl->set_goal_areas(_goal_areas_cache);
-}
-
-//====================================================
-void CrowdSimEditorTable::update_navmesh_level()
-{
-  _navmesh_filename_cache.clear();
-  for (auto level : _project.building.levels)
-  {
-    _navmesh_filename_cache.emplace_back(level.name + "_navmesh.nav");
-  }
-  _impl->set_navmesh_file_name(_navmesh_filename_cache);
 }
 
 //====================================================

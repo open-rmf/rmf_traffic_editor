@@ -66,7 +66,7 @@ YAML::Node CrowdSimImplementation::_output_obstacle_node() const
   obstacle_node.SetStyle(YAML::EmitterStyle::Flow);
   obstacle_node["class"] = 1;
   obstacle_node["type"] = "nav_mesh";
-  obstacle_node["file_name"] = this->_navmesh_filename_list[0];
+  obstacle_node["file_name"] = this->_navmesh_filename;
   return obstacle_node;
 }
 
@@ -309,7 +309,7 @@ bool CrowdSimImplementation::from_yaml(const YAML::Node& input)
 void CrowdSimImplementation::clear()
 {
   _goal_areas.clear();
-  _navmesh_filename_list.clear();
+  _navmesh_filename = "";
 
   _enable_crowd_sim = false;
   _update_time_step = 0.1;

@@ -52,13 +52,13 @@ public:
   void clear();
   void init_default_configure();
 
-  void set_navmesh_file_name(std::vector<std::string> navmesh_filename)
+  void set_navmesh_file_name(std::string navmesh_filename)
   {
-    _navmesh_filename_list = navmesh_filename;
+    _navmesh_filename = navmesh_filename;
   }
-  std::vector<std::string> get_navmesh_file_name() const
+  std::string get_navmesh_file_name() const
   {
-    return _navmesh_filename_list;
+    return _navmesh_filename;
   }
 
   void set_enable_crowd_sim(bool is_enable) { _enable_crowd_sim = is_enable; }
@@ -103,7 +103,7 @@ public:
 private:
   // update from project.building in crowd_sim_table
   std::set<std::string> _goal_areas;
-  std::vector<std::string> _navmesh_filename_list;
+  std::string _navmesh_filename;
 
   // real configurations
   bool _enable_crowd_sim;
