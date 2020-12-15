@@ -244,9 +244,22 @@ void CrowdSimEditorTable::update(int level)
 void CrowdSimEditorTable::update_goal_area()
 {
   _goal_areas_cache.clear();
-  auto states = _impl->get_states();
-  for (auto state:states)
-    _goal_areas_cache.insert(state.get_name());
+  for (auto level : _project.building.levels)
+  {
+    auto vertex_list = level.vertices;
+    for (auto vertex : vertex_list)
+    {
+      if (vertex.params.find("human_goal_set_name") == vertex.params.end() )
+        continue;
+      auto param = vertex.params["human_goal_set_name"];
+      if (param.type != param.STRING)
+      {
+        std::cout << "Error param type for human_goal_set_name." << std::endl;
+        return;
+      }
+      _goal_areas_cache.insert(param.value_string);
+    }
+  }
   _impl->set_goal_areas(_goal_areas_cache);
 }
 
