@@ -97,10 +97,6 @@ SlotcarCommon::SlotcarCommon()
     .mode_request_id(0)
     .type(rmf_fleet_msgs::msg::PauseRequest::TYPE_RESUME)
     .at_checkpoint(0);
-
-  // Assumes robot is stationary upon initialization
-  _old_lin_vel = Eigen::Vector3d::Zero();
-  _old_ang_vel = 0.0;
 }
 
 rclcpp::Logger SlotcarCommon::logger() const
