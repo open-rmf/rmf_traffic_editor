@@ -246,7 +246,6 @@ void CrowdSimEditorTable::update_goal_area()
   _goal_areas_cache.clear();
   auto level = _project.building.levels[_level];
   auto vertex_list = level.vertices;
-
   for (auto vertex : vertex_list)
   {
     if (vertex.params.find("human_goal_set_name") == vertex.params.end() )
@@ -268,15 +267,13 @@ void CrowdSimEditorTable::update_external_agent_from_spawn_point()
 {
   std::vector<std::string> spawn_point_name;
 
-  for (auto level : _project.building.levels)
+  auto level = _project.building.levels[_level];
+  for (auto vertex : level.vertices)
   {
-    for (auto vertex : level.vertices)
+    if (vertex.params.find("spawn_robot_name") != vertex.params.end())
     {
-      if (vertex.params.find("spawn_robot_name") != vertex.params.end())
-      {
-        spawn_point_name.emplace_back(
-          vertex.params["spawn_robot_name"].value_string);
-      }
+      spawn_point_name.emplace_back(
+        vertex.params["spawn_robot_name"].value_string);
     }
   }
 
