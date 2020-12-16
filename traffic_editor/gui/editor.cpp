@@ -1185,7 +1185,7 @@ void Editor::update_property_editor()
     if (v.selected)
     {
       populate_property_editor(v);
-      human_prop_editor->populate(v);
+      human_prop_editor->populate(v, level_idx);
       return;  // stop after finding the first one
     }
   }

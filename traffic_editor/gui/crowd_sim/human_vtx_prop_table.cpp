@@ -57,9 +57,9 @@ void HumanVtxPropTable::setActorModels(std::vector<std::string>& am)
 }
 
 //==================================
-void HumanVtxPropTable::populate(Vertex& vertex)
+void HumanVtxPropTable::populate(Vertex& vertex, int level)
 {
-  update(vertex);
+  update(vertex, level);
 }
 
 //==================================
@@ -73,7 +73,7 @@ void HumanVtxPropTable::close()
 }
 
 //==============================
-void HumanVtxPropTable::update(Vertex& vertex)
+void HumanVtxPropTable::update(Vertex& vertex, int level)
 {
   if (_project.building.levels.empty())
   {
@@ -81,30 +81,26 @@ void HumanVtxPropTable::update(Vertex& vertex)
     return;
   }
 
-  BuildingLevel L1 = _project.building.levels.front();
+  BuildingLevel lvl = _project.building.levels[level];
 
-  if (strcmp(L1.name.c_str(), "L1") != 0)
+  if (lvl.crowd_sim_impl == nullptr)
   {
-    close();
-    return;
-  }
-
-  if (L1.crowd_sim_impl == nullptr)
-  {
-    printf("Initialize crowd_sim_implementation for project.building\n");
+    printf(
+      "Initialize crowd_sim_implementation for project.building level %d\n",
+      level + 1);
     _impl = std::make_shared<crowd_sim::CrowdSimImplementation>();
-    L1.crowd_sim_impl = _impl;
+    lvl.crowd_sim_impl = _impl;
   }
   else
   {
-    _impl = L1.crowd_sim_impl;
+    _impl = lvl.crowd_sim_impl;
   }
 
-  int edges_count = L1.edges.size();
+  int edges_count = lvl.edges.size();
   std::set<int> idxs; // set to keep only unique idx(s)
   for (int i = 0; i < edges_count; i++)
   {
-    const auto& edge = L1.edges.at(i);
+    const auto& edge = lvl.edges.at(i);
     if (edge.type == Edge::Type::HUMAN_LANE)
     {
       idxs.insert(edge.start_idx);
@@ -117,7 +113,7 @@ void HumanVtxPropTable::update(Vertex& vertex)
   QSet<QString> unique_human_goals;
   for (auto& idx:idxs)
   {
-    auto& v = L1.vertices.at(idx);
+    auto& v = lvl.vertices.at(idx);
     human_lane_vertices.push_back({v.x, v.y});
     const auto& it = v.params.find("human_goal_set_name");
     if (it != vertex.params.end())

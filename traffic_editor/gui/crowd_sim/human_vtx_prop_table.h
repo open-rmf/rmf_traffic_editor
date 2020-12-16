@@ -42,9 +42,9 @@ public:
   ~HumanVtxPropTable() {}
 
   void setActorModels(std::vector<std::string>& am);
-  void populate(Vertex& vertex);
+  void populate(Vertex& vertex, int level);
   void close();
-  void update(Vertex& vertex);
+  void update(Vertex& vertex, int level);
   void storeWidget(QTabWidget* widget) {_widget = widget;}
   void storeTabStyle(QString tabStyle) {_tabStyle = tabStyle;}
 
