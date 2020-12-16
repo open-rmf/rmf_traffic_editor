@@ -41,14 +41,15 @@
 #include "ament_index_cpp/get_package_prefix.hpp"
 #include "ament_index_cpp/get_resource.hpp"
 
-
 #include "actions/add_fiducial.h"
 #include "actions/add_model.h"
+#include "actions/add_property.h"
 #include "actions/add_polygon.h"
 #include "actions/add_vertex.h"
 #include "actions/delete.h"
 #include "actions/polygon_add_vertex.h"
 #include "actions/polygon_remove_vertices.h"
+
 #include "add_param_dialog.h"
 #include "building_dialog.h"
 #include "building_level_dialog.h"
@@ -809,6 +810,7 @@ void Editor::edit_undo()
     prev_clicked_idx = -1;
   }
   create_scene();
+  update_property_editor();
   setWindowModified(true);
 }
 
@@ -1256,7 +1258,7 @@ void Editor::add_param_button_clicked()
     if (dialog.exec() != QDialog::Accepted)
       return;
 
-    for (auto& v : project.building.levels[level_idx].vertices)
+    /*for (auto& v : project.building.levels[level_idx].vertices)
     {
       if (v.selected)
       {
@@ -1265,7 +1267,20 @@ void Editor::add_param_button_clicked()
         setWindowModified(true);
         return;  // stop after finding the first one
       }
-    }
+    }*/
+
+    AddPropertyCommand* cmd = new AddPropertyCommand(
+      &project,
+      dialog.get_param_name(),
+      Param(dialog.get_param_type()),
+      level_idx
+    );
+
+    undo_stack.push(cmd);
+    auto updated_id = cmd->get_vertex_updated();
+    populate_property_editor(
+      project.building.levels[level_idx].vertices[updated_id]);
+    setWindowModified(true);
   }
 }
 
