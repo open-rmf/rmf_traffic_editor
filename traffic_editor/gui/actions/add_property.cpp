@@ -17,7 +17,7 @@
 #include "add_property.h"
 
 AddPropertyCommand::AddPropertyCommand(
-  Project* project, 
+  Project* project,
   std::string property,
   Param value,
   int level_idx)
@@ -28,8 +28,8 @@ AddPropertyCommand::AddPropertyCommand(
   _level_idx = level_idx;
   _vert_id = -1;
 
-  for (std::size_t i = 0; 
-    i < project->building.levels[level_idx].vertices.size(); 
+  for (std::size_t i = 0;
+    i < project->building.levels[level_idx].vertices.size();
     i++)
   {
     if (project->building.levels[level_idx].vertices[i].selected)
@@ -41,7 +41,7 @@ AddPropertyCommand::AddPropertyCommand(
 
 AddPropertyCommand::~AddPropertyCommand()
 {
-  
+
 }
 
 int AddPropertyCommand::get_vertex_updated()
@@ -51,21 +51,21 @@ int AddPropertyCommand::get_vertex_updated()
 
 void AddPropertyCommand::redo()
 {
-  if(_vert_id < 0)
+  if (_vert_id < 0)
   {
     return;
   }
   _project->building.levels[_level_idx]
-    .vertices[_vert_id].params[_prop] = _val;
+  .vertices[_vert_id].params[_prop] = _val;
 }
 
 void AddPropertyCommand::undo()
 {
   auto v = _project->building.levels[_level_idx].vertices[_vert_id];
-  if(v.params.count(_prop) == 0)
+  if (v.params.count(_prop) == 0)
   {
     return; //something went wrong
   }
   _project->building.levels[_level_idx]
-    .vertices[_vert_id].params.erase(_prop);
+  .vertices[_vert_id].params.erase(_prop);
 }

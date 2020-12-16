@@ -23,7 +23,7 @@
 class AddPropertyCommand : public QUndoCommand
 {
 public:
-  AddPropertyCommand(Project* project, 
+  AddPropertyCommand(Project* project,
     std::string property,
     Param value,
     int level_idx);

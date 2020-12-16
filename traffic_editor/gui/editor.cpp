@@ -1258,17 +1258,6 @@ void Editor::add_param_button_clicked()
     if (dialog.exec() != QDialog::Accepted)
       return;
 
-    /*for (auto& v : project.building.levels[level_idx].vertices)
-    {
-      if (v.selected)
-      {
-        v.params[dialog.get_param_name()] = Param(dialog.get_param_type());
-        populate_property_editor(v);
-        setWindowModified(true);
-        return;  // stop after finding the first one
-      }
-    }*/
-
     AddPropertyCommand* cmd = new AddPropertyCommand(
       &project,
       dialog.get_param_name(),
