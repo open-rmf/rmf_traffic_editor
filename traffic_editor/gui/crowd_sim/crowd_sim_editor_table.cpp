@@ -266,7 +266,6 @@ void CrowdSimEditorTable::update_navmesh_level()
   _navmesh_filename_cache.clear();
   auto level = _project.building.levels[_level];
   _navmesh_filename_cache.emplace_back(level.name + "_navmesh.nav");
-  
   _impl->set_navmesh_file_name(_navmesh_filename_cache);
 }
 
