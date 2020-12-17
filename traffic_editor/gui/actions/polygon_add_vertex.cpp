@@ -15,32 +15,32 @@
  *
 */
 
-#ifndef _ADD_VERTEX_H_
-#define _ADD_VERTEX_H_
+#include "polygon_add_vertex.h"
 
-#include <QUndoCommand>
-#include "editor_mode_id.h"
-#include "project.h"
+PolygonAddVertCommand::PolygonAddVertCommand(
+  Polygon* polygon,
+  int position,
+  int vert_id)
+{
+  _polygon = polygon;
+  _old_vertices = polygon->vertices;
+  _position = position;
+  _vert_id = vert_id;
+}
 
-class AddVertexCommand : public QUndoCommand
+PolygonAddVertCommand::~PolygonAddVertCommand()
 {
 
-public:
-  AddVertexCommand(
-    Project* project,
-    EditorModeId mode,
-    int level_idx,
-    double x,
-    double y);
-  virtual ~AddVertexCommand();
-  void undo() override;
-  void redo() override;
-private:
-  Project* _project;
-  EditorModeId _mode;
-  double _x, _y;
-  int _level_idx;
-  QUuid _vert_id;
-};
+}
 
-#endif
+void PolygonAddVertCommand::undo()
+{
+  _polygon->vertices.erase(_polygon->vertices.begin() + _position);
+}
+
+void PolygonAddVertCommand::redo()
+{
+  _polygon->vertices.insert(
+    _polygon->vertices.begin() + _position,
+    _vert_id);
+}

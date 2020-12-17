@@ -32,7 +32,11 @@
 #include <QUndoStack>
 
 #include "project.h"
+#include "actions/add_edge.h"
+#include "actions/move_fiducial.h"
+#include "actions/move_model.h"
 #include "actions/move_vertex.h"
+#include "actions/rotate_model.h"
 #include "traffic_editor/editor_model.h"
 #include "editor_mode_id.h"
 
@@ -175,6 +179,7 @@ private:
   Project project;
   int level_idx = 0;  // level that we are currently editing
   int clicked_idx = -1;  // point most recently clicked
+  int prev_clicked_idx = -1; // Previously clicked ID.
   //int polygon_idx = -1;  // currently selected polygon
   Polygon* selected_polygon = nullptr;
 
@@ -242,6 +247,7 @@ private:
   QPushButton* add_param_button, * delete_param_button;
   void add_param_button_clicked();
   void delete_param_button_clicked();
+  void clear_current_tool_buffer(); // Necessary for tools like edge drawing that store temporary states
 
 #ifdef HAS_IGNITION_PLUGIN
   QAction* sim_reset_action;
@@ -341,7 +347,11 @@ private:
   QPointF previous_mouse_point;
 
   // For undo related support
+  AddEdgeCommand* latest_add_edge;
+  MoveFiducialCommand* latest_move_fiducial;
+  MoveModelCommand* latest_move_model;
   MoveVertexCommand* latest_move_vertex;
+  RotateModelCommand* latest_rotate_model;
 };
 
 #endif

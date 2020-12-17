@@ -25,6 +25,7 @@ using std::string;
 
 Fiducial::Fiducial()
 {
+  uuid = QUuid::createUuid();
 }
 
 Fiducial::Fiducial(double _x, double _y, const string& _name)
