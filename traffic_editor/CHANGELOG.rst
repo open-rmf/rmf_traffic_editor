@@ -5,7 +5,7 @@ Changelog for package traffic_editor
 Upcoming release
 ------------------
 * Adds undo capability to a large part of the actions. (`#269 <https://github.com/osrf/traffic_editor/pull/269>`_) (`#266 <https://github.com/osrf/traffic_editor/pull/266>`_)
-* Contibutors: Arjo, Morgan Quuigley, Yadu
+* Contibutors: Arjo, Morgan Quigley, Yadu
 
 1.1.0 (2020-09-24)
 ------------------
