@@ -115,11 +115,7 @@ if (menge_FOUND)
   )
 
   #crowd_simulation_common_install
-  if($ENV{ROS_DISTRO} STREQUAL foxy)
-    ament_export_targets(crowd_simulator_common HAS_LIBRARY_TARGET)
-  elseif($ENV{ROS_DISTRO} STREQUAL eloquent)
-    ament_export_interfaces(crowd_simulator_common HAS_LIBRARY_TARGET)
-  endif()
+  ament_export_targets(crowd_simulator_common HAS_LIBRARY_TARGET)
   install(
     TARGETS crowd_simulator_common
     EXPORT crowd_simulator_common
@@ -135,17 +131,9 @@ endif()
 ###############################
 ament_export_include_directories(include)
 
-if($ENV{ROS_DISTRO} STREQUAL foxy)
-  ament_export_targets(slotcar_common HAS_LIBRARY_TARGET)
-  ament_export_targets(door_common HAS_LIBRARY_TARGET)
-  ament_export_targets(lift_common HAS_LIBRARY_TARGET)
-elseif($ENV{ROS_DISTRO} STREQUAL eloquent)
-  ament_export_interfaces(slotcar_common HAS_LIBRARY_TARGET)
-  ament_export_interfaces(door_common HAS_LIBRARY_TARGET)
-  ament_export_interfaces(lift_common HAS_LIBRARY_TARGET)
-else()
-  message(FATAL_ERROR "Unsupported ROS distribution")
-endif()
+ament_export_targets(slotcar_common HAS_LIBRARY_TARGET)
+ament_export_targets(door_common HAS_LIBRARY_TARGET)
+ament_export_targets(lift_common HAS_LIBRARY_TARGET)
 
 ament_export_dependencies(Eigen3)
 

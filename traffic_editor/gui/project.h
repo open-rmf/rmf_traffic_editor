@@ -71,7 +71,11 @@ public:
     const int level_idx);
 
   void clear_selection(const int level_idx);
+  bool can_delete_current_selection(const int level_idx);
   bool delete_selected(const int level_idx);
+
+  void get_selected_items(const int level_idx,
+    std::vector<BuildingLevel::SelectedItem>& selected);
 
   struct NearestItem
   {

@@ -64,6 +64,7 @@ public:
   virtual void clear_selection() = 0;
 
   void add_vertex(const double x, const double y);
+  size_t get_vertex_by_id(QUuid vertex_id);
 
 protected:
   double point_to_line_segment_distance(
