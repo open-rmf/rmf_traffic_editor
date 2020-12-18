@@ -59,7 +59,8 @@ class BuildingYamlParse:
         self.crowd_sim_config = []
         self.crowd_sim_human = []
         for level_name, level_yaml in self.yaml_node['levels'].items():
-            if 'crowd_sim' in level_yaml and 'enable' in level_yaml['crowd_sim'] and level_yaml['crowd_sim']['enable'] == 1:
+            if 'crowd_sim' in level_yaml and 'enable' in level_yaml[
+                    'crowd_sim'] and level_yaml['crowd_sim']['enable'] == 1:
                 self.levels_with_human_lanes[level_name] = LevelWithHumanLanes(
                     level_yaml, level_name)
                 self.crowd_sim_config.append(level_yaml['crowd_sim'])
