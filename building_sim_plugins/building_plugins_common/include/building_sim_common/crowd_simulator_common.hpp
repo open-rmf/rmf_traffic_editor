@@ -236,22 +236,25 @@ private:
 
 template<typename SdfPtrT>
 bool CrowdSimInterface::read_sdf(
-  SdfPtrT& sdf)
+  SdfPtrT& sdf_in)
 {
-  sdf = sdf->template GetElementImpl("floor");
+  SdfPtrT sdf = sdf_in->template GetElementImpl("floor");
+  std::string name = "";
+  sdf->GetAttribute("name")->Get(name);
   if (!sdf->template HasElement("resource_path"))
   {
     char* menge_resource_path;
     menge_resource_path = getenv("MENGE_RESOURCE_PATH");
-    RCLCPP_WARN(logger(),
-      "No resource path provided! <env MENGE_RESOURCE_PATH> " +
-      std::string(menge_resource_path) + " will be used.");
-    _resource_path = std::string(menge_resource_path);
+    RCLCPP_INFO(logger(),
+      "resource_path not found, use <env MENGE_RESOURCE_PATH> " +
+      std::string(menge_resource_path) + "/" + name + " instead.");
+    _resource_path = std::string(menge_resource_path) + "/" + name;
   }
   else
   {
     _resource_path =
-      sdf->template GetElementImpl("resource_path")->template Get<std::string>();
+      sdf->template GetElementImpl("resource_path")->template Get<std::string>()
+      + "/" + name;
   }
 
   if (!sdf->template HasElement("behavior_file"))

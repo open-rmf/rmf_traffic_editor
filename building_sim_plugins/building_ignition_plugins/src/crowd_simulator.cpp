@@ -57,14 +57,14 @@ void CrowdSimulatorPlugin::Configure(
       "Error loading crowd simulator plugin. Load [ Menge ] failed!");
     exit(EXIT_FAILURE);
   }
-
+  /*
   if (!_spawn_agents_in_world(ecm))
   {
     RCLCPP_ERROR(
       _crowd_sim_interface->logger(),
       "Error loading crowd simulator plugin. Crowd Simulator failed to spawn agents in the world!");
     exit(EXIT_FAILURE);
-  }
+  }*/
 
 }
 
@@ -91,6 +91,7 @@ void CrowdSimulatorPlugin::PreUpdate(
   }
 }
 
+/*
 //==========================================================
 bool CrowdSimulatorPlugin::_spawn_agents_in_world(
   ignition::gazebo::EntityComponentManager& ecm)
@@ -116,7 +117,7 @@ bool CrowdSimulatorPlugin::_spawn_agents_in_world(
     }
   }
   return true;
-}
+}*/
 
 //==========================================================
 void CrowdSimulatorPlugin::_init_spawned_agents(
@@ -209,7 +210,7 @@ bool CrowdSimulatorPlugin::_create_entity(
   assert(model_type_ptr);
   std::string service = "/world/" + this->_world_name + "/create";
   ignition::msgs::EntityFactory request;
-  request.set_sdf_filename(model_type_ptr->file_name);
+  request.set_sdf_filename(model_type_ptr->type_name);
   request.set_name(model_name);
   ignition::math::Pose3d pose(0, 0, 0, 0, 0, 0);
 

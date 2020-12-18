@@ -67,7 +67,7 @@ private:
   // map for <model_name, entity_id> contains external and internal agents
   std::unordered_map<std::string, ignition::gazebo::Entity> _entity_dic;
 
-  bool _spawn_agents_in_world(ignition::gazebo::EntityComponentManager& ecm);
+  //bool _spawn_agents_in_world(ignition::gazebo::EntityComponentManager& ecm);
   void _init_spawned_agents(ignition::gazebo::EntityComponentManager& ecm);
   void _config_spawned_agents(
     const crowd_simulator::CrowdSimInterface::ObjectPtr obj_ptr,
