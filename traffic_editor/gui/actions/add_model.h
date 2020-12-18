@@ -14,33 +14,31 @@
  * limitations under the License.
  *
 */
-
-#ifndef _ADD_VERTEX_H_
-#define _ADD_VERTEX_H_
+#ifndef _ADD_MODEL_H_
+#define _ADD_MODEL_H_
 
 #include <QUndoCommand>
-#include "editor_mode_id.h"
 #include "project.h"
 
-class AddVertexCommand : public QUndoCommand
+class AddModelCommand : public QUndoCommand
 {
 
 public:
-  AddVertexCommand(
+  AddModelCommand(
     Project* project,
-    EditorModeId mode,
     int level_idx,
     double x,
-    double y);
-  virtual ~AddVertexCommand();
+    double y,
+    std::string name);
+  virtual ~AddModelCommand();
   void undo() override;
   void redo() override;
 private:
   Project* _project;
-  EditorModeId _mode;
   double _x, _y;
   int _level_idx;
-  QUuid _vert_id;
+  QUuid _uuid;
+  std::string _name;
 };
 
 #endif
