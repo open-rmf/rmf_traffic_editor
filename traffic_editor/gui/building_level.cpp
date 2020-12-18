@@ -290,6 +290,41 @@ YAML::Node BuildingLevel::to_yaml() const
   return y;
 }
 
+bool BuildingLevel::can_delete_current_selection()
+{
+  int selected_vertex_idx = -1;
+  for (int i = 0; i < static_cast<int>(vertices.size()); i++)
+  {
+    if (vertices[i].selected)
+    {
+      selected_vertex_idx = i;
+      break;  // just grab the index of the first selected vertex
+    }
+  }
+
+  if (selected_vertex_idx < 0)
+    return true;
+
+  bool vertex_used = false;
+  for (const auto& edge : edges)
+  {
+    if (edge.start_idx == selected_vertex_idx ||
+      edge.end_idx == selected_vertex_idx)
+      vertex_used = true;
+  }
+  for (const auto& polygon : polygons)
+  {
+    for (const int& vertex_idx : polygon.vertices)
+    {
+      if (vertex_idx == selected_vertex_idx)
+        vertex_used = true;
+    }
+  }
+  if (vertex_used)
+    return false;// don't try to delete a vertex used in a shape
+  return true;
+}
+
 bool BuildingLevel::delete_selected()
 {
   edges.erase(
@@ -442,6 +477,60 @@ bool BuildingLevel::delete_selected()
     }
   }
   return true;
+}
+
+void BuildingLevel::get_selected_items(
+  std::vector<BuildingLevel::SelectedItem>& items)
+{
+  for (size_t i = 0; i < edges.size(); i++)
+  {
+    if (edges[i].selected)
+    {
+      BuildingLevel::SelectedItem item;
+      item.edge_idx = i;
+      items.push_back(item);
+    }
+  }
+
+  for (size_t i = 0; i < models.size(); i++)
+  {
+    if (models[i].selected)
+    {
+      BuildingLevel::SelectedItem item;
+      item.model_idx = i;
+      items.push_back(item);
+    }
+  }
+
+  for (size_t i = 0; i < vertices.size(); i++)
+  {
+    if (vertices[i].selected)
+    {
+      BuildingLevel::SelectedItem item;
+      item.vertex_idx = i;
+      items.push_back(item);
+    }
+  }
+
+  for (size_t i = 0; i < fiducials.size(); i++)
+  {
+    if (fiducials[i].selected)
+    {
+      BuildingLevel::SelectedItem item;
+      item.fiducial_idx = i;
+      items.push_back(item);
+    }
+  }
+
+  for (size_t i = 0; i < polygons.size(); i++)
+  {
+    if (polygons[i].selected)
+    {
+      BuildingLevel::SelectedItem item;
+      item.polygon_idx = i;
+      items.push_back(item);
+    }
+  }
 }
 
 void BuildingLevel::calculate_scale()

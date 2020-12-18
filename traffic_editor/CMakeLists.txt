@@ -37,8 +37,19 @@ include_directories(include)
 include_directories(${ament_index_cpp_INCLUDE_DIRS})
 
 set(traffic_editor_sources
+  gui/actions/add_edge.cpp
+  gui/actions/add_fiducial.cpp
+  gui/actions/add_model.cpp
+  gui/actions/add_polygon.cpp
+  gui/actions/add_property.cpp
   gui/actions/add_vertex.cpp
+  gui/actions/delete.cpp
+  gui/actions/move_fiducial.cpp
+  gui/actions/move_model.cpp
   gui/actions/move_vertex.cpp
+  gui/actions/polygon_remove_vertices.cpp
+  gui/actions/polygon_add_vertex.cpp
+  gui/actions/rotate_model.cpp
   gui/add_param_dialog.cpp
   gui/building.cpp
   gui/building_dialog.cpp

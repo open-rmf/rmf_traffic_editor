@@ -14,33 +14,31 @@
  * limitations under the License.
  *
 */
-
-#ifndef _ADD_VERTEX_H_
-#define _ADD_VERTEX_H_
+#ifndef _ADD_POLYGON_H_
+#define _ADD_POLYGON_H_
 
 #include <QUndoCommand>
 #include "editor_mode_id.h"
 #include "project.h"
 
-class AddVertexCommand : public QUndoCommand
+class AddPolygonCommand : public QUndoCommand
 {
 
 public:
-  AddVertexCommand(
+  AddPolygonCommand(
     Project* project,
     EditorModeId mode,
-    int level_idx,
-    double x,
-    double y);
-  virtual ~AddVertexCommand();
+    Polygon polygon,
+    int level_idx);
+  virtual ~AddPolygonCommand();
   void undo() override;
   void redo() override;
 private:
   Project* _project;
   EditorModeId _mode;
-  double _x, _y;
+  Polygon _to_add;
   int _level_idx;
-  QUuid _vert_id;
+  std::vector<Polygon> _previous_polygons;
 };
 
 #endif

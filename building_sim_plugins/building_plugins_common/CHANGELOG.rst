@@ -2,9 +2,10 @@
 Changelog for package building_sim_common
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming (2020-09-28)
+Forthcoming (2021-01-XX)
 ------------------
 * Add animation switch to crowd simulation plugin (`#238 <https://github.com/osrf/traffic_editor/pull/238>`_)
+* Add pausing feature to slotcar plugin: [`#267 <https://github.com/osrf/traffic_editor/pull/267>`_]
 
 1.1.0 (2020-09-24)
 ------------------
