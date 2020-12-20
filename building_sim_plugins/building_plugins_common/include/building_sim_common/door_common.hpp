@@ -72,10 +72,11 @@ public:
   std::vector<DoorUpdateResult> update(const double time,
     const std::vector<DoorUpdateRequest>& request);
 
-private:
-
   struct DoorElement
   {
+    std::string door_type;
+    std::string link_name;
+    std::string joint_name;
     double closed_position;
     double open_position;
     double current_position;
@@ -84,10 +85,16 @@ private:
     DoorElement() {}
 
     DoorElement(
+      const std::string& door_type,
+      const std::string& link_name,
+      const std::string& joint_name,
       const double lower_limit,
       const double upper_limit,
       const bool flip_direction = false)
-    : current_position(0.0),
+    : door_type(door_type),
+      link_name(link_name),
+      joint_name(joint_name),
+      current_position(0.0),
       current_velocity(0.0)
     {
       if (flip_direction)
@@ -105,6 +112,10 @@ private:
 
   // Map joint name to its DoorElement
   using Doors = std::unordered_map<std::string, DoorElement>;
+  // Map of joint_name and corresponding DoorElement
+  Doors _doors;
+
+private:
 
   DoorMode requested_mode() const;
 
@@ -139,9 +150,6 @@ private:
   double _last_pub_time = ((double) std::rand()) / ((double) (RAND_MAX));
 
   bool _initialized = false;
-
-  // Map of joint_name and corresponding DoorElement
-  Doors _doors;
 };
 
 template<typename SdfPtrT>
@@ -209,18 +217,24 @@ std::shared_ptr<DoorCommon> DoorCommon::make(
       if (it != joint_names.end())
       {
         auto element = joint_sdf_clone;
+
+        std::string link_name;
+        get_sdf_param_required<std::string>(
+              element, "child", link_name);
+
         get_element_required(joint_sdf_clone, "axis", element);
         get_element_required(element, "limit", element);
         double lower_limit = -1.57;
         double upper_limit = 0.0;
         get_sdf_param_if_available<double>(element, "lower", lower_limit);
         get_sdf_param_if_available<double>(element, "upper", upper_limit);
+
         DoorCommon::DoorElement door_element;
         if (joint_name == right_door_joint_name)
           door_element =
-            DoorCommon::DoorElement{lower_limit, upper_limit, true};
+            DoorCommon::DoorElement{door_type, link_name, joint_name, lower_limit, upper_limit, true};
         else if (joint_name == left_door_joint_name)
-          door_element = DoorCommon::DoorElement{lower_limit, upper_limit};
+          door_element = DoorCommon::DoorElement{door_type, link_name, joint_name, lower_limit, upper_limit};
         doors.insert({joint_name, door_element});
       }
     };
