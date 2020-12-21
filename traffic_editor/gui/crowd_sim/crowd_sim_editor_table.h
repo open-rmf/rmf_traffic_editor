@@ -41,9 +41,9 @@ public:
 
   void update(int level = 0);
   void update_goal_area();
-  void set_navmesh_file_name(const std::string& level_name)
+  void set_navmesh_file_name()
   {
-    _navmesh_filename = level_name+"_navmesh.nav";
+    _navmesh_filename = "navmesh.nav";
     _impl->set_navmesh_file_name(_navmesh_filename);
   }
   void update_external_agent_from_spawn_point();

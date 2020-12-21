@@ -54,7 +54,7 @@ public:
   void add_level(const BuildingLevel& level);
 
   void add_vertex(int level_index, double x, double y);
-  void add_fiducial(int level_index, double x, double y);
+  QUuid add_fiducial(int level_index, double x, double y);
 
   int find_nearest_vertex_index(
     int level_index, double x, double y, double& distance);
@@ -96,7 +96,7 @@ public:
     const int end_idx,
     const int graph_idx);
 
-  void add_model(
+  QUuid add_model(
     const int level_idx,
     const double x,
     const double y,

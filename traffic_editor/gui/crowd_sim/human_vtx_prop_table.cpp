@@ -232,9 +232,9 @@ void HumanVtxPropTable::update(Vertex& vertex, int level)
               break;
             }
           }
-          if (!found)
+          if (!found) // not found means new group
           {
-            AgentGroup agrp(agent_groups.size(), vertex.x, vertex.y);
+            AgentGroup agrp(agent_groups.size(), dp3(vertex.x), dp3(vertex.y));
             agrp.set_initial_state(text.toStdString());
             agent_groups.push_back(agrp);
           }
@@ -268,7 +268,7 @@ void HumanVtxPropTable::update(Vertex& vertex, int level)
           }
           if (!found)
           {
-            AgentGroup agrp(agent_groups.size(), vertex.x, vertex.y);
+            AgentGroup agrp(agent_groups.size(), dp3(vertex.x), dp3(vertex.y));
             agrp.set_spawn_number(text.toInt());
             agent_groups.push_back(agrp);
           }
@@ -310,7 +310,7 @@ void HumanVtxPropTable::update(Vertex& vertex, int level)
           }
           if (!found)
           {
-            AgentGroup agrp(agent_groups.size(), vertex.x, vertex.y);
+            AgentGroup agrp(agent_groups.size(), dp3(vertex.x), dp3(vertex.y));
             agrp.set_agent_profile(text.toStdString());
             agent_groups.push_back(agrp);
           }
@@ -350,7 +350,7 @@ void HumanVtxPropTable::update(Vertex& vertex, int level)
           }
           if (!found)
           {
-            AgentGroup agrp(agent_groups.size(), vertex.x, vertex.y);
+            AgentGroup agrp(agent_groups.size(), dp3(vertex.x), dp3(vertex.y));
             agrp.set_internal_agent_model_name(text.toStdString());
             agent_groups.push_back(agrp);
           }

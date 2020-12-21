@@ -185,7 +185,7 @@ void CrowdSimEditorTable::update(int level)
   }
 
   update_goal_area();
-  set_navmesh_file_name(level_name);
+  set_navmesh_file_name();
   update_external_agent_from_spawn_point();
   update_external_agent_state();
 

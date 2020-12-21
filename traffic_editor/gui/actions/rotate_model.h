@@ -15,32 +15,34 @@
  *
 */
 
-#ifndef _ADD_VERTEX_H_
-#define _ADD_VERTEX_H_
+#ifndef _ROTATE_MODEL_H_
+#define _ROTATE_MODEL_H_
 
 #include <QUndoCommand>
-#include "editor_mode_id.h"
 #include "project.h"
 
-class AddVertexCommand : public QUndoCommand
+class RotateModelCommand : public QUndoCommand
 {
-
 public:
-  AddVertexCommand(
+  RotateModelCommand(
     Project* project,
-    EditorModeId mode,
-    int level_idx,
-    double x,
-    double y);
-  virtual ~AddVertexCommand();
+    int level,
+    int model_id
+  );
+  virtual ~RotateModelCommand();
+
   void undo() override;
   void redo() override;
+
+  void set_final_destination(double yaw);
+
+  bool has_moved;
 private:
+  double _original_yaw;
+  double _final_yaw;
+  int _level_id, _model_id;
   Project* _project;
-  EditorModeId _mode;
-  double _x, _y;
-  int _level_idx;
-  QUuid _vert_id;
 };
+
 
 #endif

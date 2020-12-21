@@ -23,21 +23,23 @@ class ConfigFileGenerator:
         # only level L1
         self.level_yaml = building_yaml_parse.yaml_node['levels']
         self.level = {}
-        L1 = next(iter(self.level_yaml))
-        self.level[L1] = Level(self.level_yaml[L1], L1)
-        self.level[L1].calculate_scale_using_measurements()
-        # assume only level 1 for now
-        self.crowd_sim_yaml = building_yaml_parse.crowd_sim_config[0]
-        # assume only level 1 for now
-        self.crowd_sim_human_yaml = building_yaml_parse.crowd_sim_human[0]
-        if 'enable' not in self.crowd_sim_yaml:
-            raise ValueError(
-                "Missing 'enable' tag for crowdsim configuration.")
-        self.enable_crowdsim = int(self.crowd_sim_yaml['enable']) == 1
-        self.human_goals = building_yaml_parse.get_human_goals()
-        self.behavior_file = BehaviorFile()
-        self.scene_file = SceneFile()
-        self.plugin_file = Plugin()
+        L1 = next(iter(self.level_yaml), -1)
+        self.enable_crowdsim = 0
+        if L1 != -1 and len(building_yaml_parse.crowd_sim_config) > 0:
+            self.level[L1] = Level(self.level_yaml[L1], L1)
+            self.level[L1].calculate_scale_using_measurements()
+            # assume only level 1 for now
+            self.crowd_sim_yaml = building_yaml_parse.crowd_sim_config[0]
+            # assume only level 1 for now
+            self.crowd_sim_human_yaml = building_yaml_parse.crowd_sim_human[0]
+            if 'enable' not in self.crowd_sim_yaml:
+                raise ValueError(
+                    "Missing 'enable' tag for crowdsim configuration.")
+            self.enable_crowdsim = int(self.crowd_sim_yaml['enable']) == 1
+            self.human_goals = building_yaml_parse.get_human_goals()
+            self.behavior_file = BehaviorFile()
+            self.scene_file = SceneFile()
+            self.plugin_file = Plugin()
 
     def generate_behavior_file(self, output_dir=""):
         # must follow the sequence:
@@ -166,7 +168,12 @@ def configfile_main(map_file, output_dir, world_file_to_be_inserted):
 
     yaml_parse = BuildingYamlParse(map_file)
     configfile_generator = ConfigFileGenerator(yaml_parse)
-    configfile_generator.generate_behavior_file(output_dir)
-    configfile_generator.generate_scene_file(output_dir)
-    configfile_generator.insert_plugin_into_world_file(
-        world_file_to_be_inserted)
+    if configfile_generator.enable_crowdsim == 1:
+        L1 = next(iter(configfile_generator.level_yaml))
+        output_dir = output_dir + L1
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        configfile_generator.generate_behavior_file(output_dir)
+        configfile_generator.generate_scene_file(output_dir)
+        configfile_generator.insert_plugin_into_world_file(
+            world_file_to_be_inserted)

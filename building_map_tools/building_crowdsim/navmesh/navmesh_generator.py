@@ -91,8 +91,11 @@ def navmesh_main(map_file, output_dir):
     # parse the yaml file
     yaml_parse = BuildingYamlParse(map_file)
 
-    for level_name in yaml_parse.levels_name:
+    for level_name in yaml_parse.levels_with_human_lanes:
         # navmesh output
-        navmesh_output_file = output_dir + '/' + level_name + "_navmesh.nav"
+        output_dir = output_dir + level_name
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        navmesh_output_file = output_dir + '/' + "navmesh.nav"
         level_with_human_lanes = yaml_parse.levels_with_human_lanes[level_name]
         navmesh_output(level_name, level_with_human_lanes, navmesh_output_file)
