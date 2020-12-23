@@ -33,25 +33,16 @@ class IGNITION_GAZEBO_VISIBLE DoorPlugin
   public ISystemPreUpdate
 {
 private:
-  struct DoorElement {
-    Entity link_entity;
-    Entity joint_entity;
-    ignition::math::Pose3d orig_position;
-    double orig_rotation;
-  };
-
   rclcpp::Node::SharedPtr _ros_node;
   std::unordered_map<std::string, Entity> _link_entities;
   std::unordered_map<std::string, Entity> _joint_entities;
   Entity _en;
 
-  std::unordered_map<Entity, ignition::math::Pose3d> orig_positions;
+  std::unordered_map<std::string, ignition::math::Pose3d> orig_positions;
+  std::unordered_map<std::string, double> orig_rotations;
+  std::unordered_map<std::string, double> vel_cmds;
   std::string _physics_plugin_name;
-  ignition::math::Pose3d orig_pos;
-  double orig_rot = 0.0;
   bool pos_set = false;
-  int axis = 0;
-  double vel_cmd = 0.0;
 
   std::shared_ptr<DoorCommon> _door_common = nullptr;
 
@@ -151,7 +142,12 @@ public:
       create_joint_components(joint, ecm);
       _joint_entities.insert({door_elem.second.joint_name, joint});
     }
-
+    /*if (!ecm.EntityHasComponentType(_en,
+      components::LinearVelocityCmd().TypeId()))
+      ecm.CreateComponent(_en, components::LinearVelocityCmd());
+    if (!ecm.EntityHasComponentType(_en,
+      components::AngularVelocityCmd().TypeId()))
+      ecm.CreateComponent(_en, components::AngularVelocityCmd());*/
     _initialized = true;
 
     RCLCPP_INFO(_ros_node->get_logger(),
@@ -167,9 +163,11 @@ public:
       return;
 
     if(!pos_set){
-
-      orig_pos = ecm.Component<components::Pose>(_en)->Data();
-      orig_rot = ecm.Component<components::Pose>(_en)->Data().Yaw();
+      for (const auto& link_entity : _link_entities)
+      {
+        orig_positions[link_entity.first] = ecm.Component<components::Pose>(link_entity.second)->Data() + ecm.Component<components::Pose>(_en)->Data();
+        orig_rotations[link_entity.first] = ecm.Component<components::Pose>(link_entity.second)->Data().Yaw() + ecm.Component<components::Pose>(_en)->Data().Yaw();
+      }
 
       Entity parent = _en;
       while(ecm.ParentEntity(parent)){
@@ -198,6 +196,14 @@ public:
       {
         const DoorCommon::DoorElement& door_elem = door.second;
         constexpr double eps = 0.01;
+        double orig_rot = orig_rotations[door.first];
+        double curr_rot = ecm.Component<components::Pose>(link)->Data().Yaw() + ecm.Component<components::Pose>(_en)->Data().Yaw();
+        ignition::math::Pose3d orig_pos = orig_positions[door.first];
+        ignition::math::Pose3d curr_pos = ecm.Component<components::Pose>(link)->Data() + ecm.Component<components::Pose>(_en)->Data();
+        //std::cout << "velocity: " << result.velocity << std::endl;
+        //std::cout << "Door Pose: " << ecm.Component<components::Pose>(_en)->Data() << std::endl;
+        //std::cout << "Link Pose: " << curr_pos << std::endl;
+        //std::cout << request.joint_name << " original pos: " << orig_pos << " current pos: " << curr_pos << std::endl;
         if(door_elem.door_type == "SwingDoor" || door_elem.door_type == "DoubleSwingDoor")
         {
           // In the event that Yaw angle of the door moves past -Pi rads, it experiences a discontinuous jump from -Pi to Pi (likewise when the Yaw angle moves past Pi)
@@ -208,18 +214,17 @@ public:
             // push it past -Pi rads.
             // If closed position (0 rads) is larger than open position, then the relative orientation should theoretically never exceed 0,
             //which is how we identify when it has experienced a discontinuous jump
-            request.position = ecm.Component<components::Pose>(link)->Data().Yaw() - orig_rot > eps ?
-              -3.14 - fmod(ecm.Component<components::Pose>(link)->Data().Yaw() - orig_rot,3.14) : ecm.Component<components::Pose>(link)->Data().Yaw() - orig_rot;
+            request.position = curr_rot - orig_rot > eps ?
+              -3.14 - fmod(curr_rot - orig_rot,3.14) : curr_rot - orig_rot;
           }
           else // Yaw may go past +180, and experience discontinuous jump to -180
           {
-            request.position = ecm.Component<components::Pose>(link)->Data().Yaw() - orig_rot < -eps ?
-              3.14 + abs(-3.14 - (ecm.Component<components::Pose>(link)->Data().Yaw() - orig_rot)) : ecm.Component<components::Pose>(link)->Data().Yaw() - orig_rot;
+            request.position = curr_rot - orig_rot < -eps ?
+              3.14 + abs(-3.14 - (curr_rot - orig_rot)) : curr_rot - orig_rot;
           }
         }
         else if(door_elem.door_type == "SlidingDoor" || door_elem.door_type == "DoubleSlidingDoor")
         {
-            ignition::math::Pose3d curr_pos = ecm.Component<components::Pose>(link)->Data();
             ignition::math::Vector3d displacement = curr_pos.CoordPositionSub(orig_pos);
             //std::cout << "diff: " << displacement.Length() << std::endl;
             request.position = displacement.Length();
@@ -228,9 +233,11 @@ public:
         {
           continue;
         }
-        //std::cout << "pos: " << request.position << std::endl;
+        if (door_elem.door_type == "DoubleSwingDoor"){
+          std::cout << door.first << " pos: " << request.position << std::endl;
+        }
         //std::cout << "result vel: " << vel_cmd << std::endl;
-        request.velocity = vel_cmd;
+        request.velocity = vel_cmds[door.first];
       }
       else // Default Physics Engine with Joint Features support
       {
@@ -255,11 +262,25 @@ public:
       //to get door element section
       if(is_tpe_plugin(_physics_plugin_name))
       {
-        vel_cmd = result.velocity;
+        vel_cmds[result.joint_name] = result.velocity;
+        double vel_cmd = result.velocity;
         const DoorCommon::DoorElement& door_elem = it->second;
         if(door_elem.door_type == "SwingDoor" || door_elem.door_type == "DoubleSwingDoor")
         {
-          ecm.Component<components::LinearVelocityCmd>(link)->Data() = ignition::math::Vector3d(0,-0.5*vel_cmd,0);
+          double curr_rot = /*ecm.Component<components::Pose>(link)->Data().Yaw()*/ + ecm.Component<components::Pose>(_en)->Data().Yaw() - orig_rotations[result.joint_name];
+          double x_cmd = cos(curr_rot) * vel_cmd * (door_elem.length / 2.0);
+          double y_cmd = sin(curr_rot) * vel_cmd * (door_elem.length / 2.0);
+
+          double x_rot_cmd = -y_cmd;
+          double y_rot_cmd = x_cmd;
+          /*if (vel_cmd < 0){
+            x_rot_cmd *= -1;
+            y_rot_cmd *= -1;
+          }
+          if (door_elem.door_type == "DoubleSwingDoor" && std::abs(x_cmd) > 0.00001 || std::abs(y_cmd) > 0.0001){
+            std::cout << result.joint_name << " yaw: " << curr_rot << " x cmd: " << x_rot_cmd << " y cmd: " << y_rot_cmd << std::endl;
+          }*/
+          ecm.Component<components::LinearVelocityCmd>(link)->Data() = ignition::math::Vector3d(x_rot_cmd,y_rot_cmd,0);
           ecm.Component<components::AngularVelocityCmd>(link)->Data() = ignition::math::Vector3d(0,0,vel_cmd);
         }
         else if(door_elem.door_type == "SlidingDoor")
@@ -270,9 +291,6 @@ public:
         {
           continue;
         }
-        //std::cout << "velocity: " << result.velocity << std::endl;
-        //std::cout << "Door Pose: " << ecm.Component<components::Pose>(_en)->Data() << std::endl;
-        //std::cout << "Link Pose: " << ecm.Component<components::Pose>(link)->Data() << std::endl;
       }
       else // Default Physics Engine with Joint Features support
       {
