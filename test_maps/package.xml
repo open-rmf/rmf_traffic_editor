@@ -10,7 +10,7 @@
   <license>Apache License 2.0</license>
 
   <buildtool_depend>ament_cmake_rolling</buildtool_depend>
-  <buildtool_depend>building_map_tools_rolling</buildtool_depend>
+  <buildtool_depend>building_map_tools</buildtool_depend>
   <buildtool_depend>ros2run_rolling</buildtool_depend>
 
   <export>

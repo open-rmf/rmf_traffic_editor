@@ -21,14 +21,14 @@
   <depend>gazebo_ros_rolling</depend>
   <depend>gazebo_msgs_rolling</depend>
   <depend>gazebo_dev_rolling</depend>
-  <depend>rmf_fleet_msgs_rolling</depend>
-  <depend>rmf_door_msgs_rolling</depend>
-  <depend>rmf_lift_msgs_rolling</depend>
+  <depend>rmf_fleet_msgs</depend>
+  <depend>rmf_door_msgs</depend>
+  <depend>rmf_lift_msgs</depend>
   <depend>tf2_ros_rolling</depend>
   <depend>geometry_msgs_rolling</depend>
   <depend>std_msgs_rolling</depend>
   <depend>std_srvs_rolling</depend>
-  <depend>building_sim_common_rolling</depend>
+  <depend>building_sim_common</depend>
   <depend>libopencv-dev</depend>
 
   <export>

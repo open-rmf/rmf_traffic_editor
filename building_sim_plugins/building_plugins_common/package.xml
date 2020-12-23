@@ -19,15 +19,15 @@
   <build_depend>eigen</build_depend>
 
   <depend>rclcpp_rolling</depend>
-  <depend>rmf_fleet_msgs_rolling</depend>
-  <depend>rmf_door_msgs_rolling</depend>
-  <depend>rmf_lift_msgs_rolling</depend>
-  <depend>building_map_msgs_rolling</depend>
+  <depend>rmf_fleet_msgs</depend>
+  <depend>rmf_door_msgs</depend>
+  <depend>rmf_lift_msgs</depend>
+  <depend>building_map_msgs</depend>
   <depend>tf2_ros_rolling</depend>
   <depend>geometry_msgs_rolling</depend>
   <depend>std_msgs_rolling</depend>
   <depend>std_srvs_rolling</depend>
-  <depend>menge_rolling</depend>
+  <depend>menge</depend>
   <depend>libqt5-widgets</depend>
   <depend>qtbase5-dev</depend>
 
