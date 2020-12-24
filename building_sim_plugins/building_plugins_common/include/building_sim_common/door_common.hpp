@@ -74,7 +74,6 @@ public:
 
   struct DoorElement
   {
-    std::string type;
     std::string link_name;
     std::string joint_name;
     double length;
@@ -86,15 +85,13 @@ public:
     DoorElement() {}
 
     DoorElement(
-      const std::string& type,
       const std::string& link_name,
       const std::string& joint_name,
       const double length,
       const double lower_limit,
       const double upper_limit,
       const bool flip_direction = false)
-    : type(type),
-      link_name(link_name),
+    : link_name(link_name),
       joint_name(joint_name),
       length(length),
       current_position(0.0),
@@ -175,16 +172,13 @@ std::shared_ptr<DoorCommon> DoorCommon::make(
   auto door_element = sdf_clone;
   std::string left_door_joint_name;
   std::string right_door_joint_name;
-  std::string door_type;
 
   // Get the joint names and door type
   if (!get_element_required(sdf_clone, "door", door_element) ||
     !get_sdf_attribute_required<std::string>(
       door_element, "left_joint_name", left_door_joint_name) ||
     !get_sdf_attribute_required<std::string>(
-      door_element, "right_joint_name", right_door_joint_name) ||
-    !get_sdf_attribute_required<std::string>(
-      door_element, "type", door_type))
+      door_element, "right_joint_name", right_door_joint_name))
   {
     RCLCPP_ERROR(node->get_logger(),
       " -- Missing required parameters for [%s] plugin",
@@ -285,9 +279,9 @@ std::shared_ptr<DoorCommon> DoorCommon::make(
         DoorCommon::DoorElement door_element;
         if (joint_name == right_door_joint_name)
           door_element =
-            DoorCommon::DoorElement{door_type, link_name, joint_name, length, lower_limit, upper_limit, true};
+            DoorCommon::DoorElement{link_name, joint_name, length, lower_limit, upper_limit, true};
         else if (joint_name == left_door_joint_name)
-          door_element = DoorCommon::DoorElement{door_type, link_name, joint_name, length, lower_limit, upper_limit};
+          door_element = DoorCommon::DoorElement{link_name, joint_name, length, lower_limit, upper_limit};
         doors.insert({joint_name, door_element});
       }
     };

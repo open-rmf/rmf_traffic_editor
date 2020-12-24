@@ -179,6 +179,7 @@ public:
           ecm.Component<components::Pose>(door_ign.link_entity)->Data()
           + ecm.Component<components::Pose>(_en)->Data();
         door_ign.orig_rotation = door_ign.orig_position.Yaw();
+        door_ign.joint_type = ecm.Component<components::JointType>(door_ign.joint_entity)->Data();
       }
 
       Entity parent = _en;
@@ -216,7 +217,7 @@ public:
           + ecm.Component<components::Pose>(_en)->Data();
         constexpr double eps = 0.01;
 
-        if(door.type == "SwingDoor" || door.type == "DoubleSwingDoor")
+        if (door_ign.joint_type == sdf::JointType::REVOLUTE)
         {
           // In the event that Yaw angle of the door moves past -Pi rads, it experiences
           // a discontinuous jump from -Pi to Pi (vice-versa when the Yaw angle moves past Pi).
@@ -238,7 +239,7 @@ public:
               3.14 + abs(-3.14 - (curr_rot - orig_rot)) : curr_rot - orig_rot;
           }
         }
-        else if(door.type == "SlidingDoor" || door.type == "DoubleSlidingDoor")
+        else if (door_ign.joint_type == sdf::JointType::PRISMATIC)
         {
             ignition::math::Vector3d displacement = curr_pos.CoordPositionSub(orig_pos);
             request.position = displacement.Length();
@@ -279,7 +280,7 @@ public:
         door_ign.vel_cmd = result.velocity;
         double vel_cmd = result.velocity;
         const DoorCommon::DoorElement& door_elem = it->second;
-        if(door_elem.type == "SwingDoor" || door_elem.type == "DoubleSwingDoor")
+        if (door_ign.joint_type == sdf::JointType::REVOLUTE)
         {
           // The reference frame axes of the Linear Velocity Cmds at any point t = axes defined
           // by the link's global pose (link yaw + model yaw) at time t0, rotated by the change in
@@ -312,7 +313,7 @@ public:
           ecm.Component<components::LinearVelocityCmd>(link)->Data() = ignition::math::Vector3d(x_rot_cmd,y_rot_cmd,0);
           ecm.Component<components::AngularVelocityCmd>(link)->Data() = ignition::math::Vector3d(0,0,vel_cmd);
         }
-        else if(door_elem.type == "SlidingDoor" || door_elem.type == "DoubleSlidingDoor")
+        else if (door_ign.joint_type == sdf::JointType::PRISMATIC)
         {
           ecm.Component<components::LinearVelocityCmd>(link)->Data() = ignition::math::Vector3d(vel_cmd,0,0);
         }
