@@ -235,16 +235,16 @@ std::shared_ptr<DoorCommon> DoorCommon::make(
         // Get name of the link associated with the joint
         std::string link_name;
         get_sdf_param_required<std::string>(
-              element, "child", link_name);
+          element, "child", link_name);
 
         // Find link and get its dimensions
         double length = 0.0;
         auto link = parent->GetElement("link");
         std::string link_search_name;
-        while(link && get_sdf_attribute_required<std::string>(
-          link, "name", link_search_name))
+        while (link && get_sdf_attribute_required<std::string>(
+            link, "name", link_search_name))
         {
-          if(link_search_name == link_name)
+          if (link_search_name == link_name)
           {
             auto visual = link->GetElement("visual");
             if (visual)
@@ -265,7 +265,7 @@ std::shared_ptr<DoorCommon> DoorCommon::make(
           {
             link = link->GetNextElement("link");
           }
-        };
+        }
 
         // Get joint parameters
         get_element_required(joint_sdf_clone, "axis", element);
@@ -279,9 +279,11 @@ std::shared_ptr<DoorCommon> DoorCommon::make(
         DoorCommon::DoorElement door_element;
         if (joint_name == right_door_joint_name)
           door_element =
-            DoorCommon::DoorElement{link_name, joint_name, length, lower_limit, upper_limit, true};
+            DoorCommon::DoorElement{link_name, joint_name, length, lower_limit,
+            upper_limit, true};
         else if (joint_name == left_door_joint_name)
-          door_element = DoorCommon::DoorElement{link_name, joint_name, length, lower_limit, upper_limit};
+          door_element = DoorCommon::DoorElement{link_name, joint_name, length,
+            lower_limit, upper_limit};
         doors.insert({joint_name, door_element});
       }
     };

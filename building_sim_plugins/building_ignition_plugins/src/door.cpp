@@ -80,7 +80,7 @@ private:
       components::AngularVelocityCmd().TypeId()))
       ecm.CreateComponent(entity, components::AngularVelocityCmd());
     if (!ecm.EntityHasComponentType(entity,
-        components::Pose().TypeId()))
+      components::Pose().TypeId()))
       ecm.CreateComponent(entity, components::Pose());
   }
 
@@ -185,7 +185,8 @@ public:
     if (!_initialized)
       return;
 
-    if(!pos_set){
+    if (!pos_set)
+    {
       // Code later on assumes that each link is originally at its closed position
       for (auto& [door_name, door_ign] : _doors_ign)
       {
@@ -193,7 +194,8 @@ public:
           ecm.Component<components::Pose>(door_ign.link_entity)->Data()
           + ecm.Component<components::Pose>(_en)->Data();
         door_ign.orig_rotation = door_ign.orig_position.Yaw();
-        door_ign.joint_type = ecm.Component<components::JointType>(door_ign.joint_entity)->Data();
+        door_ign.joint_type = ecm.Component<components::JointType>(
+          door_ign.joint_entity)->Data();
       }
 
       fill_physics_engine(_en, ecm);
@@ -214,13 +216,15 @@ public:
       request.joint_name = door_name;
 
       // No joint features support, look at link pose instead
-      if(_phys_plugin == PhysEnginePlugin::TPE)
+      if (_phys_plugin == PhysEnginePlugin::TPE)
       {
         const double orig_rot = door_ign.orig_rotation;
-        const double curr_rot = ecm.Component<components::Pose>(link)->Data().Yaw()
+        const double curr_rot =
+          ecm.Component<components::Pose>(link)->Data().Yaw()
           + ecm.Component<components::Pose>(_en)->Data().Yaw();
         const ignition::math::Pose3d orig_pos = door_ign.orig_position;
-        const ignition::math::Pose3d curr_pos = ecm.Component<components::Pose>(link)->Data()
+        const ignition::math::Pose3d curr_pos =
+          ecm.Component<components::Pose>(link)->Data()
           + ecm.Component<components::Pose>(_en)->Data();
         constexpr double eps = 0.01;
 
@@ -230,7 +234,7 @@ public:
           // a discontinuous jump from -Pi to Pi (vice-versa when the Yaw angle moves past Pi).
           // We need to take this jump into account when calculating the relative orientation
           // of the door w.r.t to its original orientation.
-          if(door.closed_position > door.open_position)
+          if (door.closed_position > door.open_position)
           {
             // Yaw may go past -Pi rads when opening, and experience discontinuous jump to +Pi.
             // For e.g. when original angle is -(7/8)Pi, opening the door by Pi/2 rads would
@@ -248,12 +252,14 @@ public:
         }
         else if (door_ign.joint_type == sdf::JointType::PRISMATIC)
         {
-            ignition::math::Vector3d displacement = curr_pos.CoordPositionSub(orig_pos);
-            request.position = displacement.Length();
-            if (door.open_position < door.closed_position){
-              // At any point the link's position must be negative relative to the closed pose
-              request.position *= -1;
-            }
+          ignition::math::Vector3d displacement = curr_pos.CoordPositionSub(
+            orig_pos);
+          request.position = displacement.Length();
+          if (door.open_position < door.closed_position)
+          {
+            // At any point the link's position must be negative relative to the closed pose
+            request.position *= -1;
+          }
         }
         else
         {
@@ -282,25 +288,30 @@ public:
       assert(it != _door_common->_doors.end());
 
       // No joint features support, use velocity commands to mimic joint motion
-      if(_phys_plugin == PhysEnginePlugin::TPE)
+      if (_phys_plugin == PhysEnginePlugin::TPE)
       {
         door_ign.vel_cmd = result.velocity;
         double vel_cmd = result.velocity;
         const DoorCommon::DoorElement& door_elem = it->second;
         if (door_ign.joint_type == sdf::JointType::REVOLUTE)
         {
-          // The reference frame axes of the Linear Velocity Cmds at any point t = axes defined
-          // by the link's global pose (link yaw + model yaw) at time t0, rotated by the change in
-          // yaw component of the link since then.
-          // Note: This is not always equal to the global reference frame's axes rotated by the
-          // link's global yaw. In some cases, the link may rotate after time t0, but the change in
-          // its yaw may equal 0 if the change is applied to the parent model instead.
+          // The reference frame axes of the Linear Velocity Cmds at any time t equals to the
+          // axes defined by the link's global pose (link yaw + model yaw) at time t0, rotated
+          // by the change in yaw component of the link since then.
+          // Note: This does not always simply equal the axes defined by the link's global pose
+          // at time t. In some cases, the link may rotate after time t0, but the change in
+          // its yaw component may equal 0 if the change is applied to the parent model instead.
 
-          // Calculate the door link orientation, theta_local, relative to Linear Velocity cmds reference frame
-          // theta_global = (current_link_yaw + current_model_yaw) - (original_link_yaw + original_model_yaw)
-          // theta_local = theta_global - (current_link_yaw - original_link_yaw)
-          // theta_local = current_model_yaw - (original_link_yaw + original_model_yaw) (assuming original link yaw = 0)
-          double theta_local = ecm.Component<components::Pose>(_en)->Data().Yaw() - door_ign.orig_rotation;
+          // Calculate the door link orientation (theta_local) relative to Linear Velocity cmds reference frame
+          // d_yaw_component = current_link_yaw - original_link_yaw
+          // reference_frame_axes_rotation = (original_link_yaw + original_model_yaw) + d_yaw_component
+          // theta_global = current_link_yaw + current_model_yaw
+          // theta_local = theta_global - reference_frame_rotation_angle
+          // theta_local = (current_link_yaw + current_model_yaw) - ((original_link_yaw + original_model_yaw) + (current_link_yaw - original_link_yaw))
+          // theta_local = current_model_yaw - original_model_yaw
+          double theta_local =
+            ecm.Component<components::Pose>(_en)->Data().Yaw()
+            - door_ign.orig_rotation; // Todo: currently assumes orig_rotation = original_model_yaw, i.e. original link yaw = 0
 
           // Given the rotation of the door, calculate a vector parallel to the door length, with magnitude 1/2 * vel_cmd
           double x_cmd = cos(theta_local) * vel_cmd * (door_elem.length / 2.0);
@@ -317,12 +328,15 @@ public:
             y_rot_cmd *= -1;
           }
 
-          ecm.Component<components::LinearVelocityCmd>(link)->Data() = ignition::math::Vector3d(x_rot_cmd,y_rot_cmd,0);
-          ecm.Component<components::AngularVelocityCmd>(link)->Data() = ignition::math::Vector3d(0,0,vel_cmd);
+          ecm.Component<components::LinearVelocityCmd>(link)->Data() =
+            ignition::math::Vector3d(x_rot_cmd, y_rot_cmd, 0);
+          ecm.Component<components::AngularVelocityCmd>(link)->Data() =
+            ignition::math::Vector3d(0, 0, vel_cmd);
         }
         else if (door_ign.joint_type == sdf::JointType::PRISMATIC)
         {
-          ecm.Component<components::LinearVelocityCmd>(link)->Data() = ignition::math::Vector3d(vel_cmd,0,0);
+          ecm.Component<components::LinearVelocityCmd>(link)->Data() =
+            ignition::math::Vector3d(vel_cmd, 0, 0);
         }
         else
         {
