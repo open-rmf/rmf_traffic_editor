@@ -5,6 +5,7 @@
 #include <ignition/gazebo/components/JointAxis.hh>
 #include <ignition/gazebo/components/JointPosition.hh>
 #include <ignition/gazebo/components/JointVelocity.hh>
+#include <ignition/gazebo/components/JointType.hh>
 #include <ignition/gazebo/components/JointVelocityCmd.hh>
 #include <ignition/gazebo/components/LinearVelocityCmd.hh>
 #include <ignition/gazebo/components/AngularVelocityCmd.hh>
@@ -33,14 +34,20 @@ class IGNITION_GAZEBO_VISIBLE DoorPlugin
   public ISystemPreUpdate
 {
 private:
-  rclcpp::Node::SharedPtr _ros_node;
-  std::unordered_map<std::string, Entity> _link_entities;
-  std::unordered_map<std::string, Entity> _joint_entities;
-  Entity _en;
+  struct DoorElementIgnition
+  {
+    Entity link_entity;
+    Entity joint_entity;
+    sdf::JointType joint_type;
+    ignition::math::Pose3d orig_position;
+    double orig_rotation;
+    double vel_cmd;
+  };
 
-  std::unordered_map<std::string, ignition::math::Pose3d> orig_positions;
-  std::unordered_map<std::string, double> orig_rotations;
-  std::unordered_map<std::string, double> vel_cmds;
+  rclcpp::Node::SharedPtr _ros_node;
+  // Map from joint_name of each door section to ignition properties for that section
+  std::unordered_map<std::string, DoorElementIgnition> _doors_ign;
+  Entity _en;
   std::string _physics_plugin_name;
   bool pos_set = false;
 
@@ -59,6 +66,9 @@ private:
     if (!ecm.EntityHasComponentType(entity,
       components::JointVelocityCmd().TypeId()))
       ecm.CreateComponent(entity, components::JointVelocityCmd({0}));
+    if (!ecm.EntityHasComponentType(entity,
+      components::JointType().TypeId()))
+      ecm.CreateComponent(entity, components::JointType());
   }
 
   void create_link_components(Entity entity, EntityComponentManager& ecm)
@@ -120,6 +130,9 @@ public:
 
     for (const auto& door_elem : _door_common->_doors)
     {
+      auto door_ign_it = _doors_ign.insert(
+        {door_elem.second.joint_name, DoorElementIgnition()}).first;
+
       // For Trivial Physics Engine (TPE)
       const auto link = model.LinkByName(ecm, door_elem.second.link_name);
       if (link == kNullEntity)
@@ -130,7 +143,7 @@ public:
         return;
       }
       create_link_components(link, ecm);
-      _link_entities.insert({door_elem.second.joint_name, link});
+      door_ign_it->second.link_entity = link;
 
       // For default physics engine
       const auto joint = model.JointByName(ecm, door_elem.second.joint_name);
@@ -142,7 +155,7 @@ public:
         return;
       }
       create_joint_components(joint, ecm);
-      _joint_entities.insert({door_elem.second.joint_name, joint});
+      door_ign_it->second.joint_entity = joint;
     }
     _initialized = true;
 
@@ -160,12 +173,12 @@ public:
 
     if(!pos_set){
       // Code later on assumes that each link is originally at its closed position
-      for (const auto& link_entity : _link_entities)
+      for (auto& [door_name, door_ign] : _doors_ign)
       {
-        orig_positions[link_entity.first] =
-          ecm.Component<components::Pose>(link_entity.second)->Data()
+        door_ign.orig_position =
+          ecm.Component<components::Pose>(door_ign.link_entity)->Data()
           + ecm.Component<components::Pose>(_en)->Data();
-        orig_rotations[link_entity.first] = orig_positions[link_entity.first].Yaw();
+        door_ign.orig_rotation = door_ign.orig_position.Yaw();
       }
 
       Entity parent = _en;
@@ -185,31 +198,31 @@ public:
 
     // Determine current angular position and velocity of the door elements
     std::vector<DoorCommon::DoorUpdateRequest> requests;
-    for (const auto& door : _door_common->_doors)
+    for (const auto& [door_name, door] : _door_common->_doors)
     {
-      Entity link = _link_entities[door.first];
+      const DoorElementIgnition& door_ign = _doors_ign[door_name];
+      Entity link = door_ign.link_entity;
       DoorCommon::DoorUpdateRequest request;
-      request.joint_name = door.first;
+      request.joint_name = door_name;
 
       // No joint features support, look at link pose instead
       if(is_tpe_plugin(_physics_plugin_name))
       {
-        const DoorCommon::DoorElement& door_elem = door.second;
-        double orig_rot = orig_rotations[door.first];
-        double curr_rot = ecm.Component<components::Pose>(link)->Data().Yaw()
+        const double orig_rot = door_ign.orig_rotation;
+        const double curr_rot = ecm.Component<components::Pose>(link)->Data().Yaw()
           + ecm.Component<components::Pose>(_en)->Data().Yaw();
-        ignition::math::Pose3d orig_pos = orig_positions[door.first];
-        ignition::math::Pose3d curr_pos = ecm.Component<components::Pose>(link)->Data()
+        const ignition::math::Pose3d orig_pos = door_ign.orig_position;
+        const ignition::math::Pose3d curr_pos = ecm.Component<components::Pose>(link)->Data()
           + ecm.Component<components::Pose>(_en)->Data();
         constexpr double eps = 0.01;
 
-        if(door_elem.type == "SwingDoor" || door_elem.type == "DoubleSwingDoor")
+        if(door.type == "SwingDoor" || door.type == "DoubleSwingDoor")
         {
           // In the event that Yaw angle of the door moves past -Pi rads, it experiences
           // a discontinuous jump from -Pi to Pi (vice-versa when the Yaw angle moves past Pi).
           // We need to take this jump into account when calculating the relative orientation
           // of the door w.r.t to its original orientation.
-          if(door_elem.closed_position > door_elem.open_position)
+          if(door.closed_position > door.open_position)
           {
             // Yaw may go past -Pi rads when opening, and experience discontinuous jump to +Pi.
             // For e.g. when original angle is -(7/8)Pi, opening the door by Pi/2 rads would
@@ -225,11 +238,11 @@ public:
               3.14 + abs(-3.14 - (curr_rot - orig_rot)) : curr_rot - orig_rot;
           }
         }
-        else if(door_elem.type == "SlidingDoor" || door_elem.type == "DoubleSlidingDoor")
+        else if(door.type == "SlidingDoor" || door.type == "DoubleSlidingDoor")
         {
             ignition::math::Vector3d displacement = curr_pos.CoordPositionSub(orig_pos);
             request.position = displacement.Length();
-            if (door_elem.open_position < door_elem.closed_position){
+            if (door.open_position < door.closed_position){
               // At any point the link's position must be negative relative to the closed pose
               request.position *= -1;
             }
@@ -238,15 +251,14 @@ public:
         {
           continue;
         }
-        request.velocity = vel_cmds[door.first];
+        request.velocity = door_ign.vel_cmd;
       }
       else // Default Physics Engine with Joint Features support
       {
-        Entity joint = _joint_entities[door.first];
         request.position = ecm.Component<components::JointPosition>(
-          joint)->Data()[0];
+          door_ign.joint_entity)->Data()[0];
         request.velocity = ecm.Component<components::JointVelocity>(
-          joint)->Data()[0];
+          door_ign.joint_entity)->Data()[0];
       }
 
       requests.push_back(request);
@@ -256,14 +268,15 @@ public:
     auto results = _door_common->update(t, requests);
     for (const auto& result : results)
     {
-      Entity link = _link_entities[result.joint_name];
+      DoorElementIgnition& door_ign = _doors_ign[result.joint_name];
+      const Entity link = door_ign.link_entity;
       const auto it = _door_common->_doors.find(result.joint_name);
       assert(it != _door_common->_doors.end());
 
       // No joint features support, use velocity commands to mimic joint motion
       if(is_tpe_plugin(_physics_plugin_name))
       {
-        vel_cmds[result.joint_name] = result.velocity;
+        door_ign.vel_cmd = result.velocity;
         double vel_cmd = result.velocity;
         const DoorCommon::DoorElement& door_elem = it->second;
         if(door_elem.type == "SwingDoor" || door_elem.type == "DoubleSwingDoor")
@@ -279,7 +292,7 @@ public:
           // theta_global = (current_link_yaw + current_model_yaw) - (original_link_yaw + original_model_yaw)
           // theta_local = theta_global - (current_link_yaw - original_link_yaw)
           // theta_local = current_model_yaw - (original_link_yaw + original_model_yaw) (assuming original link yaw = 0)
-          double theta_local = ecm.Component<components::Pose>(_en)->Data().Yaw() - orig_rotations[result.joint_name];
+          double theta_local = ecm.Component<components::Pose>(_en)->Data().Yaw() - door_ign.orig_rotation;
 
           // Given the rotation of the door, calculate a vector parallel to the door length, with magnitude 1/2 * vel_cmd
           double x_cmd = cos(theta_local) * vel_cmd * (door_elem.length / 2.0);
@@ -310,9 +323,8 @@ public:
       }
       else // Default Physics Engine with Joint Features support
       {
-        Entity joint = _joint_entities[result.joint_name];
         auto joint_vel_cmd = ecm.Component<components::JointVelocityCmd>(
-          joint);
+          door_ign.joint_entity);
         joint_vel_cmd->Data()[0] = result.velocity;
       }
     }
