@@ -48,7 +48,7 @@ private:
   // Map from joint_name of each door section to ignition properties for that section
   std::unordered_map<std::string, DoorElementIgnition> _doors_ign;
   Entity _en;
-  std::string _physics_plugin_name;
+  PhysEnginePlugin _phys_plugin = PhysEnginePlugin::DEFAULT;
   bool pos_set = false;
 
   std::shared_ptr<DoorCommon> _door_common = nullptr;
@@ -84,10 +84,24 @@ private:
       ecm.CreateComponent(entity, components::Pose());
   }
 
-  bool is_tpe_plugin(const std::string& plugin_name)
+  void fill_physics_engine(Entity entity, EntityComponentManager& ecm)
   {
-    static const std::string tpe_plugin = "ignition-physics-tpe-plugin";
-    return plugin_name == tpe_plugin;
+    Entity parent = entity;
+    while (ecm.ParentEntity(parent))
+    {
+      parent = ecm.ParentEntity(parent);
+    }
+    if (ecm.EntityHasComponentType(parent,
+      components::PhysicsEnginePlugin().TypeId()))
+    {
+      const std::string physics_plugin_name =
+        ecm.Component<components::PhysicsEnginePlugin>(parent)->Data();
+      const auto it = plugin_names.find(physics_plugin_name);
+      if (it != plugin_names.end())
+      {
+        _phys_plugin = it->second;
+      }
+    }
   }
 
 public:
@@ -182,14 +196,7 @@ public:
         door_ign.joint_type = ecm.Component<components::JointType>(door_ign.joint_entity)->Data();
       }
 
-      Entity parent = _en;
-      while(ecm.ParentEntity(parent)){
-        parent = ecm.ParentEntity(parent);
-      }
-      if (ecm.EntityHasComponentType(parent,
-          components::PhysicsEnginePlugin().TypeId())){
-            _physics_plugin_name = ecm.Component<components::PhysicsEnginePlugin>(parent)->Data();
-      }
+      fill_physics_engine(_en, ecm);
       pos_set = true;
     }
 
@@ -207,7 +214,7 @@ public:
       request.joint_name = door_name;
 
       // No joint features support, look at link pose instead
-      if(is_tpe_plugin(_physics_plugin_name))
+      if(_phys_plugin == PhysEnginePlugin::TPE)
       {
         const double orig_rot = door_ign.orig_rotation;
         const double curr_rot = ecm.Component<components::Pose>(link)->Data().Yaw()
@@ -275,7 +282,7 @@ public:
       assert(it != _door_common->_doors.end());
 
       // No joint features support, use velocity commands to mimic joint motion
-      if(is_tpe_plugin(_physics_plugin_name))
+      if(_phys_plugin == PhysEnginePlugin::TPE)
       {
         door_ign.vel_cmd = result.velocity;
         double vel_cmd = result.velocity;

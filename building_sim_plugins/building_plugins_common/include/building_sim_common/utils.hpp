@@ -3,8 +3,14 @@
 
 #include <cmath>
 #include <iostream>
+#include <string>
+#include <unordered_map>
 
 namespace building_sim_common {
+
+enum class PhysEnginePlugin {DEFAULT, TPE};
+std::unordered_map<std::string, PhysEnginePlugin> plugin_names {
+  {"ignition-physics-tpe-plugin", PhysEnginePlugin::TPE}};
 
 // TODO(MXG): Refactor the use of this function to replace it with
 // compute_desired_rate_of_change()

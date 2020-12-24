@@ -31,10 +31,6 @@ using namespace building_sim_common;
 
 namespace building_sim_ign {
 
-enum class PhysEnginePlugin {DEFAULT, TPE};
-std::unordered_map<std::string, PhysEnginePlugin> plugin_names {
-  {"ignition-physics-tpe-plugin", PhysEnginePlugin::TPE}};
-
 //==============================================================================
 
 class IGNITION_GAZEBO_VISIBLE LiftPlugin
