@@ -159,6 +159,7 @@ public:
       return;
 
     if(!pos_set){
+      // Code later on assumes that each link is originally at its closed position
       for (const auto& link_entity : _link_entities)
       {
         orig_positions[link_entity.first] =
@@ -202,7 +203,7 @@ public:
           + ecm.Component<components::Pose>(_en)->Data();
         constexpr double eps = 0.01;
 
-        if(door_elem.door_type == "SwingDoor" || door_elem.door_type == "DoubleSwingDoor")
+        if(door_elem.type == "SwingDoor" || door_elem.type == "DoubleSwingDoor")
         {
           // In the event that Yaw angle of the door moves past -Pi rads, it experiences
           // a discontinuous jump from -Pi to Pi (vice-versa when the Yaw angle moves past Pi).
@@ -224,10 +225,14 @@ public:
               3.14 + abs(-3.14 - (curr_rot - orig_rot)) : curr_rot - orig_rot;
           }
         }
-        else if(door_elem.door_type == "SlidingDoor" || door_elem.door_type == "DoubleSlidingDoor")
+        else if(door_elem.type == "SlidingDoor" || door_elem.type == "DoubleSlidingDoor")
         {
             ignition::math::Vector3d displacement = curr_pos.CoordPositionSub(orig_pos);
             request.position = displacement.Length();
+            if (door_elem.open_position < door_elem.closed_position){
+              // At any point the link's position must be negative relative to the closed pose
+              request.position *= -1;
+            }
         }
         else
         {
@@ -261,7 +266,7 @@ public:
         vel_cmds[result.joint_name] = result.velocity;
         double vel_cmd = result.velocity;
         const DoorCommon::DoorElement& door_elem = it->second;
-        if(door_elem.door_type == "SwingDoor" || door_elem.door_type == "DoubleSwingDoor")
+        if(door_elem.type == "SwingDoor" || door_elem.type == "DoubleSwingDoor")
         {
           // The reference frame axes of the Linear Velocity Cmds at any point t = axes defined
           // by the link's global pose (link yaw + model yaw) at time t0, rotated by the change in
@@ -294,7 +299,7 @@ public:
           ecm.Component<components::LinearVelocityCmd>(link)->Data() = ignition::math::Vector3d(x_rot_cmd,y_rot_cmd,0);
           ecm.Component<components::AngularVelocityCmd>(link)->Data() = ignition::math::Vector3d(0,0,vel_cmd);
         }
-        else if(door_elem.door_type == "SlidingDoor" || door_elem.door_type == "DoubleSlidingDoor")
+        else if(door_elem.type == "SlidingDoor" || door_elem.type == "DoubleSlidingDoor")
         {
           ecm.Component<components::LinearVelocityCmd>(link)->Data() = ignition::math::Vector3d(vel_cmd,0,0);
         }

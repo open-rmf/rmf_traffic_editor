@@ -74,7 +74,7 @@ public:
 
   struct DoorElement
   {
-    std::string door_type;
+    std::string type;
     std::string link_name;
     std::string joint_name;
     double length;
@@ -86,14 +86,14 @@ public:
     DoorElement() {}
 
     DoorElement(
-      const std::string& door_type,
+      const std::string& type,
       const std::string& link_name,
       const std::string& joint_name,
       const double length,
       const double lower_limit,
       const double upper_limit,
       const bool flip_direction = false)
-    : door_type(door_type),
+    : type(type),
       link_name(link_name),
       joint_name(joint_name),
       length(length),
@@ -243,7 +243,7 @@ std::shared_ptr<DoorCommon> DoorCommon::make(
         get_sdf_param_required<std::string>(
               element, "child", link_name);
 
-        // Get the link's dimensions
+        // Find link and get its dimensions
         double length = 0.0;
         auto link = parent->GetElement("link");
         std::string link_search_name;
