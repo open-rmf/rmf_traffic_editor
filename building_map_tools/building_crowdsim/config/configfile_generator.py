@@ -32,7 +32,8 @@ class ConfigFileGenerator:
                 if 'enable' not in cur_level.crowd_sim_yaml:
                     raise ValueError(
                         "Missing 'enable' tag for crowdsim configuration.")
-                cur_level.enable_crowdsim = int(cur_level.crowd_sim_yaml['enable']) == 1
+                cur_level.enable_crowdsim = int(
+                    cur_level.crowd_sim_yaml['enable']) == 1
                 cur_level.human_goals = building_yaml_parse.get_human_goals()
                 cur_level.behavior_file = BehaviorFile()
                 cur_level.scene_file = SceneFile()
@@ -79,7 +80,8 @@ class ConfigFileGenerator:
         # 'obstacle_set','agent_profiles','agent_groups'
         if 'obstacle_set' in cur_level.crowd_sim_yaml:
             obstacle_set = ObstacleSet()
-            obstacle_set.load_from_yaml(cur_level.crowd_sim_yaml['obstacle_set'])
+            obstacle_set.load_from_yaml(
+                cur_level.crowd_sim_yaml['obstacle_set'])
             cur_level.scene_file.sub_elements.append(obstacle_set)
         if 'agent_profiles' in cur_level.crowd_sim_yaml:
             for item in cur_level.crowd_sim_yaml['agent_profiles']:
@@ -175,4 +177,5 @@ def configfile_main(map_file, output_dir, world_file_to_be_inserted):
             configfile_generator.generate_behavior_file(level_name, dest_dir)
             configfile_generator.generate_scene_file(level_name, dest_dir)
     if at_least_a_level_with_crowdsim:
-        configfile_generator.insert_plugin_into_world_file(world_file_to_be_inserted)
+        configfile_generator.insert_plugin_into_world_file(
+            world_file_to_be_inserted)
