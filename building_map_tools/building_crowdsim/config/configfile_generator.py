@@ -27,8 +27,10 @@ class ConfigFileGenerator:
             cur_level.enable_crowdsim = 0
             if level_name in building_yaml_parse.crowd_sim_config:
                 cur_level.calculate_scale_using_measurements()
-                cur_level.crowd_sim_yaml = building_yaml_parse.crowd_sim_config[level_name]
-                cur_level.crowd_sim_human_yaml = building_yaml_parse.crowd_sim_human[level_name]
+                cur_level.crowd_sim_yaml =\
+                    building_yaml_parse.crowd_sim_config[level_name]
+                cur_level.crowd_sim_human_yaml =\
+                    building_yaml_parse.crowd_sim_human[level_name]
                 if 'enable' not in cur_level.crowd_sim_yaml:
                     raise ValueError(
                         "Missing 'enable' tag for crowdsim configuration.")

@@ -57,8 +57,12 @@ class BuildingYamlParse:
         # human_lanes for navmesh
         # contain parsed yaml for each level that contain human lanes
         self.levels_with_human_lanes = {}
-        self.crowd_sim_config = {}  # contain raw yaml under crowdsim tag from each level
-        # contain humans from each level which comprises non-static human model from model section
+
+        # contain raw yaml under crowdsim tag from each level
+        self.crowd_sim_config = {}
+
+        # contain humans from each level which comprises non-static human model
+        # from model section
         self.crowd_sim_human = {}
         for level_name, level_yaml in self.yaml_node['levels'].items():
             if 'crowd_sim' in level_yaml and 'enable' in level_yaml[
