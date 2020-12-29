@@ -29,7 +29,7 @@ def test_scene_file():
 def test_scene_from_yaml():
     map_file = os.getcwd() + '/test/building_crowdsim/config_test.yaml'
     yaml_parse = BuildingYamlParse(map_file)
-    crowd_sim_yaml = yaml_parse.crowd_sim_config
+    crowd_sim_yaml = next(iter(yaml_parse.crowd_sim_config.values()))
 
     scene_file = SceneFile()
     scene_file.add_spatial_query()
@@ -57,7 +57,7 @@ def test_scene_from_yaml():
 def test_behavior_from_yaml():
     map_file = os.getcwd() + '/test/building_crowdsim/config_test.yaml'
     yaml_parse = BuildingYamlParse(map_file)
-    crowd_sim_yaml = yaml_parse.crowd_sim_config
+    crowd_sim_yaml = next(iter(yaml_parse.crowd_sim_config.values()))
 
     behavior_file = BehaviorFile()
     if 'states' in crowd_sim_yaml:
@@ -84,7 +84,7 @@ def test_behavior_from_yaml():
 def test_plugin_from_yaml():
     map_file = os.getcwd() + '/test/building_crowdsim/config_test.yaml'
     yaml_parse = yaml_parse = BuildingYamlParse(map_file)
-    crowd_sim_yaml = yaml_parse.crowd_sim_config
+    crowd_sim_yaml = next(iter(yaml_parse.crowd_sim_config.values()))
 
     plugin_file = Plugin()
     plugin_file.load_from_yaml(crowd_sim_yaml)

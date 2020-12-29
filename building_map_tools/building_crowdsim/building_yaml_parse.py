@@ -55,20 +55,21 @@ class BuildingYamlParse:
             self.yaml_node = yaml.load(f, yaml.SafeLoader)
 
         # human_lanes for navmesh
-        self.levels_with_human_lanes = {}
-        self.crowd_sim_config = []
-        self.crowd_sim_human = []
+        self.levels_with_human_lanes = {}  # contain parsed yaml for each level that contain human lanes
+        self.crowd_sim_config = {}  # contain raw yaml under crowdsim tag from each level
+        # contain humans from each level which comprises non-static human model from model section
+        self.crowd_sim_human = {}
         for level_name, level_yaml in self.yaml_node['levels'].items():
             if 'crowd_sim' in level_yaml and 'enable' in level_yaml[
                     'crowd_sim'] and level_yaml['crowd_sim']['enable'] == 1:
                 self.levels_with_human_lanes[level_name] = LevelWithHumanLanes(
                     level_yaml, level_name)
-                self.crowd_sim_config.append(level_yaml['crowd_sim'])
+                self.crowd_sim_config[level_name] = level_yaml['crowd_sim']
                 level_human = []
                 for model_yaml in level_yaml['models']:
                     if 'agent_group_id' in model_yaml:
                         level_human.append(model_yaml)
-                self.crowd_sim_human.append(level_human)
+                self.crowd_sim_human[level_name] = level_human
 
     def get_human_goals(self):
         result = {}

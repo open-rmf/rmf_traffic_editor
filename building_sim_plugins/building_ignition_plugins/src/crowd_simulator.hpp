@@ -39,7 +39,7 @@ class IGNITION_GAZEBO_VISIBLE CrowdSimulatorPlugin
 public:
   CrowdSimulatorPlugin()
   : _transport_node_ptr(std::make_shared<ignition::transport::Node>()),
-    _crowd_sim_interface(std::make_shared<crowd_simulator::CrowdSimInterface>()),
+    _crowd_sim_interfaces(),
     _initialized(false)
   {}
 
@@ -55,7 +55,8 @@ public:
 
 private:
   std::shared_ptr<ignition::transport::Node> _transport_node_ptr;
-  std::shared_ptr<crowd_simulator::CrowdSimInterface> _crowd_sim_interface;
+  std::vector<std::shared_ptr<crowd_simulator::CrowdSimInterface>>
+  _crowd_sim_interfaces;
   bool _initialized;
   std::chrono::steady_clock::duration _last_sim_time{0};
 
@@ -68,23 +69,30 @@ private:
   std::unordered_map<std::string, ignition::gazebo::Entity> _entity_dic;
 
   //bool _spawn_agents_in_world(ignition::gazebo::EntityComponentManager& ecm);
-  void _init_spawned_agents(ignition::gazebo::EntityComponentManager& ecm);
+  void _init_spawned_agents(ignition::gazebo::EntityComponentManager& ecm,
+    std::shared_ptr<crowd_simulator::CrowdSimInterface> crowd_sim_interface);
   void _config_spawned_agents(
     const crowd_simulator::CrowdSimInterface::ObjectPtr obj_ptr,
     const ignition::gazebo::Entity& enity,
-    ignition::gazebo::EntityComponentManager& ecm) const;
+    ignition::gazebo::EntityComponentManager& ecm,
+    std::shared_ptr<crowd_simulator::CrowdSimInterface> crowd_sim_interface)
+  const;
   bool _create_entity(
     ignition::gazebo::EntityComponentManager& ecm,
     const std::string& model_name,
     const crowd_simulator::ModelTypeDatabase::RecordPtr model_type_ptr) const;
   void _update_all_objects(
     double delta_sim_time,
-    ignition::gazebo::EntityComponentManager& ecm) const;
+    ignition::gazebo::EntityComponentManager& ecm,
+    std::shared_ptr<crowd_simulator::CrowdSimInterface> crowd_sim_interface)
+  const;
   void _update_internal_object(
     double delta_sim_time,
     const crowd_simulator::CrowdSimInterface::ObjectPtr obj_ptr,
     const ignition::gazebo::Entity& enity,
-    ignition::gazebo::EntityComponentManager& ecm) const;
+    ignition::gazebo::EntityComponentManager& ecm,
+    std::shared_ptr<crowd_simulator::CrowdSimInterface> crowd_sim_interface)
+  const;
 };
 
 } //namespace crowd_simulation_ign

@@ -174,6 +174,7 @@ public:
 
   CrowdSimInterface()
   : _model_type_db_ptr(std::make_shared<crowd_simulator::ModelTypeDatabase>()),
+    _objects_count(0),
     _sdf_loaded(false),
     _switch_anim_distance_th(0.01),
     _switch_anim_name({"idle", "stand"})
@@ -210,6 +211,7 @@ public:
   IgnMathPose3d get_agent_pose(
     const AgentPtr agent_ptr, double delta_sim_time);
 
+  size_t _objects_count;
 private:
   bool _sdf_loaded;
   double _switch_anim_distance_th;
@@ -236,9 +238,8 @@ private:
 
 template<typename SdfPtrT>
 bool CrowdSimInterface::read_sdf(
-  SdfPtrT& sdf_in)
+  SdfPtrT& sdf)
 {
-  SdfPtrT sdf = sdf_in->template GetElementImpl("floor");
   std::string name = "";
   sdf->GetAttribute("name")->Get(name);
   if (!sdf->template HasElement("resource_path"))
@@ -301,19 +302,9 @@ bool CrowdSimInterface::read_sdf(
       return false;
     }
 
-
     auto model_type_ptr = this->_model_type_db_ptr->emplace(s,
         std::make_shared<ModelTypeDatabase::Record>() ); //unordered_map
     model_type_ptr->type_name = s;
-
-/*
-    if (!model_type_element->template Get<std::string>("filename",
-      model_type_ptr->file_name, ""))
-    {
-      RCLCPP_ERROR(logger(),
-        "No actor skin configured in <model_type>! <filename> Required");
-      return false;
-    }*/
 
     if (!model_type_element->template Get<std::string>("animation",
       model_type_ptr->animation, ""))
@@ -331,24 +322,6 @@ bool CrowdSimInterface::read_sdf(
         "No animation speed configured in <model_type>! <animation_speed> Required");
       return false;
     }
-
-/*
-    if (!model_type_element->template HasElement("initial_pose"))
-    {
-      RCLCPP_ERROR(
-        logger(),
-        "No model initial pose configured in <model_type>! <initial_pose> Required [" + s +
-        "]");
-      return false;
-    }
-    if (!_load_model_init_pose(model_type_element, model_type_ptr->pose))
-    {
-      RCLCPP_ERROR(
-        logger(),
-        "Error loading model initial pose in <model_type>! Check <initial_pose> in [" + s +
-        "]");
-      return false;
-    }*/
 
     model_type_element = model_type_element->template GetNextElement(
       "model_type");

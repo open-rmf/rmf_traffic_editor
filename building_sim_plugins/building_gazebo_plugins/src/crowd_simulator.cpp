@@ -34,28 +34,29 @@ void CrowdSimulatorPlugin::Load(
 {
   _world = world;
 
-  if (!_crowd_sim_interface->read_sdf(sdf))
+  sdf::ElementPtr sdf_floor = sdf->GetElement("floor");
+
+  while (sdf_floor)
   {
-    exit(EXIT_FAILURE);
+    auto crowd_sim_interface =
+      std::make_shared<crowd_simulator::CrowdSimInterface>();
+
+    if (!crowd_sim_interface->read_sdf(sdf_floor))
+    {
+      exit(EXIT_FAILURE);
+    }
+
+    if (!crowd_sim_interface->init_crowd_sim())
+    {
+      RCLCPP_ERROR(
+        crowd_sim_interface->logger(),
+        "Crowd simulation failed to initialize.");
+      exit(EXIT_FAILURE);
+    }
+
+    _crowd_sim_interfaces.push_back(crowd_sim_interface);
+    sdf_floor = sdf_floor->GetNextElement("floor");
   }
-
-  if (!_crowd_sim_interface->init_crowd_sim())
-  {
-    RCLCPP_ERROR(
-      _crowd_sim_interface->logger(),
-      "Crowd simulation failed to initialize.");
-    exit(EXIT_FAILURE);
-  }
-
-/*
-  if (!_spawn_agents_in_world())
-  {
-    RCLCPP_ERROR(
-      _crowd_sim_interface->logger(),
-      "Crowd simulation failed to spawn agents in the world.");
-    exit(EXIT_FAILURE);
-  }*/
-
 
   _update_connection_ptr = gazebo::event::Events::ConnectWorldUpdateBegin(
     [this](gazebo::common::UpdateInfo update_info)
@@ -83,20 +84,25 @@ void CrowdSimulatorPlugin::_update(
   }
 
   auto delta_sim_time = (update_info.simTime - _last_sim_time).Double();
-  if (delta_sim_time > _crowd_sim_interface->get_sim_time_step())
+  for (auto& crowd_sim_interface:_crowd_sim_interfaces)
   {
-    _last_sim_time = update_info.simTime;
-    _crowd_sim_interface->one_step_sim();
-    _update_all_objects(delta_sim_time);
+    if (delta_sim_time > crowd_sim_interface->get_sim_time_step())
+    {
+      _last_sim_time = update_info.simTime;
+      crowd_sim_interface->one_step_sim();
+      _update_all_objects(crowd_sim_interface, delta_sim_time);
+    }
   }
 }
 
 //============================================
-void CrowdSimulatorPlugin::_update_all_objects(double delta_sim_time)
+void CrowdSimulatorPlugin::_update_all_objects(
+  std::shared_ptr<crowd_simulator::CrowdSimInterface> crowd_sim_interface,
+  double delta_sim_time)
 {
-  for (size_t id = 0; id < _objects_count; id++)
+  for (size_t id = 0; id < crowd_sim_interface->_objects_count; id++)
   {
-    ObjectPtr obj_ptr = _crowd_sim_interface->get_object_by_id(id);
+    ObjectPtr obj_ptr = crowd_sim_interface->get_object_by_id(id);
     gazebo::physics::ModelPtr model_ptr = _world->ModelByName(
       obj_ptr->model_name);
 
@@ -104,21 +110,22 @@ void CrowdSimulatorPlugin::_update_all_objects(double delta_sim_time)
     if (obj_ptr->agent_ptr->_external)
     {
       ignition::math::Pose3d pose = model_ptr->WorldPose();
-      _crowd_sim_interface->update_external_agent<ignition::math::Pose3d>(
+      crowd_sim_interface->update_external_agent<ignition::math::Pose3d>(
         obj_ptr->agent_ptr, pose);
       continue;
     }
 
     //update internal agents
-    auto type_ptr = _crowd_sim_interface->_model_type_db_ptr->get(
+    auto type_ptr = crowd_sim_interface->_model_type_db_ptr->get(
       obj_ptr->type_name);
-    _update_internal_object(delta_sim_time, obj_ptr,
+    _update_internal_object(crowd_sim_interface, delta_sim_time, obj_ptr,
       model_ptr, type_ptr);
   }
 }
 
 //============================================
 void CrowdSimulatorPlugin::_update_internal_object(
+  std::shared_ptr<crowd_simulator::CrowdSimInterface> crowd_sim_interface,
   double delta_sim_time,
   const ObjectPtr object_ptr,
   const gazebo::physics::ModelPtr model_ptr,
@@ -127,26 +134,28 @@ void CrowdSimulatorPlugin::_update_internal_object(
   if (!object_ptr)
   {
     RCLCPP_ERROR(
-      _crowd_sim_interface->logger(), "Null objectPtr when update Object!");
+      crowd_sim_interface->logger(), "Null objectPtr when update Object!");
     return;
   }
   if (!model_ptr)
   {
     RCLCPP_ERROR(
-      _crowd_sim_interface->logger(), "Null modelPtr when update Object!");
+      crowd_sim_interface->logger(), "Null modelPtr when update Object!");
     return;
   }
 
   //update pose from menge to gazebo
   ignition::math::Pose3d pose =
-    _crowd_sim_interface->get_agent_pose<ignition::math::Pose3d>(
+    crowd_sim_interface->get_agent_pose<ignition::math::Pose3d>(
     object_ptr->agent_ptr,
     delta_sim_time);
 
   gazebo::physics::ActorPtr actor_ptr =
     boost::dynamic_pointer_cast<gazebo::physics::Actor>(model_ptr);
 
-  auto delta_dist_vector = pose.Pos() - actor_ptr->WorldPose().Pos();
+  auto pos_old = actor_ptr->WorldPose().Pos();
+  auto pos_new = pose.Pos();
+  auto delta_dist_vector = pos_new - pos_old;
   // might need future work on 3D case
   // the center of human has a z_elevation, which will make the human keep walking even if he reached the target
   delta_dist_vector.Z(0.0);
@@ -161,7 +170,7 @@ void CrowdSimulatorPlugin::_update_internal_object(
   anim_pose.Pos().Y(pose.Pos().Y());
 
   AnimState next_state = object_ptr->get_next_state(
-    delta_dist < _crowd_sim_interface->get_switch_anim_distance_th() &&
+    delta_dist < crowd_sim_interface->get_switch_anim_distance_th() &&
     !type_ptr->idle_animation.empty());
 
   auto traj_info = actor_ptr->CustomTrajectory();
@@ -184,57 +193,63 @@ void CrowdSimulatorPlugin::_update_internal_object(
       break;
   }
   object_ptr->current_state = next_state;
+
+  anim_pose.Pos().Z(pos_old.Z());
   actor_ptr->SetWorldPose(anim_pose);
 }
 
 //============================================
 void CrowdSimulatorPlugin::_init_spawned_agents()
 {
-  _objects_count = _crowd_sim_interface->get_num_objects();
-  for (size_t id = 0; id < _objects_count; ++id)
+  for (auto& crowd_sim_interface:_crowd_sim_interfaces)
   {
-    ObjectPtr obj_ptr = _crowd_sim_interface->get_object_by_id(id);
-    // spawned agents are not fully loaded
-    if (!_world->ModelByName(obj_ptr->model_name))
+    crowd_sim_interface->_objects_count =
+      crowd_sim_interface->get_num_objects();
+    for (size_t id = 0; id < crowd_sim_interface->_objects_count; ++id)
     {
-      _initialized = false;
-      return;
-    }
-    // all agents are loaded, set internal actors as non-static model and set custom trajectory
-    // because only non-static model can interact with slotcars
-    if (!obj_ptr->is_external)
-    {
-      gazebo::physics::ModelPtr model_ptr = _world->ModelByName(
-        obj_ptr->model_name);
-      gazebo::physics::ActorPtr actor_ptr =
-        boost::dynamic_pointer_cast<gazebo::physics::Actor>(model_ptr);
-      gazebo::physics::TrajectoryInfoPtr trajectory_info(new gazebo::physics::
-        TrajectoryInfo()); //matches the actor skeleton
-
-      crowd_simulator::ModelTypeDatabase::RecordPtr type_ptr =
-        _crowd_sim_interface->_model_type_db_ptr->get(obj_ptr->type_name);
-      trajectory_info->type = type_ptr->animation;
-      // set each keyframe duration as the sim_time_step
-      trajectory_info->duration = _crowd_sim_interface->get_sim_time_step();
-      actor_ptr->SetCustomTrajectory(trajectory_info);
-      actor_ptr->SetStatic(false);
-
-      //check actor has idle animation
-      for (auto idle_anim : _crowd_sim_interface->get_switch_anim_name())
+      ObjectPtr obj_ptr = crowd_sim_interface->get_object_by_id(id);
+      // spawned agents are not fully loaded
+      if (!_world->ModelByName(obj_ptr->model_name))
       {
-        if (actor_ptr->SkeletonAnimations().find(idle_anim) !=
-          actor_ptr->SkeletonAnimations().end())
+        _initialized = false;
+        return;
+      }
+      // all agents are loaded, set internal actors as non-static model and set custom trajectory
+      // because only non-static model can interact with slotcars
+      if (!obj_ptr->is_external)
+      {
+        gazebo::physics::ModelPtr model_ptr = _world->ModelByName(
+          obj_ptr->model_name);
+        gazebo::physics::ActorPtr actor_ptr =
+          boost::dynamic_pointer_cast<gazebo::physics::Actor>(model_ptr);
+        gazebo::physics::TrajectoryInfoPtr trajectory_info(new gazebo::physics::
+          TrajectoryInfo()); //matches the actor skeleton
+
+        crowd_simulator::ModelTypeDatabase::RecordPtr type_ptr =
+          crowd_sim_interface->_model_type_db_ptr->get(obj_ptr->type_name);
+        trajectory_info->type = type_ptr->animation;
+        // set each keyframe duration as the sim_time_step
+        trajectory_info->duration = crowd_sim_interface->get_sim_time_step();
+        actor_ptr->SetCustomTrajectory(trajectory_info);
+        actor_ptr->SetStatic(false);
+
+        //check actor has idle animation
+        for (auto idle_anim : crowd_sim_interface->get_switch_anim_name())
         {
-          type_ptr->idle_animation = idle_anim;
-          break;
+          if (actor_ptr->SkeletonAnimations().find(idle_anim) !=
+            actor_ptr->SkeletonAnimations().end())
+          {
+            type_ptr->idle_animation = idle_anim;
+            break;
+          }
         }
       }
     }
+    _initialized = true;
+    RCLCPP_INFO(
+      crowd_sim_interface->logger(),
+      "Gazebo models all loaded! Start simulating...");
   }
-  _initialized = true;
-  RCLCPP_INFO(
-    _crowd_sim_interface->logger(),
-    "Gazebo models all loaded! Start simulating...");
 }
 
 // insert the plugin

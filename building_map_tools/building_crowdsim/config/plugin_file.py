@@ -9,16 +9,18 @@ class Plugin (Element):
         self.attributes['filename'] = 'libcrowd_simulator.so'
         self.attributes['name'] = 'crowd_simulation'
 
-    def load_from_yaml(self, yaml_node, human_yaml_node):
-        floor = Floor()
-        floor.load_from_yaml(yaml_node, human_yaml_node)
-        self.sub_elements.append(floor)
+    def load_from_yaml(self, yaml_node):
+        internal_agent_names = {}
+        for level_name, cur_level in yaml_node.items():
+            floor = Floor(level_name)
+            floor.load_from_yaml(cur_level, internal_agent_names)
+            self.sub_elements.append(floor)
 
 
 class Floor (Element):
-    def __init__(self):
+    def __init__(self, level_name):
         Element.__init__(self, 'floor')
-        self.attributes['name'] = 'L1'
+        self.attributes['name'] = level_name
 
         self.behavior_file_element = LeafElement('behavior_file')
         self.behavior_file_element.text = 'behavior_file.xml'
@@ -33,7 +35,9 @@ class Floor (Element):
         self.sub_elements.append(self.scene_file_element)
         self.sub_elements.append(self.update_time_step_element)
 
-    def load_from_yaml(self, yaml_node, human_yaml_node):
+    def load_from_yaml(self, cur_level, internal_agent_names={}):
+        yaml_node = cur_level.crowd_sim_yaml
+        human_yaml = cur_level.crowd_sim_human_yaml
         if 'enable' not in yaml_node:
             raise ValueError("Missing 'enable' in yaml_node")
         if 'update_time_step' not in yaml_node:
@@ -57,8 +61,7 @@ class Floor (Element):
                 self.add_external_list(group['agents_name'])
 
         # get all the internal agent names from 'human_yaml'
-        internal_agent_names = {}
-        for internal_agent in human_yaml_node:
+        for internal_agent in human_yaml:
             if 'agent_group_id' in internal_agent:
                 name = internal_agent['name']
                 if name not in internal_agent_names:
