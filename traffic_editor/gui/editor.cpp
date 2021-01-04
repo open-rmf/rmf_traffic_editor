@@ -1838,16 +1838,16 @@ void Editor::mouse_add_edge(
     }
 
     const double vertex_radius_meters = 0.1;
-    const double vertex_dist_thresh =
-      project.building.levels[level_idx].drawing_meters_per_pixel /
-      vertex_radius_meters;
+    const double vertex_dist_thresh_pixels =
+      vertex_radius_meters /
+      project.building.levels[level_idx].drawing_meters_per_pixel;
 
     const int prev_clicked_idx = clicked_idx;
     clicked_idx = project.building.nearest_item_index_if_within_distance(
       level_idx,
       p_aligned.x(),
       p_aligned.y(),
-      vertex_dist_thresh,
+      vertex_dist_thresh_pixels,
       Building::VERTEX);
 
     if (clicked_idx < 0)
