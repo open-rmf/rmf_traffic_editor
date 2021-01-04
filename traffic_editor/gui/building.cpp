@@ -174,11 +174,12 @@ void Building::add_vertex(int level_index, double x, double y)
   levels[level_index].add_vertex(x, y);
 }
 
-void Building::add_fiducial(int level_index, double x, double y)
+QUuid Building::add_fiducial(int level_index, double x, double y)
 {
   if (level_index >= static_cast<int>(levels.size()))
-    return;
+    return NULL;
   levels[level_index].fiducials.push_back(Fiducial(x, y));
+  return levels[level_index].fiducials.rbegin()->uuid;
 }
 
 int Building::find_nearest_vertex_index(
@@ -369,7 +370,7 @@ bool Building::delete_selected(const int level_index)
   return true;
 }
 
-void Building::add_model(
+QUuid Building::add_model(
   const int level_idx,
   const double x,
   const double y,
@@ -378,7 +379,7 @@ void Building::add_model(
   const std::string& model_name)
 {
   if (level_idx >= static_cast<int>(levels.size()))
-    return;
+    return NULL;
 
   printf("Building::add_model(%d, %.1f, %.1f, %.1f, %.2f, %s)\n",
     level_idx, x, y, z, yaw, model_name.c_str());
@@ -391,6 +392,7 @@ void Building::add_model(
   m.instance_name = model_name;  // todo: add unique numeric suffix?
   m.is_static = true;
   levels[level_idx].models.push_back(m);
+  return levels[level_idx].models.rbegin()->uuid;
 }
 
 void Building::set_model_yaw(

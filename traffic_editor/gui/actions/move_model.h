@@ -15,32 +15,33 @@
  *
 */
 
-#ifndef _ADD_VERTEX_H_
-#define _ADD_VERTEX_H_
+#ifndef _MOVE_MODEL_H_
+#define _MOVE_MODEL_H_
 
 #include <QUndoCommand>
-#include "editor_mode_id.h"
 #include "project.h"
 
-class AddVertexCommand : public QUndoCommand
+class MoveModelCommand : public QUndoCommand
 {
-
 public:
-  AddVertexCommand(
+  MoveModelCommand(
     Project* project,
-    EditorModeId mode,
-    int level_idx,
-    double x,
-    double y);
-  virtual ~AddVertexCommand();
+    int level,
+    int model_id
+  );
+  virtual ~MoveModelCommand();
+
   void undo() override;
   void redo() override;
+
+  void set_final_destination(double x, double y);
+
+  bool has_moved;
 private:
+  double _original_x, _original_y;
+  double _final_x, _final_y;
+  int _level_id, _model_id;
   Project* _project;
-  EditorModeId _mode;
-  double _x, _y;
-  int _level_idx;
-  QUuid _vert_id;
 };
 
 #endif

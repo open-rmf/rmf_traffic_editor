@@ -15,32 +15,36 @@
  *
 */
 
-#ifndef _ADD_VERTEX_H_
-#define _ADD_VERTEX_H_
+#ifndef _ADD_EDGE_H_
+#define _ADD_EDGE_H_
 
 #include <QUndoCommand>
-#include "editor_mode_id.h"
 #include "project.h"
 
-class AddVertexCommand : public QUndoCommand
+class AddEdgeCommand : public QUndoCommand
 {
 
 public:
-  AddVertexCommand(
-    Project* project,
-    EditorModeId mode,
-    int level_idx,
-    double x,
-    double y);
-  virtual ~AddVertexCommand();
+  AddEdgeCommand(Project* project, int level_idx);
+  virtual ~AddEdgeCommand();
   void undo() override;
   void redo() override;
+  int set_first_point(double x, double y);
+  int set_second_point(double x, double y);
+  void set_edge_type(Edge::Type type);
 private:
   Project* _project;
-  EditorModeId _mode;
-  double _x, _y;
+  double _first_x, _first_y;
+  double _second_x, _second_y;
+  bool _first_point_not_exist, _first_point_drawn;
+  bool _second_point_not_exist, _second_point_drawn;
   int _level_idx;
-  QUuid _vert_id;
+  std::vector<Edge> _edge_snapshot;
+  std::vector<Vertex> _vert_snapshot, _final_snapshot;
+  int _vert_id_first, _vert_id_second;
+  Edge::Type _type;
+  const double _vertex_radius_meters = 0.1;
 };
+
 
 #endif

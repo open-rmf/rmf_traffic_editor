@@ -22,6 +22,7 @@
 #include <string>
 #include <vector>
 #include <yaml-cpp/yaml.h>
+#include <quuid.h>
 
 class QGraphicsScene;
 
@@ -32,6 +33,7 @@ public:
   double x = 0.0;
   double y = 0.0;
   std::string name;
+  QUuid uuid;
 
   bool selected = false;
 
