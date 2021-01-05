@@ -66,8 +66,16 @@ int AddEdgeCommand::set_first_point(double x, double y)
   _first_x = x;
   _first_y = y;
 
+  const double vertex_dist_thresh_pixels =
+    _vertex_radius_meters /
+    _project->building.levels[_level_idx].drawing_meters_per_pixel;
+
   int clicked_idx = _project->building.nearest_item_index_if_within_distance(
-    _level_idx, x, y, 10.0, Building::VERTEX);
+    _level_idx,
+    x,
+    y,
+    vertex_dist_thresh_pixels,
+    Building::VERTEX);
 
   _first_point_drawn = true;
   if (clicked_idx < 0)
@@ -86,8 +94,16 @@ int AddEdgeCommand::set_second_point(double x, double y)
   _second_x = x;
   _second_y = y;
 
+  const double vertex_dist_thresh_pixels =
+    _vertex_radius_meters /
+    _project->building.levels[_level_idx].drawing_meters_per_pixel;
+
   int clicked_idx = _project->building.nearest_item_index_if_within_distance(
-    _level_idx, x, y, 10.0, Building::VERTEX);
+    _level_idx,
+    x,
+    y,
+    vertex_dist_thresh_pixels,
+    Building::VERTEX);
 
   _second_point_drawn = true;
 
