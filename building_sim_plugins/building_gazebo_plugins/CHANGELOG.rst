@@ -2,8 +2,15 @@
 Changelog for package building_gazebo_plugins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming (2020-09-28)
+1.2.0 (2021-01-06)
 ------------------
+* Merge branch 'release-1.1'
+* Control slotcar with model velocity cmds in place of joint velocity cmds (`#236 <https://github.com/osrf/traffic_editor/issues/236>`_)
+* Implement battery drain and recharge for slotcars (`#242 <https://github.com/osrf/traffic_editor/issues/242>`_)
+* Implement animation switching in crowd simulation (`#238 <https://github.com/osrf/traffic_editor/issues/238>`_)
+* Building_crowdsim for generating the navmesh file and required configuration files for menge (`#224 <https://github.com/osrf/traffic_editor/issues/224>`_)
+* Contributors: Geoffrey Biggs, Guoliang (Fred) Shao, Marco A. Gutierrez, Marco A. Gutiérrez, Rushyendra Maganty
+
 * Add animation switch to crowd simulation plugin (`#238 <https://github.com/osrf/traffic_editor/pull/238>`_)
 
 1.1.0 (2020-09-24)
