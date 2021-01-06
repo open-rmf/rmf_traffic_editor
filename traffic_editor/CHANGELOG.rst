@@ -2,10 +2,30 @@
 Changelog for package traffic_editor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Upcoming release
+1.2.0 (2021-01-05)
 ------------------
 * Adds undo capability to a large part of the actions. (`#269 <https://github.com/osrf/traffic_editor/pull/269>`_) (`#266 <https://github.com/osrf/traffic_editor/pull/266>`_)
 * Contibutors: Arjo, Morgan Quigley, Yadu
+* Merge pull request `#276 <https://github.com/osrf/traffic_editor/issues/276>`_ from osrf/add_lane_vertex_snap_distance_scaling
+  scale add-lane vertex snap distance correctly
+* undo features
+* compute the click-to-merge treshold in pixels
+* Feature/undo: Undo for editor components (`#269 <https://github.com/osrf/traffic_editor/issues/269>`_)
+* scale add-lane vertex snap distance correctly
+* fix to compilation when no opencv (`#272 <https://github.com/osrf/traffic_editor/issues/272>`_)
+* Merge pull request `#266 <https://github.com/osrf/traffic_editor/issues/266>`_ from osrf/feature/undo
+* Merge branch 'feature/undo' of https://github.com/osrf/traffic_editor into feature/undo
+* Added "save" to newly updated transition entries (`#265 <https://github.com/osrf/traffic_editor/issues/265>`_)
+* Merge pull request `#263 <https://github.com/osrf/traffic_editor/issues/263>`_ from osrf/dont_crash_on_new_project_crowdsim
+* Merge pull request `#257 <https://github.com/osrf/traffic_editor/issues/257>`_ from Briancbn/pr-fix-disable-plugin-backwards-compatibility
+* Merge pull request `#255 <https://github.com/osrf/traffic_editor/issues/255>`_ from osrf/feature/remove-plugin-option
+* Configured gui to load and save proper parameters for plugins
+* Using just the Lift object to propagate the plugin removal option
+* Added option to remove plugins for doors on gui and building_map_tools generator
+* Add GUI to traffic editor for crowd simulation configuration (`#225 <https://github.com/osrf/traffic_editor/issues/225>`_)
+* Merge pull request `#249 <https://github.com/osrf/traffic_editor/issues/249>`_ from osrf/fix/lift_dialog_saving
+* Add first pass of quality declarations for all packages (`#235 <https://github.com/osrf/traffic_editor/issues/235>`_)
+* Contributors: Aaron Chong, Arjo Chakravarty, Chen Bainian, Geoffrey Biggs, Guoliang (Fred) Shao, Marco A. Gutiérrez, Morgan Quigley, Tian En
 
 1.1.0 (2020-09-24)
 ------------------
