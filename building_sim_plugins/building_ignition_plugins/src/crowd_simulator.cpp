@@ -395,7 +395,7 @@ void CrowdSimulatorPlugin::_update_internal_object(
   }
   auto anim_time_comp =
     ecm.Component<ignition::gazebo::components::AnimationTime>(entity);
-  if (nullptr == anim_name_comp)
+  if (nullptr == anim_time_comp)
   {
     RCLCPP_ERROR(_crowd_sim_interface->logger(),
       "Model [" + obj_ptr->model_name + "] has no AnimationTime component.");
@@ -438,20 +438,20 @@ void CrowdSimulatorPlugin::_update_internal_object(
       break;
   }
 
-  if (obj_ptr->current_state != next_state)
+  //if (obj_ptr->current_state != next_state)
     ecm.SetChanged(entity,
       ignition::gazebo::components::AnimationName::typeId,
-      ignition::gazebo::ComponentState::OneTimeChange);
+      ignition::gazebo::ComponentState::PeriodicChange);
   obj_ptr->current_state = next_state;
 
   // set trajectory
   traj_pose_comp->Data() = agent_pose;
   ecm.SetChanged(entity,
     ignition::gazebo::components::TrajectoryPose::typeId,
-    ignition::gazebo::ComponentState::OneTimeChange);
+    ignition::gazebo::ComponentState::PeriodicChange);
   ecm.SetChanged(entity,
     ignition::gazebo::components::AnimationTime::typeId,
-    ignition::gazebo::ComponentState::OneTimeChange);
+    ignition::gazebo::ComponentState::PeriodicChange);
 }
 
 } //namespace crowd_simulation_ign
