@@ -438,10 +438,9 @@ void CrowdSimulatorPlugin::_update_internal_object(
       break;
   }
 
-  //if (obj_ptr->current_state != next_state)
-    ecm.SetChanged(entity,
-      ignition::gazebo::components::AnimationName::typeId,
-      ignition::gazebo::ComponentState::PeriodicChange);
+  ecm.SetChanged(entity,
+    ignition::gazebo::components::AnimationName::typeId,
+    ignition::gazebo::ComponentState::PeriodicChange);
   obj_ptr->current_state = next_state;
 
   // set trajectory
