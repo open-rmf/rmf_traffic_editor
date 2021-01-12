@@ -12,9 +12,10 @@ class Plugin (Element):
     def load_from_yaml(self, yaml_node):
         internal_agent_names = {}
         for level_name, cur_level in yaml_node.items():
-            floor = Floor(level_name)
-            floor.load_from_yaml(cur_level, internal_agent_names)
-            self.sub_elements.append(floor)
+            if cur_level.enable_crowdsim == 1:
+                floor = Floor(level_name)
+                floor.load_from_yaml(cur_level, internal_agent_names)
+                self.sub_elements.append(floor)
 
 
 class Floor (Element):
