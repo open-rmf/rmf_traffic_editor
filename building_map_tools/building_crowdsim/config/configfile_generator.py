@@ -20,9 +20,9 @@ from building_map.level import Level
 class ConfigFileGenerator:
     def __init__(self, building_yaml_parse):
         assert(isinstance(building_yaml_parse, BuildingYamlParse))
-        self.level_yaml = building_yaml_parse.yaml_node['levels']
+        self.levels_yaml = building_yaml_parse.yaml_node['levels']
         self.level = {}
-        for level_name, level_yaml in self.level_yaml.items():
+        for level_name, level_yaml in self.levels_yaml.items():
             cur_level = self.level[level_name] = Level(level_yaml, level_name)
             cur_level.enable_crowdsim = 0
             if level_name in building_yaml_parse.crowd_sim_config:

@@ -36,41 +36,42 @@ class Floor (Element):
         self.sub_elements.append(self.update_time_step_element)
 
     def load_from_yaml(self, cur_level, internal_agent_names={}):
-        yaml_node = cur_level.crowd_sim_yaml
-        human_yaml = cur_level.crowd_sim_human_yaml
-        if 'enable' not in yaml_node:
-            raise ValueError("Missing 'enable' in yaml_node")
-        if 'update_time_step' not in yaml_node:
-            raise ValueError("Missing 'update_time_step' in yaml_node")
-        self.update_time_step_element.text = str(
-            float(yaml_node['update_time_step']))
+        if cur_level.enable_crowdsim == 1:
+            yaml_node = cur_level.crowd_sim_yaml
+            human_yaml = cur_level.crowd_sim_human_yaml
+            if 'enable' not in yaml_node:
+                raise ValueError("Missing 'enable' in yaml_node")
+            if 'update_time_step' not in yaml_node:
+                raise ValueError("Missing 'update_time_step' in yaml_node")
+            self.update_time_step_element.text = str(
+                float(yaml_node['update_time_step']))
 
-        if 'model_types' not in yaml_node:
-            raise ValueError("Invalid 'model_types' in yaml_node")
-        for model_type in yaml_node['model_types']:
-            cur_model_type = ModelType()
-            cur_model_type.load_from_yaml(model_type)
-            self.add_model_type(cur_model_type)
+            if 'model_types' not in yaml_node:
+                raise ValueError("Invalid 'model_types' in yaml_node")
+            for model_type in yaml_node['model_types']:
+                cur_model_type = ModelType()
+                cur_model_type.load_from_yaml(model_type)
+                self.add_model_type(cur_model_type)
 
-        # get all the external agent names from 'agent_groups'
-        if 'external_agent_groups' not in yaml_node:
-            return
-        external_agent_groups = yaml_node['external_agent_groups']
-        for group in external_agent_groups:
-            if len(group['agents_name']) > 0:
-                self.add_external_list(group['agents_name'])
+            # get all the external agent names from 'agent_groups'
+            if 'external_agent_groups' not in yaml_node:
+                return
+            external_agent_groups = yaml_node['external_agent_groups']
+            for group in external_agent_groups:
+                if len(group['agents_name']) > 0:
+                    self.add_external_list(group['agents_name'])
 
-        # get all the internal agent names from 'human_yaml'
-        for internal_agent in human_yaml:
-            if 'agent_group_id' in internal_agent:
-                name = internal_agent['name']
-                if name not in internal_agent_names:
-                    internal_agent_names[name] = 0
-                else:
-                    internal_agent_names[name] += 1
-                suffix = '_' + str(internal_agent_names[name] + 1)\
-                    if internal_agent_names[name] > 0 else ''
-                self.add_internal_agent(name+suffix)
+            # get all the internal agent names from 'human_yaml'
+            for internal_agent in human_yaml:
+                if 'agent_group_id' in internal_agent:
+                    name = internal_agent['name']
+                    if name not in internal_agent_names:
+                        internal_agent_names[name] = 0
+                    else:
+                        internal_agent_names[name] += 1
+                    suffix = '_' + str(internal_agent_names[name] + 1)\
+                        if internal_agent_names[name] > 0 else ''
+                    self.add_internal_agent(name+suffix)
 
     def add_model_type(self, model_type):
         assert(isinstance(model_type, ModelType))
