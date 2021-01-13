@@ -128,3 +128,5 @@ models:
 - OpenRobotics/WoodenChair
 - OpenRobotics/XRayMachine
 - OpenRobotics/XRayMachineSmall
+actor_models:
+- OpenRobotics/MaleVisitorPhone
