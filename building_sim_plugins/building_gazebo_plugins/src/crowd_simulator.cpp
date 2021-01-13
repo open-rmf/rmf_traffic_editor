@@ -43,7 +43,7 @@ void CrowdSimulatorPlugin::Load(
 
     if (!crowd_sim_interface->read_sdf(sdf_floor))
     {
-      exit(EXIT_FAILURE);
+      return;
     }
 
     if (!crowd_sim_interface->init_crowd_sim())

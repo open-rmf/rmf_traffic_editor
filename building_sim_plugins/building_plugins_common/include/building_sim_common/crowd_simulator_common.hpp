@@ -246,6 +246,13 @@ bool CrowdSimInterface::read_sdf(
   {
     char* menge_resource_path;
     menge_resource_path = getenv("MENGE_RESOURCE_PATH");
+    if (menge_resource_path == nullptr ||
+      strcmp(menge_resource_path, "") == 0)
+    {
+      RCLCPP_INFO(logger(),
+        "Menge resource not found. Crowd simulation is disabled.");
+      return false;
+    }
     RCLCPP_INFO(logger(),
       "resource_path not found, use <env MENGE_RESOURCE_PATH> " +
       std::string(menge_resource_path) + "/" + name + " instead.");
