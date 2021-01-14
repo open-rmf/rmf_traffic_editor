@@ -12,5 +12,7 @@
   <file>icons/wall.svg</file>
   <file>icons/door.svg</file>
   <file>icons/measurement.svg</file>
+  <file>icons/human_vertex.svg</file>
+  <file>icons/human_vertex_selected.svg</file>
 </qresource>
 </RCC>

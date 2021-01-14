@@ -16,6 +16,7 @@
 */
 
 #include <traffic_editor/crowd_sim/crowd_sim_impl.h>
+#include <traffic_editor/vertex.h>
 
 using namespace crowd_sim;
 
@@ -376,4 +377,20 @@ void CrowdSimImplementation::save_model_types(
 {
   _model_types.clear();
   _model_types = model_types;
+}
+
+bool CrowdSimImplementation::vertex_has_human(const Vertex& vertex)
+{
+  for (const auto& _agent_group : _agent_groups)
+  {
+    if (_agent_group.get_internal_agent_model_name() != "") // skip first one (external_agent group)
+    {
+      auto point = _agent_group.get_spawn_point();
+      if (point.first == vertex.x && point.second == vertex.y &&
+        _agent_group.get_spawn_number() > 0 && _agent_group.is_valid())
+        return true;
+    }
+  }
+
+  return false;
 }

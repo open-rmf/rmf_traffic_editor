@@ -19,6 +19,8 @@
 
 #include <QGraphicsScene>
 #include <QGraphicsSimpleTextItem>
+#include <QLabel>
+#include <QSvgWidget>
 
 #include "traffic_editor/vertex.h"
 using std::string;
@@ -97,10 +99,12 @@ YAML::Node Vertex::to_yaml() const
   return vertex_node;
 }
 
+
 void Vertex::draw(
   QGraphicsScene* scene,
   const double radius,
-  const QColor& color) const
+  const QColor& color,
+  bool human_vertex) const
 {
   QPen vertex_pen(Qt::black);
   vertex_pen.setWidthF(radius / 2.0);
@@ -112,13 +116,27 @@ void Vertex::draw(
 
   QColor selected_color = QColor::fromRgbF(1.0, 0.0, 0.0, a);
 
-  scene->addEllipse(
-    x - radius,
-    y - radius,
-    2 * radius,
-    2 * radius,
-    vertex_pen,
-    selected ? QBrush(selected_color) : QBrush(nonselected_color));
+  if (human_vertex)
+  {
+    double new_radius = 2 * (radius+10);
+    const int svg_w_h = new_radius*2;
+    auto* svg_anim =
+      new QSvgWidget(QString(selected ? ":icons/human_vertex_selected.svg" :
+        ":icons/human_vertex.svg"));
+    svg_anim->setGeometry(x - new_radius, y - new_radius, svg_w_h, svg_w_h);
+    svg_anim->setStyleSheet("background-color: transparent; ");
+    scene->addWidget(svg_anim);
+  }
+  else
+  {
+    scene->addEllipse(
+      x - radius,
+      y - radius,
+      2 * radius,
+      2 * radius,
+      vertex_pen,
+      selected ? QBrush(selected_color) : QBrush(nonselected_color));
+  }
 
   if (!name.empty())
   {

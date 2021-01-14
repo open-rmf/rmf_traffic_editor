@@ -54,7 +54,8 @@ public:
   void draw(
     QGraphicsScene* scene,
     const double radius,
-    const QColor& color) const;
+    const QColor& color,
+    bool human_vertex = false) const;
 
   ////////////////////////////////////////////////////////////
   static const std::vector<std::pair<std::string, Param::Type>> allowed_params;

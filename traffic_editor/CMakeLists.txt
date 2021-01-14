@@ -22,7 +22,7 @@ if(CMAKE_VERSION VERSION_LESS "3.7.0")
   set(CMAKE_INCLUDE_CURRENT_DIR ON)
 endif()
 
-find_package(Qt5 COMPONENTS Widgets Concurrent REQUIRED)
+find_package(Qt5 COMPONENTS Widgets Concurrent Svg REQUIRED)
 find_package(ignition-plugin1 QUIET COMPONENTS all)
 find_package(ignition-common3 QUIET)
 find_package(ament_index_cpp REQUIRED)
@@ -116,6 +116,7 @@ set(traffic_editor_sources
 set(traffic_editor_libs
   Qt5::Widgets
   Qt5::Concurrent
+  Qt5::Svg
   yaml-cpp
   ${ament_index_cpp_LIBRARIES}
   ${OpenCV_LIBS}

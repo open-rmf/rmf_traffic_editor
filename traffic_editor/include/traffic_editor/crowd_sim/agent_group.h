@@ -69,6 +69,10 @@ public:
   {
     return _agent_profile.size() > 0 && _initial_state.size() > 0;
   }
+  bool is_human_valid() const
+  {
+    return _internal_agent_model_name.size() > 0 && is_valid();
+  }
   size_t get_group_id() const { return _group_id; }
   std::pair<double, double> get_spawn_point() const
   {

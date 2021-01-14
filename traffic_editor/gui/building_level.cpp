@@ -1070,10 +1070,14 @@ void BuildingLevel::draw(
   }
 
   for (const auto& v : vertices)
+  {
     v.draw(
       scene,
       vertex_radius / drawing_meters_per_pixel,
-      QColor::fromRgbF(0.0, 0.5, 0.0));
+      QColor::fromRgbF(0.0, 0.5, 0.0),
+      crowd_sim_impl->vertex_has_human(v));
+  }
+
 
   for (const auto& f : fiducials)
     f.draw(scene, drawing_meters_per_pixel);

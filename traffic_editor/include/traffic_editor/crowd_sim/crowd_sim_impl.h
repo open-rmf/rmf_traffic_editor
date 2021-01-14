@@ -30,6 +30,7 @@
 #include <traffic_editor/crowd_sim/agent_profile.h>
 #include <traffic_editor/crowd_sim/agent_group.h>
 #include <traffic_editor/crowd_sim/model_type.h>
+#include <traffic_editor/vertex.h>
 
 namespace crowd_sim {
 
@@ -99,6 +100,8 @@ public:
 
   void save_model_types(const std::vector<ModelType>& model_types);
   std::vector<ModelType> get_model_types() { return _model_types; }
+
+  bool vertex_has_human(const Vertex& vertex);
 
 private:
   // update from project.building in crowd_sim_table
