@@ -145,6 +145,7 @@ void CrowdSimEditorTable::update(int level)
 {
   blockSignals(true);
   std::string level_name = "";
+
   if (!_project.building.levels.empty() &&
     level < _project.building.levels.size())
   {
@@ -162,6 +163,8 @@ void CrowdSimEditorTable::update(int level)
     }
     _level = level;
   }
+  else
+    return;
 
 
   if (_parentwidget)
