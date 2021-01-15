@@ -307,92 +307,102 @@ void SlotcarCommon::read_sdf(SdfPtrT& sdf)
   get_element_val_if_present<SdfPtrT, double>(sdf, "nominal_drive_speed",
     this->_nominal_drive_speed);
   RCLCPP_INFO(logger(),
-    "Setting nominal drive speed to: " +
-    std::to_string(_nominal_drive_speed));
+    std::string("Setting nominal drive speed to: " +
+    std::to_string(_nominal_drive_speed)).c_str());
 
   get_element_val_if_present<SdfPtrT, double>(sdf,
     "nominal_drive_acceleration", this->_nominal_drive_acceleration);
   RCLCPP_INFO(logger(),
-    "Setting nominal drive acceleration to: " + std::to_string(
-      _nominal_drive_acceleration));
+    std::string("Setting nominal drive acceleration to: " + std::to_string(
+      _nominal_drive_acceleration)).c_str());
 
   get_element_val_if_present<SdfPtrT, double>(sdf,
     "max_drive_acceleration", this->_max_drive_acceleration);
   RCLCPP_INFO(logger(),
-    "Setting max drive acceleration to: "
-    + std::to_string(_max_drive_acceleration));
+    std::string("Setting max drive acceleration to: "
+    + std::to_string(_max_drive_acceleration)).c_str());
 
   get_element_val_if_present<SdfPtrT, double>(sdf,
     "nominal_turn_speed", this->_nominal_turn_speed);
   RCLCPP_INFO(logger(),
-    "Setting nominal turn speed to:"
-    + std::to_string(_nominal_turn_speed));
+    std::string("Setting nominal turn speed to:"
+    + std::to_string(_nominal_turn_speed)).c_str());
 
   get_element_val_if_present<SdfPtrT, double>(sdf,
     "nominal_turn_acceleration", this->_nominal_turn_acceleration);
-  RCLCPP_INFO(logger(), "Setting nominal turn acceleration to:" + std::to_string(
-      _nominal_turn_acceleration));
+  RCLCPP_INFO(logger(), std::string("Setting nominal turn acceleration to:"
+    + std::to_string(_nominal_turn_acceleration)).c_str());
 
   get_element_val_if_present<SdfPtrT, double>(sdf,
     "max_turn_acceleration", this->_max_turn_acceleration);
   RCLCPP_INFO(logger(),
-    "Setting max turn acceleration to:"
-    + std::to_string(_max_turn_acceleration));
+    std::string("Setting max turn acceleration to:"
+    + std::to_string(_max_turn_acceleration)).c_str());
 
   get_element_val_if_present<SdfPtrT, double>(sdf,
     "stop_distance", this->_stop_distance);
   RCLCPP_INFO(logger(),
-    "Setting stop distance to:" + std::to_string(_stop_distance));
+    std::string("Setting stop distance to:"
+    + std::to_string(_stop_distance)).c_str());
 
   get_element_val_if_present<SdfPtrT, double>(sdf,
     "stop_radius", this->_stop_radius);
   RCLCPP_INFO(logger(),
-    "Setting stop radius to:" + std::to_string(_stop_radius));
+    std::string("Setting stop radius to:"
+    + std::to_string(_stop_radius)).c_str());
 
   get_element_val_if_present<SdfPtrT, double>(sdf,
     "tire_radius", this->_tire_radius);
   RCLCPP_INFO(logger(),
-    "Setting tire radius to:" + std::to_string(_tire_radius));
+    std::string("Setting tire radius to:"
+    + std::to_string(_tire_radius)).c_str());
 
   get_element_val_if_present<SdfPtrT, double>(sdf,
     "base_width", this->_base_width);
   RCLCPP_INFO(logger(),
-    "Setting base width to: " + std::to_string(_base_width));
+    std::string("Setting base width to: "
+    + std::to_string(_base_width)).c_str());
 
   get_element_val_if_present<SdfPtrT, double>(sdf,
     "nominal_voltage", this->_params.nominal_voltage);
   RCLCPP_INFO(logger(),
-    "Setting nominal voltage to: " + std::to_string(_params.nominal_voltage));
+    std::string("Setting nominal voltage to: "
+    + std::to_string(_params.nominal_voltage)).c_str());
 
   get_element_val_if_present<SdfPtrT, double>(sdf,
     "nominal_capacity", this->_params.nominal_capacity);
   RCLCPP_INFO(logger(),
-    "Setting nominal capacity to: " + std::to_string(_params.nominal_capacity));
+    std::string("Setting nominal capacity to: "
+    + std::to_string(_params.nominal_capacity)).c_str());
 
   get_element_val_if_present<SdfPtrT, double>(sdf,
     "charging_current", this->_params.charging_current);
   RCLCPP_INFO(logger(),
-    "Setting charging current to: " + std::to_string(_params.charging_current));
+    std::string("Setting charging current to: "
+    + std::to_string(_params.charging_current)).c_str());
 
   get_element_val_if_present<SdfPtrT, double>(sdf,
     "mass", this->_params.mass);
-  RCLCPP_INFO(logger(), "Setting mass to: " + std::to_string(_params.mass));
+  RCLCPP_INFO(logger(), std::string("Setting mass to: "
+    + std::to_string(_params.mass)).c_str());
 
   get_element_val_if_present<SdfPtrT, double>(sdf,
     "inertia", this->_params.inertia);
   RCLCPP_INFO(logger(),
-    "Setting inertia to: " + std::to_string(_params.inertia));
+    std::string("Setting inertia to: "
+    + std::to_string(_params.inertia)).c_str());
 
   get_element_val_if_present<SdfPtrT, double>(sdf,
     "friction_coefficient", this->_params.friction_coefficient);
   RCLCPP_INFO(logger(),
-    "Setting friction coefficient to: "
-    + std::to_string(_params.friction_coefficient));
+    std::string("Setting friction coefficient to: "
+    + std::to_string(_params.friction_coefficient)).c_str());
 
   get_element_val_if_present<SdfPtrT, double>(sdf,
     "nominal_power", this->_params.nominal_power);
   RCLCPP_INFO(logger(),
-    "Setting nominal power to: " + std::to_string(_params.nominal_power));
+    std::string("Setting nominal power to: "
+    + std::to_string(_params.nominal_power)).c_str());
 
   // Charger Waypoint coordinates are in child element of top level world element
   if (sdf->GetParent() && sdf->GetParent()->GetParent())
@@ -426,7 +436,7 @@ void SlotcarCommon::read_sdf(SdfPtrT& sdf)
     }
   }
 
-  RCLCPP_INFO(logger(), "Setting name to: " + _model_name);
+  RCLCPP_INFO(logger(), std::string("Setting name to: " + _model_name).c_str());
 }
 } // namespace building_sim_common
 

@@ -243,8 +243,8 @@ bool CrowdSimInterface::read_sdf(
     char* menge_resource_path;
     menge_resource_path = getenv("MENGE_RESOURCE_PATH");
     RCLCPP_WARN(logger(),
-      "No resource path provided! <env MENGE_RESOURCE_PATH> " +
-      std::string(menge_resource_path) + " will be used.");
+      std::string("No resource path provided! <env MENGE_RESOURCE_PATH> " +
+      std::string(menge_resource_path) + " will be used.").c_str());
     _resource_path = std::string(menge_resource_path);
   }
   else
@@ -330,16 +330,16 @@ bool CrowdSimInterface::read_sdf(
     {
       RCLCPP_ERROR(
         logger(),
-        "No model initial pose configured in <model_type>! <initial_pose> Required [" + s +
-        "]");
+        std::string("No model initial pose configured in <model_type>! "
+        "<initial_pose> Required [" + s + "]").c_str());
       return false;
     }
     if (!_load_model_init_pose(model_type_element, model_type_ptr->pose))
     {
       RCLCPP_ERROR(
         logger(),
-        "Error loading model initial pose in <model_type>! Check <initial_pose> in [" + s +
-        "]");
+        std::string("Error loading model initial pose in <model_type>! Check "
+        "<initial_pose> in [" + s + "]").c_str());
       return false;
     }
 
@@ -358,7 +358,7 @@ bool CrowdSimInterface::read_sdf(
   {
     auto ex_agent_name = external_agent_element->template Get<std::string>();
     RCLCPP_INFO(logger(),
-      "Added external agent: [ " + ex_agent_name + " ].");
+      std::string("Added external agent: [ " + ex_agent_name + " ].").c_str());
     _external_agents.emplace_back(ex_agent_name); //just store the name
     external_agent_element = external_agent_element->template GetNextElement(
       "external_agent");
