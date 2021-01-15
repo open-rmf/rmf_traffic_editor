@@ -84,7 +84,8 @@ void SlotcarPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf)
   dataPtr->init_ros_node(_ros_node);
 
   RCLCPP_INFO(dataPtr->logger(),
-    "Initialising slotcar for " + model->GetName());
+    std::string("Initialising slotcar for "
+    + model->GetName()).c_str());
 
   _update_connection = gazebo::event::Events::ConnectWorldUpdateBegin(
     std::bind(&SlotcarPlugin::OnUpdate, this));

@@ -253,7 +253,8 @@ bool CrowdSimulatorPlugin::_spawn_agents_in_world()
         object_ptr->agent_ptr) )
       {
         RCLCPP_INFO(_crowd_sim_interface->logger(),
-          "Failed to insert model [" + object_ptr->model_name + "] in world");
+          std::string("Failed to insert model ["
+          + object_ptr->model_name + "] in world").c_str());
         return false;
       }
     }
@@ -298,8 +299,8 @@ bool CrowdSimulatorPlugin::_create_model(
   assert(sdf);
   _world->InsertModelSDF(*sdf);
   RCLCPP_INFO(_crowd_sim_interface->logger(),
-    "Insert actor for crowd simulator agent: [" + model_name + "] at ["+ oss.str() +
-    "].");
+    std::string("Insert actor for crowd simulator agent: ["
+    + model_name + "] at ["+ oss.str() + "].").c_str());
   return true;
 }
 
