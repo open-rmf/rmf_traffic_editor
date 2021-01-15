@@ -1004,6 +1004,16 @@ void Editor::keyPressEvent(QKeyEvent* e)
       tool_button_group->button(TOOL_SELECT)->click();
       project.clear_selection(level_idx);
       clear_current_tool_buffer();
+      // right button means "exit edge drawing mode please"
+      clicked_idx = -1;
+      prev_clicked_idx = -1;
+      if (latest_add_edge != NULL)
+      {
+        //Need to check if new vertex was added.
+        delete latest_add_edge;
+        latest_add_edge = NULL;
+      }
+      remove_mouse_motion_item();
       update_property_editor();
       create_scene();
       break;
