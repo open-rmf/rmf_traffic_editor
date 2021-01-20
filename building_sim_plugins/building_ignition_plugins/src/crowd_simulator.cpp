@@ -53,10 +53,12 @@ void CrowdSimulatorPlugin::Configure(
 
     if (!crowd_sim_interface->read_sdf(sdf_floor))
     {
-      return;
+      if (!crowd_sim_interface->_menge_disabled) // enabled but contain errors
+        exit(EXIT_FAILURE);
     }
 
-    if (!crowd_sim_interface->init_crowd_sim())
+    if (!crowd_sim_interface->_menge_disabled &&
+      !crowd_sim_interface->init_crowd_sim())
     {
       RCLCPP_ERROR(
         crowd_sim_interface->logger(),
@@ -91,8 +93,15 @@ void CrowdSimulatorPlugin::PreUpdate(
     if (crowd_sim_interface->get_sim_time_step() <= delta_sim_time)
     {
       _last_sim_time = info.simTime;
-      crowd_sim_interface->one_step_sim();
-      _update_all_objects(delta_sim_time, ecm, crowd_sim_interface);
+      if (crowd_sim_interface->_menge_disabled)
+      {
+        _animate_idle_objects(delta_sim_time, ecm, crowd_sim_interface);
+      }
+      else
+      {
+        crowd_sim_interface->one_step_sim();
+        _update_all_objects(delta_sim_time, ecm, crowd_sim_interface);
+      }
     }
   }
 }
@@ -105,77 +114,111 @@ void CrowdSimulatorPlugin::_init_spawned_agents(
   // check all the models are in the world
   std::unordered_map<std::string, size_t> objects_name;
   size_t object_count = crowd_sim_interface->get_num_objects();
-  for (size_t id = 0; id < object_count; id++)
+  if (crowd_sim_interface->_menge_disabled)
   {
-    auto obj = crowd_sim_interface->get_object_by_id(id);
-    // already found in the Dic
-    if (_entity_dic.find(obj->model_name) != _entity_dic.end())
-      continue;
-    objects_name.insert({obj->model_name, id});
+    for (size_t id = 0; id < object_count; id++)
+    {
+      objects_name.insert({crowd_sim_interface->get_internal_agent(id), id});
+    }
+    // for internal agent
+    ecm.Each<ignition::gazebo::components::Actor,
+      ignition::gazebo::components::Name>(
+      [&](const ignition::gazebo::Entity& entity,
+      const ignition::gazebo::components::Actor* actor,
+      const ignition::gazebo::components::Name* name) -> bool
+      {
+        auto it_objects_name = objects_name.find(name->Data());
+        if (it_objects_name != objects_name.end())
+        {
+          // update in entityDic
+          _entity_dic[name->Data()] = entity;
+          // config internal spawned agent for custom trajectory
+          _config_spawned_agents(nullptr, entity, ecm, crowd_sim_interface);
+          objects_name.erase(name->Data());
+        }
+        return true;
+      });
+    if (objects_name.size() != 0)
+    {
+      _initialized = false;
+      return;
+    }
+    _initialized = true;
   }
-  // for external agent
-  ecm.Each<ignition::gazebo::components::Model,
-    ignition::gazebo::components::Name>(
-    [&](const ignition::gazebo::Entity& entity,
-    const ignition::gazebo::components::Model*,
-    const ignition::gazebo::components::Name* name) -> bool
+  else
+  {
+    for (size_t id = 0; id < object_count; id++)
     {
-      auto it_objects_name = objects_name.find(name->Data());
-      if (it_objects_name != objects_name.end())
-      {
-        // update in entityDic
-        _entity_dic[name->Data()] = entity;
-        auto obj_ptr =
-        crowd_sim_interface->get_object_by_id(it_objects_name->second);
-        // config internal spawned agent for custom trajectory
-        if (!obj_ptr->is_external)
-        {
-          _config_spawned_agents(obj_ptr, entity, ecm, crowd_sim_interface);
-        }
-        objects_name.erase(name->Data());
-        RCLCPP_INFO(crowd_sim_interface->logger(),
-        "Crowd Simulator found agent: " + name->Data() );
-      }
-      return true;
+      auto obj = crowd_sim_interface->get_object_by_id(id);
+      // already found in the Dic
+      if (_entity_dic.find(obj->model_name) != _entity_dic.end())
+        continue;
+      objects_name.insert({obj->model_name, id});
     }
-    );
-  // for internal agent
-  ecm.Each<ignition::gazebo::components::Actor,
-    ignition::gazebo::components::Name>(
-    [&](const ignition::gazebo::Entity& entity,
-    const ignition::gazebo::components::Actor*,
-    const ignition::gazebo::components::Name* name) -> bool
-    {
-      auto it_objects_name = objects_name.find(name->Data());
-      if (it_objects_name != objects_name.end())
+    // for external agent
+    ecm.Each<ignition::gazebo::components::Model,
+      ignition::gazebo::components::Name>(
+      [&](const ignition::gazebo::Entity& entity,
+      const ignition::gazebo::components::Model*,
+      const ignition::gazebo::components::Name* name) -> bool
       {
-        // update in entityDic
-        _entity_dic[name->Data()] = entity;
-        auto obj_ptr =
-        crowd_sim_interface->get_object_by_id(it_objects_name->second);
-        // config internal spawned agent for custom trajectory
-        if (!obj_ptr->is_external)
+        auto it_objects_name = objects_name.find(name->Data());
+        if (it_objects_name != objects_name.end())
         {
-          _config_spawned_agents(obj_ptr, entity, ecm, crowd_sim_interface);
+          // update in entityDic
+          _entity_dic[name->Data()] = entity;
+          auto obj_ptr =
+          crowd_sim_interface->get_object_by_id(it_objects_name->second);
+          // config internal spawned agent for custom trajectory
+          if (!obj_ptr->is_external)
+          {
+            _config_spawned_agents(obj_ptr, entity, ecm, crowd_sim_interface);
+          }
+          objects_name.erase(name->Data());
+          RCLCPP_INFO(crowd_sim_interface->logger(),
+          "Crowd Simulator found agent: " + name->Data() );
         }
-        objects_name.erase(name->Data());
-        RCLCPP_INFO(crowd_sim_interface->logger(),
-        "Crowd Simulator found agent: " + name->Data() );
+        return true;
       }
-      return true;
-    }
-    );
+      );
+    // for internal agent
+    ecm.Each<ignition::gazebo::components::Actor,
+      ignition::gazebo::components::Name>(
+      [&](const ignition::gazebo::Entity& entity,
+      const ignition::gazebo::components::Actor*,
+      const ignition::gazebo::components::Name* name) -> bool
+      {
+        auto it_objects_name = objects_name.find(name->Data());
+        if (it_objects_name != objects_name.end())
+        {
+          // update in entityDic
+          _entity_dic[name->Data()] = entity;
+          auto obj_ptr =
+          crowd_sim_interface->get_object_by_id(it_objects_name->second);
+          // config internal spawned agent for custom trajectory
+          if (!obj_ptr->is_external)
+          {
+            _config_spawned_agents(obj_ptr, entity, ecm, crowd_sim_interface);
+          }
+          objects_name.erase(name->Data());
+          RCLCPP_INFO(crowd_sim_interface->logger(),
+          "Crowd Simulator found agent: " + name->Data() );
+        }
+        return true;
+      }
+      );
 
-  // external agents not found or not loaded yet
-  if (objects_name.size() != 0)
-  {
-    _initialized = false;
-    return;
+    // external agents not found or not loaded yet
+    if (objects_name.size() != 0)
+    {
+      _initialized = false;
+      return;
+    }
+    _initialized = true;
+    RCLCPP_INFO(
+      crowd_sim_interface->logger(),
+      "Ignition Models are all loaded! Start simulating...");
   }
-  _initialized = true;
-  RCLCPP_INFO(
-    crowd_sim_interface->logger(),
-    "Ignition Models are all loaded! Start simulating...");
 }
 
 //==================================================
@@ -185,20 +228,19 @@ void CrowdSimulatorPlugin::_config_spawned_agents(
   ignition::gazebo::EntityComponentManager& ecm,
   std::shared_ptr<crowd_simulator::CrowdSimInterface> crowd_sim_interface) const
 {
-  assert(obj_ptr);
-  auto agent_ptr = obj_ptr->agent_ptr;
-  auto model_type = crowd_sim_interface->_model_type_db_ptr->get(
+  bool disabled = crowd_sim_interface->_menge_disabled;
+  assert(disabled || obj_ptr);
+  auto agent_ptr = (disabled) ? nullptr : obj_ptr->agent_ptr;
+  auto model_type =
+    (disabled) ? nullptr : crowd_sim_interface->_model_type_db_ptr->get(
     obj_ptr->type_name);
-  // different from gazebo plugin, the pose component is the origin of the trajPose
-  ignition::math::Pose3d actor_pose(
-    static_cast<double>(agent_ptr->_pos.x()),
-    static_cast<double>(agent_ptr->_pos.y()), 0.0,
-    0, 0, 0
-  );
 
   // get pose component for entity
   auto pose_comp = ecm.Component<ignition::gazebo::components::Pose>(entity);
-  if (nullptr == pose_comp)
+  auto original_pose = ignition::math::Pose3d(
+    pose_comp->Data().Pos().X(), pose_comp->Data().Pos().Y(),
+    pose_comp->Data().Pos().Z(), 0, 0, 0);
+  if (!disabled && nullptr == pose_comp) // model_type nullptr for disabled
   {
     // use the initial_pose for actor type
     ignition::math::Pose3d initial_pose =
@@ -215,8 +257,40 @@ void CrowdSimulatorPlugin::_config_spawned_agents(
         0));
   }
 
+  // different from gazebo plugin, the pose component is the origin of the trajPose
+  ignition::math::Pose3d actor_pose;
+  if (!disabled)
+  {
+    actor_pose = ignition::math::Pose3d(
+      static_cast<double>(agent_ptr->_pos.x()),
+      static_cast<double>(agent_ptr->_pos.y()), 0.0,
+      0, 0, 0
+    );
+  }
+  else
+  {
+    actor_pose = original_pose;
+  }
+
+  if (!disabled)
+  {
+    // check idle animation name
+    auto actor_comp =
+      ecm.Component<ignition::gazebo::components::Actor>(entity);
+    for (auto idle_anim : crowd_sim_interface->get_switch_anim_name())
+    {
+      if (actor_comp->Data().AnimationNameExists(idle_anim))
+      {
+        model_type->idle_animation = idle_anim;
+        break;
+      }
+    }
+  }
+
+
   // initialize agent animationName
-  std::string animation_name = model_type->animation;
+  std::string animation_name =
+    (disabled) ? "idle" : model_type->animation;
   assert(!animation_name.empty());
 
   auto animation_name_comp =
@@ -231,30 +305,22 @@ void CrowdSimulatorPlugin::_config_spawned_agents(
     *animation_name_comp = ignition::gazebo::components::AnimationName(
       animation_name);
   }
-  // check idle animation name
-  auto actor_comp =
-    ecm.Component<ignition::gazebo::components::Actor>(entity);
-  for (auto idle_anim : crowd_sim_interface->get_switch_anim_name())
-  {
-    if (actor_comp->Data().AnimationNameExists(idle_anim))
-    {
-      model_type->idle_animation = idle_anim;
-      break;
-    }
-  }
 
   // mark as one-time-change
   ecm.SetChanged(
     entity,
     ignition::gazebo::components::AnimationName::typeId,
     ignition::gazebo::ComponentState::OneTimeChange);
+
   // initialize agent animationTime
   auto anim_time_comp =
     ecm.Component<ignition::gazebo::components::AnimationTime>(entity);
   if (nullptr == anim_time_comp)
   {
-    ecm.CreateComponent(entity, ignition::gazebo::components::AnimationTime());
+    ecm.CreateComponent(entity,
+      ignition::gazebo::components::AnimationTime());
   }
+
   // having a trajectory pose prevents the actor from moving with the sdf script
   auto traj_pose_comp =
     ecm.Component<ignition::gazebo::components::TrajectoryPose>(entity);
@@ -263,6 +329,43 @@ void CrowdSimulatorPlugin::_config_spawned_agents(
     ecm.CreateComponent(entity,
       ignition::gazebo::components::TrajectoryPose(actor_pose));
   }
+
+}
+
+void CrowdSimulatorPlugin::_animate_idle_objects(double delta_sim_time,
+  ignition::gazebo::EntityComponentManager&  ecm,
+  std::shared_ptr<crowd_simulator::CrowdSimInterface> crowd_sim_interface) const
+{
+  // for internal agent
+  ecm.Each<ignition::gazebo::components::Actor,
+    ignition::gazebo::components::Name>(
+    [&](const ignition::gazebo::Entity& entity,
+    const ignition::gazebo::components::Actor* actor,
+    const ignition::gazebo::components::Name* name) -> bool
+    {
+      //const auto& local_entity = _entity_dic.find(name->Data());
+      //if (local_entity != _entity_dic.end())
+      //{
+
+      auto anim_time_comp =
+      ecm.Component<ignition::gazebo::components::AnimationTime>(entity);
+      if (nullptr == anim_time_comp)
+      {
+        RCLCPP_ERROR(
+          crowd_sim_interface->logger(),
+          "[" + name->Data() +
+          "] has no AnimationTime component.");
+        exit(EXIT_FAILURE);
+      }
+      anim_time_comp->Data() +=
+      std::chrono::duration_cast<std::chrono::steady_clock::duration>(
+        std::chrono::duration<double>(delta_sim_time));
+      ecm.SetChanged(entity,
+      ignition::gazebo::components::AnimationTime::typeId,
+      ignition::gazebo::ComponentState::OneTimeChange);
+      //}
+      return true;
+    });
 }
 
 //============================================================================

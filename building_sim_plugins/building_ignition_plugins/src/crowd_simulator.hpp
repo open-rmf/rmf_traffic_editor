@@ -40,7 +40,8 @@ public:
   CrowdSimulatorPlugin()
   : _transport_node_ptr(std::make_shared<ignition::transport::Node>()),
     _crowd_sim_interfaces(),
-    _initialized(false)
+    _initialized(false),
+    _disabled(false)
   {}
 
   // inherit from ISystemConfigure
@@ -58,6 +59,7 @@ private:
   std::vector<std::shared_ptr<crowd_simulator::CrowdSimInterface>>
   _crowd_sim_interfaces;
   bool _initialized;
+  bool _disabled;
   std::chrono::steady_clock::duration _last_sim_time{0};
 
   std::shared_ptr<ignition::gazebo::Model> _world;
@@ -81,6 +83,10 @@ private:
     ignition::gazebo::EntityComponentManager& ecm,
     const std::string& model_name,
     const crowd_simulator::ModelTypeDatabase::RecordPtr model_type_ptr) const;
+  void _animate_idle_objects(double delta_sim_time,
+    ignition::gazebo::EntityComponentManager&  ecm,
+    std::shared_ptr<crowd_simulator::CrowdSimInterface> crowd_sim_interface)
+  const;
   void _update_all_objects(
     double delta_sim_time,
     ignition::gazebo::EntityComponentManager& ecm,

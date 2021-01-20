@@ -43,10 +43,12 @@ void CrowdSimulatorPlugin::Load(
 
     if (!crowd_sim_interface->read_sdf(sdf_floor))
     {
-      return;
+      if (!crowd_sim_interface->_menge_disabled) // enabled but contain errors
+        exit(EXIT_FAILURE);
     }
 
-    if (!crowd_sim_interface->init_crowd_sim())
+    if (!crowd_sim_interface->_menge_disabled &&
+      !crowd_sim_interface->init_crowd_sim())
     {
       RCLCPP_ERROR(
         crowd_sim_interface->logger(),
@@ -89,8 +91,25 @@ void CrowdSimulatorPlugin::_update(
     if (delta_sim_time > crowd_sim_interface->get_sim_time_step())
     {
       _last_sim_time = update_info.simTime;
-      crowd_sim_interface->one_step_sim();
-      _update_all_objects(crowd_sim_interface, delta_sim_time);
+      if (crowd_sim_interface->_menge_disabled)
+      {
+        crowd_sim_interface->_objects_count =
+          crowd_sim_interface->get_num_objects();
+        for (size_t id = 0; id < crowd_sim_interface->_objects_count; id++)
+        {
+          auto name = crowd_sim_interface->get_internal_agent(id);
+          gazebo::physics::ModelPtr model_ptr = _world->ModelByName(name);
+          gazebo::physics::ActorPtr actor_ptr =
+            boost::dynamic_pointer_cast<gazebo::physics::Actor>(model_ptr);
+          actor_ptr->SetScriptTime(
+            actor_ptr->ScriptTime() + delta_sim_time);
+        }
+      }
+      else
+      {
+        crowd_sim_interface->one_step_sim();
+        _update_all_objects(crowd_sim_interface, delta_sim_time);
+      }
     }
   }
 }
@@ -205,50 +224,69 @@ void CrowdSimulatorPlugin::_init_spawned_agents()
   {
     crowd_sim_interface->_objects_count =
       crowd_sim_interface->get_num_objects();
-    for (size_t id = 0; id < crowd_sim_interface->_objects_count; ++id)
+    if (crowd_sim_interface->_menge_disabled)
     {
-      ObjectPtr obj_ptr = crowd_sim_interface->get_object_by_id(id);
-      // spawned agents are not fully loaded
-      if (!_world->ModelByName(obj_ptr->model_name))
+      for (size_t id = 0; id < crowd_sim_interface->_objects_count; id++)
       {
-        _initialized = false;
-        return;
-      }
-      // all agents are loaded, set internal actors as non-static model and set custom trajectory
-      // because only non-static model can interact with slotcars
-      if (!obj_ptr->is_external)
-      {
-        gazebo::physics::ModelPtr model_ptr = _world->ModelByName(
-          obj_ptr->model_name);
+        auto name = crowd_sim_interface->get_internal_agent(id);
+        gazebo::physics::ModelPtr model_ptr = _world->ModelByName(name);
         gazebo::physics::ActorPtr actor_ptr =
           boost::dynamic_pointer_cast<gazebo::physics::Actor>(model_ptr);
         gazebo::physics::TrajectoryInfoPtr trajectory_info(new gazebo::physics::
           TrajectoryInfo()); //matches the actor skeleton
-
-        crowd_simulator::ModelTypeDatabase::RecordPtr type_ptr =
-          crowd_sim_interface->_model_type_db_ptr->get(obj_ptr->type_name);
-        trajectory_info->type = type_ptr->animation;
-        // set each keyframe duration as the sim_time_step
-        trajectory_info->duration = crowd_sim_interface->get_sim_time_step();
+        trajectory_info->type = "idle";
         actor_ptr->SetCustomTrajectory(trajectory_info);
         actor_ptr->SetStatic(false);
-
-        //check actor has idle animation
-        for (auto idle_anim : crowd_sim_interface->get_switch_anim_name())
+      }
+      _initialized = true;
+    }
+    else
+    {
+      for (size_t id = 0; id < crowd_sim_interface->_objects_count; ++id)
+      {
+        ObjectPtr obj_ptr = crowd_sim_interface->get_object_by_id(id);
+        // spawned agents are not fully loaded
+        if (!_world->ModelByName(obj_ptr->model_name))
         {
-          if (actor_ptr->SkeletonAnimations().find(idle_anim) !=
-            actor_ptr->SkeletonAnimations().end())
+          _initialized = false;
+          return;
+        }
+        // all agents are loaded, set internal actors as non-static model and set custom trajectory
+        // because only non-static model can interact with slotcars
+        if (!obj_ptr->is_external)
+        {
+          gazebo::physics::ModelPtr model_ptr = _world->ModelByName(
+            obj_ptr->model_name);
+          gazebo::physics::ActorPtr actor_ptr =
+            boost::dynamic_pointer_cast<gazebo::physics::Actor>(model_ptr);
+          gazebo::physics::TrajectoryInfoPtr trajectory_info(new gazebo::physics::
+            TrajectoryInfo()); //matches the actor skeleton
+
+          crowd_simulator::ModelTypeDatabase::RecordPtr type_ptr =
+            crowd_sim_interface->_model_type_db_ptr->get(obj_ptr->type_name);
+          trajectory_info->type = type_ptr->animation;
+          // set each keyframe duration as the sim_time_step
+          trajectory_info->duration = crowd_sim_interface->get_sim_time_step();
+          actor_ptr->SetCustomTrajectory(trajectory_info);
+          actor_ptr->SetStatic(false);
+
+          //check actor has idle animation
+          for (auto idle_anim : crowd_sim_interface->get_switch_anim_name())
           {
-            type_ptr->idle_animation = idle_anim;
-            break;
+            if (actor_ptr->SkeletonAnimations().find(idle_anim) !=
+              actor_ptr->SkeletonAnimations().end())
+            {
+              type_ptr->idle_animation = idle_anim;
+              break;
+            }
           }
         }
       }
+      _initialized = true;
+      RCLCPP_INFO(
+        crowd_sim_interface->logger(),
+        "Gazebo models all loaded! Start simulating...");
     }
-    _initialized = true;
-    RCLCPP_INFO(
-      crowd_sim_interface->logger(),
-      "Gazebo models all loaded! Start simulating...");
   }
 }
 

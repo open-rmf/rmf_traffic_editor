@@ -223,7 +223,7 @@ void CrowdSimInterface::_add_object(AgentPtr agent_ptr,
 
 size_t CrowdSimInterface::get_num_objects() const
 {
-  return _objects.size();
+  return (_menge_disabled) ? _internal_agents.size() : _objects.size();
 }
 
 CrowdSimInterface::ObjectPtr CrowdSimInterface::get_object_by_id(size_t id)
