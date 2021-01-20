@@ -259,8 +259,8 @@ void CrowdSimulatorPlugin::_init_spawned_agents()
             obj_ptr->model_name);
           gazebo::physics::ActorPtr actor_ptr =
             boost::dynamic_pointer_cast<gazebo::physics::Actor>(model_ptr);
-          gazebo::physics::TrajectoryInfoPtr trajectory_info(new gazebo::physics::
-            TrajectoryInfo()); //matches the actor skeleton
+          gazebo::physics::TrajectoryInfoPtr trajectory_info(
+            new gazebo::physics::TrajectoryInfo()); //matches the actor skeleton
 
           crowd_simulator::ModelTypeDatabase::RecordPtr type_ptr =
             crowd_sim_interface->_model_type_db_ptr->get(obj_ptr->type_name);
