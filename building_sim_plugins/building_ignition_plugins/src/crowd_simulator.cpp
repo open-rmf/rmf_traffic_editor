@@ -239,7 +239,7 @@ void CrowdSimulatorPlugin::_config_spawned_agents(
   auto pose_comp = ecm.Component<ignition::gazebo::components::Pose>(entity);
   auto original_pose = ignition::math::Pose3d(
     pose_comp->Data().Pos().X(), pose_comp->Data().Pos().Y(),
-    pose_comp->Data().Pos().Z(), 0, 0, 0);
+    0, 0, 0, 0);
   if (!disabled && nullptr == pose_comp) // model_type nullptr for disabled
   {
     // use the initial_pose for actor type
