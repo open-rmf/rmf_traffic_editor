@@ -166,9 +166,10 @@ private:
     }
   };
 
+  // TODO(MXG): Allow users to configure this using SDF
   // use this to check the colinearity threshold when chaining items together
   double _colinearity_threshold = 3*M_PI/180;
-  //tolerance of the controller when achieving a goal
+  // tolerance of the controller when achieving a goal
   double _goal_tolerance = 0.02;
 
   // Constants for update rate of tf2 and robot_state topic

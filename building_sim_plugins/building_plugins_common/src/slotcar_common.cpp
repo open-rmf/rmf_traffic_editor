@@ -319,73 +319,90 @@ std::size_t SlotcarCommon::get_last_colinear_target(
   const rclcpp::Time current_time)
 {
   if (_traj_wp_idx >= trajectory.size())
+  {
     throw  std::runtime_error(
-            "slotcar_common.cpp (line "
-            +std::to_string(__LINE__)
-            +"):Trajectory ID out of bounds.");
+      "slotcar_common.cpp (line " + std::to_string(__LINE__)
+      + "):Trajectory ID [" + std::to_string(_traj_wp_idx)
+      + "] out of bounds [< " + std::to_string(trajectory.size()) + "]");
+  }
 
-  const Eigen::Vector3d dpos = compute_dpos(
+  const Eigen::Vector3d initial_dpos = compute_dpos(
     trajectory.at(_traj_wp_idx), _pose);
-  auto dpos_mag = dpos.norm();
-  auto prev_mag = dpos_mag;
+  const auto initial_dpos_mag = initial_dpos.norm();
+  Eigen::Vector3d dpos_prev = initial_dpos;
 
   std::size_t last_colinear_idx = _traj_wp_idx;
   while (last_colinear_idx+1 < trajectory.size())
   {
-    //calculate line to candidate point from robot pose.
-    auto candidate_colinear_pt = trajectory.at(last_colinear_idx+1);
-    const Eigen::Vector3d dto_candidate = compute_dpos(
+    // calculate line to candidate point from robot pose.
+    const auto candidate_colinear_pt = trajectory.at(last_colinear_idx+1);
+    const Eigen::Vector3d dpos_to_candidate = compute_dpos(
       candidate_colinear_pt, _pose);
 
-    //get angle between line from robot to next target and line from robot
-    //to candidate point.
-    auto dto_candidate_norm = dto_candidate.norm();
-    auto angle_current_pos =
-      acos(dto_candidate.dot(dpos)/(dto_candidate_norm*dpos_mag));
+    // get angle between line from robot to next target and line from robot
+    // to candidate point.
+    const auto dpos_to_candidate_norm = dpos_to_candidate.norm();
+    const auto angle_from_current_dpos =
+      std::acos(dpos_to_candidate.dot(initial_dpos)
+                /(dpos_to_candidate_norm*initial_dpos_mag));
 
-    //check if the robot needs to spin
-    auto dyaw =
-      acos(compute_heading(_pose).dot(compute_heading(candidate_colinear_pt)));
+    // Check if the robot would actually be backtracking by going to the next
+    // waypoint. If the dot product (p2-p1).dot(p1-p0) is negative, then p2 is
+    // actually backtracking back towards p0 after reaching p1.
+    const auto dpos_prev_to_candidate = dpos_to_candidate - dpos_prev;
+    const auto direction_consistency =
+        dpos_prev_to_candidate.dot(dpos_to_candidate);
 
-    //We need to check few conditions to establish colinearity
-    //1. If the angle between the line from the robot to the last colinear
-    //   target and the line from the robot and the candidate target are the same,
-    //   the two points fall on the same line. Otherwise the candidate is not colinear,
-    //2. If the candidate target is behind the next target this means the
-    //   robot should reverse. Hence, it will be non-colinear.
-    //3. If the headings are different the robot should spin.
-    if (abs(angle_current_pos) > _colinearity_threshold
-      || dto_candidate_norm < prev_mag
-      || abs(dyaw) > _colinearity_threshold)
+    // Check if the robot needs to spin
+    const auto dyaw =
+      std::acos(compute_heading(_pose)
+                .dot(compute_heading(candidate_colinear_pt)));
+
+    // We need to check few conditions to establish colinearity
+    // 1. If the angle between the line from the robot to the last colinear
+    //    target and the line from the robot and the candidate target are the
+    //    same, the two points fall on the same line. Otherwise the candidate is
+    //    not colinear,
+    // 2. If the candidate target is behind the next target this means the
+    //    robot should reverse. Hence, it will be non-colinear.
+    // 3. If the headings are different the robot should spin.
+    if (std::abs(angle_from_current_dpos) > _colinearity_threshold
+      || direction_consistency < 0.0
+      || std::abs(dyaw) > _colinearity_threshold)
     {
-      //The two points are not colinear
+      // The two points are not colinear
       return last_colinear_idx;
     }
 
-    //We need to check hold times. Calculate the ETA at target.
-    double time_left = dpos_mag/_nominal_drive_speed;
-    int32_t seconds = time_left;
-    rclcpp::Duration dur(seconds,
-      static_cast<uint32_t>((time_left-seconds)*1e9));
-    auto hold_time = rclcpp::Time(_hold_times.at(
-          last_colinear_idx), RCL_ROS_TIME);
+    // We need to check hold times. Calculate the ETA at target.
+    const double time_left = dpos_to_candidate_norm/_nominal_drive_speed;
+    const auto dur = rclcpp::Duration::from_seconds(time_left);
+    const auto hold_time =
+        rclcpp::Time(_hold_times.at(last_colinear_idx), RCL_ROS_TIME);
+
     if (dur + current_time < hold_time)
     {
-      return last_colinear_idx;
+      // If we will need to hold when we reach this wapyoint, then we should
+      // stop iterating here and return the index of this waypoint.
+      return last_colinear_idx+1;
     }
 
-    //Finally we shall check for pause requests
+    // Finally we shall check for pause requests
     if (pause_request.type == pause_request.TYPE_PAUSE_AT_CHECKPOINT
       && pause_request.at_checkpoint == _full_path.at(last_colinear_idx).index)
     {
-      return last_colinear_idx;
+      // If we will need to pause when we reach this waypoint, then we should
+      // stop iterating here and return the index of this waypoint.
+      return last_colinear_idx+1;
     }
 
-    //The angle was less. The next point should also be colinear.
-    prev_mag = dto_candidate_norm;
-    last_colinear_idx++;
+    // All colinearity conditions were met for this waypoint. Now we will
+    // check the next one.
+    dpos_prev = dpos_to_candidate;
+    ++last_colinear_idx;
   }
-  //Will reach here if all candidates are colinear.
+
+  // Will reach here if all candidates are colinear.
   return last_colinear_idx;
 }
 
@@ -393,13 +410,13 @@ void SlotcarCommon::predict_pop_off_targets(
   std::size_t last_colinear_target,
   double dist_travelled)
 {
-  //Assuming same time step and similar velocity, we
-  //can get the predicted distance travelled
-  for (size_t i = _traj_wp_idx;
-    i <= last_colinear_target
-    && i < trajectory.size();
-    i++)
+  // Assuming same time step and similar velocity, we
+  // can get the predicted distance travelled
+  assert(last_colinear_target < trajectory.size());
+  for (size_t i = _traj_wp_idx; i <= last_colinear_target; ++i)
   {
+    // FIXME(MXG): This looks like it may pop off future waypoints that we
+    // have not actually passed yet.
     auto dist_to_target = compute_dpos(trajectory.at(i), _pose);
     if (dist_to_target.norm() <= dist_travelled+_goal_tolerance)
     {
@@ -408,13 +425,15 @@ void SlotcarCommon::predict_pop_off_targets(
         _model_name.c_str(),
         _traj_wp_idx,
         (int)trajectory.size());
-      _traj_wp_idx++;
+
+      ++_traj_wp_idx;
+
       if (!_remaining_path.empty())
         _remaining_path.erase(_remaining_path.begin());
-
     }
   }
 }
+
 // First value of par is x_target, second is yaw_target
 std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
   const std::vector<Eigen::Vector3d>& obstacle_positions,
@@ -526,8 +545,6 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
 
     const bool rotate_towards_next_target = close_enough && (hold || pause);
 
-    auto last_colinear_target = get_last_colinear_target(now);
-
     if (rotate_towards_next_target)
     {
       if (_traj_wp_idx+1 < trajectory.size())
@@ -564,8 +581,9 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
       if (dir < 0.0)
         current_heading *= -1.0;
 
-      // If the points are colinear, we do not want to slow down when we approach a target
-      // rather we will just continue driving on in order to try to meet the timing.
+      // If the future waypoints are colinear, we do not want to slow down when
+      // we approach a target.
+      const auto last_colinear_target = get_last_colinear_target(now);
 
       auto vel_mag =
         compute_dpos(trajectory.at(last_colinear_target), _pose).norm();
@@ -576,9 +594,8 @@ std::pair<double, double> SlotcarCommon::update(const Eigen::Isometry3d& pose,
       velocities.first = std::abs(velocities.second) <
         d_yaw_tolerance ? dir * vel_mag : 0.0;
 
-      //Predict which targets to pop of in next time step.
-      if (_initialized_pose)
-        predict_pop_off_targets(last_colinear_target, distance_travelled);
+      // Predict which targets to pop of in next time step.
+      predict_pop_off_targets(last_colinear_target, distance_travelled);
     }
   }
   else
