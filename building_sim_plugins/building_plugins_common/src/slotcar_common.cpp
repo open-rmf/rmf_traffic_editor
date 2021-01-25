@@ -124,6 +124,10 @@ void SlotcarCommon::init_ros_node(const rclcpp::Node::SharedPtr node)
   _robot_state_pub =
     _ros_node->create_publisher<rmf_fleet_msgs::msg::RobotState>(
     "/robot_state", 10);
+  
+  _charger_state_pub =
+    _ros_node->create_publisher<rmf_charger_msgs::msg::ChargerState>(
+    "/rmf_charger/state", 10);
 
   auto qos_profile = rclcpp::QoS(10);
   qos_profile.transient_local();
@@ -148,6 +152,17 @@ void SlotcarCommon::init_ros_node(const rclcpp::Node::SharedPtr node)
     "/robot_mode_requests",
     10,
     std::bind(&SlotcarCommon::mode_request_cb, this, std::placeholders::_1));
+
+  _charger_requests_sub = _ros_node->create_subscription<rmf_charger_msgs::msg::ChargerRequest>(
+    "/rmf_charger/requests",
+    10,
+    std::bind(&SlotcarCommon::charger_request_cb, this, std::placeholders::_1));
+}
+
+void SlotcarCommon::charger_request_cb(
+  const rmf_charger_msgs::msg::ChargerRequest::SharedPtr msg)
+{
+
 }
 
 bool SlotcarCommon::path_request_valid(

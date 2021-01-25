@@ -27,6 +27,7 @@ find_package(tf2_ros REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
+find_package(rmf_charger_msgs REQUIRED)
 find_package(rmf_fleet_msgs REQUIRED)
 find_package(rmf_door_msgs REQUIRED)
 find_package(rmf_lift_msgs REQUIRED)
@@ -39,6 +40,7 @@ add_library(slotcar_common SHARED ${PROJECT_SOURCE_DIR}/src/slotcar_common.cpp)
 
 ament_target_dependencies(slotcar_common
     Eigen3
+    rmf_charger_msgs
     rmf_fleet_msgs
     building_map_msgs
     rclcpp

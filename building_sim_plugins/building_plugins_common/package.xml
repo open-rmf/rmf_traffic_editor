@@ -19,6 +19,7 @@
   <build_depend>eigen</build_depend>
 
   <depend>rclcpp</depend>
+  <depend>rmf_charger_msgs</depend>
   <depend>rmf_fleet_msgs</depend>
   <depend>rmf_door_msgs</depend>
   <depend>rmf_lift_msgs</depend>

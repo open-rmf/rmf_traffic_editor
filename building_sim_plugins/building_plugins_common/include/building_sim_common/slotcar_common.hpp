@@ -30,6 +30,8 @@
 #include <rmf_fleet_msgs/msg/path_request.hpp>
 #include <rmf_fleet_msgs/msg/pause_request.hpp>
 #include <rmf_fleet_msgs/msg/mode_request.hpp>
+#include <rmf_charger_msgs/msg/charger_request.hpp>
+#include <rmf_charger_msgs/msg/charger_state.hpp>
 #include <building_map_msgs/msg/building_map.hpp>
 
 namespace building_sim_common {
@@ -166,6 +168,9 @@ private:
     }
   };
 
+  // 
+  std::unordered_map<int, std::string> _charger_assignment;
+
   // Constants for update rate of tf2 and robot_state topic
   static constexpr float TF2_RATE = 100.0;
   static constexpr float STATE_TOPIC_RATE = 2.0;
@@ -206,12 +211,15 @@ private:
 
   std::shared_ptr<tf2_ros::TransformBroadcaster> _tf2_broadcaster;
   rclcpp::Publisher<rmf_fleet_msgs::msg::RobotState>::SharedPtr _robot_state_pub;
+  rclcpp::Publisher<rmf_charger_msgs::msg::ChargerState>::SharedPtr _charger_state_pub;
 
   rclcpp::Subscription<rmf_fleet_msgs::msg::PathRequest>::SharedPtr _traj_sub;
   rclcpp::Subscription<rmf_fleet_msgs::msg::PauseRequest>::SharedPtr _pause_sub;
   rclcpp::Subscription<rmf_fleet_msgs::msg::ModeRequest>::SharedPtr _mode_sub;
   rclcpp::Subscription<building_map_msgs::msg::BuildingMap>::SharedPtr
     _building_map_sub;
+  rclcpp::Subscription<rmf_charger_msgs::msg::ChargerRequest>::SharedPtr
+    _charger_requests_sub;
 
   rmf_fleet_msgs::msg::RobotMode _current_mode;
 
@@ -268,6 +276,9 @@ private:
 
   bool path_request_valid(
     const rmf_fleet_msgs::msg::PathRequest::SharedPtr msg);
+
+  void charger_request_cb(
+    const rmf_charger_msgs::msg::ChargerRequest::SharedPtr msg);
 
   void path_request_cb(const rmf_fleet_msgs::msg::PathRequest::SharedPtr msg);
 
