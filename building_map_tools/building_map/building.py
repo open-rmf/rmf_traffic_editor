@@ -264,7 +264,7 @@ class Building:
                         'model_name': f'{self.name}_{level_name}'})
 
                 for model in level.models:
-                    if model.static:
+                    if model.static or model.human:
                         model_ele = SubElement(
                             floor_ele,
                             'model',

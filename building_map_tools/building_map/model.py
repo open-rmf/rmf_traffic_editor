@@ -16,9 +16,9 @@ class Model:
 
         # temporary hack: whitelist of robot models which must be non-static
         non_static_model_names = [
-          'Sesto',
-          'MiR100',
-          'Magni'
+            'Sesto',
+            'MiR100',
+            'Magni'
         ]
         if self.model_name in non_static_model_names:
             self.static = False
@@ -27,6 +27,11 @@ class Model:
                 self.static = yaml_node['static']
             else:
                 self.static = True
+
+        if 'agent_group_id' in yaml_node:
+            self.human = True
+        else:
+            self.human = False
 
         self.yaw = yaml_node['yaw']
 
