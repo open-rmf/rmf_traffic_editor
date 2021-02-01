@@ -595,9 +595,11 @@ void Editor::load_model_names()
 
   const double model_meters_per_pixel = y["meters_per_pixel"].as<double>();
   const YAML::Node ym = y["models"];
+  editor_models.reserve(y["models"].size());
   for (YAML::const_iterator it = ym.begin(); it != ym.end(); ++it)
-    editor_models.push_back(
-      EditorModel(it->as<std::string>(), model_meters_per_pixel));
+    editor_models.emplace_back(
+      it->as<std::string>(),
+      model_meters_per_pixel);
 }
 
 QToolButton* Editor::create_tool_button(
@@ -1598,9 +1600,7 @@ void Editor::property_editor_cell_changed(int row, int column)
 bool Editor::create_scene()
 {
   scene->clear();  // destroys the mouse_motion_* items if they are there
-#ifdef HAS_IGNITION_PLUGIN
   project.clear_scene();  // forget all pointers to the graphics items
-#endif
   mouse_motion_line = nullptr;
   mouse_motion_model = nullptr;
   mouse_motion_ellipse = nullptr;

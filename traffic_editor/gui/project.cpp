@@ -61,7 +61,7 @@ bool Project::load_yaml_file(const std::string& _filename)
   // we load are in different directories (!)
 
   QString dir(QFileInfo(QString::fromStdString(filename)).absolutePath());
-  printf("changing directory to [%s]", qUtf8Printable(dir));
+  printf("changing directory to [%s]\n", qUtf8Printable(dir));
   if (!QDir::setCurrent(dir))
   {
     printf("couldn't change directory\n");
