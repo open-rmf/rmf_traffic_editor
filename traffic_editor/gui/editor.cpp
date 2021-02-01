@@ -1599,7 +1599,6 @@ void Editor::property_editor_cell_changed(int row, int column)
 
 bool Editor::create_scene()
 {
-  printf("Editor::create_scene()\n");
   scene->clear();  // destroys the mouse_motion_* items if they are there
   project.clear_scene();  // forget all pointers to the graphics items
   mouse_motion_line = nullptr;
