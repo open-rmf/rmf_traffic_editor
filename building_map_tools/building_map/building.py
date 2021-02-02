@@ -309,7 +309,16 @@ class Building:
         return self.levels[list(self.levels.keys())[0]].center()
 
     def add_lanes_from(self, other_building):
-        pass
+        # go through each level and try to add lanes from the other building
+        print(f'add_lanes_from()')
+        print(f'this building\'s levels: {list(self.levels.keys())}')
+        print(f'other building\'s levels: {list(other_building.levels.keys())}')
+        for level_name, level in self.levels.items():
+            if level_name in other_building.levels.keys():
+                print(f'level {level_name} exists in both buildings')
+                level.add_lanes_from(other_building.levels[level_name])
+            else:
+                print(f'WARNING: level {level_name} does not exist in both buildings')
 
     def write_yaml_file(self, filename):
         with open(filename, 'w') as f:

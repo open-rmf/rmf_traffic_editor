@@ -460,3 +460,14 @@ class Level:
             return (0, 0)
         bounds = self.floors[0].polygon.bounds
         return ((bounds[0] + bounds[2]) / 2.0, (bounds[1] + bounds[3]) / 2.0)
+
+    def add_lanes_from(self, other):
+        print(f'add_lanes_from()')
+        print(f'  this level has {len(self.vertices)} vertices')
+        print(f'  other level has {len(other.vertices)} vertices')
+
+        # TODO: use fiducials to calculate transform between these spaces
+        self.vertices.extend(other.vertices)
+
+        for lane in other.lanes:
+            print(f'  other lane: {lane.start_idx} -> {lane.end_idx}')
