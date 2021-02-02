@@ -91,6 +91,24 @@ class Level:
             for hole_yaml in yaml_node['holes']:
                 self.holes.append(Hole(hole_yaml))
 
+    def to_yaml(self):
+        y = {}
+        if self.drawing_name:
+            y['drawing'] = {}
+            y['drawing']['filename'] = self.drawing_name
+        y['elevation'] = self.elevation
+
+        y['fiducials'] = [f.to_yaml() for f in self.fiducials]
+        y['vertices'] = [v.to_yaml() for v in self.vertices]
+        y['measurements'] = [e.to_yaml() for e in self.meas]
+        y['lanes'] = [e.to_yaml() for e in self.lanes]
+        y['walls'] = [e.to_yaml() for e in self.walls]
+        y['doors'] = [e.to_yaml() for e in self.doors]
+        y['models'] = [m.to_yaml() for m in self.models]
+        y['floors'] = [f.to_yaml() for f in self.floors]
+        y['holes'] = [h.to_yaml() for h in self.holes]
+        return y
+
     def transform_all_vertices(self):
         self.transformed_vertices = []
 

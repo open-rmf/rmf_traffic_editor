@@ -29,6 +29,7 @@ class LiftDoor:
         x_diff = abs(abs(self.x) - lift_size[0] / 2)
         y_diff = abs(abs(self.y) - lift_size[1] / 2)
         offset = 0.025    # cabin door position offset
+
         if x_diff <= y_diff:
             if self.x > 0:
                 self.side = ('right', self.y-self.width/2, self.y+self.width/2)
@@ -47,6 +48,15 @@ class LiftDoor:
                 self.side = ('back', self.x-self.width/2, self.x+self.width/2)
                 self.shaft_door_pose = (self.x, -lift_size[1]/2 - self.gap)
                 self.cabin_door_pose = (self.x, -lift_size[1]/2 + offset)
+
+    def to_yaml(self):
+        y = {}
+        y['door_type'] = self.door_type
+        y['x'] = self.x
+        y['y'] = self.y
+        y['motion_axis_orientation'] = self.motion_axis_orientation
+        y['width'] = self.width
+        return y
 
     def generate_cabin_door(self, lift_model_ele, name):
         door_model_ele = SubElement(lift_model_ele, 'model')
@@ -232,12 +242,15 @@ class Lift:
         else:
             self.lowest_elevation = -float('inf')
 
+        if 'reference_floor_name' in yaml_node:
+            self.reference_floor_name = yaml_node['reference_floor_name']
+
         self.plugins = True
         if 'plugins' in yaml_node:
             self.plugins = bool(yaml_node['plugins'])
 
-        raw_pos = (float(yaml_node['x']), -float(yaml_node['y']))
-        self.x, self.y = transform.transform_point(raw_pos)
+        self.raw_pos = (float(yaml_node['x']), -float(yaml_node['y']))
+        self.x, self.y = transform.transform_point(self.raw_pos)
         self.cabin_height = 2.5
         self.wall_thickness = 0.05
         self.floor_thickness = 0.05
@@ -284,6 +297,31 @@ class Lift:
             side, left, right = door.side
             self.end_points[side] += [left, right]
             self.end_points[side].sort()
+
+    def to_yaml(self):
+        y = {}
+        y['depth'] = self.depth
+        y['width'] = self.width
+        y['yaw'] = self.yaw
+        y['initial_floor_name'] = self.initial_floor_name
+        if hasattr(self, 'highest_floor'):
+            y['highest_floor'] = self.highest_floor
+        if hasattr(self, 'lowest_floor'):
+            y['lowest_floor'] = self.lowest_floor
+        if hasattr(self, 'reference_floor_name'):
+            y['reference_floor_name'] = self.reference_floor_name
+        y['plugins'] = self.plugins
+        y['x'] = self.raw_pos[0]
+        y['y'] = -self.raw_pos[1]  # invert back to image coords
+        y['level_doors'] = {}
+        print(self.level_doors)
+        for level_name, door_names in self.level_doors.items():
+            y['level_doors'][level_name] = door_names
+        y['doors'] = {}
+        for door in self.doors:
+            y['doors'][door.name] = door.to_yaml()
+        return y
+
 
     def parse_lift_doors(self, yaml_node):
         doors = []

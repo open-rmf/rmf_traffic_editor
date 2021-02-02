@@ -1,6 +1,7 @@
 import math
 import numpy as np
 import os
+import yaml
 from xml.etree.ElementTree import Element, SubElement, parse
 from ament_index_python.packages import get_package_share_directory
 
@@ -306,3 +307,22 @@ class Building:
         # todo: something smarter in the future. For now just the center
         # of the first level
         return self.levels[list(self.levels.keys())[0]].center()
+
+    def add_lanes_from(self, other_building):
+        pass
+
+    def write_yaml_file(self, filename):
+        with open(filename, 'w') as f:
+            d = {}
+            d['name'] = self.name
+            d['reference_level_name'] = self.reference_level_name
+
+            d['levels'] = {}
+            for level_name, level_data in self.levels.items():
+                d['levels'][level_name] = level_data.to_yaml()
+
+            d['lifts'] = {}
+            for lift_name, lift in self.lifts.items():
+                d['lifts'][lift_name] = lift.to_yaml()
+
+            yaml.dump(d, f)

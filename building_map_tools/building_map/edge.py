@@ -11,6 +11,12 @@ class Edge:
             for param_name, param_yaml in yaml_node[2].items():
                 self.params[param_name] = ParamValue(param_yaml)
 
+    def to_yaml(self):
+        y = [self.start_idx, self.end_idx, {}]
+        for param_name, param_value in self.params.items():
+            y[2][param_name] = param_value.to_yaml()
+        return y
+
     def calc_statistics(self, vertices):
         self.x1 = vertices[self.start_idx].x
         self.y1 = vertices[self.start_idx].y
