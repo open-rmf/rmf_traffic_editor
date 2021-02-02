@@ -31,6 +31,7 @@
 #include <traffic_editor/crowd_sim/agent_group.h>
 #include <traffic_editor/crowd_sim/model_type.h>
 #include <traffic_editor/vertex.h>
+#include <traffic_editor/crowd_sim/helper.h>
 
 namespace crowd_sim {
 

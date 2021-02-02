@@ -386,7 +386,7 @@ bool CrowdSimImplementation::vertex_has_human(const Vertex& vertex)
     if (_agent_group.get_internal_agent_model_name() != "") // skip first one (external_agent group)
     {
       auto point = _agent_group.get_spawn_point();
-      if (point.first == vertex.x && point.second == vertex.y &&
+      if (point.first == dp3(vertex.x) && point.second == dp3(vertex.y) &&
         _agent_group.get_spawn_number() > 0 && _agent_group.is_valid())
         return true;
     }

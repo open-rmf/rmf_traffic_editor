@@ -48,12 +48,6 @@ public:
   void storeWidget(QTabWidget* widget) {_widget = widget;}
   void storeTabStyle(QString tabStyle) {_tabStyle = tabStyle;}
 
-  // helper function
-  double dp3(double x)
-  {
-    return std::round(x * 1000.0) / 1000.0;
-  }
-
   static const std::vector<std::string> _required_components;
 
 private:
