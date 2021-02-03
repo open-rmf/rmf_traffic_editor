@@ -17,7 +17,7 @@ def main():
     parser.add_argument("SECONDARY_INPUT", type=str,
                         help="Secondary building.yaml file")
     parser.add_argument("OUTPUT", type=str,
-                        help="Output filename, will be PRIMARY + lanes(SECONDARY)")
+                        help="Output file will be PRIMARY + lanes(SECONDARY)")
 
     args = parser.parse_args()
 
