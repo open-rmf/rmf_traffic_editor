@@ -322,7 +322,6 @@ class Lift:
             y['doors'][door.name] = door.to_yaml()
         return y
 
-
     def parse_lift_doors(self, yaml_node):
         doors = []
         for lift_door_name, lift_door_yaml in yaml_node.items():
