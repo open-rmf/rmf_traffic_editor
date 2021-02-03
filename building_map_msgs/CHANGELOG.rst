@@ -2,6 +2,11 @@
 Changelog for package building_map_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.2.0 (2021-01-06)
+------------------
+* Add first pass of quality declarations for all packages (`#235 <https://github.com/osrf/traffic_editor/issues/235>`_)
+* Contributors: Geoffrey Biggs, Marco A. Gutierrez, Marco A. Gutiérrez
+
 1.0.0 (2020-06-22)
 ------------------
 * merging master

@@ -2,9 +2,27 @@
 Changelog for package building_map_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming (2020-09-28)
+1.2.0 (2021-01-06)
 ------------------
+* Ign rtf optimizations and GUI plugins (`#248 <https://github.com/osrf/traffic_editor/issues/248>`_)
+* Merge pull request `#257 <https://github.com/osrf/traffic_editor/issues/257>`_ from Briancbn/pr-fix-disable-plugin-backwards-compatibility
+  Fix door, lift plugin disable options backwards compatibility
+* Merge pull request `#255 <https://github.com/osrf/traffic_editor/issues/255>`_ from osrf/feature/remove-plugin-option
+  Feature/remove plugin option
+* Three lines of code to double the RTF, :sparkles:
+* Makes lifts static if plugins are not required
+* Door plugins option parsing correctly now
+* Using just the Lift object to propagate the plugin removal option
+* Added option to remove plugins for doors on gui and building_map_tools generator
+* Fix namespace for rmf charging plugin (`#253 <https://github.com/osrf/traffic_editor/issues/253>`_)
+* Textures/additional (`#244 <https://github.com/osrf/traffic_editor/issues/244>`_)
+* Implement battery drain and recharge for slotcars (`#242 <https://github.com/osrf/traffic_editor/issues/242>`_)
+* Implement animation switching in crowd simulation (`#238 <https://github.com/osrf/traffic_editor/issues/238>`_)
+* Add first pass of quality declarations for all packages (`#235 <https://github.com/osrf/traffic_editor/issues/235>`_)
+* Building_crowdsim for generating the navmesh file and required configuration files for menge (`#224 <https://github.com/osrf/traffic_editor/issues/224>`_)
 * Add building_crowdsim to generate navmesh and config files for crowd simulation (`#224 <https://github.com/osrf/traffic_editor/pull/224>`_)
+* Contributors: Aaron Chong, Chen Bainian, Geoffrey Biggs, Guoliang (Fred) Shao, Luca Della Vedova, Marco A. Gutiérrez, Morgan Quigley, Rushyendra Maganty, Valerie
+
 
 1.1.0 (2020-09-24)
 ------------------
