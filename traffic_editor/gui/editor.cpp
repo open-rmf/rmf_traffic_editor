@@ -2522,8 +2522,11 @@ void Editor::clear_current_tool_buffer()
   {
     prev_clicked_idx = -1;
     clicked_idx = -1;
-    delete latest_add_edge;
-    latest_add_edge = NULL;
+    if (latest_add_edge)
+    {
+      delete latest_add_edge;
+      latest_add_edge = NULL;
+    }
   }
 }
 
