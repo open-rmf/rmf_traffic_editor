@@ -17,7 +17,7 @@ class Vertex:
         return (self.x, self.y)
 
     def to_yaml(self):
-        y = [self.x, self.y, self.z, self.name, {}]
+        y = [self.x, -self.y, self.z, self.name, {}]
         for param_name, param_value in self.params.items():
             y[4][param_name] = param_value.to_yaml()
         return y

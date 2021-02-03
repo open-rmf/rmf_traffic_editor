@@ -466,8 +466,24 @@ class Level:
         print(f'  this level has {len(self.vertices)} vertices')
         print(f'  other level has {len(other.vertices)} vertices')
 
-        # TODO: use fiducials to calculate transform between these spaces
-        self.vertices.extend(other.vertices)
+        fiducial_pairs = []
+        for ref_fiducial in self.fiducials:
+            for fiducial in other.fiducials:
+                if ref_fiducial.name == fiducial.name:
+                    fiducial_pairs.append((ref_fiducial, fiducial))
+        t = Transform()
+        t.set_from_fiducials(fiducial_pairs, 1.0)
 
-        for lane in other.lanes:
-            print(f'  other lane: {lane.start_idx} -> {lane.end_idx}')
+        v_idx_offset = len(self.vertices)
+
+        # transform the incoming vertices
+        for v_in in other.vertices:
+            v_out = copy.deepcopy(v_in)
+            (v_out.x, v_out.y) = t.transform_point([v_in.x, v_in.y])
+            self.vertices.append(v_out)
+
+        for lane_in in other.lanes:
+            lane_out = copy.deepcopy(lane_in)
+            lane_out.start_idx += v_idx_offset
+            lane_out.end_idx += v_idx_offset
+            self.lanes.append(lane_out)
