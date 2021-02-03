@@ -118,7 +118,7 @@ void Vertex::draw(
 
   if (human_vertex)
   {
-    double new_radius = 2 * (radius+10);
+    double new_radius = 2.4*(radius*1.25);
     const int svg_w_h = new_radius*2;
     auto* svg_anim =
       new QSvgWidget(QString(selected ? ":icons/human_vertex_selected.svg" :

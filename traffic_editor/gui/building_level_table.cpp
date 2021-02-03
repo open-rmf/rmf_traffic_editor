@@ -103,6 +103,7 @@ void BuildingLevelTable::update(Building& building)
       {
         level.load_drawing();
         building.add_level(level);
+        _cwdsimtable->update();
         setWindowModified(true);
         update(building);
         emit redraw_scene();

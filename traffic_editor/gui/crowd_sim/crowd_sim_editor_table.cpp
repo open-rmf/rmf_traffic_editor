@@ -149,7 +149,7 @@ void CrowdSimEditorTable::update(int level)
   if (!_project.building.levels.empty() &&
     level < _project.building.levels.size())
   {
-    BuildingLevel lvl = _project.building.levels[level];
+    const BuildingLevel& lvl = _project.building.levels[level];
     level_name = lvl.name;
     if (lvl.crowd_sim_impl)
       _impl = lvl.crowd_sim_impl;
