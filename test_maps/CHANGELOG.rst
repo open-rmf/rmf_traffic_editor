@@ -2,7 +2,12 @@
 Changelog for package test_maps
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1.1.0 (2020-0-24)
+1.2.0 (2021-01-05)
+------------------
+* Add first pass of quality declarations for all packages (`#235 <https://github.com/osrf/traffic_editor/issues/235>`_)
+* Contributors: Geoffrey Biggs, Marco A. Gutiérrez
+
+1.1.0 (2020-09-24)
 -----------------
 * Move message call outside of custom command cal `#184 <https://github.com/osrf/traffic_editor/issues/184>`_
 * Fix/separate model download `#183 <https://github.com/osrf/traffic_editor/issues/183>`_
