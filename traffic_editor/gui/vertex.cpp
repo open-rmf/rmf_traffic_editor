@@ -145,6 +145,7 @@ void Vertex::draw(
     pixmap_item->setPos(
       x + icon_ring_radius * cos(icon_bearing),
       y - icon_ring_radius * sin(icon_bearing));
+    pixmap_item->setToolTip("This vertex is a holding point");
   }
 
   if (is_parking_point())
@@ -161,6 +162,7 @@ void Vertex::draw(
     pixmap_item->setPos(
       x + icon_ring_radius * cos(icon_bearing),
       y - icon_ring_radius * sin(icon_bearing));
+    pixmap_item->setToolTip("This vertex is a parking point");
 
     /*
     // outline the vertex with another circle
@@ -177,7 +179,7 @@ void Vertex::draw(
 
   if (is_charger())
   {
-    const double charger_icon_bearing = 135.0 * M_PI / 180.0;
+    const double icon_bearing = 135.0 * M_PI / 180.0;
     /*
     // draw a larger black rectangle around the vertex
     QGraphicsRectItem* rect_item = scene->addRect(
@@ -189,17 +191,18 @@ void Vertex::draw(
       QBrush());  // default brush is transparent
     rect_item->setZValue(20.0);
     */
-    QIcon battery_icon(":icons/battery.svg");
-    QPixmap battery_pixmap(battery_icon.pixmap(battery_icon.actualSize(QSize(128, 128))));
-    QGraphicsPixmapItem* pixmap_item = scene->addPixmap(battery_pixmap);
+    QIcon icon(":icons/battery.svg");
+    QPixmap pixmap(icon.pixmap(icon.actualSize(QSize(128, 128))));
+    QGraphicsPixmapItem* pixmap_item = scene->addPixmap(pixmap);
     pixmap_item->setOffset(
-      -battery_pixmap.width() / 2,
-      -battery_pixmap.height() / 2);
+      -pixmap.width() / 2,
+      -pixmap.height() / 2);
     pixmap_item->setScale(icon_scale);
     pixmap_item->setZValue(20.0);
     pixmap_item->setPos(
-      x + icon_ring_radius * cos(charger_icon_bearing),
-      y - icon_ring_radius * sin(charger_icon_bearing));
+      x + icon_ring_radius * cos(icon_bearing),
+      y - icon_ring_radius * sin(icon_bearing));
+    pixmap_item->setToolTip("This vertex is a charger");
   }
 
   if (!name.empty())
