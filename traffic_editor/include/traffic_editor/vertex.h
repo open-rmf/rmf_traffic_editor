@@ -53,8 +53,11 @@ public:
 
   void draw(
     QGraphicsScene* scene,
-    const double radius,
-    const QColor& color) const;
+    const double radius) const;
+
+  bool is_parking_point() const;
+  bool is_holding_point() const;
+  bool is_charger() const;
 
   ////////////////////////////////////////////////////////////
   static const std::vector<std::pair<std::string, Param::Type>> allowed_params;
