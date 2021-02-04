@@ -133,7 +133,7 @@ void Vertex::draw(
 
   if (is_holding_point())
   {
-    const double icon_bearing = -45.0 * M_PI / 180.0;
+    const double icon_bearing = -135.0 * M_PI / 180.0;
     QIcon icon(":icons/stopwatch.svg");
     QPixmap pixmap(icon.pixmap(icon.actualSize(QSize(128, 128))));
     QGraphicsPixmapItem* pixmap_item = scene->addPixmap(pixmap);
