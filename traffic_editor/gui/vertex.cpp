@@ -136,7 +136,7 @@ void Vertex::draw(
     const double icon_bearing = -45.0 * M_PI / 180.0;
     QIcon icon(":icons/stopwatch.svg");
     QPixmap pixmap(icon.pixmap(icon.actualSize(QSize(128, 128))));
-    QGraphicsPixmapItem *pixmap_item = scene->addPixmap(pixmap);
+    QGraphicsPixmapItem* pixmap_item = scene->addPixmap(pixmap);
     pixmap_item->setOffset(
       -pixmap.width() / 2,
       -pixmap.height() / 2);
@@ -152,7 +152,7 @@ void Vertex::draw(
     const double icon_bearing = 45.0 * M_PI / 180.0;
     QIcon icon(":icons/parking.svg");
     QPixmap pixmap(icon.pixmap(icon.actualSize(QSize(128, 128))));
-    QGraphicsPixmapItem *pixmap_item = scene->addPixmap(pixmap);
+    QGraphicsPixmapItem* pixmap_item = scene->addPixmap(pixmap);
     pixmap_item->setOffset(
       -pixmap.width() / 2,
       -pixmap.height() / 2);
@@ -191,7 +191,7 @@ void Vertex::draw(
     */
     QIcon battery_icon(":icons/battery.svg");
     QPixmap battery_pixmap(battery_icon.pixmap(battery_icon.actualSize(QSize(128, 128))));
-    QGraphicsPixmapItem *pixmap_item = scene->addPixmap(battery_pixmap);
+    QGraphicsPixmapItem* pixmap_item = scene->addPixmap(battery_pixmap);
     pixmap_item->setOffset(
       -battery_pixmap.width() / 2,
       -battery_pixmap.height() / 2);
