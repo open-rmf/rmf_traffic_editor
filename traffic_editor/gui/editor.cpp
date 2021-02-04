@@ -87,7 +87,8 @@ Editor::Editor()
 
   map_view = new MapView(this);
   map_view->setScene(scene);
-  map_view->setStyleSheet("QToolTip { color: #000000; background-color: #ffff88; border: 0px; }");
+  map_view->setStyleSheet(
+    "QToolTip { color: #000000; background-color: #ffff88; border: 0px; }");
 
   QVBoxLayout* left_layout = new QVBoxLayout;
   left_layout->addWidget(map_view);
