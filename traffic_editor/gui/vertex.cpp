@@ -112,21 +112,54 @@ void Vertex::draw(
 
   QColor selected_color = QColor::fromRgbF(1.0, 0.0, 0.0, a);
 
-  scene->addEllipse(
-    x - radius,
-    y - radius,
-    2 * radius,
-    2 * radius,
-    vertex_pen,
-    selected ? QBrush(selected_color) : QBrush(nonselected_color));
+  const QBrush vertex_brush =
+    selected ? QBrush(selected_color) : QBrush(nonselected_color);
+
+  if (is_holding_point())
+  {
+    // draw the vertex as a slightly larger box
+    QGraphicsRectItem* rect_item = scene->addRect(
+      x - 1.5 * radius,
+      y - 1.5 * radius,
+      2 * 1.5 * radius,
+      2 * 1.5 * radius,
+      vertex_pen,
+      vertex_brush);
+    rect_item->setZValue(20.0);
+  }
+  else
+  {
+    // draw the vertex as a circle
+    QGraphicsEllipseItem* ellipse_item = scene->addEllipse(
+      x - radius,
+      y - radius,
+      2 * radius,
+      2 * radius,
+      vertex_pen,
+      vertex_brush);
+    ellipse_item->setZValue(20.0);  // above all lane/wall edges
+  }
+
+  if (is_parking_point())
+  {
+    // draw a larger black rectangle around the vertex
+    QGraphicsRectItem* rect_item = scene->addRect(
+      x - 2.5 * radius,
+      y - 2.5 * radius,
+      2 * 2.5 * radius,
+      2 * 2.5 * radius,
+      vertex_pen,
+      QBrush());  // transparent rectangle
+    rect_item->setZValue(20.0);
+  }
 
   if (!name.empty())
   {
-    QGraphicsSimpleTextItem* item = scene->addSimpleText(
+    QGraphicsSimpleTextItem* text_item = scene->addSimpleText(
       QString::fromStdString(name),
       QFont("Helvetica", 6));
-    item->setBrush(selected ? selected_color : color);
-    item->setPos(x, y + radius);
+    text_item->setBrush(selected ? selected_color : color);
+    text_item->setPos(x, y + radius);
   }
 }
 
@@ -139,4 +172,22 @@ void Vertex::set_param(const std::string& param_name, const std::string& value)
     return;  // unknown parameter
   }
   it->second.set(value);
+}
+
+bool Vertex::is_parking_point() const
+{
+  const auto it = params.find("is_parking_spot");
+  if (it == params.end())
+    return false;
+
+  return it->second.value_bool;
+}
+
+bool Vertex::is_holding_point() const
+{
+  const auto it = params.find("is_holding_point");
+  if (it == params.end())
+    return false;
+
+  return it->second.value_bool;
 }

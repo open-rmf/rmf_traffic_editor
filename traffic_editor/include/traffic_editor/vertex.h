@@ -56,6 +56,9 @@ public:
     const double radius,
     const QColor& color) const;
 
+  bool is_parking_point() const;
+  bool is_holding_point() const;
+
   ////////////////////////////////////////////////////////////
   static const std::vector<std::pair<std::string, Param::Type>> allowed_params;
 };
