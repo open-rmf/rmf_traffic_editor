@@ -60,8 +60,6 @@ public:
 private:
   std::string _name, _animation;
   double _animation_speed;
-  //std::string _model_uri;
-  //std::vector<double> _init_pose;
 };
 
 } //namespace crowd_sim

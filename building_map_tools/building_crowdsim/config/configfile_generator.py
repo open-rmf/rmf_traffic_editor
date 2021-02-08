@@ -99,7 +99,7 @@ class ConfigFileGenerator:
         agent_groups = {}
         for item in cur_level.crowd_sim_human_yaml:
             group_id = item['agent_group_id']
-            if item['agent_group_id'] in agent_groups:
+            if group_id in agent_groups:
                 self.transform_point_modify_yaml(level_name, item)
                 agent_groups[group_id].load_an_agent_from_yaml(item)
             else:

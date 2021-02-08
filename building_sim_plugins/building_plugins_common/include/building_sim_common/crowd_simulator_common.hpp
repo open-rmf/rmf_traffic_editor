@@ -147,11 +147,11 @@ private:
 
 //================================================================
 /*
-* class CrowdSimInterface
+* class CrowdSimInterfaceCommon
 * provides the relationship between menge agents and gazebo models
 * provides the interface to set position between gazebo models and menge agents
 */
-class CrowdSimInterface
+class CrowdSimInterfaceCommon
 {
 public:
   enum class AnimState
@@ -171,13 +171,13 @@ public:
   };
   using ObjectPtr = std::shared_ptr<Object>;
 
-  CrowdSimInterface()
+  CrowdSimInterfaceCommon()
   : _model_type_db_ptr(std::make_shared<crowd_simulator::ModelTypeDatabase>()),
     _objects_count(0),
     _sdf_loaded(false),
     _switch_anim_distance_th(0.01),
     _switch_anim_name({"idle", "stand"}),
-    _menge_disabled(false)
+    _menge_enabled(true)
   {}
 
   std::shared_ptr<ModelTypeDatabase> _model_type_db_ptr;
@@ -211,14 +211,14 @@ public:
   IgnMathPose3d get_agent_pose(
     const AgentPtr agent_ptr, double delta_sim_time);
 
-  std::string get_internal_agent(size_t id)
+  std::string get_internal_agent_name(size_t id)
   {
-    return _internal_agents.at(id);
+    return _internal_agent_names.at(id);
   }
 
   size_t _objects_count;
-  bool _menge_disabled;
-private:
+  bool _menge_enabled;
+protected:
   bool _sdf_loaded;
   double _switch_anim_distance_th;
   std::vector<std::string> _switch_anim_name;
@@ -228,8 +228,8 @@ private:
   std::string _resource_path;
   std::string _behavior_file;
   std::string _scene_file;
-  std::vector<std::string> _external_agents;
-  std::vector<std::string> _internal_agents;
+  std::vector<std::string> _external_agent_names;
+  std::vector<std::string> _internal_agent_names;
   rclcpp::Node::SharedPtr _ros_node;
 
   template<typename SdfPtrT>
@@ -243,38 +243,29 @@ private:
 };
 
 template<typename SdfPtrT>
-bool CrowdSimInterface::read_sdf(
+bool CrowdSimInterfaceCommon::read_sdf(
   SdfPtrT& sdf)
 {
   std::string name = "";
   sdf->GetAttribute("name")->Get(name);
-  if (!sdf->template HasElement("resource_path"))
+
+  char* menge_resource_path = getenv("MENGE_RESOURCE_PATH");
+  if (menge_resource_path == nullptr ||
+    strcmp(menge_resource_path, "") == 0)
   {
-    char* menge_resource_path;
-    menge_resource_path = getenv("MENGE_RESOURCE_PATH");
-    if (menge_resource_path == nullptr ||
-      strcmp(menge_resource_path, "") == 0)
-    {
-      RCLCPP_INFO(logger(),
-        "Menge resource not found. Crowd simulation is disabled.");
-      _menge_disabled = true;
-    }
-    else
-    {
-      RCLCPP_INFO(logger(),
-        "resource_path not found, use <env MENGE_RESOURCE_PATH> " +
-        std::string(menge_resource_path) + "/" + name + " instead.");
-      _resource_path = std::string(menge_resource_path) + "/" + name;
-    }
+    RCLCPP_INFO(logger(),
+      "Menge resource not found. Crowd simulation is disabled.");
+    _menge_enabled = false;
   }
   else
   {
-    _resource_path =
-      sdf->template GetElementImpl("resource_path")->template Get<std::string>()
-      + "/" + name;
+    RCLCPP_INFO(logger(),
+      "resource_path not found, use <env MENGE_RESOURCE_PATH> " +
+      std::string(menge_resource_path) + "/" + name + " instead.");
+    _resource_path = std::string(menge_resource_path) + "/" + name;
   }
 
-  if (!_menge_disabled)
+  if (_menge_enabled)
   {
     if (!sdf->template HasElement("behavior_file"))
     {
@@ -300,56 +291,15 @@ bool CrowdSimInterface::read_sdf(
         "No update_time_step found! <update_time_step> Required!");
       return false;
     }
+
     _sim_time_step =
       sdf->template GetElementImpl("update_time_step")->template Get<float>();
 
-    if (!sdf->template HasElement("model_type"))
-    {
-      RCLCPP_ERROR(logger(),
-        "No model type for agents found! <model_type> element Required!");
-      return false;
-    }
-    auto model_type_element = sdf->template GetElementImpl("model_type");
-    while (model_type_element)
-    {
-      std::string s;
-      if (!model_type_element->template Get<std::string>("typename", s, ""))
-      {
-        RCLCPP_ERROR(logger(),
-          "No model type name configured in <model_type>! <typename> Required");
-        return false;
-      }
-
-      auto model_type_ptr = this->_model_type_db_ptr->emplace(s,
-          std::make_shared<ModelTypeDatabase::Record>() ); //unordered_map
-      model_type_ptr->type_name = s;
-
-      if (!model_type_element->template Get<std::string>("animation",
-        model_type_ptr->animation, ""))
-      {
-        RCLCPP_ERROR(logger(),
-          "No animation configured in <model_type>! <animation> Required");
-        return false;
-      }
-
-      if (!model_type_element->template Get<double>("animation_speed",
-        model_type_ptr->animation_speed, 0.0))
-      {
-        RCLCPP_ERROR(
-          logger(),
-          "No animation speed configured in <model_type>! <animation_speed> Required");
-        return false;
-      }
-
-      model_type_element = model_type_element->template GetNextElement(
-        "model_type");
-    }
-
     if (!sdf->template HasElement("external_agent"))
     {
-      RCLCPP_ERROR(
+      RCLCPP_INFO(
         logger(),
-        "No external agent provided. <external_agent> is needed with a unique name defined above.");
+        "No external agent provided. <external_agent> is needed with a unique name.");
     }
     auto external_agent_element =
       sdf->template GetElementImpl("external_agent");
@@ -358,96 +308,78 @@ bool CrowdSimInterface::read_sdf(
       auto ex_agent_name = external_agent_element->template Get<std::string>();
       RCLCPP_INFO(logger(),
         "Added external agent: [ " + ex_agent_name + " ].");
-      _external_agents.emplace_back(ex_agent_name); //just store the name
+      _external_agent_names.emplace_back(ex_agent_name); //just store the name
       external_agent_element = external_agent_element->template GetNextElement(
         "external_agent");
     }
-    if (!sdf->template HasElement("internal_agent"))
+  }
+
+  if (!sdf->template HasElement("model_type"))
+  {
+    RCLCPP_ERROR(logger(),
+      "No model type for agents found! <model_type> element Required!");
+    return false;
+  }
+  auto model_type_element = sdf->template GetElementImpl("model_type");
+  while (model_type_element)
+  {
+    std::string s;
+    if (!model_type_element->template Get<std::string>("typename", s, ""))
+    {
+      RCLCPP_ERROR(logger(),
+        "No model type name configured in <model_type>! <typename> Required");
+      return false;
+    }
+
+    auto model_type_ptr = this->_model_type_db_ptr->emplace(s,
+        std::make_shared<ModelTypeDatabase::Record>() ); //unordered_map
+    model_type_ptr->type_name = s;
+
+    if (!model_type_element->template Get<std::string>("animation",
+      model_type_ptr->animation, ""))
+    {
+      RCLCPP_ERROR(logger(),
+        "No animation configured in <model_type>! <animation> Required");
+      return false;
+    }
+
+    if (!model_type_element->template Get<double>("animation_speed",
+      model_type_ptr->animation_speed, 0.0))
     {
       RCLCPP_ERROR(
         logger(),
-        "No internal agent provided. <internal_agent> is needed with a unique name defined above.");
-    }
-    auto internal_agent_element =
-      sdf->template GetElementImpl("internal_agent");
-    while (internal_agent_element)
-    {
-      auto in_agent_name = internal_agent_element->template Get<std::string>();
-      RCLCPP_INFO(logger(),
-        "Added internal agent: [ " + in_agent_name + " ].");
-      _internal_agents.emplace_back(in_agent_name); //just store the name
-      internal_agent_element = internal_agent_element->template GetNextElement(
-        "internal_agent");
-    }
-  }
-  else
-  {
-    if (!sdf->template HasElement("model_type"))
-    {
-      RCLCPP_ERROR(logger(),
-        "No model type for agents found! <model_type> element Required!");
+        "No animation speed configured in <model_type>! <animation_speed> Required");
       return false;
     }
-    auto model_type_element = sdf->template GetElementImpl("model_type");
-    while (model_type_element)
-    {
-      std::string s;
-      if (!model_type_element->template Get<std::string>("typename", s, ""))
-      {
-        RCLCPP_ERROR(logger(),
-          "No model type name configured in <model_type>! <typename> Required");
-        return false;
-      }
 
-      auto model_type_ptr = this->_model_type_db_ptr->emplace(s,
-          std::make_shared<ModelTypeDatabase::Record>() ); //unordered_map
-      model_type_ptr->type_name = s;
-
-      if (!model_type_element->template Get<std::string>("animation",
-        model_type_ptr->animation, ""))
-      {
-        RCLCPP_ERROR(logger(),
-          "No animation configured in <model_type>! <animation> Required");
-        return false;
-      }
-
-      if (!model_type_element->template Get<double>("animation_speed",
-        model_type_ptr->animation_speed, 0.0))
-      {
-        RCLCPP_ERROR(
-          logger(),
-          "No animation speed configured in <model_type>! <animation_speed> Required");
-        return false;
-      }
-
-      model_type_element = model_type_element->template GetNextElement(
-        "model_type");
-    }
-    if (sdf->template HasElement("internal_agent"))
-    {
-      auto internal_agent_element =
-        sdf->template GetElementImpl("internal_agent");
-      while (internal_agent_element)
-      {
-        auto in_agent_name =
-          internal_agent_element->template Get<std::string>();
-        RCLCPP_INFO(logger(),
-          "Added internal agent: [ " + in_agent_name + " ].");
-        _internal_agents.emplace_back(in_agent_name); //just store the name
-        internal_agent_element =
-          internal_agent_element->template GetNextElement(
-          "internal_agent");
-      }
-    }
+    model_type_element = model_type_element->template GetNextElement(
+      "model_type");
   }
 
+  if (!sdf->template HasElement("internal_agent"))
+  {
+    RCLCPP_INFO(
+      logger(),
+      "No internal agent provided. <internal_agent> is needed with a unique name.");
+  }
+  auto internal_agent_element =
+    sdf->template GetElementImpl("internal_agent");
+  while (internal_agent_element)
+  {
+    auto in_agent_name = internal_agent_element->template Get<std::string>();
+    RCLCPP_INFO(logger(),
+      "Added internal agent: [ " + in_agent_name + " ].");
+    _internal_agent_names.emplace_back(in_agent_name); //just store the name
+    internal_agent_element = internal_agent_element->template GetNextElement(
+      "internal_agent");
+  }
 
   _sdf_loaded = true;
   return true;
 }
 
 template<typename SdfPtrT>
-bool CrowdSimInterface::_load_model_init_pose(
+bool CrowdSimInterfaceCommon::_load_model_init_pose(
   SdfPtrT& model_type_element, AgentPose3d& result) const
 {
   std::string pose_str;
@@ -478,7 +410,7 @@ bool CrowdSimInterface::_load_model_init_pose(
 }
 
 template<typename IgnMathPose3d>
-IgnMathPose3d CrowdSimInterface::get_agent_pose(
+IgnMathPose3d CrowdSimInterfaceCommon::get_agent_pose(
   size_t id, double delta_sim_time)
 {
   assert(id < get_num_objects());
@@ -487,7 +419,7 @@ IgnMathPose3d CrowdSimInterface::get_agent_pose(
 }
 
 template<typename IgnMathPose3d>
-IgnMathPose3d CrowdSimInterface::get_agent_pose(
+IgnMathPose3d CrowdSimInterfaceCommon::get_agent_pose(
   const AgentPtr agent_ptr, double delta_sim_time)
 {
   //calculate future position in delta_sim_time. currently in 2d
@@ -505,7 +437,7 @@ IgnMathPose3d CrowdSimInterface::get_agent_pose(
 }
 
 template<typename IgnMathPose3d>
-void CrowdSimInterface::update_external_agent(
+void CrowdSimInterfaceCommon::update_external_agent(
   size_t id, const IgnMathPose3d& model_pose)
 {
   assert(id < get_num_objects());
@@ -514,7 +446,7 @@ void CrowdSimInterface::update_external_agent(
 }
 
 template<typename IgnMathPose3d>
-void CrowdSimInterface::update_external_agent(
+void CrowdSimInterfaceCommon::update_external_agent(
   const AgentPtr agent_ptr, const IgnMathPose3d& model_pose)
 {
   assert(agent_ptr);

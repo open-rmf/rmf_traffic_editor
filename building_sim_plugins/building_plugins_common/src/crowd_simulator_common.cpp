@@ -148,17 +148,17 @@ size_t ModelTypeDatabase::size() const
 
 //================================================================
 
-rclcpp::Logger CrowdSimInterface::logger() const
+rclcpp::Logger CrowdSimInterfaceCommon::logger() const
 {
   return rclcpp::get_logger("crowdsim");
 }
 
-void CrowdSimInterface::init_ros_node(const rclcpp::Node::SharedPtr node)
+void CrowdSimInterfaceCommon::init_ros_node(const rclcpp::Node::SharedPtr node)
 {
   _ros_node = std::move(node);
 }
 
-bool CrowdSimInterface::init_crowd_sim()
+bool CrowdSimInterfaceCommon::init_crowd_sim()
 {
   _menge_handle = MengeHandle::init_and_make(_resource_path, _behavior_file,
       _scene_file, _sim_time_step);
@@ -174,15 +174,15 @@ bool CrowdSimInterface::init_crowd_sim()
   return true;
 }
 
-double CrowdSimInterface::get_sim_time_step() const
+double CrowdSimInterfaceCommon::get_sim_time_step() const
 {
   return static_cast<double>(_sim_time_step);
 }
 
-bool CrowdSimInterface::_spawn_object()
+bool CrowdSimInterfaceCommon::_spawn_object()
 {
   //External models are loaded first in scene file
-  size_t external_count = _external_agents.size();
+  size_t external_count = _external_agent_names.size();
   size_t total_agent_count = _menge_handle->get_agent_count();
 
   //external model must be included in scene file
@@ -192,20 +192,20 @@ bool CrowdSimInterface::_spawn_object()
   {
     auto agent_ptr = _menge_handle->get_agent(i);
     agent_ptr->_external = true;
-    _add_object(agent_ptr, _external_agents[i], "0", true);
+    _add_object(agent_ptr, _external_agent_names[i], "0", true);
   }
 
   for (size_t i = external_count; i < total_agent_count; ++i)
   {
     auto agent_ptr = this->_menge_handle->get_agent(i);
     agent_ptr->_external = false;
-    _add_object(agent_ptr, _internal_agents[i-external_count],
+    _add_object(agent_ptr, _internal_agent_names[i-external_count],
       agent_ptr->_typeName, false);
   }
   return true;
 }
 
-void CrowdSimInterface::_add_object(AgentPtr agent_ptr,
+void CrowdSimInterfaceCommon::_add_object(AgentPtr agent_ptr,
   const std::string& model_name,
   const std::string& type_name,
   bool is_external = false)
@@ -221,35 +221,37 @@ void CrowdSimInterface::_add_object(AgentPtr agent_ptr,
       AnimState::WALK});
 }
 
-size_t CrowdSimInterface::get_num_objects() const
+size_t CrowdSimInterfaceCommon::get_num_objects() const
 {
-  return (_menge_disabled) ? _internal_agents.size() : _objects.size();
+  return (_menge_enabled) ? _objects.size() : _internal_agent_names.size();
 }
 
-CrowdSimInterface::ObjectPtr CrowdSimInterface::get_object_by_id(size_t id)
+CrowdSimInterfaceCommon::ObjectPtr CrowdSimInterfaceCommon::get_object_by_id(
+  size_t id)
 const
 {
   assert(id < _objects.size());
   return _objects[id];
 }
 
-void CrowdSimInterface::one_step_sim() const
+void CrowdSimInterfaceCommon::one_step_sim() const
 {
   _menge_handle->sim_step();
 }
 
-double CrowdSimInterface::get_switch_anim_distance_th() const
+double CrowdSimInterfaceCommon::get_switch_anim_distance_th() const
 {
   return _switch_anim_distance_th;
 }
 
-std::vector<std::string> CrowdSimInterface::get_switch_anim_name() const
+std::vector<std::string> CrowdSimInterfaceCommon::get_switch_anim_name() const
 {
   return _switch_anim_name;
 }
 
 //=============================================
-CrowdSimInterface::AnimState CrowdSimInterface::Object::get_next_state(
+CrowdSimInterfaceCommon::AnimState CrowdSimInterfaceCommon::Object::
+get_next_state(
   bool condition)
 {
   if (condition)

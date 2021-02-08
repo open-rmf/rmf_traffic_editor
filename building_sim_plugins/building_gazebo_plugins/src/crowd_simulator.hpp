@@ -37,6 +37,14 @@
 #include <building_sim_common/crowd_simulator_common.hpp>
 
 
+namespace crowd_simulator {
+class CrowdSimInterface : public CrowdSimInterfaceCommon
+{
+public:
+  gazebo::common::Time _gz_last_sim_time;
+};
+}
+
 namespace crowd_simulation_gazebo {
 
 using ObjectPtr = crowd_simulator::CrowdSimInterface::ObjectPtr;
@@ -57,20 +65,19 @@ public:
 
   void Load(gazebo::physics::WorldPtr world, sdf::ElementPtr sdf) override;
 private:
-  std::vector<std::shared_ptr<crowd_simulator::CrowdSimInterface>>
+  std::vector<std::unique_ptr<crowd_simulator::CrowdSimInterface>>
   _crowd_sim_interfaces;
   bool _initialized;
   gazebo::physics::WorldPtr _world;
   gazebo::event::ConnectionPtr _update_connection_ptr;
-  gazebo::common::Time _last_sim_time;
 
   void _init_spawned_agents();
   void _update(const gazebo::common::UpdateInfo& update_info); //Update trigger function
   void _update_all_objects(
-    std::shared_ptr<crowd_simulator::CrowdSimInterface> crowd_sim_interface,
+    crowd_simulator::CrowdSimInterface& crowd_sim_interface,
     double delta_sim_time);
   void _update_internal_object(
-    std::shared_ptr<crowd_simulator::CrowdSimInterface> crowd_sim_interface,
+    crowd_simulator::CrowdSimInterface& crowd_sim_interface,
     double delta_sim_time,
     const ObjectPtr object_ptr,
     const gazebo::physics::ModelPtr model_ptr,

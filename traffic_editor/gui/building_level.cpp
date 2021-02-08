@@ -25,6 +25,7 @@
 #include <QImageReader>
 
 #include "traffic_editor/building_level.h"
+#include "traffic_editor/crowd_sim/helper.h"
 using std::string;
 using std::vector;
 
@@ -330,48 +331,49 @@ bool BuildingLevel::delete_selected()
       edges.end(),
       [&](const Edge& edge)
       {
-        if (edge.selected)
+        if (!edge.selected)
+          return false;
+
+        std::vector<int> current_edge_idxs; // get the 2 start and end vertices involved in the selected edge
+        current_edge_idxs.push_back(edge.start_idx);
+        current_edge_idxs.push_back(edge.end_idx);
+        for (auto& idx:current_edge_idxs)
         {
-          std::vector<int> current_edge_idxs; // get the 2 start and end vertices involved in the selected edge
-          current_edge_idxs.push_back(edge.start_idx);
-          current_edge_idxs.push_back(edge.end_idx);
-          for (auto& idx:current_edge_idxs)
+          auto& v = vertices.at(idx);
+          if (!crowd_sim_impl) // check if this vertex spawns humans
+            continue;
+          auto& agent_groups = crowd_sim_impl->get_agent_groups();
+          bool found = false;
+          int i = 0;
+          for (auto& group:agent_groups)
           {
-            auto& v = vertices.at(idx);
-            if (crowd_sim_impl) // check if this vertex spawns humans
+            const auto& sp = group.get_spawn_point();
+            if (sp.first == crowd_sim::dp3(v.x) &&
+            sp.second == crowd_sim::dp3(v.y)) // found that it spawns human
             {
-              auto& agent_groups = crowd_sim_impl->get_agent_groups();
-              bool found = false;
-              int i = 0;
-              for (auto& group:agent_groups)
-              {
-                const auto& sp = group.get_spawn_point();
-                if (sp.first == v.x && sp.second == v.y) // found that it spawns human
-                {
-                  found = true;
-                  break;
-                }
-                i++;
-              }
-              if (found)
-              {
-                std::vector<Edge> local_edges;
-                std::copy_if(edges.begin(), edges.end(),
-                std::back_inserter(local_edges), [&](Edge e)
-                {
-                  if (e.selected) // currently selected
-                    return false;
-                  if (e.start_idx == idx || e.end_idx == idx)
-                    return true;
-                  return false;
-                });
-                if (local_edges.size() == 0) // if it does not involve in other edges
-                  agent_groups.erase(agent_groups.begin() + i);
-              }
+              found = true;
+              break;
             }
+            i++;
           }
+          if (!found)
+            continue;
+          std::vector<Edge> local_edges;
+          std::copy_if(edges.begin(), edges.end(),
+          std::back_inserter(local_edges), [&](Edge e)
+          {
+            if (e.selected) // currently selected
+              return false;
+            if (e.type == Edge::HUMAN_LANE &&
+            (e.start_idx == idx || e.end_idx == idx))
+              return true;
+            return false;
+          });
+          if (local_edges.size() == 0) // if it does not involve in other human edges
+            agent_groups.erase(agent_groups.begin() + i);
+
         }
-        return edge.selected;
+        return true;
       }),
     edges.end());
 

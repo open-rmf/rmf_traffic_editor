@@ -27,6 +27,13 @@
 
 #include <building_sim_common/crowd_simulator_common.hpp>
 
+namespace crowd_simulator {
+class CrowdSimInterface : public CrowdSimInterfaceCommon
+{
+public:
+  std::chrono::steady_clock::duration _ign_last_sim_time{0};
+};
+}
 
 namespace crowd_simulation_ign {
 
@@ -39,7 +46,6 @@ class IGNITION_GAZEBO_VISIBLE CrowdSimulatorPlugin
 public:
   CrowdSimulatorPlugin()
   : _transport_node_ptr(std::make_shared<ignition::transport::Node>()),
-    _crowd_sim_interfaces(),
     _initialized(false),
     _disabled(false)
   {}
@@ -48,7 +54,7 @@ public:
   void Configure(const ignition::gazebo::Entity& entity,
     const std::shared_ptr<const sdf::Element>& sdf,
     ignition::gazebo::EntityComponentManager& ecm,
-    ignition::gazebo::EventManager& event_mgr) override;
+    ignition::gazebo::EventManager&) override;
 
   // inherit from ISystemPreUpdate
   void PreUpdate(const ignition::gazebo::UpdateInfo& info,
@@ -56,12 +62,10 @@ public:
 
 private:
   std::shared_ptr<ignition::transport::Node> _transport_node_ptr;
-  std::vector<std::shared_ptr<crowd_simulator::CrowdSimInterface>>
+  std::vector<std::unique_ptr<crowd_simulator::CrowdSimInterface>>
   _crowd_sim_interfaces;
   bool _initialized;
   bool _disabled;
-  std::chrono::steady_clock::duration _last_sim_time{0};
-
   std::shared_ptr<ignition::gazebo::Model> _world;
   std::string _world_name;
 
@@ -72,12 +76,12 @@ private:
 
   //bool _spawn_agents_in_world(ignition::gazebo::EntityComponentManager& ecm);
   void _init_spawned_agents(ignition::gazebo::EntityComponentManager& ecm,
-    std::shared_ptr<crowd_simulator::CrowdSimInterface> crowd_sim_interface);
+    crowd_simulator::CrowdSimInterface& crowd_sim_interface);
   void _config_spawned_agents(
     const crowd_simulator::CrowdSimInterface::ObjectPtr obj_ptr,
     const ignition::gazebo::Entity& enity,
     ignition::gazebo::EntityComponentManager& ecm,
-    std::shared_ptr<crowd_simulator::CrowdSimInterface> crowd_sim_interface)
+    crowd_simulator::CrowdSimInterface& crowd_sim_interface)
   const;
   bool _create_entity(
     ignition::gazebo::EntityComponentManager& ecm,
@@ -85,19 +89,19 @@ private:
     const crowd_simulator::ModelTypeDatabase::RecordPtr model_type_ptr) const;
   void _animate_idle_objects(double delta_sim_time,
     ignition::gazebo::EntityComponentManager&  ecm,
-    std::shared_ptr<crowd_simulator::CrowdSimInterface> crowd_sim_interface)
+    crowd_simulator::CrowdSimInterface& crowd_sim_interface)
   const;
   void _update_all_objects(
     double delta_sim_time,
     ignition::gazebo::EntityComponentManager& ecm,
-    std::shared_ptr<crowd_simulator::CrowdSimInterface> crowd_sim_interface)
+    crowd_simulator::CrowdSimInterface& crowd_sim_interface)
   const;
   void _update_internal_object(
     double delta_sim_time,
     const crowd_simulator::CrowdSimInterface::ObjectPtr obj_ptr,
     const ignition::gazebo::Entity& enity,
     ignition::gazebo::EntityComponentManager& ecm,
-    std::shared_ptr<crowd_simulator::CrowdSimInterface> crowd_sim_interface)
+    crowd_simulator::CrowdSimInterface& crowd_sim_interface)
   const;
 };
 

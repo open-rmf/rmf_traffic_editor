@@ -14,19 +14,10 @@ class Model:
             print('parsed a deprecated .building.yaml, model should have a z'
                   ' field, setting elevation to 0.0 for now')
 
-        # temporary hack: whitelist of robot models which must be non-static
-        non_static_model_names = [
-            'Sesto',
-            'MiR100',
-            'Magni'
-        ]
-        if self.model_name in non_static_model_names:
-            self.static = False
+        if 'static' in yaml_node:
+            self.static = yaml_node['static']
         else:
-            if 'static' in yaml_node:
-                self.static = yaml_node['static']
-            else:
-                self.static = True
+            self.static = True
 
         if 'agent_group_id' in yaml_node:
             self.human = True
