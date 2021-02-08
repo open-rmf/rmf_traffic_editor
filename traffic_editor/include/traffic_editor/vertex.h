@@ -57,6 +57,10 @@ public:
     const QColor& color,
     bool human_vertex = false) const;
 
+  bool is_parking_point() const;
+  bool is_holding_point() const;
+  bool is_charger() const;
+
   ////////////////////////////////////////////////////////////
   static const std::vector<std::pair<std::string, Param::Type>> allowed_params;
 };

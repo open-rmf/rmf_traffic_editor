@@ -87,6 +87,8 @@ Editor::Editor()
 
   map_view = new MapView(this);
   map_view->setScene(scene);
+  map_view->setStyleSheet(
+    "QToolTip { color: #000000; background-color: #ffff88; border: 0px; }");
 
   QVBoxLayout* left_layout = new QVBoxLayout;
   left_layout->addWidget(map_view);
@@ -273,6 +275,8 @@ Editor::Editor()
   w->setLayout(hbox_layout);
   w->setStyleSheet("background-color: #404040");
   setCentralWidget(w);
+
+  //qApp->
 
   // PROJECT MENU
   QMenu* project_menu = menuBar()->addMenu("&Project");

@@ -1,18 +1,21 @@
 <!DOCTYPE RCC>
 <RCC version="1.0">
 <qresource>
-  <file>icons/vertex.svg</file>
-  <file>icons/move.svg</file>
-  <file>icons/rotate.svg</file>
-  <file>icons/select.svg</file>
+  <file>icons/battery.svg</file>
+  <file>icons/door.svg</file>
   <file>icons/fiducial.svg</file>
-  <file>icons/roi.svg</file>
   <file>icons/floor.svg</file>
   <file>icons/hole.svg</file>
-  <file>icons/wall.svg</file>
-  <file>icons/door.svg</file>
   <file>icons/measurement.svg</file>
   <file>icons/human_vertex.svg</file>
   <file>icons/human_vertex_selected.svg</file>
+  <file>icons/move.svg</file>
+  <file>icons/parking.svg</file>
+  <file>icons/roi.svg</file>
+  <file>icons/rotate.svg</file>
+  <file>icons/select.svg</file>
+  <file>icons/stopwatch.svg</file>
+  <file>icons/vertex.svg</file>
+  <file>icons/wall.svg</file>
 </qresource>
 </RCC>
