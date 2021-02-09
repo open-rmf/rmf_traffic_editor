@@ -21,6 +21,7 @@
 #include <QGraphicsSimpleTextItem>
 #include <QLabel>
 #include <QSvgWidget>
+#include <QGraphicsProxyWidget>
 #include <QIcon>
 
 #include "traffic_editor/vertex.h"
@@ -104,7 +105,6 @@ YAML::Node Vertex::to_yaml() const
 void Vertex::draw(
   QGraphicsScene* scene,
   const double radius,
-  const QColor& color,
   bool human_vertex) const
 {
   QPen vertex_pen(Qt::black);
@@ -126,8 +126,9 @@ void Vertex::draw(
       new QSvgWidget(QString(selected ? ":icons/human_vertex_selected.svg" :
         ":icons/human_vertex.svg"));
     svg_anim->setGeometry(x - new_radius, y - new_radius, svg_w_h, svg_w_h);
-    svg_anim->setStyleSheet("background-color: transparent; ");
-    scene->addWidget(svg_anim);
+    svg_anim->setStyleSheet("background-color: transparent;");
+    QGraphicsProxyWidget* item = scene->addWidget(svg_anim);
+    item->setZValue(20.0);
   }
   else
   {

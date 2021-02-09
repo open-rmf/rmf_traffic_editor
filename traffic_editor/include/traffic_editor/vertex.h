@@ -54,7 +54,6 @@ public:
   void draw(
     QGraphicsScene* scene,
     const double radius,
-    const QColor& color,
     bool human_vertex = false) const;
 
   bool is_parking_point() const;

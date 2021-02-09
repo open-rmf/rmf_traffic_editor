@@ -108,7 +108,6 @@ void HumanVtxPropTable::update(Vertex& vertex, int level)
     }
   }
 
-  int vertices_count = idxs.size();
   std::vector<std::pair<double, double>> human_lane_vertices;
   QSet<QString> unique_human_goals;
   for (auto& idx:idxs)

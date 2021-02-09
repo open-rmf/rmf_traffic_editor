@@ -1078,7 +1078,6 @@ void BuildingLevel::draw(
     v.draw(
       scene,
       vertex_radius / drawing_meters_per_pixel,
-      QColor::fromRgbF(0.0, 0.5, 0.0),
       crowd_sim_impl->vertex_has_human(v));
   }
 
