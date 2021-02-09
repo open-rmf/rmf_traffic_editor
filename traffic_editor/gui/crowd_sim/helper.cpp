@@ -15,14 +15,14 @@
  *
 */
 
-#ifndef CROWD_SIM_HELPER__H
-#define CROWD_SIM_HELPER__H
-#include <cmath>
+#include <traffic_editor/crowd_sim/helper.h>
 
 namespace crowd_sim {
 
 // helper function
-double dp3(double x);
+double dp3(double x)
+{
+  return std::round(x * 1000.0) / 1000.0;
 }
 
-#endif
+}

@@ -102,6 +102,7 @@ set(traffic_editor_sources
   gui/crowd_sim/crowd_sim_table_base.cpp
   gui/crowd_sim/goal_set.cpp
   gui/crowd_sim/goal_set_table.cpp
+  gui/crowd_sim/helper.cpp
   gui/crowd_sim/human_vtx_prop_table.cpp
   gui/crowd_sim/model_type.cpp
   gui/crowd_sim/profile_model_type_layout.cpp
