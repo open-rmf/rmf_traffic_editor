@@ -8,7 +8,6 @@
 #include <sstream>
 #include <vector>
 #include <set>
-#include "callbacks.h"
 
 class MultiSelectComboBox : public QComboBox
 {

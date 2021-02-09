@@ -183,34 +183,11 @@ void Vertex::draw(
       x + icon_ring_radius * cos(icon_bearing),
       y - icon_ring_radius * sin(icon_bearing));
     pixmap_item->setToolTip("This vertex is a parking point");
-
-    /*
-    // outline the vertex with another circle
-    QGraphicsEllipseItem* ellipse_item = scene->addEllipse(
-      x - 2.0 * radius,
-      y - 2.0 * radius,
-      2 * 2.0 * radius,
-      2 * 2.0 * radius,
-      annotation_pen,
-      QBrush());  // default brush is transparent
-    ellipse_item->setZValue(20.0);  // above all lane/wall edges
-    */
   }
 
   if (is_charger())
   {
     const double icon_bearing = 135.0 * M_PI / 180.0;
-    /*
-    // draw a larger black rectangle around the vertex
-    QGraphicsRectItem* rect_item = scene->addRect(
-      x - 2.0 * radius,
-      y - 2.0 * radius,
-      2 * 2.0 * radius,
-      2 * 2.0 * radius,
-      annotation_pen,
-      QBrush());  // default brush is transparent
-    rect_item->setZValue(20.0);
-    */
     QIcon icon(":icons/battery.svg");
     QPixmap pixmap(icon.pixmap(icon.actualSize(QSize(128, 128))));
     QGraphicsPixmapItem* pixmap_item = scene->addPixmap(pixmap);
