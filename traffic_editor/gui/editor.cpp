@@ -1365,9 +1365,11 @@ void Editor::layers_table_set_row(
     visible_checkbox, &QAbstractButton::clicked,
     [=](bool box_checked)
     {
-      if (row_idx > 0)
-        project.building.levels[level_idx].layers[row_idx-1].visible =
-        box_checked;
+      if (row_idx == 0) {
+        project.building.levels[level_idx].set_drawing_visible(box_checked);
+      } else if (row_idx > 0) {
+        project.building.levels[level_idx].layers[row_idx-1].visible = box_checked;
+      }
       create_scene();
     });
   connect(

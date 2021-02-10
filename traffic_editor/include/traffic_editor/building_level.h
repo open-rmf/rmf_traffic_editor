@@ -91,7 +91,11 @@ public:
 
   bool load_drawing();
 
+  void set_drawing_visible(bool value) { drawing_visible_ = value; }
+
 private:
+  bool drawing_visible_ = true;
+
   void draw_lane(
     QGraphicsScene* scene,
     const Edge& edge,

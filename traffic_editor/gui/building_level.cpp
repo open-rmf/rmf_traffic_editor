@@ -918,7 +918,7 @@ void BuildingLevel::draw(
   vector<EditorModel>& editor_models,
   const RenderingOptions& rendering_options)
 {
-  if (drawing_filename.size())
+  if (drawing_filename.size() && drawing_visible_)
   {
     scene->setSceneRect(
       QRectF(0, 0, drawing_width, drawing_height));
