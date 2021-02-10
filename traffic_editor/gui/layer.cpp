@@ -17,6 +17,7 @@
 
 #include <QImageReader>
 #include "traffic_editor/layer.h"
+#include "traffic_editor/correspondence_point.hpp"
 using std::string;
 using std::vector;
 
@@ -40,6 +41,16 @@ bool Layer::from_yaml(const std::string& _name, const YAML::Node& y)
   rotation = y["rotation"].as<double>();
   if (y["visible"])
     visible = y["visible"].as<bool>();
+  if (y["correspondence_points"] && y["correspondence_points"].IsSequence())
+  {
+    const YAML::Node& points = y["correspondence_points"];
+    for (YAML::const_iterator it = points.begin(); it != points.end(); ++it)
+    {
+      CorrespondencePoint cp;
+      cp.from_yaml(*it);
+      correspondence_points.push_back(cp);
+    }
+  }
 
   // now try to load the image
   QImageReader image_reader(QString::fromStdString(filename));
@@ -69,5 +80,8 @@ YAML::Node Layer::to_yaml() const
   y["translation_y"] = translation_y;
   y["rotation"] = rotation;
   y["visible"] = visible;
+  for (const auto& cp : correspondence_points)
+    y["correspondence_points"].push_back(cp.to_yaml());
+
   return y;
 }

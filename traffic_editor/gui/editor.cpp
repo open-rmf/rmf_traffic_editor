@@ -41,6 +41,7 @@
 #include "ament_index_cpp/get_package_prefix.hpp"
 #include "ament_index_cpp/get_resource.hpp"
 
+#include "actions/add_correspondence_point.hpp"
 #include "actions/add_fiducial.h"
 #include "actions/add_model.h"
 #include "actions/add_property.h"
@@ -91,7 +92,16 @@ Editor::Editor()
   QVBoxLayout* left_layout = new QVBoxLayout;
   left_layout->addWidget(map_view);
 
-  layers_table = new TableList;  // todo: replace with specific subclass?
+  layers_table = new TableList(4);  // todo: replace with specific subclass?
+  QStringList header_labels = {"Name", "Active layer", "Visible", "Edit"};
+  layers_table->setHorizontalHeaderLabels(header_labels);
+  connect(
+    layers_table, &QTableWidget::cellClicked,
+    [=](int row, int /*col*/) {
+      if (row < static_cast<int>(project.building.levels[level_idx].layers.size())) {
+        layer_idx = row;
+      }
+    });
 
   level_table = new BuildingLevelTable;
   connect(
@@ -392,6 +402,7 @@ Editor::Editor()
   create_tool_button(TOOL_MOVE, ":icons/move.svg", "Move (M)");
   create_tool_button(TOOL_ROTATE, ":icons/rotate.svg", "Rotate (R)");
   create_tool_button(TOOL_ADD_VERTEX, ":icons/vertex.svg", "Add Vertex (V)");
+  create_tool_button(TOOL_ADD_CORRESPONDENCE_POINT, ":icons/correspondence_point.svg", "Add Correspondence Point");
   create_tool_button(TOOL_ADD_FIDUCIAL, ":icons/fiducial.svg", "Add Fiducial");
   create_tool_button(TOOL_ADD_LANE, "", "Add Lane (L)");
   create_tool_button(TOOL_ADD_WALL, ":icons/wall.svg", "Add Wall (W)");
@@ -917,6 +928,7 @@ void Editor::mouse_event(const MouseType t, QMouseEvent* e)
     case TOOL_ADD_FLOOR:    mouse_add_floor(t, e, p); break;
     case TOOL_ADD_HOLE:     mouse_add_hole(t, e, p); break;
     case TOOL_EDIT_POLYGON: mouse_edit_polygon(t, e, p); break;
+    case TOOL_ADD_CORRESPONDENCE_POINT: mouse_add_correspondence_point(t, e, p); break;
     case TOOL_ADD_FIDUCIAL: mouse_add_fiducial(t, e, p); break;
     case TOOL_ADD_ROI:      mouse_add_roi(t, e, p); break;
     case TOOL_ADD_HUMAN_LANE: mouse_add_human_lane(t, e, p); break;
@@ -1055,6 +1067,7 @@ const QString Editor::tool_id_to_string(const int id)
     case TOOL_ADD_HOLE: return "add hole";
     case TOOL_EDIT_POLYGON: return "&edit polygon";
     case TOOL_ADD_HUMAN_LANE: return "add human lane";
+    case TOOL_ADD_CORRESPONDENCE_POINT: return "add &correspondence point";
     default: return "unknown tool ID";
   }
 }
@@ -1181,6 +1194,15 @@ void Editor::update_property_editor()
     }
   }
 
+  for (const auto& cp : project.building.levels[level_idx].layers[layer_idx].correspondence_points)
+  {
+    if (cp.selected())
+    {
+      populate_property_editor(cp);
+      return;  // stop after finding the first one
+    }
+  }
+
   for (const auto& f : project.building.levels[level_idx].fiducials)
   {
     if (f.selected)
@@ -1291,8 +1313,7 @@ void Editor::populate_layers_table()
   layers_table->blockSignals(true);  // otherwise we get tons of callbacks
   layers_table->setRowCount(2 + level.layers.size());
 
-  layers_table->blockSignals(true);  // otherwise we get tons of callbacks
-  layers_table_set_row(0, "floorplan", true);
+  layers_table_set_row(0, "Floorplan", true);
 
   for (size_t i = 0; i < level.layers.size(); i++)
   {
@@ -1305,8 +1326,10 @@ void Editor::populate_layers_table()
   const int last_row_idx = static_cast<int>(level.layers.size()) + 1;
   // we'll use the last row for the "Add" button
   layers_table->setCellWidget(last_row_idx, 0, nullptr);
+  layers_table->setCellWidget(last_row_idx, 1, nullptr);
+  layers_table->setCellWidget(last_row_idx, 2, nullptr);
   QPushButton* add_button = new QPushButton("Add...", this);
-  layers_table->setCellWidget(last_row_idx, 1, add_button);
+  layers_table->setCellWidget(last_row_idx, 3, add_button);
   connect(
     add_button, &QAbstractButton::clicked,
     [=]() { this->layer_add_button_clicked(); });
@@ -1319,18 +1342,27 @@ void Editor::layers_table_set_row(
   const QString& label,
   const bool checked)
 {
-  QCheckBox* checkbox = new QCheckBox(label);
-  checkbox->setChecked(checked);
-  layers_table->setCellWidget(row_idx, 0, checkbox);
+  layers_table->setCellWidget(row_idx, 0, new QLabel(label));
+  QCheckBox* active_checkbox = new QCheckBox();
+  active_checkbox->setChecked(false);
+  layers_table->setCellWidget(row_idx, 1, active_checkbox);
+  QCheckBox* visible_checkbox = new QCheckBox();
+  visible_checkbox->setChecked(checked);
+  layers_table->setCellWidget(row_idx, 2, visible_checkbox);
 
   QPushButton* button = new QPushButton("Edit...", this);
-  layers_table->setCellWidget(row_idx, 1, button);
+  layers_table->setCellWidget(row_idx, 3, button);
 
   connect(
-    button, &QAbstractButton::clicked,
-    [=]() { this->layer_edit_button_clicked(label.toStdString()); });
+    active_checkbox, &QAbstractButton::clicked,
+    [=](bool box_checked)
+    {
+      if (box_checked) {
+        update_active_layer_checkboxes(row_idx);
+      }
+    });
   connect(
-    checkbox, &QAbstractButton::clicked,
+    visible_checkbox, &QAbstractButton::clicked,
     [=](bool box_checked)
     {
       if (row_idx > 0)
@@ -1338,6 +1370,9 @@ void Editor::layers_table_set_row(
         box_checked;
       create_scene();
     });
+  connect(
+    button, &QAbstractButton::clicked,
+    [=]() { this->layer_edit_button_clicked(label.toStdString()); });
 }
 
 void Editor::layer_edit_button_clicked(const std::string& label)
@@ -1378,6 +1413,15 @@ void Editor::layer_add_button_clicked()
   level.layers.push_back(layer);
   populate_layers_table();
   setWindowModified(true);
+}
+
+void Editor::update_active_layer_checkboxes(int row_idx) {
+  for (size_t ii = 0; ii < project.building.levels[level_idx].layers.size() + 1; ++ii)
+  {
+    dynamic_cast<QCheckBox*>(layers_table->cellWidget(ii, 1))->setChecked(false);
+  }
+  dynamic_cast<QCheckBox*>(layers_table->cellWidget(row_idx, 1))->setChecked(true);
+  layer_idx = row_idx;
 }
 
 void Editor::populate_property_editor(const Edge& edge)
@@ -1455,6 +1499,22 @@ void Editor::populate_property_editor(const Vertex& vertex)
   add_param_button->setProperty("object_type", QVariant("vertex"));
 
   property_editor->blockSignals(false);  // re-enable callbacks
+}
+
+void Editor::populate_property_editor(const CorrespondencePoint& correspondence_point)
+{
+  property_editor->blockSignals(true);
+
+  property_editor->setRowCount(1);
+  QString id_str;
+  id_str.setNum(correspondence_point.id());
+  property_editor_set_row(
+    0,
+    "ID",
+    id_str,
+    false);  // true means that this cell value is editable
+
+  property_editor->blockSignals(false);
 }
 
 void Editor::populate_property_editor(const Fiducial& fiducial)
@@ -1674,6 +1734,7 @@ void Editor::remove_mouse_motion_item()
 
   mouse_vertex_idx = -1;
   mouse_fiducial_idx = -1;
+  mouse_correspondence_point_idx = -1;
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -1689,7 +1750,7 @@ void Editor::mouse_select(
   const QPoint p_map = map_view->mapFromGlobal(p_global);
   QGraphicsItem* item = map_view->itemAt(p_map);
 
-  project.mouse_select_press(mode, level_idx, p.x(), p.y(), item);
+  project.mouse_select_press(mode, level_idx, layer_idx, p.x(), p.y(), item);
 
   // todo: figure out something smarter than this abomination
   selected_polygon = project.get_selected_polygon(mode, level_idx);
@@ -1727,6 +1788,22 @@ void Editor::mouse_add_vertex(
   }
 }
 
+void Editor::mouse_add_correspondence_point(const MouseType t, QMouseEvent*, const QPointF& p)
+{
+  if (t == MOUSE_PRESS)
+  {
+    AddCorrespondencePointCommand* command = new AddCorrespondencePointCommand(
+      &project,
+      level_idx,
+      layer_idx,
+      p.x(),
+      p.y());
+    undo_stack.push(command);
+    setWindowModified(true);
+    create_scene();
+  }
+}
+
 void Editor::mouse_add_fiducial(
   const MouseType t, QMouseEvent*, const QPointF& p)
 {
@@ -1749,7 +1826,7 @@ void Editor::mouse_move(
   if (t == MOUSE_PRESS)
   {
     Building::NearestItem ni =
-      project.building.nearest_items(level_idx, p.x(), p.y());
+      project.building.nearest_items(level_idx, layer_idx, p.x(), p.y());
 
     // todo: use QGraphics stuff to see if we clicked a model pixmap...
     const double model_dist_thresh = 0.5 /
@@ -1772,6 +1849,16 @@ void Editor::mouse_move(
 
       latest_move_vertex = new MoveVertexCommand(&project, level_idx,
           mouse_vertex_idx);
+      // todo: save the QGrahpicsEllipse or group, to avoid full repaints?
+    }
+    else if (ni.correspondence_point_idx >= 0 && ni.correspondence_point_dist < 10.0)
+    {
+      mouse_correspondence_point_idx = ni.correspondence_point_idx;
+      latest_move_correspondence_point = new MoveCorrespondencePointCommand(
+        &project,
+        level_idx,
+        layer_idx,
+        mouse_correspondence_point_idx);
       // todo: save the QGrahpicsEllipse or group, to avoid full repaints?
     }
     else if (ni.fiducial_idx >= 0 && ni.fiducial_dist < 10.0)
@@ -1810,6 +1897,19 @@ void Editor::mouse_move(
       }
     }
 
+    if (mouse_correspondence_point_idx >= 0) //Add mouse move correspondence_point
+    {
+      if (latest_move_correspondence_point->has_moved)
+      {
+        undo_stack.push(latest_move_correspondence_point);
+      }
+      else
+      {
+        delete latest_move_correspondence_point;
+        latest_move_correspondence_point = NULL;
+      }
+    }
+
     if (mouse_fiducial_idx >= 0) //Add mouse move fiducial
     {
       if (latest_move_fiducial->has_moved)
@@ -1823,6 +1923,7 @@ void Editor::mouse_move(
       }
     }
     mouse_vertex_idx = -1;
+    mouse_correspondence_point_idx = -1;
     mouse_fiducial_idx = -1;
     create_scene();  // this will free mouse_motion_model
     setWindowModified(true);
@@ -1831,8 +1932,9 @@ void Editor::mouse_move(
   {
     if (!(e->buttons() & Qt::LeftButton))
       return;// we only care about mouse-dragging, not just motion
-    printf("mouse move, vertex_idx = %d, fiducial_idx = %d\n",
+    printf("mouse move, vertex_idx = %d, correspondence_point_idx = %d, fiducial_idx = %d\n",
       mouse_vertex_idx,
+      mouse_correspondence_point_idx,
       mouse_fiducial_idx);
     if (mouse_motion_model != nullptr)
     {
@@ -1853,6 +1955,19 @@ void Editor::mouse_move(
       pt.x = p.x();
       pt.y = p.y();
       latest_move_vertex->set_final_destination(p.x(), p.y());
+      create_scene();
+    }
+    else if (mouse_correspondence_point_idx >= 0)
+    {
+      CorrespondencePoint& cp =
+        project.building.levels[level_idx].layers[layer_idx].correspondence_points[mouse_correspondence_point_idx];
+      cp.set_x(p.x());
+      cp.set_y(p.y());
+      latest_move_correspondence_point->set_final_destination(p.x(), p.y());
+      printf("moved correspondence point %d to (%.1f, %.1f)\n",
+        mouse_correspondence_point_idx,
+        cp.x(),
+        cp.y());
       create_scene();
     }
     else if (mouse_fiducial_idx >= 0)
@@ -2146,7 +2261,7 @@ void Editor::mouse_add_polygon(
     if (e->buttons() & Qt::LeftButton)
     {
       const Project::NearestItem ni =
-        project.nearest_items(mode, level_idx, p.x(), p.y());
+        project.nearest_items(mode, level_idx, layer_idx, p.x(), p.y());
       clicked_idx = ni.vertex_dist < 10.0 ? ni.vertex_idx : -1;
       if (clicked_idx < 0)
         return;// nothing to do. click wasn't on a vertex.
@@ -2270,7 +2385,7 @@ void Editor::mouse_edit_polygon(
     if (e->buttons() & Qt::RightButton)
     {
       const Project::NearestItem ni = project.nearest_items(
-        mode, level_idx, p.x(), p.y());
+        mode, level_idx, layer_idx, p.x(), p.y());
       if (ni.vertex_dist > 10.0)
       {
         printf("right-click wasn't near a vertex: %.1f\n", ni.vertex_dist);
@@ -2324,7 +2439,7 @@ void Editor::mouse_edit_polygon(
     mouse_motion_polygon = nullptr;
 
     const Project::NearestItem ni = project.nearest_items(
-      mode, level_idx, p.x(), p.y());
+      mode, level_idx, layer_idx, p.x(), p.y());
 
     if (ni.vertex_dist > 10.0)
       return;// nothing to do; didn't release near a vertex
@@ -2485,6 +2600,7 @@ void Editor::set_mode(const EditorModeId _mode, const QString& mode_string)
   set_tool_visibility(TOOL_ADD_MODEL, mode == MODE_BUILDING);
   set_tool_visibility(TOOL_ADD_FLOOR, mode == MODE_BUILDING);
   set_tool_visibility(TOOL_ADD_HOLE, mode == MODE_BUILDING);
+  set_tool_visibility(TOOL_ADD_CORRESPONDENCE_POINT, mode == MODE_BUILDING);
   set_tool_visibility(TOOL_ADD_FIDUCIAL, mode == MODE_BUILDING);
 
   // traffic tools

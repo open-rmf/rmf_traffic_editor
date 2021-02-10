@@ -58,6 +58,7 @@ public:
 
   void add_vertex(int level_index, double x, double y);
   QUuid add_fiducial(int level_index, double x, double y);
+  QUuid add_correspondence_point(int level, int layer, double x, double y);
 
   int find_nearest_vertex_index(
     int level_index, double x, double y, double& distance);
@@ -71,12 +72,16 @@ public:
     double vertex_dist = 1e100;
     int vertex_idx = -1;
 
+    double correspondence_point_dist = 1e100;
+    int correspondence_point_idx = -1;
+
     double fiducial_dist = 1e100;
     int fiducial_idx = -1;
   };
 
   NearestItem nearest_items(
     const int level_index,
+    const int layer_index,
     const double x,
     const double y);
 

@@ -85,6 +85,9 @@ public:
     double vertex_dist = 1e100;
     int vertex_idx = -1;
 
+    double correspondence_point_dist = 1e100;
+    int correspondence_point_idx = -1;
+
     double fiducial_dist = 1e100;
     int fiducial_idx = -1;
   };
@@ -92,6 +95,7 @@ public:
   NearestItem nearest_items(
     EditorModeId mode,
     const int level_index,
+    const int layer_index,
     const double x,
     const double y);
 
@@ -106,6 +110,7 @@ public:
   void mouse_select_press(
     const EditorModeId mode,
     const int level_idx,
+    const int layer_index,
     const double x,
     const double y,
     QGraphicsItem* graphics_item);

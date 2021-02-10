@@ -182,6 +182,18 @@ QUuid Building::add_fiducial(int level_index, double x, double y)
   return levels[level_index].fiducials.rbegin()->uuid;
 }
 
+QUuid Building::add_correspondence_point(int level, int layer, double x, double y)
+{
+  if (level >= static_cast<int>(levels.size())) {
+    return NULL;
+  }
+  if (layer >= static_cast<int>(levels[level].layers.size())) {
+    return NULL;
+  }
+  levels[level].layers[layer].correspondence_points.push_back(CorrespondencePoint(x, y));
+  return levels[level].layers[layer].correspondence_points.rbegin()->uuid();
+}
+
 int Building::find_nearest_vertex_index(
   int level_index,
   double x,
@@ -208,6 +220,7 @@ int Building::find_nearest_vertex_index(
 
 Building::NearestItem Building::nearest_items(
   const int level_index,
+  const int layer_index,
   const double x,
   const double y)
 {
@@ -226,6 +239,19 @@ Building::NearestItem Building::nearest_items(
     {
       ni.vertex_dist = dist;
       ni.vertex_idx = i;
+    }
+  }
+
+  for (size_t ii = 0; ii < level.layers[layer_index].correspondence_points.size(); ++ii)
+  {
+    const CorrespondencePoint& cp = level.layers[layer_index].correspondence_points[ii];
+    const double dx = x - cp.x();
+    const double dy = y - cp.y();
+    const double dist = sqrt(dx*dx + dy*dy);
+    if (dist < ni.correspondence_point_dist)
+    {
+      ni.correspondence_point_dist = dist;
+      ni.correspondence_point_idx = ii;
     }
   }
 

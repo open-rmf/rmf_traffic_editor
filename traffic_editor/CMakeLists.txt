@@ -37,6 +37,7 @@ include_directories(include)
 include_directories(${ament_index_cpp_INCLUDE_DIRS})
 
 set(traffic_editor_sources
+  gui/actions/add_correspondence_point.cpp
   gui/actions/add_edge.cpp
   gui/actions/add_fiducial.cpp
   gui/actions/add_model.cpp
@@ -44,6 +45,7 @@ set(traffic_editor_sources
   gui/actions/add_property.cpp
   gui/actions/add_vertex.cpp
   gui/actions/delete.cpp
+  gui/actions/move_correspondence_point.cpp
   gui/actions/move_fiducial.cpp
   gui/actions/move_model.cpp
   gui/actions/move_vertex.cpp
@@ -56,6 +58,7 @@ set(traffic_editor_sources
   gui/building_level.cpp
   gui/building_level_dialog.cpp
   gui/building_level_table.cpp
+  gui/correspondence_point.cpp
   gui/edge.cpp
   gui/editor.cpp
   gui/editor_model.cpp
