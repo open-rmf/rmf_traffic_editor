@@ -24,17 +24,14 @@
 #include "traffic_editor/correspondence_point.hpp"
 
 
-uint16_t CorrespondencePoint::next_id_ = 0;
-
 CorrespondencePoint::CorrespondencePoint()
 {
   uuid_ = QUuid::createUuid();
 }
 
-CorrespondencePoint::CorrespondencePoint(double x, double y)
-: x_(x), y_(y)
+CorrespondencePoint::CorrespondencePoint(double x, double y, int id)
+: x_(x), y_(y), id_(id)
 {
-  id_ = next_id_++;
   uuid_ = QUuid::createUuid();
 }
 
@@ -73,8 +70,10 @@ void CorrespondencePoint::draw(QGraphicsScene* scene, double meters_per_pixel) c
   scene->addLine(x_ - 2 * radius, y_ - 2 * radius, x_ + 2 * radius, y_ + 2 * radius, pen);
   scene->addLine(x_ - 2 * radius, y_ + 2 * radius, x_ + 2 * radius, y_ - 2 * radius, pen);
 
-  QGraphicsSimpleTextItem* item = scene->addSimpleText(
-    QString::number(id_));
+  QGraphicsSimpleTextItem* item = scene->addSimpleText(QString::number(id_));
   item->setBrush(QColor(0, 0, 255, 255));
   item->setPos(x_ + radius, y_ + radius);
+  auto font = item->font();
+  font.setPointSize(30);
+  item->setFont(font);
 }

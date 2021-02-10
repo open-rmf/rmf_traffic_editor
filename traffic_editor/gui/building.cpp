@@ -187,11 +187,10 @@ QUuid Building::add_correspondence_point(int level, int layer, double x, double 
   if (level >= static_cast<int>(levels.size())) {
     return NULL;
   }
-  if (layer >= static_cast<int>(levels[level].layers.size())) {
+  if (layer >= static_cast<int>(levels[level].correspondence_point_sets().size())) {
     return NULL;
   }
-  levels[level].layers[layer].correspondence_points.push_back(CorrespondencePoint(x, y));
-  return levels[level].layers[layer].correspondence_points.rbegin()->uuid();
+  return levels[level].add_correspondence_point(layer, x, y);
 }
 
 int Building::find_nearest_vertex_index(
@@ -242,9 +241,9 @@ Building::NearestItem Building::nearest_items(
     }
   }
 
-  for (size_t ii = 0; ii < level.layers[layer_index].correspondence_points.size(); ++ii)
+  for (size_t ii = 0; ii < level.correspondence_point_sets()[layer_index].size(); ++ii)
   {
-    const CorrespondencePoint& cp = level.layers[layer_index].correspondence_points[ii];
+    const CorrespondencePoint& cp = level.correspondence_point_sets()[layer_index][ii];
     const double dx = x - cp.x();
     const double dy = y - cp.y();
     const double dist = sqrt(dx*dx + dy*dy);

@@ -284,10 +284,10 @@ Project::NearestItem Project::nearest_items(
 
     for (
       size_t ii = 0;
-      ii < building_level.layers[layer_index].correspondence_points.size();
+      ii < building_level.correspondence_point_sets()[layer_index].size();
       ++ii)
     {
-      const CorrespondencePoint& cp = building_level.layers[layer_index].correspondence_points[ii];
+      const CorrespondencePoint& cp = building_level.correspondence_point_sets()[layer_index][ii];
       const double dx = x - cp.x();
       const double dy = y - cp.y();
       const double dist = std::sqrt(dx*dx + dy*dy);

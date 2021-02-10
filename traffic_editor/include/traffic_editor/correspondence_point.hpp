@@ -27,7 +27,7 @@ class CorrespondencePoint
 {
 public:
   CorrespondencePoint();
-  CorrespondencePoint(double x, double y);
+  CorrespondencePoint(double x, double y, int id);
 
   double x() const { return x_; }
   void set_x(double x) { x_ = x; }

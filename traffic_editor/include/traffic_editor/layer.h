@@ -18,8 +18,6 @@
 #ifndef LAYER_H
 #define LAYER_H
 
-#include "traffic_editor/correspondence_point.hpp"
-
 #include <string>
 #include <vector>
 
@@ -41,7 +39,6 @@ public:
   double translation_x = 0.0;
   double translation_y = 0.0;
   double rotation = 0.0;
-  std::vector<CorrespondencePoint> correspondence_points;
 
   QPixmap pixmap;
 

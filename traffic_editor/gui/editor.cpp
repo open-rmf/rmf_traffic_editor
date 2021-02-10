@@ -100,6 +100,7 @@ Editor::Editor()
     [=](int row, int /*col*/) {
       if (row < static_cast<int>(project.building.levels[level_idx].layers.size())) {
         layer_idx = row;
+        project.building.levels[level_idx].set_active_layer(layer_idx);
       }
     });
 
@@ -1194,7 +1195,7 @@ void Editor::update_property_editor()
     }
   }
 
-  for (const auto& cp : project.building.levels[level_idx].layers[layer_idx].correspondence_points)
+  for (const auto& cp : project.building.levels[level_idx].correspondence_point_sets()[layer_idx])
   {
     if (cp.selected())
     {
@@ -1357,9 +1358,8 @@ void Editor::layers_table_set_row(
     active_checkbox, &QAbstractButton::clicked,
     [=](bool box_checked)
     {
-      if (box_checked) {
-        update_active_layer_checkboxes(row_idx);
-      }
+      update_active_layer_checkboxes(row_idx);
+      create_scene();
     });
   connect(
     visible_checkbox, &QAbstractButton::clicked,
@@ -1424,6 +1424,7 @@ void Editor::update_active_layer_checkboxes(int row_idx) {
   }
   dynamic_cast<QCheckBox*>(layers_table->cellWidget(row_idx, 1))->setChecked(true);
   layer_idx = row_idx;
+  project.building.levels[level_idx].set_active_layer(layer_idx);
 }
 
 void Editor::populate_property_editor(const Edge& edge)
@@ -1962,7 +1963,7 @@ void Editor::mouse_move(
     else if (mouse_correspondence_point_idx >= 0)
     {
       CorrespondencePoint& cp =
-        project.building.levels[level_idx].layers[layer_idx].correspondence_points[mouse_correspondence_point_idx];
+        project.building.levels[level_idx].correspondence_point_sets()[layer_idx][mouse_correspondence_point_idx];
       cp.set_x(p.x());
       cp.set_y(p.y());
       latest_move_correspondence_point->set_final_destination(p.x(), p.y());

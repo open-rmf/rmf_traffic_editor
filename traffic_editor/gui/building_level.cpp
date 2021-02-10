@@ -147,6 +147,28 @@ bool BuildingLevel::from_yaml(
     }
   }
 
+  if (_data["correspondence_point_sets"] && _data["correspondence_point_sets"].IsSequence()) {
+    const YAML::Node& node = _data["correspondence_point_sets"];
+    for (YAML::const_iterator ii = node.begin(); ii != node.end(); ++ii) {
+      std::vector<CorrespondencePoint> cps;
+      for (YAML::const_iterator jj = ii->begin(); jj != ii->end(); ++jj) {
+        CorrespondencePoint cp;
+        cp.from_yaml(*jj);
+        cps.push_back(cp);
+      }
+      correspondence_point_sets_.push_back(cps);
+      next_cp_ids.push_back(cps.rbegin()->id() + 1);
+    }
+  } else {
+    // Add an empty set for each layer, including the floorplan non-layer
+    correspondence_point_sets_.push_back(std::vector<CorrespondencePoint>());
+    next_cp_ids.push_back(0);
+    for (size_t ii = 0; ii < layers.size(); ++ii) {
+      correspondence_point_sets_.push_back(std::vector<CorrespondencePoint>());
+      next_cp_ids.push_back(0);
+    }
+  }
+
   return true;
 }
 
@@ -198,6 +220,14 @@ YAML::Node BuildingLevel::to_yaml() const
 
   for (const auto& v : vertices)
     y["vertices"].push_back(v.to_yaml());
+
+  for (const auto& cps : correspondence_point_sets_) {
+    YAML::Node set;
+    for (const auto& cp : cps) {
+      set.push_back(cp.to_yaml());
+    }
+    y["correspondence_point_sets"].push_back(set);
+  }
 
   for (const auto& f : fiducials)
     y["fiducials"].push_back(f.to_yaml());
@@ -982,6 +1012,9 @@ void BuildingLevel::draw(
       vertex_radius / drawing_meters_per_pixel,
       QColor::fromRgbF(0.0, 0.5, 0.0));
 
+  for (const auto& cp : correspondence_point_sets_[active_layer_])
+    cp.draw(scene, drawing_meters_per_pixel);
+
   for (const auto& f : fiducials)
     f.draw(scene, drawing_meters_per_pixel);
 }
@@ -990,4 +1023,12 @@ void BuildingLevel::clear_scene()
 {
   for (auto& model : models)
     model.clear_scene();
+}
+
+QUuid BuildingLevel::add_correspondence_point(int layer, double x, double y)
+{
+  auto id = next_cp_ids[layer];
+  next_cp_ids[layer] += 1;
+  correspondence_point_sets_[layer].push_back(CorrespondencePoint(x, y, id));
+  return correspondence_point_sets_[layer].rbegin()->uuid();
 }

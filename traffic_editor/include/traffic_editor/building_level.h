@@ -23,6 +23,7 @@
 #include <yaml-cpp/yaml.h>
 #include <string>
 
+#include "traffic_editor/correspondence_point.hpp"
 #include "traffic_editor/edge.h"
 #include "traffic_editor/editor_model.h"
 #include "traffic_editor/fiducial.h"
@@ -93,8 +94,22 @@ public:
 
   void set_drawing_visible(bool value) { drawing_visible_ = value; }
 
+  const std::vector<std::vector<CorrespondencePoint>>& correspondence_point_sets() const {
+    return correspondence_point_sets_;
+  }
+
+  std::vector<std::vector<CorrespondencePoint>>& correspondence_point_sets() {
+    return correspondence_point_sets_;
+  }
+
+  void set_active_layer(int active_layer) { active_layer_ = active_layer; }
+  QUuid add_correspondence_point(int layer, double x, double y);
+
 private:
   bool drawing_visible_ = true;
+  std::vector<std::vector<CorrespondencePoint>> correspondence_point_sets_;
+  std::vector<int> next_cp_ids;
+  int active_layer_ = 0;
 
   void draw_lane(
     QGraphicsScene* scene,

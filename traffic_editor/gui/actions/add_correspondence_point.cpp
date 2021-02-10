@@ -37,11 +37,11 @@ void AddCorrespondencePointCommand::undo()
 
   for (
     size_t ii = 0;
-    ii < project_->building.levels[level_].layers[layer_].correspondence_points.size();
+    ii < project_->building.levels[level_].correspondence_point_sets()[layer_].size();
     ++ii)
   {
     if (uuid_ ==
-        project_->building.levels[level_].layers[layer_].correspondence_points[ii].uuid())
+        project_->building.levels[level_].correspondence_point_sets()[layer_][ii].uuid())
     {
       index_to_remove = ii;
     }
@@ -50,8 +50,8 @@ void AddCorrespondencePointCommand::undo()
     return;
   }
 
-  project_->building.levels[level_].layers[layer_].correspondence_points.erase(
-    project_->building.levels[level_].layers[layer_].correspondence_points.begin() +
+  project_->building.levels[level_].correspondence_point_sets()[layer_].erase(
+    project_->building.levels[level_].correspondence_point_sets()[layer_].begin() +
       index_to_remove);
 }
 
