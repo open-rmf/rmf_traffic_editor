@@ -171,6 +171,11 @@ bool Project::load(const std::string& _filename)
   return load_yaml_file(_filename);
 }
 
+bool Project::export_correspondence_points(int level_index, const std::string& dest_filename) const
+{
+  return building.export_level_correspondence_points(level_index, dest_filename);
+}
+
 void Project::add_scenario_vertex(
   const int level_idx,
   const double x,

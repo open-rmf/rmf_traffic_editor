@@ -72,7 +72,7 @@ void CorrespondencePoint::draw(QGraphicsScene* scene, double meters_per_pixel) c
 
   QGraphicsSimpleTextItem* item = scene->addSimpleText(QString::number(id_));
   item->setBrush(QColor(0, 0, 255, 255));
-  item->setPos(x_ + radius, y_ + radius);
+  item->setPos(x_, y_ + radius);
   auto font = item->font();
   font.setPointSize(30);
   item->setFont(font);

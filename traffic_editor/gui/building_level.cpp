@@ -17,12 +17,14 @@
 
 #include <algorithm>
 #include <cmath>
+#include <fstream>
 
 #include <QGraphicsOpacityEffect>
 #include <QGraphicsPixmapItem>
 #include <QGraphicsScene>
 #include <QImage>
 #include <QImageReader>
+#include "yaml_utils.h"
 
 #include "traffic_editor/building_level.h"
 using std::string;
@@ -157,7 +159,11 @@ bool BuildingLevel::from_yaml(
         cps.push_back(cp);
       }
       correspondence_point_sets_.push_back(cps);
-      next_cp_ids.push_back(cps.rbegin()->id() + 1);
+      if (cps.size() > 0) {
+        next_cp_ids.push_back(cps.rbegin()->id() + 1);
+      } else {
+        next_cp_ids.push_back(0);
+      }
     }
   } else {
     // Add an empty set for each layer, including the floorplan non-layer
@@ -964,7 +970,7 @@ void BuildingLevel::draw(
 
   draw_polygons(scene);
 
-  for (const auto& layer : layers)
+  for (auto& layer : layers)
   {
     if (!layer.visible)
       continue;
@@ -972,6 +978,8 @@ void BuildingLevel::draw(
     //printf("floorplan height: %d\n", level.floorplan_pixmap.height());
     //printf("layer pixmap height: %d\n", layer.pixmap.height());
     QGraphicsPixmapItem* item = scene->addPixmap(layer.pixmap);
+    // Store for later use in getting coordinates back out
+    layer.scene_item = item;
     // set the origin of the pixmap frame to the lower-left corner
     item->setOffset(0, -layer.pixmap.height());
     item->setPos(
@@ -1031,4 +1039,115 @@ QUuid BuildingLevel::add_correspondence_point(int layer, double x, double y)
   next_cp_ids[layer] += 1;
   correspondence_point_sets_[layer].push_back(CorrespondencePoint(x, y, id));
   return correspondence_point_sets_[layer].rbegin()->uuid();
+}
+
+bool BuildingLevel::export_correspondence_points(const std::string& filename) const
+{
+  YAML::Node level_correspondence_points;
+
+  YAML::Node floorplan_yaml;
+  floorplan_yaml["name"] = "floorplan";
+  floorplan_yaml["image_file"] = drawing_filename;
+  floorplan_yaml["size"].push_back(drawing_width);
+  floorplan_yaml["size"].push_back(drawing_height);
+  floorplan_yaml["size"].SetStyle(YAML::EmitterStyle::Flow);
+  YAML::Node floorplan_cps;
+  for (const auto& cp : correspondence_point_sets_[0]) {
+    YAML::Node cp_yaml;
+    cp_yaml.SetStyle(YAML::EmitterStyle::Flow);
+    cp_yaml.push_back(cp.x());
+    cp_yaml.push_back(cp.y());
+    floorplan_cps.push_back(cp_yaml);
+  }
+  floorplan_yaml["correspondence_points"] = floorplan_cps;
+  level_correspondence_points["ref_map"] = floorplan_yaml;
+
+  int layer_index = 1;
+  for (std::vector<Layer>::const_iterator layer = layers.begin(); layer != layers.end(); ++layer) {
+    YAML::Node y;
+    y["name"] = layer->name;
+    y["image_file"] = layer->filename;
+
+    QPixmap layer_pixmap =
+      QPixmap::fromImage(QImageReader(QString::fromStdString(layer->filename)).read());
+    y["size"].push_back(layer_pixmap.width());
+    y["size"].push_back(layer_pixmap.height());
+    y["size"].SetStyle(YAML::EmitterStyle::Flow);
+
+    YAML::Node transform;
+    double scale = layer->meters_per_pixel / drawing_meters_per_pixel;
+    transform["scale"].push_back(scale);
+    transform["scale"].push_back(scale);
+    transform["scale"].SetStyle(YAML::EmitterStyle::Flow);
+    transform["rotation"] = layer->rotation;
+    transform["translation"].push_back((layer->translation_x / drawing_meters_per_pixel) / scale);
+    transform["translation"].push_back((layer->translation_y / drawing_meters_per_pixel) / scale);
+    transform["translation"].SetStyle(YAML::EmitterStyle::Flow);
+    y["transform"] = transform;
+
+    YAML::Node cps;
+    for (const auto& cp : correspondence_point_sets_[layer_index]) {
+      QPointF offset = layer->scene_item->offset();
+      QPointF mapped_point = layer->scene_item->mapFromScene(QPointF(cp.x(), cp.y()));
+      YAML::Node cp_yaml;
+      cp_yaml.push_back(mapped_point.rx() - offset.rx());
+      cp_yaml.push_back(mapped_point.ry() - offset.ry());
+      cp_yaml.SetStyle(YAML::EmitterStyle::Flow);
+      cps.push_back(cp_yaml);
+
+      //printf("Offset is %f, %f\n", layer->scene_item->offset().rx(), layer->scene_item->offset().ry());
+      //QPointF mapped = layer->scene_item->mapFromScene(QPointF(cp.x(), cp.y()));
+      //printf("Mapped is %f, %f\n", mapped.rx(), mapped.ry());
+
+      //printf("==================\n");
+      //printf("Raw point: %f, %f\n", cp.x(), cp.y());
+      //printf("Floorplan scale: %f\n", drawing_meters_per_pixel);
+      //printf("Translation in metres: %f, %f\n", layer->translation_x, layer->translation_y);
+
+      //double scale = layer->meters_per_pixel / drawing_meters_per_pixel;
+      //double displayed_image_x = layer->pixmap.width() * scale;
+      //double displayed_image_y = layer->pixmap.height() * scale;
+      //printf("Image size: %f, %f\n", displayed_image_x, displayed_image_y);
+      //printf("------------------\n");
+      //double image_x = cp.x();
+      //double image_y = cp.y();
+
+      //double translate_x = (layer->translation_x / drawing_meters_per_pixel);
+      //double translate_y = (layer->translation_y / drawing_meters_per_pixel);
+      //image_x = image_x - translate_x;
+      //image_y = image_y + translate_y;
+      //printf("Translated x by %f to %f\n", translate_x, image_x);
+      //printf("Translated y by %f to %f\n", translate_y, image_y);
+
+      //double angle = -layer->rotation;
+      //image_x = image_x * std::cos(angle) - image_y * std::sin(angle);
+      //image_y = image_x * std::sin(angle) + image_y * std::cos(angle);
+      //printf("Rotated x by %f to %f\n", angle, image_x);
+      //printf("Rotated y by %f to %f\n", angle, image_y);
+
+      //image_x = image_x / scale;
+      //image_y = image_y / scale;
+      //printf("Scaled x by %f to %f\n", scale, image_x);
+      //printf("Scaled y by %f to %f\n", scale, image_y);
+
+      //printf("Offset is %f, %f\n", layer->scene_item->offset().rx(), layer->scene_item->offset().ry());
+      //QPointF mapped = layer->scene_item->mapFromScene(QPointF(cp.x(), cp.y()));
+      //printf("Mapped is %f, %f\n", mapped.rx(), mapped.ry());
+
+    }
+    y["correspondence_points"] = cps;
+    layer_index++;
+    level_correspondence_points["robot_map"] = y;
+  }
+
+  YAML::Emitter emitter;
+  yaml_utils::write_node(level_correspondence_points, emitter);
+  std::ofstream dest(filename);
+  dest << emitter.c_str();
+  return true;
+}
+
+void BuildingLevel::layer_added() {
+  correspondence_point_sets_.push_back(std::vector<CorrespondencePoint>());
+  next_cp_ids.push_back(0);
 }

@@ -146,6 +146,7 @@ private:
   void project_new();
   void project_open();
   bool project_save();
+  bool project_export_correspondence_points();
 
   bool maybe_save();
   void edit_undo();

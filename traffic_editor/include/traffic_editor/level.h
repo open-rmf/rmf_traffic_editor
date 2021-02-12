@@ -46,6 +46,7 @@ public:
   std::vector<Polygon> polygons;
 
   std::vector<Layer> layers;
+  virtual void layer_added() = 0;
 
   // temporary, just for debugging polygon edge projection...
   double polygon_edge_proj_x = 0.0;

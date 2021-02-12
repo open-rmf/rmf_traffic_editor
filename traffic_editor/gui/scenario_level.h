@@ -34,6 +34,8 @@ public:
   ScenarioLevel();
   ~ScenarioLevel();
 
+  void layer_added() {}
+
   bool from_yaml(const std::string& _name, const YAML::Node& yaml_node);
   YAML::Node to_yaml() const;
 

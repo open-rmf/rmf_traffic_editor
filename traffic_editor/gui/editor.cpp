@@ -287,6 +287,12 @@ Editor::Editor()
     &Editor::project_save,
     QKeySequence(Qt::CTRL + Qt::Key_S));
 
+  project_menu->addAction(
+    "&Export correspondence points for level",
+    this,
+    &Editor::project_export_correspondence_points,
+    QKeySequence(Qt::CTRL + Qt::Key_E));
+
   project_menu->addSeparator();
 
   project_menu->addAction(
@@ -806,6 +812,26 @@ bool Editor::project_save()
   project.save();
   setWindowModified(false);
   return true;
+}
+
+bool Editor::project_export_correspondence_points()
+{
+  QFileDialog dialog(this, "Export correspondence points for level");
+  dialog.setNameFilter("*.yaml");
+  dialog.setDefaultSuffix(".yaml");
+  dialog.setAcceptMode(QFileDialog::AcceptMode::AcceptSave);
+  dialog.setConfirmOverwrite(true);
+
+  if (dialog.exec() != QDialog::Accepted) {
+    return true;
+  }
+
+  QFileInfo file_info(dialog.selectedFiles().first());
+  auto result = project.export_correspondence_points(
+    level_idx,
+    file_info.absoluteFilePath().toStdString());
+  setWindowModified(false);
+  return result;
 }
 
 void Editor::help_about()
@@ -1413,6 +1439,7 @@ void Editor::layer_add_button_clicked()
     return;
   printf("added a layer: [%s]\n", layer.name.c_str());
   level.layers.push_back(layer);
+  level.layer_added();
   populate_layers_table();
   setWindowModified(true);
 }

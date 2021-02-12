@@ -102,8 +102,10 @@ public:
     return correspondence_point_sets_;
   }
 
+  void layer_added();
   void set_active_layer(int active_layer) { active_layer_ = active_layer; }
   QUuid add_correspondence_point(int layer, double x, double y);
+  bool export_correspondence_points(const std::string& filename) const;
 
 private:
   bool drawing_visible_ = true;
