@@ -288,7 +288,7 @@ Editor::Editor()
     QKeySequence(Qt::CTRL + Qt::Key_S));
 
   project_menu->addAction(
-    "&Export correspondence points for level",
+    "&Export layer alignment points for level",
     this,
     &Editor::project_export_correspondence_points,
     QKeySequence(Qt::CTRL + Qt::Key_E));
@@ -409,7 +409,7 @@ Editor::Editor()
   create_tool_button(TOOL_MOVE, ":icons/move.svg", "Move (M)");
   create_tool_button(TOOL_ROTATE, ":icons/rotate.svg", "Rotate (R)");
   create_tool_button(TOOL_ADD_VERTEX, ":icons/vertex.svg", "Add Vertex (V)");
-  create_tool_button(TOOL_ADD_CORRESPONDENCE_POINT, ":icons/correspondence_point.svg", "Add Correspondence Point");
+  create_tool_button(TOOL_ADD_CORRESPONDENCE_POINT, ":icons/correspondence_point.svg", "Add Layer Alignment Point");
   create_tool_button(TOOL_ADD_FIDUCIAL, ":icons/fiducial.svg", "Add Fiducial");
   create_tool_button(TOOL_ADD_LANE, "", "Add Lane (L)");
   create_tool_button(TOOL_ADD_WALL, ":icons/wall.svg", "Add Wall (W)");
@@ -816,7 +816,7 @@ bool Editor::project_save()
 
 bool Editor::project_export_correspondence_points()
 {
-  QFileDialog dialog(this, "Export correspondence points for level");
+  QFileDialog dialog(this, "Export layer alignment points for level");
   dialog.setNameFilter("*.yaml");
   dialog.setDefaultSuffix(".yaml");
   dialog.setAcceptMode(QFileDialog::AcceptMode::AcceptSave);
@@ -1094,7 +1094,7 @@ const QString Editor::tool_id_to_string(const int id)
     case TOOL_ADD_HOLE: return "add hole";
     case TOOL_EDIT_POLYGON: return "&edit polygon";
     case TOOL_ADD_HUMAN_LANE: return "add human lane";
-    case TOOL_ADD_CORRESPONDENCE_POINT: return "add &correspondence point";
+    case TOOL_ADD_CORRESPONDENCE_POINT: return "add layer &alignment point";
     default: return "unknown tool ID";
   }
 }
