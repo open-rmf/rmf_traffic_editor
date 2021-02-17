@@ -647,14 +647,16 @@ void BuildingLevel::draw_lane(
       const double hix = mx + 1.0 * cos(yaw) / drawing_meters_per_pixel;
       const double hiy = my + 1.0 * sin(yaw) / drawing_meters_per_pixel;
       pp.lineTo(QPointF(hix, hiy));
-      scene->addPath(pp, orientation_pen);
+      QGraphicsPathItem* pi = scene->addPath(pp, orientation_pen);
+      pi->setZValue(edge.get_graph_idx() + 1.1);
     }
     else if (orientation_it->second.value_string == "backward")
     {
       const double hix = mx - 1.0 * cos(yaw) / drawing_meters_per_pixel;
       const double hiy = my - 1.0 * sin(yaw) / drawing_meters_per_pixel;
       pp.lineTo(QPointF(hix, hiy));
-      scene->addPath(pp, orientation_pen);
+      QGraphicsPathItem* pi = scene->addPath(pp, orientation_pen);
+      pi->setZValue(edge.get_graph_idx() + 1.1);
     }
   }
 }
@@ -1017,8 +1019,7 @@ void BuildingLevel::draw(
   for (const auto& v : vertices)
     v.draw(
       scene,
-      vertex_radius / drawing_meters_per_pixel,
-      QColor::fromRgbF(0.0, 0.5, 0.0));
+      vertex_radius / drawing_meters_per_pixel);
 
   for (const auto& cp : correspondence_point_sets_[active_layer_])
     cp.draw(scene, drawing_meters_per_pixel);

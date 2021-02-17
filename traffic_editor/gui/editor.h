@@ -187,25 +187,21 @@ private:
   //int polygon_idx = -1;  // currently selected polygon
   Polygon* selected_polygon = nullptr;
 
-  QButtonGroup* level_button_group;
-  QHBoxLayout* level_button_hbox_layout;
-  QGraphicsScene* scene;
-  MapView* map_view;
+  QGraphicsScene* scene = nullptr;
+  MapView* map_view = nullptr;
 
-  QAction* save_action;
-  QAction* zoom_in_action, * zoom_out_action;
-  QAction* zoom_normal_action, * zoom_fit_action;
-  QAction* view_models_action;
+  QAction* zoom_fit_action = nullptr;
+  QAction* view_models_action = nullptr;
 
   const QString tool_id_to_string(const int id);
-  QButtonGroup* tool_button_group;
+  QButtonGroup* tool_button_group = nullptr;
 
-  QTabWidget* right_tab_widget;
+  QTabWidget* right_tab_widget = nullptr;
 
   QTableWidget* create_tabbed_table();
   void update_tables();
 
-  QTableWidget* layers_table;
+  QTableWidget* layers_table = nullptr;
   void populate_layers_table();
   void layers_table_set_row(
     const int row_idx,
@@ -215,13 +211,13 @@ private:
   void layer_add_button_clicked();
   void update_active_layer_checkboxes(int row_idx);
 
-  BuildingLevelTable* level_table;
-  LiftTable* lift_table;
-  ScenarioTable* scenario_table;
-  TrafficTable* traffic_table;
-  CrowdSimEditorTable* crowd_sim_table;
+  BuildingLevelTable* level_table = nullptr;
+  LiftTable* lift_table = nullptr;
+  ScenarioTable* scenario_table = nullptr;
+  TrafficTable* traffic_table = nullptr;
+  CrowdSimEditorTable* crowd_sim_table = nullptr;
 
-  QTableWidget* property_editor;
+  QTableWidget* property_editor = nullptr;
   void update_property_editor();
   void clear_property_editor();
   void populate_property_editor(const Edge& edge);
@@ -355,12 +351,12 @@ private:
   QPointF previous_mouse_point;
 
   // For undo related support
-  AddEdgeCommand* latest_add_edge;
-  MoveCorrespondencePointCommand* latest_move_correspondence_point;
-  MoveFiducialCommand* latest_move_fiducial;
-  MoveModelCommand* latest_move_model;
-  MoveVertexCommand* latest_move_vertex;
-  RotateModelCommand* latest_rotate_model;
+  AddEdgeCommand* latest_add_edge = nullptr;
+  MoveCorrespondencePointCommand* latest_move_correspondence_point = nullptr;
+  MoveFiducialCommand* latest_move_fiducial = nullptr;
+  MoveModelCommand* latest_move_model = nullptr;
+  MoveVertexCommand* latest_move_vertex = nullptr;
+  RotateModelCommand* latest_rotate_model = nullptr;
 };
 
 #endif
