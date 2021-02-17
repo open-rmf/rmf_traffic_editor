@@ -189,12 +189,10 @@ QUuid Building::add_fiducial(int level_index, double x, double y)
 
 QUuid Building::add_correspondence_point(int level, int layer, double x, double y)
 {
-  if (level >= static_cast<int>(levels.size())) {
+  if (level >= static_cast<int>(levels.size()))
     return NULL;
-  }
-  if (layer >= static_cast<int>(levels[level].correspondence_point_sets().size())) {
+  if (layer >= static_cast<int>(levels[level].correspondence_point_sets().size()))
     return NULL;
-  }
   return levels[level].add_correspondence_point(layer, x, y);
 }
 
@@ -246,7 +244,9 @@ Building::NearestItem Building::nearest_items(
     }
   }
 
-  for (size_t ii = 0; ii < level.correspondence_point_sets()[layer_index].size(); ++ii)
+  for (size_t ii = 0;
+    ii < level.correspondence_point_sets()[layer_index].size();
+    ++ii)
   {
     const CorrespondencePoint& cp = level.correspondence_point_sets()[layer_index][ii];
     const double dx = x - cp.x();

@@ -149,27 +149,33 @@ bool BuildingLevel::from_yaml(
     }
   }
 
-  if (_data["correspondence_point_sets"] && _data["correspondence_point_sets"].IsSequence()) {
+  if (_data["correspondence_point_sets"] &&
+    _data["correspondence_point_sets"].IsSequence())
+  {
     const YAML::Node& node = _data["correspondence_point_sets"];
-    for (YAML::const_iterator ii = node.begin(); ii != node.end(); ++ii) {
+    for (YAML::const_iterator ii = node.begin(); ii != node.end(); ++ii)
+    {
       std::vector<CorrespondencePoint> cps;
-      for (YAML::const_iterator jj = ii->begin(); jj != ii->end(); ++jj) {
+      for (YAML::const_iterator jj = ii->begin(); jj != ii->end(); ++jj)
+      {
         CorrespondencePoint cp;
         cp.from_yaml(*jj);
         cps.push_back(cp);
       }
       correspondence_point_sets_.push_back(cps);
-      if (cps.size() > 0) {
+      if (cps.size() > 0)
         next_cp_ids.push_back(cps.rbegin()->id() + 1);
-      } else {
+      else
         next_cp_ids.push_back(0);
-      }
     }
-  } else {
+  }
+  else
+  {
     // Add an empty set for each layer, including the floorplan non-layer
     correspondence_point_sets_.push_back(std::vector<CorrespondencePoint>());
     next_cp_ids.push_back(0);
-    for (size_t ii = 0; ii < layers.size(); ++ii) {
+    for (size_t ii = 0; ii < layers.size(); ++ii)
+    {
       correspondence_point_sets_.push_back(std::vector<CorrespondencePoint>());
       next_cp_ids.push_back(0);
     }
@@ -1042,7 +1048,8 @@ QUuid BuildingLevel::add_correspondence_point(int layer, double x, double y)
   return correspondence_point_sets_[layer].rbegin()->uuid();
 }
 
-bool BuildingLevel::export_correspondence_points(const std::string& filename) const
+bool BuildingLevel::export_correspondence_points(
+  const std::string& filename) const
 {
   YAML::Node level_correspondence_points;
 
@@ -1053,7 +1060,8 @@ bool BuildingLevel::export_correspondence_points(const std::string& filename) co
   floorplan_yaml["size"].push_back(drawing_height);
   floorplan_yaml["size"].SetStyle(YAML::EmitterStyle::Flow);
   YAML::Node floorplan_cps;
-  for (const auto& cp : correspondence_point_sets_[0]) {
+  for (const auto& cp : correspondence_point_sets_[0])
+  {
     YAML::Node cp_yaml;
     cp_yaml.SetStyle(YAML::EmitterStyle::Flow);
     cp_yaml.push_back(cp.x());
@@ -1064,13 +1072,17 @@ bool BuildingLevel::export_correspondence_points(const std::string& filename) co
   level_correspondence_points["ref_map"] = floorplan_yaml;
 
   int layer_index = 1;
-  for (std::vector<Layer>::const_iterator layer = layers.begin(); layer != layers.end(); ++layer) {
+  for (std::vector<Layer>::const_iterator layer = layers.begin();
+    layer != layers.end();
+    ++layer)
+  {
     YAML::Node y;
     y["name"] = layer->name;
     y["image_file"] = layer->filename;
 
     QPixmap layer_pixmap =
-      QPixmap::fromImage(QImageReader(QString::fromStdString(layer->filename)).read());
+      QPixmap::fromImage(
+        QImageReader(QString::fromStdString(layer->filename)).read());
     y["size"].push_back(layer_pixmap.width());
     y["size"].push_back(layer_pixmap.height());
     y["size"].SetStyle(YAML::EmitterStyle::Flow);
@@ -1081,15 +1093,19 @@ bool BuildingLevel::export_correspondence_points(const std::string& filename) co
     transform["scale"].push_back(scale);
     transform["scale"].SetStyle(YAML::EmitterStyle::Flow);
     transform["rotation"] = layer->rotation;
-    transform["translation"].push_back((layer->translation_x / drawing_meters_per_pixel) / scale);
-    transform["translation"].push_back((layer->translation_y / drawing_meters_per_pixel) / scale);
+    transform["translation"].push_back(
+      (layer->translation_x / drawing_meters_per_pixel) / scale);
+    transform["translation"].push_back(
+      (layer->translation_y / drawing_meters_per_pixel) / scale);
     transform["translation"].SetStyle(YAML::EmitterStyle::Flow);
     y["transform"] = transform;
 
     YAML::Node cps;
-    for (const auto& cp : correspondence_point_sets_[layer_index]) {
+    for (const auto& cp : correspondence_point_sets_[layer_index])
+    {
       QPointF offset = layer->scene_item->offset();
-      QPointF mapped_point = layer->scene_item->mapFromScene(QPointF(cp.x(), cp.y()));
+      QPointF mapped_point =
+        layer->scene_item->mapFromScene(QPointF(cp.x(), cp.y()));
       YAML::Node cp_yaml;
       cp_yaml.push_back(mapped_point.rx() - offset.rx());
       cp_yaml.push_back(mapped_point.ry() - offset.ry());

@@ -171,9 +171,13 @@ bool Project::load(const std::string& _filename)
   return load_yaml_file(_filename);
 }
 
-bool Project::export_correspondence_points(int level_index, const std::string& dest_filename) const
+bool Project::export_correspondence_points(
+  int level_index,
+  const std::string& dest_filename) const
 {
-  return building.export_level_correspondence_points(level_index, dest_filename);
+  return building.export_level_correspondence_points(
+    level_index,
+    dest_filename);
 }
 
 void Project::add_scenario_vertex(
@@ -292,7 +296,8 @@ Project::NearestItem Project::nearest_items(
       ii < building_level.correspondence_point_sets()[layer_index].size();
       ++ii)
     {
-      const CorrespondencePoint& cp = building_level.correspondence_point_sets()[layer_index][ii];
+      const CorrespondencePoint& cp =
+        building_level.correspondence_point_sets()[layer_index][ii];
       const double dx = x - cp.x();
       const double dy = y - cp.y();
       const double dist = std::sqrt(dx*dx + dy*dy);

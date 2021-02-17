@@ -223,7 +223,8 @@ private:
   void populate_property_editor(const Edge& edge);
   void populate_property_editor(const Model& model);
   void populate_property_editor(const Vertex& vertex);
-  void populate_property_editor(const CorrespondencePoint& correspondence_point);
+  void populate_property_editor(
+    const CorrespondencePoint& correspondence_point);
   void populate_property_editor(const Fiducial& fiducial);
   void populate_property_editor(const Polygon& polygon);
 
@@ -333,7 +334,10 @@ private:
   void mouse_rotate(const MouseType t, QMouseEvent* e, const QPointF& p);
 
   void mouse_add_vertex(const MouseType t, QMouseEvent* e, const QPointF& p);
-  void mouse_add_correspondence_point(const MouseType t, QMouseEvent* e, const QPointF& p);
+  void mouse_add_correspondence_point(
+    const MouseType t,
+    QMouseEvent* e,
+    const QPointF& p);
   void mouse_add_fiducial(const MouseType t, QMouseEvent* e, const QPointF& p);
   void mouse_add_lane(const MouseType t, QMouseEvent* e, const QPointF& p);
   void mouse_add_wall(const MouseType t, QMouseEvent* e, const QPointF& p);

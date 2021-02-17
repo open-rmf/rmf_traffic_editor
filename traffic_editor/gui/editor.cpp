@@ -100,7 +100,9 @@ Editor::Editor()
   connect(
     layers_table, &QTableWidget::cellClicked,
     [=](int row, int /*col*/) {
-      if (row < static_cast<int>(project.building.levels[level_idx].layers.size())) {
+      if (row < static_cast<int>(
+        project.building.levels[level_idx].layers.size()))
+      {
         layer_idx = row;
         project.building.levels[level_idx].set_active_layer(layer_idx);
       }
@@ -413,8 +415,14 @@ Editor::Editor()
   create_tool_button(TOOL_MOVE, ":icons/move.svg", "Move (M)");
   create_tool_button(TOOL_ROTATE, ":icons/rotate.svg", "Rotate (R)");
   create_tool_button(TOOL_ADD_VERTEX, ":icons/vertex.svg", "Add Vertex (V)");
-  create_tool_button(TOOL_ADD_CORRESPONDENCE_POINT, ":icons/correspondence_point.svg", "Add Layer Alignment Point");
-  create_tool_button(TOOL_ADD_FIDUCIAL, ":icons/fiducial.svg", "Add Fiducial");
+  create_tool_button(
+    TOOL_ADD_CORRESPONDENCE_POINT,
+    ":icons/correspondence_point.svg",
+    "Add Layer Alignment Point");
+  create_tool_button(
+    TOOL_ADD_FIDUCIAL,
+    ":icons/fiducial.svg",
+    "Add Level Alignemnt Fiducial");
   create_tool_button(TOOL_ADD_LANE, "", "Add Lane (L)");
   create_tool_button(TOOL_ADD_WALL, ":icons/wall.svg", "Add Wall (W)");
   create_tool_button(
@@ -826,9 +834,8 @@ bool Editor::project_export_correspondence_points()
   dialog.setAcceptMode(QFileDialog::AcceptMode::AcceptSave);
   dialog.setConfirmOverwrite(true);
 
-  if (dialog.exec() != QDialog::Accepted) {
+  if (dialog.exec() != QDialog::Accepted)
     return true;
-  }
 
   QFileInfo file_info(dialog.selectedFiles().first());
   auto result = project.export_correspondence_points(
@@ -959,7 +966,9 @@ void Editor::mouse_event(const MouseType t, QMouseEvent* e)
     case TOOL_ADD_FLOOR:    mouse_add_floor(t, e, p); break;
     case TOOL_ADD_HOLE:     mouse_add_hole(t, e, p); break;
     case TOOL_EDIT_POLYGON: mouse_edit_polygon(t, e, p); break;
-    case TOOL_ADD_CORRESPONDENCE_POINT: mouse_add_correspondence_point(t, e, p); break;
+    case TOOL_ADD_CORRESPONDENCE_POINT:
+      mouse_add_correspondence_point(t, e, p);
+      break;
     case TOOL_ADD_FIDUCIAL: mouse_add_fiducial(t, e, p); break;
     case TOOL_ADD_ROI:      mouse_add_roi(t, e, p); break;
     case TOOL_ADD_HUMAN_LANE: mouse_add_human_lane(t, e, p); break;
@@ -1225,7 +1234,8 @@ void Editor::update_property_editor()
     }
   }
 
-  for (const auto& cp : project.building.levels[level_idx].correspondence_point_sets()[layer_idx])
+  for (const auto& cp :
+    project.building.levels[level_idx].correspondence_point_sets()[layer_idx])
   {
     if (cp.selected())
     {
@@ -1448,12 +1458,17 @@ void Editor::layer_add_button_clicked()
   setWindowModified(true);
 }
 
-void Editor::update_active_layer_checkboxes(int row_idx) {
-  for (size_t ii = 0; ii < project.building.levels[level_idx].layers.size() + 1; ++ii)
+void Editor::update_active_layer_checkboxes(int row_idx)
+{
+  for (size_t ii = 0;
+    ii < project.building.levels[level_idx].layers.size() + 1;
+    ++ii)
   {
-    dynamic_cast<QCheckBox*>(layers_table->cellWidget(ii, 1))->setChecked(false);
+    dynamic_cast<QCheckBox*>(
+      layers_table->cellWidget(ii, 1))->setChecked(false);
   }
-  dynamic_cast<QCheckBox*>(layers_table->cellWidget(row_idx, 1))->setChecked(true);
+  dynamic_cast<QCheckBox*>(
+    layers_table->cellWidget(row_idx, 1))->setChecked(true);
   layer_idx = row_idx;
   project.building.levels[level_idx].set_active_layer(layer_idx);
 }
@@ -1535,7 +1550,8 @@ void Editor::populate_property_editor(const Vertex& vertex)
   property_editor->blockSignals(false);  // re-enable callbacks
 }
 
-void Editor::populate_property_editor(const CorrespondencePoint& correspondence_point)
+void Editor::populate_property_editor(
+  const CorrespondencePoint& correspondence_point)
 {
   property_editor->blockSignals(true);
 
@@ -1822,7 +1838,10 @@ void Editor::mouse_add_vertex(
   }
 }
 
-void Editor::mouse_add_correspondence_point(const MouseType t, QMouseEvent*, const QPointF& p)
+void Editor::mouse_add_correspondence_point(
+  const MouseType t,
+  QMouseEvent*,
+  const QPointF& p)
 {
   if (t == MOUSE_PRESS)
   {
@@ -1885,7 +1904,8 @@ void Editor::mouse_move(
           mouse_vertex_idx);
       // todo: save the QGrahpicsEllipse or group, to avoid full repaints?
     }
-    else if (ni.correspondence_point_idx >= 0 && ni.correspondence_point_dist < 10.0)
+    else if (ni.correspondence_point_idx >= 0 &&
+      ni.correspondence_point_dist < 10.0)
     {
       mouse_correspondence_point_idx = ni.correspondence_point_idx;
       latest_move_correspondence_point = new MoveCorrespondencePointCommand(
@@ -1966,7 +1986,10 @@ void Editor::mouse_move(
   {
     if (!(e->buttons() & Qt::LeftButton))
       return;// we only care about mouse-dragging, not just motion
-    printf("mouse move, vertex_idx = %d, correspondence_point_idx = %d, fiducial_idx = %d\n",
+    printf(
+      "mouse move, vertex_idx = %d, "
+      "correspondence_point_idx = %d, "
+      "fiducial_idx = %d\n",
       mouse_vertex_idx,
       mouse_correspondence_point_idx,
       mouse_fiducial_idx);

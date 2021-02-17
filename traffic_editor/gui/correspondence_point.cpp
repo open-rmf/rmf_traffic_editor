@@ -37,9 +37,8 @@ CorrespondencePoint::CorrespondencePoint(double x, double y, int id)
 
 void CorrespondencePoint::from_yaml(const YAML::Node& data)
 {
-  if (!data.IsMap()) {
+  if (!data.IsMap())
     throw std::runtime_error("CorrespondencePoint::from_yaml() expected a map");
-  }
   x_ = data["x"].as<double>();
   y_ = data["y"].as<double>();
   id_ = data["id"].as<uint16_t>();
@@ -57,7 +56,9 @@ YAML::Node CorrespondencePoint::to_yaml() const
   return node;
 }
 
-void CorrespondencePoint::draw(QGraphicsScene* scene, double meters_per_pixel) const
+void CorrespondencePoint::draw(
+  QGraphicsScene* scene,
+  double meters_per_pixel) const
 {
   const double a = 0.5;
   const QColor color = QColor::fromRgbF(0.0, 0.0, 1.0, a);
@@ -67,8 +68,19 @@ void CorrespondencePoint::draw(QGraphicsScene* scene, double meters_per_pixel) c
   pen.setWidth(0.2 / meters_per_pixel);
   const double radius = 0.5 / meters_per_pixel;
 
-  scene->addLine(x_ - 2 * radius, y_ - 2 * radius, x_ + 2 * radius, y_ + 2 * radius, pen);
-  scene->addLine(x_ - 2 * radius, y_ + 2 * radius, x_ + 2 * radius, y_ - 2 * radius, pen);
+  scene->addLine(
+    x_ - 2 * radius,
+    y_ - 2 * radius,
+    x_ + 2 * radius,
+    y_ + 2 * radius,
+    pen);
+
+  scene->addLine(
+    x_ - 2 * radius,
+    y_ + 2 * radius,
+    x_ + 2 * radius,
+    y_ - 2 * radius,
+    pen);
 
   QGraphicsSimpleTextItem* item = scene->addSimpleText(QString::number(id_));
   item->setBrush(QColor(0, 0, 255, 255));

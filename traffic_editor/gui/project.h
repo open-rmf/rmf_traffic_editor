@@ -53,7 +53,9 @@ public:
 
   bool save();
   bool load(const std::string& _filename);
-  bool export_correspondence_points(int level_index, const std::string& dest_filename) const;
+  bool export_correspondence_points(
+    int level_index,
+    const std::string& dest_filename) const;
 
   void clear();
 
