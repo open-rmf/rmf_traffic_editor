@@ -26,7 +26,12 @@
 class AddCorrespondencePointCommand : public QUndoCommand
 {
 public:
-  AddCorrespondencePointCommand(Project* project, int level, int layer, double x, double y);
+  AddCorrespondencePointCommand(
+    Project* project,
+    int level,
+    int layer,
+    double x,
+    double y);
 
   void undo() override;
   void redo() override;

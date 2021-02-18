@@ -233,11 +233,11 @@ YAML::Node BuildingLevel::to_yaml() const
   for (const auto& v : vertices)
     y["vertices"].push_back(v.to_yaml());
 
-  for (const auto& cps : correspondence_point_sets_) {
+  for (const auto& cps : correspondence_point_sets_)
+  {
     YAML::Node set;
-    for (const auto& cp : cps) {
+    for (const auto& cp : cps)
       set.push_back(cp.to_yaml());
-    }
     y["correspondence_point_sets"].push_back(set);
   }
 
@@ -1080,9 +1080,8 @@ bool BuildingLevel::export_correspondence_points(
     y["name"] = layer->name;
     y["image_file"] = layer->filename;
 
-    QPixmap layer_pixmap =
-      QPixmap::fromImage(
-        QImageReader(QString::fromStdString(layer->filename)).read());
+    QPixmap layer_pixmap = QPixmap::fromImage(
+      QImageReader(QString::fromStdString(layer->filename)).read());
     y["size"].push_back(layer_pixmap.width());
     y["size"].push_back(layer_pixmap.height());
     y["size"].SetStyle(YAML::EmitterStyle::Flow);
@@ -1164,7 +1163,8 @@ bool BuildingLevel::export_correspondence_points(
   return true;
 }
 
-void BuildingLevel::layer_added() {
+void BuildingLevel::layer_added()
+{
   correspondence_point_sets_.push_back(std::vector<CorrespondencePoint>());
   next_cp_ids.push_back(0);
 }

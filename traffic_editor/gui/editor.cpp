@@ -99,7 +99,8 @@ Editor::Editor()
   layers_table->setHorizontalHeaderLabels(header_labels);
   connect(
     layers_table, &QTableWidget::cellClicked,
-    [=](int row, int /*col*/) {
+    [=](int row, int /*col*/)
+    {
       if (row < static_cast<int>(
         project.building.levels[level_idx].layers.size()))
       {
@@ -1396,7 +1397,7 @@ void Editor::layers_table_set_row(
 
   connect(
     active_checkbox, &QAbstractButton::clicked,
-    [=](bool box_checked)
+    [=](bool)
     {
       update_active_layer_checkboxes(row_idx);
       create_scene();
@@ -1405,10 +1406,14 @@ void Editor::layers_table_set_row(
     visible_checkbox, &QAbstractButton::clicked,
     [=](bool box_checked)
     {
-      if (row_idx == 0) {
-        project.building.levels[level_idx].set_drawing_visible(box_checked);
-      } else if (row_idx > 0) {
-        project.building.levels[level_idx].layers[row_idx-1].visible = box_checked;
+      auto& level = project.building.levels[level_idx];
+      if (row_idx == 0)
+      {
+        level.set_drawing_visible(box_checked);
+      }
+      else if (row_idx > 0)
+      {
+        level.layers[row_idx-1].visible = box_checked;
       }
       create_scene();
     });
@@ -2017,7 +2022,8 @@ void Editor::mouse_move(
     else if (mouse_correspondence_point_idx >= 0)
     {
       CorrespondencePoint& cp =
-        project.building.levels[level_idx].correspondence_point_sets()[layer_idx][mouse_correspondence_point_idx];
+        project.building.levels[level_idx].correspondence_point_sets()
+        [layer_idx][mouse_correspondence_point_idx];
       cp.set_x(p.x());
       cp.set_y(p.y());
       latest_move_correspondence_point->set_final_destination(p.x(), p.y());

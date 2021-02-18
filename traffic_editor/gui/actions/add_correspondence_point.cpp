@@ -42,7 +42,8 @@ void AddCorrespondencePointCommand::undo()
     if (uuid_ == s[ii].uuid())
       index_to_remove = ii;
   }
-  if (index_to_remove < 0) {
+  if (index_to_remove < 0)
+  {
     return;
   }
 

@@ -94,11 +94,14 @@ public:
 
   void set_drawing_visible(bool value) { drawing_visible_ = value; }
 
-  const std::vector<std::vector<CorrespondencePoint>>& correspondence_point_sets() const {
+  const std::vector<std::vector<CorrespondencePoint>>&
+  correspondence_point_sets() const
+  {
     return correspondence_point_sets_;
   }
 
-  std::vector<std::vector<CorrespondencePoint>>& correspondence_point_sets() {
+  std::vector<std::vector<CorrespondencePoint>>& correspondence_point_sets()
+  {
     return correspondence_point_sets_;
   }
 

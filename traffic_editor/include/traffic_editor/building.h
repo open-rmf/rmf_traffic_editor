@@ -54,7 +54,9 @@ public:
   bool save_yaml_file();
   void clear();  // clear all internal data structures
 
-  bool export_level_correspondence_points(int level_index, const std::string& dest_filename) const;
+  bool export_level_correspondence_points(
+    int level_index,
+    const std::string& dest_filename) const;
 
   void add_level(const BuildingLevel& level);
 
