@@ -19,10 +19,13 @@
 #define LAYER_H
 
 #include <string>
+#include <vector>
 
 #include <QPixmap>
-
 #include <yaml-cpp/yaml.h>
+
+
+class QGraphicsPixmapItem;
 
 
 class Layer
@@ -41,6 +44,7 @@ public:
   double rotation = 0.0;
 
   QPixmap pixmap;
+  QGraphicsPixmapItem* scene_item = nullptr;  // Borrowed pointer, not owned, don't delete
 
   bool from_yaml(const std::string& name, const YAML::Node& data);
   YAML::Node to_yaml() const;

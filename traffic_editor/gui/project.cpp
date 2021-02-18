@@ -171,6 +171,15 @@ bool Project::load(const std::string& _filename)
   return load_yaml_file(_filename);
 }
 
+bool Project::export_correspondence_points(
+  int level_index,
+  const std::string& dest_filename) const
+{
+  return building.export_level_correspondence_points(
+    level_index,
+    dest_filename);
+}
+
 void Project::add_scenario_vertex(
   const int level_idx,
   const double x,
@@ -257,6 +266,7 @@ void Project::get_selected_items(
 Project::NearestItem Project::nearest_items(
   EditorModeId mode,
   const int level_index,
+  const int layer_index,
   const double x,
   const double y)
 {
@@ -278,6 +288,36 @@ Project::NearestItem Project::nearest_items(
       {
         ni.vertex_dist = dist;
         ni.vertex_idx = i;
+      }
+    }
+
+    for (
+      size_t ii = 0;
+      ii < building_level.correspondence_point_sets()[layer_index].size();
+      ++ii)
+    {
+      const CorrespondencePoint& cp =
+        building_level.correspondence_point_sets()[layer_index][ii];
+      const double dx = x - cp.x();
+      const double dy = y - cp.y();
+      const double dist = std::sqrt(dx*dx + dy*dy);
+      if (dist < ni.correspondence_point_dist)
+      {
+        ni.correspondence_point_dist = dist;
+        ni.correspondence_point_idx = ii;
+      }
+    }
+
+    for (size_t i = 0; i < building_level.fiducials.size(); i++)
+    {
+      const Fiducial& f = building_level.fiducials[i];
+      const double dx = x - f.x;
+      const double dy = y - f.y;
+      const double dist = std::sqrt(dx*dx + dy*dy);
+      if (dist < ni.fiducial_dist)
+      {
+        ni.fiducial_dist = dist;
+        ni.fiducial_idx = i;
       }
     }
 
@@ -359,12 +399,13 @@ ScenarioLevel* Project::scenario_level(const int building_level_idx)
 void Project::mouse_select_press(
   const EditorModeId mode,
   const int level_idx,
+  const int layer_idx,
   const double x,
   const double y,
   QGraphicsItem* graphics_item)
 {
   clear_selection(level_idx);
-  const NearestItem ni = nearest_items(mode, level_idx, x, y);
+  const NearestItem ni = nearest_items(mode, level_idx, layer_idx, x, y);
 
   const double vertex_dist_thresh =
     building.levels[level_idx].vertex_radius /

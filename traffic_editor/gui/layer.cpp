@@ -17,6 +17,7 @@
 
 #include <QImageReader>
 #include "traffic_editor/layer.h"
+#include "traffic_editor/correspondence_point.hpp"
 using std::string;
 using std::vector;
 
@@ -69,5 +70,6 @@ YAML::Node Layer::to_yaml() const
   y["translation_y"] = translation_y;
   y["rotation"] = rotation;
   y["visible"] = visible;
+
   return y;
 }
