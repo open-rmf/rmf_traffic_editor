@@ -1732,15 +1732,19 @@ void Editor::draw_mouse_motion_line_item(
 {
   double pen_width = 1;
   QColor color;
+  Edge::Type edge_type = Edge::Type::UNDEFINED;
+
   switch (tool_id)
   {
     case TOOL_ADD_LANE:
       pen_width = 20;
       color = QColor::fromRgbF(0, 0, 1, 0.5);
+      edge_type = Edge::Type::LANE;
       break;
     case TOOL_ADD_WALL:
       pen_width = 5;
       color = QColor::fromRgbF(0, 0, 1, 0.5);
+      edge_type = Edge::Type::WALL;
       break;
     case TOOL_ADD_MEAS:
       pen_width = 5;
@@ -1751,12 +1755,19 @@ void Editor::draw_mouse_motion_line_item(
   }
 
   QPen pen(QBrush(color), pen_width, Qt::SolidLine, Qt::RoundCap);
-  const auto& start =
-    project.building.levels[level_idx].vertices[clicked_idx];
+  const auto& level = project.building.levels[level_idx];
+  const auto& start = level.vertices[clicked_idx];
   if (!mouse_motion_line)
     mouse_motion_line = scene->addLine(start.x, start.y, mouse_x, mouse_y, pen);
   else
     mouse_motion_line->setLine(start.x, start.y, mouse_x, mouse_y);
+
+  // see if this not-yet-clicked edge would intersect another edge
+  if (tool_id != TOOL_ADD_LANE || tool_id != TOOL_ADD_WALL)
+    return;
+
+  // find the first edge of this type that we would intersect
+  // TODO!
 }
 
 void Editor::remove_mouse_motion_item()

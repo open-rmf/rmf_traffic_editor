@@ -283,6 +283,7 @@ private:
 
   const static int ROTATION_INDICATOR_RADIUS = 50;
   QGraphicsLineItem* mouse_motion_line = nullptr;
+  QGraphicsLineItem* mouse_motion_autosplit_line = nullptr;
   QGraphicsEllipseItem* mouse_motion_ellipse = nullptr;
   QGraphicsPixmapItem* mouse_motion_model = nullptr;
   QGraphicsPolygonItem* mouse_motion_polygon = nullptr;
