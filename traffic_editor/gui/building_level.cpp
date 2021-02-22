@@ -1027,8 +1027,11 @@ void BuildingLevel::draw(
       scene,
       vertex_radius / drawing_meters_per_pixel);
 
-  for (const auto& cp : correspondence_point_sets_[active_layer_])
-    cp.draw(scene, drawing_meters_per_pixel);
+  if (active_layer_ < static_cast<int>(correspondence_point_sets_.size()))
+  {
+    for (const auto& cp : correspondence_point_sets_[active_layer_])
+      cp.draw(scene, drawing_meters_per_pixel);
+  }
 
   for (const auto& f : fiducials)
     f.draw(scene, drawing_meters_per_pixel);
