@@ -1235,13 +1235,17 @@ void Editor::update_property_editor()
     }
   }
 
-  for (const auto& cp :
-    project.building.levels[level_idx].correspondence_point_sets()[layer_idx])
+  if (level_idx > static_cast<int>(
+    project.building.levels[level_idx].correspondence_point_sets().size()))
   {
-    if (cp.selected())
+    for (const auto& cp :
+      project.building.levels[level_idx].correspondence_point_sets()[layer_idx])
     {
-      populate_property_editor(cp);
-      return;  // stop after finding the first one
+      if (cp.selected())
+      {
+        populate_property_editor(cp);
+        return;  // stop after finding the first one
+      }
     }
   }
 
