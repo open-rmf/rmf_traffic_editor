@@ -291,20 +291,20 @@ Project::NearestItem Project::nearest_items(
       }
     }
 
-    for (
-      size_t ii = 0;
-      ii < building_level.correspondence_point_sets()[layer_index].size();
-      ++ii)
+    const auto& cp_sets = building_level.correspondence_point_sets();
+    if (layer_index < static_cast<int>(cp_sets.size()))
     {
-      const CorrespondencePoint& cp =
-        building_level.correspondence_point_sets()[layer_index][ii];
-      const double dx = x - cp.x();
-      const double dy = y - cp.y();
-      const double dist = std::sqrt(dx*dx + dy*dy);
-      if (dist < ni.correspondence_point_dist)
+      for (size_t i = 0; i < cp_sets[layer_index].size(); i++)
       {
-        ni.correspondence_point_dist = dist;
-        ni.correspondence_point_idx = ii;
+        const CorrespondencePoint& cp = cp_sets[layer_index][i];
+        const double dx = x - cp.x();
+        const double dy = y - cp.y();
+        const double dist = std::sqrt(dx*dx + dy*dy);
+        if (dist < ni.correspondence_point_dist)
+        {
+          ni.correspondence_point_dist = dist;
+          ni.correspondence_point_idx = i;
+        }
       }
     }
 
