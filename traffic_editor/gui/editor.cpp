@@ -1236,7 +1236,7 @@ void Editor::update_property_editor()
   }
 
   if (level_idx > static_cast<int>(
-    project.building.levels[level_idx].correspondence_point_sets().size()))
+      project.building.levels[level_idx].correspondence_point_sets().size()))
   {
     for (const auto& cp :
       project.building.levels[level_idx].correspondence_point_sets()[layer_idx])
