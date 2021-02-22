@@ -1028,9 +1028,9 @@ void Editor::keyPressEvent(QKeyEvent* e)
       break;
     case Qt::Key_S:
     case Qt::Key_Escape:
-      tool_button_group->button(TOOL_SELECT)->click();
       project.clear_selection(level_idx);
       clear_current_tool_buffer();
+      tool_button_group->button(TOOL_SELECT)->click();
       update_property_editor();
       create_scene();
       break;
