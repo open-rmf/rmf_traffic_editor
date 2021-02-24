@@ -89,7 +89,11 @@ def navmesh_main(map_file, output_dir):
         os.makedirs(output_dir)
 
     # parse the yaml file
-    yaml_parse = BuildingYamlParse(map_file)
+    try:
+        yaml_parse = BuildingYamlParse(map_file)
+    except ValueError as e:
+        print('crowdsim unable to parse, not attempting to proceed')
+        return
 
     for level_name in yaml_parse.levels_name:
         # navmesh output
