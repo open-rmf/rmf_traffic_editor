@@ -132,7 +132,12 @@ def configfile_main(map_file, output_dir, world_file_to_be_inserted):
     if not os.path.exists(world_file_to_be_inserted):
         world_file_to_be_inserted = ""
 
-    yaml_parse = BuildingYamlParse(map_file)
+    try:
+        yaml_parse = BuildingYamlParse(map_file)
+    except ValueError as e:
+        print('crowdsim unable to parse, not attempting to proceed')
+        return
+
     configfile_generator = ConfigFileGenerator(yaml_parse)
     configfile_generator.generate_behavior_file(output_dir)
     configfile_generator.generate_scene_file(output_dir)

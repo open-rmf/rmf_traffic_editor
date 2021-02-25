@@ -58,6 +58,8 @@ class BuildingYamlParse:
         self.levels_with_human_lanes = {}
         self.levels_name = []
         for level_name, level_yaml in self.yaml_node['levels'].items():
+            if 'human_lanes' not in level_yaml:
+                raise ValueError(f'expected human_lanes in level')
             self.levels_with_human_lanes[level_name] = LevelWithHumanLanes(
                 level_yaml, level_name)
             self.levels_name.append(level_name)
