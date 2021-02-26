@@ -22,21 +22,28 @@ if(CMAKE_VERSION VERSION_LESS "3.7.0")
   set(CMAKE_INCLUDE_CURRENT_DIR ON)
 endif()
 
-find_package(Qt5 COMPONENTS Widgets Concurrent REQUIRED)
+find_package(Qt5 COMPONENTS Widgets Concurrent Test REQUIRED)
+find_package(ament_index_cpp REQUIRED)
+
 find_package(ignition-plugin1 QUIET COMPONENTS all)
 find_package(ignition-common3 QUIET)
-find_package(ament_index_cpp REQUIRED)
+if (ignition-plugin1_VERSION)
+  add_compile_definitions("HAS_IGNITION_PLUGIN")
+endif()
 
 # OpenCV is an optional dependency, only needed if you want to make videos
 # which is only really needed if you're using a process simulation plugin
 find_package(OpenCV QUIET)
+if (OpenCV_VERSION)
+  add_compile_definitions("HAS_OPENCV")
+endif()
 
 include_directories(.)
 include_directories(gui)
 include_directories(include)
 include_directories(${ament_index_cpp_INCLUDE_DIRS})
 
-set(traffic_editor_sources
+set(traffic_editor_gui_sources
   gui/actions/add_correspondence_point.cpp
   gui/actions/add_edge.cpp
   gui/actions/add_fiducial.cpp
@@ -70,7 +77,6 @@ set(traffic_editor_sources
   gui/lift_dialog.cpp
   gui/lift_door.cpp
   gui/lift_table.cpp
-  gui/main.cpp
   gui/map_view.cpp
   gui/model.cpp
   gui/model_dialog.cpp
@@ -90,7 +96,6 @@ set(traffic_editor_sources
   gui/traffic_map_dialog.cpp
   gui/vertex.cpp
   gui/yaml_utils.cpp
-  resources/resource.qrc
 
   #crowd_sim related
   gui/multi_select_combo_box.cpp
@@ -116,7 +121,7 @@ set(traffic_editor_sources
   gui/crowd_sim/transition_table.cpp
 )
 
-set(traffic_editor_libs
+set(traffic_editor_gui_libs
   Qt5::Widgets
   Qt5::Concurrent
   yaml-cpp
@@ -125,30 +130,30 @@ set(traffic_editor_libs
 )
 
 if (ignition-plugin1_VERSION)
-  set(traffic_editor_sources
-    ${traffic_editor_sources}
+  set(traffic_editor_gui_sources
+    ${traffic_editor_gui_sources}
     gui/sim_thread.cpp
   )
-  set(traffic_editor_libs
-    ${traffic_editor_libs}
+  set(traffic_editor_gui_libs
+    ${traffic_editor_gui_libs}
     ignition-plugin1::core
     ignition-plugin1::loader
     ignition-common3::core
   )
 endif()
 
-add_executable(traffic-editor ${traffic_editor_sources})
-target_link_libraries(traffic-editor ${traffic_editor_libs})
+add_library(
+  traffic_editor_gui STATIC
+  ${traffic_editor_gui_sources})
 
-if (ignition-plugin1_VERSION)
-  # sadly this if() block has to come after add_executable(), but
-  # the if() block determining the sources has to go before add_executable()
-  target_compile_definitions(traffic-editor PUBLIC "HAS_IGNITION_PLUGIN")
-endif()
+target_link_libraries(traffic_editor_gui ${traffic_editor_gui_libs})
 
-if (OpenCV_VERSION)
-  target_compile_definitions(traffic-editor PUBLIC "HAS_OPENCV")
-endif()
+add_executable(
+  traffic-editor
+  resources/resource.qrc
+  gui/main.cpp)
+
+target_link_libraries(traffic-editor traffic_editor_gui)
 
 set_property(TARGET traffic-editor PROPERTY ENABLE_EXPORTS 1)
 
@@ -170,6 +175,9 @@ install(
   DESTINATION
     include)
 
+if (BUILD_TESTING)
+  add_subdirectory(test)
+endif()
 
 ament_export_include_directories(include)
 
