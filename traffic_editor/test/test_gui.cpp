@@ -8,7 +8,7 @@ class TestGui : public QObject
   Q_OBJECT
 
 private:
-  Editor *editor = nullptr;
+  Editor* editor = nullptr;
 
 private slots:
   void initTestCase()
