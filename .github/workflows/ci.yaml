@@ -1,7 +1,7 @@
-name: build
+name: ci
 on: [push, pull_request]
 jobs:
-  build:
+  ci:
     runs-on: ubuntu-18.04
     container:
       image: docker://ros:eloquent-ros-base-bionic
@@ -39,7 +39,21 @@ jobs:
         source /opt/ros/eloquent/setup.bash
         colcon build --packages-select traffic_editor --cmake-args -DNO_DOWNLOAD_MODELS=True
 
-  build_without_plugin_support:
+    - name: test
+      shell: bash
+      run: |
+        cd ws
+        source /opt/ros/eloquent/setup.bash
+        colcon test --packages-select traffic_editor --cmake-args -DNO_DOWNLOAD_MODELS=True
+
+    - name: test-results
+      shell: bash
+      run: |
+        cd ws
+        source /opt/ros/eloquent/setup.bash
+        colcon test-results --verbose
+
+  ci_without_plugin_support:
     runs-on: ubuntu-18.04
     container:
       image: docker://ros:eloquent-ros-base-bionic
@@ -74,3 +88,17 @@ jobs:
         cd ws
         source /opt/ros/eloquent/setup.bash
         colcon build --packages-select traffic_editor --cmake-args -DNO_DOWNLOAD_MODELS=True
+
+    - name: test
+      shell: bash
+      run: |
+        cd ws
+        source /opt/ros/eloquent/setup.bash
+        colcon test --packages-select traffic_editor --cmake-args -DNO_DOWNLOAD_MODELS=True
+
+    - name: test-results
+      shell: bash
+      run: |
+        cd ws
+        source /opt/ros/eloquent/setup.bash
+        colcon test-results --verbose

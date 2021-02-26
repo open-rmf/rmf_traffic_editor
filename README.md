@@ -1,4 +1,4 @@
-![](https://github.com/osrf/traffic_editor/workflows/build/badge.svg)
+![](https://github.com/osrf/traffic_editor/workflows/ci/badge.svg)
 ![](https://github.com/osrf/traffic_editor/workflows/style/badge.svg)
 
 # traffic\_editor
