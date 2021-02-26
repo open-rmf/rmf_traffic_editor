@@ -2,9 +2,9 @@ name: ci
 on: [push, pull_request]
 jobs:
   ci:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     container:
-      image: docker://ros:eloquent-ros-base-bionic
+      image: docker://ros:foxy-ros-base-focal
     
     steps:
     - name: osrf-repo
@@ -12,7 +12,7 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y wget
-        echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable bionic main" > /etc/apt/sources.list.d/gazebo-stable.list
+        echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable focal main" > /etc/apt/sources.list.d/gazebo-stable.list
         wget https://packages.osrfoundation.org/gazebo.key -O - | apt-key add -
         sudo apt-get update
         sudo apt-get install -y libignition-plugin-dev libignition-common3-dev
@@ -36,21 +36,20 @@ jobs:
       shell: bash
       run: |
         cd ws
-        source /opt/ros/eloquent/setup.bash
+        source /opt/ros/foxy/setup.bash
         colcon build --packages-select traffic_editor --cmake-args -DNO_DOWNLOAD_MODELS=True
 
     - name: test
       shell: bash
       run: |
         cd ws
-        source /opt/ros/eloquent/setup.bash
-        colcon test --packages-select traffic_editor --cmake-args -DNO_DOWNLOAD_MODELS=True
-
+        source /opt/ros/foxy/setup.bash
+        colcon test --packages-select traffic_editor
     - name: test-results
       shell: bash
       run: |
         cd ws
-        source /opt/ros/eloquent/setup.bash
+        source /opt/ros/foxy/setup.bash
         colcon test-results --verbose
 
   ci_without_plugin_support:
@@ -94,7 +93,7 @@ jobs:
       run: |
         cd ws
         source /opt/ros/eloquent/setup.bash
-        colcon test --packages-select traffic_editor --cmake-args -DNO_DOWNLOAD_MODELS=True
+        colcon test --packages-select traffic_editor
 
     - name: test-results
       shell: bash
