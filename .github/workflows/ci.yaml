@@ -50,7 +50,7 @@ jobs:
       run: |
         cd ws
         source /opt/ros/foxy/setup.bash
-        colcon test-results --verbose
+        colcon test-result --verbose
 
   ci_without_plugin_support:
     runs-on: ubuntu-18.04
@@ -100,4 +100,4 @@ jobs:
       run: |
         cd ws
         source /opt/ros/eloquent/setup.bash
-        colcon test-results --verbose
+        colcon test-result --verbose
