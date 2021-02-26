@@ -28,14 +28,14 @@ find_package(ament_index_cpp REQUIRED)
 find_package(ignition-plugin1 QUIET COMPONENTS all)
 find_package(ignition-common3 QUIET)
 if (ignition-plugin1_VERSION)
-  add_compile_definitions("HAS_IGNITION_PLUGIN")
+  add_definitions(-DHAS_IGNITION_PLUGIN)
 endif()
 
 # OpenCV is an optional dependency, only needed if you want to make videos
 # which is only really needed if you're using a process simulation plugin
 find_package(OpenCV QUIET)
 if (OpenCV_VERSION)
-  add_compile_definitions("HAS_OPENCV")
+  add_definitions(-DHAS_OPENCV)
 endif()
 
 include_directories(.)
