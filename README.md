@@ -1,5 +1,5 @@
-![](https://github.com/osrf/traffic_editor/workflows/ci/badge.svg)
-![](https://github.com/osrf/traffic_editor/workflows/style/badge.svg)
+[![](https://github.com/osrf/traffic_editor/workflows/ci/badge.svg)](https://github.com/osrf/traffic_editor/actions/workflows/ci.yaml)
+[![](https://github.com/osrf/traffic_editor/workflows/style/badge.svg)](https://github.com/osrf/traffic_editor/actions/workflows/style.yaml)
 
 # traffic\_editor
 

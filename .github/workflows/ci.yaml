@@ -44,7 +44,7 @@ jobs:
       run: |
         cd ws
         source /opt/ros/foxy/setup.bash
-        colcon test --packages-select traffic_editor
+        QT_QPA_PLATFORM=offscreen colcon test --packages-select traffic_editor
     - name: test-results
       shell: bash
       run: |
@@ -93,7 +93,7 @@ jobs:
       run: |
         cd ws
         source /opt/ros/eloquent/setup.bash
-        colcon test --packages-select traffic_editor
+        QT_QPA_PLATFORM=offscreen colcon test --packages-select traffic_editor
 
     - name: test-results
       shell: bash
