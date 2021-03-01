@@ -41,7 +41,7 @@ void MultiSelectComboBox::build_list()
 }
 
 
-void MultiSelectComboBox::box_checked(int state)
+void MultiSelectComboBox::box_checked(int /*state*/)
 {
   blockSignals(true);
   size_t list_count = pListWidget->count();
