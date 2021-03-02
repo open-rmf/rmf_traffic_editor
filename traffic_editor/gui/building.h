@@ -32,6 +32,7 @@ class QGraphicsScene;
 #include "building_level.h"
 #include "lift.h"
 #include <traffic_editor/crowd_sim/crowd_sim_impl.h>
+#include "rendering_options.h"
 
 class Building
 {
@@ -53,9 +54,12 @@ public:
   bool save();
   void clear();  // clear all internal data structures
 
-  bool export_level_correspondence_points(
+  bool export_correspondence_points(
     int level_index,
     const std::string& dest_filename) const;
+
+  void clear_selection(const int level_idx);
+  bool can_delete_current_selection(const int level_idx);
 
   void add_level(const BuildingLevel& level);
 
@@ -176,6 +180,30 @@ public:
   double level_meters_per_pixel(const std::string& level_name) const;
 
   void rotate_all_models(const double rotation);
+
+  void get_selected_items(const int level_idx,
+    std::vector<BuildingLevel::SelectedItem>& selected);
+
+  void draw(
+    QGraphicsScene* scene,
+    const int level_idx,
+    std::vector<EditorModel>& editor_models,
+    const RenderingOptions& rendering_options);
+
+  void mouse_select_press(
+    const int level_idx,
+    const int layer_index,
+    const double x,
+    const double y,
+    QGraphicsItem* graphics_item,
+    const RenderingOptions& rendering_options);
+
+  Polygon* get_selected_polygon(const int level_idx);
+
+  void set_selected_line_item(
+    const int level_idx,
+    QGraphicsLineItem* line_item,
+    const RenderingOptions& rendering_options);
 
 private:
   std::string filename;

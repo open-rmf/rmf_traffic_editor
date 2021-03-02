@@ -167,7 +167,7 @@ bool Building::save()
   return true;
 }
 
-bool Building::export_level_correspondence_points(
+bool Building::export_correspondence_points(
   int level_index,
   const std::string& dest_filename) const
 {
@@ -763,4 +763,148 @@ bool Building::set_filename(const std::string& _fn)
     "set building filename to [%s]\n",
     filename.c_str());
   return true;
+}
+
+void Building::clear_selection(const int level_idx)
+{
+  if (levels.empty())
+    return;
+  levels[level_idx].clear_selection();
+}
+
+bool Building::can_delete_current_selection(const int level_idx)
+{
+  if (level_idx >= static_cast<int>(levels.size()))
+    return false;
+  return levels[level_idx].can_delete_current_selection();
+}
+
+void Building::get_selected_items(
+  const int level_idx,
+  std::vector<BuildingLevel::SelectedItem>& selected)
+{
+  if (level_idx >= static_cast<int>(levels.size()))
+    return;
+  levels[level_idx].get_selected_items(selected);
+}
+
+void Building::draw(
+  QGraphicsScene* scene,
+  const int level_idx,
+  std::vector<EditorModel>& editor_models,
+  const RenderingOptions& rendering_options)
+{
+  if (levels.empty())
+  {
+    printf("nothing to draw!\n");
+    return;
+  }
+
+  levels[level_idx].draw(scene, editor_models, rendering_options);
+  draw_lifts(scene, level_idx);
+}
+
+Polygon* Building::get_selected_polygon(const int level_idx)
+{
+  for (size_t i = 0; i < levels[level_idx].polygons.size(); i++)
+  {
+    if (levels[level_idx].polygons[i].selected)
+      return &levels[level_idx].polygons[i];// abomination
+  }
+  return nullptr;
+}
+
+void Building::mouse_select_press(
+  const int level_idx,
+  const int layer_idx,
+  const double x,
+  const double y,
+  QGraphicsItem* graphics_item,
+  const RenderingOptions& rendering_options)
+{
+  clear_selection(level_idx);
+  const NearestItem ni = nearest_items(level_idx, layer_idx, x, y);
+
+  const double vertex_dist_thresh =
+    levels[level_idx].vertex_radius /
+    levels[level_idx].drawing_meters_per_pixel;
+
+  // todo: use QGraphics stuff to see if we clicked a model pixmap...
+  const double model_dist_thresh = 0.5 /
+    levels[level_idx].drawing_meters_per_pixel;
+
+  if (rendering_options.show_models &&
+    ni.model_idx >= 0 &&
+    ni.model_dist < model_dist_thresh)
+    levels[level_idx].models[ni.model_idx].selected = true;
+  else if (ni.vertex_idx >= 0 && ni.vertex_dist < vertex_dist_thresh)
+    levels[level_idx].vertices[ni.vertex_idx].selected = true;
+  else if (ni.fiducial_idx >= 0 && ni.fiducial_dist < 10.0)
+    levels[level_idx].fiducials[ni.fiducial_idx].selected = true;
+  else
+  {
+    // use the QGraphics stuff to see if it's an edge segment or polygon
+    if (graphics_item)
+    {
+      switch (graphics_item->type())
+      {
+        case QGraphicsLineItem::Type:
+          set_selected_line_item(
+            level_idx,
+            qgraphicsitem_cast<QGraphicsLineItem*>(graphics_item));
+          break;
+
+        case QGraphicsPolygonItem::Type:
+          set_selected_containing_polygon(level_idx, x, y);
+          break;
+
+        default:
+          printf("clicked unhandled type: %d\n",
+            static_cast<int>(graphics_item->type()));
+          break;
+      }
+    }
+  }
+}
+
+void Building::set_selected_line_item(
+  const int level_idx,
+  QGraphicsLineItem* line_item,
+  const RenderingOptions& rendering_options)
+{
+  clear_selection(level_idx);
+  if (line_item == nullptr)
+    return;
+
+  // find if any of our lanes match those vertices
+  for (auto& edge : building.levels[level_idx].edges)
+  {
+    if ((edge.type == Edge::LANE) &&
+      (edge.get_graph_idx() != rendering_options.active_traffic_map_idx))
+        continue;
+
+    // look up the line's vertices
+    const double x1 = line_item->line().x1();
+    const double y1 = line_item->line().y1();
+    const double x2 = line_item->line().x2();
+    const double y2 = line_item->line().y2();
+
+    const auto& v_start = building.levels[level_idx].vertices[edge.start_idx];
+    const auto& v_end = building.levels[level_idx].vertices[edge.end_idx];
+
+    // calculate distances
+    const double dx1 = v_start.x - x1;
+    const double dy1 = v_start.y - y1;
+    const double dx2 = v_end.x - x2;
+    const double dy2 = v_end.y - y2;
+    const double v1_dist = std::sqrt(dx1*dx1 + dy1*dy1);
+    const double v2_dist = std::sqrt(dx2*dx2 + dy2*dy2);
+
+    const double thresh = 10.0;  // it should be really tiny if it matches
+    if (v1_dist < thresh && v2_dist < thresh)
+    {
+      edge.selected = true;
+      return;  // stop after first one is found, don't select multiple
+    }
+  }
 }

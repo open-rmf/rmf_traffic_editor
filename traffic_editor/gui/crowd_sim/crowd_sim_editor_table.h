@@ -26,7 +26,7 @@
 #include <QtWidgets>
 
 #include "table_list.h"
-#include "project.h"
+#include "building.h"
 #include <traffic_editor/crowd_sim/crowd_sim_impl.h>
 
 using namespace crowd_sim;
@@ -36,7 +36,7 @@ class CrowdSimEditorTable : public TableList
   Q_OBJECT;
 
 public:
-  CrowdSimEditorTable(const Project& input_project);
+  CrowdSimEditorTable(const Building& building);
   ~CrowdSimEditorTable() {}
 
   void update();
@@ -46,7 +46,7 @@ public:
   void update_external_agent_state();
 
 private:
-  const Project& _project;
+  const Building& _building;
   CrowdSimImplPtr _impl;
 
   // reserved rows for checkbox for enable_crowd_sim, LineEdit for updtae_time_step

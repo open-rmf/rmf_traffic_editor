@@ -142,7 +142,7 @@ private:
   void building_new();
   void building_open();
   bool building_save();
-  bool project_export_correspondence_points();
+  bool building_export_correspondence_points();
 
   bool maybe_save();
   void edit_undo();

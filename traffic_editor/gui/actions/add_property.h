@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2020 Open Source Robotics Foundation
+ * Copyright (C) 2019-2021 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,12 @@
 #define _ADD_PROPERTY_H_
 
 #include <QUndoCommand>
-#include "project.h"
+#include "building.h"
 
 class AddPropertyCommand : public QUndoCommand
 {
 public:
-  AddPropertyCommand(Project* project,
+  AddPropertyCommand(Building* building,
     std::string property,
     Param value,
     int level_idx);
@@ -33,7 +33,7 @@ public:
   void redo() override;
 
 private:
-  Project* _project;
+  Building* _building;
   std::string _prop;
   Param _val;
   int _vert_id, _level_idx;
