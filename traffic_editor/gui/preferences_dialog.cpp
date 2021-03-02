@@ -51,13 +51,13 @@ PreferencesDialog::PreferencesDialog(QWidget* parent)
     cancel_button, &QAbstractButton::clicked,
     this, &QDialog::reject);
 
-  open_previous_project_checkbox = new QCheckBox(
-    "Open previous project at startup", this);
-  open_previous_project_checkbox->setChecked(
-    settings.value(preferences_keys::open_previous_project).toBool());
+  open_previous_building_checkbox = new QCheckBox(
+    "Open previous building at startup", this);
+  open_previous_building_checkbox->setChecked(
+    settings.value(preferences_keys::open_previous_building).toBool());
 
   QVBoxLayout* vbox_layout = new QVBoxLayout;
-  vbox_layout->addWidget(open_previous_project_checkbox);
+  vbox_layout->addWidget(open_previous_building_checkbox);
   vbox_layout->addLayout(thumbnail_path_layout);
   // todo: some sort of separator (?)
   vbox_layout->addLayout(bottom_buttons_layout);
@@ -111,8 +111,8 @@ void PreferencesDialog::ok_button_clicked()
     thumbnail_path_line_edit->text());
 
   settings.setValue(
-    preferences_keys::open_previous_project,
-    open_previous_project_checkbox->isChecked());
+    preferences_keys::open_previous_building,
+    open_previous_building_checkbox->isChecked());
 
   accept();
 }

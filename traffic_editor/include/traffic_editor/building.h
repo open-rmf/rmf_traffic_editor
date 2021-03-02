@@ -22,7 +22,6 @@
 class QGraphicsScene;
 
 #include <memory>
-#include <mutex>
 #include <string>
 #include <vector>
 #include <yaml-cpp/yaml.h>
@@ -44,14 +43,14 @@ public:
   std::string reference_level_name;
   std::vector<BuildingLevel> levels;
   std::vector<Lift> lifts;
-  std::mutex building_mutex;
 
   mutable crowd_sim::CrowdSimImplPtr crowd_sim_impl;
 
-  std::string filename;
+  bool set_filename(const std::string& _filename);
+  std::string get_filename() { return filename; }
 
-  bool load_yaml_file();
-  bool save_yaml_file();
+  bool load(const std::string& filename);
+  bool save();
   void clear();  // clear all internal data structures
 
   bool export_level_correspondence_points(
@@ -177,6 +176,9 @@ public:
   double level_meters_per_pixel(const std::string& level_name) const;
 
   void rotate_all_models(const double rotation);
+
+private:
+  std::string filename;
 };
 
 #endif

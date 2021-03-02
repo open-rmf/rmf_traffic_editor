@@ -21,7 +21,6 @@
 #include "traffic_editor/building.h"
 #include "traffic_editor/editor_model.h"
 #include "editor_mode_id.h"
-#include "scenario.h"
 #include "traffic_map.h"
 
 #include <array>
@@ -41,26 +40,17 @@ public:
   std::string name;
 
   Building building;
-  std::vector<std::unique_ptr<Scenario>> scenarios;
   std::vector<TrafficMap> traffic_maps;
-
-  int scenario_idx = -1;  // the current scenario being viewed/edited
-  int traffic_map_idx = 0;  // the current traffic map being viewed/edited
 
   /////////////////////////////////
   Project();
   ~Project();
 
-  bool save();
-  bool load(const std::string& _filename);
   bool export_correspondence_points(
     int level_index,
     const std::string& dest_filename) const;
 
   void clear();
-
-  void add_scenario_vertex(int level_index, double x, double y);
-  void scenario_row_clicked(const int row);
 
   void clear_scene();
 
@@ -69,40 +59,12 @@ public:
     const int level_idx,
     std::vector<EditorModel>& editor_models);
 
-  void scenario_scene_update(
-    QGraphicsScene* scene,
-    const int level_idx);
-
   void clear_selection(const int level_idx);
   bool can_delete_current_selection(const int level_idx);
   bool delete_selected(const int level_idx);
 
   void get_selected_items(const int level_idx,
     std::vector<BuildingLevel::SelectedItem>& selected);
-
-  struct NearestItem
-  {
-    double model_dist = 1e100;
-    int model_idx = -1;
-
-    double vertex_dist = 1e100;
-    int vertex_idx = -1;
-
-    double correspondence_point_dist = 1e100;
-    int correspondence_point_idx = -1;
-
-    double fiducial_dist = 1e100;
-    int fiducial_idx = -1;
-  };
-
-  NearestItem nearest_items(
-    EditorModeId mode,
-    const int level_index,
-    const int layer_index,
-    const double x,
-    const double y);
-
-  ScenarioLevel* scenario_level(const int building_level_idx);
 
   void set_selected_containing_polygon(
     const EditorModeId mode,
@@ -132,17 +94,8 @@ public:
     const int start_idx,
     const int end_idx);
 
-#ifdef HAS_IGNITION_PLUGIN
-  // simulation stuff
-  void sim_reset();
-  void sim_tick();
-  bool sim_is_paused = true;
-  bool has_sim_plugin();
-#endif
-
   RenderingOptions rendering_options;
 
-  bool set_filename(const std::string& _filename);
   std::string get_filename() { return filename; }
 
 private:

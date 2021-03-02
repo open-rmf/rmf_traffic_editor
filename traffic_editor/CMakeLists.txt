@@ -25,19 +25,6 @@ endif()
 find_package(Qt5 COMPONENTS Widgets Concurrent Test REQUIRED)
 find_package(ament_index_cpp REQUIRED)
 
-find_package(ignition-plugin1 QUIET COMPONENTS all)
-find_package(ignition-common3 QUIET)
-if (ignition-plugin1_VERSION)
-  add_definitions(-DHAS_IGNITION_PLUGIN)
-endif()
-
-# OpenCV is an optional dependency, only needed if you want to make videos
-# which is only really needed if you're using a process simulation plugin
-find_package(OpenCV QUIET)
-if (OpenCV_VERSION)
-  add_definitions(-DHAS_OPENCV)
-endif()
-
 include_directories(.)
 include_directories(gui)
 include_directories(include)
@@ -85,11 +72,6 @@ set(traffic_editor_gui_sources
   gui/preferences_dialog.cpp
   gui/preferences_keys.cpp
   gui/project.cpp
-  gui/project_dialog.cpp
-  gui/scenario.cpp
-  gui/scenario_dialog.cpp
-  gui/scenario_level.cpp
-  gui/scenario_table.cpp
   gui/table_list.cpp
   gui/traffic_table.cpp
   gui/traffic_map.cpp
@@ -128,19 +110,6 @@ set(traffic_editor_gui_libs
   ${ament_index_cpp_LIBRARIES}
   ${OpenCV_LIBS}
 )
-
-if (ignition-plugin1_VERSION)
-  set(traffic_editor_gui_sources
-    ${traffic_editor_gui_sources}
-    gui/sim_thread.cpp
-  )
-  set(traffic_editor_gui_libs
-    ${traffic_editor_gui_libs}
-    ignition-plugin1::core
-    ignition-plugin1::loader
-    ignition-common3::core
-  )
-endif()
 
 add_library(
   traffic_editor_gui STATIC

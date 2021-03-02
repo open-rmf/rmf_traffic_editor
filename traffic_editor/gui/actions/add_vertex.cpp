@@ -62,9 +62,4 @@ void AddVertexCommand::redo()
     size_t sz = _project->building.levels[_level_idx].vertices.size();
     _vert_id = _project->building.levels[_level_idx].vertices[sz-1].uuid;
   }
-  else if (_mode == MODE_SCENARIO)
-  {
-    assert(_project->scenario_idx < 0);
-    _project->add_scenario_vertex(_level_idx, _x, _y);
-  }
 }

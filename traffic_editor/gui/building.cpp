@@ -50,9 +50,11 @@ Building::~Building()
 ///
 /// This function replaces the contents of this object with what is
 /// in the YAML file.
-bool Building::load_yaml_file()
+bool Building::load(const string& _filename)
 {
-  printf("Building::load_yaml_file(%s)\n", filename.c_str());
+  printf("Building::load_yaml_file(%s)\n", _filename.c_str());
+  filename = _filename;
+
   YAML::Node y;
   try
   {
@@ -67,8 +69,6 @@ bool Building::load_yaml_file()
   // change directory to the path of the file, so that we can correctly open
   // relative paths recorded in the file
 
-  // TODO: save previous directory and restore it when leaving this function
-  // in case the building file is in a different path from the project file
   QString dir(QFileInfo(QString::fromStdString(filename)).absolutePath());
   qDebug("changing directory to [%s]", qUtf8Printable(dir));
   if (!QDir::setCurrent(dir))
@@ -138,7 +138,7 @@ bool Building::load_yaml_file()
   return true;
 }
 
-bool Building::save_yaml_file()
+bool Building::save()
 {
   printf("Building::save_yaml(%s)\n", filename.c_str());
 
@@ -722,4 +722,45 @@ void Building::rotate_all_models(const double rotation)
       model.state.yaw += rotation;
     }
   }
+}
+
+bool Building::set_filename(const std::string& _fn)
+{
+  const string suffix(".building.yaml");
+
+  // ensure there is at least one character in addition to the suffix length
+  if (_fn.size() <= suffix.size())
+  {
+    printf("Building::set_filename() too short: [%s]\n", _fn.c_str());
+    return false;
+  }
+
+  // ensure the filename ends in .building.yaml
+  // it should, because the "save as" dialog appends it, but...
+  if (_fn.compare(_fn.size() - suffix.size(), suffix.size(), suffix))
+  {
+    printf(
+      "Building::set_filename() filename had unexpected suffix: [%s]\n",
+      _fn.c_str());
+    return false;
+  }
+
+  const string no_suffix(_fn.substr(0, _fn.size() - suffix.size()));
+
+  const size_t last_slash_pos = no_suffix.rfind('/', no_suffix.size());
+
+  const string stem(
+    (last_slash_pos == string::npos) ?
+    no_suffix :
+    string(no_suffix, last_slash_pos + 1));
+
+  filename = _fn;
+
+  if (name.empty())
+    name = stem;
+
+  printf(
+    "set building filename to [%s]\n",
+    filename.c_str());
+  return true;
 }

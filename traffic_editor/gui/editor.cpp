@@ -29,12 +29,6 @@
 #include <QListWidget>
 #include <QToolBar>
 
-#ifdef HAS_OPENCV
-#include <opencv2/core/core.hpp>
-#include <opencv2/videoio.hpp>
-#include <opencv2/imgproc.hpp>
-#endif
-
 #include <yaml-cpp/yaml.h>
 
 #include "ament_index_cpp/get_package_share_directory.hpp"
@@ -62,8 +56,6 @@
 #include "model_dialog.h"
 #include "preferences_dialog.h"
 #include "preferences_keys.h"
-#include "project_dialog.h"
-#include "scenario_table.h"
 #include "traffic_table.h"
 #include "ui_transform_dialog.h"
 
@@ -102,10 +94,10 @@ Editor::Editor()
     [=](int row, int /*col*/)
     {
       if (row < static_cast<int>(
-        project.building.levels[level_idx].layers.size()))
+        building.levels[level_idx].layers.size()))
       {
         layer_idx = row;
-        project.building.levels[level_idx].set_active_layer(layer_idx);
+        building.levels[level_idx].set_active_layer(layer_idx);
       }
     });
 
@@ -114,7 +106,7 @@ Editor::Editor()
     level_table, &QTableWidget::cellClicked,
     [=](int row, int /*col*/)
     {
-      if (row < static_cast<int>(project.building.levels.size()))
+      if (row < static_cast<int>(building.levels.size()))
       {
         // save the center point of the current level's image coordinates
         const QPoint p_center_window(
@@ -176,18 +168,8 @@ Editor::Editor()
     &QTableWidget::cellClicked,
     [=](int row, int /*col*/)
     {
-      project.traffic_map_idx = row;
+      traffic_map_idx = row;
       traffic_table->update(project);
-    });
-
-  scenario_table = new ScenarioTable;
-  connect(
-    scenario_table,
-    &QTableWidget::cellClicked,
-    [=](int row, int /*col*/)
-    {
-      project.scenario_row_clicked(row);
-      create_scene();
     });
 
   crowd_sim_table = new CrowdSimEditorTable(project);
@@ -208,7 +190,6 @@ Editor::Editor()
   right_tab_widget->addTab(layers_table, "layers");
   right_tab_widget->addTab(lift_table, "lifts");
   right_tab_widget->addTab(traffic_table, "traffic");
-  right_tab_widget->addTab(scenario_table, "scenarios");
   right_tab_widget->addTab(crowd_sim_table, "crowd_sim");
 
   property_editor = new QTableWidget;
@@ -271,38 +252,36 @@ Editor::Editor()
   w->setStyleSheet("background-color: #404040");
   setCentralWidget(w);
 
-  //qApp->
+  // BUILDING MENU
+  QMenu* building_menu = menuBar()->addMenu("&Building");
 
-  // PROJECT MENU
-  QMenu* project_menu = menuBar()->addMenu("&Project");
-
-  project_menu->addAction(
+  building_menu->addAction(
     "&New...",
     this,
-    &Editor::project_new,
+    &Editor::building_new,
     QKeySequence(Qt::CTRL + Qt::Key_N));
 
-  project_menu->addAction(
+  building_menu->addAction(
     "&Open...",
     this,
-    &Editor::project_open,
+    &Editor::building_open,
     QKeySequence(Qt::CTRL + Qt::Key_O));
 
-  project_menu->addAction(
+  building_menu->addAction(
     "&Save",
     this,
-    &Editor::project_save,
+    &Editor::building_save,
     QKeySequence(Qt::CTRL + Qt::Key_S));
 
-  project_menu->addAction(
+  building_menu->addAction(
     "&Export layer alignment points for level",
     this,
     &Editor::project_export_correspondence_points,
     QKeySequence(Qt::CTRL + Qt::Key_E));
 
-  project_menu->addSeparator();
+  building_menu->addSeparator();
 
-  project_menu->addAction(
+  building_menu->addAction(
     "E&xit",
     this,
     &QWidget::close,
@@ -325,10 +304,6 @@ Editor::Editor()
     "&Building properties...",
     this,
     &Editor::edit_building_properties);
-  edit_menu->addAction(
-    "&Project properties...",
-    this,
-    &Editor::edit_project_properties);
   edit_menu->addSeparator();
   edit_menu->addAction(
     "&Transform...",
@@ -445,29 +420,6 @@ Editor::Editor()
 
   toolbar->addSeparator();
 
-#ifdef HAS_IGNITION_PLUGIN
-  sim_reset_action = toolbar->addAction(
-    "Reset",
-    this,
-    &Editor::sim_reset);
-  sim_reset_action->setVisible(false);
-
-  sim_play_pause_action = toolbar->addAction(
-    "Play",
-    this,
-    &Editor::sim_play_pause);
-  sim_play_pause_action->setVisible(false);
-
-#ifdef HAS_OPENCV
-  record_start_stop_action = toolbar->addAction(
-    "Record",
-    this,
-    &Editor::record_start_stop);
-  record_start_stop_action->setVisible(false);
-#endif  // HAS_OPENCV
-
-#endif  // HAS_IGNITION_PLUGIN
-
   toolbar->setStyleSheet(
     "QToolBar {background-color: #404040; border: none; spacing: 5px} QToolButton {background-color: #c0c0c0; color: blue; border: 1px solid black;} QToolButton:checked {background-color: #808080; color: red; border: 1px solid black;}");
   addToolBar(Qt::TopToolBarArea, toolbar);
@@ -503,71 +455,11 @@ Editor::Editor()
 
   load_model_names();
   level_table->setCurrentCell(level_idx, 0);
-
-#ifdef HAS_IGNITION_PLUGIN
-  scene_update_timer = new QTimer;
-  connect(
-    scene_update_timer,
-    &QTimer::timeout,
-    this,
-    &Editor::scene_update_timer_timeout);
-  scene_update_timer->start(1000 / 30);
-#endif
 }
 
 Editor::~Editor()
 {
-#if defined(HAS_OPENCV) && defined(HAS_IGNITION_PLUGIN)
-  if (video_writer)
-  {
-    delete video_writer;
-    video_writer = nullptr;
-  }
-#endif
 }
-
-#ifdef HAS_IGNITION_PLUGIN
-void Editor::scene_update_timer_timeout()
-{
-  if (project.building.levels.empty())
-    return;// let's not crash...
-
-  project.scenario_scene_update(scene, level_idx);
-
-  {
-    std::lock_guard<std::mutex> building_guard(
-      project.building.building_mutex);
-
-    // project->draw_scenario(scene, level_idx);
-    //project.building.levels[level_idx]->name,
-    //    building.levels[level_idx]->drawing_meters_per_pixel,
-
-    const BuildingLevel& level = project.building.levels[level_idx];
-
-    const std::string& level_name = level.name;
-    const double level_scale = level.drawing_meters_per_pixel;
-
-    // for now, we're not dealing with models changing levels from their
-    // starting level. we'll need to do that in the future at some point.
-    for (auto& model : project.building.levels[level_idx].models)
-    {
-      if (!model.is_active)
-        continue;
-
-      if (model.state.level_name != level_name)
-        continue;
-
-      model.draw(scene, editor_models, level_scale);
-    }
-
-    //scenario->draw(scene, level_idx);
-  }
-
-#ifdef HAS_OPENCV
-  record_frame_to_video();
-#endif  // HAS_OPENCV
-}
-#endif  // HAS_IGNITION_PLUGIN
 
 void Editor::load_model_names()
 {
@@ -662,18 +554,16 @@ Editor* Editor::get_instance()
   return instance;
 }
 
-bool Editor::load_project(const QString& filename)
+bool Editor::load_building(const QString& filename)
 {
-  const std::string filename_std_string = filename.toStdString();
-
-  if (!project.load(filename.toStdString()))
+  if (!building.load(filename.toStdString()))
     return false;
 
   level_idx = 0;
 
-  if (!project.building.levels.empty())
+  if (!building.levels.empty())
   {
-    const BuildingLevel& level = project.building.levels[level_idx];
+    const BuildingLevel& level = building.levels[level_idx];
     scene->setSceneRect(
       QRectF(0, 0, level.drawing_width, level.drawing_height));
     previous_mouse_point = QPointF(level.drawing_width, level.drawing_height);
@@ -683,22 +573,8 @@ bool Editor::load_project(const QString& filename)
 
   update_tables();
 
-#ifdef HAS_IGNITION_PLUGIN
-  if (project.has_sim_plugin())
-  {
-    printf("project has a sim plugin\n");
-    sim_reset_action->setVisible(true);
-    sim_play_pause_action->setVisible(true);
-#ifdef HAS_OPENCV
-    record_start_stop_action->setVisible(true);
-#endif
-  }
-  else
-    printf("project does not have a sim plugin\n");
-#endif
-
   QSettings settings;
-  settings.setValue(preferences_keys::previous_project_path, filename);
+  settings.setValue(preferences_keys::previous_building_path, filename);
 
   setWindowModified(false);
 
@@ -760,21 +636,21 @@ void Editor::restore_previous_viewport()
   map_view->centerOn(QPointF(viewport_center_x, viewport_center_y));
 }
 
-bool Editor::load_previous_project()
+bool Editor::load_previous_building()
 {
   QSettings settings;
   const QString filename(
-    settings.value(preferences_keys::previous_project_path).toString());
+    settings.value(preferences_keys::previous_building_path).toString());
   if (!filename.isEmpty())
-    return load_project(filename);
+    return load_building(filename);
   return true;
 }
 
-void Editor::project_new()
+void Editor::building_new()
 {
-  QFileDialog dialog(this, "New Project");
-  dialog.setNameFilter("*.project.yaml");
-  dialog.setDefaultSuffix(".project.yaml");
+  QFileDialog dialog(this, "New Building");
+  dialog.setNameFilter("*.building.yaml");
+  dialog.setDefaultSuffix(".building.yaml");
   dialog.setAcceptMode(QFileDialog::AcceptMode::AcceptSave);
   dialog.setConfirmOverwrite(true);
 
@@ -784,26 +660,26 @@ void Editor::project_new()
   QFileInfo file_info(dialog.selectedFiles().first());
   std::string fn = file_info.fileName().toStdString();
 
-  project.clear();
-  project.set_filename(file_info.absoluteFilePath().toStdString());
+  building.clear();
+  building.set_filename(file_info.absoluteFilePath().toStdString());
   QString dir_path = file_info.dir().path();
   QDir::setCurrent(dir_path);
 
   create_scene();
-  project_save();
+  building.save();
   update_tables();
 
   QSettings settings;
   settings.setValue(
-    preferences_keys::previous_project_path,
-    QString::fromStdString(project.get_filename()));
+    preferences_keys::previous_building_path,
+    QString::fromStdString(building.get_filename()));
 }
 
-void Editor::project_open()
+void Editor::building_open()
 {
-  QFileDialog file_dialog(this, "Open Project");
+  QFileDialog file_dialog(this, "Open Building");
   file_dialog.setFileMode(QFileDialog::ExistingFile);
-  file_dialog.setNameFilter("*.project.yaml");
+  file_dialog.setNameFilter("*.building.yaml");
 
   if (file_dialog.exec() != QDialog::Accepted)
     return;
@@ -817,12 +693,12 @@ void Editor::project_open()
       "File does not exist. Cannot open file.");
     return;
   }
-  load_project(file_info.filePath());
+  load_building(file_info.filePath());
 }
 
-bool Editor::project_save()
+bool Editor::building_save()
 {
-  project.save();
+  building.save();
   setWindowModified(false);
   return true;
 }
@@ -888,13 +764,6 @@ void Editor::edit_building_properties()
     setWindowModified(true);
 }
 
-void Editor::edit_project_properties()
-{
-  ProjectDialog project_dialog(project);
-  if (project_dialog.exec() == QDialog::Accepted)
-    setWindowModified(true);
-}
-
 void Editor::edit_transform()
 {
   QDialog dialog;
@@ -940,7 +809,7 @@ void Editor::mouse_event(const MouseType t, QMouseEvent* e)
         QMessageBox::critical(
           this,
           "No project",
-          "Please try File->New Project... or File->Open Project...");
+          "Please try File->New Building... or File->Open Building...");
       }
       else if (project.building.levels.empty())
       {
@@ -1825,18 +1694,6 @@ void Editor::mouse_add_vertex(
 {
   if (t == MOUSE_PRESS)
   {
-    if (mode == MODE_SCENARIO)
-    {
-      if (project.scenario_idx < 0)
-      {
-        QMessageBox::warning(
-          this,
-          "Add Vertex",
-          "No scenario currently defined.");
-        return;
-      }
-    }
-
     AddVertexCommand* command = new AddVertexCommand(&project, mode, level_idx,
         p.x(), p.y());
 
@@ -2327,8 +2184,8 @@ void Editor::mouse_add_polygon(
   {
     if (e->buttons() & Qt::LeftButton)
     {
-      const Project::NearestItem ni =
-        project.nearest_items(mode, level_idx, layer_idx, p.x(), p.y());
+      const Building::NearestItem ni =
+        building.nearest_items(mode, level_idx, layer_idx, p.x(), p.y());
       clicked_idx = ni.vertex_dist < 10.0 ? ni.vertex_idx : -1;
       if (clicked_idx < 0)
         return;// nothing to do. click wasn't on a vertex.
@@ -2336,8 +2193,6 @@ void Editor::mouse_add_polygon(
       Vertex* v = nullptr;
       if (mode == MODE_BUILDING)
         v = &project.building.levels[level_idx].vertices[clicked_idx];
-      else if (mode == MODE_SCENARIO)
-        v = &project.scenario_level(level_idx)->vertices[clicked_idx];
 
       v->selected = true;  // todo: colorize it?
 
@@ -2407,8 +2262,6 @@ void Editor::mouse_add_polygon(
       const Vertex* v = nullptr;
       if (mode == MODE_BUILDING)
         v = &project.building.levels[level_idx].vertices[vertex_idx];
-      else if (mode == MODE_SCENARIO)
-        v = &project.scenario_level(level_idx)->vertices[vertex_idx];
 
       polygon_vertices.append(QPointF(v->x, v->y));
     }
@@ -2573,13 +2426,13 @@ bool Editor::maybe_save()
   const QMessageBox::StandardButton button_clicked =
     QMessageBox::warning(
     this,
-    "Project not saved!",
+    "Building not saved!",
     "Do you want to save your changes?",
     QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
   switch (button_clicked)
   {
     case QMessageBox::Save:
-      return project_save();
+      return building_save();
     case QMessageBox::Cancel:
       return false;
     default:
@@ -2591,20 +2444,10 @@ bool Editor::maybe_save()
 void Editor::showEvent(QShowEvent* event)
 {
   QMainWindow::showEvent(event);
-#ifdef HAS_IGNITION_PLUGIN
-  sim_thread.start();
-#endif
 }
 
 void Editor::closeEvent(QCloseEvent* event)
 {
-#ifdef HAS_IGNITION_PLUGIN
-  printf("waiting on sim_thread...\n");
-  sim_thread.requestInterruption();
-  sim_thread.quit();
-  sim_thread.wait();
-#endif
-
   // save window geometry
   QSettings settings;
   settings.setValue(preferences_keys::window_left, geometry().x());
@@ -2689,7 +2532,6 @@ void Editor::update_tables()
   populate_layers_table();
   level_table->update(project.building);
   lift_table->update(project.building);
-  scenario_table->update(project);
   traffic_table->update(project);
   crowd_sim_table->update();
 }
@@ -2712,66 +2554,3 @@ void Editor::clear_current_tool_buffer()
     }
   }
 }
-
-#ifdef HAS_IGNITION_PLUGIN
-void Editor::sim_reset()
-{
-  printf("TODO: sim_reset()\n");
-  // todo: signal to the sim thread to reset the project
-}
-
-void Editor::sim_play_pause()
-{
-  printf("sim_play_pause()\n");
-  project.sim_is_paused = !project.sim_is_paused;
-}
-
-void Editor::sim_tick()
-{
-  // called from sim thread
-
-  if (!project.sim_is_paused)
-    project.sim_tick();
-}
-
-#ifdef HAS_OPENCV
-void Editor::record_start_stop()
-{
-  is_recording = !is_recording;
-}
-
-void Editor::record_frame_to_video()
-{
-  if (!is_recording)
-    return;
-
-  QPixmap pixmap = map_view->viewport()->grab();
-  const int w = pixmap.size().width();
-  const int h = pixmap.size().height();
-  QImage image(pixmap.toImage());
-  // int format = static_cast<int>(image.format());
-  cv::Mat mat(
-    h,
-    w,
-    CV_8UC4,
-    const_cast<uchar*>(image.bits()),
-    static_cast<size_t>(image.bytesPerLine()));
-  cv::Mat mat_rgb_swap;
-  cv::cvtColor(mat, mat_rgb_swap, cv::COLOR_RGBA2BGRA);
-
-  if (video_writer == nullptr)
-  {
-    printf("initializing video writer...\n");
-    video_writer =
-      new cv::VideoWriter(
-      "test.avi",
-      cv::VideoWriter::fourcc('M', 'J', 'P', 'G'),
-      30,
-      cv::Size(w, h));
-  }
-
-  video_writer->write(mat_rgb_swap);
-}
-#endif  // HAS_OPENCV
-
-#endif  // HAS_IGNITION_PLUGIN

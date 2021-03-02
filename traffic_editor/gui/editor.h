@@ -31,19 +31,15 @@
 #include <QSettings>
 #include <QUndoStack>
 
-#include "project.h"
 #include "actions/add_edge.h"
 #include "actions/move_correspondence_point.hpp"
 #include "actions/move_fiducial.h"
 #include "actions/move_model.h"
 #include "actions/move_vertex.h"
 #include "actions/rotate_model.h"
+#include "traffic_editor/building.h"
 #include "traffic_editor/editor_model.h"
 #include "editor_mode_id.h"
-
-#ifdef HAS_IGNITION_PLUGIN
-#include "sim_thread.h"
-#endif
 
 #include "crowd_sim/crowd_sim_editor_table.h"
 
@@ -51,7 +47,6 @@ class BuildingLevelTable;
 class MapView;
 class Level;
 class LiftTable;
-class ScenarioTable;
 class TrafficTable;
 class CrowdSimTable;
 
@@ -91,12 +86,12 @@ public:
 
   static Editor* get_instance();
 
-  /// Load a project, replacing the current project being edited
-  bool load_project(const QString& filename);
+  /// Load a building, replacing the current building being edited
+  bool load_building(const QString& filename);
 
   /// Attempt to load the most recently saved project, just for convenience
   /// when starting the application since often we want to 'resume' editing.
-  bool load_previous_project();
+  bool load_previous_building();
 
   /// Attempt to restore the previous viewport scale and center point
   void restore_previous_viewport();
@@ -143,9 +138,9 @@ private:
 
   /////////////////
   // MENU ACTIONS
-  void project_new();
-  void project_open();
-  bool project_save();
+  void building_new();
+  void building_open();
+  bool building_save();
   bool project_export_correspondence_points();
 
   bool maybe_save();
@@ -179,11 +174,12 @@ private:
 /////////////////////////////
   static Editor* instance;  // there will only be one instance
 
-  Project project;
+  Building building;
   int level_idx = 0;  // level that we are currently editing
   int layer_idx = 0;  // currently selected layer
   int clicked_idx = -1;  // point most recently clicked
   int prev_clicked_idx = -1; // Previously clicked ID.
+  int traffic_map_idx = 0;  // the current traffic map being viewed/edited
   //int polygon_idx = -1;  // currently selected polygon
   Polygon* selected_polygon = nullptr;
 
@@ -213,7 +209,6 @@ private:
 
   BuildingLevelTable* level_table = nullptr;
   LiftTable* lift_table = nullptr;
-  ScenarioTable* scenario_table = nullptr;
   TrafficTable* traffic_table = nullptr;
   CrowdSimEditorTable* crowd_sim_table = nullptr;
 

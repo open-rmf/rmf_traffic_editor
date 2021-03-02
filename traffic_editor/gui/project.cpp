@@ -39,138 +39,6 @@ Project::~Project()
 {
 }
 
-bool Project::load_yaml_file(const std::string& _filename)
-{
-  filename = _filename;
-
-  YAML::Node yaml;
-  try
-  {
-    yaml = YAML::LoadFile(filename.c_str());
-  }
-  catch (const std::exception& e)
-  {
-    printf("couldn't parse %s: %s", filename.c_str(), e.what());
-    return false;
-  }
-
-  // change directory to the path of the file, so that we can correctly open
-  // relative paths recorded in the file
-
-  // TODO: save previous directory and restore it, in case other files
-  // we load are in different directories (!)
-
-  QString dir(QFileInfo(QString::fromStdString(filename)).absolutePath());
-  printf("changing directory to [%s]\n", qUtf8Printable(dir));
-  if (!QDir::setCurrent(dir))
-  {
-    printf("couldn't change directory\n");
-    return false;
-  }
-
-  if (yaml["name"])
-    name = yaml["name"].as<string>();
-
-  if (yaml["building"] && yaml["building"].IsMap())
-  {
-    if (!yaml["building"]["filename"])
-    {
-      printf("expected a 'filename' key within the 'building' map\n");
-      return false;
-    }
-    building.filename = yaml["building"]["filename"].as<string>();
-    if (!building.load_yaml_file())
-      return false;
-  }
-
-  if (yaml["scenarios"] && yaml["scenarios"].IsSequence())
-  {
-    for (YAML::const_iterator scenario_node = yaml["scenarios"].begin();
-      scenario_node != yaml["scenarios"].end();
-      ++scenario_node)
-    {
-      std::unique_ptr<Scenario> scenario(new Scenario);
-      scenario->filename = (*scenario_node)["filename"].as<string>();
-      if (!scenario->load())
-      {
-        printf("couldn't load [%s]\n", scenario->filename.c_str());
-        //return false;
-      }
-      scenarios.push_back(std::move(scenario));
-    }
-    if (!scenarios.empty())
-      scenario_idx = 0;
-  }
-
-  if (yaml["traffic_maps"] && yaml["traffic_maps"].IsMap())
-  {
-    const YAML::Node& ytm = yaml["traffic_maps"];
-    for (YAML::const_iterator it = ytm.begin(); it != ytm.end(); ++it)
-    {
-      TrafficMap tm;
-      tm.from_project_yaml(it->first.as<string>(), it->second);
-      traffic_maps.push_back(tm);
-    }
-  }
-
-  return true;
-}
-
-bool Project::save_yaml_file() const
-{
-  printf("Project::save_yaml_file()\n");
-
-  YAML::Node y;
-  y["version"] = 1;
-  y["name"] = name;
-
-  y["building"] = YAML::Node(YAML::NodeType::Map);
-  y["building"]["filename"] = building.filename;
-
-  for (const auto& scenario : scenarios)
-  {
-    printf("saving scenario\n");
-    YAML::Node scenario_node;
-    scenario_node["filename"] = scenario->filename;
-    y["scenarios"].push_back(scenario_node);
-  }
-
-  y["traffic_maps"] = YAML::Node(YAML::NodeType::Map);
-  for (const auto& traffic_map : traffic_maps)
-    y["traffic_maps"][traffic_map.name] = traffic_map.to_project_yaml();
-
-  YAML::Emitter emitter;
-  yaml_utils::write_node(y, emitter);
-  std::ofstream fout(filename);
-  fout << emitter.c_str() << std::endl;
-
-  return true;
-}
-
-bool Project::save()
-{
-  if (!save_yaml_file())
-    return false;
-
-  building.save_yaml_file();
-
-  /*
-  // TODO: currently the scenarios are not fully parsed, so we
-  // can't save them back to disk without data loss
-  for (const auto& scenario : scenarios)
-    if (!scenario->save())
-      return false;
-  */
-
-  return true;
-}
-
-bool Project::load(const std::string& _filename)
-{
-  // future extension point: dispatch based on file type (json/yaml/...)
-  return load_yaml_file(_filename);
-}
-
 bool Project::export_correspondence_points(
   int level_index,
   const std::string& dest_filename) const
@@ -180,35 +48,11 @@ bool Project::export_correspondence_points(
     dest_filename);
 }
 
-void Project::add_scenario_vertex(
-  const int level_idx,
-  const double x,
-  const double y)
-{
-  printf("add_scenario_vertex(%d, %.3f, %.3f)\n", level_idx, x, y);
-  if (scenario_idx < 0 || scenario_idx >= static_cast<int>(scenarios.size()))
-    return;
-  scenarios[scenario_idx]->add_vertex(building.levels[level_idx].name, x, y);
-}
-
-void Project::scenario_row_clicked(const int row)
-{
-  printf("Project::scenario_row_clicked(%d)\n", row);
-  if (row < 0 || row >= static_cast<int>(scenarios.size()))
-  {
-    scenario_idx = -1;
-    return;
-  }
-  scenario_idx = row;
-}
-
 void Project::draw(
   QGraphicsScene* scene,
   const int level_idx,
   std::vector<EditorModel>& editor_models)
 {
-  std::lock_guard<std::mutex> building_guard(building.building_mutex);
-
   if (building.levels.empty())
   {
     printf("nothing to draw!\n");
@@ -217,13 +61,6 @@ void Project::draw(
 
   building.levels[level_idx].draw(scene, editor_models, rendering_options);
   building.draw_lifts(scene, level_idx);
-
-  if (scenario_idx >= 0)
-    scenarios[scenario_idx]->draw(
-      scene,
-      building.levels[level_idx].name,
-      building.levels[level_idx].drawing_meters_per_pixel,
-      editor_models);
 }
 
 void Project::clear_selection(const int level_idx)
@@ -231,9 +68,6 @@ void Project::clear_selection(const int level_idx)
   if (building.levels.empty())
     return;
   building.levels[level_idx].clear_selection();
-
-  if (scenario_idx >= 0)
-    scenarios[scenario_idx]->clear_selection(building.levels[level_idx].name);
 }
 
 bool Project::can_delete_current_selection(const int level_idx)
@@ -249,10 +83,6 @@ bool Project::delete_selected(const int level_idx)
     return false;
   if (!building.delete_selected(level_idx))
     return false;
-  const std::string level_name = building.levels[level_idx].name;
-  if (scenario_idx >= 0 &&
-    !scenarios[scenario_idx]->delete_selected(level_name))
-    return false;
   return true;
 }
 
@@ -263,148 +93,16 @@ void Project::get_selected_items(
   building.levels[level_idx].get_selected_items(selected);
 }
 
-Project::NearestItem Project::nearest_items(
-  EditorModeId mode,
-  const int level_index,
-  const int layer_index,
-  const double x,
-  const double y)
-{
-  NearestItem ni;
-
-  if (level_index >= static_cast<int>(building.levels.size()))
-    return ni;
-  const BuildingLevel& building_level = building.levels[level_index];
-
-  if (mode == MODE_BUILDING)
-  {
-    for (size_t i = 0; i < building_level.vertices.size(); i++)
-    {
-      const Vertex& p = building_level.vertices[i];
-      const double dx = x - p.x;
-      const double dy = y - p.y;
-      const double dist = std::sqrt(dx*dx + dy*dy);
-      if (dist < ni.vertex_dist)
-      {
-        ni.vertex_dist = dist;
-        ni.vertex_idx = i;
-      }
-    }
-
-    const auto& cp_sets = building_level.correspondence_point_sets();
-    if (layer_index < static_cast<int>(cp_sets.size()))
-    {
-      for (size_t i = 0; i < cp_sets[layer_index].size(); i++)
-      {
-        const CorrespondencePoint& cp = cp_sets[layer_index][i];
-        const double dx = x - cp.x();
-        const double dy = y - cp.y();
-        const double dist = std::sqrt(dx*dx + dy*dy);
-        if (dist < ni.correspondence_point_dist)
-        {
-          ni.correspondence_point_dist = dist;
-          ni.correspondence_point_idx = i;
-        }
-      }
-    }
-
-    for (size_t i = 0; i < building_level.fiducials.size(); i++)
-    {
-      const Fiducial& f = building_level.fiducials[i];
-      const double dx = x - f.x;
-      const double dy = y - f.y;
-      const double dist = std::sqrt(dx*dx + dy*dy);
-      if (dist < ni.fiducial_dist)
-      {
-        ni.fiducial_dist = dist;
-        ni.fiducial_idx = i;
-      }
-    }
-
-    for (size_t i = 0; i < building_level.fiducials.size(); i++)
-    {
-      const Fiducial& f = building_level.fiducials[i];
-      const double dx = x - f.x;
-      const double dy = y - f.y;
-      const double dist = std::sqrt(dx*dx + dy*dy);
-      if (dist < ni.fiducial_dist)
-      {
-        ni.fiducial_dist = dist;
-        ni.fiducial_idx = i;
-      }
-    }
-
-    for (size_t i = 0; i < building_level.models.size(); i++)
-    {
-      const Model& m = building_level.models[i];
-      const double dx = x - m.state.x;
-      const double dy = y - m.state.y;
-      const double dist = std::sqrt(dx*dx + dy*dy);  // no need for sqrt each time
-      if (dist < ni.model_dist)
-      {
-        ni.model_dist = dist;
-        ni.model_idx = i;
-      }
-    }
-  }
-  else if (mode == MODE_SCENARIO)
-  {
-    if (scenario_idx < 0 ||
-      scenario_idx >= static_cast<int>(scenarios.size()))
-      return ni;
-    const Scenario& scenario = *scenarios[scenario_idx];
-
-    for (const ScenarioLevel& scenario_level : scenario.levels)
-    {
-      if (scenario_level.name != building_level.name)
-        continue;
-
-      for (size_t i = 0; i < scenario_level.vertices.size(); i++)
-      {
-        const Vertex& p = scenario_level.vertices[i];
-        const double dx = x - p.x;
-        const double dy = y - p.y;
-        const double dist = std::sqrt(dx*dx + dy*dy);
-        if (dist < ni.vertex_dist)
-        {
-          ni.vertex_dist = dist;
-          ni.vertex_idx = i;
-        }
-      }
-    }
-  }
-
-  return ni;
-}
-
-ScenarioLevel* Project::scenario_level(const int building_level_idx)
-{
-  if (building_level_idx >= static_cast<int>(building.levels.size()))
-    return nullptr;
-  const BuildingLevel& building_level = building.levels[building_level_idx];
-
-  if (scenario_idx < 0 ||
-    scenario_idx >= static_cast<int>(scenarios.size()))
-    return nullptr;
-  // I'm sure this is a horrific abomination. Fix someday.
-  Scenario& scenario = *scenarios[scenario_idx];
-  for (size_t i = 0; i < scenario.levels.size(); i++)
-  {
-    if (scenario.levels[i].name == building_level.name)
-      return &scenario.levels[i];
-  }
-  return nullptr;
-}
-
 void Project::mouse_select_press(
   const EditorModeId mode,
   const int level_idx,
-  const int layer_idx,
-  const double x,
-  const double y,
-  QGraphicsItem* graphics_item)
+  const int /*layer_idx*/,
+  const double /*x*/,
+  const double /*y*/,
+  QGraphicsItem* /*graphics_item*/)
 {
   clear_selection(level_idx);
+#if 0
   const NearestItem ni = nearest_items(mode, level_idx, layer_idx, x, y);
 
   const double vertex_dist_thresh =
@@ -480,31 +178,7 @@ void Project::mouse_select_press(
       }
     }
   }
-  else if (mode == MODE_SCENARIO && scenario_idx >= 0)
-  {
-    ScenarioLevel* level = scenario_level(level_idx);
-    if (ni.vertex_dist < 10.0)
-      level->vertices[ni.vertex_idx].selected = true;
-    else
-    {
-      // use the QGraphics stuff to see if it's an edge segment or polygon
-      if (graphics_item)
-      {
-        switch (graphics_item->type())
-        {
-          case QGraphicsPolygonItem::Type:
-            set_selected_containing_polygon(mode, level_idx, x, y);
-            break;
-
-          default:
-            printf("clicked unhandled type: %d\n",
-              static_cast<int>(graphics_item->type()));
-            break;
-        }
-      }
-
-    }
-  }
+#endif
 }
 
 void Project::set_selected_line_item(
@@ -513,7 +187,7 @@ void Project::set_selected_line_item(
   const EditorModeId mode)
 {
   clear_selection(level_idx);
-
+#if 0
   if (line_item == nullptr)
     return;
 
@@ -564,6 +238,7 @@ void Project::set_selected_line_item(
       return;  // stop after first one is found, don't select multiple
     }
   }
+#endif
 }
 
 Polygon::EdgeDragPolygon Project::polygon_edge_drag_press(
@@ -580,14 +255,6 @@ Polygon::EdgeDragPolygon Project::polygon_edge_drag_press(
 
   if (mode == MODE_BUILDING)
     return building.levels[level_idx].polygon_edge_drag_press(polygon, x, y);
-  else if (mode == MODE_SCENARIO)
-  {
-    ScenarioLevel* slevel = scenario_level(level_idx);
-    if (slevel == nullptr)
-      return edp;
-    return slevel->polygon_edge_drag_press(polygon, x, y);
-  }
-
   return edp;
 }
 
@@ -603,18 +270,6 @@ Polygon* Project::get_selected_polygon(
         return &building.levels[level_idx].polygons[i];// abomination
     }
   }
-  else if (mode == MODE_SCENARIO)
-  {
-    ScenarioLevel* slevel = scenario_level(level_idx);
-    if (slevel)
-    {
-      for (size_t i = 0; i < slevel->polygons.size(); i++)
-      {
-        if (slevel->polygons[i].selected)
-          return &slevel->polygons[i];// abomination
-      }
-    }
-  }
   return nullptr;
 }
 
@@ -627,9 +282,6 @@ void Project::set_selected_containing_polygon(
   Level* level = nullptr;
   if (mode == MODE_BUILDING)
     level = &building.levels[level_idx];
-  else if (mode == MODE_SCENARIO)
-    level = scenario_level(level_idx);
-
   if (level == nullptr)
     return;
 
@@ -673,34 +325,11 @@ void Project::clear()
   building.clear();
   name.clear();
   filename.clear();
-  scenarios.clear();
-  scenario_idx = -1;
 }
-
-#ifdef HAS_IGNITION_PLUGIN
-void Project::sim_tick()
-{
-  if (scenario_idx < 0 || scenario_idx >= static_cast<int>(scenarios.size()))
-    return;
-  scenarios[scenario_idx]->sim_tick(building);
-}
-
-void Project::sim_reset()
-{
-  if (scenario_idx < 0 || scenario_idx >= static_cast<int>(scenarios.size()))
-    return;
-  scenarios[scenario_idx]->sim_reset(building);
-}
-#endif
 
 void Project::clear_scene()
 {
   building.clear_scene();
-
-#ifdef HAS_IGNITION_PLUGIN
-  for (auto& scenario : scenarios)
-    scenario->clear_scene();
-#endif
 }
 
 void Project::add_lane(
@@ -709,79 +338,4 @@ void Project::add_lane(
   const int end_idx)
 {
   building.add_lane(level_idx, start_idx, end_idx, traffic_map_idx);
-}
-
-#ifdef HAS_IGNITION_PLUGIN
-void Project::scenario_scene_update(
-  QGraphicsScene* scene,
-  const int level_idx)
-{
-  if (scenario_idx < 0 || scenario_idx >= static_cast<int>(scenarios.size()))
-    return;
-  scenarios[scenario_idx]->scene_update(scene, building, level_idx);
-}
-
-bool Project::has_sim_plugin()
-{
-  for (const auto& scenario : scenarios)
-  {
-    if (scenario->sim_plugin)
-      return true;
-  }
-  return false;
-}
-#endif
-
-bool Project::set_filename(const std::string& _fn)
-{
-  const string suffix(".project.yaml");
-
-  // ensure there is at least one character in addition to the suffix length
-  if (_fn.size() <= suffix.size())
-  {
-    printf("Project::set_filename() too short: [%s]\n", _fn.c_str());
-    return false;
-  }
-
-  // ensure the filename ends in .project.yaml
-  // it should, because the "save as" dialog appends it, but...
-  if (_fn.compare(_fn.size() - suffix.size(), suffix.size(), suffix))
-  {
-    printf(
-      "Project::set_filename() filename had unexpected suffix: [%s]\n",
-      _fn.c_str());
-    return false;
-  }
-
-  const string no_suffix(_fn.substr(0, _fn.size() - suffix.size()));
-
-  const size_t last_slash_pos = no_suffix.rfind('/', no_suffix.size());
-
-  const string stem(
-    (last_slash_pos == string::npos) ?
-    no_suffix :
-    string(no_suffix, last_slash_pos + 1));
-
-  filename = _fn;
-
-  if (name.empty())
-  {
-    name = stem;
-  }
-
-  if (building.name.empty())
-  {
-    building.name = stem;
-  }
-  if (building.filename.empty())
-  {
-    building.filename = stem + std::string(".building.yaml");
-  }
-
-  printf(
-    "set project filename to [%s] stem: [%s] building filename: [%s]\n",
-    filename.c_str(),
-    stem.c_str(),
-    building.filename.c_str());
-  return true;
 }

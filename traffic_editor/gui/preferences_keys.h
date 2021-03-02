@@ -6,8 +6,8 @@
 namespace preferences_keys {
 
 extern const QString thumbnail_path;
-extern const QString open_previous_project;
-extern const QString previous_project_path;
+extern const QString open_previous_building;
+extern const QString previous_building_path;
 extern const QString window_width;
 extern const QString window_height;
 extern const QString window_left;
