@@ -94,7 +94,7 @@ void Project::get_selected_items(
 }
 
 void Project::mouse_select_press(
-  const EditorModeId mode,
+  const EditorModeId /*mode*/,
   const int level_idx,
   const int /*layer_idx*/,
   const double /*x*/,
@@ -183,8 +183,8 @@ void Project::mouse_select_press(
 
 void Project::set_selected_line_item(
   const int level_idx,
-  QGraphicsLineItem* line_item,
-  const EditorModeId mode)
+  QGraphicsLineItem* /*line_item*/,
+  const EditorModeId /*mode*/)
 {
   clear_selection(level_idx);
 #if 0
@@ -333,9 +333,9 @@ void Project::clear_scene()
 }
 
 void Project::add_lane(
-  const int level_idx,
-  const int start_idx,
-  const int end_idx)
+  const int /*level_idx*/,
+  const int /*start_idx*/,
+  const int /*end_idx*/)
 {
-  building.add_lane(level_idx, start_idx, end_idx, traffic_map_idx);
+  //building.add_lane(level_idx, start_idx, end_idx, traffic_map_idx);
 }

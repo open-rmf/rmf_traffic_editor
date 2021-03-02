@@ -18,20 +18,20 @@
 #ifndef BUILDING_LEVEL_H
 #define BUILDING_LEVEL_H
 
-#include "traffic_editor/level.h"
+#include "level.h"
 
 #include <yaml-cpp/yaml.h>
 #include <string>
 
-#include "traffic_editor/correspondence_point.hpp"
-#include "traffic_editor/edge.h"
-#include "traffic_editor/editor_model.h"
-#include "traffic_editor/fiducial.h"
-#include "traffic_editor/layer.h"
-#include "traffic_editor/model.h"
-#include "traffic_editor/polygon.h"
-#include "traffic_editor/rendering_options.h"
-#include "traffic_editor/vertex.h"
+#include "correspondence_point.hpp"
+#include "edge.h"
+#include "editor_model.h"
+#include "fiducial.h"
+#include "layer.h"
+#include "model.h"
+#include "polygon.h"
+#include "rendering_options.h"
+#include "vertex.h"
 
 #include <QPixmap>
 #include <QPainterPath>

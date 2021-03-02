@@ -20,7 +20,7 @@
 
 #include <QDialog>
 #include <QObject>
-#include "traffic_editor/layer.h"
+#include "layer.h"
 class QLineEdit;
 
 

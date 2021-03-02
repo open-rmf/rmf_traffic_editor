@@ -25,6 +25,7 @@ public:
   std::array<bool, NUM_BUILDING_LANES> show_building_lanes;
 
   bool show_models = true;
+  int active_traffic_map_idx = 0;
 };
 
 #endif

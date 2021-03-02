@@ -20,7 +20,7 @@
 
 #include <QUndoCommand>
 #include "project.h"
-#include "traffic_editor/vertex.h"
+#include "vertex.h"
 
 class MoveVertexCommand : public QUndoCommand
 {

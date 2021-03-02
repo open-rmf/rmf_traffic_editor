@@ -21,7 +21,7 @@
 #include <QGraphicsSimpleTextItem>
 #include <QString>
 
-#include "traffic_editor/correspondence_point.hpp"
+#include "correspondence_point.hpp"
 
 
 CorrespondencePoint::CorrespondencePoint()

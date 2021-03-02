@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Open Source Robotics Foundation
+ * Copyright (C) 2019-2021 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@
 #include <QtConcurrent/QtConcurrent>
 #include <QElapsedTimer>
 
-#include "traffic_editor/building.h"
+#include "building.h"
 #include "yaml_utils.h"
 
 using std::string;

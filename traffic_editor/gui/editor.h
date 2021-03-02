@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Open Source Robotics Foundation
+ * Copyright (C) 2019-2021 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,9 +37,10 @@
 #include "actions/move_model.h"
 #include "actions/move_vertex.h"
 #include "actions/rotate_model.h"
-#include "traffic_editor/building.h"
-#include "traffic_editor/editor_model.h"
+#include "building.h"
+#include "editor_model.h"
 #include "editor_mode_id.h"
+#include "rendering_options.h"
 
 #include "crowd_sim/crowd_sim_editor_table.h"
 
@@ -175,11 +176,11 @@ private:
   static Editor* instance;  // there will only be one instance
 
   Building building;
+  RenderingOptions rendering_options;
   int level_idx = 0;  // level that we are currently editing
   int layer_idx = 0;  // currently selected layer
   int clicked_idx = -1;  // point most recently clicked
   int prev_clicked_idx = -1; // Previously clicked ID.
-  int traffic_map_idx = 0;  // the current traffic map being viewed/edited
   //int polygon_idx = -1;  // currently selected polygon
   Polygon* selected_polygon = nullptr;
 

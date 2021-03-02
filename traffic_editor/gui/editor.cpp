@@ -117,7 +117,7 @@ Editor::Editor()
         //   p_center_scene.x(), p_center_scene.y());
 
         QPointF p_transformed;
-        project.building.transform_between_levels(
+        building.transform_between_levels(
           level_idx,
           p_center_scene,
           row,
@@ -127,8 +127,8 @@ Editor::Editor()
         const double prev_scale = map_view->transform().m11();
 
         double scale = prev_scale *
-        project.building.levels[row].drawing_meters_per_pixel /
-        project.building.levels[level_idx].drawing_meters_per_pixel;
+        building.levels[row].drawing_meters_per_pixel /
+        building.levels[level_idx].drawing_meters_per_pixel;
         if (isnan(scale))
         {
           scale = 1.0;
@@ -168,8 +168,8 @@ Editor::Editor()
     &QTableWidget::cellClicked,
     [=](int row, int /*col*/)
     {
-      traffic_map_idx = row;
-      traffic_table->update(project);
+      rendering_options.active_traffic_map_idx = row;
+      traffic_table->update(rendering_options);
     });
 
   crowd_sim_table = new CrowdSimEditorTable(project);
@@ -2415,7 +2415,7 @@ void Editor::number_key_pressed(const int n)
     update_property_editor();
   }
 
-  project.traffic_map_idx = n;
+  rendering_options.active_traffic_map_idx = n;
   traffic_table->update(project);
 }
 
