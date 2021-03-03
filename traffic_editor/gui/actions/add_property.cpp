@@ -57,7 +57,7 @@ void AddPropertyCommand::undo()
 {
   auto v = _building->levels[_level_idx].vertices[_vert_id];
   if (v.params.count(_prop) == 0)
-    return; //something went wrong
+    return;
 
   _building->levels[_level_idx].vertices[_vert_id].params.erase(_prop);
 }

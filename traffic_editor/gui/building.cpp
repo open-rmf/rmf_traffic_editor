@@ -270,7 +270,7 @@ Building::NearestItem Building::nearest_items(
       }
     }
   }
-  
+
   for (size_t i = 0; i < level.fiducials.size(); i++)
   {
     const Fiducial& f = level.fiducials[i];
@@ -886,7 +886,7 @@ void Building::set_selected_line_item(
   {
     if ((edge.type == Edge::LANE) &&
       (edge.get_graph_idx() != rendering_options.active_traffic_map_idx))
-        continue;
+      continue;
 
     // look up the line's vertices
     const double x1 = line_item->line().x1();
@@ -967,7 +967,7 @@ Polygon::EdgeDragPolygon Building::polygon_edge_drag_press(
   Polygon::EdgeDragPolygon edp;
 
   if (level_idx < 0 || level_idx > static_cast<int>(levels.size()))
-    return edp;  // oh no
+    return edp;
 
   return levels[level_idx].polygon_edge_drag_press(polygon, x, y);
 }

@@ -1660,12 +1660,13 @@ void Editor::mouse_add_correspondence_point(
 {
   if (t == MOUSE_PRESS)
   {
-    undo_stack.push(new AddCorrespondencePointCommand(
-      &building,
-      level_idx,
-      layer_idx,
-      p.x(),
-      p.y()));
+    undo_stack.push(
+      new AddCorrespondencePointCommand(
+        &building,
+        level_idx,
+        layer_idx,
+        p.x(),
+        p.y()));
     setWindowModified(true);
     create_scene();
   }
