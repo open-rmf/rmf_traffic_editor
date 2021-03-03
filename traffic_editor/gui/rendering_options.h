@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2020 Open Source Robotics Foundation
+ * Copyright (C) 2019-2021 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,8 @@
 #ifndef RENDERING_OPTIONS_H
 #define RENDERING_OPTIONS_H
 
+#include <array>
+
 class RenderingOptions
 {
 public:
@@ -26,6 +28,8 @@ public:
 
   bool show_models = true;
   int active_traffic_map_idx = 0;
+
+  RenderingOptions();
 };
 
 #endif

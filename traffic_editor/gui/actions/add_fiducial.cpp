@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2020 Open Source Robotics Foundation
+ * Copyright (C) 2019-2021 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,12 @@
 #include "add_fiducial.h"
 
 AddFiducialCommand::AddFiducialCommand(
-  Project* project,
+  Building* building,
   int level_idx,
   double x,
   double y)
 {
-  _project = project;
+  _building = building;
   _x = x;
   _y = y;
   _level_idx = level_idx;
@@ -38,26 +38,24 @@ void AddFiducialCommand::undo()
 {
   int index_to_remove = -1;
 
-  for (size_t i = 0; i < _project->building.levels[_level_idx].fiducials.size();
-    i++)
+  for (size_t i = 0; i < _building->levels[_level_idx].fiducials.size(); i++)
   {
-    if (_uuid == _project->building.levels[_level_idx].fiducials[i].uuid)
-    {
+    if (_uuid == _building->levels[_level_idx].fiducials[i].uuid)
       index_to_remove = i;
-    }
   }
+
   if (index_to_remove < 0)
   {
     //something wrong
     return;
   }
 
-  _project->building.levels[_level_idx].fiducials.erase(
-    _project->building.levels[_level_idx].fiducials.begin() + index_to_remove
+  _building->levels[_level_idx].fiducials.erase(
+    _building->levels[_level_idx].fiducials.begin() + index_to_remove
   );
 }
 
 void AddFiducialCommand::redo()
 {
-  _uuid = _project->building.add_fiducial(_level_idx, _x, _y);
+  _uuid = _building->add_fiducial(_level_idx, _x, _y);
 }

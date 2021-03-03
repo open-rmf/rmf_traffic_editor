@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2020 Open Source Robotics Foundation
+ * Copyright (C) 2019-2021 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,13 +19,13 @@
 #define _MOVE_MODEL_H_
 
 #include <QUndoCommand>
-#include "project.h"
+#include "building.h"
 
 class MoveModelCommand : public QUndoCommand
 {
 public:
   MoveModelCommand(
-    Project* project,
+    Building* building,
     int level,
     int model_id
   );
@@ -41,7 +41,7 @@ private:
   double _original_x, _original_y;
   double _final_x, _final_y;
   int _level_id, _model_id;
-  Project* _project;
+  Building* _building;
 };
 
 #endif

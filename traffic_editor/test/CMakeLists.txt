@@ -5,7 +5,7 @@ add_executable(
 
 target_link_libraries(
   test_gui
-  traffic_editor_gui
+  gui_lib
   Qt5::Test
 )
 

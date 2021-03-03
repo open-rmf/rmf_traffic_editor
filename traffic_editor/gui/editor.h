@@ -32,14 +32,13 @@
 #include <QUndoStack>
 
 #include "actions/add_edge.h"
-#include "actions/move_correspondence_point.hpp"
+#include "actions/move_correspondence_point.h"
 #include "actions/move_fiducial.h"
 #include "actions/move_model.h"
 #include "actions/move_vertex.h"
 #include "actions/rotate_model.h"
 #include "building.h"
 #include "editor_model.h"
-#include "editor_mode_id.h"
 #include "rendering_options.h"
 
 #include "crowd_sim/crowd_sim_editor_table.h"
@@ -108,9 +107,6 @@ protected:
 private:
 
   QUndoStack undo_stack;
-  EditorModeId mode = MODE_BUILDING;
-
-  void set_mode(const EditorModeId _mode, const QString& mode_string);
 
   enum ToolId
   {
@@ -134,8 +130,6 @@ private:
   } tool_id = TOOL_SELECT;
 
   std::map<ToolId, QAction*> tools;
-
-  void set_tool_visibility(const ToolId id, const bool visible);
 
   /////////////////
   // MENU ACTIONS

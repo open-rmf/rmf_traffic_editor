@@ -19,13 +19,13 @@
 #include <math.h>
 
 AddModelCommand::AddModelCommand(
-  Project* project,
+  Building* building,
   int level_idx,
   double x,
   double y,
   std::string name)
 {
-  _project = project;
+  _building = building;
   _level_idx = level_idx;
   _x = x;
   _y = y;
@@ -39,13 +39,13 @@ AddModelCommand::~AddModelCommand()
 
 void AddModelCommand::undo()
 {
-  for (size_t i = 0; i < _project->building.levels[_level_idx].models.size();
+  for (size_t i = 0; i < _building->levels[_level_idx].models.size();
     i++)
   {
-    if (_project->building.levels[_level_idx].models[i].uuid == _uuid)
+    if (_building->levels[_level_idx].models[i].uuid == _uuid)
     {
-      _project->building.levels[_level_idx].models.erase(
-        _project->building.levels[_level_idx].models.begin() + i
+      _building->levels[_level_idx].models.erase(
+        _building->levels[_level_idx].models.begin() + i
       );
       return;
     }
@@ -55,7 +55,7 @@ void AddModelCommand::undo()
 
 void AddModelCommand::redo()
 {
-  _uuid = _project->building.add_model(
+  _uuid = _building->add_model(
     _level_idx,
     _x,
     _y,

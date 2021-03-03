@@ -251,22 +251,26 @@ Building::NearestItem Building::nearest_items(
     }
   }
 
-  for (size_t ii = 0;
-    ii < level.correspondence_point_sets()[layer_index].size();
-    ++ii)
+  if (layer_index <
+    static_cast<int>(level.correspondence_point_sets().size()))
   {
-    const CorrespondencePoint& cp =
-      level.correspondence_point_sets()[layer_index][ii];
-    const double dx = x - cp.x();
-    const double dy = y - cp.y();
-    const double dist = sqrt(dx*dx + dy*dy);
-    if (dist < ni.correspondence_point_dist)
+    for (size_t ii = 0;
+      ii < level.correspondence_point_sets()[layer_index].size();
+      ++ii)
     {
-      ni.correspondence_point_dist = dist;
-      ni.correspondence_point_idx = ii;
+      const CorrespondencePoint& cp =
+        level.correspondence_point_sets()[layer_index][ii];
+      const double dx = x - cp.x();
+      const double dy = y - cp.y();
+      const double dist = sqrt(dx*dx + dy*dy);
+      if (dist < ni.correspondence_point_dist)
+      {
+        ni.correspondence_point_dist = dist;
+        ni.correspondence_point_idx = ii;
+      }
     }
   }
-
+  
   for (size_t i = 0; i < level.fiducials.size(); i++)
   {
     const Fiducial& f = level.fiducials[i];
@@ -851,7 +855,8 @@ void Building::mouse_select_press(
         case QGraphicsLineItem::Type:
           set_selected_line_item(
             level_idx,
-            qgraphicsitem_cast<QGraphicsLineItem*>(graphics_item));
+            qgraphicsitem_cast<QGraphicsLineItem*>(graphics_item),
+            rendering_options);
           break;
 
         case QGraphicsPolygonItem::Type:
@@ -877,7 +882,7 @@ void Building::set_selected_line_item(
     return;
 
   // find if any of our lanes match those vertices
-  for (auto& edge : building.levels[level_idx].edges)
+  for (auto& edge : levels[level_idx].edges)
   {
     if ((edge.type == Edge::LANE) &&
       (edge.get_graph_idx() != rendering_options.active_traffic_map_idx))
@@ -889,8 +894,8 @@ void Building::set_selected_line_item(
     const double x2 = line_item->line().x2();
     const double y2 = line_item->line().y2();
 
-    const auto& v_start = building.levels[level_idx].vertices[edge.start_idx];
-    const auto& v_end = building.levels[level_idx].vertices[edge.end_idx];
+    const auto& v_start = levels[level_idx].vertices[edge.start_idx];
+    const auto& v_end = levels[level_idx].vertices[edge.end_idx];
 
     // calculate distances
     const double dx1 = v_start.x - x1;
@@ -907,4 +912,62 @@ void Building::set_selected_line_item(
       return;  // stop after first one is found, don't select multiple
     }
   }
+}
+
+void Building::set_selected_containing_polygon(
+  const int level_idx,
+  const double x,
+  const double y)
+{
+  if (level_idx >= static_cast<int>(levels.size()))
+    return;
+  Level& level = levels[level_idx];
+
+  // holes are "higher" in our Z-stack (to make them clickable), so first
+  // we need to make a list of all polygons that contain this point.
+  vector<Polygon*> containing_polygons;
+  for (size_t i = 0; i < level.polygons.size(); i++)
+  {
+    Polygon& polygon = level.polygons[i];
+    QVector<QPointF> polygon_vertices;
+    for (const auto& vertex_idx: polygon.vertices)
+    {
+      const Vertex& v = level.vertices[vertex_idx];
+      polygon_vertices.append(QPointF(v.x, v.y));
+    }
+    QPolygonF qpolygon(polygon_vertices);
+    if (qpolygon.containsPoint(QPoint(x, y), Qt::OddEvenFill))
+      containing_polygons.push_back(&level.polygons[i]);
+  }
+
+  // first search for holes
+  for (Polygon* p : containing_polygons)
+  {
+    if (p->type == Polygon::HOLE)
+    {
+      p->selected = true;
+      return;
+    }
+  }
+
+  // if we get here, just return the first thing.
+  for (Polygon* p : containing_polygons)
+  {
+    p->selected = true;
+    return;
+  }
+}
+
+Polygon::EdgeDragPolygon Building::polygon_edge_drag_press(
+  const int level_idx,
+  const Polygon* polygon,
+  const double x,
+  const double y)
+{
+  Polygon::EdgeDragPolygon edp;
+
+  if (level_idx < 0 || level_idx > static_cast<int>(levels.size()))
+    return edp;  // oh no
+
+  return levels[level_idx].polygon_edge_drag_press(polygon, x, y);
 }

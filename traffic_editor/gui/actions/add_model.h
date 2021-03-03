@@ -18,14 +18,14 @@
 #define _ADD_MODEL_H_
 
 #include <QUndoCommand>
-#include "project.h"
+#include "building.h"
 
 class AddModelCommand : public QUndoCommand
 {
 
 public:
   AddModelCommand(
-    Project* project,
+    Building* building,
     int level_idx,
     double x,
     double y,
@@ -34,7 +34,7 @@ public:
   void undo() override;
   void redo() override;
 private:
-  Project* _project;
+  Building* _building;
   double _x, _y;
   int _level_idx;
   QUuid _uuid;

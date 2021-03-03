@@ -205,6 +205,17 @@ public:
     QGraphicsLineItem* line_item,
     const RenderingOptions& rendering_options);
 
+  void set_selected_containing_polygon(
+    const int level_idx,
+    const double x,
+    const double y);
+
+  Polygon::EdgeDragPolygon polygon_edge_drag_press(
+    const int level_idx,
+    const Polygon* polygon,
+    const double x,
+    const double y);
+
 private:
   std::string filename;
 };

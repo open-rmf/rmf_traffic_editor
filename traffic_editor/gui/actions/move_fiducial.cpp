@@ -18,12 +18,12 @@
 #include "move_fiducial.h"
 
 MoveFiducialCommand::MoveFiducialCommand(
-  Project* project,
+  Building* building,
   int level,
   int fiducial_id)
 {
-  _project = project;
-  Fiducial fiducial = project->building.levels[level].fiducials[fiducial_id];
+  _building = building;
+  Fiducial fiducial = _building->levels[level].fiducials[fiducial_id];
   _original_x = fiducial.x;
   _original_y = fiducial.y;
   _level_id = level;
@@ -38,7 +38,7 @@ MoveFiducialCommand::~MoveFiducialCommand()
 void MoveFiducialCommand::undo()
 {
   Fiducial& fiducial =
-    _project->building.levels[_level_id].fiducials[_fiducial_id];
+    _building->levels[_level_id].fiducials[_fiducial_id];
   fiducial.x = _original_x;
   fiducial.y = _original_y;
 }
@@ -46,7 +46,7 @@ void MoveFiducialCommand::undo()
 void MoveFiducialCommand::redo()
 {
   Fiducial& fiducial =
-    _project->building.levels[_level_id].fiducials[_fiducial_id];
+    _building->levels[_level_id].fiducials[_fiducial_id];
   fiducial.x = _final_x;
   fiducial.y = _final_y;
 }

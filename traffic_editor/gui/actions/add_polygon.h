@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2020 Open Source Robotics Foundation
+ * Copyright (C) 2019-2021 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,24 +18,21 @@
 #define _ADD_POLYGON_H_
 
 #include <QUndoCommand>
-#include "editor_mode_id.h"
-#include "project.h"
+#include "building.h"
 
 class AddPolygonCommand : public QUndoCommand
 {
 
 public:
   AddPolygonCommand(
-    Project* project,
-    EditorModeId mode,
+    Building* building,
     Polygon polygon,
     int level_idx);
   virtual ~AddPolygonCommand();
   void undo() override;
   void redo() override;
 private:
-  Project* _project;
-  EditorModeId _mode;
+  Building* _building;
   Polygon _to_add;
   int _level_idx;
   std::vector<Polygon> _previous_polygons;

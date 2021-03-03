@@ -15,35 +15,32 @@
  *
 */
 
-#ifndef ACTIONS__MOVE_CORRESPONDENCE_POING_HPP_
-#define ACTIONS__MOVE_CORRESPONDENCE_POING_HPP_
+#ifndef ACTIONS__ADD_CORRESPONDENCE_POINT_H_
+#define ACTIONS__ADD_CORRESPONDENCE_POINT_H_
 
 #include <QUndoCommand>
 #include <QUuid>
 
-#include "project.h"
+#include "building.h"
 
-class MoveCorrespondencePointCommand : public QUndoCommand
+class AddCorrespondencePointCommand : public QUndoCommand
 {
 public:
-  MoveCorrespondencePointCommand(
-    Project* project,
-    int id,
+  AddCorrespondencePointCommand(
+    Building* building,
     int level,
-    int layer);
+    int layer,
+    double x,
+    double y);
 
   void undo() override;
   void redo() override;
 
-  void set_final_destination(double x, double y);
-
-  bool has_moved;
-
 private:
-  Project* project_;
-  int level_, layer_, point_id_;
-  double original_x_, original_y_;
-  double final_x_, final_y_;
+  Building* building_;
+  int level_, layer_;
+  double x_, y_;
+  QUuid uuid_;
 };
 
-#endif  // ACTIONS__MOVE_CORRESPONDENCE_POING_HPP_
+#endif  // ACTIONS__ADD_CORRESPONDENCE_POINT_H_
