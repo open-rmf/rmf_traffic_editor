@@ -15,15 +15,15 @@
  *
 */
 
-#include "add_correspondence_point.hpp"
+#include "add_correspondence_point.h"
 
 AddCorrespondencePointCommand::AddCorrespondencePointCommand(
-  Project* project,
+  Building* building,
   int level,
   int layer,
   double x,
   double y)
-: project_(project),
+: building_(building),
   level_(level),
   layer_(layer),
   x_(x),
@@ -34,24 +34,22 @@ AddCorrespondencePointCommand::AddCorrespondencePointCommand(
 void AddCorrespondencePointCommand::undo()
 {
   int index_to_remove = -1;
-  auto& s = project_->building.levels[level_].
-    correspondence_point_sets()[layer_];
+  auto& s = building_->levels[level_].correspondence_point_sets()[layer_];
 
   for (size_t ii = 0; ii < s.size(); ++ii)
   {
     if (uuid_ == s[ii].uuid())
       index_to_remove = ii;
   }
+
   if (index_to_remove < 0)
-  {
     return;
-  }
 
   s.erase(s.begin() + index_to_remove);
 }
 
 void AddCorrespondencePointCommand::redo()
 {
-  uuid_ = project_->building.add_correspondence_point(level_, layer_, x_, y_);
+  uuid_ = building_->add_correspondence_point(level_, layer_, x_, y_);
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2020 Open Source Robotics Foundation
+ * Copyright (C) 2021 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,16 +15,32 @@
  *
 */
 
-#ifndef RENDERING_OPTIONS_H
-#define RENDERING_OPTIONS_H
+#ifndef ACTIONS__ADD_CORRESPONDENCE_POINT_H_
+#define ACTIONS__ADD_CORRESPONDENCE_POINT_H_
 
-class RenderingOptions
+#include <QUndoCommand>
+#include <QUuid>
+
+#include "building.h"
+
+class AddCorrespondencePointCommand : public QUndoCommand
 {
 public:
-  static const int NUM_BUILDING_LANES = 10;
-  std::array<bool, NUM_BUILDING_LANES> show_building_lanes;
+  AddCorrespondencePointCommand(
+    Building* building,
+    int level,
+    int layer,
+    double x,
+    double y);
 
-  bool show_models = true;
+  void undo() override;
+  void redo() override;
+
+private:
+  Building* building_;
+  int level_, layer_;
+  double x_, y_;
+  QUuid uuid_;
 };
 
-#endif
+#endif  // ACTIONS__ADD_CORRESPONDENCE_POINT_H_

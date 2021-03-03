@@ -30,20 +30,20 @@ int main(int argc, char* argv[])
 
   QCommandLineParser parser;
   parser.addHelpOption();
-  parser.addPositionalArgument("[project]", "Project to open");
+  parser.addPositionalArgument("[building]", "Building YAML file to open");
   parser.process(QCoreApplication::arguments());
 
   Editor editor;
   QSettings settings;
 
   const bool load_previous = settings.value(
-    preferences_keys::open_previous_project, QVariant(true)).toBool();
+    preferences_keys::open_previous_building, QVariant(true)).toBool();
 
   if (load_previous && parser.positionalArguments().isEmpty())
-    editor.load_previous_project();
+    editor.load_previous_building();
 
   if (parser.positionalArguments().length() >= 1)
-    editor.load_project(parser.positionalArguments().at(0));
+    editor.load_building(parser.positionalArguments().at(0));
 
   editor.show();
 

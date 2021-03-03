@@ -17,16 +17,20 @@
 
 #include "add_edge.h"
 
-AddEdgeCommand::AddEdgeCommand(Project* project, int level_idx)
+AddEdgeCommand::AddEdgeCommand(
+  Building* building,
+  int level_idx,
+  const RenderingOptions& rendering_options)
 {
-  _project = project;
+  _building = building;
+  _rendering_options = rendering_options;
   _level_idx = level_idx;
   _first_point_not_exist = false;
   _first_point_drawn = false;
   _second_point_not_exist = false;
   _second_point_drawn = false;
-  _edge_snapshot = _project->building.levels[_level_idx].edges;
-  _vert_snapshot = _project->building.levels[_level_idx].vertices;
+  _edge_snapshot = _building->levels[_level_idx].edges;
+  _vert_snapshot = _building->levels[_level_idx].vertices;
 }
 
 AddEdgeCommand::~AddEdgeCommand()
@@ -36,10 +40,10 @@ AddEdgeCommand::~AddEdgeCommand()
 
 void AddEdgeCommand::redo()
 {
-  _project->building.levels[_level_idx].vertices = _final_snapshot;
+  _building->levels[_level_idx].vertices = _final_snapshot;
   if (_type != Edge::LANE)
   {
-    _project->building.add_edge(
+    _building->add_edge(
       _level_idx,
       _vert_id_first,
       _vert_id_second,
@@ -47,18 +51,19 @@ void AddEdgeCommand::redo()
   }
   else
   {
-    _project->add_lane(
+    _building->add_lane(
       _level_idx,
       _vert_id_first,
-      _vert_id_second);
+      _vert_id_second,
+      _rendering_options.active_traffic_map_idx);
   }
 }
 
 void AddEdgeCommand::undo()
 {
   //Just use snapshots to keep things simpler
-  _project->building.levels[_level_idx].edges = _edge_snapshot;
-  _project->building.levels[_level_idx].vertices = _vert_snapshot;
+  _building->levels[_level_idx].edges = _edge_snapshot;
+  _building->levels[_level_idx].vertices = _vert_snapshot;
 }
 
 int AddEdgeCommand::set_first_point(double x, double y)
@@ -68,9 +73,9 @@ int AddEdgeCommand::set_first_point(double x, double y)
 
   const double vertex_dist_thresh_pixels =
     _vertex_radius_meters /
-    _project->building.levels[_level_idx].drawing_meters_per_pixel;
+    _building->levels[_level_idx].drawing_meters_per_pixel;
 
-  int clicked_idx = _project->building.nearest_item_index_if_within_distance(
+  int clicked_idx = _building->nearest_item_index_if_within_distance(
     _level_idx,
     x,
     y,
@@ -81,11 +86,11 @@ int AddEdgeCommand::set_first_point(double x, double y)
   if (clicked_idx < 0)
   {
     _first_point_not_exist = true;
-    _project->building.add_vertex(_level_idx, x, y);
-    clicked_idx = _project->building.levels[_level_idx].vertices.size()-1;
+    _building->add_vertex(_level_idx, x, y);
+    clicked_idx = _building->levels[_level_idx].vertices.size()-1;
   }
   _vert_id_first = clicked_idx;
-  _final_snapshot = _project->building.levels[_level_idx].vertices;
+  _final_snapshot = _building->levels[_level_idx].vertices;
   return clicked_idx;
 }
 
@@ -96,9 +101,9 @@ int AddEdgeCommand::set_second_point(double x, double y)
 
   const double vertex_dist_thresh_pixels =
     _vertex_radius_meters /
-    _project->building.levels[_level_idx].drawing_meters_per_pixel;
+    _building->levels[_level_idx].drawing_meters_per_pixel;
 
-  int clicked_idx = _project->building.nearest_item_index_if_within_distance(
+  int clicked_idx = _building->nearest_item_index_if_within_distance(
     _level_idx,
     x,
     y,
@@ -111,11 +116,11 @@ int AddEdgeCommand::set_second_point(double x, double y)
   {
     _second_point_not_exist = true;
     _second_point_drawn = true;
-    _project->building.add_vertex(_level_idx, x, y);
-    clicked_idx = _project->building.levels[_level_idx].vertices.size()-1;
+    _building->add_vertex(_level_idx, x, y);
+    clicked_idx = _building->levels[_level_idx].vertices.size()-1;
   }
   _vert_id_second = clicked_idx;
-  _final_snapshot = _project->building.levels[_level_idx].vertices;
+  _final_snapshot = _building->levels[_level_idx].vertices;
   return clicked_idx;
 }
 

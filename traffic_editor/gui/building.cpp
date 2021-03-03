@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Open Source Robotics Foundation
+ * Copyright (C) 2019-2021 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@
 #include <QtConcurrent/QtConcurrent>
 #include <QElapsedTimer>
 
-#include "traffic_editor/building.h"
+#include "building.h"
 #include "yaml_utils.h"
 
 using std::string;
@@ -50,9 +50,11 @@ Building::~Building()
 ///
 /// This function replaces the contents of this object with what is
 /// in the YAML file.
-bool Building::load_yaml_file()
+bool Building::load(const string& _filename)
 {
-  printf("Building::load_yaml_file(%s)\n", filename.c_str());
+  printf("Building::load_yaml_file(%s)\n", _filename.c_str());
+  filename = _filename;
+
   YAML::Node y;
   try
   {
@@ -67,8 +69,6 @@ bool Building::load_yaml_file()
   // change directory to the path of the file, so that we can correctly open
   // relative paths recorded in the file
 
-  // TODO: save previous directory and restore it when leaving this function
-  // in case the building file is in a different path from the project file
   QString dir(QFileInfo(QString::fromStdString(filename)).absolutePath());
   qDebug("changing directory to [%s]", qUtf8Printable(dir));
   if (!QDir::setCurrent(dir))
@@ -138,7 +138,7 @@ bool Building::load_yaml_file()
   return true;
 }
 
-bool Building::save_yaml_file()
+bool Building::save()
 {
   printf("Building::save_yaml(%s)\n", filename.c_str());
 
@@ -167,7 +167,7 @@ bool Building::save_yaml_file()
   return true;
 }
 
-bool Building::export_level_correspondence_points(
+bool Building::export_correspondence_points(
   int level_index,
   const std::string& dest_filename) const
 {
@@ -251,19 +251,23 @@ Building::NearestItem Building::nearest_items(
     }
   }
 
-  for (size_t ii = 0;
-    ii < level.correspondence_point_sets()[layer_index].size();
-    ++ii)
+  if (layer_index <
+    static_cast<int>(level.correspondence_point_sets().size()))
   {
-    const CorrespondencePoint& cp =
-      level.correspondence_point_sets()[layer_index][ii];
-    const double dx = x - cp.x();
-    const double dy = y - cp.y();
-    const double dist = sqrt(dx*dx + dy*dy);
-    if (dist < ni.correspondence_point_dist)
+    for (size_t ii = 0;
+      ii < level.correspondence_point_sets()[layer_index].size();
+      ++ii)
     {
-      ni.correspondence_point_dist = dist;
-      ni.correspondence_point_idx = ii;
+      const CorrespondencePoint& cp =
+        level.correspondence_point_sets()[layer_index][ii];
+      const double dx = x - cp.x();
+      const double dy = y - cp.y();
+      const double dist = sqrt(dx*dx + dy*dy);
+      if (dist < ni.correspondence_point_dist)
+      {
+        ni.correspondence_point_dist = dist;
+        ni.correspondence_point_idx = ii;
+      }
     }
   }
 
@@ -722,4 +726,248 @@ void Building::rotate_all_models(const double rotation)
       model.state.yaw += rotation;
     }
   }
+}
+
+bool Building::set_filename(const std::string& _fn)
+{
+  const string suffix(".building.yaml");
+
+  // ensure there is at least one character in addition to the suffix length
+  if (_fn.size() <= suffix.size())
+  {
+    printf("Building::set_filename() too short: [%s]\n", _fn.c_str());
+    return false;
+  }
+
+  // ensure the filename ends in .building.yaml
+  // it should, because the "save as" dialog appends it, but...
+  if (_fn.compare(_fn.size() - suffix.size(), suffix.size(), suffix))
+  {
+    printf(
+      "Building::set_filename() filename had unexpected suffix: [%s]\n",
+      _fn.c_str());
+    return false;
+  }
+
+  const string no_suffix(_fn.substr(0, _fn.size() - suffix.size()));
+
+  const size_t last_slash_pos = no_suffix.rfind('/', no_suffix.size());
+
+  const string stem(
+    (last_slash_pos == string::npos) ?
+    no_suffix :
+    string(no_suffix, last_slash_pos + 1));
+
+  filename = _fn;
+
+  if (name.empty())
+    name = stem;
+
+  printf(
+    "set building filename to [%s]\n",
+    filename.c_str());
+  return true;
+}
+
+void Building::clear_selection(const int level_idx)
+{
+  if (levels.empty())
+    return;
+  levels[level_idx].clear_selection();
+}
+
+bool Building::can_delete_current_selection(const int level_idx)
+{
+  if (level_idx >= static_cast<int>(levels.size()))
+    return false;
+  return levels[level_idx].can_delete_current_selection();
+}
+
+void Building::get_selected_items(
+  const int level_idx,
+  std::vector<BuildingLevel::SelectedItem>& selected)
+{
+  if (level_idx >= static_cast<int>(levels.size()))
+    return;
+  levels[level_idx].get_selected_items(selected);
+}
+
+void Building::draw(
+  QGraphicsScene* scene,
+  const int level_idx,
+  std::vector<EditorModel>& editor_models,
+  const RenderingOptions& rendering_options)
+{
+  if (levels.empty())
+  {
+    printf("nothing to draw!\n");
+    return;
+  }
+
+  levels[level_idx].draw(scene, editor_models, rendering_options);
+  draw_lifts(scene, level_idx);
+}
+
+Polygon* Building::get_selected_polygon(const int level_idx)
+{
+  for (size_t i = 0; i < levels[level_idx].polygons.size(); i++)
+  {
+    if (levels[level_idx].polygons[i].selected)
+      return &levels[level_idx].polygons[i];// abomination
+  }
+  return nullptr;
+}
+
+void Building::mouse_select_press(
+  const int level_idx,
+  const int layer_idx,
+  const double x,
+  const double y,
+  QGraphicsItem* graphics_item,
+  const RenderingOptions& rendering_options)
+{
+  clear_selection(level_idx);
+  const NearestItem ni = nearest_items(level_idx, layer_idx, x, y);
+
+  const double vertex_dist_thresh =
+    levels[level_idx].vertex_radius /
+    levels[level_idx].drawing_meters_per_pixel;
+
+  // todo: use QGraphics stuff to see if we clicked a model pixmap...
+  const double model_dist_thresh = 0.5 /
+    levels[level_idx].drawing_meters_per_pixel;
+
+  if (rendering_options.show_models &&
+    ni.model_idx >= 0 &&
+    ni.model_dist < model_dist_thresh)
+    levels[level_idx].models[ni.model_idx].selected = true;
+  else if (ni.vertex_idx >= 0 && ni.vertex_dist < vertex_dist_thresh)
+    levels[level_idx].vertices[ni.vertex_idx].selected = true;
+  else if (ni.fiducial_idx >= 0 && ni.fiducial_dist < 10.0)
+    levels[level_idx].fiducials[ni.fiducial_idx].selected = true;
+  else
+  {
+    // use the QGraphics stuff to see if it's an edge segment or polygon
+    if (graphics_item)
+    {
+      switch (graphics_item->type())
+      {
+        case QGraphicsLineItem::Type:
+          set_selected_line_item(
+            level_idx,
+            qgraphicsitem_cast<QGraphicsLineItem*>(graphics_item),
+            rendering_options);
+          break;
+
+        case QGraphicsPolygonItem::Type:
+          set_selected_containing_polygon(level_idx, x, y);
+          break;
+
+        default:
+          printf("clicked unhandled type: %d\n",
+            static_cast<int>(graphics_item->type()));
+          break;
+      }
+    }
+  }
+}
+
+void Building::set_selected_line_item(
+  const int level_idx,
+  QGraphicsLineItem* line_item,
+  const RenderingOptions& rendering_options)
+{
+  clear_selection(level_idx);
+  if (line_item == nullptr)
+    return;
+
+  // find if any of our lanes match those vertices
+  for (auto& edge : levels[level_idx].edges)
+  {
+    if ((edge.type == Edge::LANE) &&
+      (edge.get_graph_idx() != rendering_options.active_traffic_map_idx))
+      continue;
+
+    // look up the line's vertices
+    const double x1 = line_item->line().x1();
+    const double y1 = line_item->line().y1();
+    const double x2 = line_item->line().x2();
+    const double y2 = line_item->line().y2();
+
+    const auto& v_start = levels[level_idx].vertices[edge.start_idx];
+    const auto& v_end = levels[level_idx].vertices[edge.end_idx];
+
+    // calculate distances
+    const double dx1 = v_start.x - x1;
+    const double dy1 = v_start.y - y1;
+    const double dx2 = v_end.x - x2;
+    const double dy2 = v_end.y - y2;
+    const double v1_dist = std::sqrt(dx1*dx1 + dy1*dy1);
+    const double v2_dist = std::sqrt(dx2*dx2 + dy2*dy2);
+
+    const double thresh = 10.0;  // it should be really tiny if it matches
+    if (v1_dist < thresh && v2_dist < thresh)
+    {
+      edge.selected = true;
+      return;  // stop after first one is found, don't select multiple
+    }
+  }
+}
+
+void Building::set_selected_containing_polygon(
+  const int level_idx,
+  const double x,
+  const double y)
+{
+  if (level_idx >= static_cast<int>(levels.size()))
+    return;
+  Level& level = levels[level_idx];
+
+  // holes are "higher" in our Z-stack (to make them clickable), so first
+  // we need to make a list of all polygons that contain this point.
+  vector<Polygon*> containing_polygons;
+  for (size_t i = 0; i < level.polygons.size(); i++)
+  {
+    Polygon& polygon = level.polygons[i];
+    QVector<QPointF> polygon_vertices;
+    for (const auto& vertex_idx: polygon.vertices)
+    {
+      const Vertex& v = level.vertices[vertex_idx];
+      polygon_vertices.append(QPointF(v.x, v.y));
+    }
+    QPolygonF qpolygon(polygon_vertices);
+    if (qpolygon.containsPoint(QPoint(x, y), Qt::OddEvenFill))
+      containing_polygons.push_back(&level.polygons[i]);
+  }
+
+  // first search for holes
+  for (Polygon* p : containing_polygons)
+  {
+    if (p->type == Polygon::HOLE)
+    {
+      p->selected = true;
+      return;
+    }
+  }
+
+  // if we get here, just return the first thing.
+  for (Polygon* p : containing_polygons)
+  {
+    p->selected = true;
+    return;
+  }
+}
+
+Polygon::EdgeDragPolygon Building::polygon_edge_drag_press(
+  const int level_idx,
+  const Polygon* polygon,
+  const double x,
+  const double y)
+{
+  Polygon::EdgeDragPolygon edp;
+
+  if (level_idx < 0 || level_idx > static_cast<int>(levels.size()))
+    return edp;
+
+  return levels[level_idx].polygon_edge_drag_press(polygon, x, y);
 }

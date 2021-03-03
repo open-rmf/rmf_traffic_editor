@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2020 Open Source Robotics Foundation
+ * Copyright (C) 2019-2021 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,20 +15,21 @@
  *
 */
 
-#ifndef SIM_THREAD_H
-#define SIM_THREAD_H
+#ifndef RENDERING_OPTIONS_H
+#define RENDERING_OPTIONS_H
 
-#include <QThread>
+#include <array>
 
-class SimThread : public QThread
+class RenderingOptions
 {
-  Q_OBJECT
-
 public:
-  SimThread();
-  ~SimThread();
+  static const int NUM_BUILDING_LANES = 10;
+  std::array<bool, NUM_BUILDING_LANES> show_building_lanes;
 
-  void run() override;
+  bool show_models = true;
+  int active_traffic_map_idx = 0;
+
+  RenderingOptions();
 };
 
 #endif

@@ -3,11 +3,11 @@
 const QString preferences_keys::thumbnail_path(
   "editor/thumbnail_path");
 
-const QString preferences_keys::open_previous_project(
-  "editor/open_previous_project");
+const QString preferences_keys::open_previous_building(
+  "editor/open_previous_building");
 
-const QString preferences_keys::previous_project_path(
-  "editor/previous_project_path");
+const QString preferences_keys::previous_building_path(
+  "editor/previous_building_path");
 
 const QString preferences_keys::window_width("editor/window_width");
 const QString preferences_keys::window_height("editor/window_height");

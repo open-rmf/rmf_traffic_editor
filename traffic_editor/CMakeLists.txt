@@ -25,25 +25,12 @@ endif()
 find_package(Qt5 COMPONENTS Widgets Concurrent Test REQUIRED)
 find_package(ament_index_cpp REQUIRED)
 
-find_package(ignition-plugin1 QUIET COMPONENTS all)
-find_package(ignition-common3 QUIET)
-if (ignition-plugin1_VERSION)
-  add_definitions(-DHAS_IGNITION_PLUGIN)
-endif()
-
-# OpenCV is an optional dependency, only needed if you want to make videos
-# which is only really needed if you're using a process simulation plugin
-find_package(OpenCV QUIET)
-if (OpenCV_VERSION)
-  add_definitions(-DHAS_OPENCV)
-endif()
-
 include_directories(.)
 include_directories(gui)
 include_directories(include)
 include_directories(${ament_index_cpp_INCLUDE_DIRS})
 
-set(traffic_editor_gui_sources
+set(gui_sources
   gui/actions/add_correspondence_point.cpp
   gui/actions/add_edge.cpp
   gui/actions/add_fiducial.cpp
@@ -84,16 +71,10 @@ set(traffic_editor_gui_sources
   gui/polygon.cpp
   gui/preferences_dialog.cpp
   gui/preferences_keys.cpp
-  gui/project.cpp
-  gui/project_dialog.cpp
-  gui/scenario.cpp
-  gui/scenario_dialog.cpp
-  gui/scenario_level.cpp
-  gui/scenario_table.cpp
+  gui/rendering_options.cpp
   gui/table_list.cpp
   gui/traffic_table.cpp
   gui/traffic_map.cpp
-  gui/traffic_map_dialog.cpp
   gui/vertex.cpp
   gui/yaml_utils.cpp
 
@@ -121,39 +102,24 @@ set(traffic_editor_gui_sources
   gui/crowd_sim/transition_table.cpp
 )
 
-set(traffic_editor_gui_libs
+add_library(
+  gui_lib STATIC
+  ${gui_sources})
+
+target_link_libraries(
+  gui_lib
   Qt5::Widgets
   Qt5::Concurrent
   yaml-cpp
   ${ament_index_cpp_LIBRARIES}
-  ${OpenCV_LIBS}
 )
-
-if (ignition-plugin1_VERSION)
-  set(traffic_editor_gui_sources
-    ${traffic_editor_gui_sources}
-    gui/sim_thread.cpp
-  )
-  set(traffic_editor_gui_libs
-    ${traffic_editor_gui_libs}
-    ignition-plugin1::core
-    ignition-plugin1::loader
-    ignition-common3::core
-  )
-endif()
-
-add_library(
-  traffic_editor_gui STATIC
-  ${traffic_editor_gui_sources})
-
-target_link_libraries(traffic_editor_gui ${traffic_editor_gui_libs})
 
 add_executable(
   traffic-editor
   resources/resource.qrc
   gui/main.cpp)
 
-target_link_libraries(traffic-editor traffic_editor_gui)
+target_link_libraries(traffic-editor gui_lib)
 
 set_property(TARGET traffic-editor PROPERTY ENABLE_EXPORTS 1)
 

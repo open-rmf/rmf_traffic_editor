@@ -18,13 +18,13 @@
 #include "move_vertex.h"
 
 MoveVertexCommand::MoveVertexCommand(
-  Project* project,
+  Building* building,
   int level_idx,
   int mouse_vertex_idx)
 {
-  _to_move = project->building.levels[level_idx].vertices[mouse_vertex_idx];
+  _building = building;
+  _to_move = _building->levels[level_idx].vertices[mouse_vertex_idx];
   _level_idx = level_idx;
-  _project = project;
   has_moved = false;
 }
 
@@ -44,7 +44,7 @@ void MoveVertexCommand::undo()
 {
   //Use ID because in future if we want to support photoshop style selective
   //undo-redos it will be consistent even after deletion of intermediate vertices.
-  for (Vertex& vert: _project->building.levels[_level_idx].vertices)
+  for (Vertex& vert: _building->levels[_level_idx].vertices)
   {
     if (vert.uuid == _to_move.uuid)
     {
@@ -58,7 +58,7 @@ void MoveVertexCommand::redo()
 {
   //Use ID because in future if we want to support photoshop style selective
   //undo-redos it will be consistent even after deletion of intermediate vertices.
-  for (Vertex& vert: _project->building.levels[_level_idx].vertices)
+  for (Vertex& vert: _building->levels[_level_idx].vertices)
   {
     if (vert.uuid == _to_move.uuid)
     {

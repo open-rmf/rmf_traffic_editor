@@ -19,7 +19,6 @@
 #define TRAFFIC_MAP_DIALOG_H
 
 #include <QDialog>
-#include "project.h"
 #include "traffic_map.h"
 class QLineEdit;
 class QComboBox;
@@ -28,19 +27,17 @@ class QComboBox;
 class TrafficMapDialog : public QDialog
 {
 public:
-  TrafficMapDialog(TrafficMap& _scenario);
+  TrafficMapDialog(TrafficMap& _traffic_map);
   ~TrafficMapDialog();
 
 private:
   TrafficMap& traffic_map;
 
   QLineEdit* name_line_edit;
-  QLineEdit* path_line_edit;
   QPushButton* ok_button, * cancel_button;
 
 private slots:
   void ok_button_clicked();
-  void path_button_clicked();
 };
 
 #endif

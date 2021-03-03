@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Open Source Robotics Foundation
+ * Copyright (C) 2019-2021 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 */
 
 #include <QImageReader>
-#include "traffic_editor/layer.h"
-#include "traffic_editor/correspondence_point.hpp"
+#include "layer.h"
+#include "correspondence_point.hpp"
 using std::string;
 using std::vector;
 

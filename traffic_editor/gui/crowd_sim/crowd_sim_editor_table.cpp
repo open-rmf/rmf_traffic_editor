@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Open Source Robotics Foundation
+ * Copyright (C) 2020-2021 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,26 +25,25 @@
 using namespace crowd_sim;
 
 //=====================================================================
-CrowdSimEditorTable::CrowdSimEditorTable(const Project& input_project)
+CrowdSimEditorTable::CrowdSimEditorTable(const Building& building)
 : TableList(3),
-  _project(input_project)
+  _building(building)
 {
-  if (_project.building.crowd_sim_impl == nullptr)
+  if (_building.crowd_sim_impl == nullptr)
   {
-    printf("Initialize crowd_sim_implementation for project.building\n");
+    printf("Initialize crowd_sim_implementation for building\n");
     _impl = std::make_shared<crowd_sim::CrowdSimImplementation>();
-    _project.building.crowd_sim_impl = _impl;
+    _building.crowd_sim_impl = _impl;
   }
   else
   {
-    _impl = _project.building.crowd_sim_impl;
+    _impl = _building.crowd_sim_impl;
   }
 
-  const QStringList labels =
-  { "Name", "Status", "" };
+  const QStringList labels = { "Name", "Status", "" };
   setHorizontalHeaderLabels(labels);
   setRowCount(
-    _reserved_rows +  // checkbox for enable_crowd_sim, LineEdit for updtae_time_step
+    _reserved_rows +  // checkbox for enable_crowd_sim, LineEdit for update_time_step
     _required_components.size());
 
   _enable_crowd_sim_name_item =
@@ -165,7 +164,7 @@ void CrowdSimEditorTable::update()
 void CrowdSimEditorTable::update_goal_area()
 {
   _goal_areas_cache.clear();
-  for (auto level : _project.building.levels)
+  for (auto level : _building.levels)
   {
     auto vertex_list = level.vertices;
     for (auto vertex : vertex_list)
@@ -188,7 +187,7 @@ void CrowdSimEditorTable::update_goal_area()
 void CrowdSimEditorTable::update_navmesh_level()
 {
   _navmesh_filename_cache.clear();
-  for (auto level : _project.building.levels)
+  for (auto level : _building.levels)
   {
     _navmesh_filename_cache.emplace_back(level.name + "_navmesh.nav");
   }
@@ -200,7 +199,7 @@ void CrowdSimEditorTable::update_external_agent_from_spawn_point()
 {
   std::vector<std::string> spawn_point_name;
 
-  for (auto level : _project.building.levels)
+  for (auto level : _building.levels)
   {
     for (auto vertex : level.vertices)
     {

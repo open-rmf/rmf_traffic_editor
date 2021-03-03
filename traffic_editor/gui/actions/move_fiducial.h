@@ -19,13 +19,13 @@
 #define _MOVE_FIDUCIAL_H_
 
 #include <QUndoCommand>
-#include "project.h"
+#include "building.h"
 
 class MoveFiducialCommand : public QUndoCommand
 {
 public:
   MoveFiducialCommand(
-    Project* project,
+    Building* building,
     int level,
     int fiducial_id
   );
@@ -41,7 +41,7 @@ private:
   double _original_x, _original_y;
   double _final_x, _final_y;
   int _level_id, _fiducial_id;
-  Project* _project;
+  Building* _building;
 };
 
 #endif

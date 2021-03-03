@@ -15,21 +15,21 @@
  *
 */
 
-#include "move_correspondence_point.hpp"
+#include "move_correspondence_point.h"
 
 MoveCorrespondencePointCommand::MoveCorrespondencePointCommand(
-  Project* project,
+  Building* building,
   int level,
   int layer,
   int point_id)
 : has_moved(false),
-  project_(project),
+  building_(building),
   level_(level),
   layer_(layer),
   point_id_(point_id)
 {
   CorrespondencePoint correspondence_point =
-    project_->building.levels[level_].
+    building_->levels[level_].
     correspondence_point_sets()[layer_][point_id_];
   final_x_ = original_x_ = correspondence_point.x();
   final_y_ = original_y_ = correspondence_point.y();
@@ -38,7 +38,7 @@ MoveCorrespondencePointCommand::MoveCorrespondencePointCommand(
 void MoveCorrespondencePointCommand::undo()
 {
   CorrespondencePoint& correspondence_point =
-    project_->building.levels[level_].
+    building_->levels[level_].
     correspondence_point_sets()[layer_][point_id_];
   correspondence_point.set_x(original_x_);
   correspondence_point.set_y(original_y_);
@@ -47,7 +47,7 @@ void MoveCorrespondencePointCommand::undo()
 void MoveCorrespondencePointCommand::redo()
 {
   CorrespondencePoint& correspondence_point =
-    project_->building.levels[level_].
+    building_->levels[level_].
     correspondence_point_sets()[layer_][point_id_];
   correspondence_point.set_x(final_x_);
   correspondence_point.set_y(final_y_);

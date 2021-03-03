@@ -2,12 +2,12 @@
 #define _DELETE_H_
 
 #include <QUndoCommand>
-#include "project.h"
+#include "building.h"
 
 class DeleteCommand : public QUndoCommand
 {
 public:
-  DeleteCommand(Project* project, int level_idx);
+  DeleteCommand(Building* building, int level_idx);
   virtual ~DeleteCommand();
   void undo() override;
   void redo() override;
@@ -24,7 +24,7 @@ private:
   std::vector<Polygon> _polygons;
   std::vector<int> _polygon_idx;
 
-  Project* _project;
+  Building* _building;
   int _level_idx;
 };
 

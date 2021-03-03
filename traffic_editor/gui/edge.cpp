@@ -15,7 +15,7 @@
  *
 */
 
-#include "traffic_editor/edge.h"
+#include "edge.h"
 using std::string;
 
 

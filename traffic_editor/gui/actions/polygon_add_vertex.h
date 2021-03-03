@@ -19,8 +19,7 @@
 #define _POLYGON_ADD_H_
 
 #include <QUndoCommand>
-#include "editor_mode_id.h"
-#include "project.h"
+#include "polygon.h"
 
 class PolygonAddVertCommand : public QUndoCommand
 {

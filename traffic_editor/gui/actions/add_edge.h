@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2020 Open Source Robotics Foundation
+ * Copyright (C) 2019-2021 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,13 +19,18 @@
 #define _ADD_EDGE_H_
 
 #include <QUndoCommand>
-#include "project.h"
+#include "building.h"
+#include "rendering_options.h"
 
 class AddEdgeCommand : public QUndoCommand
 {
 
 public:
-  AddEdgeCommand(Project* project, int level_idx);
+  AddEdgeCommand(
+    Building* building,
+    int level_idx,
+    const RenderingOptions& rendering_options
+  );
   virtual ~AddEdgeCommand();
   void undo() override;
   void redo() override;
@@ -33,7 +38,8 @@ public:
   int set_second_point(double x, double y);
   void set_edge_type(Edge::Type type);
 private:
-  Project* _project;
+  Building* _building;
+  RenderingOptions _rendering_options;
   double _first_x, _first_y;
   double _second_x, _second_y;
   bool _first_point_not_exist, _first_point_drawn;

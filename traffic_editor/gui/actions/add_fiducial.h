@@ -19,14 +19,14 @@
 #define _ADD_FIDUCIAL_H_
 
 #include <QUndoCommand>
-#include "project.h"
+#include "building.h"
 
 class AddFiducialCommand : public QUndoCommand
 {
 
 public:
   AddFiducialCommand(
-    Project* project,
+    Building* building,
     int level_idx,
     double x,
     double y);
@@ -34,7 +34,7 @@ public:
   void undo() override;
   void redo() override;
 private:
-  Project* _project;
+  Building* _building;
   double _x, _y;
   int _level_idx;
   QUuid _uuid;

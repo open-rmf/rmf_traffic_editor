@@ -18,13 +18,13 @@
 #include "move_model.h"
 
 MoveModelCommand::MoveModelCommand(
-  Project* project,
+  Building* building,
   int level,
   int model_id
 )
 {
-  _project = project;
-  Model model = project->building.levels[level].models[model_id];
+  _building = building;
+  Model model = _building->levels[level].models[model_id];
   _original_x = model.state.x;
   _original_y = model.state.y;
   _level_id = level;
@@ -39,14 +39,14 @@ MoveModelCommand::~MoveModelCommand()
 
 void MoveModelCommand::undo()
 {
-  Model& model = _project->building.levels[_level_id].models[_model_id];
+  Model& model = _building->levels[_level_id].models[_model_id];
   model.state.x = _original_x;
   model.state.y = _original_y;
 }
 
 void MoveModelCommand::redo()
 {
-  Model& model = _project->building.levels[_level_id].models[_model_id];
+  Model& model = _building->levels[_level_id].models[_model_id];
   model.state.x = _final_x;
   model.state.y = _final_y;
 }
