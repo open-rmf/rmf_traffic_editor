@@ -16,6 +16,7 @@
 */
 
 #include <traffic_editor/crowd_sim/crowd_sim_impl.h>
+#include <vertex.h>
 
 using namespace crowd_sim;
 
@@ -41,9 +42,8 @@ void CrowdSimImplementation::_initialize_agent_profile()
 void CrowdSimImplementation::_initialize_agent_group()
 {
   if (_agent_groups.size() == 0)
-    _agent_groups.emplace_back(0, true);
-  else
-    _agent_groups[0] = AgentGroup(0, true);
+    _agent_groups.emplace_back(0);
+
   _agent_groups[0].set_agent_profile("external_agent");
   _agent_groups[0].set_initial_state("external_static");
 }
@@ -57,10 +57,6 @@ void CrowdSimImplementation::_initialize_model_type()
     _model_types[0] = ModelType("human", "walk");
   auto& default_type = _model_types.at(0);
   default_type.set_animation_speed(1.0);
-  default_type.set_model_uri("model://MaleVisitorPhone");
-  default_type.set_init_pose(
-    {0, 0, 0, 0, 0, 0}
-  );
 }
 
 //=================================================
@@ -71,7 +67,7 @@ YAML::Node CrowdSimImplementation::_output_obstacle_node() const
   obstacle_node.SetStyle(YAML::EmitterStyle::Flow);
   obstacle_node["class"] = 1;
   obstacle_node["type"] = "nav_mesh";
-  obstacle_node["file_name"] = this->_navmesh_filename_list[0];
+  obstacle_node["file_name"] = this->_navmesh_filename;
   return obstacle_node;
 }
 
@@ -110,11 +106,9 @@ YAML::Node CrowdSimImplementation::to_yaml()
 
   top_node["obstacle_set"] = _output_obstacle_node();
 
-  top_node["agent_groups"] = YAML::Node(YAML::NodeType::Sequence);
-  for (auto group : _agent_groups)
-  {
-    top_node["agent_groups"].push_back(group.to_yaml());
-  }
+  top_node["external_agent_groups"] = YAML::Node(YAML::NodeType::Sequence);
+  top_node["external_agent_groups"].push_back(
+    _agent_groups[0].external_to_yaml());
 
   top_node["model_types"] = YAML::Node(YAML::NodeType::Sequence);
   for (auto model_type : _model_types)
@@ -123,6 +117,81 @@ YAML::Node CrowdSimImplementation::to_yaml()
   }
 
   return top_node;
+}
+
+void CrowdSimImplementation::internal_agents_to_yaml(
+  YAML::Node&& models_yaml_node)
+{
+  int i = 1; // 0 being the external agent group
+  for (const auto& _agent_group : _agent_groups)
+  {
+    if (_agent_group.get_internal_agent_model_name() != "") // skip first one (external_agent group)
+    {
+      std::vector<YAML::Node> internal_agent_nodes =
+        _agent_group.internal_to_yaml(i);
+      if (internal_agent_nodes.size() > 0)
+      {
+        for (const auto& node: internal_agent_nodes)
+          models_yaml_node.push_back(node);
+        i++;
+      }
+    }
+  }
+}
+
+//=================================================
+bool CrowdSimImplementation::internal_agents_from_yaml(
+  const YAML::Node& models_yaml_node)
+{
+  int existing_size = this->_agent_groups.size();
+  std::vector<AgentGroup> internal_groups;
+
+  for (YAML::const_iterator it = models_yaml_node.begin();
+    it != models_yaml_node.end(); it++) // Go through each model node
+  {
+    if (!(*it)["agent_group_id"]) // only get those that are human
+      continue;
+
+    AgentGroup internal_group_temp(*it);
+    bool internal_groups_exist = false;
+    size_t group_id = internal_group_temp.get_group_id();
+    for (auto& group: internal_groups) // check the current populated group pool as see if it matches any in there
+    {
+      if (group_id == group.get_group_id()) // same group id should mean its properties match that of the group
+      {
+        if (internal_group_temp.get_agent_profile() ==
+          group.get_agent_profile()  &&\
+          internal_group_temp.get_internal_agent_model_name() ==
+          group.get_internal_agent_model_name()  &&\
+          internal_group_temp.get_initial_state() ==
+          group.get_initial_state()  &&\
+          internal_group_temp.get_spawn_point() == group.get_spawn_point())
+        {
+          group.increment_spawn_number();
+          internal_groups_exist = true;
+        }
+        else
+        {
+          printf(
+            "Error in internal_agent_groups dataset due to inconsistencies.\n");
+          return false;
+        }
+        break;
+      }
+    }
+
+    if (!internal_groups_exist) // create new group in the pool if it is new
+      internal_groups.push_back(internal_group_temp);
+  }
+
+  for (const auto& internal_group:internal_groups)
+  {
+    this->_agent_groups.emplace_back(internal_group);
+  }
+
+  printf("crowd_sim loaded %lu internal_agent_groups\n",
+    this->_agent_groups.size() - existing_size);
+  return true;
 }
 
 //=================================================
@@ -148,9 +217,10 @@ bool CrowdSimImplementation::from_yaml(const YAML::Node& input)
     printf("Error in load agent_profiles\n");
     return false;
   }
-  if (!input["agent_groups"] || !input["agent_groups"].IsSequence())
+  if (!input["external_agent_groups"] ||
+    !input["external_agent_groups"].IsSequence())
   {
-    printf("Error in load agent_groups\n");
+    printf("Error in load external_agent_groups\n");
     return false;
   }
   if (!input["model_types"] || !input["model_types"].IsSequence())
@@ -210,16 +280,18 @@ bool CrowdSimImplementation::from_yaml(const YAML::Node& input)
     AgentProfile agent_profile_temp(*it);
     this->_agent_profiles.emplace_back(agent_profile_temp);
   }
-  printf("crowd_sim loaded %lu agent_profiles\n", this->_agent_profiles.size());
+  printf("crowd_sim loaded %lu agent_profiles\n",
+    this->_agent_profiles.size());
 
-  const YAML::Node& agent_group_node = input["agent_groups"];
+  const YAML::Node& agent_group_node = input["external_agent_groups"];
   for (YAML::const_iterator it = agent_group_node.begin();
     it != agent_group_node.end(); it++)
   {
     AgentGroup agent_group_temp(*it);
     this->_agent_groups.emplace_back(agent_group_temp);
   }
-  printf("crowd_sim loaded %lu agent_groups\n", this->_agent_profiles.size());
+  printf("crowd_sim loaded %lu external_agent_groups\n",
+    this->_agent_groups.size());
 
   const YAML::Node& model_type_node = input["model_types"];
   for (YAML::const_iterator it = model_type_node.begin();
@@ -238,7 +310,7 @@ bool CrowdSimImplementation::from_yaml(const YAML::Node& input)
 void CrowdSimImplementation::clear()
 {
   _goal_areas.clear();
-  _navmesh_filename_list.clear();
+  _navmesh_filename = "";
 
   _enable_crowd_sim = false;
   _update_time_step = 0.1;
@@ -305,4 +377,20 @@ void CrowdSimImplementation::save_model_types(
 {
   _model_types.clear();
   _model_types = model_types;
+}
+
+bool CrowdSimImplementation::vertex_has_human(const Vertex& vertex)
+{
+  for (const auto& _agent_group : _agent_groups)
+  {
+    if (_agent_group.get_internal_agent_model_name() != "") // skip first one (external_agent group)
+    {
+      auto point = _agent_group.get_spawn_point();
+      if (point.first == dp3(vertex.x) && point.second == dp3(vertex.y) &&
+        _agent_group.get_spawn_number() > 0 && _agent_group.is_valid())
+        return true;
+    }
+  }
+
+  return false;
 }

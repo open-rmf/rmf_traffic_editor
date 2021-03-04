@@ -1,0 +1,10 @@
+<svg xml:space="preserve" viewBox="0 0 120 120" y="0" x="0" xmlns="http://www.w3.org/2000/svg" version="1.1" width="100%" height="100%">
+    <g>
+        <circle fill="blue" r="25" cy="60" cx="60"></circle>
+    </g>
+    <g class="ani">
+        <circle stroke-width="16" stroke="blue" fill="none" r="52" cy="60" cx="60"></circle>
+        <animateTransform attributeName="transform" type="translate" begin="0" dur="2s" from="60 60" to="0 0" additive="sum" repeatCount="indefinite"/>
+        <animateTransform attributeName="transform" type="scale" begin="0" dur="2s" from="0" to="1" additive="sum" repeatCount="indefinite"/>
+</g>
+</svg>

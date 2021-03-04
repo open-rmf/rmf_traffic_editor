@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2020 Open Source Robotics Foundation
+ * Copyright (C) 2020 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,33 +15,28 @@
  *
 */
 
-#ifndef BUILDING_LEVEL_TABLE_H
-#define BUILDING_LEVEL_TABLE_H
+#ifndef LINE_EDIT__H
+#define LINE_EDIT__H
 
-#include <QTableWidget>
+#include <QLineEdit>
+#include <iostream>
+#include <thread>
+#include <chrono>
 
-#include "table_list.h"
-#include "building.h"
-#include "crowd_sim/crowd_sim_editor_table.h"
-
-class BuildingLevelTable : public TableList
+class LineEdit : public QLineEdit
 {
-  Q_OBJECT
-
 public:
-  BuildingLevelTable();
-  ~BuildingLevelTable();
+  explicit LineEdit(QWidget* parent = nullptr)
+  : QLineEdit(parent) {}
+  explicit LineEdit(const QString& s, QWidget* parent = nullptr)
+  : QLineEdit(s, parent) {}
 
-  void update(Building& building);
-  void setCrowdSimTable(CrowdSimEditorTable* cwdsimtable)
+protected:
+  void mousePressEvent(QMouseEvent* e) override
   {
-    _cwdsimtable = cwdsimtable;
+    completer()->complete();
+    QLineEdit::mousePressEvent(e);
   }
-private:
-  CrowdSimEditorTable* _cwdsimtable;
-
-signals:
-  void redraw_scene();
 };
 
 #endif

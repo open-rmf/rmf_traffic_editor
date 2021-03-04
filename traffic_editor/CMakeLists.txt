@@ -22,7 +22,7 @@ if(CMAKE_VERSION VERSION_LESS "3.7.0")
   set(CMAKE_INCLUDE_CURRENT_DIR ON)
 endif()
 
-find_package(Qt5 COMPONENTS Widgets Concurrent Test REQUIRED)
+find_package(Qt5 COMPONENTS Widgets Concurrent Svg Test REQUIRED)
 find_package(ament_index_cpp REQUIRED)
 
 include_directories(.)
@@ -81,19 +81,20 @@ set(gui_sources
   #crowd_sim related
   gui/multi_select_combo_box.cpp
   gui/crowd_sim/agent_group.cpp
-  gui/crowd_sim/agent_group_table.cpp
   gui/crowd_sim/agent_profile.cpp
-  gui/crowd_sim/agent_profile_table.cpp
   gui/crowd_sim/condition.cpp
   gui/crowd_sim/condition_dialog.cpp
   gui/crowd_sim/crowd_sim_dialog.cpp
   gui/crowd_sim/crowd_sim_editor_table.cpp
   gui/crowd_sim/crowd_sim_impl.cpp
+  gui/crowd_sim/crowd_sim_layout_base.cpp
   gui/crowd_sim/crowd_sim_table_base.cpp
   gui/crowd_sim/goal_set.cpp
   gui/crowd_sim/goal_set_table.cpp
+  gui/crowd_sim/helper.cpp
+  gui/crowd_sim/human_vtx_prop_table.cpp
   gui/crowd_sim/model_type.cpp
-  gui/crowd_sim/model_type_table.cpp
+  gui/crowd_sim/profile_model_type_layout.cpp
   gui/crowd_sim/state.cpp
   gui/crowd_sim/state_table.cpp
   gui/crowd_sim/to_state_dialog.cpp
@@ -110,6 +111,7 @@ target_link_libraries(
   gui_lib
   Qt5::Widgets
   Qt5::Concurrent
+  Qt5::Svg
   yaml-cpp
   ${ament_index_cpp_LIBRARIES}
 )

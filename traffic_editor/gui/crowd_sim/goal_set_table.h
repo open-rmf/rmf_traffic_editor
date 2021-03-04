@@ -45,6 +45,7 @@ public:
   {
     return static_cast<int>(_cache.size());
   }
+
   void list_item_in_cache() override;
   void save() override;
   void save_to_impl() override;

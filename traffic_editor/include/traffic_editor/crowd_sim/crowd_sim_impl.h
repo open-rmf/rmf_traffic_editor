@@ -30,6 +30,8 @@
 #include <traffic_editor/crowd_sim/agent_profile.h>
 #include <traffic_editor/crowd_sim/agent_group.h>
 #include <traffic_editor/crowd_sim/model_type.h>
+#include <vertex.h>
+#include <traffic_editor/crowd_sim/helper.h>
 
 namespace crowd_sim {
 
@@ -46,17 +48,19 @@ public:
 
 
   YAML::Node to_yaml();
+  void internal_agents_to_yaml(YAML::Node&& models_yaml_node);
   bool from_yaml(const YAML::Node& input);
+  bool internal_agents_from_yaml(const YAML::Node& models_yaml_node);
   void clear();
   void init_default_configure();
 
-  void set_navmesh_file_name(std::vector<std::string> navmesh_filename)
+  void set_navmesh_file_name(std::string navmesh_filename)
   {
-    _navmesh_filename_list = navmesh_filename;
+    _navmesh_filename = navmesh_filename;
   }
-  std::vector<std::string> get_navmesh_file_name() const
+  std::string get_navmesh_file_name() const
   {
-    return _navmesh_filename_list;
+    return _navmesh_filename;
   }
 
   void set_enable_crowd_sim(bool is_enable) { _enable_crowd_sim = is_enable; }
@@ -93,15 +97,17 @@ public:
   }
 
   void save_agent_groups(const std::vector<AgentGroup>& agent_groups);
-  std::vector<AgentGroup> get_agent_groups() const { return _agent_groups; }
+  std::vector<AgentGroup>& get_agent_groups() { return _agent_groups; }
 
   void save_model_types(const std::vector<ModelType>& model_types);
-  std::vector<ModelType> get_model_types() const { return _model_types; }
+  std::vector<ModelType> get_model_types() { return _model_types; }
+
+  bool vertex_has_human(const Vertex& vertex);
 
 private:
   // update from project.building in crowd_sim_table
   std::set<std::string> _goal_areas;
-  std::vector<std::string> _navmesh_filename_list;
+  std::string _navmesh_filename;
 
   // real configurations
   bool _enable_crowd_sim;
@@ -110,8 +116,8 @@ private:
   std::vector<GoalSet> _goal_sets;
   std::vector<Transition> _transitions;
   std::vector<AgentProfile> _agent_profiles;
-  std::vector<AgentGroup> _agent_groups;
   std::vector<ModelType> _model_types;
+  std::vector<AgentGroup> _agent_groups;
 
   void _initialize_state();
   void _initialize_agent_profile();

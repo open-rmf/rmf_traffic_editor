@@ -199,6 +199,30 @@ class AgentGroup (Element):
     def add_agent(self, x, y):
         self.generator.add_agent(x, y)
 
+    def load_an_agent_from_yaml(self, yaml_node):  # only for agent in model
+        if 'profile_selector' not in yaml_node or\
+           'state_selector' not in yaml_node:
+            raise ValueError("Invalid AgentGroup Yaml!")
+
+        px = float(yaml_node['x'])
+        py = float(yaml_node['y'])
+
+        if len(self.generator.sub_elements) > 0:
+            first_agent_in_group = self.generator.sub_elements[0]
+            assert(px == first_agent_in_group.attributes['p_x'] and
+                   py == first_agent_in_group.attributes['p_y'] and
+                   self.profile_selector.attributes['name'] ==
+                   yaml_node['profile_selector'] and
+                   self.state_selector.attributes['name'] ==
+                   yaml_node['state_selector'])
+        else:
+            self.profile_selector.attributes['name'] =\
+                yaml_node['profile_selector']
+            self.state_selector.attributes['name'] =\
+                yaml_node['state_selector']
+
+        self.add_agent(px, py)
+
     def load_from_yaml(self, yaml_node):
         if 'profile_selector' not in yaml_node or\
            'state_selector' not in yaml_node:
@@ -209,10 +233,12 @@ class AgentGroup (Element):
         self.state_selector.attributes['name'] =\
             yaml_node['state_selector']
 
-        if 'agents_number' not in yaml_node:
-            raise ValueError("Invalid agents_number provided in AgentGroup!")
-        number = int(yaml_node['agents_number'])
         px = float(yaml_node['x'])
         py = float(yaml_node['y'])
+
+        if 'agents_number' not in yaml_node:
+            raise ValueError("Invalid agents_number provided in AgentGroup!")
+
+        number = int(yaml_node['agents_number'])
         for _ in range(number):
-            self.generator.add_agent(px, py)
+            self.add_agent(px, py)

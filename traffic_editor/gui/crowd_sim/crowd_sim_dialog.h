@@ -27,6 +27,7 @@
 #include <traffic_editor/crowd_sim/crowd_sim_impl.h>
 
 #include "crowd_sim_table_base.h"
+#include "crowd_sim_layout_base.h"
 
 using namespace crowd_sim;
 
@@ -47,6 +48,7 @@ public:
 
 private:
   CrowdSimTablePtr _table_ptr;
+  CrowdSimLayoutPtr _layout_ptr;
 };
 
 #endif

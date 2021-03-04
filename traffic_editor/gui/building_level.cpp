@@ -27,6 +27,7 @@
 #include "yaml_utils.h"
 
 #include "building_level.h"
+#include "traffic_editor/crowd_sim/helper.h"
 using std::string;
 using std::vector;
 
@@ -49,6 +50,26 @@ bool BuildingLevel::from_yaml(
 
   if (!_data.IsMap())
     throw std::runtime_error("level " + name + " YAML invalid");
+
+  // crowd_sim_impl is initialized when creating crowd_sim_table in editor.cpp
+  // just in case the pointer is not initialized
+  crowd_sim_impl = std::make_shared<crowd_sim::CrowdSimImplementation>();
+
+  crowd_sim_impl->clear();
+  crowd_sim_impl->init_default_configure();
+
+  if (_data["crowd_sim"] && _data["crowd_sim"].IsMap())
+  {
+    if (!(crowd_sim_impl->from_yaml(_data["crowd_sim"]) &&
+      crowd_sim_impl->internal_agents_from_yaml(_data["models"])))
+    {
+      printf(
+        "Error in loading crowd_sim configuration from yaml, re-initialize crowd_sim");
+      crowd_sim_impl->clear();
+      crowd_sim_impl->init_default_configure();
+    }
+  }
+
 
   if (_data["drawing"] && _data["drawing"].IsMap())
   {
@@ -107,6 +128,9 @@ bool BuildingLevel::from_yaml(
     const YAML::Node& ys = _data["models"];
     for (YAML::const_iterator it = ys.begin(); it != ys.end(); ++it)
     {
+      if ((*it)["agent_group_id"])
+        continue;
+
       Model m;
       m.from_yaml(*it, this->name);
       models.push_back(m);
@@ -273,6 +297,12 @@ YAML::Node BuildingLevel::to_yaml() const
     y[dict_name].push_back(n);
   }
 
+  if (crowd_sim_impl)
+  {
+    y["crowd_sim"] = crowd_sim_impl->to_yaml();
+    crowd_sim_impl->internal_agents_to_yaml(y["models"]);
+  }
+
   for (const auto& model : models)
     y["models"].push_back(model.to_yaml());
 
@@ -341,7 +371,52 @@ bool BuildingLevel::delete_selected()
     std::remove_if(
       edges.begin(),
       edges.end(),
-      [](const Edge& edge) { return edge.selected; }),
+      [&](const Edge& edge)
+      {
+        if (!edge.selected)
+          return false;
+
+        std::vector<int> current_edge_idxs; // get the 2 start and end vertices involved in the selected edge
+        current_edge_idxs.push_back(edge.start_idx);
+        current_edge_idxs.push_back(edge.end_idx);
+        for (auto& idx:current_edge_idxs)
+        {
+          auto& v = vertices.at(idx);
+          if (!crowd_sim_impl) // check if this vertex spawns humans
+            continue;
+          auto& agent_groups = crowd_sim_impl->get_agent_groups();
+          bool found = false;
+          int i = 0;
+          for (auto& group:agent_groups)
+          {
+            const auto& sp = group.get_spawn_point();
+            if (sp.first == crowd_sim::dp3(v.x) &&
+            sp.second == crowd_sim::dp3(v.y)) // found that it spawns human
+            {
+              found = true;
+              break;
+            }
+            i++;
+          }
+          if (!found)
+            continue;
+          std::vector<Edge> local_edges;
+          std::copy_if(edges.begin(), edges.end(),
+          std::back_inserter(local_edges), [&](Edge e)
+          {
+            if (e.selected) // currently selected
+              return false;
+            if (e.type == Edge::HUMAN_LANE &&
+            (e.start_idx == idx || e.end_idx == idx))
+              return true;
+            return false;
+          });
+          if (local_edges.size() == 0) // if it does not involve in other human edges
+            agent_groups.erase(agent_groups.begin() + i);
+
+        }
+        return true;
+      }),
     edges.end());
 
   models.erase(
@@ -400,6 +475,26 @@ bool BuildingLevel::delete_selected()
     }
     if (vertex_used)
       return false;// don't try to delete a vertex used in a shape
+
+    auto& v = vertices.at(selected_vertex_idx);
+    if (crowd_sim_impl)
+    {
+      auto& agent_groups = crowd_sim_impl->get_agent_groups();
+      bool found = false;
+      int i = 0;
+      for (auto& group:agent_groups)
+      {
+        const auto& sp = group.get_spawn_point();
+        if (sp.first == v.x && sp.second == v.y) // found
+        {
+          found = true;
+          break;
+        }
+        i++;
+      }
+      if (found)
+        agent_groups.erase(agent_groups.begin() + i);
+    }
 
     // the vertex is not currently being used, so let's erase it
     vertices.erase(vertices.begin() + selected_vertex_idx);
@@ -1023,9 +1118,12 @@ void BuildingLevel::draw(
   }
 
   for (const auto& v : vertices)
+  {
     v.draw(
       scene,
-      vertex_radius / drawing_meters_per_pixel);
+      vertex_radius / drawing_meters_per_pixel,
+      crowd_sim_impl->vertex_has_human(v));
+  }
 
   if (active_layer_ < static_cast<int>(correspondence_point_sets_.size()))
   {

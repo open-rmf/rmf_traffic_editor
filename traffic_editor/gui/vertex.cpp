@@ -19,6 +19,9 @@
 
 #include <QGraphicsScene>
 #include <QGraphicsSimpleTextItem>
+#include <QLabel>
+#include <QSvgWidget>
+#include <QGraphicsProxyWidget>
 #include <QIcon>
 
 #include "vertex.h"
@@ -36,7 +39,6 @@ const vector<pair<string, Param::Type>> Vertex::allowed_params
   { "spawn_robot_name", Param::Type::STRING },
   { "is_holding_point", Param::Type::BOOL },
   { "is_passthrough_point", Param::Type::BOOL },
-  { "human_goal_set_name", Param::Type::STRING },
 };
 
 
@@ -71,7 +73,8 @@ void Vertex::from_yaml(const YAML::Node& data)
     {
       Param p;
       p.from_yaml(it->second);
-      params[it->first.as<string>()] = p;
+      std::string key = it->first.as<string>();
+      params[key] = p;
     }
   }
 }
@@ -98,9 +101,11 @@ YAML::Node Vertex::to_yaml() const
   return vertex_node;
 }
 
+
 void Vertex::draw(
   QGraphicsScene* scene,
-  const double radius) const
+  const double radius,
+  bool human_vertex) const
 {
   QPen vertex_pen(Qt::black);
   vertex_pen.setWidthF(radius / 2.0);
@@ -113,17 +118,32 @@ void Vertex::draw(
 
   QColor selected_color = QColor::fromRgbF(1.0, 0.0, 0.0, a);
 
-  const QBrush vertex_brush =
-    selected ? QBrush(selected_color) : QBrush(nonselected_color);
+  if (human_vertex)
+  {
+    double new_radius = 2.4*(radius*1.25);
+    const int svg_w_h = new_radius*2;
+    auto* svg_anim =
+      new QSvgWidget(QString(selected ? ":icons/human_vertex_selected.svg" :
+        ":icons/human_vertex.svg"));
+    svg_anim->setGeometry(x - new_radius, y - new_radius, svg_w_h, svg_w_h);
+    svg_anim->setStyleSheet("background-color: transparent;");
+    QGraphicsProxyWidget* item = scene->addWidget(svg_anim);
+    item->setZValue(20.0);
+  }
+  else
+  {
+    const QBrush vertex_brush =
+      selected ? QBrush(selected_color) : QBrush(nonselected_color);
 
-  QGraphicsEllipseItem* ellipse_item = scene->addEllipse(
-    x - radius,
-    y - radius,
-    2 * radius,
-    2 * radius,
-    vertex_pen,
-    vertex_brush);
-  ellipse_item->setZValue(20.0);  // above all lane/wall edges
+    QGraphicsEllipseItem* ellipse_item = scene->addEllipse(
+      x - radius,
+      y - radius,
+      2 * radius,
+      2 * radius,
+      vertex_pen,
+      vertex_brush);
+    ellipse_item->setZValue(20.0);  // above all lane/wall edges
+  }
 
   // add some icons depending on the superpowers of this vertex
   QPen annotation_pen(Qt::black);
@@ -163,34 +183,11 @@ void Vertex::draw(
       x + icon_ring_radius * cos(icon_bearing),
       y - icon_ring_radius * sin(icon_bearing));
     pixmap_item->setToolTip("This vertex is a parking point");
-
-    /*
-    // outline the vertex with another circle
-    QGraphicsEllipseItem* ellipse_item = scene->addEllipse(
-      x - 2.0 * radius,
-      y - 2.0 * radius,
-      2 * 2.0 * radius,
-      2 * 2.0 * radius,
-      annotation_pen,
-      QBrush());  // default brush is transparent
-    ellipse_item->setZValue(20.0);  // above all lane/wall edges
-    */
   }
 
   if (is_charger())
   {
     const double icon_bearing = 135.0 * M_PI / 180.0;
-    /*
-    // draw a larger black rectangle around the vertex
-    QGraphicsRectItem* rect_item = scene->addRect(
-      x - 2.0 * radius,
-      y - 2.0 * radius,
-      2 * 2.0 * radius,
-      2 * 2.0 * radius,
-      annotation_pen,
-      QBrush());  // default brush is transparent
-    rect_item->setZValue(20.0);
-    */
     QIcon icon(":icons/battery.svg");
     QPixmap pixmap(icon.pixmap(icon.actualSize(QSize(128, 128))));
     QGraphicsPixmapItem* pixmap_item = scene->addPixmap(pixmap);

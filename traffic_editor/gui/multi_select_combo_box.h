@@ -23,11 +23,23 @@ public:
     build_list();
   }
 
+  template<typename ITEM_TYPE>
+  MultiSelectComboBox(const std::set<ITEM_TYPE>& selection_list)
+  {
+    selections.clear();
+    for (auto item : selection_list)
+    {
+      selections.emplace_back(type_to_string(item), false);
+    }
+    build_list();
+  }
+
   ~MultiSelectComboBox() {}
 
   template<typename ITEM_TYPE>
   void showCheckedItem(const std::set<ITEM_TYPE>& checked_list)
   {
+    blockSignals(true);
     std::set<std::string> checked_item;
     for (auto item : checked_list)
     {
@@ -49,6 +61,8 @@ public:
       }
       pCheckBox->setCheckState(Qt::Checked);
     }
+    line_update();
+    blockSignals(false);
   }
 
   template<typename ITEM_TYPE>
@@ -61,11 +75,54 @@ public:
     return temp;
   }
 
+  void line_update();
   std::vector<std::string> getCheckResult();
-
 private:
-  void build_list();
-  void box_checked(int state);
+  void build_list()
+  {
+    pListWidget = new QListWidget(this);
+    pLineEdit = new QLineEdit(this);
+    pLineEdit->setReadOnly(true);
+
+    connect(
+      pLineEdit,
+      &QLineEdit::textChanged,
+      [this](const QString& text)
+      {
+        text_changed(text);
+      }
+    );
+
+    for (size_t i = 0; i < selections.size(); i++)
+    {
+      QListWidgetItem* pListItem = new QListWidgetItem(pListWidget);
+      pListWidget->addItem(pListItem);
+      QCheckBox* pCheckBox =
+        new QCheckBox(QString::fromStdString(selections[i].first));
+      pListWidget->setItemWidget(pListItem, pCheckBox);
+
+      connect(
+        pCheckBox,
+        &QAbstractButton::clicked,
+        [&](int state)
+        {
+          box_checked(state);
+        }
+      );
+    }
+
+    this->setModel(pListWidget->model());
+    this->setView(pListWidget);
+    this->setLineEdit(pLineEdit);
+  }
+
+  void box_checked(int /*state*/)
+  {
+    blockSignals(true);
+    line_update();
+    blockSignals(false);
+  }
+
   void text_changed(const QString& text);
 
   std::vector<std::pair<std::string, bool>> selections;

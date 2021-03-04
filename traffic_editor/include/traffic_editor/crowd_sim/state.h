@@ -43,7 +43,7 @@ public:
     from_yaml(input);
   }
 
-  void set_navmesh_file_name(std::string file_name)
+  void set_navmesh_file_name(const std::string& file_name)
   {
     this->_navmesh_file_name = file_name;
   }

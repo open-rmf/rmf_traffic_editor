@@ -8,6 +8,8 @@
   <file>icons/floor.svg</file>
   <file>icons/hole.svg</file>
   <file>icons/measurement.svg</file>
+  <file>icons/human_vertex.svg</file>
+  <file>icons/human_vertex_selected.svg</file>
   <file>icons/move.svg</file>
   <file>icons/parking.svg</file>
   <file>icons/roi.svg</file>

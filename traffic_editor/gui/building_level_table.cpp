@@ -20,7 +20,7 @@
 #include <QtWidgets>
 
 BuildingLevelTable::BuildingLevelTable()
-: TableList(6)
+: TableList(6), _cwdsimtable(nullptr)
 {
   const QStringList labels =
   { "Name", "Scale", "X", "Y", "Z", "" };
@@ -69,7 +69,6 @@ void BuildingLevelTable::update(Building& building)
 
     QPushButton* edit_button = new QPushButton("Edit...", this);
     setCellWidget(i, 5, edit_button);
-    edit_button->setStyleSheet("QTableWidgetItem { background-color: red; }");
 
     connect(
       edit_button,
@@ -104,6 +103,7 @@ void BuildingLevelTable::update(Building& building)
       {
         level.load_drawing();
         building.add_level(level);
+        _cwdsimtable->update();
         setWindowModified(true);
         update(building);
         emit redraw_scene();

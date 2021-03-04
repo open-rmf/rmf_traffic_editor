@@ -37,6 +37,14 @@
 #include <building_sim_common/crowd_simulator_common.hpp>
 
 
+namespace crowd_simulator {
+class CrowdSimInterface : public CrowdSimInterfaceCommon
+{
+public:
+  gazebo::common::Time _gz_last_sim_time;
+};
+}
+
 namespace crowd_simulation_gazebo {
 
 using ObjectPtr = crowd_simulator::CrowdSimInterface::ObjectPtr;
@@ -50,34 +58,30 @@ class CrowdSimulatorPlugin : public gazebo::WorldPlugin
   using AnimState = crowd_simulator::CrowdSimInterface::AnimState;
 public:
   CrowdSimulatorPlugin()
-  : _crowd_sim_interface(std::make_shared<crowd_simulator::CrowdSimInterface>()),
-    _initialized(false),
-    _objects_count(0)
-  {}
+  : _crowd_sim_interfaces(),
+    _initialized(false)
+  {
+  }
 
   void Load(gazebo::physics::WorldPtr world, sdf::ElementPtr sdf) override;
-
 private:
-  std::shared_ptr<crowd_simulator::CrowdSimInterface> _crowd_sim_interface;
+  std::vector<std::unique_ptr<crowd_simulator::CrowdSimInterface>>
+  _crowd_sim_interfaces;
   bool _initialized;
-  size_t _objects_count;
   gazebo::physics::WorldPtr _world;
   gazebo::event::ConnectionPtr _update_connection_ptr;
-  gazebo::common::Time _last_sim_time;
 
-  bool _spawn_agents_in_world();
   void _init_spawned_agents();
   void _update(const gazebo::common::UpdateInfo& update_info); //Update trigger function
-  void _update_all_objects(double delta_sim_time);
+  void _update_all_objects(
+    crowd_simulator::CrowdSimInterface& crowd_sim_interface,
+    double delta_sim_time);
   void _update_internal_object(
+    crowd_simulator::CrowdSimInterface& crowd_sim_interface,
     double delta_sim_time,
     const ObjectPtr object_ptr,
     const gazebo::physics::ModelPtr model_ptr,
     const crowd_simulator::ModelTypeDatabase::RecordPtr type_ptr);
-  bool _create_model(
-    const std::string& model_name,
-    const crowd_simulator::ModelTypeDatabase::RecordPtr model_type_ptr,
-    const crowd_simulator::AgentPtr agent_ptr);
 };
 
 } //namespace crowd_simulation_gazebo

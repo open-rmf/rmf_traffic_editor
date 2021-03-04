@@ -20,26 +20,54 @@
 using namespace crowd_sim;
 
 //==============================================
-YAML::Node AgentGroup::to_yaml() const
+YAML::Node AgentGroup::to_yaml(YAML::Node& node) const
+{
+  node.SetStyle(YAML::EmitterStyle::Flow);
+  node["profile_selector"] = _agent_profile;
+  node["state_selector"] = _initial_state;
+  node["x"] = _spawn_point_x;
+  node["y"] = _spawn_point_y;
+  return node;
+}
+
+//==============================================
+YAML::Node AgentGroup::external_to_yaml() const
 {
   YAML::Node group_node = YAML::Node(YAML::NodeType::Map);
-  group_node.SetStyle(YAML::EmitterStyle::Flow);
-  group_node["group_id"] = _group_id;
-  group_node["profile_selector"] = _agent_profile;
-  group_node["state_selector"] = _initial_state;
   group_node["agents_number"] = _spawn_number;
   group_node["agents_name"] = YAML::Node(YAML::NodeType::Sequence);
+  group_node["group_id"] = _group_id;
   for (auto name : _external_agent_name)
   {
     group_node["agents_name"].push_back(name);
   }
-  group_node["x"] = _spawn_point_x;
-  group_node["y"] = _spawn_point_y;
-  return group_node;
+  return to_yaml(group_node);
 }
 
 //==============================================
-void AgentGroup::from_yaml(const YAML::Node& input)
+std::vector<YAML::Node> AgentGroup::internal_to_yaml(int group_id) const
+{
+  std::vector<YAML::Node> nodes;
+  //e.g. {agent_group_id: 1, model_name: OpenRobotics/MaleVisitorPhone, name: MaleVisitorPhone, profile_selector: human, state_selector: entry_lane, static: false, x: 1554.184, y: 434.535, yaw: 0, z: 0}
+  for (size_t i = 0; i < _spawn_number; i++)
+  {
+    if (!is_human_valid())
+      break;
+    YAML::Node node = YAML::Node(YAML::NodeType::Map);
+    node["agent_group_id"] = group_id; // use generated group_id, not the original _group_id to avoid skipped group id in case we have malformed agent groups and we decided to skip them
+    node["model_name"] = _internal_agent_model_name;
+    std::size_t slash_loc = _internal_agent_model_name.find("/");
+    node["name"] = _internal_agent_model_name.substr(slash_loc+1);
+    node["static"] = false;
+    node["yaw"] = 0;
+    node["z"] = 0;
+    nodes.push_back(to_yaml(node));
+  }
+  return nodes;
+}
+
+//==============================================
+void AgentGroup::external_from_yaml(const YAML::Node& input)
 {
   _group_id = input["group_id"].as<size_t>();
   _spawn_point_x = input["x"].as<double>();
@@ -53,8 +81,16 @@ void AgentGroup::from_yaml(const YAML::Node& input)
   {
     _external_agent_name.emplace_back( (*it).as<std::string>() );
   }
-  if (_external_agent_name.size() > 0)
-  {
-    _is_external_group = true;
-  }
+}
+
+//==============================================
+void AgentGroup::internal_from_yaml(const YAML::Node& input)
+{
+  _group_id = input["agent_group_id"].as<size_t>();
+  _spawn_number = 1;
+  _spawn_point_x = input["x"].as<double>();
+  _spawn_point_y = input["y"].as<double>();
+  _agent_profile = input["profile_selector"].as<std::string>();
+  _initial_state = input["state_selector"].as<std::string>();
+  _internal_agent_model_name = input["model_name"].as<std::string>();
 }
