@@ -36,17 +36,15 @@ class CrowdSimEditorTable : public TableList
   Q_OBJECT;
 
 public:
-  CrowdSimEditorTable(const Building& building);
+  CrowdSimEditorTable(Building& building);
   ~CrowdSimEditorTable() {}
 
   void update(int level = 0);
   void update_goal_area();
   void set_navmesh_file_name()
   {
-    _navmesh_filename = "navmesh.nav";
     _impl->set_navmesh_file_name(_navmesh_filename);
   }
-  void update_external_agent_from_spawn_point();
   void update_external_agent_state();
   void setParentTabWidget(QTabWidget* parentwidget)
   {
@@ -54,7 +52,7 @@ public:
   }
   int getCurrentLevel() {return _level;}
 private:
-  const Building& _building;
+  Building& _building;
   CrowdSimImplPtr _impl;
 
   int _level;

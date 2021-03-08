@@ -12,8 +12,8 @@
 class MultiSelectComboBox : public QComboBox
 {
 public:
-  template<typename ITEM_TYPE>
-  MultiSelectComboBox(const std::vector<ITEM_TYPE>& selection_list)
+  template<typename ItemType>
+  MultiSelectComboBox(const std::vector<ItemType>& selection_list)
   {
     selections.clear();
     for (auto item : selection_list)
@@ -23,8 +23,8 @@ public:
     build_list();
   }
 
-  template<typename ITEM_TYPE>
-  MultiSelectComboBox(const std::set<ITEM_TYPE>& selection_list)
+  template<typename ItemType>
+  MultiSelectComboBox(const std::set<ItemType>& selection_list)
   {
     selections.clear();
     for (auto item : selection_list)
@@ -36,8 +36,8 @@ public:
 
   ~MultiSelectComboBox() {}
 
-  template<typename ITEM_TYPE>
-  void showCheckedItem(const std::set<ITEM_TYPE>& checked_list)
+  template<typename ItemType>
+  void showCheckedItem(const std::set<ItemType>& checked_list)
   {
     blockSignals(true);
     std::set<std::string> checked_item;
@@ -65,8 +65,8 @@ public:
     blockSignals(false);
   }
 
-  template<typename ITEM_TYPE>
-  std::string type_to_string(ITEM_TYPE& input)
+  template<typename ItemType>
+  std::string type_to_string(ItemType& input)
   {
     std::stringstream s;
     std::string temp;

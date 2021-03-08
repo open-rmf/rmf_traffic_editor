@@ -51,7 +51,7 @@ HumanVtxPropTable::HumanVtxPropTable(const Editor* editor,
 }
 
 //==================================
-void HumanVtxPropTable::setActorModels(std::vector<std::string>& am)
+void HumanVtxPropTable::set_actor_models(std::vector<std::string>& am)
 {
   _actor_models = am;
 }
@@ -219,9 +219,9 @@ void HumanVtxPropTable::update(Vertex& vertex, int level)
         &QComboBox::currentTextChanged,
         [this, &vertex](const QString& text)
         {
-          auto& groups = _impl->get_agent_groups();
+          auto agent_groups = _impl->get_agent_groups();
           bool found = false;
-          for (auto& group : groups)
+          for (auto& group : agent_groups)
           {
             const auto& sp = group.get_spawn_point();
             if (sp.first == dp3(vertex.x) && sp.second == dp3(vertex.y))
@@ -233,10 +233,11 @@ void HumanVtxPropTable::update(Vertex& vertex, int level)
           }
           if (!found) // not found means new group
           {
-            AgentGroup agrp(groups.size(), dp3(vertex.x), dp3(vertex.y));
+            AgentGroup agrp(agent_groups.size(), dp3(vertex.x), dp3(vertex.y));
             agrp.set_initial_state(text.toStdString());
-            groups.push_back(agrp);
+            agent_groups.push_back(agrp);
           }
+          _impl->save_agent_groups(agent_groups);
         }
       );
     }
@@ -253,7 +254,7 @@ void HumanVtxPropTable::update(Vertex& vertex, int level)
         &QLineEdit::textEdited,
         [this, vertex](const QString& text)
         {
-          auto& agent_groups = _impl->get_agent_groups();
+          auto agent_groups = _impl->get_agent_groups();
           bool found = false;
           for (auto& group:agent_groups)
           {
@@ -271,6 +272,7 @@ void HumanVtxPropTable::update(Vertex& vertex, int level)
             agrp.set_spawn_number(text.toInt());
             agent_groups.push_back(agrp);
           }
+          _impl->save_agent_groups(agent_groups);
         }
       );
     }
@@ -295,7 +297,7 @@ void HumanVtxPropTable::update(Vertex& vertex, int level)
         &QComboBox::currentTextChanged,
         [this, vertex](const QString& text)
         {
-          auto& agent_groups = _impl->get_agent_groups();
+          auto agent_groups = _impl->get_agent_groups();
           bool found = false;
           for (auto& group:agent_groups)
           {
@@ -313,6 +315,7 @@ void HumanVtxPropTable::update(Vertex& vertex, int level)
             agrp.set_agent_profile(text.toStdString());
             agent_groups.push_back(agrp);
           }
+          _impl->save_agent_groups(agent_groups);
         }
       );
     }
@@ -335,7 +338,7 @@ void HumanVtxPropTable::update(Vertex& vertex, int level)
         &QComboBox::currentTextChanged,
         [this, vertex](const QString& text)
         {
-          auto& agent_groups = _impl->get_agent_groups();
+          auto agent_groups = _impl->get_agent_groups();
           bool found = false;
           for (auto& group:agent_groups)
           {
@@ -353,6 +356,7 @@ void HumanVtxPropTable::update(Vertex& vertex, int level)
             agrp.set_internal_agent_model_name(text.toStdString());
             agent_groups.push_back(agrp);
           }
+          _impl->save_agent_groups(agent_groups);
         }
       );
     }

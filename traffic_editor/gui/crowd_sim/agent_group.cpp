@@ -37,7 +37,7 @@ YAML::Node AgentGroup::external_to_yaml() const
   group_node["agents_number"] = _spawn_number;
   group_node["agents_name"] = YAML::Node(YAML::NodeType::Sequence);
   group_node["group_id"] = _group_id;
-  for (auto name : _external_agent_name)
+  for (auto name : _external_agent_names)
   {
     group_node["agents_name"].push_back(name);
   }
@@ -79,7 +79,7 @@ void AgentGroup::external_from_yaml(const YAML::Node& input)
   for (YAML::const_iterator it = agent_name_node.begin();
     it != agent_name_node.end(); it++)
   {
-    _external_agent_name.emplace_back( (*it).as<std::string>() );
+    _external_agent_names.emplace_back( (*it).as<std::string>() );
   }
 }
 

@@ -41,12 +41,12 @@ public:
   HumanVtxPropTable(const Editor* editor, const Building& building);
   ~HumanVtxPropTable() {}
 
-  void setActorModels(std::vector<std::string>& am);
+  void set_actor_models(std::vector<std::string>& am);
   void populate(Vertex& vertex, int level);
   void close();
   void update(Vertex& vertex, int level);
-  void storeWidget(QTabWidget* widget) {_widget = widget;}
-  void storeTabStyle(QString tabStyle) {_tabStyle = tabStyle;}
+  void set_widget(QTabWidget* widget) {_widget = widget;}
+  void set_tab_style(QString tabStyle) {_tabStyle = tabStyle;}
 
   static const std::vector<std::string> _required_components;
 

@@ -34,7 +34,7 @@ public:
     _spawn_point_x(0.0),
     _spawn_point_y(0.0),
     _spawn_number(0),
-    _external_agent_name({}),
+    _external_agent_names({}),
     _internal_agent_model_name(""),
     _agent_profile(""),
     _initial_state("")
@@ -44,7 +44,7 @@ public:
     _spawn_point_x(x),
     _spawn_point_y(y),
     _spawn_number(0),
-    _external_agent_name({}),
+    _external_agent_names({}),
     _internal_agent_model_name(""),
     _agent_profile(""),
     _initial_state("")
@@ -54,7 +54,7 @@ public:
     _spawn_point_x(0.0),
     _spawn_point_y(0.0),
     _spawn_number(0),
-    _external_agent_name({}),
+    _external_agent_names({}),
     _internal_agent_model_name(""),
     _agent_profile(""),
     _initial_state("")
@@ -78,9 +78,9 @@ public:
   {
     return std::pair<double, double>(_spawn_point_x, _spawn_point_y);
   }
-  std::vector<std::string> get_external_agent_name() const
+  std::vector<std::string> get_external_agent_names() const
   {
-    return _external_agent_name;
+    return _external_agent_names;
   }
   std::string get_internal_agent_model_name() const
   {
@@ -103,9 +103,9 @@ public:
   }
   void set_external_agent_name(const std::vector<std::string>& external_name)
   {
-    _external_agent_name.clear();
-    _external_agent_name = external_name;
-    _spawn_number = _external_agent_name.size();
+    _external_agent_names.clear();
+    _external_agent_names = external_name;
+    _spawn_number = _external_agent_names.size();
   }
   void set_internal_agent_model_name(const std::string& model_name)
   {
@@ -131,7 +131,7 @@ private:
   size_t _group_id;
   double _spawn_point_x, _spawn_point_y;
   size_t _spawn_number;
-  std::vector<std::string> _external_agent_name;
+  std::vector<std::string> _external_agent_names;
   std::string _internal_agent_model_name;
   std::string _agent_profile, _initial_state;
 };

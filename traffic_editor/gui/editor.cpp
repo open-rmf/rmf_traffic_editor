@@ -176,16 +176,6 @@ Editor::Editor()
     });
 
   crowd_sim_table = new CrowdSimEditorTable(building);
-  /*
-  connect(
-    crowd_sim_table,
-    &QTableWidget::cellClicked,
-    [&]()
-    {
-      crowd_sim_table->update();
-      create_scene();
-    }
-  );*/
 
   const QString tabStyle =
     "QWidget{ background-color: #a0a0a0;}\
@@ -232,8 +222,8 @@ Editor::Editor()
     this, &Editor::property_editor_cell_changed);
 
   human_prop_editor = new HumanVtxPropTable(this, building);
-  human_prop_editor->storeWidget(prop_editor_widget);
-  human_prop_editor->storeTabStyle(tabStyle);
+  human_prop_editor->set_widget(prop_editor_widget);
+  human_prop_editor->set_tab_style(tabStyle);
 
   QHBoxLayout* param_button_layout = new QHBoxLayout;
 
@@ -493,7 +483,7 @@ void Editor::load_model_names()
   const YAML::Node yam = y["actor_models"];
   for (YAML::const_iterator it = yam.begin(); it != yam.end(); ++it)
     editor_actor_models.push_back(it->as<std::string>());
-  human_prop_editor->setActorModels(editor_actor_models);
+  human_prop_editor->set_actor_models(editor_actor_models);
 }
 
 QToolButton* Editor::create_tool_button(
@@ -1525,7 +1515,7 @@ void Editor::property_editor_cell_changed(int row, int column)
     {
       if (auto& impl = building.levels[level_idx].crowd_sim_impl)
       {
-        auto& agent_groups = impl->get_agent_groups();
+        auto agent_groups = impl->get_agent_groups();
         for (auto& agent_group:agent_groups)
         {
           auto p = agent_group.get_spawn_point();
@@ -1534,6 +1524,7 @@ void Editor::property_editor_cell_changed(int row, int column)
             agent_group.set_spawn_point(stod(value), p.second);
           }
         }
+        impl->save_agent_groups(agent_groups);
       }
       v.x = stof(value);
     }
@@ -1541,7 +1532,7 @@ void Editor::property_editor_cell_changed(int row, int column)
     {
       if (auto& impl = building.levels[level_idx].crowd_sim_impl)
       {
-        auto& agent_groups = impl->get_agent_groups();
+        auto agent_groups = impl->get_agent_groups();
         for (auto& agent_group:agent_groups)
         {
           auto p = agent_group.get_spawn_point();
@@ -1550,6 +1541,7 @@ void Editor::property_editor_cell_changed(int row, int column)
             agent_group.set_spawn_point(p.first, stod(value));
           }
         }
+        impl->save_agent_groups(agent_groups);
       }
       v.y = stof(value);
     }
@@ -1900,7 +1892,7 @@ void Editor::mouse_move(
         building.levels[level_idx].vertices[mouse_vertex_idx];
       if (auto& impl = building.levels[level_idx].crowd_sim_impl)
       {
-        auto& agent_groups = impl->get_agent_groups();
+        auto agent_groups = impl->get_agent_groups();
         for (auto& agent_group:agent_groups)
         {
           auto sp = agent_group.get_spawn_point();
@@ -1909,6 +1901,7 @@ void Editor::mouse_move(
             agent_group.set_spawn_point(p.x(), p.y());
           }
         }
+        impl->save_agent_groups(agent_groups);
       }
       pt.x = p.x();
       pt.y = p.y();

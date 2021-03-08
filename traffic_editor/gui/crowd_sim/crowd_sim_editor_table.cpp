@@ -25,11 +25,11 @@
 using namespace crowd_sim;
 
 //=====================================================================
-CrowdSimEditorTable::CrowdSimEditorTable(const Building& building)
+CrowdSimEditorTable::CrowdSimEditorTable(Building& building)
 : TableList(3),
   _building(building),
-  _impl(nullptr),
-  _level(0)
+  _level(0),
+  _navmesh_filename("navmesh.nav")
 {
   blockSignals(true);
   const QStringList labels = { "Name", "Status", "" };
@@ -89,7 +89,7 @@ CrowdSimEditorTable::CrowdSimEditorTable(const Building& building)
     {
       if (_impl)
       {
-        auto& agent_groups = _impl->get_agent_groups();
+        auto agent_groups = _impl->get_agent_groups();
         auto& external_agent_groups = agent_groups[0];
 
         std::string name{""};
@@ -109,6 +109,7 @@ CrowdSimEditorTable::CrowdSimEditorTable(const Building& building)
           agent_names.push_back(name);
 
         external_agent_groups.set_external_agent_name(agent_names);
+        _impl->save_agent_groups(agent_groups);
       }
     }
   );
@@ -148,7 +149,7 @@ void CrowdSimEditorTable::update(int level)
   if (!_building.levels.empty() &&
     level < static_cast<int>(_building.levels.size()))
   {
-    const BuildingLevel& lvl = _building.levels[level];
+    auto& lvl = _building.levels[level];
     level_name = lvl.name;
     if (lvl.crowd_sim_impl)
       _impl = lvl.crowd_sim_impl;
@@ -157,8 +158,9 @@ void CrowdSimEditorTable::update(int level)
       printf(
         "Initialize crowd_sim_implementation for project.building level %d\n",
         level + 1);
-      _impl = std::make_shared<crowd_sim::CrowdSimImplementation>();
-      lvl.crowd_sim_impl = _impl;
+      lvl.crowd_sim_impl =
+        std::make_shared<crowd_sim::CrowdSimImplementation>();
+      _impl = lvl.crowd_sim_impl;
     }
     _level = level;
   }
@@ -187,7 +189,13 @@ void CrowdSimEditorTable::update(int level)
 
   update_goal_area();
   set_navmesh_file_name();
-  update_external_agent_from_spawn_point();
+  auto agent_groups = _impl->get_agent_groups();
+  if (agent_groups.size() == 0)
+  {
+    agent_groups.emplace_back(0);
+    _impl->save_agent_groups(agent_groups);
+  }
+
   update_external_agent_state();
 
   _enable_crowd_sim_checkbox->setChecked(_impl->get_enable_crowd_sim() );
@@ -195,18 +203,14 @@ void CrowdSimEditorTable::update(int level)
   _update_time_step_value_item->setText(QString::number(_impl->
     get_update_time_step() ));
 
-  auto agent_groups = _impl->get_agent_groups();
-  auto external_agent_groups = agent_groups[0];
+  auto& external_agent_groups = agent_groups[0];
   std::vector<std::string> external_agent_names =
-    external_agent_groups.get_external_agent_name();
+    external_agent_groups.get_external_agent_names();
   std::string external_agent_name_string("");
 
-  if (external_agent_names.size() > 0)
+  for (auto name : external_agent_names)
   {
-    for (auto name : external_agent_names)
-    {
-      external_agent_name_string += name + ";";
-    }
+    external_agent_name_string += name + ";";
   }
   _external_agent_value_item->setText(QString::fromStdString(
       external_agent_name_string));
@@ -245,8 +249,8 @@ void CrowdSimEditorTable::update(int level)
 void CrowdSimEditorTable::update_goal_area()
 {
   _goal_areas_cache.clear();
-  auto level = _building.levels[_level];
-  auto vertex_list = level.vertices;
+  const auto& level = _building.levels[_level];
+  const auto& vertex_list = level.vertices;
   for (auto vertex : vertex_list)
   {
     if (vertex.params.find("human_goal_set_name") == vertex.params.end() )
@@ -261,31 +265,6 @@ void CrowdSimEditorTable::update_goal_area()
   }
 
   _impl->set_goal_areas(_goal_areas_cache);
-}
-
-//====================================================
-void CrowdSimEditorTable::update_external_agent_from_spawn_point()
-{
-  std::vector<std::string> spawn_point_name;
-
-  auto level = _building.levels[_level];
-  for (auto vertex : level.vertices)
-  {
-    if (vertex.params.find("spawn_robot_name") != vertex.params.end())
-    {
-      spawn_point_name.emplace_back(
-        vertex.params["spawn_robot_name"].value_string);
-    }
-  }
-
-  auto agent_groups = _impl->get_agent_groups();
-  if (agent_groups.size() == 0)
-  {
-    agent_groups.emplace_back(0);
-  }
-  auto& external_group = agent_groups.at(0);
-  external_group.set_external_agent_name(spawn_point_name);
-  _impl->save_agent_groups(agent_groups);
 }
 
 //========================================================

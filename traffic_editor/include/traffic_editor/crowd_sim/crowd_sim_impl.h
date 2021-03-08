@@ -97,10 +97,10 @@ public:
   }
 
   void save_agent_groups(const std::vector<AgentGroup>& agent_groups);
-  std::vector<AgentGroup>& get_agent_groups() { return _agent_groups; }
+  std::vector<AgentGroup> get_agent_groups() const { return _agent_groups; }
 
   void save_model_types(const std::vector<ModelType>& model_types);
-  std::vector<ModelType> get_model_types() { return _model_types; }
+  std::vector<ModelType> get_model_types() const { return _model_types; }
 
   bool vertex_has_human(const Vertex& vertex);
 

@@ -65,7 +65,7 @@ public:
 
   QPixmap floorplan_pixmap;
 
-  mutable crowd_sim::CrowdSimImplPtr crowd_sim_impl;
+  crowd_sim::CrowdSimImplPtr crowd_sim_impl;
 
   bool from_yaml(const std::string& name, const YAML::Node& data);
   YAML::Node to_yaml() const;
@@ -112,6 +112,10 @@ public:
   void set_active_layer(int active_layer) { active_layer_ = active_layer; }
   QUuid add_correspondence_point(int layer, double x, double y);
   bool export_correspondence_points(const std::string& filename) const;
+
+  // crowdsim specific functions
+  bool human_cleanup_check(const Edge& edge);
+  void human_cleanup_execute(int vertex_idx);
 
 private:
   bool drawing_visible_ = true;

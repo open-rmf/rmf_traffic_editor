@@ -36,14 +36,4 @@ void ModelType::from_yaml(const YAML::Node& input)
   _name = input["typename"].as<std::string>();
   _animation = input["animation"].as<std::string>();
   _animation_speed = input["animation_speed"].as<double>();
-  /*
-  _model_uri = input["model_uri"].as<std::string>();
-  const YAML::Node& pose_node = input["init_pose"];
-  size_t i = 0;
-  for (YAML::const_iterator it = pose_node.begin();
-    it != pose_node.end() && i < _init_pose.size();
-    it++)
-  {
-    _init_pose[i++] = (*it).as<double>();
-  }*/
 }
