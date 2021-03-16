@@ -503,7 +503,8 @@ Editor* Editor::get_instance()
 
 bool Editor::load_building(const QString& filename)
 {
-  if (!building.load(filename.toStdString()))
+  const QString absolute_path = QFileInfo(filename).absoluteFilePath();
+  if (!building.load(absolute_path.toStdString()))
     return false;
 
   level_idx = 0;
@@ -521,7 +522,7 @@ bool Editor::load_building(const QString& filename)
   update_tables();
 
   QSettings settings;
-  settings.setValue(preferences_keys::previous_building_path, filename);
+  settings.setValue(preferences_keys::previous_building_path, absolute_path);
 
   setWindowModified(false);
 
@@ -613,7 +614,7 @@ void Editor::building_new()
   QDir::setCurrent(dir_path);
 
   create_scene();
-  building.save();
+  building_save();
   update_tables();
 
   QSettings settings;
@@ -645,7 +646,14 @@ void Editor::building_open()
 
 bool Editor::building_save()
 {
-  building.save();
+  if (!building.save())
+  {
+    QMessageBox::critical(
+      this,
+      "Unable to save",
+      "Save failed! Maybe a bad path?");
+    return false;
+  }
   setWindowModified(false);
   return true;
 }
