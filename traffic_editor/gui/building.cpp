@@ -162,6 +162,11 @@ bool Building::save()
   YAML::Emitter emitter;
   yaml_utils::write_node(y, emitter);
   std::ofstream fout(filename);
+  if (!fout)
+  {
+    printf("unable to open %s\n", filename.c_str());
+    return false;
+  }
   fout << emitter.c_str() << std::endl;
 
   return true;
