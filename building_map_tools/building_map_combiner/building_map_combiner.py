@@ -8,16 +8,16 @@ from building_map.building import Building
 
 def main():
     parser = argparse.ArgumentParser(
-        prog="building_map_combiner",
-        description="Combine two .building.yaml files"
+        prog='building_map_combiner',
+        description='Combine two .building.yaml files'
     )
 
-    parser.add_argument("PRIMARY_INPUT", type=str,
-                        help="Primary building.yaml file")
-    parser.add_argument("SECONDARY_INPUT", type=str,
-                        help="Secondary building.yaml file")
-    parser.add_argument("OUTPUT", type=str,
-                        help="Output file will be PRIMARY + lanes(SECONDARY)")
+    parser.add_argument('PRIMARY_INPUT', type=str,
+                        help='Primary building.yaml file')
+    parser.add_argument('SECONDARY_INPUT', type=str,
+                        help='Secondary building.yaml file')
+    parser.add_argument('OUTPUT', type=str,
+                        help='Output file will be PRIMARY + lanes(SECONDARY)')
 
     args = parser.parse_args()
 
@@ -39,5 +39,5 @@ def main():
     primary.write_yaml_file(args.OUTPUT)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
