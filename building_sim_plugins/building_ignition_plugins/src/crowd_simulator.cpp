@@ -51,6 +51,13 @@ void CrowdSimulatorPlugin::Configure(
     exit(EXIT_FAILURE);
   }
 
+  if (_crowd_sim_interface->enabled() == false)
+  {
+    RCLCPP_WARN(_crowd_sim_interface->logger(),
+      "CrowdSim is Disabled!");
+    return;
+  }
+
   if (!_crowd_sim_interface->init_crowd_sim())
   {
     RCLCPP_ERROR(_crowd_sim_interface->logger(),

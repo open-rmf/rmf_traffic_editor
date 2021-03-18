@@ -36,7 +36,16 @@ void CrowdSimulatorPlugin::Load(
 
   if (!_crowd_sim_interface->read_sdf(sdf))
   {
+    RCLCPP_ERROR(_crowd_sim_interface->logger(),
+      "Error loading crowd simulator plugin. Load params failed!");
     exit(EXIT_FAILURE);
+  }
+
+  if (_crowd_sim_interface->enabled() == false)
+  {
+    RCLCPP_WARN(_crowd_sim_interface->logger(),
+      "CrowdSim is not enabled");
+    return;
   }
 
   if (!_crowd_sim_interface->init_crowd_sim())
