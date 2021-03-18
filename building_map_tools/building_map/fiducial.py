@@ -7,6 +7,9 @@ class Fiducial:
         self.y = -yaml_node[1]
         self.name = yaml_node[2]
 
+    def to_yaml(self):
+        return [self.x, -self.y, self.name]
+
     def distance(self, f):
         """ Calculate distance to another fiducial """
         dx = f.x - self.x

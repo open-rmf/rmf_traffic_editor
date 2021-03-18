@@ -30,6 +30,17 @@ class Model:
 
         self.yaw = yaml_node['yaw']
 
+    def to_yaml(self):
+        y = {}
+        y['x'] = self.x
+        y['y'] = -self.y  # invert it back for the file format...
+        y['z'] = self.z
+        y['model_name'] = self.model_name
+        y['name'] = self.name
+        y['yaw'] = self.yaw
+        y['static'] = self.static
+        return y
+
     def generate(self, world_ele, transform, elevation):
         include_ele = SubElement(world_ele, 'include')
         name_ele = SubElement(include_ele, 'name')

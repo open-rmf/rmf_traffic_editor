@@ -30,6 +30,14 @@ class Floor:
             for param_name, param_yaml in yaml_node['parameters'].items():
                 self.params[param_name] = ParamValue(param_yaml)
 
+    def to_yaml(self):
+        y = {}
+        y['vertices'] = self.vertex_indices
+        y['parameters'] = {}
+        for param_name, param_value in self.params.items():
+            y['parameters'][param_name] = param_value.to_yaml()
+        return y
+
     def __str__(self):
         return f'floor ({len(self.vertices)} vertices)'
 

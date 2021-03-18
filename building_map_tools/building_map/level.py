@@ -91,6 +91,24 @@ class Level:
             for hole_yaml in yaml_node['holes']:
                 self.holes.append(Hole(hole_yaml))
 
+    def to_yaml(self):
+        y = {}
+        if self.drawing_name:
+            y['drawing'] = {}
+            y['drawing']['filename'] = self.drawing_name
+        y['elevation'] = self.elevation
+
+        y['fiducials'] = [f.to_yaml() for f in self.fiducials]
+        y['vertices'] = [v.to_yaml() for v in self.vertices]
+        y['measurements'] = [e.to_yaml() for e in self.meas]
+        y['lanes'] = [e.to_yaml() for e in self.lanes]
+        y['walls'] = [e.to_yaml() for e in self.walls]
+        y['doors'] = [e.to_yaml() for e in self.doors]
+        y['models'] = [m.to_yaml() for m in self.models]
+        y['floors'] = [f.to_yaml() for f in self.floors]
+        y['holes'] = [h.to_yaml() for h in self.holes]
+        return y
+
     def transform_all_vertices(self):
         self.transformed_vertices = []
 
@@ -442,3 +460,30 @@ class Level:
             return (0, 0)
         bounds = self.floors[0].polygon.bounds
         return ((bounds[0] + bounds[2]) / 2.0, (bounds[1] + bounds[3]) / 2.0)
+
+    def add_lanes_from(self, other):
+        print(f'add_lanes_from()')
+        print(f'  this level has {len(self.vertices)} vertices')
+        print(f'  other level has {len(other.vertices)} vertices')
+
+        fiducial_pairs = []
+        for ref_fiducial in self.fiducials:
+            for fiducial in other.fiducials:
+                if ref_fiducial.name == fiducial.name:
+                    fiducial_pairs.append((ref_fiducial, fiducial))
+        t = Transform()
+        t.set_from_fiducials(fiducial_pairs, 1.0)
+
+        v_idx_offset = len(self.vertices)
+
+        # transform the incoming vertices
+        for v_in in other.vertices:
+            v_out = copy.deepcopy(v_in)
+            (v_out.x, v_out.y) = t.transform_point([v_in.x, v_in.y])
+            self.vertices.append(v_out)
+
+        for lane_in in other.lanes:
+            lane_out = copy.deepcopy(lane_in)
+            lane_out.start_idx += v_idx_offset
+            lane_out.end_idx += v_idx_offset
+            self.lanes.append(lane_out)

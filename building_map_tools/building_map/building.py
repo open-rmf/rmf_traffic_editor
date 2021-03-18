@@ -1,6 +1,7 @@
 import math
 import numpy as np
 import os
+import yaml
 from xml.etree.ElementTree import Element, SubElement, parse
 from ament_index_python.packages import get_package_share_directory
 
@@ -89,80 +90,9 @@ class Building:
                 if ref_fiducial.name == fiducial.name:
                     fiducials.append((ref_fiducial, fiducial))
         print(f'  {len(fiducials)} common fiducials:')
-        for f_pair in fiducials:
-            f0 = f_pair[0]
-            f1 = f_pair[1]
-            print(
-                f'    ({float(f0.x):.5}, {float(f0.y):.5})'
-                f' -> ({float(f1.x):.5}, {float(f1.y):.5})'
-                f'   {f0.name}')
-
-        # calculate the bearings and distances between each fiducial pair
-        distances = []
-        bearings = []
-        for f0_idx in range(0, len(fiducials)):
-            for f1_idx in range(f0_idx + 1, len(fiducials)):
-                f0_pair = fiducials[f0_idx]
-                f1_pair = fiducials[f1_idx]
-                print(f'    calc dist {f0_pair[0].name} <=> {f1_pair[0].name}')
-
-                ref_bearing = f0_pair[0].bearing(f1_pair[0])
-                target_bearing = f0_pair[1].bearing(f1_pair[1])
-                bearings.append((ref_bearing, target_bearing))
-
-                ref_dist = f0_pair[0].distance(f1_pair[0])
-                target_dist = f0_pair[1].distance(f1_pair[1])
-                distances.append((ref_dist, target_dist))
-
-        print("Bearings:")
-        print(bearings)
-        if len(bearings) == 0:
-            return
-
-        # compute the circular mean of the difference between the bearings
-        bearing_sum = [0.0, 0.0]
-        for bearing_pair in bearings:
-            d_theta = bearing_pair[1] - bearing_pair[0]
-            bearing_sum[0] += math.sin(d_theta)
-            bearing_sum[1] += math.cos(d_theta)
-            print(f'  {d_theta}')
-        mean_bearing_difference = -math.atan2(bearing_sum[0], bearing_sum[1])
-        print(f'  Circular mean: {mean_bearing_difference}')
-        level.transform.set_rotation(mean_bearing_difference)
-
-        print("Distances:")
-        print(distances)
-
-        mean_rel_scale = 0.0
-        for distance in distances:
-            mean_rel_scale += distance[1] / distance[0]
-        mean_rel_scale /= float(len(distances))
-        print(f'mean relative scale: {mean_rel_scale}')
-        ref_scale = self.ref_level.transform.scale
-        level.transform.set_scale(ref_scale / mean_rel_scale)
-
-        mean_translation = [0.0, 0.0]
-        cr = math.cos(mean_bearing_difference)
-        sr = math.sin(mean_bearing_difference)
-        for f_pair in fiducials:
-            rot_mat = np.array([[cr, -sr], [sr, cr]])
-            f1x = f_pair[1].x / mean_rel_scale
-            f1y = f_pair[1].y / mean_rel_scale
-            rot_f_pair1 = rot_mat @ np.array([[f1x], [f1y]])
-            rot_f1x = np.asscalar(rot_f_pair1[0])
-            rot_f1y = np.asscalar(rot_f_pair1[1])
-
-            mean_translation[0] += rot_f1x - f_pair[0].x
-            mean_translation[1] += rot_f1y - f_pair[0].y
-
-        if len(fiducials):
-            mean_translation[0] *= -ref_scale / float(len(fiducials))
-            mean_translation[1] *= -ref_scale / float(len(fiducials))
-        print(
-            f'translation: '
-            f'({mean_translation[0]:.5}, '
-            f'{mean_translation[1]:.5})')
-        level.transform.set_translation(*mean_translation)
+        level.transform.set_from_fiducials(
+            fiducials,
+            self.ref_level.transform.scale)
 
     def generate_nav_graphs(self):
         """ Returns a dict of all non-empty nav graphs """
@@ -306,3 +236,31 @@ class Building:
         # todo: something smarter in the future. For now just the center
         # of the first level
         return self.levels[list(self.levels.keys())[0]].center()
+
+    def add_lanes_from(self, other_building):
+        # go through each level and try to add lanes from the other building
+        print(f'add_lanes_from()')
+        print(f'our levels: {list(self.levels.keys())}')
+        print(f'other levels: {list(other_building.levels.keys())}')
+        for level_name, level in self.levels.items():
+            if level_name in other_building.levels.keys():
+                print(f'level {level_name} exists in both buildings')
+                level.add_lanes_from(other_building.levels[level_name])
+            else:
+                print(f'WARNING: {level_name} does not exist in both')
+
+    def write_yaml_file(self, filename):
+        with open(filename, 'w') as f:
+            d = {}
+            d['name'] = self.name
+            d['reference_level_name'] = self.reference_level_name
+
+            d['levels'] = {}
+            for level_name, level_data in self.levels.items():
+                d['levels'][level_name] = level_data.to_yaml()
+
+            d['lifts'] = {}
+            for lift_name, lift in self.lifts.items():
+                d['lifts'][lift_name] = lift.to_yaml()
+
+            yaml.dump(d, f)

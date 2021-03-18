@@ -8,3 +8,6 @@ class ParamValue:
     def __init__(self, yaml_value):
         self.type = yaml_value[0]
         self.value = yaml_value[1]
+
+    def to_yaml(self):
+        return [self.type, self.value]
