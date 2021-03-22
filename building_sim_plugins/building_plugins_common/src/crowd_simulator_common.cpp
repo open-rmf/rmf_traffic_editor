@@ -158,6 +158,11 @@ void CrowdSimInterface::init_ros_node(const rclcpp::Node::SharedPtr node)
   _ros_node = std::move(node);
 }
 
+bool CrowdSimInterface::enabled() const
+{
+  return _enabled;
+}
+
 bool CrowdSimInterface::init_crowd_sim()
 {
   _menge_handle = MengeHandle::init_and_make(

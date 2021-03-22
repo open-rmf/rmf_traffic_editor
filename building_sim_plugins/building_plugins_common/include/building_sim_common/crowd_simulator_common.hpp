@@ -191,6 +191,7 @@ public:
   void one_step_sim() const;
   double get_switch_anim_distance_th() const;
   std::vector<std::string> get_switch_anim_name() const;
+  bool enabled() const;
 
   template<typename SdfPtrT>
   bool read_sdf(SdfPtrT& sdf);
@@ -223,6 +224,7 @@ private:
   std::string _scene_file;
   std::vector<std::string> _external_agents;
   rclcpp::Node::SharedPtr _ros_node;
+  bool _enabled = false;
 
   template<typename SdfPtrT>
   bool _load_model_init_pose(
@@ -238,20 +240,21 @@ template<typename SdfPtrT>
 bool CrowdSimInterface::read_sdf(
   SdfPtrT& sdf)
 {
-  if (!sdf->template HasElement("resource_path"))
+  char* menge_resource_path = getenv("MENGE_RESOURCE_PATH");
+
+  if (menge_resource_path == nullptr ||
+    strcmp(menge_resource_path, "") == 0)
   {
-    char* menge_resource_path;
-    menge_resource_path = getenv("MENGE_RESOURCE_PATH");
     RCLCPP_WARN(logger(),
-      "No resource path provided! <env MENGE_RESOURCE_PATH> " +
-      std::string(menge_resource_path) + " will be used.");
-    _resource_path = std::string(menge_resource_path);
+      "MENGE_RESOURCE_PATH env is empty. Crowd simulation is disabled.");
+    return true;
   }
-  else
-  {
-    _resource_path =
-      sdf->template GetElementImpl("resource_path")->template Get<std::string>();
-  }
+
+  _enabled = true;
+  _resource_path = std::string(menge_resource_path);
+  RCLCPP_INFO(logger(),
+    "Crowd Sim is enabled! <env MENGE_RESOURCE_PATH> is : %s",
+    _resource_path.c_str());
 
   if (!sdf->template HasElement("behavior_file"))
   {
