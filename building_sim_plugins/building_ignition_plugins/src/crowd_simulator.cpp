@@ -51,7 +51,7 @@ void CrowdSimulatorPlugin::Configure(
     exit(EXIT_FAILURE);
   }
 
-  if (_crowd_sim_interface->enabled() == false)
+  if (!_crowd_sim_interface->enabled())
   {
     RCLCPP_WARN(_crowd_sim_interface->logger(),
       "CrowdSim is Disabled!");
@@ -80,6 +80,10 @@ void CrowdSimulatorPlugin::PreUpdate(
   const ignition::gazebo::UpdateInfo& info,
   ignition::gazebo::EntityComponentManager& ecm)
 {
+  // check if crowd sim is enabled
+  if (!_crowd_sim_interface->enabled())
+    return;
+
   // wait for all the models and actors loaded in ignition rendering
   if (!_initialized)
   {
