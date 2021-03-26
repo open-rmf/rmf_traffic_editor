@@ -52,7 +52,7 @@ Building::~Building()
 /// in the YAML file.
 bool Building::load(const string& _filename)
 {
-  printf("Building::load_yaml_file(%s)\n", _filename.c_str());
+  printf("Building::load(%s)\n", _filename.c_str());
   filename = _filename;
 
   if (filename.find(".project.yaml") != string::npos)
