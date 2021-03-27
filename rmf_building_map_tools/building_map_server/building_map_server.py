@@ -13,16 +13,16 @@ from rclpy.qos import QoSDurabilityPolicy as Durability
 from rclpy.qos import QoSReliabilityPolicy as Reliability
 from rclpy.node import Node
 
-from building_map_msgs.srv import GetBuildingMap
-from building_map_msgs.msg import BuildingMap
-from building_map_msgs.msg import Level
-from building_map_msgs.msg import Graph
-from building_map_msgs.msg import GraphNode
-from building_map_msgs.msg import GraphEdge
-from building_map_msgs.msg import Place
-from building_map_msgs.msg import AffineImage
-from building_map_msgs.msg import Door
-from building_map_msgs.msg import Lift
+from rmf_building_map_msgs.srv import GetBuildingMap
+from rmf_building_map_msgs.msg import BuildingMap
+from rmf_building_map_msgs.msg import Level
+from rmf_building_map_msgs.msg import Graph
+from rmf_building_map_msgs.msg import GraphNode
+from rmf_building_map_msgs.msg import GraphEdge
+from rmf_building_map_msgs.msg import Place
+from rmf_building_map_msgs.msg import AffineImage
+from rmf_building_map_msgs.msg import Door
+from rmf_building_map_msgs.msg import Lift
 
 from building_map.building import Building
 
