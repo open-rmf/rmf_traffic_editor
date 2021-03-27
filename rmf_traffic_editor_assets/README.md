@@ -1,6 +1,6 @@
-# traffic_editor_assets
+# rmf_traffic_editor_assets
 
-Thumbnails and other static assets for the [traffic_editor](https://github.com/osrf/traffic_editor) GUI!
+Thumbnails and other static assets for the [rmf_traffic_editor](https://github.com/open-rmf/rmf_traffic_editor) GUI!
 
 
 

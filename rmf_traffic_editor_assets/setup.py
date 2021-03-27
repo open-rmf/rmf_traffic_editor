@@ -2,7 +2,7 @@ from setuptools import setup
 from glob import glob
 import os
 
-package_name = 'traffic_editor_assets'
+package_name = 'rmf_traffic_editor_assets'
 
 # Create a list of all files in the assets directory
 data_files = [x for x in glob("assets/**", recursive=True)
@@ -18,7 +18,7 @@ setup(
     data_files=[
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
-        ('share/ament_index/resource_index/traffic_editor_assets',
+        ('share/ament_index/resource_index/rmf_traffic_editor_assets',
             ['resource/assets']),
         ('share/' + package_name, ['package.xml']),
         *data_file_appends
