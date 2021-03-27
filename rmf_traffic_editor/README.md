@@ -1,4 +1,4 @@
-![](https://github.com/osrf/traffic_editor/workflows/build/badge.svg)
+![](https://github.com/open-rmf/rmf_traffic_editor/workflows/build/badge.svg)
 
 # Traffic Editor
 A graphical editor for robot traffic flows. The intent is to make it easy
@@ -29,22 +29,14 @@ sudo apt install libyaml-cpp-dev qt5-default \
   libignition-plugin-dev libignition-common3-dev
 mkdir -p ~/colcon_workspace/src
 cd ~/colcon_workspace/src
-git clone https://github.com/osrf/traffic_editor
+git clone https://github.com/open-rmf/rmf_traffic_editor
 cd ~/colcon_workspace
 source /opt/ros/eloquent/setup.bash
-colcon build --packages-select traffic_editor
+colcon build --packages-select rmf_traffic_editor
 ```
 
-You are also **highly recommended** to also install the companion `traffic_editor_assets`
-package, which contains a nifty bunch of useful assets to use with `traffic_editor`.
-
-```bash
-cd ~/colcon_workspace/src
-git clone https://github.com/osrf/traffic_editor_assets
-cd ~/colcon_workspace
-source /opt/ros/eloquent/setup.bash
-colcon build --packages-select traffic_editor_assets
-```
+The companion `traffic_editor_assets` package contains a nifty bunch of useful assets to use with `rmf_traffic_editor`.
+It is included in the above checkout.
 
 Then you should be able to run `traffic-editor` by sourcing the install
 space of that workspace, in a new "clean" terminal:
@@ -60,7 +52,7 @@ If it's the first time you are running it, starting the editor with
 
 First, you'll need to make sure that `traffic-editor` knows where the
 model thumbnails are found. If you installed `traffic_editor_assets`,
-`traffic_editor` should find it automatically. The thumbnails are
+`rmf_traffic_editor` should find it automatically. The thumbnails are
 top-view renderings of various art assets that can be added to the
 environments, such as chairs.
 
@@ -113,7 +105,7 @@ Lift waypoints at the center of the lift on each level can also be generated usi
 
 ### Generating Custom Thumbnails
 
-Model thumbnails are used in `traffic_editor`. To generate a thumbnail, a simple working example is shown here to generate a `SUV`:
+Model thumbnails are used in `rmf_traffic_editor`. To generate a thumbnail, a simple working example is shown here to generate a `SUV`:
 ```bash
 # Run as gz plugin, set --a for help options printout
 gzserver -s libthumbnail_generator.so empty.world --input ~/.gazebo/models/SUV/model.sdf --output .

@@ -4,7 +4,7 @@ if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 14)
 endif()
 
-project(traffic_editor)
+project(rmf_traffic_editor)
 
 find_package(yaml-cpp REQUIRED)
 find_package(ament_cmake REQUIRED)
