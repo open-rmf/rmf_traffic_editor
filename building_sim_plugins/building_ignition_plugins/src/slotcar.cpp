@@ -26,10 +26,6 @@ using namespace ignition::gazebo;
 
 using namespace building_sim_common;
 
-enum class PhysEnginePlugin {DEFAULT, TPE};
-std::unordered_map<std::string, PhysEnginePlugin> plugin_names {
-  {"ignition-physics-tpe-plugin", PhysEnginePlugin::TPE}};
-
 class IGNITION_GAZEBO_VISIBLE SlotcarPlugin
   : public System,
   public ISystemConfigure,
