@@ -52,8 +52,17 @@ Building::~Building()
 /// in the YAML file.
 bool Building::load(const string& _filename)
 {
-  printf("Building::load_yaml_file(%s)\n", _filename.c_str());
+  printf("Building::load(%s)\n", _filename.c_str());
   filename = _filename;
+
+  if (filename.find(".project.yaml") != string::npos)
+  {
+    printf(
+      "\nIt looks like this is a previous traffic-editor project file. "
+      "This file is no longer used. Please load the .building.yaml "
+      "file instead.\n\n");
+    return false;
+  }
 
   YAML::Node y;
   try
@@ -62,7 +71,7 @@ bool Building::load(const string& _filename)
   }
   catch (const std::exception& e)
   {
-    printf("couldn't parse %s: %s", filename.c_str(), e.what());
+    printf("couldn't parse %s: %s\n", filename.c_str(), e.what());
     return false;
   }
 
