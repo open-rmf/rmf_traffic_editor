@@ -7,6 +7,8 @@ from pprint import pprint
 import argparse
 import logging
 import sys
+import os
+import yaml
 
 __all__ = [
     "download_models"
@@ -37,6 +39,25 @@ parser.add_argument("-c", "--cache", type=str,
                     help="Path to pit_crew model cache")
 
 
+def get_crowdsim_models(input_filename):
+    if not os.path.isfile(input_filename):
+        raise FileNotFoundError(f'input file {input_filename} not found')
+
+    actor_names = []
+    with open(input_filename, 'r') as f:
+        y = yaml.safe_load(f)
+        try:
+            model_types = y["crowd_sim"]["model_types"]
+            for model in model_types:
+                name = model["model_uri"].split("://")[-1]
+                actor_names.append(name)
+            logger.info(f"Models: {actor_names} are used in crowdsim")
+        except Exception as e:
+            logger.error(f"Could not get crowdsim models, error: {e}."
+                         " Ignore models in cloud_sim...")
+        return actor_names
+
+
 def download_models(input_yaml, model_path=None, cache=None):
     """Download models for a given input building yaml."""
     # Construct model set
@@ -44,6 +65,10 @@ def download_models(input_yaml, model_path=None, cache=None):
     stringent_dict = {}  # Dict to tighten download scope
 
     building = g.parse_editor_yaml(input_yaml)
+
+    # models used for crowd sim
+    actors = get_crowdsim_models(input_yaml)
+    model_set.update(actors)
 
     for _, level in building.levels.items():
         for model in level.models:
