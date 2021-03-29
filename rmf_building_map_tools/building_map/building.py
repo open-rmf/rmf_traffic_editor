@@ -125,7 +125,7 @@ class Building:
             raise RuntimeError("expected either gazebo or ignition in options")
 
         template_path = os.path.join(
-            get_package_share_directory('building_map_tools'),
+            get_package_share_directory('rmf_building_map_tools'),
             f'templates/{template_name}')
         tree = parse(template_path)
         sdf = tree.getroot()

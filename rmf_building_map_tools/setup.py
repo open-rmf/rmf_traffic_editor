@@ -1,7 +1,7 @@
 from glob import glob
 from setuptools import setup
 
-package_name = 'building_map_tools'
+package_name = 'rmf_building_map_tools'
 
 setup(
     name=package_name,
@@ -44,7 +44,7 @@ setup(
         'Programming Language :: Python',
         'Topic :: Software Development',
     ],
-    description='building_map_tools',
+    description='rmf_building_map_tools',
     license='Apache License, Version 2.0',
     tests_require=['pytest'],
     scripts=[],
