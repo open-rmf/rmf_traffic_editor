@@ -197,7 +197,7 @@ class Wall:
 
         print(f'  copying wall textures into {meshes_path}')
         texture_path_source = os.path.join(
-            get_package_share_directory('building_map_tools'),
+            get_package_share_directory('rmf_building_map_tools'),
             f'textures/{self.texture_name}.png')
         texture_path_dest = f'{meshes_path}/{self.texture_name}.png'
         shutil.copyfile(texture_path_source, texture_path_dest)
