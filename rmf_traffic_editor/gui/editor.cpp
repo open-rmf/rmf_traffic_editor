@@ -149,7 +149,7 @@ Editor::Editor()
     level_table,
     &BuildingLevelTable::redraw_scene,
     this,
-    &Editor::create_scene);
+    &Editor::level_table_update_slot);
 
   lift_table = new LiftTable;
   connect(
@@ -1285,9 +1285,11 @@ void Editor::layer_add_button_clicked()
   if (layer_dialog.exec() != QDialog::Accepted)
     return;
   printf("added a layer: [%s]\n", layer.name.c_str());
+  layer.load_image();
   level.layers.push_back(layer);
   level.layer_added();
   populate_layers_table();
+  create_scene();
   setWindowModified(true);
 }
 
@@ -2518,4 +2520,10 @@ void Editor::clear_current_tool_buffer()
       latest_add_edge = NULL;
     }
   }
+}
+
+void Editor::level_table_update_slot()
+{
+  update_tables();
+  create_scene();
 }
