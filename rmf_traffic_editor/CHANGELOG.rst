@@ -2,6 +2,10 @@
 Changelog for package rmf_traffic_editor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.2.x (2021-03-29)
+-----------------
+* Refactoring and Migration `#308 https://github.com/open-rmf/rmf_traffic_editor/pull/308`
+
 1.2.0 (2021-01-05)
 ------------------
 * Adds undo capability to a large part of the actions. (`#269 <https://github.com/osrf/traffic_editor/pull/269>`_) (`#266 <https://github.com/osrf/traffic_editor/pull/266>`_)

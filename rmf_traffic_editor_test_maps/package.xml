@@ -4,13 +4,13 @@
   <name>test_maps</name>
   <version>1.2.0</version>
   <description>
-    Some test maps for traffic_editor and building_map_tools.
+    Some test maps for traffic_editor and rmf_building_map_tools.
   </description>
   <maintainer email="morgan@openrobotics.org">Morgan Quigley</maintainer>
   <license>Apache License 2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
-  <buildtool_depend>building_map_tools</buildtool_depend>
+  <buildtool_depend>rmf_building_map_tools</buildtool_depend>
   <buildtool_depend>ros2run</buildtool_depend>
 
   <export>

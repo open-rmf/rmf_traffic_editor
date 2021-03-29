@@ -7,8 +7,8 @@ from rclpy.qos import QoSHistoryPolicy as History
 from rclpy.qos import QoSDurabilityPolicy as Durability
 from rclpy.qos import QoSReliabilityPolicy as Reliability
 
-from building_map_msgs.msg import BuildingMap
-from building_map_msgs.msg import GraphEdge
+from rmf_building_map_msgs.msg import BuildingMap
+from rmf_building_map_msgs.msg import GraphEdge
 
 
 class BuildingMapClient(Node):
