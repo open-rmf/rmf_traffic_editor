@@ -82,6 +82,7 @@ class Floor:
             if triangulation_debugging:
                 tri_x, tri_y = triangle.exterior.coords.xy
                 plt.plot(tri_x, tri_y, 'k', linewidth=1)
+                plt.pause(0.1)
 
             # create a new geometry by intersecting this triangle with the
             # original polygon. This may create a triangle, or it may also
@@ -98,16 +99,18 @@ class Floor:
 
             # now we need to actually deal with an intersection area
             if geom.geom_type == 'Polygon':
-                # first ensure the winding is in canonical order (CCW)
-                poly = shapely.geometry.polygon.orient(geom)
+                # simplify it to remove duplicate points, which seems to
+                # happen sometimes
+                poly = geom.simplify(0.001, False)
+                if len(poly.exterior.coords) < 4:
+                    continue  # this poly disintregrated during simplification
+
+                # ensure the winding is in canonical order (CCW)
+                poly = shapely.geometry.polygon.orient(poly)
 
                 if triangulation_debugging:
                     poly_x, poly_y = poly.exterior.coords.xy
                     plt.plot(poly_x, poly_y, 'r', linewidth=2)
-
-                # first simplify it to remove duplicate points, which seems to
-                # happen sometimes
-                poly = poly.simplify(0.001)
 
                 # if this is a 3-sided polygon, hooray! it's a triangle
                 if len(poly.exterior.coords) == 4:
@@ -119,7 +122,11 @@ class Floor:
 
                     if triangulation_debugging:
                         poly_x, poly_y = poly.exterior.coords.xy
-                        plt.plot(poly_x, poly_y, 'r', linewidth=4)
+                        plt.plot(poly_x, poly_y, 'b', linewidth=4)
+
+            elif geom.geom_type == 'MultiPolygon':
+                for poly in list(geom):
+                    self.triangulate_polygon(poly, triangles)
 
             elif geom.geom_type == 'GeometryCollection':
                 # this can happen if the original triangulation needed
@@ -129,9 +136,11 @@ class Floor:
                 for item in geom:
                     if item.geom_type == 'Polygon':
                         self.triangulate_polygon(item, triangles)
+
             else:
                 if triangulation_debugging:
-                    print('\n\n\nFound something weird. Ignoring it:\n\n\n')
+                    print(f'\n\n\nFound something weird ({geom.geom_type}).')
+                    print('Ignoring it:\n')
                     print(f'  {poly.wkt}')
 
     def generate(
