@@ -51,10 +51,10 @@ def get_crowdsim_models(input_filename):
             for model in model_types:
                 name = model["model_uri"].split("://")[-1]
                 actor_names.append(name)
-            logger.info(f"Models: {actor_names} are used in crowdsim")
+            logger.info(f"Models: {actor_names} are used in crowd_sim")
         except Exception as e:
-            logger.error(f"Could not get crowdsim models, error: {e}."
-                         " Ignore models in cloud_sim...")
+            logger.error(f"Could not get crowd_sim models, error: {e}."
+                         " Ignore models in crowd_sim...")
         return actor_names
 
 
