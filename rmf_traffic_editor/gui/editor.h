@@ -148,7 +148,7 @@ private:
 
   void level_add();
   void level_edit();
-  void update_level_buttons();
+  void level_table_update_slot();
 
   void zoom_reset();
   void view_models();

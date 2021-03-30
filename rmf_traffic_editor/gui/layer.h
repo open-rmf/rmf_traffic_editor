@@ -48,6 +48,8 @@ public:
 
   bool from_yaml(const std::string& name, const YAML::Node& data);
   YAML::Node to_yaml() const;
+
+  bool load_image();
 };
 
 #endif

@@ -42,7 +42,11 @@ bool Layer::from_yaml(const std::string& _name, const YAML::Node& y)
   if (y["visible"])
     visible = y["visible"].as<bool>();
 
-  // now try to load the image
+  return load_image();
+}
+
+bool Layer::load_image()
+{
   QImageReader image_reader(QString::fromStdString(filename));
   image_reader.setAutoTransform(true);
   QImage image = image_reader.read();
