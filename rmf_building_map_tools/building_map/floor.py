@@ -101,7 +101,7 @@ class Floor:
             if geom.geom_type == 'Polygon':
                 # simplify it to remove duplicate points, which seems to
                 # happen sometimes
-                poly = geom.simplify(0.5, False)
+                poly = geom.simplify(0.001, False)
                 if len(poly.exterior.coords) < 4:
                     continue  # this poly disintregrated during simplification
 
