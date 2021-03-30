@@ -34,11 +34,19 @@ void MapView::wheelEvent(QWheelEvent* e)
   // calculate the map position before we scale things
   const QPointF p_start = mapToScene(e->pos());
 
-  // scale things
+  // sanity check: clamp the scale if it has become super tiny
+  const double scale_factor = transform().m11();
+
   if (e->delta() > 0)
-    scale(1.1, 1.1);
+  {
+    if (scale_factor < 100)
+      scale(1.1, 1.1);
+  }
   else
-    scale(0.9, 0.9);
+  {
+    if (scale_factor > 0.01)
+      scale(0.9, 0.9);
+  }
 
   // calculate the mouse map position now that we've scaled
   const QPointF p_end = mapToScene(e->pos());

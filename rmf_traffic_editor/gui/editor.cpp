@@ -319,9 +319,7 @@ Editor::Editor()
   view_models_action->setChecked(true);
   view_menu->addSeparator();
 
-  zoom_fit_action =
-    view_menu->addAction("&Fit to Window", this, &Editor::zoom_fit);
-  zoom_fit_action->setEnabled(false);
+  view_menu->addAction("&Reset zoom level", this, &Editor::zoom_reset);
 
   // HELP MENU
   QMenu* help_menu = menuBar()->addMenu("&Help");
@@ -740,11 +738,12 @@ void Editor::view_models()
   create_scene();
 }
 
-void Editor::zoom_fit()
+void Editor::zoom_reset()
 {
-  // todo: implement this for real
-  //map_view->set_absolute_scale(1.0);
-  map_view->resetMatrix();
+  const double viewport_scale = 1.0;
+  QTransform t;
+  t.scale(viewport_scale, viewport_scale);
+  map_view->setTransform(t);
 }
 
 void Editor::mouse_event(const MouseType t, QMouseEvent* e)
