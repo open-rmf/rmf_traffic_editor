@@ -150,7 +150,7 @@ private:
   void level_edit();
   void update_level_buttons();
 
-  void zoom_fit();
+  void zoom_reset();
   void view_models();
 
   void help_about();
@@ -181,7 +181,6 @@ private:
   QGraphicsScene* scene = nullptr;
   MapView* map_view = nullptr;
 
-  QAction* zoom_fit_action = nullptr;
   QAction* view_models_action = nullptr;
 
   const QString tool_id_to_string(const int id);
