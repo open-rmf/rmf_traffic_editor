@@ -456,7 +456,7 @@ class Level:
         return math.atan2(dy, dx)
 
     def center(self):
-        if not self.floors:
+        if not self.floors or self.floors[0].polygon is None:
             return (0, 0)
         bounds = self.floors[0].polygon.bounds
         return ((bounds[0] + bounds[2]) / 2.0, (bounds[1] + bounds[3]) / 2.0)

@@ -22,8 +22,8 @@ class Floor:
         self.vertex_indices = []
         self.vertices = []
         self.thickness = 0.1
-        for v_idx in yaml_node['vertices']:
-            self.vertex_indices.append(v_idx)
+        if 'vertices' in yaml_node and yaml_node['vertices'] is not None:
+            self.vertex_indices = [i for i in yaml_node['vertices']]
 
         self.params = {}
         if 'parameters' in yaml_node and yaml_node['parameters']:
@@ -162,6 +162,11 @@ class Floor:
             self.vertices.append(shapely.geometry.Point(vx, vy))
             vert_list.append((vx, vy))
 
+        if len(vert_list) < 3:
+            print(f'not enough vertices for {model_name} polygon {floor_cnt}!')
+            self.polygon = None
+            return
+
         hole_vert_lists = []
         for hole in holes:
             hole_vertices = []
@@ -200,15 +205,6 @@ class Floor:
         obj_model_rel_path = f'meshes/floor_{floor_cnt}.obj'
         mesh_uri_ele.text = f'model://{model_name}/{obj_model_rel_path}'
 
-        '''
-        material_ele = SubElement(visual_ele, 'material')
-        material_script_ele = SubElement(material_ele, 'script')
-        material_script_name_ele = SubElement(material_script_ele, 'name')
-        material_script_name_ele.text = 'SossSimulation/SimpleFloor'
-
-        self.generate_geometry(visual_ele)
-        '''
-
         collision_ele = SubElement(link_ele, 'collision')
         collision_ele.set('name', 'collision')
         # Use the mesh as a collision element
@@ -222,19 +218,6 @@ class Floor:
         contact_ele = SubElement(surface_ele, 'contact')
         collide_bitmask_ele = SubElement(contact_ele, 'collide_bitmask')
         collide_bitmask_ele.text = '0x01'
-
-        if floor_cnt == 1 and model_name == 'cgh_B1':
-            x, y = self.polygon.exterior.coords.xy
-
-            if triangulation_debugging:
-                plt.subplot(1, 2, 1)
-                plt.plot(x, y, linewidth=5.0)
-                for hole in self.polygon.interiors:
-                    hx, hy = hole.coords.xy
-                    plt.plot(hx, hy, linewidth=3.0)
-                plt.axis('equal')
-                plt.subplot(1, 2, 2)
-                plt.plot(x, y, linewidth=5.0)
 
         triangles = []
         self.triangulate_polygon(self.polygon, triangles)
