@@ -216,13 +216,13 @@ Editor::Editor()
 
   QHBoxLayout* param_button_layout = new QHBoxLayout;
 
-  add_param_button = new QPushButton("Add...");
+  add_param_button = new QPushButton("Add property...");
   add_param_button->setEnabled(false);
   connect(
     add_param_button, &QAbstractButton::clicked,
     this, &Editor::add_param_button_clicked);
 
-  delete_param_button = new QPushButton("Delete");
+  delete_param_button = new QPushButton("Delete property");
   delete_param_button->setEnabled(false);
   connect(
     delete_param_button, &QAbstractButton::clicked,
