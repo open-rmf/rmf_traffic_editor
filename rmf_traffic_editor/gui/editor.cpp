@@ -1179,7 +1179,7 @@ void Editor::populate_layers_table()
   if (level_idx >= static_cast<int>(building.levels.size()))
   {
     layers_table->clearContents();
-    return;// let's not crash...
+    return; // let's not crash...
   }
   const Level& level = building.levels[level_idx];
   layers_table->blockSignals(true);  // otherwise we get tons of callbacks
@@ -1260,11 +1260,12 @@ void Editor::layer_edit_button_clicked(const int row_idx)
 
   Level& level = building.levels[level_idx];
 
+  // make sure the requested layer exists
   if (row_idx <= 0)
-    return;  // currently, can't edit properties of the base floorplan layer
+    return;
 
   if (row_idx - 1 >= static_cast<int>(level.layers.size()))
-    return;  // requested layer doesn't exist
+    return;
 
   Layer& layer = level.layers[row_idx - 1];
   LayerDialog* dialog = new LayerDialog(this, layer, true);
@@ -1279,8 +1280,9 @@ void Editor::layer_edit_button_clicked(const int row_idx)
 
 void Editor::layer_table_update(const int row_idx)
 {
+  // make sure the requested layer exists
   if (row_idx <= 0)
-    return;  // currently, can't edit properties of the base floorplan layer
+    return;
 
   if (level_idx >= static_cast<int>(building.levels.size()))
     return;
@@ -1288,7 +1290,7 @@ void Editor::layer_table_update(const int row_idx)
   Level& level = building.levels[level_idx];
 
   if (row_idx - 1 >= static_cast<int>(level.layers.size()))
-    return;  // requested layer doesn't exist
+    return;
 
   Layer& layer = level.layers[row_idx - 1];
 
