@@ -175,6 +175,10 @@ void LayerDialog::ok_button_clicked()
       return;
     }
   }
+
+  layer.filename = filename_line_edit->text().toStdString();
+  layer.load_image();
+
   /*
   // todo: figure out how to test for valid numeric values;
   // this doesn't work but there must be a similar function somewhere
