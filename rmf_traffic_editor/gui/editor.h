@@ -197,9 +197,10 @@ private:
     const int row_idx,
     const QString& label,
     const bool checked);
-  void layer_edit_button_clicked(const std::string& label);
+  void layer_edit_button_clicked(const int row_idx);
   void layer_add_button_clicked();
   void update_active_layer_checkboxes(int row_idx);
+  void layer_table_update(const int row_idx);
 
   BuildingLevelTable* level_table = nullptr;
   LiftTable* lift_table = nullptr;
