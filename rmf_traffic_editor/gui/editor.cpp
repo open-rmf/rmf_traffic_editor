@@ -1294,6 +1294,41 @@ void Editor::layer_table_update(const int row_idx)
     QString::fromStdString(layer.name),
     layer.visible);
   create_scene();
+
+  sanity_check_layer_table_names(row_idx);
+}
+
+void Editor::sanity_check_layer_table_names(const int row_idx)
+{
+  // make sure the requested layer exists
+  if (row_idx <= 0)
+    return;
+
+  if (level_idx >= static_cast<int>(building.levels.size()))
+    return;
+
+  Level& level = building.levels[level_idx];
+
+  if (row_idx - 1 >= static_cast<int>(level.layers.size()))
+    return;
+
+  Layer& layer = level.layers[row_idx - 1];
+
+  // if we have duplicate layer names, pop up an alert box
+  for (int i = 0; i < static_cast<int>(level.layers.size()); i++)
+  {
+    if (i + 1 == row_idx)
+      continue;  // don't check if we're a duplicate of ourself
+    if (layer.name == level.layers[i].name)
+    {
+      QMessageBox::critical(
+        this,
+        "Duplicate layer name",
+        "Layers must have unique names within a level. "
+        "There is a duplicate layer name. Please correct this "
+        "to avoid data loss after save/load.");
+    }
+  }
 }
 
 void Editor::layer_add_button_clicked()
@@ -1311,6 +1346,7 @@ void Editor::layer_add_button_clicked()
   level.layer_added();
   populate_layers_table();
   create_scene();
+  sanity_check_layer_table_names(level.layers.size());
   setWindowModified(true);
 }
 
@@ -1647,7 +1683,9 @@ void Editor::remove_mouse_motion_item()
 ///////////////////////////////////////////////////////////////////////
 
 void Editor::mouse_select(
-  const MouseType type, QMouseEvent* e, const QPointF& p)
+  const MouseType type,
+  QMouseEvent* e,
+  const QPointF& p)
 {
   if (type != MOUSE_PRESS)
     return;

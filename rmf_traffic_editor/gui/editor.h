@@ -347,6 +347,8 @@ private:
   MoveModelCommand* latest_move_model = nullptr;
   MoveVertexCommand* latest_move_vertex = nullptr;
   RotateModelCommand* latest_rotate_model = nullptr;
+
+  void sanity_check_layer_table_names(const int row_idx);
 };
 
 #endif

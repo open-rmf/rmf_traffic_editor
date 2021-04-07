@@ -82,6 +82,16 @@ void Feature::draw(
     _y - 2 * radius,
     pen);
 
+  // render the feature as a small hollow rectangle
+  QGraphicsRectItem* rect_item = scene->addRect(
+    x - 2.0 * radius,
+    y - 2.0 * radius,
+    2 * 2.0 * radius,
+    2 * 2.0 * radius,
+    annotation_pen,
+    QBrush());  // default brush is transparent
+  rect_item->setZValue(20.0);
+
   QGraphicsSimpleTextItem* item = scene->addSimpleText(QString::number(_id));
   item->setBrush(QColor(0, 0, 255, 255));
   item->setPos(_x, _y + radius);

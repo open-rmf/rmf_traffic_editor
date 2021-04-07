@@ -852,6 +852,10 @@ void Building::mouse_select_press(
     levels[level_idx].models[ni.model_idx].selected = true;
   else if (ni.vertex_idx >= 0 && ni.vertex_dist < vertex_dist_thresh)
     levels[level_idx].vertices[ni.vertex_idx].selected = true;
+  else if (ni.feature_idx >= 0 && ni.feature_dist < 10.0)
+  {
+    //levels[level_idx].feature_sets[
+  }
   else if (ni.fiducial_idx >= 0 && ni.fiducial_dist < 10.0)
     levels[level_idx].fiducials[ni.fiducial_idx].selected = true;
   else
