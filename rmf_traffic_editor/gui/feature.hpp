@@ -18,8 +18,10 @@
 #ifndef TRAFFIC_EDITOR__FEATURE_HPP
 #define TRAFFIC_EDITOR__FEATURE_HPP
 
-#include <yaml-cpp/yaml.h>
+#include <string>
+
 #include <quuid.h>
+#include <yaml-cpp/yaml.h>
 
 class QGraphicsScene;
 
@@ -52,8 +54,7 @@ private:
   uint16_t _id = 0;
   QUuid _uuid;
   bool _selected = false;
-
-  static uint16_t _next_id;
+  std::string _name;
 };
 
 #endif  // TRAFFIC_EDITOR__FEATURE_HPP
