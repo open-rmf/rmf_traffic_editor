@@ -21,42 +21,42 @@
 #include <QGraphicsSimpleTextItem>
 #include <QString>
 
-#include "correspondence_point.hpp"
+#include "feature.hpp"
 
 
-CorrespondencePoint::CorrespondencePoint()
+Feature::Feature()
 {
-  uuid_ = QUuid::createUuid();
+  _uuid = QUuid::createUuid();
 }
 
-CorrespondencePoint::CorrespondencePoint(double x, double y, int id)
-: x_(x), y_(y), id_(id)
+Feature::Feature(double x, double y, int id)
+: _x(x), _y(y), _id(id)
 {
-  uuid_ = QUuid::createUuid();
+  _uuid = QUuid::createUuid();
 }
 
-void CorrespondencePoint::from_yaml(const YAML::Node& data)
+void Feature::from_yaml(const YAML::Node& data)
 {
   if (!data.IsMap())
-    throw std::runtime_error("CorrespondencePoint::from_yaml() expected a map");
-  x_ = data["x"].as<double>();
-  y_ = data["y"].as<double>();
-  id_ = data["id"].as<uint16_t>();
-  uuid_ = QString(data["uuid"].as<std::string>().c_str());
+    throw std::runtime_error("Feature::from_yaml() expected a map");
+  _x = data["x"].as<double>();
+  _y = data["y"].as<double>();
+  _id = data["id"].as<uint16_t>();
+  _uuid = QString(data["uuid"].as<std::string>().c_str());
 }
 
-YAML::Node CorrespondencePoint::to_yaml() const
+YAML::Node Feature::to_yaml() const
 {
   YAML::Node node;
   node.SetStyle(YAML::EmitterStyle::Flow);
-  node["x"] = std::round(x_ * 1000.0) / 1000.0;
-  node["y"] = std::round(y_ * 1000.0) / 1000.0;
-  node["id"] = id_;
-  node["uuid"] = uuid_.toString().toStdString();
+  node["x"] = std::round(_x * 1000.0) / 1000.0;
+  node["y"] = std::round(_y * 1000.0) / 1000.0;
+  node["id"] = _id;
+  node["uuid"] = _uuid.toString().toStdString();
   return node;
 }
 
-void CorrespondencePoint::draw(
+void Feature::draw(
   QGraphicsScene* scene,
   double meters_per_pixel) const
 {
@@ -64,27 +64,27 @@ void CorrespondencePoint::draw(
   const QColor color = QColor::fromRgbF(0.0, 0.0, 1.0, a);
   const QColor selected_color = QColor::fromRgbF(1.0, 0.0, 0.0, a);
 
-  QPen pen(selected_ ? selected_color : color);
+  QPen pen(_selected ? selected_color : color);
   pen.setWidth(0.2 / meters_per_pixel);
   const double radius = 0.5 / meters_per_pixel;
 
   scene->addLine(
-    x_ - 2 * radius,
-    y_ - 2 * radius,
-    x_ + 2 * radius,
-    y_ + 2 * radius,
+    _x - 2 * radius,
+    _y - 2 * radius,
+    _x + 2 * radius,
+    _y + 2 * radius,
     pen);
 
   scene->addLine(
-    x_ - 2 * radius,
-    y_ + 2 * radius,
-    x_ + 2 * radius,
-    y_ - 2 * radius,
+    _x - 2 * radius,
+    _y + 2 * radius,
+    _x + 2 * radius,
+    _y - 2 * radius,
     pen);
 
-  QGraphicsSimpleTextItem* item = scene->addSimpleText(QString::number(id_));
+  QGraphicsSimpleTextItem* item = scene->addSimpleText(QString::number(_id));
   item->setBrush(QColor(0, 0, 255, 255));
-  item->setPos(x_, y_ + radius);
+  item->setPos(_x, _y + radius);
   auto font = item->font();
   font.setPointSize(30);
   item->setFont(font);

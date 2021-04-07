@@ -17,7 +17,6 @@
 
 #include <QImageReader>
 #include "layer.h"
-#include "correspondence_point.hpp"
 using std::string;
 using std::vector;
 

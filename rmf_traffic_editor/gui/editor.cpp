@@ -35,7 +35,7 @@
 #include "ament_index_cpp/get_package_prefix.hpp"
 #include "ament_index_cpp/get_resource.hpp"
 
-#include "actions/add_correspondence_point.h"
+#include "actions/add_feature.h"
 #include "actions/add_fiducial.h"
 #include "actions/add_model.h"
 #include "actions/add_property.h"
@@ -275,7 +275,7 @@ Editor::Editor()
   building_menu->addAction(
     "&Export layer alignment points for level",
     this,
-    &Editor::building_export_correspondence_points,
+    &Editor::building_export_features,
     QKeySequence(Qt::CTRL + Qt::Key_E));
 
   building_menu->addSeparator();
@@ -337,10 +337,7 @@ Editor::Editor()
   create_tool_button(TOOL_MOVE, ":icons/move.svg", "Move (M)");
   create_tool_button(TOOL_ROTATE, ":icons/rotate.svg", "Rotate (R)");
   create_tool_button(TOOL_ADD_VERTEX, ":icons/vertex.svg", "Add Vertex (V)");
-  create_tool_button(
-    TOOL_ADD_CORRESPONDENCE_POINT,
-    ":icons/correspondence_point.svg",
-    "Add Layer Alignment Point");
+  create_tool_button(TOOL_ADD_FEATURE, ":icons/feature.svg", "Add Feature");
   create_tool_button(
     TOOL_ADD_FIDUCIAL,
     ":icons/fiducial.svg",
@@ -656,7 +653,7 @@ bool Editor::building_save()
   return true;
 }
 
-bool Editor::building_export_correspondence_points()
+bool Editor::building_export_features()
 {
   QFileDialog dialog(this, "Export layer alignment points for level");
   dialog.setNameFilter("*.yaml");
@@ -668,7 +665,7 @@ bool Editor::building_export_correspondence_points()
     return true;
 
   QFileInfo file_info(dialog.selectedFiles().first());
-  auto result = building.export_correspondence_points(
+  auto result = building.export_features(
     level_idx,
     file_info.absoluteFilePath().toStdString());
   setWindowModified(false);
@@ -790,9 +787,7 @@ void Editor::mouse_event(const MouseType t, QMouseEvent* e)
     case TOOL_ADD_FLOOR:    mouse_add_floor(t, e, p); break;
     case TOOL_ADD_HOLE:     mouse_add_hole(t, e, p); break;
     case TOOL_EDIT_POLYGON: mouse_edit_polygon(t, e, p); break;
-    case TOOL_ADD_CORRESPONDENCE_POINT:
-      mouse_add_correspondence_point(t, e, p);
-      break;
+    case TOOL_ADD_FEATURE:  mouse_add_feature(t, e, p); break;
     case TOOL_ADD_FIDUCIAL: mouse_add_fiducial(t, e, p); break;
     case TOOL_ADD_ROI:      mouse_add_roi(t, e, p); break;
     case TOOL_ADD_HUMAN_LANE: mouse_add_human_lane(t, e, p); break;
@@ -931,7 +926,7 @@ const QString Editor::tool_id_to_string(const int id)
     case TOOL_ADD_HOLE: return "add hole";
     case TOOL_EDIT_POLYGON: return "&edit polygon";
     case TOOL_ADD_HUMAN_LANE: return "add human lane";
-    case TOOL_ADD_CORRESPONDENCE_POINT: return "add layer &alignment point";
+    case TOOL_ADD_FEATURE: return "add &feature";
     default: return "unknown tool ID";
   }
 }
@@ -1059,14 +1054,14 @@ void Editor::update_property_editor()
   }
 
   if (layer_idx < static_cast<int>(
-      building.levels[level_idx].correspondence_point_sets().size()))
+      building.levels[level_idx].feature_sets().size()))
   {
-    for (const auto& cp :
-      building.levels[level_idx].correspondence_point_sets()[layer_idx])
+    for (const auto& feature :
+      building.levels[level_idx].feature_sets()[layer_idx])
     {
-      if (cp.selected())
+      if (feature.selected())
       {
-        populate_property_editor(cp);
+        populate_property_editor(feature);
         return;  // stop after finding the first one
       }
     }
@@ -1411,14 +1406,13 @@ void Editor::populate_property_editor(const Vertex& vertex)
   property_editor->blockSignals(false);  // re-enable callbacks
 }
 
-void Editor::populate_property_editor(
-  const CorrespondencePoint& correspondence_point)
+void Editor::populate_property_editor(const Feature& feature)
 {
   property_editor->blockSignals(true);
 
   property_editor->setRowCount(1);
   QString id_str;
-  id_str.setNum(correspondence_point.id());
+  id_str.setNum(feature.id());
   property_editor_set_row(
     0,
     "ID",
@@ -1645,7 +1639,7 @@ void Editor::remove_mouse_motion_item()
 
   mouse_vertex_idx = -1;
   mouse_fiducial_idx = -1;
-  mouse_correspondence_point_idx = -1;
+  mouse_feature_idx = -1;
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -1679,17 +1673,6 @@ void Editor::mouse_select(
 }
 
 void Editor::mouse_add_vertex(
-  const MouseType t, QMouseEvent*, const QPointF& p)
-{
-  if (t == MOUSE_PRESS)
-  {
-    undo_stack.push(new AddVertexCommand(&building, level_idx, p.x(), p.y()));
-    setWindowModified(true);
-    create_scene();
-  }
-}
-
-void Editor::mouse_add_correspondence_point(
   const MouseType t,
   QMouseEvent*,
   const QPointF& p)
@@ -1697,7 +1680,25 @@ void Editor::mouse_add_correspondence_point(
   if (t == MOUSE_PRESS)
   {
     undo_stack.push(
-      new AddCorrespondencePointCommand(
+      new AddVertexCommand(
+        &building,
+        level_idx,
+        p.x(),
+        p.y()));
+    setWindowModified(true);
+    create_scene();
+  }
+}
+
+void Editor::mouse_add_feature(
+  const MouseType t,
+  QMouseEvent*,
+  const QPointF& p)
+{
+  if (t == MOUSE_PRESS)
+  {
+    undo_stack.push(
+      new AddFeatureCommand(
         &building,
         level_idx,
         layer_idx,
@@ -1709,7 +1710,9 @@ void Editor::mouse_add_correspondence_point(
 }
 
 void Editor::mouse_add_fiducial(
-  const MouseType t, QMouseEvent*, const QPointF& p)
+  const MouseType t,
+  QMouseEvent*,
+  const QPointF& p)
 {
   if (t == MOUSE_PRESS)
   {
@@ -1757,18 +1760,16 @@ void Editor::mouse_move(
         &building,
         level_idx,
         mouse_vertex_idx);
-      // todo: save the QGrahpicsEllipse or group, to avoid full repaints?
     }
-    else if (ni.correspondence_point_idx >= 0 &&
-      ni.correspondence_point_dist < 10.0)
+    else if (ni.feature_idx >= 0 &&
+      ni.feature_dist < 10.0)
     {
-      mouse_correspondence_point_idx = ni.correspondence_point_idx;
-      latest_move_correspondence_point = new MoveCorrespondencePointCommand(
+      mouse_feature_idx = ni.feature_idx;
+      latest_move_feature = new MoveFeatureCommand(
         &building,
         level_idx,
         layer_idx,
-        mouse_correspondence_point_idx);
-      // todo: save the QGrahpicsEllipse or group, to avoid full repaints?
+        mouse_feature_idx);
     }
     else if (ni.fiducial_idx >= 0 && ni.fiducial_dist < 10.0)
     {
@@ -1777,7 +1778,6 @@ void Editor::mouse_move(
         &building,
         level_idx,
         mouse_fiducial_idx);
-      // todo: save the QGrahpicsEllipse or group, to avoid full repaints?
     }
   }
   else if (t == MOUSE_RELEASE)
@@ -1808,16 +1808,16 @@ void Editor::mouse_move(
       }
     }
 
-    if (mouse_correspondence_point_idx >= 0) //Add mouse move correspondence_point
+    if (mouse_feature_idx >= 0) //Add mouse move feature
     {
-      if (latest_move_correspondence_point->has_moved)
+      if (latest_move_feature->has_moved)
       {
-        undo_stack.push(latest_move_correspondence_point);
+        undo_stack.push(latest_move_feature);
       }
       else
       {
-        delete latest_move_correspondence_point;
-        latest_move_correspondence_point = NULL;
+        delete latest_move_feature;
+        latest_move_feature = NULL;
       }
     }
 
@@ -1834,7 +1834,7 @@ void Editor::mouse_move(
       }
     }
     mouse_vertex_idx = -1;
-    mouse_correspondence_point_idx = -1;
+    mouse_feature_idx = -1;
     mouse_fiducial_idx = -1;
     create_scene();  // this will free mouse_motion_model
     setWindowModified(true);
@@ -1845,10 +1845,10 @@ void Editor::mouse_move(
       return;// we only care about mouse-dragging, not just motion
     printf(
       "mouse move, vertex_idx = %d, "
-      "correspondence_point_idx = %d, "
+      "feature_idx = %d, "
       "fiducial_idx = %d\n",
       mouse_vertex_idx,
-      mouse_correspondence_point_idx,
+      mouse_feature_idx,
       mouse_fiducial_idx);
     if (mouse_motion_model != nullptr)
     {
@@ -1871,18 +1871,18 @@ void Editor::mouse_move(
       latest_move_vertex->set_final_destination(p.x(), p.y());
       create_scene();
     }
-    else if (mouse_correspondence_point_idx >= 0)
+    else if (mouse_feature_idx >= 0)
     {
-      CorrespondencePoint& cp =
-        building.levels[level_idx].correspondence_point_sets()
-        [layer_idx][mouse_correspondence_point_idx];
-      cp.set_x(p.x());
-      cp.set_y(p.y());
-      latest_move_correspondence_point->set_final_destination(p.x(), p.y());
-      printf("moved correspondence point %d to (%.1f, %.1f)\n",
-        mouse_correspondence_point_idx,
-        cp.x(),
-        cp.y());
+      Feature& feature =
+        building.levels[level_idx].feature_sets()
+        [layer_idx][mouse_feature_idx];
+      feature.set_x(p.x());
+      feature.set_y(p.y());
+      latest_move_feature->set_final_destination(p.x(), p.y());
+      printf("moved feature %d to (%.1f, %.1f)\n",
+        mouse_feature_idx,
+        feature.x(),
+        feature.y());
       create_scene();
     }
     else if (mouse_fiducial_idx >= 0)

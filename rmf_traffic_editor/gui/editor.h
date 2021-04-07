@@ -32,7 +32,7 @@
 #include <QUndoStack>
 
 #include "actions/add_edge.h"
-#include "actions/move_correspondence_point.h"
+#include "actions/move_feature.h"
 #include "actions/move_fiducial.h"
 #include "actions/move_model.h"
 #include "actions/move_vertex.h"
@@ -122,7 +122,7 @@ private:
     TOOL_ADD_FLOOR,
     TOOL_EDIT_POLYGON,
     TOOL_ADD_ZONE,
-    TOOL_ADD_CORRESPONDENCE_POINT,
+    TOOL_ADD_FEATURE,
     TOOL_ADD_FIDUCIAL,
     TOOL_ADD_ROI,
     TOOL_ADD_HOLE,
@@ -136,7 +136,7 @@ private:
   void building_new();
   void building_open();
   bool building_save();
-  bool building_export_correspondence_points();
+  bool building_export_features();
 
   bool maybe_save();
   void edit_undo();
@@ -213,8 +213,7 @@ private:
   void populate_property_editor(const Edge& edge);
   void populate_property_editor(const Model& model);
   void populate_property_editor(const Vertex& vertex);
-  void populate_property_editor(
-    const CorrespondencePoint& correspondence_point);
+  void populate_property_editor(const Feature& feature);
   void populate_property_editor(const Fiducial& fiducial);
   void populate_property_editor(const Polygon& polygon);
 
@@ -279,7 +278,7 @@ private:
 
   int mouse_model_idx = -1;
   int mouse_vertex_idx = -1;
-  int mouse_correspondence_point_idx = -1;
+  int mouse_feature_idx = -1;
   int mouse_fiducial_idx = -1;
   std::vector<int> mouse_motion_polygon_vertices;
   //int mouse_motion_polygon_vertex_idx = -1;
@@ -324,10 +323,7 @@ private:
   void mouse_rotate(const MouseType t, QMouseEvent* e, const QPointF& p);
 
   void mouse_add_vertex(const MouseType t, QMouseEvent* e, const QPointF& p);
-  void mouse_add_correspondence_point(
-    const MouseType t,
-    QMouseEvent* e,
-    const QPointF& p);
+  void mouse_add_feature(const MouseType t, QMouseEvent* e, const QPointF& p);
   void mouse_add_fiducial(const MouseType t, QMouseEvent* e, const QPointF& p);
   void mouse_add_lane(const MouseType t, QMouseEvent* e, const QPointF& p);
   void mouse_add_wall(const MouseType t, QMouseEvent* e, const QPointF& p);
@@ -346,7 +342,7 @@ private:
 
   // For undo related support
   AddEdgeCommand* latest_add_edge = nullptr;
-  MoveCorrespondencePointCommand* latest_move_correspondence_point = nullptr;
+  MoveFeatureCommand* latest_move_feature = nullptr;
   MoveFiducialCommand* latest_move_fiducial = nullptr;
   MoveModelCommand* latest_move_model = nullptr;
   MoveVertexCommand* latest_move_vertex = nullptr;

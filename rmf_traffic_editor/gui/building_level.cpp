@@ -149,35 +149,35 @@ bool BuildingLevel::from_yaml(
     }
   }
 
-  if (_data["correspondence_point_sets"] &&
-    _data["correspondence_point_sets"].IsSequence())
+  if (_data["feature_sets"] &&
+    _data["feature_sets"].IsSequence())
   {
-    const YAML::Node& node = _data["correspondence_point_sets"];
+    const YAML::Node& node = _data["feature_sets"];
     for (YAML::const_iterator ii = node.begin(); ii != node.end(); ++ii)
     {
-      std::vector<CorrespondencePoint> cps;
+      std::vector<Feature> features;
       for (YAML::const_iterator jj = ii->begin(); jj != ii->end(); ++jj)
       {
-        CorrespondencePoint cp;
-        cp.from_yaml(*jj);
-        cps.push_back(cp);
+        Feature feature;
+        feature.from_yaml(*jj);
+        features.push_back(feature);
       }
-      correspondence_point_sets_.push_back(cps);
-      if (cps.size() > 0)
-        next_cp_ids.push_back(cps.rbegin()->id() + 1);
+      _feature_sets.push_back(features);
+      if (features.size() > 0)
+        _next_cp_ids.push_back(features.rbegin()->id() + 1);
       else
-        next_cp_ids.push_back(0);
+        _next_cp_ids.push_back(0);
     }
   }
   else
   {
     // Add an empty set for each layer, including the floorplan non-layer
-    correspondence_point_sets_.push_back(std::vector<CorrespondencePoint>());
-    next_cp_ids.push_back(0);
+    _feature_sets.push_back(std::vector<Feature>());
+    _next_cp_ids.push_back(0);
     for (size_t ii = 0; ii < layers.size(); ++ii)
     {
-      correspondence_point_sets_.push_back(std::vector<CorrespondencePoint>());
-      next_cp_ids.push_back(0);
+      _feature_sets.push_back(std::vector<Feature>());
+      _next_cp_ids.push_back(0);
     }
   }
 
@@ -233,12 +233,12 @@ YAML::Node BuildingLevel::to_yaml() const
   for (const auto& v : vertices)
     y["vertices"].push_back(v.to_yaml());
 
-  for (const auto& cps : correspondence_point_sets_)
+  for (const auto& features : _feature_sets)
   {
     YAML::Node set;
-    for (const auto& cp : cps)
-      set.push_back(cp.to_yaml());
-    y["correspondence_point_sets"].push_back(set);
+    for (const auto& feature : features)
+      set.push_back(feature.to_yaml());
+    y["feature_sets"].push_back(set);
   }
 
   for (const auto& f : fiducials)
@@ -962,7 +962,7 @@ void BuildingLevel::draw(
   vector<EditorModel>& editor_models,
   const RenderingOptions& rendering_options)
 {
-  if (drawing_filename.size() && drawing_visible_)
+  if (drawing_filename.size() && _drawing_visible)
   {
     scene->setSceneRect(
       QRectF(0, 0, drawing_width, drawing_height));
@@ -1027,10 +1027,10 @@ void BuildingLevel::draw(
       scene,
       vertex_radius / drawing_meters_per_pixel);
 
-  if (active_layer_ < static_cast<int>(correspondence_point_sets_.size()))
+  if (_active_layer < static_cast<int>(_feature_sets.size()))
   {
-    for (const auto& cp : correspondence_point_sets_[active_layer_])
-      cp.draw(scene, drawing_meters_per_pixel);
+    for (const auto& feature : _feature_sets[_active_layer])
+      feature.draw(scene, drawing_meters_per_pixel);
   }
 
   for (const auto& f : fiducials)
@@ -1043,18 +1043,17 @@ void BuildingLevel::clear_scene()
     model.clear_scene();
 }
 
-QUuid BuildingLevel::add_correspondence_point(int layer, double x, double y)
+QUuid BuildingLevel::add_feature(int layer, double x, double y)
 {
-  auto id = next_cp_ids[layer];
-  next_cp_ids[layer] += 1;
-  correspondence_point_sets_[layer].push_back(CorrespondencePoint(x, y, id));
-  return correspondence_point_sets_[layer].rbegin()->uuid();
+  auto id = _next_cp_ids[layer];
+  _next_cp_ids[layer] += 1;
+  _feature_sets[layer].push_back(Feature(x, y, id));
+  return _feature_sets[layer].rbegin()->uuid();
 }
 
-bool BuildingLevel::export_correspondence_points(
-  const std::string& filename) const
+bool BuildingLevel::export_features(const std::string& filename) const
 {
-  YAML::Node level_correspondence_points;
+  YAML::Node level_features;
 
   YAML::Node floorplan_yaml;
   floorplan_yaml["name"] = "floorplan";
@@ -1063,16 +1062,16 @@ bool BuildingLevel::export_correspondence_points(
   floorplan_yaml["size"].push_back(drawing_height);
   floorplan_yaml["size"].SetStyle(YAML::EmitterStyle::Flow);
   YAML::Node floorplan_cps;
-  for (const auto& cp : correspondence_point_sets_[0])
+  for (const auto& feature : _feature_sets[0])
   {
     YAML::Node cp_yaml;
     cp_yaml.SetStyle(YAML::EmitterStyle::Flow);
-    cp_yaml.push_back(cp.x());
-    cp_yaml.push_back(cp.y());
+    cp_yaml.push_back(feature.x());
+    cp_yaml.push_back(feature.y());
     floorplan_cps.push_back(cp_yaml);
   }
   floorplan_yaml["correspondence_points"] = floorplan_cps;
-  level_correspondence_points["ref_map"] = floorplan_yaml;
+  level_features["ref_map"] = floorplan_yaml;
 
   int layer_index = 1;
   for (std::vector<Layer>::const_iterator layer = layers.begin();
@@ -1103,11 +1102,11 @@ bool BuildingLevel::export_correspondence_points(
     y["transform"] = transform;
 
     YAML::Node cps;
-    for (const auto& cp : correspondence_point_sets_[layer_index])
+    for (const auto& feature : _feature_sets[layer_index])
     {
       QPointF offset = layer->scene_item->offset();
       QPointF mapped_point =
-        layer->scene_item->mapFromScene(QPointF(cp.x(), cp.y()));
+        layer->scene_item->mapFromScene(QPointF(feature.x(), feature.y()));
       YAML::Node cp_yaml;
       cp_yaml.push_back(mapped_point.rx() - offset.rx());
       cp_yaml.push_back(mapped_point.ry() - offset.ry());
@@ -1156,11 +1155,11 @@ bool BuildingLevel::export_correspondence_points(
     }
     y["correspondence_points"] = cps;
     layer_index++;
-    level_correspondence_points["robot_map"] = y;
+    level_features["robot_map"] = y;
   }
 
   YAML::Emitter emitter;
-  yaml_utils::write_node(level_correspondence_points, emitter);
+  yaml_utils::write_node(level_features, emitter);
   std::ofstream dest(filename);
   dest << emitter.c_str();
   return true;
@@ -1168,6 +1167,6 @@ bool BuildingLevel::export_correspondence_points(
 
 void BuildingLevel::layer_added()
 {
-  correspondence_point_sets_.push_back(std::vector<CorrespondencePoint>());
-  next_cp_ids.push_back(0);
+  _feature_sets.push_back(std::vector<Feature>());
+  _next_cp_ids.push_back(0);
 }

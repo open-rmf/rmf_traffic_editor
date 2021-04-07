@@ -23,9 +23,9 @@
 #include <yaml-cpp/yaml.h>
 #include <string>
 
-#include "correspondence_point.hpp"
 #include "edge.h"
 #include "editor_model.h"
+#include "feature.hpp"
 #include "fiducial.h"
 #include "layer.h"
 #include "model.h"
@@ -92,29 +92,28 @@ public:
 
   bool load_drawing();
 
-  void set_drawing_visible(bool value) { drawing_visible_ = value; }
+  void set_drawing_visible(bool value) { _drawing_visible = value; }
 
-  const std::vector<std::vector<CorrespondencePoint>>&
-  correspondence_point_sets() const
+  const std::vector<std::vector<Feature>>& feature_sets() const
   {
-    return correspondence_point_sets_;
+    return _feature_sets;
   }
 
-  std::vector<std::vector<CorrespondencePoint>>& correspondence_point_sets()
+  std::vector<std::vector<Feature>>& feature_sets()
   {
-    return correspondence_point_sets_;
+    return _feature_sets;
   }
 
   void layer_added();
-  void set_active_layer(int active_layer) { active_layer_ = active_layer; }
-  QUuid add_correspondence_point(int layer, double x, double y);
-  bool export_correspondence_points(const std::string& filename) const;
+  void set_active_layer(int active_layer) { _active_layer = active_layer; }
+  QUuid add_feature(int layer, double x, double y);
+  bool export_features(const std::string& filename) const;
 
 private:
-  bool drawing_visible_ = true;
-  std::vector<std::vector<CorrespondencePoint>> correspondence_point_sets_;
-  std::vector<int> next_cp_ids;
-  int active_layer_ = 0;
+  bool _drawing_visible = true;
+  std::vector<std::vector<Feature>> _feature_sets;
+  std::vector<int> _next_cp_ids;
+  int _active_layer = 0;
 
   void draw_lane(
     QGraphicsScene* scene,

@@ -15,18 +15,18 @@
  *
 */
 
-#ifndef ACTIONS__ADD_CORRESPONDENCE_POINT_H_
-#define ACTIONS__ADD_CORRESPONDENCE_POINT_H_
+#ifndef ACTIONS__ADD_FEATURE_H_
+#define ACTIONS__ADD_FEATURE_H_
 
 #include <QUndoCommand>
 #include <QUuid>
 
 #include "building.h"
 
-class AddCorrespondencePointCommand : public QUndoCommand
+class AddFeatureCommand : public QUndoCommand
 {
 public:
-  AddCorrespondencePointCommand(
+  AddFeatureCommand(
     Building* building,
     int level,
     int layer,
@@ -37,10 +37,10 @@ public:
   void redo() override;
 
 private:
-  Building* building_;
-  int level_, layer_;
-  double x_, y_;
-  QUuid uuid_;
+  Building* _building;
+  int _level, _layer;
+  double _x, _y;
+  QUuid _uuid;
 };
 
-#endif  // ACTIONS__ADD_CORRESPONDENCE_POINT_H_
+#endif  // ACTIONS__ADD_FEATURE_H_

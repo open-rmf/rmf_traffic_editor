@@ -181,11 +181,11 @@ bool Building::save()
   return true;
 }
 
-bool Building::export_correspondence_points(
+bool Building::export_features(
   int level_index,
   const std::string& dest_filename) const
 {
-  return levels[level_index].export_correspondence_points(dest_filename);
+  return levels[level_index].export_features(dest_filename);
 }
 
 void Building::add_vertex(int level_index, double x, double y)
@@ -203,7 +203,7 @@ QUuid Building::add_fiducial(int level_index, double x, double y)
   return levels[level_index].fiducials.rbegin()->uuid;
 }
 
-QUuid Building::add_correspondence_point(
+QUuid Building::add_feature(
   int level,
   int layer,
   double x,
@@ -211,10 +211,9 @@ QUuid Building::add_correspondence_point(
 {
   if (level >= static_cast<int>(levels.size()))
     return NULL;
-  if (layer >=
-    static_cast<int>(levels[level].correspondence_point_sets().size()))
+  if (layer >= static_cast<int>(levels[level].feature_sets().size()))
     return NULL;
-  return levels[level].add_correspondence_point(layer, x, y);
+  return levels[level].add_feature(layer, x, y);
 }
 
 int Building::find_nearest_vertex_index(
@@ -265,22 +264,18 @@ Building::NearestItem Building::nearest_items(
     }
   }
 
-  if (layer_index <
-    static_cast<int>(level.correspondence_point_sets().size()))
+  if (layer_index < static_cast<int>(level.feature_sets().size()))
   {
-    for (size_t ii = 0;
-      ii < level.correspondence_point_sets()[layer_index].size();
-      ++ii)
+    for (size_t ii = 0; ii < level.feature_sets()[layer_index].size(); ++ii)
     {
-      const CorrespondencePoint& cp =
-        level.correspondence_point_sets()[layer_index][ii];
-      const double dx = x - cp.x();
-      const double dy = y - cp.y();
+      const Feature& f = level.feature_sets()[layer_index][ii];
+      const double dx = x - f.x();
+      const double dy = y - f.y();
       const double dist = sqrt(dx*dx + dy*dy);
-      if (dist < ni.correspondence_point_dist)
+      if (dist < ni.feature_dist)
       {
-        ni.correspondence_point_dist = dist;
-        ni.correspondence_point_idx = ii;
+        ni.feature_dist = dist;
+        ni.feature_idx = ii;
       }
     }
   }

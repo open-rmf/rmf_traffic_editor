@@ -54,7 +54,7 @@ public:
   bool save();
   void clear();  // clear all internal data structures
 
-  bool export_correspondence_points(
+  bool export_features(
     int level_index,
     const std::string& dest_filename) const;
 
@@ -65,7 +65,7 @@ public:
 
   void add_vertex(int level_index, double x, double y);
   QUuid add_fiducial(int level_index, double x, double y);
-  QUuid add_correspondence_point(int level, int layer, double x, double y);
+  QUuid add_feature(int level, int layer, double x, double y);
 
   int find_nearest_vertex_index(
     int level_index, double x, double y, double& distance);
@@ -79,8 +79,8 @@ public:
     double vertex_dist = 1e100;
     int vertex_idx = -1;
 
-    double correspondence_point_dist = 1e100;
-    int correspondence_point_idx = -1;
+    double feature_dist = 1e100;
+    int feature_idx = -1;
 
     double fiducial_dist = 1e100;
     int fiducial_idx = -1;

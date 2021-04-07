@@ -15,30 +15,30 @@
  *
 */
 
-#include "add_correspondence_point.h"
+#include "add_feature.h"
 
-AddCorrespondencePointCommand::AddCorrespondencePointCommand(
+AddFeatureCommand::AddFeatureCommand(
   Building* building,
   int level,
   int layer,
   double x,
   double y)
-: building_(building),
-  level_(level),
-  layer_(layer),
-  x_(x),
-  y_(y)
+: _building(building),
+  _level(level),
+  _layer(layer),
+  _x(x),
+  _y(y)
 {
 }
 
-void AddCorrespondencePointCommand::undo()
+void AddFeatureCommand::undo()
 {
   int index_to_remove = -1;
-  auto& s = building_->levels[level_].correspondence_point_sets()[layer_];
+  auto& s = _building->levels[_level].feature_sets()[_layer];
 
   for (size_t ii = 0; ii < s.size(); ++ii)
   {
-    if (uuid_ == s[ii].uuid())
+    if (_uuid == s[ii].uuid())
       index_to_remove = ii;
   }
 
@@ -48,8 +48,8 @@ void AddCorrespondencePointCommand::undo()
   s.erase(s.begin() + index_to_remove);
 }
 
-void AddCorrespondencePointCommand::redo()
+void AddFeatureCommand::redo()
 {
-  uuid_ = building_->add_correspondence_point(level_, layer_, x_, y_);
+  _uuid = _building->add_feature(_level, _layer, _x, _y);
 }
 

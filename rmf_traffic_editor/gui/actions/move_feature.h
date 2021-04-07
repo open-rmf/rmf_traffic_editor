@@ -15,18 +15,18 @@
  *
 */
 
-#ifndef ACTIONS__MOVE_CORRESPONDENCE_POINT_H_
-#define ACTIONS__MOVE_CORRESPONDENCE_POINT_H_
+#ifndef ACTIONS__MOVE_FEATURE_H_
+#define ACTIONS__MOVE_FEATURE_H_
 
 #include <QUndoCommand>
 #include <QUuid>
 
 #include "building.h"
 
-class MoveCorrespondencePointCommand : public QUndoCommand
+class MoveFeatureCommand : public QUndoCommand
 {
 public:
-  MoveCorrespondencePointCommand(
+  MoveFeatureCommand(
     Building* building,
     int id,
     int level,
@@ -40,10 +40,10 @@ public:
   bool has_moved;
 
 private:
-  Building* building_;
-  int level_, layer_, point_id_;
-  double original_x_, original_y_;
-  double final_x_, final_y_;
+  Building* _building;
+  int _level, _layer, _point_id;
+  double _original_x, _original_y;
+  double _final_x, _final_y;
 };
 
-#endif  // ACTIONS__MOVE_CORRESPONDENCE_POING_H_
+#endif  // ACTIONS__MOVE_FEATURE_H_

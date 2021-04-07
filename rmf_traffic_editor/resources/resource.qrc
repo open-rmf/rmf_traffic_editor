@@ -2,8 +2,8 @@
 <RCC version="1.0">
 <qresource>
   <file>icons/battery.svg</file>
-  <file>icons/correspondence_point.svg</file>
   <file>icons/door.svg</file>
+  <file>icons/feature.svg</file>
   <file>icons/fiducial.svg</file>
   <file>icons/floor.svg</file>
   <file>icons/hole.svg</file>
