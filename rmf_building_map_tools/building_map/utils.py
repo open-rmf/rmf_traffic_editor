@@ -20,9 +20,9 @@ def door_material(options):
     material_ele = Element('material')
     # blue-green glass as a default, so it's easy to see
     ambient_ele = SubElement(material_ele, 'ambient')
-    ambient_ele.text = '{} {} {} {}'.format(120, 60, 0, 0.6)
+    ambient_ele.text = '{} {} {} {}'.format(0.5, 0.25, 0, 0.6)
     diffuse_ele = SubElement(material_ele, 'diffuse')
-    diffuse_ele.text = '{} {} {} {}'.format(120, 60, 0, 0.6)
+    diffuse_ele.text = '{} {} {} {}'.format(0.5, 0.25, 0, 0.6)
     if 'ignition' in options:
         pbr_ele = SubElement(material_ele, 'pbr')
         metal_ele = SubElement(pbr_ele, 'metal')

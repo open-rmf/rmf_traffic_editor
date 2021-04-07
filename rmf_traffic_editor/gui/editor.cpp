@@ -1176,8 +1176,11 @@ void Editor::delete_param_button_clicked()
 
 void Editor::populate_layers_table()
 {
-  if (building.levels.empty())
-    return;// let's not crash...
+  if (level_idx >= static_cast<int>(building.levels.size()))
+  {
+    layers_table->clearContents();
+    return; // let's not crash...
+  }
   const Level& level = building.levels[level_idx];
   layers_table->blockSignals(true);  // otherwise we get tons of callbacks
   layers_table->setRowCount(2 + level.layers.size());
@@ -1246,32 +1249,56 @@ void Editor::layers_table_set_row(
     });
   connect(
     button, &QAbstractButton::clicked,
-    [=]() { this->layer_edit_button_clicked(label.toStdString()); });
+    [=]() { this->layer_edit_button_clicked(row_idx); });
 }
 
-void Editor::layer_edit_button_clicked(const std::string& label)
+void Editor::layer_edit_button_clicked(const int row_idx)
 {
-  printf("clicked: [%s]\n", label.c_str());
-  if (building.levels.empty())
+  printf("layer row clicked: [%d]\n", row_idx);
+  if (level_idx >= static_cast<int>(building.levels.size()))
     return;
-  // find the index of this layer in the current level
+
   Level& level = building.levels[level_idx];
-  for (size_t i = 0; i < level.layers.size(); i++)
-  {
-    Layer& layer = level.layers[i];
-    if (label != layer.name)
-      continue;
-    LayerDialog* dialog = new LayerDialog(this, layer, true);
-    dialog->show();
-    dialog->raise();
-    dialog->activateWindow();
-    connect(
-      dialog,
-      &LayerDialog::redraw,
-      this,
-      &Editor::create_scene);
-    return;  // only create a dialog for the first name match
-  }
+
+  // make sure the requested layer exists
+  if (row_idx <= 0)
+    return;
+
+  if (row_idx - 1 >= static_cast<int>(level.layers.size()))
+    return;
+
+  Layer& layer = level.layers[row_idx - 1];
+  LayerDialog* dialog = new LayerDialog(this, layer, true);
+  dialog->show();
+  dialog->raise();
+  dialog->activateWindow();
+  connect(
+    dialog,
+    &LayerDialog::redraw,
+    [=]() { layer_table_update(row_idx); });
+}
+
+void Editor::layer_table_update(const int row_idx)
+{
+  // make sure the requested layer exists
+  if (row_idx <= 0)
+    return;
+
+  if (level_idx >= static_cast<int>(building.levels.size()))
+    return;
+
+  Level& level = building.levels[level_idx];
+
+  if (row_idx - 1 >= static_cast<int>(level.layers.size()))
+    return;
+
+  Layer& layer = level.layers[row_idx - 1];
+
+  layers_table_set_row(
+    row_idx,
+    QString::fromStdString(layer.name),
+    layer.visible);
+  create_scene();
 }
 
 void Editor::layer_add_button_clicked()
