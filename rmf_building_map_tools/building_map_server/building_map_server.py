@@ -89,12 +89,15 @@ class BuildingMapServer(Node):
 
             image_path = os.path.join(self.map_dir, image_filename)
 
-            print('opening: {}'.format(image_path))
-            with open(image_path, 'rb') as image_file:
-                image.data = image_file.read()
-            print('read {} byte image: {}'.format(
-                len(image.data), image_filename))
-            msg.images.append(image)
+            if os.path.exists(image_path):
+                print('opening: {}'.format(image_path))
+                with open(image_path, 'rb') as image_file:
+                    image.data = image_file.read()
+                print('read {} byte image: {}'.format(
+                    len(image.data), image_filename))
+                msg.images.append(image)
+            else:
+                print(f'WARNING: unable to open image: [{image_path}]')
 
         if (len(level.doors)):
             for door in level.doors:
