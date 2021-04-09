@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2020 Open Source Robotics Foundation
+ * Copyright (C) 2019-2021 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,11 +47,11 @@
 
 #include "add_param_dialog.h"
 #include "building_dialog.h"
-#include "building_level_dialog.h"
-#include "building_level_table.h"
 #include "editor.h"
 #include "layer_dialog.h"
 #include "layer_table.h"
+#include "level_dialog.h"
+#include "level_table.h"
 #include "lift_table.h"
 #include "map_view.h"
 #include "model_dialog.h"
@@ -93,7 +93,7 @@ Editor::Editor()
   layer_table = new LayerTable;
   connect(
     layer_table, &QTableWidget::cellClicked,
-    [=](int row, int /*col*/)
+    [&](int row, int /*col*/)
     {
       if (row < static_cast<int>(
         building.levels[level_idx].layers.size()))
@@ -103,10 +103,28 @@ Editor::Editor()
       }
     });
 
-  level_table = new BuildingLevelTable;
+  connect(
+    layer_table,
+    &LayerTable::redraw_scene,
+    this,
+    &Editor::layer_table_update_slot);
+
+  connect(
+    layer_table,
+    &LayerTable::add_button_clicked,
+    this,
+    &Editor::layer_add_button_clicked);
+
+  connect(
+    layer_table,
+    &LayerTable::edit_button_clicked,
+    this,
+    &Editor::layer_edit_button_clicked);
+
+  level_table = new LevelTable;
   connect(
     level_table, &QTableWidget::cellClicked,
-    [=](int row, int /*col*/)
+    [&](int row, int /*col*/)
     {
       if (row < static_cast<int>(building.levels.size()))
       {
@@ -149,7 +167,7 @@ Editor::Editor()
 
   connect(
     level_table,
-    &BuildingLevelTable::redraw_scene,
+    &LevelTable::redraw_scene,
     this,
     &Editor::level_table_update_slot);
 
@@ -168,7 +186,7 @@ Editor::Editor()
   connect(
     traffic_table,
     &QTableWidget::cellClicked,
-    [=](int row, int /*col*/)
+    [&](int row, int /*col*/)
     {
       rendering_options.active_traffic_map_idx = row;
       traffic_table->update(rendering_options);
@@ -508,7 +526,7 @@ bool Editor::load_building(const QString& filename)
 
   if (!building.levels.empty())
   {
-    const BuildingLevel& level = building.levels[level_idx];
+    const Level& level = building.levels[level_idx];
     scene->setSceneRect(
       QRectF(0, 0, level.drawing_width, level.drawing_height));
     previous_mouse_point = QPointF(level.drawing_width, level.drawing_height);
@@ -1194,7 +1212,7 @@ void Editor::layer_edit_button_clicked(const int row_idx)
   connect(
     dialog,
     &LayerDialog::redraw,
-    [=]() { layer_table->update(&level); });
+    [=]() { layer_table->update(building, level_idx); });
 }
 
 void Editor::sanity_check()
@@ -1227,32 +1245,15 @@ void Editor::layer_add_button_clicked()
   layer.load_image();
   level.layers.push_back(layer);
   level.layer_added();
-  populate_layers_table();
+  layer_table->update(building, level_idx);
   create_scene();
   sanity_check();
   setWindowModified(true);
 }
 
-#if 0
-void Editor::update_active_layer_checkboxes(int row_idx)
-{
-  for (size_t ii = 0;
-    ii < building.levels[level_idx].layers.size() + 1;
-    ++ii)
-  {
-    dynamic_cast<QCheckBox*>(
-      layer_table->cellWidget(ii, 1))->setChecked(false);
-  }
-  dynamic_cast<QCheckBox*>(
-    layers_table->cellWidget(row_idx, 1))->setChecked(true);
-  layer_idx = row_idx;
-  building.levels[level_idx].set_active_layer(layer_idx);
-}
-#endif
-
 void Editor::populate_property_editor(const Edge& edge)
 {
-  const BuildingLevel& level = building.levels[level_idx];
+  const Level& level = building.levels[level_idx];
   const double scale = level.drawing_meters_per_pixel;
   const Vertex& sv = level.vertices[edge.start_idx];
   const Vertex& ev = level.vertices[edge.end_idx];
@@ -1294,7 +1295,7 @@ void Editor::populate_property_editor(const Edge& edge)
 
 void Editor::populate_property_editor(const Vertex& vertex)
 {
-  const BuildingLevel& level = building.levels[level_idx];
+  const Level& level = building.levels[level_idx];
   const double scale = level.drawing_meters_per_pixel;
 
   property_editor->blockSignals(true);  // otherwise we get tons of callbacks
@@ -2449,12 +2450,7 @@ void Editor::update_tables()
   lift_table->update(building);
   traffic_table->update(rendering_options);
   crowd_sim_table->update();
-
-  BuildingLevel* active_level = nullptr;
-  if (level_idx < static_cast<int>(building.levels.size()))
-    active_level = &building.levels[level_idx];
-
-  layer_table->update(active_level);
+  layer_table->update(building, level_idx);
 }
 
 void Editor::clear_current_tool_buffer()
@@ -2479,5 +2475,11 @@ void Editor::clear_current_tool_buffer()
 void Editor::level_table_update_slot()
 {
   update_tables();
+  create_scene();
+}
+
+void Editor::layer_table_update_slot()
+{
+  layer_table->update(building, level_idx);
   create_scene();
 }

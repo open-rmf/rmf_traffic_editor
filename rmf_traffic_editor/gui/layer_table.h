@@ -20,8 +20,9 @@
 
 #include <QTableWidget>
 
+#include "building.h"
 #include "table_list.h"
-#include "building_level.h"
+#include "level.h"
 
 class LayerTable : public TableList
 {
@@ -31,15 +32,21 @@ public:
   LayerTable();
   ~LayerTable();
 
-  void update(BuildingLevel* level);
+  void update(Building& building, const int level_idx);
+
   void set_row(
-    BuildingLevel* level,
+    Level& level,
     const int row_idx,
     const QString& label,
     const bool checked);
 
+  void update_active_layer_checkboxes(Level& level, const int row_idx);
+
 signals:
   void redraw_scene();
+  void add_button_clicked();
+  void update_active_layer(const int layer_idx);
+  void edit_button_clicked(const int row_idx);
 };
 
 #endif

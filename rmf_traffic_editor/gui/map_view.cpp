@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Open Source Robotics Foundation
+ * Copyright (C) 2019-2021 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -101,7 +101,7 @@ void MapView::zoom_fit(const Building& building, int level_index)
 {
   if (building.levels.empty())
     return;
-  const BuildingLevel& level = building.levels[level_index];
+  const Level& level = building.levels[level_index];
   const int w = level.drawing_width;
   const int h = level.drawing_height;
   const double cx = w / 2;

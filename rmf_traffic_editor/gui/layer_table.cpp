@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2020 Open Source Robotics Foundation
+ * Copyright (C) 2019-2021 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,29 +30,31 @@ LayerTable::~LayerTable()
 {
 }
 
-void LayerTable::update(BuildingLevel* level)
+void LayerTable::update(Building& building, const int level_idx)
 {
-  if (!level)
+  if (level_idx >= static_cast<int>(building.levels.size()))
   {
-    layers_table->clearContents();
-    return; // let's not crash...
+    clearContents();
+    return;
   }
+
+  Level& level = building.levels[level_idx];
 
   blockSignals(true);  // otherwise we get tons of callbacks
-  setRowCount(2 + level->layers.size());
+  setRowCount(2 + level.layers.size());
 
-  layers_table_set_row(0, "Floorplan", true);
+  set_row(level, 0, "Floorplan", true);
 
-  for (size_t i = 0; i < level->layers.size(); i++)
+  for (size_t i = 0; i < level.layers.size(); i++)
   {
-    layers_table_set_row(
+    set_row(
       level,
       i + 1,
-      QString::fromStdString(level->layers[i].name),
-      level->layers[i].visible);
+      QString::fromStdString(level.layers[i].name),
+      level.layers[i].visible);
   }
 
-  const int last_row_idx = static_cast<int>(level->layers.size()) + 1;
+  const int last_row_idx = static_cast<int>(level.layers.size()) + 1;
   // we'll use the last row for the "Add" button
   setCellWidget(last_row_idx, 0, nullptr);
   setCellWidget(last_row_idx, 1, nullptr);
@@ -61,24 +63,18 @@ void LayerTable::update(BuildingLevel* level)
   setCellWidget(last_row_idx, 3, add_button);
   connect(
     add_button, &QAbstractButton::clicked,
-    [=]() { this->layer_add_button_clicked(); });
+    [=]() { emit add_button_clicked(); });
 
   blockSignals(false);  // re-enable callbacks
   //sanity_check_layer_table_names(row_idx);
 }
 
 void LayerTable::set_row(
-  BuildingLevel* level,
+  Level& level,
   const int row_idx,
   const QString& label,
   const bool checked)
 {
-  if (!level)
-  {
-    layers_table->clearContents();
-    return; // let's not crash...
-  }
-
   setCellWidget(row_idx, 0, new QLabel(label));
 
   QCheckBox* active_checkbox = new QCheckBox();
@@ -93,23 +89,26 @@ void LayerTable::set_row(
   setCellWidget(row_idx, 3, button);
 
   connect(
-    active_checkbox, &QAbstractButton::clicked,
-    [=](bool)
+    active_checkbox,
+    &QAbstractButton::clicked,
+    [&](bool)
     {
-      update_active_layer_checkboxes(row_idx);
-      create_scene();
+      update_active_layer_checkboxes(level, row_idx);
+      emit redraw_scene();
     });
+
   connect(
-    visible_checkbox, &QAbstractButton::clicked,
-    [=](bool box_checked)
+    visible_checkbox,
+    &QAbstractButton::clicked,
+    [&](bool box_checked)
     {
       if (row_idx == 0)
       {
-        level->set_drawing_visible(box_checked);
+        level.set_drawing_visible(box_checked);
       }
       else if (row_idx > 0)
       {
-        level->layers[row_idx-1].visible = box_checked;
+        level.layers[row_idx-1].visible = box_checked;
       }
       emit redraw_scene();
     });
@@ -117,4 +116,17 @@ void LayerTable::set_row(
   connect(
     button, &QAbstractButton::clicked,
     [=]() { emit edit_button_clicked(row_idx); });
+}
+
+void LayerTable::update_active_layer_checkboxes(
+  Level& level,
+  const int row_idx)
+{
+  for (size_t i = 0; i < level.layers.size() + 1; i++)
+    dynamic_cast<QCheckBox*>(cellWidget(i, 1))->setChecked(false);
+
+  dynamic_cast<QCheckBox*>(cellWidget(row_idx, 1))->setChecked(true);
+  emit update_active_layer(row_idx);
+
+  level.set_active_layer(row_idx);
 }

@@ -117,7 +117,7 @@ bool Building::load(const string& _filename)
   const YAML::Node yl = y["levels"];
   for (YAML::const_iterator it = yl.begin(); it != yl.end(); ++it)
   {
-    BuildingLevel level;
+    Level level;
     level.from_yaml(it->first.as<string>(), it->second);
     levels.push_back(level);
   }
@@ -249,7 +249,7 @@ Building::NearestItem Building::nearest_items(
   NearestItem ni;
   if (level_index >= static_cast<int>(levels.size()))
     return ni;
-  const BuildingLevel& level = levels[level_index];
+  const Level& level = levels[level_index];
 
   for (size_t i = 0; i < level.vertices.size(); i++)
   {
@@ -467,7 +467,7 @@ void Building::clear()
   clear_transform_cache();
 }
 
-void Building::add_level(const BuildingLevel& new_level)
+void Building::add_level(const Level& new_level)
 {
   // make sure we don't have this level already
   for (const auto& level : levels)
@@ -480,7 +480,7 @@ void Building::add_level(const BuildingLevel& new_level)
 
 void Building::draw_lifts(QGraphicsScene* scene, const int level_idx)
 {
-  const BuildingLevel& level = levels[level_idx];
+  const Level& level = levels[level_idx];
   for (const auto& lift : lifts)
   {
     // find the level index referenced by the lift
@@ -580,8 +580,8 @@ Building::Transform Building::compute_transform(
   }
 
   // this internal function assumes that bounds checking has already happened
-  const BuildingLevel& from_level = levels[from_level_idx];
-  const BuildingLevel& to_level = levels[to_level_idx];
+  const Level& from_level = levels[from_level_idx];
+  const Level& to_level = levels[to_level_idx];
 
   // assemble a vector of fudicials in common to these levels
   vector<std::pair<Fiducial, Fiducial>> fiducials;
@@ -794,7 +794,7 @@ bool Building::can_delete_current_selection(const int level_idx)
 
 void Building::get_selected_items(
   const int level_idx,
-  std::vector<BuildingLevel::SelectedItem>& selected)
+  std::vector<Level::SelectedItem>& selected)
 {
   if (level_idx >= static_cast<int>(levels.size()))
     return;

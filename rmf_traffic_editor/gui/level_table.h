@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2020 Open Source Robotics Foundation
+ * Copyright (C) 2019-2021 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,21 +15,21 @@
  *
 */
 
-#ifndef BUILDING_LEVEL_TABLE_H
-#define BUILDING_LEVEL_TABLE_H
+#ifndef LEVEL_TABLE_H
+#define LEVEL_TABLE_H
 
 #include <QTableWidget>
 
 #include "table_list.h"
 #include "building.h"
 
-class BuildingLevelTable : public TableList
+class LevelTable : public TableList
 {
   Q_OBJECT
 
 public:
-  BuildingLevelTable();
-  ~BuildingLevelTable();
+  LevelTable();
+  ~LevelTable();
 
   void update(Building& building);
 

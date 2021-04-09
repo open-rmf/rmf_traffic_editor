@@ -49,8 +49,6 @@ set(gui_sources
   gui/add_param_dialog.cpp
   gui/building.cpp
   gui/building_dialog.cpp
-  gui/building_level_dialog.cpp
-  gui/building_level_table.cpp
   gui/feature.cpp
   gui/edge.cpp
   gui/editor.cpp
@@ -58,7 +56,10 @@ set(gui_sources
   gui/fiducial.cpp
   gui/layer.cpp
   gui/layer_dialog.cpp
+  gui/layer_table.cpp
   gui/level.cpp
+  gui/level_dialog.cpp
+  gui/level_table.cpp
   gui/lift.cpp
   gui/lift_dialog.cpp
   gui/lift_door.cpp

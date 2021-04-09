@@ -43,8 +43,9 @@
 
 #include "crowd_sim/crowd_sim_editor_table.h"
 
-class BuildingLevelTable;
+class BuildingTable;
 class LayerTable;
+class LevelTable;
 class MapView;
 class Level;
 class LiftTable;
@@ -145,6 +146,9 @@ private:
   void level_edit();
   void level_table_update_slot();
 
+  void layer_table_update(const int row_idx);
+  void layer_table_update_slot();
+
   void zoom_reset();
   void view_models();
 
@@ -194,10 +198,8 @@ private:
     const bool checked);
   void layer_edit_button_clicked(const int row_idx);
   void layer_add_button_clicked();
-  void update_active_layer_checkboxes(int row_idx);
-  void layer_table_update(const int row_idx);
 
-  BuildingLevelTable* level_table = nullptr;
+  LevelTable* level_table = nullptr;
   LayerTable* layer_table = nullptr;
   LiftTable* lift_table = nullptr;
   TrafficTable* traffic_table = nullptr;
