@@ -29,7 +29,7 @@ class QGraphicsScene;
 #include <QGraphicsLineItem>
 #include <QPointF>
 
-#include "building_level.h"
+#include "level.h"
 #include "lift.h"
 #include <traffic_editor/crowd_sim/crowd_sim_impl.h>
 #include "rendering_options.h"
@@ -42,7 +42,7 @@ public:
 
   std::string name;
   std::string reference_level_name;
-  std::vector<BuildingLevel> levels;
+  std::vector<Level> levels;
   std::vector<Lift> lifts;
 
   mutable crowd_sim::CrowdSimImplPtr crowd_sim_impl;
@@ -61,7 +61,7 @@ public:
   void clear_selection(const int level_idx);
   bool can_delete_current_selection(const int level_idx);
 
-  void add_level(const BuildingLevel& level);
+  void add_level(const Level& level);
 
   void add_vertex(int level_index, double x, double y);
   QUuid add_fiducial(int level_index, double x, double y);
@@ -182,7 +182,7 @@ public:
   void rotate_all_models(const double rotation);
 
   void get_selected_items(const int level_idx,
-    std::vector<BuildingLevel::SelectedItem>& selected);
+    std::vector<Level::SelectedItem>& selected);
 
   void draw(
     QGraphicsScene* scene,

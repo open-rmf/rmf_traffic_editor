@@ -30,7 +30,7 @@ class QGraphicsView;
 #include <vector>
 #include <yaml-cpp/yaml.h>
 #include <cfloat>
-#include "building_level.h"
+#include "level.h"
 #include "lift_door.h"
 
 
@@ -82,7 +82,7 @@ public:
 
   YAML::Node to_yaml() const;
   void from_yaml(const std::string& _name, const YAML::Node& data,
-    const std::vector<BuildingLevel>& levels);
+    const std::vector<Level>& levels);
 
   void draw(
     QGraphicsScene* scene,
@@ -97,7 +97,7 @@ public:
   bool level_door_opens(
     const std::string& level_name,
     const std::string& door_name,
-    const std::vector<BuildingLevel>& levels) const;
+    const std::vector<Level>& levels) const;
 };
 
 #endif

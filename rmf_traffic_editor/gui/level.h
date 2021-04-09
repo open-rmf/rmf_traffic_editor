@@ -49,24 +49,16 @@ public:
   std::vector<Polygon> polygons;
 
   std::vector<Layer> layers;
-  virtual void layer_added() = 0;
   bool are_layer_names_unique();
 
   // temporary, just for debugging polygon edge projection...
   double polygon_edge_proj_x = 0.0;
   double polygon_edge_proj_y = 0.0;
 
-  virtual bool from_yaml(const std::string& name, const YAML::Node& data) = 0;
-  virtual YAML::Node to_yaml() const = 0;
-
-  virtual bool delete_selected() = 0;
-
   Polygon::EdgeDragPolygon polygon_edge_drag_press(
     const Polygon* polygon,
     const double x,
     const double y);
-
-  virtual void clear_selection() = 0;
 
   void add_vertex(const double x, const double y);
   size_t get_vertex_by_id(QUuid vertex_id);

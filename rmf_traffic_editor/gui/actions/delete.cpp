@@ -79,7 +79,7 @@ void DeleteCommand::undo()
 
 void DeleteCommand::redo()
 {
-  std::vector<BuildingLevel::SelectedItem> selected_items;
+  std::vector<Level::SelectedItem> selected_items;
   _building->get_selected_items(_level_idx, selected_items);
 
   for (auto& item: selected_items)

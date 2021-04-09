@@ -49,7 +49,6 @@ set(gui_sources
   gui/add_param_dialog.cpp
   gui/building.cpp
   gui/building_dialog.cpp
-  gui/building_level.cpp
   gui/building_level_dialog.cpp
   gui/building_level_table.cpp
   gui/feature.cpp

@@ -40,7 +40,7 @@ Level::~Level()
 {
 }
 
-bool BuildingLevel::from_yaml(
+bool Level::from_yaml(
   const std::string& _name,
   const YAML::Node& _data)
 {
@@ -195,7 +195,7 @@ bool BuildingLevel::from_yaml(
   return true;
 }
 
-bool BuildingLevel::load_drawing()
+bool Level::load_drawing()
 {
   if (drawing_filename.empty())
     return true;// nothing to load
@@ -223,7 +223,7 @@ bool BuildingLevel::load_drawing()
   return true;
 }
 
-YAML::Node BuildingLevel::to_yaml() const
+YAML::Node Level::to_yaml() const
 {
   YAML::Node y;
   if (!drawing_filename.empty())
@@ -314,7 +314,7 @@ YAML::Node BuildingLevel::to_yaml() const
   return y;
 }
 
-bool BuildingLevel::can_delete_current_selection()
+bool Level::can_delete_current_selection()
 {
   int selected_vertex_idx = -1;
   for (int i = 0; i < static_cast<int>(vertices.size()); i++)
@@ -349,7 +349,7 @@ bool BuildingLevel::can_delete_current_selection()
   return true;
 }
 
-bool BuildingLevel::delete_selected()
+bool Level::delete_selected()
 {
   edges.erase(
     std::remove_if(
@@ -439,14 +439,14 @@ bool BuildingLevel::delete_selected()
   return true;
 }
 
-void BuildingLevel::get_selected_items(
-  std::vector<BuildingLevel::SelectedItem>& items)
+void Level::get_selected_items(
+  std::vector<Level::SelectedItem>& items)
 {
   for (size_t i = 0; i < edges.size(); i++)
   {
     if (edges[i].selected)
     {
-      BuildingLevel::SelectedItem item;
+      Level::SelectedItem item;
       item.edge_idx = i;
       items.push_back(item);
     }
@@ -456,7 +456,7 @@ void BuildingLevel::get_selected_items(
   {
     if (models[i].selected)
     {
-      BuildingLevel::SelectedItem item;
+      Level::SelectedItem item;
       item.model_idx = i;
       items.push_back(item);
     }
@@ -466,7 +466,7 @@ void BuildingLevel::get_selected_items(
   {
     if (vertices[i].selected)
     {
-      BuildingLevel::SelectedItem item;
+      Level::SelectedItem item;
       item.vertex_idx = i;
       items.push_back(item);
     }
@@ -476,7 +476,7 @@ void BuildingLevel::get_selected_items(
   {
     if (fiducials[i].selected)
     {
-      BuildingLevel::SelectedItem item;
+      Level::SelectedItem item;
       item.fiducial_idx = i;
       items.push_back(item);
     }
@@ -486,14 +486,14 @@ void BuildingLevel::get_selected_items(
   {
     if (polygons[i].selected)
     {
-      BuildingLevel::SelectedItem item;
+      Level::SelectedItem item;
       item.polygon_idx = i;
       items.push_back(item);
     }
   }
 }
 
-void BuildingLevel::calculate_scale()
+void Level::calculate_scale()
 {
   // for now, just calculate the mean of the scale estimates
   double scale_sum = 0.0;
@@ -531,7 +531,7 @@ void BuildingLevel::calculate_scale()
 }
 
 // todo: migrate this to the TrafficMap class eventually
-void BuildingLevel::draw_lane(
+void Level::draw_lane(
   QGraphicsScene* scene,
   const Edge& edge,
   const RenderingOptions& opts) const
@@ -681,7 +681,7 @@ void BuildingLevel::draw_lane(
   }
 }
 
-void BuildingLevel::draw_wall(QGraphicsScene* scene, const Edge& edge) const
+void Level::draw_wall(QGraphicsScene* scene, const Edge& edge) const
 {
   const auto& v_start = vertices[edge.start_idx];
   const auto& v_end = vertices[edge.end_idx];
@@ -698,7 +698,7 @@ void BuildingLevel::draw_wall(QGraphicsScene* scene, const Edge& edge) const
       Qt::SolidLine, Qt::RoundCap));
 }
 
-void BuildingLevel::draw_meas(QGraphicsScene* scene, const Edge& edge) const
+void Level::draw_meas(QGraphicsScene* scene, const Edge& edge) const
 {
   const auto& v_start = vertices[edge.start_idx];
   const auto& v_end = vertices[edge.end_idx];
@@ -713,7 +713,7 @@ void BuildingLevel::draw_meas(QGraphicsScene* scene, const Edge& edge) const
       Qt::SolidLine, Qt::RoundCap));
 }
 
-void BuildingLevel::draw_door(QGraphicsScene* scene, const Edge& edge) const
+void Level::draw_door(QGraphicsScene* scene, const Edge& edge) const
 {
   const auto& v_start = vertices[edge.start_idx];
   const auto& v_end = vertices[edge.end_idx];
@@ -826,7 +826,7 @@ void BuildingLevel::draw_door(QGraphicsScene* scene, const Edge& edge) const
       Qt::SolidLine, Qt::RoundCap));
 }
 
-void BuildingLevel::add_door_slide_path(
+void Level::add_door_slide_path(
   QPainterPath& path,
   double hinge_x,
   double hinge_y,
@@ -868,7 +868,7 @@ void BuildingLevel::add_door_slide_path(
   path.lineTo(p1);
 }
 
-void BuildingLevel::add_door_swing_path(
+void Level::add_door_swing_path(
   QPainterPath& path,
   double hinge_x,
   double hinge_y,
@@ -896,7 +896,7 @@ void BuildingLevel::add_door_swing_path(
   path.lineTo(hinge_x, hinge_y);
 }
 
-void BuildingLevel::draw_polygon(
+void Level::draw_polygon(
   QGraphicsScene* scene,
   const QBrush& brush,
   const Polygon& polygon) const
@@ -916,7 +916,7 @@ void BuildingLevel::draw_polygon(
     polygon.selected ? selected_brush : brush);
 }
 
-void BuildingLevel::draw_polygons(QGraphicsScene* scene) const
+void Level::draw_polygons(QGraphicsScene* scene) const
 {
   const QBrush floor_brush(QColor::fromRgbF(0.9, 0.9, 0.9, 0.8));
   const QBrush hole_brush(QColor::fromRgbF(0.3, 0.3, 0.3, 0.5));
@@ -953,7 +953,7 @@ void BuildingLevel::draw_polygons(QGraphicsScene* scene) const
 #endif
 }
 
-void BuildingLevel::clear_selection()
+void Level::clear_selection()
 {
   for (auto& vertex : vertices)
     vertex.selected = false;
@@ -971,7 +971,7 @@ void BuildingLevel::clear_selection()
     fiducial.selected = false;
 }
 
-void BuildingLevel::draw(
+void Level::draw(
   QGraphicsScene* scene,
   vector<EditorModel>& editor_models,
   const RenderingOptions& rendering_options)
@@ -1051,13 +1051,13 @@ void BuildingLevel::draw(
     f.draw(scene, drawing_meters_per_pixel);
 }
 
-void BuildingLevel::clear_scene()
+void Level::clear_scene()
 {
   for (auto& model : models)
     model.clear_scene();
 }
 
-QUuid BuildingLevel::add_feature(int layer, double x, double y)
+QUuid Level::add_feature(int layer, double x, double y)
 {
   auto id = _next_cp_ids[layer];
   _next_cp_ids[layer] += 1;
@@ -1065,7 +1065,7 @@ QUuid BuildingLevel::add_feature(int layer, double x, double y)
   return _feature_sets[layer].rbegin()->uuid();
 }
 
-bool BuildingLevel::export_features(const std::string& filename) const
+bool Level::export_features(const std::string& filename) const
 {
   YAML::Node level_features;
 
@@ -1179,7 +1179,7 @@ bool BuildingLevel::export_features(const std::string& filename) const
   return true;
 }
 
-void BuildingLevel::layer_added()
+void Level::layer_added()
 {
   _feature_sets.push_back(std::vector<Feature>());
   _next_cp_ids.push_back(0);
