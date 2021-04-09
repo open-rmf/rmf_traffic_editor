@@ -61,6 +61,7 @@ public:
 
   std::vector<Model> models;
   std::vector<Fiducial> fiducials;
+  std::vector<Feature> floorplan_features;
 
   QPixmap floorplan_pixmap;
 

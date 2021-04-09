@@ -91,6 +91,17 @@ bool BuildingLevel::from_yaml(
     }
   }
 
+  if (_data["features"] && _data["features"].IsSequence())
+  {
+    const YAML::Node& fy = _data["features"];
+    for (YAML::const_iterator it = fy.begin(); it != fy.end(); ++it)
+    {
+      Feature f;
+      f.from_yaml(*it);
+      floorplan_features.push_back(f);
+    }
+  }
+
   if (_data["flattened_x_offset"])
     flattened_x_offset = _data["flattened_x_offset"].as<double>();
   if (_data["flattened_y_offset"])
@@ -240,6 +251,9 @@ YAML::Node BuildingLevel::to_yaml() const
       set.push_back(feature.to_yaml());
     y["feature_sets"].push_back(set);
   }
+
+  for (const auto& feature : floorplan_features)
+    y["features"].push_back(feature.to_yaml());
 
   for (const auto& f : fiducials)
     y["fiducials"].push_back(f.to_yaml());

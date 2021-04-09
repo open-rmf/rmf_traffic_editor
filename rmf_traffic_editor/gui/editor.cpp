@@ -51,6 +51,7 @@
 #include "building_level_table.h"
 #include "editor.h"
 #include "layer_dialog.h"
+#include "layer_table.h"
 #include "lift_table.h"
 #include "map_view.h"
 #include "model_dialog.h"
@@ -86,11 +87,12 @@ Editor::Editor()
   QVBoxLayout* left_layout = new QVBoxLayout;
   left_layout->addWidget(map_view);
 
-  layers_table = new TableList(4);  // todo: replace with specific subclass?
-  QStringList header_labels = {"Name", "Active layer", "Visible", "Edit"};
-  layers_table->setHorizontalHeaderLabels(header_labels);
+  //layers_table = new TableList(4);  // todo: replace with specific subclass?
+  //QStringList header_labels = {"Name", "Active layer", "Visible", "Edit"};
+  //layers_table->setHorizontalHeaderLabels(header_labels);
+  layer_table = new LayerTable;
   connect(
-    layers_table, &QTableWidget::cellClicked,
+    layer_table, &QTableWidget::cellClicked,
     [=](int row, int /*col*/)
     {
       if (row < static_cast<int>(
@@ -186,7 +188,7 @@ Editor::Editor()
   right_tab_widget = new QTabWidget;
   right_tab_widget->setStyleSheet("QTabBar::tab { color: black; }");
   right_tab_widget->addTab(level_table, "levels");
-  right_tab_widget->addTab(layers_table, "layers");
+  right_tab_widget->addTab(layer_table, "layers");
   right_tab_widget->addTab(lift_table, "lifts");
   right_tab_widget->addTab(traffic_table, "traffic");
   right_tab_widget->addTab(crowd_sim_table, "crowd_sim");
@@ -1169,84 +1171,6 @@ void Editor::delete_param_button_clicked()
     "TODO: something...sorry. For now, hand-edit the YAML.");
 }
 
-void Editor::populate_layers_table()
-{
-  if (level_idx >= static_cast<int>(building.levels.size()))
-  {
-    layers_table->clearContents();
-    return; // let's not crash...
-  }
-  const Level& level = building.levels[level_idx];
-  layers_table->blockSignals(true);  // otherwise we get tons of callbacks
-  layers_table->setRowCount(2 + level.layers.size());
-
-  layers_table_set_row(0, "Floorplan", true);
-
-  for (size_t i = 0; i < level.layers.size(); i++)
-  {
-    layers_table_set_row(
-      i + 1,
-      QString::fromStdString(level.layers[i].name),
-      level.layers[i].visible);
-  }
-
-  const int last_row_idx = static_cast<int>(level.layers.size()) + 1;
-  // we'll use the last row for the "Add" button
-  layers_table->setCellWidget(last_row_idx, 0, nullptr);
-  layers_table->setCellWidget(last_row_idx, 1, nullptr);
-  layers_table->setCellWidget(last_row_idx, 2, nullptr);
-  QPushButton* add_button = new QPushButton("Add...", this);
-  layers_table->setCellWidget(last_row_idx, 3, add_button);
-  connect(
-    add_button, &QAbstractButton::clicked,
-    [=]() { this->layer_add_button_clicked(); });
-
-  layers_table->blockSignals(false);  // re-enable callbacks
-}
-
-void Editor::layers_table_set_row(
-  const int row_idx,
-  const QString& label,
-  const bool checked)
-{
-  layers_table->setCellWidget(row_idx, 0, new QLabel(label));
-  QCheckBox* active_checkbox = new QCheckBox();
-  active_checkbox->setChecked(false);
-  layers_table->setCellWidget(row_idx, 1, active_checkbox);
-  QCheckBox* visible_checkbox = new QCheckBox();
-  visible_checkbox->setChecked(checked);
-  layers_table->setCellWidget(row_idx, 2, visible_checkbox);
-
-  QPushButton* button = new QPushButton("Edit...", this);
-  layers_table->setCellWidget(row_idx, 3, button);
-
-  connect(
-    active_checkbox, &QAbstractButton::clicked,
-    [=](bool)
-    {
-      update_active_layer_checkboxes(row_idx);
-      create_scene();
-    });
-  connect(
-    visible_checkbox, &QAbstractButton::clicked,
-    [=](bool box_checked)
-    {
-      auto& level = building.levels[level_idx];
-      if (row_idx == 0)
-      {
-        level.set_drawing_visible(box_checked);
-      }
-      else if (row_idx > 0)
-      {
-        level.layers[row_idx-1].visible = box_checked;
-      }
-      create_scene();
-    });
-  connect(
-    button, &QAbstractButton::clicked,
-    [=]() { this->layer_edit_button_clicked(row_idx); });
-}
-
 void Editor::layer_edit_button_clicked(const int row_idx)
 {
   printf("layer row clicked: [%d]\n", row_idx);
@@ -1270,56 +1194,15 @@ void Editor::layer_edit_button_clicked(const int row_idx)
   connect(
     dialog,
     &LayerDialog::redraw,
-    [=]() { layer_table_update(row_idx); });
+    [=]() { layer_table->update(&level); });
 }
 
-void Editor::layer_table_update(const int row_idx)
+void Editor::sanity_check()
 {
-  // make sure the requested layer exists
-  if (row_idx <= 0)
-    return;
-
-  if (level_idx >= static_cast<int>(building.levels.size()))
-    return;
-
-  Level& level = building.levels[level_idx];
-
-  if (row_idx - 1 >= static_cast<int>(level.layers.size()))
-    return;
-
-  Layer& layer = level.layers[row_idx - 1];
-
-  layers_table_set_row(
-    row_idx,
-    QString::fromStdString(layer.name),
-    layer.visible);
-  create_scene();
-
-  sanity_check_layer_table_names(row_idx);
-}
-
-void Editor::sanity_check_layer_table_names(const int row_idx)
-{
-  // make sure the requested layer exists
-  if (row_idx <= 0)
-    return;
-
-  if (level_idx >= static_cast<int>(building.levels.size()))
-    return;
-
-  Level& level = building.levels[level_idx];
-
-  if (row_idx - 1 >= static_cast<int>(level.layers.size()))
-    return;
-
-  Layer& layer = level.layers[row_idx - 1];
-
-  // if we have duplicate layer names, pop up an alert box
-  for (int i = 0; i < static_cast<int>(level.layers.size()); i++)
+  // do some checks on the building and pop up errors if we find them
+  for (size_t i = 0; i < building.levels.size(); i++)
   {
-    if (i + 1 == row_idx)
-      continue;  // don't check if we're a duplicate of ourself
-    if (layer.name == level.layers[i].name)
+    if (!building.levels[i].are_layer_names_unique())
     {
       QMessageBox::critical(
         this,
@@ -1346,10 +1229,11 @@ void Editor::layer_add_button_clicked()
   level.layer_added();
   populate_layers_table();
   create_scene();
-  sanity_check_layer_table_names(level.layers.size());
+  sanity_check();
   setWindowModified(true);
 }
 
+#if 0
 void Editor::update_active_layer_checkboxes(int row_idx)
 {
   for (size_t ii = 0;
@@ -1357,13 +1241,14 @@ void Editor::update_active_layer_checkboxes(int row_idx)
     ++ii)
   {
     dynamic_cast<QCheckBox*>(
-      layers_table->cellWidget(ii, 1))->setChecked(false);
+      layer_table->cellWidget(ii, 1))->setChecked(false);
   }
   dynamic_cast<QCheckBox*>(
     layers_table->cellWidget(row_idx, 1))->setChecked(true);
   layer_idx = row_idx;
   building.levels[level_idx].set_active_layer(layer_idx);
 }
+#endif
 
 void Editor::populate_property_editor(const Edge& edge)
 {
@@ -2560,11 +2445,16 @@ void Editor::set_mode(const EditorModeId _mode, const QString& mode_string)
 
 void Editor::update_tables()
 {
-  populate_layers_table();
   level_table->update(building);
   lift_table->update(building);
   traffic_table->update(rendering_options);
   crowd_sim_table->update();
+
+  BuildingLevel* active_level = nullptr;
+  if (level_idx < static_cast<int>(building.levels.size()))
+    active_level = &building.levels[level_idx];
+
+  layer_table->update(active_level);
 }
 
 void Editor::clear_current_tool_buffer()

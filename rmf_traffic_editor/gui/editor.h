@@ -44,17 +44,12 @@
 #include "crowd_sim/crowd_sim_editor_table.h"
 
 class BuildingLevelTable;
+class LayerTable;
 class MapView;
 class Level;
 class LiftTable;
 class TrafficTable;
 class CrowdSimTable;
-
-#ifdef HAS_OPENCV
-namespace cv {
-class VideoWriter;
-}
-#endif
 
 QT_BEGIN_NAMESPACE
 class QAction;
@@ -191,7 +186,7 @@ private:
   QTableWidget* create_tabbed_table();
   void update_tables();
 
-  QTableWidget* layers_table = nullptr;
+  //QTableWidget* layers_table = nullptr;
   void populate_layers_table();
   void layers_table_set_row(
     const int row_idx,
@@ -203,6 +198,7 @@ private:
   void layer_table_update(const int row_idx);
 
   BuildingLevelTable* level_table = nullptr;
+  LayerTable* layer_table = nullptr;
   LiftTable* lift_table = nullptr;
   TrafficTable* traffic_table = nullptr;
   CrowdSimEditorTable* crowd_sim_table = nullptr;
@@ -348,7 +344,7 @@ private:
   MoveVertexCommand* latest_move_vertex = nullptr;
   RotateModelCommand* latest_rotate_model = nullptr;
 
-  void sanity_check_layer_table_names(const int row_idx);
+  void sanity_check();
 };
 
 #endif

@@ -60,37 +60,39 @@ void Feature::draw(
   QGraphicsScene* scene,
   double meters_per_pixel) const
 {
+  // todo: choose color based on layer color
   const double a = 0.5;
   const QColor color = QColor::fromRgbF(0.0, 0.0, 1.0, a);
   const QColor selected_color = QColor::fromRgbF(1.0, 0.0, 0.0, a);
 
   QPen pen(_selected ? selected_color : color);
-  pen.setWidth(0.2 / meters_per_pixel);
-  const double radius = 0.5 / meters_per_pixel;
+  pen.setWidth(0.05 / meters_per_pixel);
+  const double radius = 0.25 / meters_per_pixel;
 
-  scene->addLine(
-    _x - 2 * radius,
-    _y - 2 * radius,
-    _x + 2 * radius,
-    _y + 2 * radius,
+  QGraphicsLineItem *vertical_line = scene->addLine(
+    _x,
+    _y - radius,
+    _x,
+    _y + radius,
     pen);
+  vertical_line->setZValue(20.0);
 
-  scene->addLine(
-    _x - 2 * radius,
-    _y + 2 * radius,
-    _x + 2 * radius,
-    _y - 2 * radius,
+  QGraphicsLineItem *horizontal_line = scene->addLine(
+    _x - radius,
+    _y,
+    _x + radius,
+    _y,
     pen);
+  horizontal_line->setZValue(20.0);
 
-  // render the feature as a small hollow rectangle
-  QGraphicsRectItem* rect_item = scene->addRect(
-    x - 2.0 * radius,
-    y - 2.0 * radius,
-    2 * 2.0 * radius,
-    2 * 2.0 * radius,
-    annotation_pen,
+  QGraphicsEllipseItem* circle = scene->addEllipse(
+    _x - radius,
+    _y - radius,
+    2 * radius,
+    2 * radius,
+    pen,
     QBrush());  // default brush is transparent
-  rect_item->setZValue(20.0);
+  circle->setZValue(20.0);
 
   QGraphicsSimpleTextItem* item = scene->addSimpleText(QString::number(_id));
   item->setBrush(QColor(0, 0, 255, 255));

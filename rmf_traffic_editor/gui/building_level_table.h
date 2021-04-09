@@ -35,6 +35,7 @@ public:
 
 signals:
   void redraw_scene();
+  void edit_button_clicked(const int row_idx);
 };
 
 #endif
