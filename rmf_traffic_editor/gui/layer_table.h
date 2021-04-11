@@ -38,9 +38,12 @@ public:
     Level& level,
     const int row_idx,
     const QString& label,
+    const QColor& color,
     const bool checked);
 
   void update_active_layer_checkboxes(Level& level, const int row_idx);
+
+  QColor row_color(const int row_idx);
 
 signals:
   void redraw_scene();

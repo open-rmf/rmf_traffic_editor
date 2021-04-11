@@ -22,7 +22,7 @@ LayerTable::LayerTable()
 : TableList(4)
 {
   const QStringList labels =
-  { "Name", "Active?", "Visible", "Edit"};
+    { "Name", "Color", "Visible", "Edit"};
   setHorizontalHeaderLabels(labels);
 }
 
@@ -43,7 +43,7 @@ void LayerTable::update(Building& building, const int level_idx)
   blockSignals(true);  // otherwise we get tons of callbacks
   setRowCount(2 + level.layers.size());
 
-  set_row(level, 0, "Floorplan", true);
+  set_row(level, 0, "Floorplan", QColor::fromRgbF(0, 0, 0, 1), true);
 
   for (size_t i = 0; i < level.layers.size(); i++)
   {
@@ -51,6 +51,7 @@ void LayerTable::update(Building& building, const int level_idx)
       level,
       i + 1,
       QString::fromStdString(level.layers[i].name),
+      row_color(i + 1),
       level.layers[i].visible);
   }
 
@@ -62,24 +63,26 @@ void LayerTable::update(Building& building, const int level_idx)
   QPushButton* add_button = new QPushButton("Add...", this);
   setCellWidget(last_row_idx, 3, add_button);
   connect(
-    add_button, &QAbstractButton::clicked,
+    add_button,
+    &QAbstractButton::clicked,
     [=]() { emit add_button_clicked(); });
 
   blockSignals(false);  // re-enable callbacks
-  //sanity_check_layer_table_names(row_idx);
 }
 
 void LayerTable::set_row(
   Level& level,
   const int row_idx,
   const QString& label,
+  const QColor& color,
   const bool checked)
 {
-  setCellWidget(row_idx, 0, new QLabel(label));
+  QTableWidgetItem* name_item = new QTableWidgetItem(label);
+  setItem(row_idx, 0, name_item);
 
-  QCheckBox* active_checkbox = new QCheckBox();
-  active_checkbox->setChecked(false);
-  setCellWidget(row_idx, 1, active_checkbox);
+  QTableWidgetItem* color_item = new QTableWidgetItem(QString());
+  color_item->setBackground(QBrush(color));
+  setItem(row_idx, 1, color_item);
 
   QCheckBox* visible_checkbox = new QCheckBox();
   visible_checkbox->setChecked(checked);
@@ -87,15 +90,6 @@ void LayerTable::set_row(
 
   QPushButton* button = new QPushButton("Edit...", this);
   setCellWidget(row_idx, 3, button);
-
-  connect(
-    active_checkbox,
-    &QAbstractButton::clicked,
-    [&](bool)
-    {
-      update_active_layer_checkboxes(level, row_idx);
-      emit redraw_scene();
-    });
 
   connect(
     visible_checkbox,
@@ -114,19 +108,22 @@ void LayerTable::set_row(
     });
 
   connect(
-    button, &QAbstractButton::clicked,
+    button,
+    &QAbstractButton::clicked,
     [=]() { emit edit_button_clicked(row_idx); });
 }
 
-void LayerTable::update_active_layer_checkboxes(
-  Level& level,
-  const int row_idx)
+QColor LayerTable::row_color(const int row_idx)
 {
-  for (size_t i = 0; i < level.layers.size() + 1; i++)
-    dynamic_cast<QCheckBox*>(cellWidget(i, 1))->setChecked(false);
-
-  dynamic_cast<QCheckBox*>(cellWidget(row_idx, 1))->setChecked(true);
-  emit update_active_layer(row_idx);
-
-  level.set_active_layer(row_idx);
+  switch (row_idx)
+  {
+    case 0:
+    default: return QColor::fromRgbF(0, 0, 0, 1.0);
+    case 1:  return QColor::fromRgbF(1, 0, 0, 1.0);
+    case 2:  return QColor::fromRgbF(0, 1, 0, 1.0);
+    case 3:  return QColor::fromRgbF(0, 0, 1, 1.0);
+    case 4:  return QColor::fromRgbF(1, 1, 0, 1.0);
+    case 5:  return QColor::fromRgbF(0, 1, 1, 1.0);
+    case 6:  return QColor::fromRgbF(1, 0, 1, 1.0);
+  }
 }

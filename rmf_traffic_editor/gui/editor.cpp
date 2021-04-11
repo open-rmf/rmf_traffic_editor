@@ -87,19 +87,17 @@ Editor::Editor()
   QVBoxLayout* left_layout = new QVBoxLayout;
   left_layout->addWidget(map_view);
 
-  //layers_table = new TableList(4);  // todo: replace with specific subclass?
-  //QStringList header_labels = {"Name", "Active layer", "Visible", "Edit"};
-  //layers_table->setHorizontalHeaderLabels(header_labels);
   layer_table = new LayerTable;
   connect(
     layer_table, &QTableWidget::cellClicked,
     [&](int row, int /*col*/)
     {
-      if (row < static_cast<int>(
+      if (row - 1 < static_cast<int>(
         building.levels[level_idx].layers.size()))
       {
         layer_idx = row;
         building.levels[level_idx].set_active_layer(layer_idx);
+        printf("layer_idx = %d\n", layer_idx);
       }
     });
 
@@ -133,8 +131,6 @@ Editor::Editor()
           map_view->viewport()->width() / 2,
           map_view->viewport()->height() / 2);
         QPointF p_center_scene = map_view->mapToScene(p_center_window);
-        // printf("p_center_scene: (%.1f, %.1f)\n",
-        //   p_center_scene.x(), p_center_scene.y());
 
         QPointF p_transformed;
         building.transform_between_levels(
@@ -146,9 +142,11 @@ Editor::Editor()
         // maintain the view scale
         const double prev_scale = map_view->transform().m11();
 
-        double scale = prev_scale *
-        building.levels[row].drawing_meters_per_pixel /
-        building.levels[level_idx].drawing_meters_per_pixel;
+        double scale =
+          prev_scale *
+          building.levels[row].drawing_meters_per_pixel /
+          building.levels[level_idx].drawing_meters_per_pixel;
+
         if (isnan(scale))
         {
           scale = 1.0;
@@ -2482,4 +2480,27 @@ void Editor::layer_table_update_slot()
 {
   layer_table->update(building, level_idx);
   create_scene();
+}
+
+const Level* Editor::active_level() const
+{
+  if (level_idx < static_cast<int>(building.levels.size()))
+    return &building.levels[level_idx];
+
+  return nullptr;
+}
+
+const Layer* Editor::active_layer() const
+{
+  if (layer_idx <= 0)
+    return nullptr;
+
+  const Level* const level = active_level();
+  if (!level)
+    return nullptr;
+
+  if (layer_idx - 1 < static_cast<int>(level->layers.size()))
+    return &level->layers[layer_idx - 1];
+
+  return nullptr;
 }

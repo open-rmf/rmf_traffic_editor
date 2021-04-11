@@ -1343,10 +1343,18 @@ bool Level::are_layer_names_unique()
 
   for (size_t i = 0; i < layers.size(); i++)
   {
-    for (size_t j = 1; j < layers.size(); j++)
+    for (size_t j = i + 1; j < layers.size(); j++)
     {
       if (layers[i].name == layers[j].name)
+      {
+        printf("layer %d (%s) is the same as layer %d (%s)\n",
+          static_cast<int>(i),
+          layers[i].name.c_str(),
+          static_cast<int>(j),
+          layers[j].name.c_str());
+
         return false;
+      }
     }
   }
 

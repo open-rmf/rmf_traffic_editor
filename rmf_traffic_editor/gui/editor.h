@@ -177,6 +177,9 @@ private:
   //int polygon_idx = -1;  // currently selected polygon
   Polygon* selected_polygon = nullptr;
 
+  const Level* active_level() const;
+  const Layer* active_layer() const;
+
   QGraphicsScene* scene = nullptr;
   MapView* map_view = nullptr;
 
@@ -190,7 +193,6 @@ private:
   QTableWidget* create_tabbed_table();
   void update_tables();
 
-  //QTableWidget* layers_table = nullptr;
   void populate_layers_table();
   void layers_table_set_row(
     const int row_idx,
