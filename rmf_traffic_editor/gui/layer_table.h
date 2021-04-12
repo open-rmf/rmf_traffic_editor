@@ -43,8 +43,6 @@ public:
 
   void update_active_layer_checkboxes(Level& level, const int row_idx);
 
-  QColor row_color(const int row_idx);
-
 signals:
   void redraw_scene();
   void add_button_clicked();

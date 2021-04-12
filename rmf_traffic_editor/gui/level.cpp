@@ -993,26 +993,7 @@ void Level::draw(
   draw_polygons(scene);
 
   for (auto& layer : layers)
-  {
-    if (!layer.visible)
-      continue;
-
-    //printf("floorplan height: %d\n", level.floorplan_pixmap.height());
-    //printf("layer pixmap height: %d\n", layer.pixmap.height());
-    QGraphicsPixmapItem* item = scene->addPixmap(layer.pixmap);
-    // Store for later use in getting coordinates back out
-    layer.scene_item = item;
-    // set the origin of the pixmap frame to the lower-left corner
-    item->setOffset(0, -layer.pixmap.height());
-    item->setPos(
-      -layer.translation_x / drawing_meters_per_pixel,
-      layer.translation_y / drawing_meters_per_pixel);
-    item->setScale(layer.meters_per_pixel / drawing_meters_per_pixel);
-    item->setRotation(-1.0 * layer.rotation * 180.0 / M_PI);
-    QGraphicsOpacityEffect* opacity_effect = new QGraphicsOpacityEffect;
-    opacity_effect->setOpacity(0.5);
-    item->setGraphicsEffect(opacity_effect);
-  }
+    layer.draw(scene, drawing_meters_per_pixel);
 
   if (rendering_options.show_models)
   {

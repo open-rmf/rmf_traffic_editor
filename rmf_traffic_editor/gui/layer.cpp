@@ -15,7 +15,12 @@
  *
 */
 
+#include <cmath>
+
 #include <QImageReader>
+#include <QGraphicsPixmapItem>
+#include <QGraphicsColorizeEffect>
+#include <QGraphicsScene>
 #include "layer.h"
 using std::string;
 using std::vector;
@@ -40,6 +45,13 @@ bool Layer::from_yaml(const std::string& _name, const YAML::Node& y)
   rotation = y["rotation"].as<double>();
   if (y["visible"])
     visible = y["visible"].as<bool>();
+
+  if (y["color"] && y["color"].IsSequence() && y["color"].size() == 4)
+    color = QColor::fromRgbF(
+      y["color"][0].as<double>(),
+      y["color"][1].as<double>(),
+      y["color"][2].as<double>(),
+      y["color"][3].as<double>());
 
   return load_image();
 }
@@ -74,5 +86,52 @@ YAML::Node Layer::to_yaml() const
   y["rotation"] = rotation;
   y["visible"] = visible;
 
+  y["color"].push_back(color.redF());
+  y["color"].push_back(color.greenF());
+  y["color"].push_back(color.blueF());
+  y["color"].push_back(color.alphaF());
+
   return y;
+}
+
+void Layer::draw(
+  QGraphicsScene* scene,
+  const double level_meters_per_pixel)
+{
+  if (!visible)
+    return;
+
+  QGraphicsPixmapItem* item = scene->addPixmap(pixmap);
+
+  // Store for later use in getting coordinates back out
+  scene_item = item;
+
+  // set the origin of the pixmap frame to the lower-left corner
+  item->setOffset(0, -pixmap.height());
+
+  item->setPos(
+    -translation_x / level_meters_per_pixel,
+    translation_y / level_meters_per_pixel);
+
+  item->setScale(meters_per_pixel / level_meters_per_pixel);
+
+  item->setRotation(-1.0 * rotation * 180.0 / M_PI);
+
+  QGraphicsColorizeEffect* colorize_effect = new QGraphicsColorizeEffect;
+  colorize_effect->setColor(color);
+  item->setGraphicsEffect(colorize_effect);
+}
+
+QColor Layer::default_color(const int layer_idx)
+{
+  switch (layer_idx)
+  {
+    case 0:
+    default: return QColor::fromRgbF(1, 0, 0, 1.0);
+    case 1:  return QColor::fromRgbF(0, 1, 0, 1.0);
+    case 2:  return QColor::fromRgbF(0, 0, 1, 1.0);
+    case 3:  return QColor::fromRgbF(1, 1, 0, 1.0);
+    case 4:  return QColor::fromRgbF(0, 1, 1, 1.0);
+    case 5:  return QColor::fromRgbF(1, 0, 1, 1.0);
+  }
 }

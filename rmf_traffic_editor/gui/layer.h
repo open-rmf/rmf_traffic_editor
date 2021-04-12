@@ -25,6 +25,7 @@
 #include <yaml-cpp/yaml.h>
 
 
+class QGraphicsScene;
 class QGraphicsPixmapItem;
 
 
@@ -50,6 +51,14 @@ public:
   YAML::Node to_yaml() const;
 
   bool load_image();
+
+  void draw(
+    QGraphicsScene* scene,
+    const double level_meters_per_pixel);
+
+  QColor color;
+
+  static QColor default_color(const int layer_idx);
 };
 
 #endif

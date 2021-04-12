@@ -1230,13 +1230,14 @@ void Editor::sanity_check()
 void Editor::layer_add_button_clicked()
 {
   if (level_idx >= static_cast<int>(building.levels.size()))
-    return;// let's not crash (yet)
+    return; // let's not crash (yet)
   Level& level = building.levels[level_idx];
   Layer layer;
   LayerDialog layer_dialog(this, layer);
   if (layer_dialog.exec() != QDialog::Accepted)
     return;
   printf("added a layer: [%s]\n", layer.name.c_str());
+  layer.color = Layer::default_color(level.layers.size());
   layer.load_image();
   level.layers.push_back(layer);
   level.layer_added();
