@@ -69,7 +69,7 @@ void Feature::draw(
   pen.setWidth(0.05 / meters_per_pixel);
   const double radius = 0.25 / meters_per_pixel;
 
-  QGraphicsLineItem *vertical_line = scene->addLine(
+  QGraphicsLineItem* vertical_line = scene->addLine(
     _x,
     _y - radius,
     _x,

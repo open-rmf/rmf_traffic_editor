@@ -140,10 +140,7 @@ Editor::Editor()
           p_transformed);
 
         // maintain the view scale
-        const double prev_scale = map_view->transform().m11();
-
-        double scale =
-          prev_scale *
+        double scale = map_view->transform().m11() *
           building.levels[row].drawing_meters_per_pixel /
           building.levels[level_idx].drawing_meters_per_pixel;
 

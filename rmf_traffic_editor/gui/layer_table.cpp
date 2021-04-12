@@ -21,8 +21,7 @@
 LayerTable::LayerTable()
 : TableList(4)
 {
-  const QStringList labels =
-    { "Name", "Color", "Visible", "Edit"};
+  const QStringList labels = { "Name", "Color", "Visible", "Edit"};
   setHorizontalHeaderLabels(labels);
 }
 
