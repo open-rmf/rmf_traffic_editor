@@ -77,7 +77,7 @@ void Feature::draw(
     pen);
   vertical_line->setZValue(20.0);
 
-  QGraphicsLineItem *horizontal_line = scene->addLine(
+  QGraphicsLineItem* horizontal_line = scene->addLine(
     _x - radius,
     _y,
     _x + radius,

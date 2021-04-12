@@ -141,8 +141,8 @@ Editor::Editor()
 
         // maintain the view scale
         double scale = map_view->transform().m11() *
-          building.levels[row].drawing_meters_per_pixel /
-          building.levels[level_idx].drawing_meters_per_pixel;
+        building.levels[row].drawing_meters_per_pixel /
+        building.levels[level_idx].drawing_meters_per_pixel;
 
         if (isnan(scale))
         {
