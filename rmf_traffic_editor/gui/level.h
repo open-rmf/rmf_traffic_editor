@@ -113,6 +113,7 @@ public:
   bool load_drawing();
 
   void set_drawing_visible(bool value) { _drawing_visible = value; }
+  bool get_drawing_visible() const { return _drawing_visible; }
 
   const std::vector<std::vector<Feature>>& feature_sets() const
   {

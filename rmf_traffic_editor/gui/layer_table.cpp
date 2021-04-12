@@ -43,7 +43,12 @@ void LayerTable::update(Building& building, const int level_idx)
   blockSignals(true);  // otherwise we get tons of callbacks
   setRowCount(2 + level.layers.size());
 
-  set_row(level, 0, "Floorplan", QColor::fromRgbF(0, 0, 0, 1), true);
+  set_row(
+    level,
+    0,
+    "Floorplan",
+    QColor::fromRgbF(0, 0, 0, 1),
+    level.get_drawing_visible());
 
   for (size_t i = 0; i < level.layers.size(); i++)
   {
@@ -94,7 +99,7 @@ void LayerTable::set_row(
   connect(
     visible_checkbox,
     &QAbstractButton::clicked,
-    [&](bool box_checked)
+    [this, &level, row_idx](bool box_checked)
     {
       if (row_idx == 0)
       {
