@@ -984,6 +984,12 @@ void Level::draw(
 
   for (const auto& f : fiducials)
     f.draw(scene, drawing_meters_per_pixel);
+
+  for (const auto& feature : floorplan_features)
+    feature.draw(
+      scene,
+      drawing_meters_per_pixel,
+      QColor::fromRgbF(0, 0, 0, 0.5));
 }
 
 void Level::clear_scene()

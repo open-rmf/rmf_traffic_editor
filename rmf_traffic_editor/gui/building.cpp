@@ -209,6 +209,7 @@ QUuid Building::add_feature(
   double x,
   double y)
 {
+  printf("Building::add_feature(%d, %d, %.3f, %.3f)\n", level_idx, layer_idx, x, y);
   if (level_idx >= static_cast<int>(levels.size()))
     return NULL;
   return levels[level_idx].add_feature(layer_idx, x, y);

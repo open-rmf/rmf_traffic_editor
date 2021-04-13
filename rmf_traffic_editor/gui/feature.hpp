@@ -46,7 +46,10 @@ public:
   void from_yaml(const YAML::Node& data);
   YAML::Node to_yaml() const;
 
-  void draw(QGraphicsScene*, double meters_per_pixel) const;
+  void draw(
+    QGraphicsScene*,
+    const double meters_per_pixel,
+    const QColor color) const;
 
 private:
   double _x = 0.0;

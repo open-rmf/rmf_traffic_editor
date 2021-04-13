@@ -1561,6 +1561,7 @@ void Editor::remove_mouse_motion_item()
   mouse_vertex_idx = -1;
   mouse_fiducial_idx = -1;
   mouse_feature_idx = -1;
+  mouse_feature_layer_idx = -1;
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -1757,6 +1758,7 @@ void Editor::mouse_move(
     }
     mouse_vertex_idx = -1;
     mouse_feature_idx = -1;
+    mouse_feature_layer_idx = -1;
     mouse_fiducial_idx = -1;
     create_scene();  // this will free mouse_motion_model
     setWindowModified(true);
@@ -1767,10 +1769,11 @@ void Editor::mouse_move(
       return;// we only care about mouse-dragging, not just motion
     printf(
       "mouse move, vertex_idx = %d, "
-      "feature_idx = %d, "
+      "feature_idx = %d, feature_layer_idx = %d, "
       "fiducial_idx = %d\n",
       mouse_vertex_idx,
       mouse_feature_idx,
+      mouse_feature_layer_idx,
       mouse_fiducial_idx);
     if (mouse_motion_model != nullptr)
     {
@@ -1793,18 +1796,25 @@ void Editor::mouse_move(
       latest_move_vertex->set_final_destination(p.x(), p.y());
       create_scene();
     }
-    else if (mouse_feature_idx >= 0)
+    else if (mouse_feature_idx >= 0 && mouse_feature_layer_idx >= 0)
     {
-      Feature& feature =
-        building.levels[level_idx].feature_sets()
-        [layer_idx][mouse_feature_idx];
-      feature.set_x(p.x());
-      feature.set_y(p.y());
+      Level& level = building.levels[level_idx];
+      Feature* feature = nullptr;
+
+      if (mouse_feature_layer_idx == 0)
+        feature = &level.floorplan_features[mouse_feature_idx];
+      else
+        feature =
+          &level.layers[mouse_feature_layer_idx].features[mouse_feature_idx];
+
+      feature->set_x(p.x());
+      feature->set_y(p.y());
       latest_move_feature->set_final_destination(p.x(), p.y());
-      printf("moved feature %d to (%.1f, %.1f)\n",
+      printf("moved feature %d on layer %d to (%.1f, %.1f)\n",
         mouse_feature_idx,
-        feature.x(),
-        feature.y());
+        mouse_feature_layer_idx,
+        feature->x(),
+        feature->y());
       create_scene();
     }
     else if (mouse_fiducial_idx >= 0)
@@ -2104,7 +2114,7 @@ void Editor::mouse_add_polygon(
     if (e->buttons() & Qt::LeftButton)
     {
       const Building::NearestItem ni =
-        building.nearest_items(level_idx, layer_idx, p.x(), p.y());
+        building.nearest_items(level_idx, p.x(), p.y());
       clicked_idx = ni.vertex_dist < 10.0 ? ni.vertex_idx : -1;
       if (clicked_idx < 0)
         return;// nothing to do. click wasn't on a vertex.
@@ -2218,7 +2228,6 @@ void Editor::mouse_edit_polygon(
     {
       const Building::NearestItem ni = building.nearest_items(
         level_idx,
-        layer_idx,
         p.x(),
         p.y());
       if (ni.vertex_dist > 10.0)

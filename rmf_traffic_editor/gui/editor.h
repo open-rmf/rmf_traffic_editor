@@ -279,6 +279,7 @@ private:
   int mouse_model_idx = -1;
   int mouse_vertex_idx = -1;
   int mouse_feature_idx = -1;
+  int mouse_feature_layer_idx = -1;
   int mouse_fiducial_idx = -1;
   std::vector<int> mouse_motion_polygon_vertices;
   //int mouse_motion_polygon_vertex_idx = -1;

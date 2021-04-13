@@ -28,26 +28,50 @@ MoveFeatureCommand::MoveFeatureCommand(
   _layer_idx(layer_idx),
   _feature_idx(feature_idx)
 {
-  const Feature& f =
-  _building->levels[_level_idx].layers[_layer_idx].features[_feature_idx];
-  _final_x = _original_x = f.x();
-  _final_y = _original_y = f.y();
+  Feature* f = nullptr;
+  if (layer_idx == 0)
+  {
+    f = &_building->levels[_level_idx].floorplan_features[_feature_idx];
+  }
+  else
+  {
+    f = &_building->levels[_level_idx].
+      layers[_layer_idx-1].features[_feature_idx];
+  }
+  _final_x = _original_x = f->x();
+  _final_y = _original_y = f->y();
 }
 
 void MoveFeatureCommand::undo()
 {
-  Feature& f =
-  _building->levels[_level_idx].layers[_layer_idx].features[_feature_idx];
-  f.set_x(_original_x);
-  f.set_y(_original_y);
+  Feature* f = nullptr;
+  if (_layer_idx == 0)
+  {
+    f = &_building->levels[_level_idx].floorplan_features[_feature_idx];
+  }
+  else
+  {
+    f = &_building->levels[_level_idx].
+      layers[_layer_idx-1].features[_feature_idx];
+  }
+  f->set_x(_original_x);
+  f->set_y(_original_y);
 }
 
 void MoveFeatureCommand::redo()
 {
-  Feature& f =
-  _building->levels[_level_idx].layers[_layer_idx].features[_feature_idx];
-  f.set_x(_final_x);
-  f.set_y(_final_y);
+  Feature* f = nullptr;
+  if (_layer_idx == 0)
+  {
+    f = &_building->levels[_level_idx].floorplan_features[_feature_idx];
+  }
+  else
+  {
+    f = &_building->levels[_level_idx].
+      layers[_layer_idx-1].features[_feature_idx];
+  }
+  f->set_x(_final_x);
+  f->set_y(_final_y);
 }
 
 void MoveFeatureCommand::set_final_destination(double x, double y)
