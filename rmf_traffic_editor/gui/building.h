@@ -66,6 +66,7 @@ public:
   void add_vertex(int level_index, double x, double y);
   QUuid add_fiducial(int level_index, double x, double y);
   QUuid add_feature(int level, int layer, double x, double y);
+  void remove_feature(const int level, const int layer, QUuid feature_uuid);
 
   int find_nearest_vertex_index(
     int level_index, double x, double y, double& distance);
@@ -80,6 +81,7 @@ public:
     int vertex_idx = -1;
 
     double feature_dist = 1e100;
+    int feature_layer_idx = -1;
     int feature_idx = -1;
 
     double fiducial_dist = 1e100;
@@ -88,7 +90,6 @@ public:
 
   NearestItem nearest_items(
     const int level_index,
-    const int layer_index,
     const double x,
     const double y);
 
@@ -192,7 +193,6 @@ public:
 
   void mouse_select_press(
     const int level_idx,
-    const int layer_index,
     const double x,
     const double y,
     QGraphicsItem* graphics_item,

@@ -53,6 +53,17 @@ bool Layer::from_yaml(const std::string& _name, const YAML::Node& y)
       y["color"][2].as<double>(),
       y["color"][3].as<double>());
 
+  if (y["features"] && y["features"].IsSequence())
+  {
+    const YAML::Node& fy = y["features"];
+    for (YAML::const_iterator it = fy.begin(); it != fy.end(); ++it)
+    {
+      Feature f;
+      f.from_yaml(*it);
+      features.push_back(f);
+    }
+  }
+
   return load_image();
 }
 
@@ -90,6 +101,9 @@ YAML::Node Layer::to_yaml() const
   y["color"].push_back(color.greenF());
   y["color"].push_back(color.blueF());
   y["color"].push_back(color.alphaF());
+
+  for (const auto& feature : features)
+    y["features"].push_back(feature.to_yaml());
 
   return y;
 }
@@ -134,4 +148,26 @@ QColor Layer::default_color(const int layer_idx)
     case 4:  return QColor::fromRgbF(0, 1, 1, 1.0);
     case 5:  return QColor::fromRgbF(1, 0, 1, 1.0);
   }
+}
+
+void Layer::remove_feature(QUuid feature_uuid)
+{
+  int index_to_remove = -1;
+
+  for (size_t i = 0; i < features.size(); i++)
+  {
+    if (feature_uuid == features[i].uuid())
+      index_to_remove = i;
+  }
+
+  if (index_to_remove < 0)
+    return;
+
+  features.erase(features.begin() + index_to_remove);
+}
+
+QUuid Layer::add_feature(const double x, const double y)
+{
+  features.push_back(Feature(x, y));
+  return features.rbegin()->uuid();
 }

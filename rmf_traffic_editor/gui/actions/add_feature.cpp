@@ -33,19 +33,7 @@ AddFeatureCommand::AddFeatureCommand(
 
 void AddFeatureCommand::undo()
 {
-  int index_to_remove = -1;
-  auto& s = _building->levels[_level].feature_sets()[_layer];
-
-  for (size_t ii = 0; ii < s.size(); ++ii)
-  {
-    if (_uuid == s[ii].uuid())
-      index_to_remove = ii;
-  }
-
-  if (index_to_remove < 0)
-    return;
-
-  s.erase(s.begin() + index_to_remove);
+  _building->remove_feature(_level, _layer, _uuid);
 }
 
 void AddFeatureCommand::redo()

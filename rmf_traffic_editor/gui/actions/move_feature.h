@@ -28,9 +28,9 @@ class MoveFeatureCommand : public QUndoCommand
 public:
   MoveFeatureCommand(
     Building* building,
-    int id,
-    int level,
-    int layer);
+    int level_idx,
+    int layer_idx,
+    int feature_idx);
 
   void undo() override;
   void redo() override;
@@ -41,7 +41,7 @@ public:
 
 private:
   Building* _building;
-  int _level, _layer, _point_id;
+  int _level_idx, _layer_idx, _feature_idx;
   double _original_x, _original_y;
   double _final_x, _final_y;
 };

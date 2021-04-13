@@ -160,38 +160,6 @@ bool Level::from_yaml(
     }
   }
 
-  if (_data["feature_sets"] &&
-    _data["feature_sets"].IsSequence())
-  {
-    const YAML::Node& node = _data["feature_sets"];
-    for (YAML::const_iterator ii = node.begin(); ii != node.end(); ++ii)
-    {
-      std::vector<Feature> features;
-      for (YAML::const_iterator jj = ii->begin(); jj != ii->end(); ++jj)
-      {
-        Feature feature;
-        feature.from_yaml(*jj);
-        features.push_back(feature);
-      }
-      _feature_sets.push_back(features);
-      if (features.size() > 0)
-        _next_cp_ids.push_back(features.rbegin()->id() + 1);
-      else
-        _next_cp_ids.push_back(0);
-    }
-  }
-  else
-  {
-    // Add an empty set for each layer, including the floorplan non-layer
-    _feature_sets.push_back(std::vector<Feature>());
-    _next_cp_ids.push_back(0);
-    for (size_t ii = 0; ii < layers.size(); ++ii)
-    {
-      _feature_sets.push_back(std::vector<Feature>());
-      _next_cp_ids.push_back(0);
-    }
-  }
-
   return true;
 }
 
@@ -243,14 +211,6 @@ YAML::Node Level::to_yaml() const
 
   for (const auto& v : vertices)
     y["vertices"].push_back(v.to_yaml());
-
-  for (const auto& features : _feature_sets)
-  {
-    YAML::Node set;
-    for (const auto& feature : features)
-      set.push_back(feature.to_yaml());
-    y["feature_sets"].push_back(set);
-  }
 
   for (const auto& feature : floorplan_features)
     y["features"].push_back(feature.to_yaml());
@@ -1022,12 +982,6 @@ void Level::draw(
       scene,
       vertex_radius / drawing_meters_per_pixel);
 
-  if (_active_layer < static_cast<int>(_feature_sets.size()))
-  {
-    for (const auto& feature : _feature_sets[_active_layer])
-      feature.draw(scene, drawing_meters_per_pixel);
-  }
-
   for (const auto& f : fiducials)
     f.draw(scene, drawing_meters_per_pixel);
 }
@@ -1038,16 +992,54 @@ void Level::clear_scene()
     model.clear_scene();
 }
 
-QUuid Level::add_feature(int layer, double x, double y)
+QUuid Level::add_feature(const int layer_idx, const double x, const double y)
 {
-  auto id = _next_cp_ids[layer];
-  _next_cp_ids[layer] += 1;
-  _feature_sets[layer].push_back(Feature(x, y, id));
-  return _feature_sets[layer].rbegin()->uuid();
+  if (layer_idx == 0)
+  {
+    floorplan_features.push_back(Feature(x, y));
+    return floorplan_features.rbegin()->uuid();
+  }
+  else
+  {
+    if (layer_idx - 1 >= static_cast<int>(layers.size()))
+      return NULL;
+
+    return layers[layer_idx - 1].add_feature(x, y);
+  }
 }
 
-bool Level::export_features(const std::string& filename) const
+void Level::remove_feature(const int layer_idx, QUuid feature_uuid)
 {
+  if (layer_idx == 0)
+  {
+    int index_to_remove = -1;
+
+    for (size_t i = 0; i < floorplan_features.size(); i++)
+    {
+      if (feature_uuid == floorplan_features[i].uuid())
+        index_to_remove = i;
+    }
+
+    if (index_to_remove < 0)
+      return;
+
+    floorplan_features.erase(floorplan_features.begin() + index_to_remove);
+  }
+  else
+  {
+    if (layer_idx - 1 >= static_cast<int>(layers.size()))
+      return;
+
+    layers[layer_idx - 1].remove_feature(feature_uuid);
+  }
+}
+
+bool Level::export_features(const std::string& /*filename*/) const
+{
+  return true;
+#if 0
+  // TODO (MQ): revisit all of this...
+
   YAML::Node level_features;
 
   YAML::Node floorplan_yaml;
@@ -1158,13 +1150,9 @@ bool Level::export_features(const std::string& filename) const
   std::ofstream dest(filename);
   dest << emitter.c_str();
   return true;
+#endif
 }
 
-void Level::layer_added()
-{
-  _feature_sets.push_back(std::vector<Feature>());
-  _next_cp_ids.push_back(0);
-}
 void Level::load_yaml_edge_sequence(
   const YAML::Node& data,
   const char* sequence_name,

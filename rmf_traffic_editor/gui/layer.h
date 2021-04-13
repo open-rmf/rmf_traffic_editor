@@ -24,6 +24,7 @@
 #include <QPixmap>
 #include <yaml-cpp/yaml.h>
 
+#include "feature.hpp"
 
 class QGraphicsScene;
 class QGraphicsPixmapItem;
@@ -47,6 +48,8 @@ public:
   QPixmap pixmap;
   QGraphicsPixmapItem* scene_item = nullptr;  // Borrowed pointer, not owned, don't delete
 
+  std::vector<Feature> features;
+
   bool from_yaml(const std::string& name, const YAML::Node& data);
   YAML::Node to_yaml() const;
 
@@ -59,6 +62,9 @@ public:
   QColor color;
 
   static QColor default_color(const int layer_idx);
+
+  QUuid add_feature(const double x, const double y);
+  void remove_feature(QUuid feature_uuid);
 };
 
 #endif

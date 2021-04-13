@@ -33,13 +33,13 @@ class Feature
 {
 public:
   Feature();
-  Feature(double x, double y, int id);
+  Feature(double x, double y);
 
   double x() const { return _x; }
   void set_x(double x) { _x = x; }
   double y() const { return _y; }
   void set_y(double y) { _y = y; }
-  uint16_t id() const { return _id; }
+  std::string name() const { return _name; }
   QUuid const& uuid() const { return _uuid; }
   bool selected() const { return _selected; }
 
@@ -51,7 +51,6 @@ public:
 private:
   double _x = 0.0;
   double _y = 0.0;
-  uint16_t _id = 0;
   QUuid _uuid;
   bool _selected = false;
   std::string _name;

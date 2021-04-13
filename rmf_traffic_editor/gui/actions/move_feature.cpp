@@ -19,30 +19,33 @@
 
 MoveFeatureCommand::MoveFeatureCommand(
   Building* building,
-  int level,
-  int layer,
-  int point_id)
+  int level_idx,
+  int layer_idx,
+  int feature_idx)
 : has_moved(false),
   _building(building),
-  _level(level),
-  _layer(layer),
-  _point_id(point_id)
+  _level_idx(level_idx),
+  _layer_idx(layer_idx),
+  _feature_idx(feature_idx)
 {
-  Feature f = _building->levels[_level].feature_sets()[_layer][_point_id];
+  const Feature& f =
+  _building->levels[_level_idx].layers[_layer_idx].features[_feature_idx];
   _final_x = _original_x = f.x();
   _final_y = _original_y = f.y();
 }
 
 void MoveFeatureCommand::undo()
 {
-  Feature& f = _building->levels[_level].feature_sets()[_layer][_point_id];
+  Feature& f =
+  _building->levels[_level_idx].layers[_layer_idx].features[_feature_idx];
   f.set_x(_original_x);
   f.set_y(_original_y);
 }
 
 void MoveFeatureCommand::redo()
 {
-  Feature& f = _building->levels[_level].feature_sets()[_layer][_point_id];
+  Feature& f =
+  _building->levels[_level_idx].layers[_layer_idx].features[_feature_idx];
   f.set_x(_final_x);
   f.set_y(_final_y);
 }

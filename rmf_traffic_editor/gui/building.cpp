@@ -204,16 +204,25 @@ QUuid Building::add_fiducial(int level_index, double x, double y)
 }
 
 QUuid Building::add_feature(
-  int level,
-  int layer,
+  int level_idx,
+  int layer_idx,
   double x,
   double y)
 {
-  if (level >= static_cast<int>(levels.size()))
+  if (level_idx >= static_cast<int>(levels.size()))
     return NULL;
-  if (layer >= static_cast<int>(levels[level].feature_sets().size()))
-    return NULL;
-  return levels[level].add_feature(layer, x, y);
+  return levels[level_idx].add_feature(layer_idx, x, y);
+}
+
+void Building::remove_feature(
+  const int level_idx,
+  const int layer_idx,
+  QUuid feature_uuid)
+{
+  if (level_idx >= static_cast<int>(levels.size()))
+    return;
+
+  levels[level_idx].remove_feature(layer_idx, feature_uuid);
 }
 
 int Building::find_nearest_vertex_index(
@@ -242,7 +251,6 @@ int Building::find_nearest_vertex_index(
 
 Building::NearestItem Building::nearest_items(
   const int level_index,
-  const int layer_index,
   const double x,
   const double y)
 {
@@ -264,18 +272,35 @@ Building::NearestItem Building::nearest_items(
     }
   }
 
-  if (layer_index < static_cast<int>(level.feature_sets().size()))
+  // search the floorplan features
+  for (size_t i = 0; i < level.floorplan_features.size(); i++)
   {
-    for (size_t ii = 0; ii < level.feature_sets()[layer_index].size(); ++ii)
+    const Feature& f = level.floorplan_features[i];
+    const double dx = x - f.x();
+    const double dy = y - f.y();
+    const double dist = sqrt(dx*dx + dy*dy);
+    if (dist < ni.feature_dist)
     {
-      const Feature& f = level.feature_sets()[layer_index][ii];
+      ni.feature_layer_idx = 0;
+      ni.feature_dist = dist;
+      ni.feature_idx = i;
+    }
+  }
+
+  // now search all "other" layer features
+  for (size_t layer_idx = 0; layer_idx < level.layers.size(); layer_idx++)
+  {
+    for (size_t i = 0; i < level.layers[layer_idx].features.size(); i++)
+    {
+      const Feature& f = level.layers[layer_idx].features[i];
       const double dx = x - f.x();
       const double dy = y - f.y();
       const double dist = sqrt(dx*dx + dy*dy);
       if (dist < ni.feature_dist)
       {
+        ni.feature_layer_idx = layer_idx;
         ni.feature_dist = dist;
-        ni.feature_idx = ii;
+        ni.feature_idx = i;
       }
     }
   }
@@ -829,14 +854,13 @@ Polygon* Building::get_selected_polygon(const int level_idx)
 
 void Building::mouse_select_press(
   const int level_idx,
-  const int layer_idx,
   const double x,
   const double y,
   QGraphicsItem* graphics_item,
   const RenderingOptions& rendering_options)
 {
   clear_selection(level_idx);
-  const NearestItem ni = nearest_items(level_idx, layer_idx, x, y);
+  const NearestItem ni = nearest_items(level_idx, x, y);
 
   const double vertex_dist_thresh =
     levels[level_idx].vertex_radius /

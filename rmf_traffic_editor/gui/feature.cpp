@@ -29,8 +29,8 @@ Feature::Feature()
   _uuid = QUuid::createUuid();
 }
 
-Feature::Feature(double x, double y, int id)
-: _x(x), _y(y), _id(id)
+Feature::Feature(double x, double y)
+: _x(x), _y(y)
 {
   _uuid = QUuid::createUuid();
 }
@@ -41,8 +41,9 @@ void Feature::from_yaml(const YAML::Node& data)
     throw std::runtime_error("Feature::from_yaml() expected a map");
   _x = data["x"].as<double>();
   _y = data["y"].as<double>();
-  _id = data["id"].as<uint16_t>();
   _uuid = QString(data["uuid"].as<std::string>().c_str());
+
+  // todo: parse name, if it's in the YAML
 }
 
 YAML::Node Feature::to_yaml() const
@@ -51,7 +52,7 @@ YAML::Node Feature::to_yaml() const
   node.SetStyle(YAML::EmitterStyle::Flow);
   node["x"] = std::round(_x * 1000.0) / 1000.0;
   node["y"] = std::round(_y * 1000.0) / 1000.0;
-  node["id"] = _id;
+  node["name"] = _name;
   node["uuid"] = _uuid.toString().toStdString();
   return node;
 }
@@ -94,10 +95,12 @@ void Feature::draw(
     QBrush());  // default brush is transparent
   circle->setZValue(20.0);
 
+  /*
   QGraphicsSimpleTextItem* item = scene->addSimpleText(QString::number(_id));
   item->setBrush(QColor(0, 0, 255, 255));
   item->setPos(_x, _y + radius);
   auto font = item->font();
   font.setPointSize(30);
   item->setFont(font);
+  */
 }

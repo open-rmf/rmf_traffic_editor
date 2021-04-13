@@ -96,8 +96,7 @@ Editor::Editor()
         building.levels[level_idx].layers.size()))
       {
         layer_idx = row;
-        building.levels[level_idx].set_active_layer(layer_idx);
-        printf("layer_idx = %d\n", layer_idx);
+        layer_table->update(building, level_idx, layer_idx);
       }
     });
 
@@ -1068,16 +1067,23 @@ void Editor::update_property_editor()
     }
   }
 
-  if (layer_idx < static_cast<int>(
-      building.levels[level_idx].feature_sets().size()))
+  for (const auto& feature : building.levels[level_idx].floorplan_features)
   {
-    for (const auto& feature :
-      building.levels[level_idx].feature_sets()[layer_idx])
+    if (feature.selected())
+    {
+      populate_property_editor(feature);
+      return;
+    }
+  }
+
+  for (const auto& layer : building.levels[level_idx].layers)
+  {
+    for (const auto& feature : layer.features)
     {
       if (feature.selected())
       {
         populate_property_editor(feature);
-        return;  // stop after finding the first one
+        return;
       }
     }
   }
@@ -1207,7 +1213,7 @@ void Editor::layer_edit_button_clicked(const int row_idx)
   connect(
     dialog,
     &LayerDialog::redraw,
-    [=]() { layer_table->update(building, level_idx); });
+    [=]() { layer_table->update(building, level_idx, layer_idx); });
 }
 
 void Editor::sanity_check()
@@ -1240,8 +1246,7 @@ void Editor::layer_add_button_clicked()
   layer.color = Layer::default_color(level.layers.size());
   layer.load_image();
   level.layers.push_back(layer);
-  level.layer_added();
-  layer_table->update(building, level_idx);
+  layer_table->update(building, level_idx, layer_idx);
   create_scene();
   sanity_check();
   setWindowModified(true);
@@ -1329,13 +1334,11 @@ void Editor::populate_property_editor(const Feature& feature)
   property_editor->blockSignals(true);
 
   property_editor->setRowCount(1);
-  QString id_str;
-  id_str.setNum(feature.id());
   property_editor_set_row(
     0,
-    "ID",
-    id_str,
-    false);  // true means that this cell value is editable
+    "name",
+    QString::fromStdString(feature.name()),
+    true);
 
   property_editor->blockSignals(false);
 }
@@ -1577,7 +1580,6 @@ void Editor::mouse_select(
 
   building.mouse_select_press(
     level_idx,
-    layer_idx,
     p.x(),
     p.y(),
     item,
@@ -1653,7 +1655,7 @@ void Editor::mouse_move(
   if (t == MOUSE_PRESS)
   {
     Building::NearestItem ni =
-      building.nearest_items(level_idx, layer_idx, p.x(), p.y());
+      building.nearest_items(level_idx, p.x(), p.y());
 
     // todo: use QGraphics stuff to see if we clicked a model pixmap...
     const double model_dist_thresh = 0.5 /
@@ -1682,14 +1684,14 @@ void Editor::mouse_move(
         mouse_vertex_idx);
     }
     else if (ni.feature_idx >= 0 &&
+      ni.feature_layer_idx >= 0 &&
       ni.feature_dist < 10.0)
     {
-      mouse_feature_idx = ni.feature_idx;
       latest_move_feature = new MoveFeatureCommand(
         &building,
         level_idx,
-        layer_idx,
-        mouse_feature_idx);
+        ni.feature_layer_idx,
+        ni.feature_idx);
     }
     else if (ni.fiducial_idx >= 0 && ni.fiducial_dist < 10.0)
     {
@@ -2270,7 +2272,7 @@ void Editor::mouse_edit_polygon(
     mouse_motion_polygon = nullptr;
 
     const Building::NearestItem ni = building.nearest_items(
-      level_idx, layer_idx, p.x(), p.y());
+      level_idx, p.x(), p.y());
 
     if (ni.vertex_dist > 10.0)
       return;// nothing to do; didn't release near a vertex
@@ -2446,7 +2448,7 @@ void Editor::update_tables()
   lift_table->update(building);
   traffic_table->update(rendering_options);
   crowd_sim_table->update();
-  layer_table->update(building, level_idx);
+  layer_table->update(building, level_idx, layer_idx);
 }
 
 void Editor::clear_current_tool_buffer()
@@ -2476,7 +2478,7 @@ void Editor::level_table_update_slot()
 
 void Editor::layer_table_update_slot()
 {
-  layer_table->update(building, level_idx);
+  layer_table->update(building, level_idx, layer_idx);
   create_scene();
 }
 

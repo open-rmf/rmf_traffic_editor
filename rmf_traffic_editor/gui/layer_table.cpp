@@ -29,7 +29,10 @@ LayerTable::~LayerTable()
 {
 }
 
-void LayerTable::update(Building& building, const int level_idx)
+void LayerTable::update(
+  Building& building,
+  const int level_idx,
+  const int layer_idx)
 {
   if (level_idx >= static_cast<int>(building.levels.size()))
   {
@@ -47,7 +50,8 @@ void LayerTable::update(Building& building, const int level_idx)
     0,
     "Floorplan",
     QColor::fromRgbF(0, 0, 0, 1),
-    level.get_drawing_visible());
+    level.get_drawing_visible(),
+    layer_idx == 0);
 
   for (size_t i = 0; i < level.layers.size(); i++)
   {
@@ -56,7 +60,8 @@ void LayerTable::update(Building& building, const int level_idx)
       i + 1,
       QString::fromStdString(level.layers[i].name),
       level.layers[i].color,
-      level.layers[i].visible);
+      level.layers[i].visible,
+      layer_idx == static_cast<int>(i + 1));
   }
 
   const int last_row_idx = static_cast<int>(level.layers.size()) + 1;
@@ -79,9 +84,16 @@ void LayerTable::set_row(
   const int row_idx,
   const QString& label,
   const QColor& color,
-  const bool checked)
+  const bool checked,
+  const bool is_active_layer)
 {
   QTableWidgetItem* name_item = new QTableWidgetItem(label);
+  if (is_active_layer)
+  {
+    QFont font;
+    font.setBold(true);
+    name_item->setFont(font);
+  }
   setItem(row_idx, 0, name_item);
 
   QPushButton* color_button = new QPushButton("", this);

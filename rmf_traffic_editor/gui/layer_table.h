@@ -32,21 +32,19 @@ public:
   LayerTable();
   ~LayerTable();
 
-  void update(Building& building, const int level_idx);
+  void update(Building& building, const int level_idx, const int layer_idx);
 
   void set_row(
     Level& level,
     const int row_idx,
     const QString& label,
     const QColor& color,
-    const bool checked);
-
-  void update_active_layer_checkboxes(Level& level, const int row_idx);
+    const bool checked,
+    const bool is_active_layer);
 
 signals:
   void redraw_scene();
   void add_button_clicked();
-  void update_active_layer(const int layer_idx);
   void edit_button_clicked(const int row_idx);
 };
 

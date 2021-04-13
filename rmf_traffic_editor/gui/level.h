@@ -115,19 +115,8 @@ public:
   void set_drawing_visible(bool value) { _drawing_visible = value; }
   bool get_drawing_visible() const { return _drawing_visible; }
 
-  const std::vector<std::vector<Feature>>& feature_sets() const
-  {
-    return _feature_sets;
-  }
-
-  std::vector<std::vector<Feature>>& feature_sets()
-  {
-    return _feature_sets;
-  }
-
-  void layer_added();
-  void set_active_layer(int active_layer) { _active_layer = active_layer; }
-  QUuid add_feature(int layer, double x, double y);
+  QUuid add_feature(const int layer, const double x, const double y);
+  void remove_feature(const int layer_idx, QUuid feature_uuid);
   bool export_features(const std::string& filename) const;
 
 private:
@@ -149,9 +138,6 @@ private:
   bool parse_vertices(const YAML::Node& _data);
 
   bool _drawing_visible = true;
-  std::vector<std::vector<Feature>> _feature_sets;
-  std::vector<int> _next_cp_ids;
-  int _active_layer = 0;
 
   void draw_lane(
     QGraphicsScene* scene,
