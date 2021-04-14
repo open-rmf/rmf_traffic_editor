@@ -990,6 +990,9 @@ void Level::draw(
       scene,
       drawing_meters_per_pixel,
       QColor::fromRgbF(0, 0, 0, 0.5));
+
+  for (const auto& constraint : constraints)
+    constraint.draw(scene, *this);
 }
 
 void Level::clear_scene()
@@ -1003,7 +1006,7 @@ QUuid Level::add_feature(const int layer_idx, const double x, const double y)
   if (layer_idx == 0)
   {
     floorplan_features.push_back(Feature(x, y));
-    return floorplan_features.rbegin()->uuid();
+    return floorplan_features.rbegin()->id();
   }
   else
   {
@@ -1014,7 +1017,7 @@ QUuid Level::add_feature(const int layer_idx, const double x, const double y)
   }
 }
 
-void Level::remove_feature(const int layer_idx, QUuid feature_uuid)
+void Level::remove_feature(const int layer_idx, QUuid feature_id)
 {
   if (layer_idx == 0)
   {
@@ -1022,7 +1025,7 @@ void Level::remove_feature(const int layer_idx, QUuid feature_uuid)
 
     for (size_t i = 0; i < floorplan_features.size(); i++)
     {
-      if (feature_uuid == floorplan_features[i].uuid())
+      if (feature_id == floorplan_features[i].id())
         index_to_remove = i;
     }
 
@@ -1036,7 +1039,7 @@ void Level::remove_feature(const int layer_idx, QUuid feature_uuid)
     if (layer_idx - 1 >= static_cast<int>(layers.size()))
       return;
 
-    layers[layer_idx - 1].remove_feature(feature_uuid);
+    layers[layer_idx - 1].remove_feature(feature_id);
   }
 }
 
@@ -1334,4 +1337,58 @@ bool Level::are_layer_names_unique()
   }
 
   return true;
+}
+
+const Feature* Level::find_feature(const QUuid& id) const
+{
+  for (size_t i = 0; i < floorplan_features.size(); i++)
+  {
+    if (floorplan_features[i].id() == id)
+      return &floorplan_features[i];
+  }
+  for (size_t layer_idx = 0; layer_idx < layers.size(); layer_idx++)
+  {
+    for (size_t i = 0; i < layers[layer_idx].features.size(); i++)
+    {
+      if (layers[layer_idx].features[i].id() == id)
+        return &layers[layer_idx].features[i];
+    }
+  }
+  return nullptr;
+}
+
+const Feature* Level::find_feature(const double x, const double y) const
+{
+  for (size_t layer_idx = 0; layer_idx < layers.size(); layer_idx++)
+  {
+    if (!layers[layer_idx].visible)
+      continue;
+
+    // todo: pass the floorplan scale?
+    const Feature *layer_feature =
+      layers[layer_idx].find_feature(x, y, drawing_meters_per_pixel);
+
+    if (layer_feature)
+      return layer_feature;
+  }
+
+  double min_dist = 1e9;
+  const Feature* min_feature = nullptr;
+
+  for (size_t i = 0; i < floorplan_features.size(); i++)
+  {
+    const Feature& f = floorplan_features[i];
+    const double dx = x - f.x();
+    const double dy = y - f.y();
+    const double dist = sqrt(dx * dx + dy * dy);
+    if (dist < min_dist)
+    {
+      min_dist = dist;
+      min_feature = &floorplan_features[i];
+    }
+  }
+  if (min_dist < Feature::radius_meters / drawing_meters_per_pixel)
+    return min_feature;
+
+  return nullptr;
 }

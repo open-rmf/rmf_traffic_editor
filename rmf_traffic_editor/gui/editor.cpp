@@ -35,6 +35,7 @@
 #include "ament_index_cpp/get_package_prefix.hpp"
 #include "ament_index_cpp/get_resource.hpp"
 
+#include "actions/add_constraint.h"
 #include "actions/add_feature.h"
 #include "actions/add_fiducial.h"
 #include "actions/add_model.h"
@@ -352,6 +353,9 @@ Editor::Editor()
   create_tool_button(TOOL_ROTATE, ":icons/rotate.svg", "Rotate (R)");
   create_tool_button(TOOL_ADD_VERTEX, ":icons/vertex.svg", "Add Vertex (V)");
   create_tool_button(TOOL_ADD_FEATURE, ":icons/feature.svg", "Add Feature");
+  create_tool_button(TOOL_ADD_CONSTRAINT,
+    ":icons/constraint.svg",
+    "Add Constraint");
   create_tool_button(
     TOOL_ADD_FIDUCIAL,
     ":icons/fiducial.svg",
@@ -802,6 +806,7 @@ void Editor::mouse_event(const MouseType t, QMouseEvent* e)
     case TOOL_ADD_HOLE:     mouse_add_hole(t, e, p); break;
     case TOOL_EDIT_POLYGON: mouse_edit_polygon(t, e, p); break;
     case TOOL_ADD_FEATURE:  mouse_add_feature(t, e, p); break;
+    case TOOL_ADD_CONSTRAINT: mouse_add_constraint(t, e, p); break;
     case TOOL_ADD_FIDUCIAL: mouse_add_fiducial(t, e, p); break;
     case TOOL_ADD_ROI:      mouse_add_roi(t, e, p); break;
     case TOOL_ADD_HUMAN_LANE: mouse_add_human_lane(t, e, p); break;
@@ -1918,6 +1923,148 @@ void Editor::mouse_add_edge(
   }
 }
 
+void Editor::mouse_add_constraint(
+  const MouseType t,
+  QMouseEvent* e,
+  const QPointF& p)
+{
+  const Level* level = active_level();
+  if (!level)
+    return;
+
+  if (t == MOUSE_PRESS)
+  {
+    /*
+    if (e->buttons() & Qt::RightButton)
+    {
+      // right button means "exit edge drawing mode please"
+      clicked_idx = -1;
+      prev_clicked_idx = -1;
+      if (latest_add_edge != NULL)
+      {
+        //Need to check if new vertex was added.
+        delete latest_add_edge;
+        latest_add_edge = NULL;
+      }
+      remove_mouse_motion_item();
+      return;
+    }
+    */
+
+    // look up the feature nearest this click
+    const Feature* f = level->find_feature(p.x(), p.y());
+    if (!f)
+    {
+      printf("no feature near (%.3f, %.3f)\n", p.x(), p.y());
+      clicked_feature_id = QUuid();
+      remove_mouse_motion_item();
+      return;
+    }
+
+    printf("found feature %s\n", f->id().toString().toStdString().c_str());
+
+    if (!clicked_feature_id.isNull())
+    {
+      // create an edge between this feature and the previously clicked one
+      printf("creating constraint between %s and %s\n",
+        clicked_feature_id.toString().toStdString().c_str(),
+        f->id().toString().toStdString().c_str());
+      AddConstraintCommand* command = new AddConstraintCommand(
+        &building,
+        level_idx,
+        clicked_feature_id,
+        f->id());
+      undo_stack.push(cmd);
+
+      clicked_feature_id = QUuid();
+      setWindowModified(true);
+      create_scene();
+    }
+    else
+    {
+      clicked_feature_id = f->id();
+    }
+
+#if 0
+    if (prev_clicked_constraint_feature_idx < 0)
+    {
+      latest_add_edge = new AddEdgeCommand(
+        &building,
+        level_idx,
+        rendering_options);
+      clicked_idx = latest_add_edge->set_first_point(
+        p_aligned.x(),
+        p_aligned.y());
+      latest_add_edge->set_edge_type(edge_type);
+      prev_clicked_idx = clicked_idx;
+      create_scene();
+      setWindowModified(true);
+      return; // no previous vertex click happened; nothing else to do
+    }
+
+    clicked_idx =
+      latest_add_edge->set_second_point(p_aligned.x(), p_aligned.y());
+
+    if (clicked_idx == prev_clicked_idx)  // don't create self edge loops
+    {
+      remove_mouse_motion_item();
+      return;
+    }
+    undo_stack.push(latest_add_edge);
+
+    if (edge_type == Edge::DOOR || edge_type == Edge::MEAS)
+    {
+      clicked_idx = -1;  // doors and measurements don't usually chain
+      latest_add_edge = NULL;
+      remove_mouse_motion_item();
+    }
+    else
+    {
+      latest_add_edge = new AddEdgeCommand(
+        &building,
+        level_idx,
+        rendering_options);
+      latest_add_edge->set_first_point(p_aligned.x(), p_aligned.y());
+      latest_add_edge->set_edge_type(edge_type);
+    }
+    prev_clicked_idx = clicked_idx;
+    create_scene();
+    setWindowModified(true);
+#endif
+  }
+  else if (t == MOUSE_MOVE)
+  {
+    //printf("add_constraint mouse move\n");
+    if (clicked_feature_id.isNull())
+      return;
+    //printf("add_constraint mouse move 2\n");
+
+    const Feature* clicked_feature = level->find_feature(clicked_feature_id);
+    if (!clicked_feature)
+      return;
+    //printf("add_constraint mouse move 3\n");
+
+    // todo: translate feature points to floorplan coords
+    const double fx = clicked_feature->x();
+    const double fy = clicked_feature->y();
+
+    QPen pen(
+      QBrush(QColor::fromRgbF(0.8, 0.8, 0.4, 0.8)),
+      0.1 / level->drawing_meters_per_pixel,
+      Qt::SolidLine,
+      Qt::RoundCap);
+
+    if (!mouse_motion_line)
+    {
+      mouse_motion_line = scene->addLine(fx, fy, p.x(), p.y(), pen);
+      mouse_motion_line->setZValue(300);
+    }
+    else
+      mouse_motion_line->setLine(fx, fy, p.x(), p.y());
+  }
+}
+
+
 void Editor::mouse_add_lane(
   const MouseType t, QMouseEvent* e, const QPointF& p)
 {
@@ -2477,6 +2624,9 @@ void Editor::clear_current_tool_buffer()
       latest_add_edge = NULL;
     }
   }
+
+  if (!clicked_feature_id.isNull())
+    clicked_feature_id = QUuid();
 }
 
 void Editor::level_table_update_slot()

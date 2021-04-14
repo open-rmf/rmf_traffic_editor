@@ -15,32 +15,32 @@
  *
 */
 
-#ifndef TRAFFIC_EDITOR__FEATURE_HPP
-#define TRAFFIC_EDITOR__FEATURE_HPP
+#ifndef TRAFFIC_EDITOR__CONSTRAINT_HPP
+#define TRAFFIC_EDITOR__CONSTRAINT_HPP
 
 #include <string>
+#include <vector>
 
-#include <quuid.h>
+#include <QUuid>
 #include <yaml-cpp/yaml.h>
 
 class QGraphicsScene;
 
+class Level;
+
 //=============================================================================
-/// A feature in an image, such as a corner of a room in an occupancy-grid map.
-/// In the future, perhaps we can have more generic features, such as lines
-/// or circles (pillars), etc. But for now, we'll use points.
-class Feature
+/// A constraint between two features in two maps that we want to align.
+
+class Constraint
 {
 public:
-  Feature();
-  Feature(double x, double y);
+  Constraint();
+  Constraint(const QUuid& a, const QUuid& b);
 
-  double x() const { return _x; }
-  void set_x(double x) { _x = x; }
-  double y() const { return _y; }
-  void set_y(double y) { _y = y; }
-  std::string name() const { return _name; }
-  QUuid const& id() const { return _id; }
+  std::vector<QUuid> ids() const { return _ids; }
+  void set_ids(std::vector<QUuid>& ids) { _ids = ids; }
+  void add_id(const QUuid& id);
+
   bool selected() const { return _selected; }
 
   void from_yaml(const YAML::Node& data);
@@ -48,17 +48,11 @@ public:
 
   void draw(
     QGraphicsScene*,
-    const double meters_per_pixel,
-    const QColor color) const;
-
-  static constexpr double radius_meters = 0.1;
+    const Level& level) const;
 
 private:
-  double _x = 0.0;
-  double _y = 0.0;
-  QUuid _id;
+  std::vector<QUuid> _ids;
   bool _selected = false;
-  std::string _name;
 };
 
-#endif  // TRAFFIC_EDITOR__FEATURE_HPP
+#endif  // TRAFFIC_EDITOR__CONSTRAINT_HPP

@@ -65,6 +65,11 @@ public:
 
   QUuid add_feature(const double x, const double y);
   void remove_feature(QUuid feature_uuid);
+
+  const Feature* find_feature(
+    const double x,
+    const double y,
+    const double drawing_meters_per_pixel) const;
 };
 
 #endif

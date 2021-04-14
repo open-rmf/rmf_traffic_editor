@@ -134,6 +134,12 @@ void Layer::draw(
   QGraphicsColorizeEffect* colorize_effect = new QGraphicsColorizeEffect;
   colorize_effect->setColor(color);
   item->setGraphicsEffect(colorize_effect);
+
+  for (const auto& feature : features)
+    feature.draw(
+      scene,
+      level_meters_per_pixel,
+      color);
 }
 
 QColor Layer::default_color(const int layer_idx)
@@ -150,13 +156,13 @@ QColor Layer::default_color(const int layer_idx)
   }
 }
 
-void Layer::remove_feature(QUuid feature_uuid)
+void Layer::remove_feature(QUuid feature_id)
 {
   int index_to_remove = -1;
 
   for (size_t i = 0; i < features.size(); i++)
   {
-    if (feature_uuid == features[i].uuid())
+    if (feature_id == features[i].id())
       index_to_remove = i;
   }
 
@@ -168,6 +174,38 @@ void Layer::remove_feature(QUuid feature_uuid)
 
 QUuid Layer::add_feature(const double x, const double y)
 {
+  printf("Layer::add_feature(%s, %.3f, %.3f)\n", name.c_str(), x, y);
   features.push_back(Feature(x, y));
-  return features.rbegin()->uuid();
+  return features.rbegin()->id();
+}
+
+const Feature* Layer::find_feature(
+  const double x,
+  const double y,
+  const double drawing_meters_per_pixel) const
+{
+  // todo: apply transform as needed to features to be calculating
+  // distances to where they are currently
+  double min_dist = 1e9;
+  const Feature* min_feature = nullptr;
+
+  for (size_t i = 0; i < features.size(); i++)
+  {
+    const Feature& f = features[i];
+    const double dx = x - f.x();
+    const double dy = y - f.y();
+    const double dist = sqrt(dx * dx + dy * dy);
+    if (dist < min_dist)
+    {
+      min_dist = dist;
+      min_feature = &features[i];
+    }
+  }
+
+  printf("min_dist = %.3f   layer meters_per_pixel = %.3f\n", min_dist, meters_per_pixel);
+  // scale calculation? probably wrong...
+  if (min_dist * drawing_meters_per_pixel < Feature::radius_meters)
+    return min_feature;
+
+  return nullptr;
 }

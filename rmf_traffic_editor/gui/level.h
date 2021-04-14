@@ -21,6 +21,7 @@
 #include <yaml-cpp/yaml.h>
 #include <string>
 
+#include "constraint.hpp"
 #include "edge.h"
 #include "editor_model.h"
 #include "feature.hpp"
@@ -81,11 +82,15 @@ public:
   std::vector<Model> models;
   std::vector<Fiducial> fiducials;
   std::vector<Feature> floorplan_features;
+  std::vector<Constraint> constraints;
 
   QPixmap floorplan_pixmap;
 
   bool from_yaml(const std::string& name, const YAML::Node& data);
   YAML::Node to_yaml() const;
+
+  const Feature* find_feature(const QUuid& id) const;
+  const Feature* find_feature(const double x, const double y) const;
 
   struct SelectedItem
   {
@@ -170,7 +175,6 @@ private:
     double hinge_y,
     double door_length,
     double door_angle) const;
-
 };
 
 #endif

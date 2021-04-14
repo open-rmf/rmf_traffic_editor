@@ -26,13 +26,13 @@
 
 Feature::Feature()
 {
-  _uuid = QUuid::createUuid();
+  _id = QUuid::createUuid();
 }
 
 Feature::Feature(double x, double y)
 : _x(x), _y(y)
 {
-  _uuid = QUuid::createUuid();
+  _id = QUuid::createUuid();
 }
 
 void Feature::from_yaml(const YAML::Node& data)
@@ -41,7 +41,7 @@ void Feature::from_yaml(const YAML::Node& data)
     throw std::runtime_error("Feature::from_yaml() expected a map");
   _x = data["x"].as<double>();
   _y = data["y"].as<double>();
-  _uuid = QString(data["uuid"].as<std::string>().c_str());
+  _id = QString(data["id"].as<std::string>().c_str());
 
   // todo: parse name, if it's in the YAML
 }
@@ -53,7 +53,7 @@ YAML::Node Feature::to_yaml() const
   node["x"] = std::round(_x * 1000.0) / 1000.0;
   node["y"] = std::round(_y * 1000.0) / 1000.0;
   node["name"] = _name;
-  node["uuid"] = _uuid.toString().toStdString();
+  node["id"] = _id.toString().toStdString();
   return node;
 }
 
@@ -62,12 +62,16 @@ void Feature::draw(
   const double meters_per_pixel,
   const QColor color) const
 {
-  // todo: compute selected color based on color param
   const QColor selected_color = QColor::fromRgbF(1.0, 0.0, 0.0, 0.5);
 
-  QPen pen(_selected ? selected_color : color);
-  pen.setWidth(0.05 / meters_per_pixel);
-  const double radius = 0.10 / meters_per_pixel;
+  const double pen_width = 0.025 / meters_per_pixel;
+  QPen pen(
+    QBrush(_selected ? selected_color : color),
+    pen_width,
+    Qt::SolidLine,
+    Qt::FlatCap);
+
+  const double radius = radius_meters / meters_per_pixel;
 
   QGraphicsEllipseItem* circle = scene->addEllipse(
     _x - radius,
@@ -78,21 +82,22 @@ void Feature::draw(
     QBrush(QColor::fromRgbF(1, 1, 1, 0.5)));
   circle->setZValue(200.0);
 
-  QGraphicsLineItem* vertical_line = scene->addLine(
-    _x,
-    _y - radius,
-    _x,
-    _y + radius,
+  const double line_radius = (radius - pen_width / 2.0) / sqrt(2.0);
+  QGraphicsLineItem* line_1 = scene->addLine(
+    _x - line_radius,
+    _y - line_radius,
+    _x + line_radius,
+    _y + line_radius,
     pen);
-  vertical_line->setZValue(200.0);
+  line_1->setZValue(200.0);
 
-  QGraphicsLineItem* horizontal_line = scene->addLine(
-    _x - radius,
-    _y,
-    _x + radius,
-    _y,
+  QGraphicsLineItem* line_2 = scene->addLine(
+    _x - line_radius,
+    _y + line_radius,
+    _x + line_radius,
+    _y - line_radius,
     pen);
-  horizontal_line->setZValue(200.0);
+  line_2->setZValue(200.0);
 
   /*
   QGraphicsSimpleTextItem* item = scene->addSimpleText(QString::number(_id));

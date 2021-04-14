@@ -32,6 +32,7 @@ include_directories(${ament_index_cpp_INCLUDE_DIRS})
 
 set(gui_sources
   gui/actions/add_edge.cpp
+  gui/actions/add_constraint.cpp
   gui/actions/add_feature.cpp
   gui/actions/add_fiducial.cpp
   gui/actions/add_model.cpp
@@ -49,6 +50,7 @@ set(gui_sources
   gui/add_param_dialog.cpp
   gui/building.cpp
   gui/building_dialog.cpp
+  gui/constraint.cpp
   gui/feature.cpp
   gui/edge.cpp
   gui/editor.cpp

@@ -119,6 +119,7 @@ private:
     TOOL_EDIT_POLYGON,
     TOOL_ADD_ZONE,
     TOOL_ADD_FEATURE,
+    TOOL_ADD_CONSTRAINT,
     TOOL_ADD_FIDUCIAL,
     TOOL_ADD_ROI,
     TOOL_ADD_HOLE,
@@ -176,6 +177,7 @@ private:
   int prev_clicked_idx = -1; // Previously clicked ID.
   //int polygon_idx = -1;  // currently selected polygon
   Polygon* selected_polygon = nullptr;
+  QUuid clicked_feature_id;
 
   const Level* active_level() const;
   const Layer* active_layer() const;
@@ -337,6 +339,11 @@ private:
   void mouse_edit_polygon(const MouseType t, QMouseEvent* e, const QPointF& p);
 
   void mouse_add_human_lane(const MouseType t, QMouseEvent* e,
+    const QPointF& p);
+
+  void mouse_add_constraint(
+    const MouseType t,
+    QMouseEvent* e,
     const QPointF& p);
 
   QPointF previous_mouse_point;

@@ -13,7 +13,7 @@
    version="1.1"
    id="svg8"
    inkscape:version="0.92.5 (2060ec1f9f, 2020-04-08)"
-   sodipodi:docname="feature.svg">
+   sodipodi:docname="constraint.svg">
   <defs
      id="defs2">
     <marker
@@ -66,9 +66,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.4"
-     inkscape:cx="54.739711"
-     inkscape:cy="-56.931114"
+     inkscape:zoom="7.919596"
+     inkscape:cx="63.552633"
+     inkscape:cy="73.621956"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      inkscape:document-rotation="0"
@@ -77,9 +77,9 @@
      fit-margin-left="0"
      fit-margin-right="0"
      fit-margin-bottom="0"
-     inkscape:window-width="952"
+     inkscape:window-width="2040"
      inkscape:window-height="2099"
-     inkscape:window-x="5760"
+     inkscape:window-x="4736"
      inkscape:window-y="26"
      inkscape:window-maximized="0" />
   <metadata
@@ -100,19 +100,20 @@
      id="layer1"
      transform="translate(-99.245236,-121.60212)">
     <g
+       transform="matrix(0.45166575,0,0,0.45166575,54.510229,81.4205)"
        id="g1482">
       <g
          transform="matrix(1.7779229,0,0,1.7779229,-70.739975,-126.47961)"
          style="fill:none;stroke:#ae0000;stroke-width:1.00004339;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-         id="g857">
+         id="g857-3">
         <path
            inkscape:connector-curvature="0"
-           id="path833"
+           id="path833-6"
            d="m 99.619412,143.11941 10.761178,10.76118"
            style="fill:none;fill-rule:evenodd;stroke:#ae0000;stroke-width:1.00004339;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
         <path
            inkscape:connector-curvature="0"
-           id="path833-3"
+           id="path833-3-7"
            d="M 110.38059,143.11941 99.619412,153.88059"
            style="fill:none;fill-rule:evenodd;stroke:#ae0000;stroke-width:1.00004339;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
       </g>
@@ -123,5 +124,40 @@
          id="path852"
          style="opacity:1;fill:none;fill-opacity:0.07843137;stroke:#ae0000;stroke-width:1.778;stroke-linecap:square;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
     </g>
+    <g
+       transform="matrix(0.45166577,0,0,0.45166577,72.468348,71.205103)"
+       id="g1482-5">
+      <g
+         transform="matrix(1.7779229,0,0,1.7779229,-70.739975,-126.47961)"
+         style="fill:none;stroke:#ae0000;stroke-width:1.00004339;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         id="g857-3-3">
+        <path
+           inkscape:connector-curvature="0"
+           id="path833-6-5"
+           d="m 99.619412,143.11941 10.761178,10.76118"
+           style="fill:none;fill-rule:evenodd;stroke:#ae0000;stroke-width:1.00004339;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+        <path
+           inkscape:connector-curvature="0"
+           id="path833-3-7-6"
+           d="M 110.38059,143.11941 99.619412,153.88059"
+           style="fill:none;fill-rule:evenodd;stroke:#ae0000;stroke-width:1.00004339;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+      </g>
+      <circle
+         r="12.962572"
+         cy="137.61725"
+         cx="115.94958"
+         id="path852-2"
+         style="opacity:1;fill:none;fill-opacity:0.07843137;stroke:#ae0000;stroke-width:1.778;stroke-linecap:square;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    </g>
+    <rect
+       style="opacity:1;fill:#fdff00;fill-opacity:0.98692812;stroke:#000000;stroke-width:1;stroke-linecap:square;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect1582"
+       width="23.425552"
+       height="4.3392611"
+       x="19.40675"
+       y="175.6842"
+       rx="2.5560281"
+       ry="2.0171607"
+       transform="rotate(-29.988273)" />
   </g>
 </svg>
