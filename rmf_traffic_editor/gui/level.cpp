@@ -952,8 +952,14 @@ void Level::draw(
 {
   if (drawing_filename.size() && _drawing_visible)
   {
+    const double extra_scroll_area_width = 1.0 * drawing_width;
+    const double extra_scroll_area_height = 1.0 * drawing_height;
     scene->setSceneRect(
-      QRectF(0, 0, drawing_width, drawing_height));
+      QRectF(
+        -extra_scroll_area_width,
+        -extra_scroll_area_height,
+        drawing_width + 2 * extra_scroll_area_width,
+        drawing_height + 2 * extra_scroll_area_height));
     scene->addPixmap(floorplan_pixmap);
   }
   else

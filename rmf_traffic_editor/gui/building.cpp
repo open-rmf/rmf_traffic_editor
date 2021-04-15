@@ -299,7 +299,7 @@ Building::NearestItem Building::nearest_items(
       const double dist = sqrt(dx*dx + dy*dy);
       if (dist < ni.feature_dist)
       {
-        ni.feature_layer_idx = layer_idx;
+        ni.feature_layer_idx = layer_idx + 1;
         ni.feature_dist = dist;
         ni.feature_idx = i;
       }
