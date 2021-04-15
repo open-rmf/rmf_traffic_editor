@@ -1663,6 +1663,14 @@ void Editor::mouse_move(
     Building::NearestItem ni =
       building.nearest_items(level_idx, p.x(), p.y());
 
+    printf(
+      "mouse press (%.3f, %.3f) feature_dist = %.3f, feature_idx = %d, feature_layer_idx = %d\n",
+      p.x(),
+      p.y(),
+      ni.feature_dist,
+      ni.feature_idx,
+      ni.feature_layer_idx);
+
     // todo: use QGraphics stuff to see if we clicked a model pixmap...
     const double model_dist_thresh = 0.5 /
       building.levels[level_idx].drawing_meters_per_pixel;
@@ -1693,6 +1701,9 @@ void Editor::mouse_move(
       ni.feature_layer_idx >= 0 &&
       ni.feature_dist < 10.0)
     {
+      mouse_feature_idx = ni.feature_idx;
+      mouse_feature_layer_idx = ni.feature_layer_idx;
+
       latest_move_feature = new MoveFeatureCommand(
         &building,
         level_idx,
@@ -1702,6 +1713,7 @@ void Editor::mouse_move(
     else if (ni.fiducial_idx >= 0 && ni.fiducial_dist < 10.0)
     {
       mouse_fiducial_idx = ni.fiducial_idx;
+
       latest_move_fiducial = new MoveFiducialCommand(
         &building,
         level_idx,
@@ -1772,6 +1784,7 @@ void Editor::mouse_move(
   {
     if (!(e->buttons() & Qt::LeftButton))
       return;// we only care about mouse-dragging, not just motion
+    /*
     printf(
       "mouse move, vertex_idx = %d, "
       "feature_idx = %d, feature_layer_idx = %d, "
@@ -1780,6 +1793,7 @@ void Editor::mouse_move(
       mouse_feature_idx,
       mouse_feature_layer_idx,
       mouse_fiducial_idx);
+    */
     if (mouse_motion_model != nullptr)
     {
       // we're dragging a model

@@ -102,6 +102,17 @@ bool Level::from_yaml(
     }
   }
 
+  if (_data["constraints"] && _data["constraints"].IsSequence())
+  {
+    const YAML::Node& c_data = _data["constraints"];
+    for (YAML::const_iterator it = c_data.begin(); it != c_data.end(); ++it)
+    {
+      Constraint c;
+      c.from_yaml(*it);
+      constraints.push_back(c);
+    }
+  }
+
   if (_data["flattened_x_offset"])
     flattened_x_offset = _data["flattened_x_offset"].as<double>();
   if (_data["flattened_y_offset"])
@@ -214,6 +225,9 @@ YAML::Node Level::to_yaml() const
 
   for (const auto& feature : floorplan_features)
     y["features"].push_back(feature.to_yaml());
+
+  for (const auto& constraint : constraints)
+    y["constraints"].push_back(constraint.to_yaml());
 
   for (const auto& f : fiducials)
     y["fiducials"].push_back(f.to_yaml());
@@ -1395,6 +1409,9 @@ const Feature* Level::find_feature(const double x, const double y) const
 
 void Level::add_constraint(const QUuid& a, const QUuid& b)
 {
+  printf("Level::add_constraint(%s, %s)\n",
+    a.toString().toStdString().c_str(),
+    b.toString().toStdString().c_str());
   if (a == b)
     return;  // let's be serious
   constraints.push_back(Constraint(a, b));

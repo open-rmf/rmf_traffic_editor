@@ -75,10 +75,10 @@ void Constraint::draw(
     return;
   }
 
-  const QColor color = QColor::fromRgbF(1.0, 1.0, 0.0, 0.5);
+  const QColor color = QColor::fromRgbF(0.7, 0.7, 0.2, 1.0);
   const QColor selected_color = QColor::fromRgbF(1.0, 0.0, 0.0, 0.5);
 
-  const double pen_width = 0.01 / level.drawing_meters_per_pixel;
+  const double pen_width = 0.1 / level.drawing_meters_per_pixel;
   QPen pen(
     QBrush(_selected ? selected_color : color),
     pen_width,
@@ -100,7 +100,6 @@ void Constraint::draw(
       _ids[1].toString().toStdString().c_str());
     return;
   }
-
 
   QGraphicsLineItem* line = scene->addLine(
     f1->x(),

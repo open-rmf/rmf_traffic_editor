@@ -89,7 +89,6 @@ bool Layer::load_image()
 YAML::Node Layer::to_yaml() const
 {
   YAML::Node y;
-  y.SetStyle(YAML::EmitterStyle::Flow);
   y["filename"] = filename;
   y["meters_per_pixel"] = meters_per_pixel;
   y["translation_x"] = translation_x;
@@ -97,10 +96,11 @@ YAML::Node Layer::to_yaml() const
   y["rotation"] = rotation;
   y["visible"] = visible;
 
-  y["color"].push_back(color.redF());
-  y["color"].push_back(color.greenF());
-  y["color"].push_back(color.blueF());
-  y["color"].push_back(color.alphaF());
+  y["color"].push_back(std::round(color.redF() * 1000.0) / 1000.0);
+  y["color"].SetStyle(YAML::EmitterStyle::Flow);
+  y["color"].push_back(std::round(color.greenF() * 1000.0) / 1000.0);
+  y["color"].push_back(std::round(color.blueF() * 1000.0) / 1000.0);
+  y["color"].push_back(std::round(color.alphaF() * 1000.0) / 1000.0);
 
   for (const auto& feature : features)
     y["features"].push_back(feature.to_yaml());
