@@ -35,7 +35,7 @@
 #include "ament_index_cpp/get_package_prefix.hpp"
 #include "ament_index_cpp/get_resource.hpp"
 
-#include "actions/add_constraint.h"
+#include "actions/add_constraint.hpp"
 #include "actions/add_feature.h"
 #include "actions/add_fiducial.h"
 #include "actions/add_model.h"
@@ -1974,7 +1974,7 @@ void Editor::mouse_add_constraint(
         level_idx,
         clicked_feature_id,
         f->id());
-      undo_stack.push(cmd);
+      undo_stack.push(command);
 
       clicked_feature_id = QUuid();
       setWindowModified(true);

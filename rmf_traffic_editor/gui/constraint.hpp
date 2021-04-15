@@ -50,6 +50,8 @@ public:
     QGraphicsScene*,
     const Level& level) const;
 
+  bool operator==(const Constraint& other);
+
 private:
   std::vector<QUuid> _ids;
   bool _selected = false;

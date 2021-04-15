@@ -29,7 +29,7 @@ class AddConstraintCommand : public QUndoCommand
 public:
   AddConstraintCommand(
     Building* building,
-    int level_idx,
+    const int level_idx,
     const QUuid& a,
     const QUuid& b);
   virtual ~AddConstraintCommand();
@@ -38,9 +38,9 @@ public:
 
 private:
   Building* _building;
+  int _level_idx;
   QUuid _id_a;
   QUuid _id_b;
-  int _level_idx;
   std::vector<Constraint> _constraints_snapshot;
 };
 

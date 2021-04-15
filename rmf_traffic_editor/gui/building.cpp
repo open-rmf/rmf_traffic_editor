@@ -1004,8 +1004,28 @@ Polygon::EdgeDragPolygon Building::polygon_edge_drag_press(
 {
   Polygon::EdgeDragPolygon edp;
 
-  if (level_idx < 0 || level_idx > static_cast<int>(levels.size()))
+  if (level_idx < 0 || level_idx >= static_cast<int>(levels.size()))
     return edp;
 
   return levels[level_idx].polygon_edge_drag_press(polygon, x, y);
+}
+
+void Building::add_constraint(
+  const int level_idx,
+  const QUuid& a,
+  const QUuid& b)
+{
+  if (level_idx < 0 || level_idx >= static_cast<int>(levels.size()))
+    return;
+  levels[level_idx].add_constraint(a, b);
+}
+
+void Building::remove_constraint(
+  const int level_idx,
+  const QUuid& a,
+  const QUuid& b)
+{
+  if (level_idx < 0 || level_idx >= static_cast<int>(levels.size()))
+    return;
+  levels[level_idx].remove_constraint(a, b);
 }

@@ -68,6 +68,9 @@ public:
   QUuid add_feature(int level, int layer, double x, double y);
   void remove_feature(const int level, const int layer, QUuid feature_uuid);
 
+  void add_constraint(const int level_idx, const QUuid& a, const QUuid& b);
+  void remove_constraint(const int level_idx, const QUuid& a, const QUuid& b);
+
   int find_nearest_vertex_index(
     int level_index, double x, double y, double& distance);
 

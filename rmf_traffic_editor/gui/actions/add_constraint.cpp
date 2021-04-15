@@ -15,29 +15,31 @@
  *
 */
 
-#include "add_constraint.h"
+#include "add_constraint.hpp"
 
 AddConstraintCommand::AddConstraintCommand(
   Building* building,
-  int level,
+  const int level_idx,
   const QUuid& a,
   const QUuid& b)
 : _building(building),
-  _layer(layer),
+  _level_idx(level_idx),
   _id_a(a),
   _id_b(b)
 {
 }
 
+AddConstraintCommand::~AddConstraintCommand()
+{
+}
+
 void AddConstraintCommand::undo()
 {
-  // TODO
-  //_building->remove_feature(_level, _layer, _uuid);
+  _building->remove_constraint(_level_idx, _id_a, _id_b);
 }
 
 void AddConstraintCommand::redo()
 {
-  // TODO
-  //_uuid = _building->add_feature(_level, _layer, _x, _y);
+  _building->add_constraint(_level_idx, _id_a, _id_b);
 }
 

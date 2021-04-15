@@ -1392,3 +1392,30 @@ const Feature* Level::find_feature(const double x, const double y) const
 
   return nullptr;
 }
+
+void Level::add_constraint(const QUuid& a, const QUuid& b)
+{
+  if (a == b)
+    return;  // let's be serious
+  constraints.push_back(Constraint(a, b));
+}
+
+void Level::remove_constraint(const QUuid& a, const QUuid& b)
+{
+  const Constraint c(a, b);
+  int index_to_remove = -1;
+
+  for (size_t i = 0; i < constraints.size(); i++)
+  {
+    if (constraints[i] == c)
+    {
+      index_to_remove = static_cast<int>(i);
+      break;
+    }
+  }
+
+  if (index_to_remove < 0)
+    return;
+
+  constraints.erase(constraints.begin() + index_to_remove);
+}

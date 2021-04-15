@@ -110,3 +110,22 @@ void Constraint::draw(
     pen);
   line->setZValue(199.0);
 }
+
+bool Constraint::operator==(const Constraint& other)
+{
+  if (_ids.size() != other._ids.size())
+    return false;
+
+  bool all_equal_forwards = true;
+  bool all_equal_backwards = true;
+
+  for (size_t i = 0; i < _ids.size(); i++)
+  {
+    if (_ids[i] != other._ids[i])
+      all_equal_forwards = false;
+
+    if (_ids[i] != other._ids[other._ids.size() - 1 - i])
+      all_equal_backwards = false;
+  }
+  return all_equal_forwards || all_equal_backwards;
+}

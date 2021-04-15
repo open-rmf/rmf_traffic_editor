@@ -92,6 +92,9 @@ public:
   const Feature* find_feature(const QUuid& id) const;
   const Feature* find_feature(const double x, const double y) const;
 
+  void add_constraint(const QUuid& a, const QUuid& b);
+  void remove_constraint(const QUuid& a, const QUuid& b);
+
   struct SelectedItem
   {
     int model_idx = -1;
