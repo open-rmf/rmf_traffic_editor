@@ -1385,7 +1385,7 @@ const Feature* Level::find_feature(const double x, const double y) const
       continue;
 
     // todo: pass the floorplan scale?
-    const Feature *layer_feature =
+    const Feature* layer_feature =
       layers[layer_idx].find_feature(x, y, drawing_meters_per_pixel);
 
     if (layer_feature)
@@ -1419,7 +1419,7 @@ void Level::add_constraint(const QUuid& a, const QUuid& b)
     a.toString().toStdString().c_str(),
     b.toString().toStdString().c_str());
   if (a == b)
-    return;  // let's be serious
+    return;
   constraints.push_back(Constraint(a, b));
 }
 

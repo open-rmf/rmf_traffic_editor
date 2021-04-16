@@ -85,7 +85,7 @@ void Constraint::draw(
     Qt::SolidLine,
     Qt::RoundCap);
 
-  const Feature *f1 = level.find_feature(_ids[0]);
+  const Feature* f1 = level.find_feature(_ids[0]);
   if (!f1)
   {
     printf("woah! couldn't find constraint ID %s\n",
@@ -93,7 +93,7 @@ void Constraint::draw(
     return;
   }
 
-  const Feature *f2 = level.find_feature(_ids[1]);
+  const Feature* f2 = level.find_feature(_ids[1]);
   if (!f1)
   {
     printf("woah! couldn't find constraint ID %s\n",

@@ -1241,7 +1241,7 @@ void Editor::sanity_check()
 void Editor::layer_add_button_clicked()
 {
   if (level_idx >= static_cast<int>(building.levels.size()))
-    return; // let's not crash (yet)
+    return;
   Level& level = building.levels[level_idx];
   Layer layer;
   LayerDialog layer_dialog(this, layer);
@@ -1824,7 +1824,7 @@ void Editor::mouse_move(
         feature = &level.floorplan_features[mouse_feature_idx];
       else
         feature =
-          &level.layers[mouse_feature_layer_idx - 1].features[mouse_feature_idx];
+          &level.layers[mouse_feature_layer_idx-1].features[mouse_feature_idx];
 
       feature->set_x(p.x());
       feature->set_y(p.y());
