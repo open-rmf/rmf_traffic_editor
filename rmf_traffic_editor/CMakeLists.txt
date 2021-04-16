@@ -77,6 +77,7 @@ set(gui_sources
   gui/table_list.cpp
   gui/traffic_table.cpp
   gui/traffic_map.cpp
+  gui/transform.cpp
   gui/vertex.cpp
   gui/yaml_utils.cpp
 

@@ -39,10 +39,14 @@ bool Layer::from_yaml(const std::string& _name, const YAML::Node& y)
     throw std::runtime_error("Layer::from_yaml() expected a map");
   name = _name;
   filename = y["filename"].as<string>();
+
+  /*
   meters_per_pixel = y["meters_per_pixel"].as<double>();
   translation_x = y["translation_x"].as<double>();
   translation_y = y["translation_y"].as<double>();
   rotation = y["rotation"].as<double>();
+  */
+
   if (y["visible"])
     visible = y["visible"].as<bool>();
 
@@ -90,10 +94,6 @@ YAML::Node Layer::to_yaml() const
 {
   YAML::Node y;
   y["filename"] = filename;
-  y["meters_per_pixel"] = meters_per_pixel;
-  y["translation_x"] = translation_x;
-  y["translation_y"] = translation_y;
-  y["rotation"] = rotation;
   y["visible"] = visible;
 
   y["color"].push_back(std::round(color.redF() * 1000.0) / 1000.0);
@@ -121,12 +121,12 @@ void Layer::draw(
   scene_item = item;
 
   item->setPos(
-    -translation_x / level_meters_per_pixel,
-    translation_y / level_meters_per_pixel);
+    -transform.translation().x() / transform.scale(),
+    transform.translation().y() / transform.scale());
 
-  item->setScale(meters_per_pixel / level_meters_per_pixel);
+  item->setScale(transform._scale / level_meters_per_pixel);
 
-  item->setRotation(-1.0 * rotation * 180.0 / M_PI);
+  item->setRotation(-1.0 * transform.yaw() * 180.0 / M_PI);
 
   QGraphicsColorizeEffect* colorize_effect = new QGraphicsColorizeEffect;
   colorize_effect->setColor(color);
@@ -199,7 +199,7 @@ const Feature* Layer::find_feature(
     }
   }
 
-  printf("min_dist = %.3f   layer meters_per_pixel = %.3f\n", min_dist, meters_per_pixel);
+  printf("min_dist = %.3f   layer scale = %.3f\n", min_dist, transform.scale());
   // scale calculation? probably wrong...
   if (min_dist * drawing_meters_per_pixel < Feature::radius_meters)
     return min_feature;

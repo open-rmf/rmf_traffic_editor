@@ -25,6 +25,7 @@
 #include <yaml-cpp/yaml.h>
 
 #include "feature.hpp"
+#include "transform.hpp"
 
 class QGraphicsScene;
 class QGraphicsPixmapItem;
@@ -40,10 +41,14 @@ public:
   std::string filename;
   bool visible = true;
 
+  /*
   double meters_per_pixel = 0.05;  // relative to the parent floorplan scale
   double translation_x = 0.0;
   double translation_y = 0.0;
   double rotation = 0.0;
+  */
+
+  Transform transform;
 
   QPixmap pixmap;
   QGraphicsPixmapItem* scene_item = nullptr;  // Borrowed pointer, not owned, don't delete
