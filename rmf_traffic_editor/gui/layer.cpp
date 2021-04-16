@@ -120,9 +120,6 @@ void Layer::draw(
   // Store for later use in getting coordinates back out
   scene_item = item;
 
-  // set the origin of the pixmap frame to the lower-left corner
-  item->setOffset(0, -pixmap.height());
-
   item->setPos(
     -translation_x / level_meters_per_pixel,
     translation_y / level_meters_per_pixel);
@@ -208,4 +205,18 @@ const Feature* Layer::find_feature(
     return min_feature;
 
   return nullptr;
+}
+
+void Layer::transform_global_to_layer(const QPointF in, QPointF& out)
+{
+  // TODO
+  out.setX(in.x());
+  out.setY(in.y());
+}
+
+void Layer::transform_layer_to_global(const QPointF in, QPointF& out)
+{
+  // TODO
+  out.setX(in.x());
+  out.setY(in.y());
 }

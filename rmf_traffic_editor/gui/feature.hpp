@@ -20,7 +20,8 @@
 
 #include <string>
 
-#include <quuid.h>
+#include <QPointF>
+#include <QUuid>
 #include <yaml-cpp/yaml.h>
 
 class QGraphicsScene;
@@ -35,12 +36,19 @@ public:
   Feature();
   Feature(double x, double y);
 
+  // "x" and "y" are pixels from the upper-left corner of the layer image
   double x() const { return _x; }
   void set_x(double x) { _x = x; }
+
   double y() const { return _y; }
   void set_y(double y) { _y = y; }
+
+  QPointF transformed() { return _transformed; }
+
   std::string name() const { return _name; }
+
   QUuid const& id() const { return _id; }
+
   bool selected() const { return _selected; }
 
   void from_yaml(const YAML::Node& data);
@@ -59,6 +67,7 @@ private:
   QUuid _id;
   bool _selected = false;
   std::string _name;
+  QPointF _transformed;
 };
 
 #endif  // TRAFFIC_EDITOR__FEATURE_HPP

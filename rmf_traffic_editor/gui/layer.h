@@ -70,6 +70,9 @@ public:
     const double x,
     const double y,
     const double drawing_meters_per_pixel) const;
+
+  void transform_global_to_layer(const QPointF in, QPointF& out);
+  void transform_layer_to_global(const QPointF in, QPointF& out);
 };
 
 #endif
