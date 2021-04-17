@@ -59,23 +59,26 @@ YAML::Node Feature::to_yaml() const
 
 void Feature::draw(
   QGraphicsScene* scene,
-  const double meters_per_pixel,
-  const QColor color) const
+  const Transform& transform,
+  const QColor color,
+  const double level_meters_per_pixel) const
 {
   const QColor selected_color = QColor::fromRgbF(1.0, 0.0, 0.0, 0.5);
 
-  const double pen_width = 0.025 / meters_per_pixel;
+  const double pen_width = 0.025 / level_meters_per_pixel;
   QPen pen(
     QBrush(_selected ? selected_color : color),
     pen_width,
     Qt::SolidLine,
     Qt::FlatCap);
 
-  const double radius = radius_meters / meters_per_pixel;
+  const double radius = radius_meters / level_meters_per_pixel;
+
+  const QPointF transformed(transform.forwards(QPointF(_x, _y)));
 
   QGraphicsEllipseItem* circle = scene->addEllipse(
-    _x - radius,
-    _y - radius,
+    transformed.x() - radius,
+    transformed.y() - radius,
     2 * radius,
     2 * radius,
     pen,
@@ -84,18 +87,18 @@ void Feature::draw(
 
   const double line_radius = (radius - pen_width / 2.0) / sqrt(2.0);
   QGraphicsLineItem* line_1 = scene->addLine(
-    _x - line_radius,
-    _y - line_radius,
-    _x + line_radius,
-    _y + line_radius,
+    transformed.x() - line_radius,
+    transformed.y() - line_radius,
+    transformed.x() + line_radius,
+    transformed.y() + line_radius,
     pen);
   line_1->setZValue(200.0);
 
   QGraphicsLineItem* line_2 = scene->addLine(
-    _x - line_radius,
-    _y + line_radius,
-    _x + line_radius,
-    _y - line_radius,
+    transformed.x() - line_radius,
+    transformed.y() + line_radius,
+    transformed.x() + line_radius,
+    transformed.y() - line_radius,
     pen);
   line_2->setZValue(200.0);
 

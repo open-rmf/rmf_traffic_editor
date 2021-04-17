@@ -24,6 +24,8 @@
 #include <QUuid>
 #include <yaml-cpp/yaml.h>
 
+#include "transform.hpp"
+
 class QGraphicsScene;
 
 //=============================================================================
@@ -56,8 +58,9 @@ public:
 
   void draw(
     QGraphicsScene*,
-    const double meters_per_pixel,
-    const QColor color) const;
+    const Transform& transform,
+    const QColor color,
+    const double level_meters_per_pixel) const;
 
   static constexpr double radius_meters = 0.1;
 

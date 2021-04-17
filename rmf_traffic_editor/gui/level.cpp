@@ -1008,8 +1008,9 @@ void Level::draw(
   for (const auto& feature : floorplan_features)
     feature.draw(
       scene,
-      drawing_meters_per_pixel,
-      QColor::fromRgbF(0, 0, 0, 0.5));
+      Transform(),
+      QColor::fromRgbF(0, 0, 0, 0.5),
+      drawing_meters_per_pixel);
 
   for (const auto& constraint : constraints)
     constraint.draw(scene, *this);

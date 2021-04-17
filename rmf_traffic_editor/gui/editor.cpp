@@ -1939,7 +1939,7 @@ void Editor::mouse_add_edge(
 
 void Editor::mouse_add_constraint(
   const MouseType t,
-  QMouseEvent* e,
+  QMouseEvent* /*e*/,
   const QPointF& p)
 {
   const Level* level = active_level();

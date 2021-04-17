@@ -50,6 +50,9 @@ bool Layer::from_yaml(const std::string& _name, const YAML::Node& y)
   if (y["visible"])
     visible = y["visible"].as<bool>();
 
+  if (y["transform"] && y["transform"].IsMap())
+    transform.from_yaml(y["transform"]);
+
   if (y["color"] && y["color"].IsSequence() && y["color"].size() == 4)
     color = QColor::fromRgbF(
       y["color"][0].as<double>(),
@@ -105,6 +108,8 @@ YAML::Node Layer::to_yaml() const
   for (const auto& feature : features)
     y["features"].push_back(feature.to_yaml());
 
+  y["transform"] = transform.to_yaml();
+
   return y;
 }
 
@@ -133,10 +138,7 @@ void Layer::draw(
   item->setGraphicsEffect(colorize_effect);
 
   for (const auto& feature : features)
-    feature.draw(
-      scene,
-      level_meters_per_pixel,
-      color);
+    feature.draw(scene, transform, color, level_meters_per_pixel);
 }
 
 QColor Layer::default_color(const int layer_idx)
@@ -207,16 +209,12 @@ const Feature* Layer::find_feature(
   return nullptr;
 }
 
-void Layer::transform_global_to_layer(const QPointF in, QPointF& out)
+QPointF Layer::transform_global_to_layer(const QPointF& global_point)
 {
-  // TODO
-  out.setX(in.x());
-  out.setY(in.y());
+  return transform.backwards(global_point);
 }
 
-void Layer::transform_layer_to_global(const QPointF in, QPointF& out)
+QPointF Layer::transform_layer_to_global(const QPointF& layer_point)
 {
-  // TODO
-  out.setX(in.x());
-  out.setY(in.y());
+  return transform.forwards(layer_point);
 }

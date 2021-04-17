@@ -40,8 +40,8 @@ public:
   double scale() const { return _scale; }
   QPointF translation() const { return _translation; }
 
-  QPointF forwards(const QPointF& p);
-  QPointF backwards(const QPointF& p);
+  QPointF forwards(const QPointF& p) const;
+  QPointF backwards(const QPointF& p) const;
 
   bool from_yaml(const YAML::Node& data);
   YAML::Node to_yaml() const;

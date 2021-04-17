@@ -51,12 +51,12 @@ YAML::Node Transform::to_yaml() const
   return y;
 }
 
-QPointF Transform::forwards(const QPointF& p)
+QPointF Transform::forwards(const QPointF& p) const
 {
   return p;
 }
 
-QPointF Transform::backwards(const QPointF& p)
+QPointF Transform::backwards(const QPointF& p) const
 {
   return p;
 }
