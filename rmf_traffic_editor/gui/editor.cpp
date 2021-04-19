@@ -1218,7 +1218,12 @@ void Editor::layer_edit_button_clicked(const int row_idx)
   connect(
     dialog,
     &LayerDialog::redraw,
-    [=]() { layer_table->update(building, level_idx, layer_idx); });
+    [=]()
+    {
+      layer_table->update(building, level_idx, layer_idx);
+      create_scene();
+    }
+  );
 }
 
 void Editor::sanity_check()
@@ -1829,6 +1834,7 @@ void Editor::mouse_move(
       feature->set_x(p.x());
       feature->set_y(p.y());
       latest_move_feature->set_final_destination(p.x(), p.y());
+
       printf("moved feature %d on layer %d to (%.1f, %.1f)\n",
         mouse_feature_idx,
         mouse_feature_layer_idx,

@@ -37,8 +37,16 @@ public:
   QPointF _translation;
 
   double yaw() const { return _yaw; }
+  void setYaw(const double next_yaw) { _yaw = next_yaw; }
+
   double scale() const { return _scale; }
+  void setScale(const double next_scale) { _scale = next_scale; }
+
   QPointF translation() const { return _translation; }
+  void setTranslation(const QPointF& next_translation)
+  {
+    _translation = next_translation;
+  }
 
   QPointF forwards(const QPointF& p) const;
   QPointF backwards(const QPointF& p) const;

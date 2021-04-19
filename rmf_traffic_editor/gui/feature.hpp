@@ -56,9 +56,10 @@ public:
   void from_yaml(const YAML::Node& data);
   YAML::Node to_yaml() const;
 
+  void apply_transformation(const Transform& transform);
+
   void draw(
     QGraphicsScene*,
-    const Transform& transform,
     const QColor color,
     const double level_meters_per_pixel) const;
 

@@ -59,7 +59,6 @@ YAML::Node Feature::to_yaml() const
 
 void Feature::draw(
   QGraphicsScene* scene,
-  const Transform& transform,
   const QColor color,
   const double level_meters_per_pixel) const
 {
@@ -72,13 +71,13 @@ void Feature::draw(
     Qt::SolidLine,
     Qt::FlatCap);
 
+  printf("  draw point = (%.3f, %.3f)\n", _transformed.x(), _transformed.y());
+
   const double radius = radius_meters / level_meters_per_pixel;
 
-  const QPointF transformed(transform.forwards(QPointF(_x, _y)));
-
   QGraphicsEllipseItem* circle = scene->addEllipse(
-    transformed.x() - radius,
-    transformed.y() - radius,
+    _transformed.x() - radius,
+    _transformed.y() - radius,
     2 * radius,
     2 * radius,
     pen,
@@ -87,18 +86,18 @@ void Feature::draw(
 
   const double line_radius = (radius - pen_width / 2.0) / sqrt(2.0);
   QGraphicsLineItem* line_1 = scene->addLine(
-    transformed.x() - line_radius,
-    transformed.y() - line_radius,
-    transformed.x() + line_radius,
-    transformed.y() + line_radius,
+    _transformed.x() - line_radius,
+    _transformed.y() - line_radius,
+    _transformed.x() + line_radius,
+    _transformed.y() + line_radius,
     pen);
   line_1->setZValue(200.0);
 
   QGraphicsLineItem* line_2 = scene->addLine(
-    transformed.x() - line_radius,
-    transformed.y() + line_radius,
-    transformed.x() + line_radius,
-    transformed.y() - line_radius,
+    _transformed.x() - line_radius,
+    _transformed.y() + line_radius,
+    _transformed.x() + line_radius,
+    _transformed.y() - line_radius,
     pen);
   line_2->setZValue(200.0);
 
@@ -110,4 +109,11 @@ void Feature::draw(
   font.setPointSize(30);
   item->setFont(font);
   */
+}
+
+void Feature::apply_transformation(const Transform& transform)
+{
+  printf("Feature::apply_transformation(scale = %.3f)\n", transform.scale());
+  _transformed = transform.forwards(QPointF(_x, _y));
+  printf("  point = (%.3f, %.3f)\n", _transformed.x(), _transformed.y());
 }

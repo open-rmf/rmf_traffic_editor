@@ -69,7 +69,7 @@ LayerDialog::LayerDialog(QWidget* parent, Layer& _layer, bool edit_mode)
   scale_line_edit = new QLineEdit(
     QString::number(layer.transform.scale()),
     this);
-  scale_line_edit->setEnabled(false);
+  //scale_line_edit->setEnabled(false);
   scale_hbox_layout->addWidget(scale_line_edit);
 
   QHBoxLayout* translation_x_hbox_layout = new QHBoxLayout;
@@ -77,7 +77,7 @@ LayerDialog::LayerDialog(QWidget* parent, Layer& _layer, bool edit_mode)
   translation_x_line_edit = new QLineEdit(
     QString::number(layer.transform.translation().x()),
     this);
-  translation_x_line_edit->setEnabled(false);
+  //translation_x_line_edit->setEnabled(false);
   translation_x_hbox_layout->addWidget(translation_x_line_edit);
 
   QHBoxLayout* translation_y_hbox_layout = new QHBoxLayout;
@@ -85,7 +85,7 @@ LayerDialog::LayerDialog(QWidget* parent, Layer& _layer, bool edit_mode)
   translation_y_line_edit = new QLineEdit(
     QString::number(layer.transform.translation().y()),
     this);
-  translation_y_line_edit->setEnabled(false);
+  //translation_y_line_edit->setEnabled(false);
   translation_y_hbox_layout->addWidget(translation_y_line_edit);
 
   QHBoxLayout* rotation_hbox_layout = new QHBoxLayout;
@@ -93,7 +93,7 @@ LayerDialog::LayerDialog(QWidget* parent, Layer& _layer, bool edit_mode)
   rotation_line_edit = new QLineEdit(
     QString::number(layer.transform.yaw()),
     this);
-  rotation_line_edit->setEnabled(false);
+  //rotation_line_edit->setEnabled(false);
   rotation_hbox_layout->addWidget(rotation_line_edit);
 
   QVBoxLayout* vbox_layout = new QVBoxLayout;
@@ -108,6 +108,30 @@ LayerDialog::LayerDialog(QWidget* parent, Layer& _layer, bool edit_mode)
 
   connect(
     filename_line_edit,
+    &QLineEdit::textEdited,
+    this,
+    &LayerDialog::update_layer);
+
+  connect(
+    scale_line_edit,
+    &QLineEdit::textEdited,
+    this,
+    &LayerDialog::update_layer);
+
+  connect(
+    translation_x_line_edit,
+    &QLineEdit::textEdited,
+    this,
+    &LayerDialog::update_layer);
+
+  connect(
+    translation_y_line_edit,
+    &QLineEdit::textEdited,
+    this,
+    &LayerDialog::update_layer);
+
+  connect(
+    rotation_line_edit,
     &QLineEdit::textEdited,
     this,
     &LayerDialog::update_layer);
@@ -192,5 +216,14 @@ void LayerDialog::update_layer()
 {
   layer.name = name_line_edit->text().toStdString();
   layer.filename = filename_line_edit->text().toStdString();
+
+  layer.transform.setScale(scale_line_edit->text().toDouble());
+  layer.transform.setYaw(rotation_line_edit->text().toDouble());
+
+  layer.transform.setTranslation(
+    QPointF(
+      translation_x_line_edit->text().toDouble(),
+      translation_y_line_edit->text().toDouble()));
+
   emit redraw();
 }

@@ -98,6 +98,7 @@ bool Level::from_yaml(
     {
       Feature f;
       f.from_yaml(*it);
+      f.apply_transformation(Transform());
       floorplan_features.push_back(f);
     }
   }
@@ -1005,12 +1006,14 @@ void Level::draw(
   for (const auto& f : fiducials)
     f.draw(scene, drawing_meters_per_pixel);
 
-  for (const auto& feature : floorplan_features)
+  for (auto& feature : floorplan_features)
+  {
+    feature.apply_transformation(Transform());
     feature.draw(
       scene,
-      Transform(),
       QColor::fromRgbF(0, 0, 0, 0.5),
       drawing_meters_per_pixel);
+  }
 
   for (const auto& constraint : constraints)
     constraint.draw(scene, *this);
@@ -1026,7 +1029,9 @@ QUuid Level::add_feature(const int layer_idx, const double x, const double y)
 {
   if (layer_idx == 0)
   {
-    floorplan_features.push_back(Feature(x, y));
+    Feature f(x, y);
+    f.apply_transformation(Transform());
+    floorplan_features.push_back(f);
     return floorplan_features.rbegin()->id();
   }
   else

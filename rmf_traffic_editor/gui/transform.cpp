@@ -53,7 +53,14 @@ YAML::Node Transform::to_yaml() const
 
 QPointF Transform::forwards(const QPointF& p) const
 {
-  return p;
+  const double qx =
+    ( cos(_yaw) * p.x() + sin(_yaw) * p.y()) * _scale + _translation.x();
+
+  const double qy =
+    (-sin(_yaw) * p.x() + cos(_yaw) * p.y()) * _scale + _translation.y();
+
+  QPointF q(qx, qy);
+  return q;
 }
 
 QPointF Transform::backwards(const QPointF& p) const

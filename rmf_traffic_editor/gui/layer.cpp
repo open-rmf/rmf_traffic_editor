@@ -120,6 +120,8 @@ void Layer::draw(
   if (!visible)
     return;
 
+  printf("Layer::draw()\n");
+
   QGraphicsPixmapItem* item = scene->addPixmap(pixmap);
 
   // Store for later use in getting coordinates back out
@@ -137,8 +139,11 @@ void Layer::draw(
   colorize_effect->setColor(color);
   item->setGraphicsEffect(colorize_effect);
 
-  for (const auto& feature : features)
-    feature.draw(scene, transform, color, level_meters_per_pixel);
+  for (Feature& feature : features)
+  {
+    feature.apply_transformation(transform); // todo: only when changes
+    feature.draw(scene, color, level_meters_per_pixel);
+  }
 }
 
 QColor Layer::default_color(const int layer_idx)
