@@ -140,10 +140,7 @@ void Layer::draw(
   item->setGraphicsEffect(colorize_effect);
 
   for (Feature& feature : features)
-  {
-    feature.apply_transformation(transform); // todo: only when changes
-    feature.draw(scene, color, level_meters_per_pixel);
-  }
+    feature.draw(scene, color, transform, 1.0 / level_meters_per_pixel);
 }
 
 QColor Layer::default_color(const int layer_idx)

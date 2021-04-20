@@ -60,24 +60,30 @@ YAML::Node Feature::to_yaml() const
 void Feature::draw(
   QGraphicsScene* scene,
   const QColor color,
-  const double level_meters_per_pixel) const
+  const Transform& layer_transform,
+  const double render_scale) const
 {
   const QColor selected_color = QColor::fromRgbF(1.0, 0.0, 0.0, 0.5);
 
-  const double pen_width = 0.025 / level_meters_per_pixel;
+  const double pen_width = 0.025 * render_scale;
   QPen pen(
     QBrush(_selected ? selected_color : color),
     pen_width,
     Qt::SolidLine,
     Qt::FlatCap);
 
-  printf("  draw point = (%.3f, %.3f)\n", _transformed.x(), _transformed.y());
+  // first transform to meters
+  QPointF p = layer_transform.forwards(QPointF(_x, _y));
+  // now scale for drawing pixels
+  p *= render_scale;
 
-  const double radius = radius_meters / level_meters_per_pixel;
+  printf("  draw point = (%.3f, %.3f) => (%.3f, %.3f)\n", _x, _y, p.x(), p.y());
+
+  const double radius = radius_meters * render_scale;
 
   QGraphicsEllipseItem* circle = scene->addEllipse(
-    _transformed.x() - radius,
-    _transformed.y() - radius,
+    p.x() - radius,
+    p.y() - radius,
     2 * radius,
     2 * radius,
     pen,
@@ -86,18 +92,18 @@ void Feature::draw(
 
   const double line_radius = (radius - pen_width / 2.0) / sqrt(2.0);
   QGraphicsLineItem* line_1 = scene->addLine(
-    _transformed.x() - line_radius,
-    _transformed.y() - line_radius,
-    _transformed.x() + line_radius,
-    _transformed.y() + line_radius,
+    p.x() - line_radius,
+    p.y() - line_radius,
+    p.x() + line_radius,
+    p.y() + line_radius,
     pen);
   line_1->setZValue(200.0);
 
   QGraphicsLineItem* line_2 = scene->addLine(
-    _transformed.x() - line_radius,
-    _transformed.y() + line_radius,
-    _transformed.x() + line_radius,
-    _transformed.y() - line_radius,
+    p.x() - line_radius,
+    p.y() + line_radius,
+    p.x() + line_radius,
+    p.y() - line_radius,
     pen);
   line_2->setZValue(200.0);
 
@@ -109,11 +115,4 @@ void Feature::draw(
   font.setPointSize(30);
   item->setFont(font);
   */
-}
-
-void Feature::apply_transformation(const Transform& transform)
-{
-  printf("Feature::apply_transformation(scale = %.3f)\n", transform.scale());
-  _transformed = transform.forwards(QPointF(_x, _y));
-  printf("  point = (%.3f, %.3f)\n", _transformed.x(), _transformed.y());
 }
