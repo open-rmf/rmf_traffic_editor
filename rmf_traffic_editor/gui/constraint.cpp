@@ -101,6 +101,7 @@ void Constraint::draw(
     return;
   }
 
+  // TODO: apply layer transform to each feature point
   QGraphicsLineItem* line = scene->addLine(
     f1->x(),
     f1->y(),

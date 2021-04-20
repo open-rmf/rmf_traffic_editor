@@ -120,18 +120,21 @@ void Layer::draw(
   if (!visible)
     return;
 
-  printf("Layer::draw()\n");
+  printf("Layer::draw(transform.scale=%.3f, level_meters_per_pixel=%.3f)\n",
+    transform.scale(), level_meters_per_pixel);
 
   QGraphicsPixmapItem* item = scene->addPixmap(pixmap);
 
   // Store for later use in getting coordinates back out
   scene_item = item;
 
-  item->setPos(
-    -transform.translation().x() / transform.scale(),
-    transform.translation().y() / transform.scale());
+  printf("layer xtrans=%.3f scale=%.3f level_mpp=%.3f\n", transform.translation().x(), transform.scale(), level_meters_per_pixel);
 
-  item->setScale(transform._scale / level_meters_per_pixel);
+  item->setPos(
+    transform.translation().x() / level_meters_per_pixel,
+    transform.translation().y() / level_meters_per_pixel);
+
+  item->setScale(transform.scale() / level_meters_per_pixel);
 
   item->setRotation(-1.0 * transform.yaw() * 180.0 / M_PI);
 
@@ -140,7 +143,7 @@ void Layer::draw(
   item->setGraphicsEffect(colorize_effect);
 
   for (Feature& feature : features)
-    feature.draw(scene, color, transform, 1.0 / level_meters_per_pixel);
+    feature.draw(scene, color, transform, level_meters_per_pixel);
 }
 
 QColor Layer::default_color(const int layer_idx)
@@ -173,28 +176,45 @@ void Layer::remove_feature(QUuid feature_id)
   features.erase(features.begin() + index_to_remove);
 }
 
-QUuid Layer::add_feature(const double x, const double y)
+QUuid Layer::add_feature(
+  const double x,
+  const double y,
+  const double level_meters_per_pixel)
 {
-  printf("Layer::add_feature(%s, %.3f, %.3f)\n", name.c_str(), x, y);
-  features.push_back(Feature(x, y));
+  printf("Layer::add_feature(%s, %.3f, %.3f, %.3f)\n",
+    name.c_str(),
+    x,
+    y,
+    level_meters_per_pixel);
+
+  // convert clicks in the working area to meters
+  QPointF layer_pixel =
+    transform.backwards(
+      QPointF(x * level_meters_per_pixel, y * level_meters_per_pixel));
+
+  printf("  transformed: (%.3f, %.3f)\n", layer_pixel.x(), layer_pixel.y());
+  features.push_back(Feature(layer_pixel));
+
   return features.rbegin()->id();
 }
 
 const Feature* Layer::find_feature(
   const double x,
   const double y,
-  const double drawing_meters_per_pixel) const
+  const double level_meters_per_pixel) const
 {
-  // todo: apply transform as needed to features to be calculating
-  // distances to where they are currently
+  QPointF layer_pixel =
+    transform.backwards(
+      QPointF(x * level_meters_per_pixel, y * level_meters_per_pixel));
+
   double min_dist = 1e9;
   const Feature* min_feature = nullptr;
 
   for (size_t i = 0; i < features.size(); i++)
   {
     const Feature& f = features[i];
-    const double dx = x - f.x();
-    const double dy = y - f.y();
+    const double dx = layer_pixel.x() - f.x();
+    const double dy = layer_pixel.y() - f.y();
     const double dist = sqrt(dx * dx + dy * dy);
     if (dist < min_dist)
     {
@@ -205,7 +225,7 @@ const Feature* Layer::find_feature(
 
   printf("min_dist = %.3f   layer scale = %.3f\n", min_dist, transform.scale());
   // scale calculation? probably wrong...
-  if (min_dist * drawing_meters_per_pixel < Feature::radius_meters)
+  if (min_dist * level_meters_per_pixel < Feature::radius_meters)
     return min_feature;
 
   return nullptr;

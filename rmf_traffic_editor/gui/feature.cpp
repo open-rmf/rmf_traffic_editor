@@ -35,6 +35,12 @@ Feature::Feature(double x, double y)
   _id = QUuid::createUuid();
 }
 
+Feature::Feature(const QPointF& p)
+: _x(p.x()), _y(p.y())
+{
+  _id = QUuid::createUuid();
+}
+
 void Feature::from_yaml(const YAML::Node& data)
 {
   if (!data.IsMap())
@@ -61,11 +67,11 @@ void Feature::draw(
   QGraphicsScene* scene,
   const QColor color,
   const Transform& layer_transform,
-  const double render_scale) const
+  const double meters_per_pixel) const
 {
   const QColor selected_color = QColor::fromRgbF(1.0, 0.0, 0.0, 0.5);
 
-  const double pen_width = 0.025 * render_scale;
+  const double pen_width = 0.025 / meters_per_pixel;
   QPen pen(
     QBrush(_selected ? selected_color : color),
     pen_width,
@@ -75,11 +81,11 @@ void Feature::draw(
   // first transform to meters
   QPointF p = layer_transform.forwards(QPointF(_x, _y));
   // now scale for drawing pixels
-  p *= render_scale;
+  p /= meters_per_pixel;
 
   printf("  draw point = (%.3f, %.3f) => (%.3f, %.3f)\n", _x, _y, p.x(), p.y());
 
-  const double radius = radius_meters * render_scale;
+  const double radius = radius_meters / meters_per_pixel;
 
   QGraphicsEllipseItem* circle = scene->addEllipse(
     p.x() - radius,

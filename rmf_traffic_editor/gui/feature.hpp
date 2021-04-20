@@ -37,6 +37,7 @@ class Feature
 public:
   Feature();
   Feature(double x, double y);
+  Feature(const QPointF& p);
 
   // "x" and "y" are pixels from the upper-left corner of the layer image
   double x() const { return _x; }

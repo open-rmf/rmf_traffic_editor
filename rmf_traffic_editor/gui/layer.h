@@ -68,7 +68,11 @@ public:
 
   static QColor default_color(const int layer_idx);
 
-  QUuid add_feature(const double x, const double y);
+  QUuid add_feature(
+    const double x,
+    const double y,
+    const double level_meters_per_pixel);
+
   void remove_feature(QUuid feature_uuid);
 
   const Feature* find_feature(

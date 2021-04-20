@@ -973,7 +973,7 @@ void Level::draw(
   draw_polygons(scene);
 
   for (auto& layer : layers)
-    layer.draw(scene, 1.0);
+    layer.draw(scene, drawing_meters_per_pixel);
 
   if (rendering_options.show_models)
   {
@@ -1005,12 +1005,14 @@ void Level::draw(
   for (const auto& f : fiducials)
     f.draw(scene, drawing_meters_per_pixel);
 
+  Transform level_scale;
+  level_scale.setScale(drawing_meters_per_pixel);
   for (auto& feature : floorplan_features)
   {
     feature.draw(
       scene,
       QColor::fromRgbF(0, 0, 0, 0.5),
-      Transform(),
+      level_scale,
       drawing_meters_per_pixel);
   }
 
@@ -1036,7 +1038,7 @@ QUuid Level::add_feature(const int layer_idx, const double x, const double y)
     if (layer_idx - 1 >= static_cast<int>(layers.size()))
       return NULL;
 
-    return layers[layer_idx - 1].add_feature(x, y);
+    return layers[layer_idx - 1].add_feature(x, y, drawing_meters_per_pixel);
   }
 }
 
@@ -1387,7 +1389,6 @@ const Feature* Level::find_feature(const double x, const double y) const
     if (!layers[layer_idx].visible)
       continue;
 
-    // todo: pass the floorplan scale?
     const Feature* layer_feature =
       layers[layer_idx].find_feature(x, y, drawing_meters_per_pixel);
 
