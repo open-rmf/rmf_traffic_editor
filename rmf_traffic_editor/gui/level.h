@@ -92,6 +92,8 @@ public:
   const Feature* find_feature(const QUuid& id) const;
   const Feature* find_feature(const double x, const double y) const;
 
+  bool get_feature_point(const QUuid& id, QPointF& point) const;
+
   void add_constraint(const QUuid& a, const QUuid& b);
   void remove_constraint(const QUuid& a, const QUuid& b);
 
@@ -126,6 +128,7 @@ public:
   QUuid add_feature(const int layer, const double x, const double y);
   void remove_feature(const int layer_idx, QUuid feature_uuid);
   bool export_features(const std::string& filename) const;
+  void optimize_layer_transforms();
 
 private:
   double point_to_line_segment_distance(
@@ -158,6 +161,10 @@ private:
   void draw_fiducials(QGraphicsScene* scene) const;
   void draw_polygons(QGraphicsScene* scene) const;
 
+  void draw_constraint(
+    QGraphicsScene* scene,
+    const Constraint& constraint) const;
+
   // helper function
   void draw_polygon(
     QGraphicsScene* scene,
@@ -178,6 +185,8 @@ private:
     double hinge_y,
     double door_length,
     double door_angle) const;
+
+  double transform_cost(const size_t layer_idx, const Transform& t);
 };
 
 #endif

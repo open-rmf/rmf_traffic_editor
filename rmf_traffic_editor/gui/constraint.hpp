@@ -37,7 +37,7 @@ public:
   Constraint();
   Constraint(const QUuid& a, const QUuid& b);
 
-  std::vector<QUuid> ids() const { return _ids; }
+  const std::vector<QUuid>& ids() const { return _ids; }
   void set_ids(std::vector<QUuid>& ids) { _ids = ids; }
   void add_id(const QUuid& id);
 
@@ -45,10 +45,6 @@ public:
 
   void from_yaml(const YAML::Node& data);
   YAML::Node to_yaml() const;
-
-  void draw(
-    QGraphicsScene*,
-    const Level& level) const;
 
   bool operator==(const Constraint& other);
 

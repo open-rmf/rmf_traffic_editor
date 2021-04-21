@@ -78,12 +78,8 @@ void Feature::draw(
     Qt::SolidLine,
     Qt::FlatCap);
 
-  // first transform to meters
-  QPointF p = layer_transform.forwards(QPointF(_x, _y));
-  // now scale for drawing pixels
-  p /= meters_per_pixel;
-
-  printf("  draw point = (%.3f, %.3f) => (%.3f, %.3f)\n", _x, _y, p.x(), p.y());
+  QPointF p = layer_transform.forwards(QPointF(_x, _y));  // to meters
+  p /= meters_per_pixel;  // now to parent level's pixels
 
   const double radius = radius_meters / meters_per_pixel;
 
@@ -112,13 +108,4 @@ void Feature::draw(
     p.y() - line_radius,
     pen);
   line_2->setZValue(200.0);
-
-  /*
-  QGraphicsSimpleTextItem* item = scene->addSimpleText(QString::number(_id));
-  item->setBrush(QColor(0, 0, 255, 255));
-  item->setPos(_x, _y + radius);
-  auto font = item->font();
-  font.setPointSize(30);
-  item->setFont(font);
-  */
 }

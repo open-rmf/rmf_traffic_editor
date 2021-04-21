@@ -46,6 +46,8 @@ public:
   double y() const { return _y; }
   void set_y(double y) { _y = y; }
 
+  QPointF qpoint() const { return QPointF(_x, _y); }
+
   QPointF transform_to_level_pixels(
     const Transform& layer_transform,
     const double render_scale);

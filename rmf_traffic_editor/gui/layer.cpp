@@ -120,15 +120,10 @@ void Layer::draw(
   if (!visible)
     return;
 
-  printf("Layer::draw(transform.scale=%.3f, level_meters_per_pixel=%.3f)\n",
-    transform.scale(), level_meters_per_pixel);
-
   QGraphicsPixmapItem* item = scene->addPixmap(pixmap);
 
   // Store for later use in getting coordinates back out
   scene_item = item;
-
-  printf("layer xtrans=%.3f scale=%.3f level_mpp=%.3f\n", transform.translation().x(), transform.scale(), level_meters_per_pixel);
 
   item->setPos(
     transform.translation().x() / level_meters_per_pixel,

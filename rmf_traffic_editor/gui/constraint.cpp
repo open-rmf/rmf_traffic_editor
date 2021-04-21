@@ -64,53 +64,6 @@ YAML::Node Constraint::to_yaml() const
   return node;
 }
 
-void Constraint::draw(
-  QGraphicsScene* scene,
-  const Level& level) const
-{
-  if (_ids.size() != 2)
-  {
-    printf("WOAH! tried to draw a constraint with only %d ID's!\n",
-      static_cast<int>(_ids.size()));
-    return;
-  }
-
-  const QColor color = QColor::fromRgbF(0.7, 0.7, 0.2, 1.0);
-  const QColor selected_color = QColor::fromRgbF(1.0, 0.0, 0.0, 0.5);
-
-  const double pen_width = 0.1 / level.drawing_meters_per_pixel;
-  QPen pen(
-    QBrush(_selected ? selected_color : color),
-    pen_width,
-    Qt::SolidLine,
-    Qt::RoundCap);
-
-  const Feature* f1 = level.find_feature(_ids[0]);
-  if (!f1)
-  {
-    printf("woah! couldn't find constraint ID %s\n",
-      _ids[0].toString().toStdString().c_str());
-    return;
-  }
-
-  const Feature* f2 = level.find_feature(_ids[1]);
-  if (!f1)
-  {
-    printf("woah! couldn't find constraint ID %s\n",
-      _ids[1].toString().toStdString().c_str());
-    return;
-  }
-
-  // TODO: apply layer transform to each feature point
-  QGraphicsLineItem* line = scene->addLine(
-    f1->x(),
-    f1->y(),
-    f2->x(),
-    f2->y(),
-    pen);
-  line->setZValue(199.0);
-}
-
 bool Constraint::operator==(const Constraint& other)
 {
   if (_ids.size() != other._ids.size())

@@ -314,16 +314,25 @@ Editor::Editor()
     &Editor::edit_redo,
     QKeySequence::Redo);
   edit_menu->addSeparator();
+
   edit_menu->addAction(
     "&Building properties...",
     this,
     &Editor::edit_building_properties);
   edit_menu->addSeparator();
+
   edit_menu->addAction(
-    "&Transform...",
+    "Rotate all models...",
     this,
-    &Editor::edit_transform);
+    &Editor::edit_rotate_all_models);
   edit_menu->addSeparator();
+
+  edit_menu->addAction(
+    "Optimize layer transforms",
+    this,
+    &Editor::edit_optimize_layer_transforms);
+  edit_menu->addSeparator();
+
   edit_menu->addAction("&Preferences...", this, &Editor::edit_preferences);
 
   // VIEW MENU
@@ -732,7 +741,7 @@ void Editor::edit_building_properties()
     setWindowModified(true);
 }
 
-void Editor::edit_transform()
+void Editor::edit_rotate_all_models()
 {
   QDialog dialog;
   Ui::TransformDialog dialog_ui;
@@ -745,6 +754,14 @@ void Editor::edit_transform()
   building.rotate_all_models(rotation);
   create_scene();
   setWindowModified(true);
+}
+
+void Editor::edit_optimize_layer_transforms()
+{
+  printf("Editor::edit_optimize_layer_transforms()\n");
+  if (level_idx < static_cast<int>(building.levels.size()))
+    building.levels[level_idx].optimize_layer_transforms();
+  create_scene();
 }
 
 void Editor::view_models()

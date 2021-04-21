@@ -1017,7 +1017,7 @@ void Level::draw(
   }
 
   for (const auto& constraint : constraints)
-    constraint.draw(scene, *this);
+    draw_constraint(scene, constraint);
 }
 
 void Level::clear_scene()
@@ -1445,4 +1445,141 @@ void Level::remove_constraint(const QUuid& a, const QUuid& b)
     return;
 
   constraints.erase(constraints.begin() + index_to_remove);
+}
+
+bool Level::get_feature_point(const QUuid& id, QPointF& point) const
+{
+  for (size_t i = 0; i < floorplan_features.size(); i++)
+  {
+    if (floorplan_features[i].id() == id)
+    {
+      point = floorplan_features[i].qpoint();
+      return true;
+    }
+  }
+  for (size_t layer_idx = 0; layer_idx < layers.size(); layer_idx++)
+  {
+    for (size_t i = 0; i < layers[layer_idx].features.size(); i++)
+    {
+      const Layer& layer = layers[layer_idx];
+      if (layer.features[i].id() == id)
+      {
+        const Feature& feature = layers[layer_idx].features[i];
+        point = layer.transform.forwards(feature.qpoint());
+        point /= drawing_meters_per_pixel;
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+void Level::draw_constraint(
+    QGraphicsScene* scene,
+    const Constraint& constraint) const
+{
+  const std::vector<QUuid>& feature_ids = constraint.ids();
+  if (feature_ids.size() != 2)
+  {
+    printf("WOAH! tried to draw a constraint with only %d ID's!\n",
+      static_cast<int>(feature_ids.size()));
+    return;
+  }
+
+  const QColor color = QColor::fromRgbF(0.7, 0.7, 0.2, 1.0);
+  const QColor selected_color = QColor::fromRgbF(1.0, 0.0, 0.0, 0.5);
+
+  const double pen_width = 0.1 / drawing_meters_per_pixel;
+  QPen pen(
+    QBrush(constraint.selected() ? selected_color : color),
+    pen_width,
+    Qt::SolidLine,
+    Qt::RoundCap);
+
+  QPointF p1, p2;
+  if (!get_feature_point(feature_ids[0], p1))
+  {
+    printf("woah! couldn't find constraint feature ID %s\n",
+      feature_ids[0].toString().toStdString().c_str());
+    return;
+  }
+
+  if (!get_feature_point(feature_ids[1], p2))
+  {
+    printf("woah! couldn't find constraint feature ID %s\n",
+      feature_ids[1].toString().toStdString().c_str());
+    return;
+  }
+
+  QGraphicsLineItem* line = scene->addLine(
+    p1.x(),
+    p1.y(),
+    p2.x(),
+    p2.y(),
+    pen);
+  line->setZValue(199.0);
+}
+
+void Level::optimize_layer_transforms()
+{
+  printf("level %s optimizing layer transforms...\n", name.c_str());
+
+  for (size_t i = 0; i < layers.size(); i++)
+  {
+    // placeholder POC: just a line search on yaw
+    Transform t;
+    for (double yaw = 0; yaw < 2 * M_PI; yaw += 0.1)
+    {
+      t.setYaw(yaw);
+      const double cost = transform_cost(i, t);
+      printf("yaw = %.3f cost = %.3f\n", yaw, cost);
+    }
+  }
+}
+
+double Level::transform_cost(const size_t layer_idx, const Transform& t)
+{
+  if (layer_idx >= layers.size())
+    return 0;
+
+  Layer& layer = layers[layer_idx];
+  const Transform previous_transform = layer.transform;
+  layer.transform = t;
+
+  // transform all constraint pairs by t and sum the distances
+  double total_cost = 0;
+
+  for (const Constraint& constraint : constraints)
+  {
+    const std::vector<QUuid>& feature_ids = constraint.ids();
+    if (feature_ids.size() != 2)
+      continue;
+
+    QPointF p1, p2;
+
+    if (!get_feature_point(feature_ids[0], p1))
+    {
+      printf("woah! couldn't find constraint feature ID %s\n",
+        feature_ids[0].toString().toStdString().c_str());
+      continue;
+    }
+    if (!get_feature_point(feature_ids[1], p2))
+    {
+      printf("woah! couldn't find constraint feature ID %s\n",
+        feature_ids[1].toString().toStdString().c_str());
+      continue;
+    }
+
+    const double dx = p1.x() - p2.x();
+    const double dy = p1.y() - p2.y();
+    const double d = sqrt(dx * dx + dy * dy);
+
+    // todo: someday could weight some constraints more than others
+
+    total_cost += d;
+  }
+
+  layer.transform = previous_transform;
+
+  return total_cost;
 }

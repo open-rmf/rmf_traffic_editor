@@ -141,7 +141,8 @@ private:
   void edit_preferences();
   void edit_building_properties();
   void edit_project_properties();
-  void edit_transform();
+  void edit_rotate_all_models();
+  void edit_optimize_layer_transforms();
 
   void level_add();
   void level_edit();
