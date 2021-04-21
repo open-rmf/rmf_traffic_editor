@@ -307,8 +307,6 @@ class Floor:
 
         print(f'  wrote {mtl_path}')
 
-        print(f'  wrote {mtl_path}')
-
         texture_path_source = os.path.join(
             get_package_share_directory('rmf_building_map_tools'),
             f'textures/{texture_name}.png')
