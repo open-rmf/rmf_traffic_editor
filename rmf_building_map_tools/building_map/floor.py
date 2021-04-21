@@ -288,6 +288,10 @@ class Floor:
 
         print(f'  wrote {obj_path}')
 
+        texture_name = 'blue_linoleum'
+        if 'texture_name' in self.params:
+            texture_name = self.params['texture_name'].value
+
         mtl_path = f'{model_path}/meshes/floor_{floor_cnt}.mtl'
         with open(mtl_path, 'w') as f:
             f.write('# The Great Editor v0.0.1\n')
@@ -299,17 +303,15 @@ class Floor:
             f.write('Ni 1.0\n')  # no idea what this is
             f.write('d 1.0\n')  # alpha (maybe?)
             f.write('illum 2\n')  # illumination model (enum)
-            f.write(f'map_Kd floor_{floor_cnt}.png\n')
+            f.write(f'map_Kd {texture_name}.png\n')
 
         print(f'  wrote {mtl_path}')
 
-        texture_name = 'blue_linoleum'
-        if 'texture_name' in self.params:
-            texture_name = self.params['texture_name'].value
+        print(f'  wrote {mtl_path}')
 
         texture_path_source = os.path.join(
             get_package_share_directory('rmf_building_map_tools'),
             f'textures/{texture_name}.png')
-        texture_path_dest = f'{model_path}/meshes/floor_{floor_cnt}.png'
+        texture_path_dest = f'{model_path}/meshes/{texture_name}.png'
         shutil.copyfile(texture_path_source, texture_path_dest)
         print(f'  wrote {texture_path_dest}')
