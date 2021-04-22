@@ -6,8 +6,12 @@ endif()
 
 project(rmf_traffic_editor)
 
-find_package(yaml-cpp REQUIRED)
 find_package(ament_cmake REQUIRED)
+find_package(ament_index_cpp REQUIRED)
+find_package(Ceres REQUIRED)
+find_package(Eigen3 REQUIRED)
+find_package(Qt5 COMPONENTS Widgets Concurrent Test REQUIRED)
+find_package(yaml-cpp REQUIRED)
 
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
 # set(CMAKE_VERBOSE_MAKEFILE TRUE)
@@ -21,9 +25,6 @@ set(CMAKE_AUTOUIC ON)
 if(CMAKE_VERSION VERSION_LESS "3.7.0")
   set(CMAKE_INCLUDE_CURRENT_DIR ON)
 endif()
-
-find_package(Qt5 COMPONENTS Widgets Concurrent Test REQUIRED)
-find_package(ament_index_cpp REQUIRED)
 
 include_directories(.)
 include_directories(gui)
@@ -111,6 +112,8 @@ add_library(
 
 target_link_libraries(
   gui_lib
+  ceres
+  Eigen3::Eigen
   Qt5::Widgets
   Qt5::Concurrent
   yaml-cpp

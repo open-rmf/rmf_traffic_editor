@@ -330,7 +330,8 @@ Editor::Editor()
   edit_menu->addAction(
     "Optimize layer transforms",
     this,
-    &Editor::edit_optimize_layer_transforms);
+    &Editor::edit_optimize_layer_transforms,
+    QKeySequence(Qt::CTRL + Qt::Key_T));
   edit_menu->addSeparator();
 
   edit_menu->addAction("&Preferences...", this, &Editor::edit_preferences);

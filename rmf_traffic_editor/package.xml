@@ -15,7 +15,11 @@
   <build_depend>libqt5-concurrent</build_depend>
   <build_depend>libqt5-widgets</build_depend>
   <build_depend>qtbase5-dev</build_depend>
-    
+  <build_depend>eigen</build_depend>
+
+  <depend>libceres-dev</depend>
+  <depend>libgoogle-glog-dev</depend>
+
   <export>
     <build_type>ament_cmake</build_type>
   </export>

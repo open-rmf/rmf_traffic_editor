@@ -18,7 +18,9 @@
 #include <algorithm>
 #include <cmath>
 #include <fstream>
+#include <iostream>
 
+#include "ceres/ceres.h"
 #include <QGraphicsOpacityEffect>
 #include <QGraphicsPixmapItem>
 #include <QGraphicsScene>
@@ -1520,25 +1522,61 @@ void Level::draw_constraint(
   line->setZValue(199.0);
 }
 
-void Level::optimize_layer_transforms()
+class TransformResidual
 {
-  printf("level %s optimizing layer transforms...\n", name.c_str());
-
-  for (size_t i = 0; i < layers.size(); i++)
+public:
+  TransformResidual(
+    double level_x,
+    double level_y,
+    double level_meters_per_pixel,
+    double layer_x,
+    double layer_y)
+  : _level_x(level_x),
+    _level_y(level_y),
+    _level_meters_per_pixel(level_meters_per_pixel),
+    _layer_x(layer_x),
+    _layer_y(layer_y)
   {
-    // placeholder POC: just a line search on yaw
-    Transform t;
-    for (double yaw = 0; yaw < 2 * M_PI; yaw += 0.1)
-    {
-      t.setYaw(yaw);
-      const double cost = transform_cost(i, t);
-      printf("yaw = %.3f cost = %.3f\n", yaw, cost);
-    }
   }
-}
+
+  template <typename T>
+  bool operator()(
+    const T* const yaw,
+    const T* const scale,
+    const T* const translation,
+    T* residual) const
+  {
+    const T qx =
+      (( cos(yaw[0]) * _layer_x + sin(yaw[0]) * _layer_y) * scale[0]
+      + translation[0]) / _level_meters_per_pixel;
+
+    const T qy =
+      ((-sin(yaw[0]) * _layer_x + cos(yaw[0]) * _layer_y) * scale[0]
+      + translation[1]) / _level_meters_per_pixel;
+
+    residual[0] = _level_x - qx;
+    residual[1] = _level_y - qy;
+
+    return true;
+  }
+
+private:
+  double _level_x, _level_y;
+  double _level_meters_per_pixel;
+  double _layer_x, _layer_y;
+};
 
 double Level::transform_cost(const size_t layer_idx, const Transform& t)
 {
+  /*
+  printf("transform_cost(%d, %.3f, %.3f, %.3f, %.3f)\n",
+    (int)layer_idx,
+    t.yaw(),
+    t.scale(),
+    t.translation().x(),
+    t.translation().y());
+  */
+
   if (layer_idx >= layers.size())
     return 0;
 
@@ -1582,4 +1620,104 @@ double Level::transform_cost(const size_t layer_idx, const Transform& t)
   layer.transform = previous_transform;
 
   return total_cost;
+}
+
+void Level::optimize_layer_transforms()
+{
+  printf("level %s optimizing layer transforms...\n", name.c_str());
+
+  for (size_t i = 0; i < layers.size(); i++)
+  {
+    ceres::Problem problem;
+
+    double yaw = 0;
+    double scale = layers[i].transform.scale();
+    double translation[2] = {0};
+
+    for (const Constraint& constraint : constraints)
+    {
+      const std::vector<QUuid>& feature_ids = constraint.ids();
+      if (feature_ids.size() != 2)
+        continue;
+
+      QPointF level_point, layer_point;
+
+      // find the level point
+      bool found_level_point = false;
+      for (const Feature& feature : floorplan_features)
+      {
+        if (feature_ids[0] == feature.id())
+        {
+          level_point = feature.qpoint();
+          found_level_point = true;
+          break;
+        }
+        else if (feature_ids[1] == feature.id())
+        {
+          level_point = feature.qpoint();
+          found_level_point = true;
+          break;
+        }
+      }
+      if (!found_level_point)
+      {
+        printf("WOAH couldn't find level point in constraint! Ignoring it\n");
+        continue;
+      }
+
+      // find the layer point
+      bool found_layer_point = false;
+      for (const Feature& feature : layers[i].features)
+      {
+        if (feature_ids[0] == feature.id())
+        {
+          layer_point = feature.qpoint();
+          found_layer_point = true;
+          break;
+        }
+        else if (feature_ids[1] == feature.id())
+        {
+          layer_point = feature.qpoint();
+          found_layer_point = true;
+          break;
+        }
+      }
+      if (!found_layer_point)
+      {
+        printf("WOAH couldn't find layer point in constraint! Ignoring...\n");
+        continue;
+      }
+
+      TransformResidual* tr = new TransformResidual(
+        level_point.x(),
+        level_point.y(),
+        drawing_meters_per_pixel,
+        layer_point.x(),
+        layer_point.y());
+
+      problem.AddResidualBlock(
+        new ceres::AutoDiffCostFunction<TransformResidual, 2, 1, 1, 2>(tr),
+        nullptr,
+        &yaw,
+        &scale,
+        &translation[0]);
+
+    }
+
+    ceres::Solver::Options options;
+    options.minimizer_progress_to_stdout = true;
+    ceres::Solver::Summary summary;
+    ceres::Solve(options, &problem, &summary);
+
+    std::cout << summary.BriefReport() << "\n";
+    printf("solution:\n");
+    printf("  yaw = %.3f\n", yaw);
+    printf("  scale = %.3f\n", scale);
+    printf("  translation = (%.3f, %.3f)\n", translation[0], translation[1]);
+
+    layers[i].transform.setYaw(yaw);
+    layers[i].transform.setScale(scale);
+    layers[i].transform.setTranslation(
+      QPointF(translation[0], translation[1]));
+  }
 }
