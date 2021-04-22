@@ -122,14 +122,6 @@ This quality declaration has not been externally peer-reviewed and is not regist
 
 Below are the required direct runtime non-ROS dependencies of `rmf_traffic_editor` and their evaluations.
 
-#### ignition-plugin
-
-`ignition-plugin` is assumed to be **Quality Level 3** based on its change control process, CI, tests, and documentation.
-
-#### ignition-common3
-
-`ignition-common3` is assumed to be **Quality Level 3** based on its change control process, CI, tests, and documentation.
-
 #### yaml-cpp
 
 The [`yaml-cpp` library](https://github.com/jbeder/yaml-cpp) is assumed to be **Quality Level 3** due to its wide use, provided documentation, use of testing, and version number above 1.0.0.
