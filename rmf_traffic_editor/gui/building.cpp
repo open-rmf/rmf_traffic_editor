@@ -249,153 +249,6 @@ int Building::find_nearest_vertex_index(
   return min_index;  // will be -1 if vertices vector is empty
 }
 
-Building::NearestItem Building::nearest_items(
-  const int level_index,
-  const double x,
-  const double y)
-{
-  NearestItem ni;
-  if (level_index >= static_cast<int>(levels.size()))
-    return ni;
-  const Level& level = levels[level_index];
-
-  for (size_t i = 0; i < level.vertices.size(); i++)
-  {
-    const Vertex& p = level.vertices[i];
-    const double dx = x - p.x;
-    const double dy = y - p.y;
-    const double dist = sqrt(dx*dx + dy*dy);
-    if (dist < ni.vertex_dist)
-    {
-      ni.vertex_dist = dist;
-      ni.vertex_idx = i;
-    }
-  }
-
-  // search the floorplan features
-  for (size_t i = 0; i < level.floorplan_features.size(); i++)
-  {
-    const Feature& f = level.floorplan_features[i];
-    const double dx = x - f.x();
-    const double dy = y - f.y();
-    const double dist = sqrt(dx*dx + dy*dy);
-    if (dist < ni.feature_dist)
-    {
-      ni.feature_layer_idx = 0;
-      ni.feature_dist = dist;
-      ni.feature_idx = i;
-    }
-  }
-
-  // now search all "other" layer features
-  for (size_t layer_idx = 0; layer_idx < level.layers.size(); layer_idx++)
-  {
-    for (size_t i = 0; i < level.layers[layer_idx].features.size(); i++)
-    {
-      const Feature& f = level.layers[layer_idx].features[i];
-      const double dx = x - f.x();
-      const double dy = y - f.y();
-      const double dist = sqrt(dx*dx + dy*dy);
-      if (dist < ni.feature_dist)
-      {
-        ni.feature_layer_idx = layer_idx + 1;
-        ni.feature_dist = dist;
-        ni.feature_idx = i;
-      }
-    }
-  }
-
-  for (size_t i = 0; i < level.fiducials.size(); i++)
-  {
-    const Fiducial& f = level.fiducials[i];
-    const double dx = x - f.x;
-    const double dy = y - f.y;
-    const double dist = sqrt(dx*dx + dy*dy);
-    if (dist < ni.fiducial_dist)
-    {
-      ni.fiducial_dist = dist;
-      ni.fiducial_idx = i;
-    }
-  }
-
-  for (size_t i = 0; i < level.models.size(); i++)
-  {
-    const Model& m = level.models[i];
-    const double dx = x - m.state.x;
-    const double dy = y - m.state.y;
-    const double dist = sqrt(dx*dx + dy*dy);  // no need for sqrt each time
-    if (dist < ni.model_dist)
-    {
-      ni.model_dist = dist;
-      ni.model_idx = i;
-    }
-  }
-
-  return ni;
-}
-
-int Building::nearest_item_index_if_within_distance(
-  const int level_index,
-  const double x,
-  const double y,
-  const double distance_threshold,
-  const ItemType item_type)
-{
-  if (level_index >= static_cast<int>(levels.size()))
-    return -1;
-
-  double min_dist = 1e100;
-  int min_index = -1;
-  if (item_type == VERTEX)
-  {
-    for (size_t i = 0; i < levels[level_index].vertices.size(); i++)
-    {
-      const Vertex& p = levels[level_index].vertices[i];
-      const double dx = x - p.x;
-      const double dy = y - p.y;
-      const double dist2 = dx*dx + dy*dy;  // no need for sqrt each time
-      if (dist2 < min_dist)
-      {
-        min_dist = dist2;
-        min_index = i;
-      }
-    }
-  }
-  else if (item_type == FIDUCIAL)
-  {
-    for (size_t i = 0; i < levels[level_index].fiducials.size(); i++)
-    {
-      const Fiducial& f = levels[level_index].fiducials[i];
-      const double dx = x - f.x;
-      const double dy = y - f.y;
-      const double dist2 = dx*dx + dy*dy;
-      if (dist2 < min_dist)
-      {
-        min_dist = dist2;
-        min_index = i;
-      }
-    }
-  }
-  else if (item_type == MODEL)
-  {
-    for (size_t i = 0; i < levels[level_index].models.size(); i++)
-    {
-      const Model& m = levels[level_index].models[i];
-      const double dx = x - m.state.x;
-      const double dy = y - m.state.y;
-      const double dist2 = dx*dx + dy*dy;  // no need for sqrt each time
-      if (dist2 < min_dist)
-      {
-        min_dist = dist2;
-        min_index = i;
-      }
-    }
-  }
-  if (sqrt(min_dist) < distance_threshold)
-    return min_index;
-  return -1;
-}
-
 void Building::add_edge(
   const int level_index,
   const int start_vertex_index,
@@ -439,7 +292,6 @@ bool Building::delete_selected(const int level_index)
   if (level_index >= static_cast<int>(levels.size()))
     return false;
 
-  printf("Building::delete_keypress()\n");
   if (!levels[level_index].delete_selected())
     return false;
 
@@ -852,149 +704,6 @@ Polygon* Building::get_selected_polygon(const int level_idx)
   return nullptr;
 }
 
-void Building::mouse_select_press(
-  const int level_idx,
-  const double x,
-  const double y,
-  QGraphicsItem* graphics_item,
-  const RenderingOptions& rendering_options)
-{
-  clear_selection(level_idx);
-  const NearestItem ni = nearest_items(level_idx, x, y);
-
-  const double vertex_dist_thresh =
-    levels[level_idx].vertex_radius /
-    levels[level_idx].drawing_meters_per_pixel;
-
-  // todo: use QGraphics stuff to see if we clicked a model pixmap...
-  const double model_dist_thresh = 0.5 /
-    levels[level_idx].drawing_meters_per_pixel;
-
-  if (rendering_options.show_models &&
-    ni.model_idx >= 0 &&
-    ni.model_dist < model_dist_thresh)
-    levels[level_idx].models[ni.model_idx].selected = true;
-  else if (ni.vertex_idx >= 0 && ni.vertex_dist < vertex_dist_thresh)
-    levels[level_idx].vertices[ni.vertex_idx].selected = true;
-  else if (ni.feature_idx >= 0 && ni.feature_dist < 10.0)
-  {
-    //levels[level_idx].feature_sets[
-  }
-  else if (ni.fiducial_idx >= 0 && ni.fiducial_dist < 10.0)
-    levels[level_idx].fiducials[ni.fiducial_idx].selected = true;
-  else
-  {
-    // use the QGraphics stuff to see if it's an edge segment or polygon
-    if (graphics_item)
-    {
-      switch (graphics_item->type())
-      {
-        case QGraphicsLineItem::Type:
-          set_selected_line_item(
-            level_idx,
-            qgraphicsitem_cast<QGraphicsLineItem*>(graphics_item),
-            rendering_options);
-          break;
-
-        case QGraphicsPolygonItem::Type:
-          set_selected_containing_polygon(level_idx, x, y);
-          break;
-
-        default:
-          printf("clicked unhandled type: %d\n",
-            static_cast<int>(graphics_item->type()));
-          break;
-      }
-    }
-  }
-}
-
-void Building::set_selected_line_item(
-  const int level_idx,
-  QGraphicsLineItem* line_item,
-  const RenderingOptions& rendering_options)
-{
-  clear_selection(level_idx);
-  if (line_item == nullptr)
-    return;
-
-  // find if any of our lanes match those vertices
-  for (auto& edge : levels[level_idx].edges)
-  {
-    if ((edge.type == Edge::LANE) &&
-      (edge.get_graph_idx() != rendering_options.active_traffic_map_idx))
-      continue;
-
-    // look up the line's vertices
-    const double x1 = line_item->line().x1();
-    const double y1 = line_item->line().y1();
-    const double x2 = line_item->line().x2();
-    const double y2 = line_item->line().y2();
-
-    const auto& v_start = levels[level_idx].vertices[edge.start_idx];
-    const auto& v_end = levels[level_idx].vertices[edge.end_idx];
-
-    // calculate distances
-    const double dx1 = v_start.x - x1;
-    const double dy1 = v_start.y - y1;
-    const double dx2 = v_end.x - x2;
-    const double dy2 = v_end.y - y2;
-    const double v1_dist = std::sqrt(dx1*dx1 + dy1*dy1);
-    const double v2_dist = std::sqrt(dx2*dx2 + dy2*dy2);
-
-    const double thresh = 10.0;  // it should be really tiny if it matches
-    if (v1_dist < thresh && v2_dist < thresh)
-    {
-      edge.selected = true;
-      return;  // stop after first one is found, don't select multiple
-    }
-  }
-}
-
-void Building::set_selected_containing_polygon(
-  const int level_idx,
-  const double x,
-  const double y)
-{
-  if (level_idx >= static_cast<int>(levels.size()))
-    return;
-  Level& level = levels[level_idx];
-
-  // holes are "higher" in our Z-stack (to make them clickable), so first
-  // we need to make a list of all polygons that contain this point.
-  vector<Polygon*> containing_polygons;
-  for (size_t i = 0; i < level.polygons.size(); i++)
-  {
-    Polygon& polygon = level.polygons[i];
-    QVector<QPointF> polygon_vertices;
-    for (const auto& vertex_idx: polygon.vertices)
-    {
-      const Vertex& v = level.vertices[vertex_idx];
-      polygon_vertices.append(QPointF(v.x, v.y));
-    }
-    QPolygonF qpolygon(polygon_vertices);
-    if (qpolygon.containsPoint(QPoint(x, y), Qt::OddEvenFill))
-      containing_polygons.push_back(&level.polygons[i]);
-  }
-
-  // first search for holes
-  for (Polygon* p : containing_polygons)
-  {
-    if (p->type == Polygon::HOLE)
-    {
-      p->selected = true;
-      return;
-    }
-  }
-
-  // if we get here, just return the first thing.
-  for (Polygon* p : containing_polygons)
-  {
-    p->selected = true;
-    return;
-  }
-}
-
 Polygon::EdgeDragPolygon Building::polygon_edge_drag_press(
   const int level_idx,
   const Polygon* polygon,
@@ -1027,4 +736,21 @@ void Building::remove_constraint(
   if (level_idx < 0 || level_idx >= static_cast<int>(levels.size()))
     return;
   levels[level_idx].remove_constraint(a, b);
+}
+
+int Building::nearest_item_index_if_within_distance(
+  const double level_idx,
+  const double x,
+  const double y,
+  const double distance_threshold,
+  const Level::ItemType item_type)
+{
+  if (level_idx >= levels.size())
+    return -1;
+
+  return levels[level_idx].nearest_item_index_if_within_distance(
+    x,
+    y,
+    distance_threshold,
+    item_type);
 }

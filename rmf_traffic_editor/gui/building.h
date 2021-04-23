@@ -71,37 +71,15 @@ public:
   void add_constraint(const int level_idx, const QUuid& a, const QUuid& b);
   void remove_constraint(const int level_idx, const QUuid& a, const QUuid& b);
 
-  int find_nearest_vertex_index(
-    int level_index, double x, double y, double& distance);
-
-  enum ItemType { VERTEX=1, MODEL, FIDUCIAL };
-  struct NearestItem
-  {
-    double model_dist = 1e100;
-    int model_idx = -1;
-
-    double vertex_dist = 1e100;
-    int vertex_idx = -1;
-
-    double feature_dist = 1e100;
-    int feature_layer_idx = -1;
-    int feature_idx = -1;
-
-    double fiducial_dist = 1e100;
-    int fiducial_idx = -1;
-  };
-
-  NearestItem nearest_items(
-    const int level_index,
-    const double x,
-    const double y);
-
   int nearest_item_index_if_within_distance(
-    const int level_index,
+    const double level_idx,
     const double x,
     const double y,
     const double distance_threshold,
-    const ItemType item_type);
+    const Level::ItemType item_type);
+
+  int find_nearest_vertex_index(
+    int level_index, double x, double y, double& distance);
 
   void add_edge(
     const int level_idx,
@@ -202,16 +180,6 @@ public:
     const RenderingOptions& rendering_options);
 
   Polygon* get_selected_polygon(const int level_idx);
-
-  void set_selected_line_item(
-    const int level_idx,
-    QGraphicsLineItem* line_item,
-    const RenderingOptions& rendering_options);
-
-  void set_selected_containing_polygon(
-    const int level_idx,
-    const double x,
-    const double y);
 
   Polygon::EdgeDragPolygon polygon_edge_drag_press(
     const int level_idx,

@@ -235,3 +235,9 @@ QPointF Layer::transform_layer_to_global(const QPointF& layer_point)
 {
   return transform.forwards(layer_point);
 }
+
+void Layer::clear_selection()
+{
+  for (auto& feature : features)
+    feature.setSelected(false);
+}

@@ -97,6 +97,39 @@ public:
   void add_constraint(const QUuid& a, const QUuid& b);
   void remove_constraint(const QUuid& a, const QUuid& b);
 
+  enum ItemType { VERTEX=1, MODEL, FIDUCIAL };
+  struct NearestItem
+  {
+    double model_dist = 1e100;
+    int model_idx = -1;
+
+    double vertex_dist = 1e100;
+    int vertex_idx = -1;
+
+    double feature_dist = 1e100;
+    int feature_layer_idx = -1;
+    int feature_idx = -1;
+
+    double fiducial_dist = 1e100;
+    int fiducial_idx = -1;
+  };
+
+  NearestItem nearest_items(
+    const double x,
+    const double y);
+
+  int nearest_item_index_if_within_distance(
+    const double x,
+    const double y,
+    const double distance_threshold,
+    const ItemType item_type);
+
+  void mouse_select_press(
+    const double x,
+    const double y,
+    QGraphicsItem* graphics_item,
+    const RenderingOptions& rendering_options);
+
   struct SelectedItem
   {
     int model_idx = -1;
@@ -104,14 +137,25 @@ public:
     int fiducial_idx = -1;
     int edge_idx = -1;
     int polygon_idx = -1;
+    int feature_idx = -1;
+    int feature_layer_idx = -1;
+    int constraint_idx = -1;
   };
 
   bool can_delete_current_selection();
   bool delete_selected();
   void calculate_scale();
   void clear_selection();
+
   void get_selected_items(std::vector<SelectedItem>& selected_items);
 
+  void set_selected_line_item(
+    QGraphicsLineItem* line_item,
+    const RenderingOptions& rendering_options);
+
+  void set_selected_containing_polygon(
+    const double x,
+    const double y);
 
   void draw(
     QGraphicsScene* scene,
@@ -163,7 +207,8 @@ private:
 
   void draw_constraint(
     QGraphicsScene* scene,
-    const Constraint& constraint) const;
+    const Constraint& constraint,
+    int constraint_idx) const;
 
   // helper function
   void draw_polygon(

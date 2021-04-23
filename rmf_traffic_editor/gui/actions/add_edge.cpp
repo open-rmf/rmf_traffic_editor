@@ -80,7 +80,7 @@ int AddEdgeCommand::set_first_point(double x, double y)
     x,
     y,
     vertex_dist_thresh_pixels,
-    Building::VERTEX);
+    Level::VERTEX);
 
   _first_point_drawn = true;
   if (clicked_idx < 0)
@@ -108,7 +108,7 @@ int AddEdgeCommand::set_second_point(double x, double y)
     x,
     y,
     vertex_dist_thresh_pixels,
-    Building::VERTEX);
+    Level::VERTEX);
 
   _second_point_drawn = true;
 

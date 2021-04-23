@@ -65,6 +65,32 @@ void DeleteCommand::undo()
       _polygons[i]);
   }
 
+  for (size_t i = 0; i < _features.size(); i++)
+  {
+    Level& level = _building->levels[_level_idx];
+    if (_feature_layer_idx[i] == 0)
+    {
+      level.floorplan_features.insert(
+        level.floorplan_features.begin() + _feature_idx[i],
+        _features[i]);
+    }
+    else
+    {
+      Layer& layer = level.layers[_feature_layer_idx[i] - 1];
+      layer.features.insert(
+        layer.features.begin() + _feature_idx[i],
+        _features[i]);
+    }
+  }
+
+  for (size_t i = 0; i < _constraints.size(); i++)
+  {
+    Level& level = _building->levels[_level_idx];
+    level.constraints.insert(
+      level.constraints.begin() + _constraint_idx[i],
+      _constraints[i]);
+  }
+
   _vertices.clear();
   _vertex_idx.clear();
   _edges.clear();
@@ -75,6 +101,13 @@ void DeleteCommand::undo()
   _fiducial_idx.clear();
   _polygons.clear();
   _polygon_idx.clear();
+
+  _features.clear();
+  _feature_layer_idx.clear();
+  _feature_idx.clear();
+
+  _constraints.clear();
+  _constraint_idx.clear();
 }
 
 void DeleteCommand::redo()
@@ -117,7 +150,31 @@ void DeleteCommand::redo()
       _polygons.push_back(
         _building->levels[_level_idx].polygons[item.polygon_idx]
       );
-      _polygon_idx.push_back(item.edge_idx);
+      _polygon_idx.push_back(item.edge_idx); // (MQ) should be polygon_idx ?
+    }
+
+    if (item.feature_idx >= 0)
+    {
+      _feature_layer_idx.push_back(item.feature_layer_idx);
+      _feature_idx.push_back(item.feature_idx);
+      if (item.feature_layer_idx == 0)
+      {
+        _features.push_back(
+          _building->levels[_level_idx].floorplan_features[item.feature_idx]);
+      }
+      else
+      {
+        _features.push_back(
+          _building->levels[_level_idx].layers[item.feature_layer_idx-1].
+          features[item.feature_idx]);
+      }
+    }
+
+    if (item.constraint_idx >= 0)
+    {
+      _constraints.push_back(
+        _building->levels[_level_idx].constraints[item.constraint_idx]);
+      _constraint_idx.push_back(item.constraint_idx);
     }
   }
   _building->delete_selected(_level_idx);

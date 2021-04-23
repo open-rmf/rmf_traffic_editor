@@ -82,6 +82,8 @@ public:
 
   QPointF transform_global_to_layer(const QPointF& global_point);
   QPointF transform_layer_to_global(const QPointF& layer_point);
+
+  void clear_selection();
 };
 
 #endif

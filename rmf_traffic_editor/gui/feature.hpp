@@ -57,6 +57,7 @@ public:
   QUuid const& id() const { return _id; }
 
   bool selected() const { return _selected; }
+  void setSelected(const bool selected) { _selected = selected; }
 
   void from_yaml(const YAML::Node& data);
   YAML::Node to_yaml() const;

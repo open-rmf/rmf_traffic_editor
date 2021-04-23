@@ -82,3 +82,11 @@ bool Constraint::operator==(const Constraint& other)
   }
   return all_equal_forwards || all_equal_backwards;
 }
+
+bool Constraint::includes_id(const QUuid& test_id) const
+{
+  for (const auto& id : _ids)
+    if (test_id == id)
+      return true;
+  return false;
+}

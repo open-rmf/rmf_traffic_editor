@@ -876,7 +876,8 @@ void Editor::keyPressEvent(QKeyEvent* e)
         QMessageBox::critical(
           this,
           "Could not delete item",
-          "If deleting a vertex, it must not be in any edges or polygons.");
+          "If deleting a vertex, it must not be in any edges or polygons. "
+          "If deleting a feature, it must not be in any constraints.");
 
         building.clear_selection(level_idx);
       }
@@ -1387,7 +1388,6 @@ void Editor::populate_property_editor(const Fiducial& fiducial)
 
 void Editor::populate_property_editor(const Model& model)
 {
-  printf("populate_property_editor(model)\n");
   property_editor->blockSignals(true);  // otherwise we get tons of callbacks
 
   property_editor->setRowCount(4);
@@ -1607,8 +1607,7 @@ void Editor::mouse_select(
   const QPoint p_map = map_view->mapFromGlobal(p_global);
   QGraphicsItem* item = map_view->itemAt(p_map);
 
-  building.mouse_select_press(
-    level_idx,
+  building.levels[level_idx].mouse_select_press(
     p.x(),
     p.y(),
     item,
@@ -1679,12 +1678,14 @@ void Editor::mouse_add_fiducial(
 }
 
 void Editor::mouse_move(
-  const MouseType t, QMouseEvent* e, const QPointF& p)
+  const MouseType t,
+  QMouseEvent* e,
+  const QPointF& p)
 {
   if (t == MOUSE_PRESS)
   {
-    Building::NearestItem ni =
-      building.nearest_items(level_idx, p.x(), p.y());
+    Level::NearestItem ni =
+      building.levels[level_idx].nearest_items(p.x(), p.y());
 
     printf(
       "mouse press (%.3f, %.3f) feature_dist = %.3f, feature_idx = %d, feature_layer_idx = %d\n",
@@ -2193,7 +2194,7 @@ void Editor::mouse_rotate(
       p.x(),
       p.y(),
       50.0,
-      Building::MODEL);
+      Level::MODEL);
     if (clicked_idx < 0)
       return;// nothing to do. click wasn't on a model.
 
@@ -2298,8 +2299,8 @@ void Editor::mouse_add_polygon(
   {
     if (e->buttons() & Qt::LeftButton)
     {
-      const Building::NearestItem ni =
-        building.nearest_items(level_idx, p.x(), p.y());
+      const Level::NearestItem ni =
+        building.levels[level_idx].nearest_items(p.x(), p.y());
       clicked_idx = ni.vertex_dist < 10.0 ? ni.vertex_idx : -1;
       if (clicked_idx < 0)
         return;// nothing to do. click wasn't on a vertex.
@@ -2411,8 +2412,7 @@ void Editor::mouse_edit_polygon(
   {
     if (e->buttons() & Qt::RightButton)
     {
-      const Building::NearestItem ni = building.nearest_items(
-        level_idx,
+      const Level::NearestItem ni = building.levels[level_idx].nearest_items(
         p.x(),
         p.y());
       if (ni.vertex_dist > 10.0)
@@ -2465,8 +2465,9 @@ void Editor::mouse_edit_polygon(
     delete mouse_motion_polygon;
     mouse_motion_polygon = nullptr;
 
-    const Building::NearestItem ni = building.nearest_items(
-      level_idx, p.x(), p.y());
+    const Level::NearestItem ni = building.levels[level_idx].nearest_items(
+      p.x(),
+      p.y());
 
     if (ni.vertex_dist > 10.0)
       return;// nothing to do; didn't release near a vertex

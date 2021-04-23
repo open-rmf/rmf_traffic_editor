@@ -40,8 +40,10 @@ public:
   const std::vector<QUuid>& ids() const { return _ids; }
   void set_ids(std::vector<QUuid>& ids) { _ids = ids; }
   void add_id(const QUuid& id);
+  bool includes_id(const QUuid& id) const;
 
   bool selected() const { return _selected; }
+  void setSelected(const bool selected) { _selected = selected; }
 
   void from_yaml(const YAML::Node& data);
   YAML::Node to_yaml() const;

@@ -292,6 +292,29 @@ YAML::Node Level::to_yaml() const
 
 bool Level::can_delete_current_selection()
 {
+  // if a feature is selected, refuse to delete it if it's in a constraint
+  for (const Feature& feature : floorplan_features)
+  {
+    if (!feature.selected())
+      continue;
+    for (const Constraint& constraint : constraints)
+      if (constraint.includes_id(feature.id()))
+        return false;
+  }
+
+  for (const Layer& layer : layers)
+  {
+    for (const Feature& feature : layer.features)
+    {
+      if (!feature.selected())
+        continue;
+
+      for (const Constraint& constraint : constraints)
+        if (constraint.includes_id(feature.id()))
+          return false;
+    }
+  }
+
   int selected_vertex_idx = -1;
   for (int i = 0; i < static_cast<int>(vertices.size()); i++)
   {
@@ -322,6 +345,7 @@ bool Level::can_delete_current_selection()
   }
   if (vertex_used)
     return false;// don't try to delete a vertex used in a shape
+
   return true;
 }
 
@@ -354,6 +378,13 @@ bool Level::delete_selected()
       polygons.end(),
       [](const Polygon& polygon) { return polygon.selected; }),
     polygons.end());
+
+  constraints.erase(
+    std::remove_if(
+      constraints.begin(),
+      constraints.end(),
+      [](const Constraint& constraint) { return constraint.selected(); }),
+    constraints.end());
 
   // Vertices take a lot more care, because we have to check if a vertex
   // is used in an edge or a polygon before deleting it, and update all
@@ -412,6 +443,38 @@ bool Level::delete_selected()
       }
     }
   }
+
+  // if a feature is selected, refuse to delete it if it's in a constraint
+  for (size_t i = 0; i < floorplan_features.size(); i++)
+  {
+    if (!floorplan_features[i].selected())
+      continue;
+
+    for (size_t j = 0; j < constraints.size(); j++)
+      if (constraints[j].includes_id(floorplan_features[i].id()))
+        return false;
+
+    floorplan_features.erase(floorplan_features.begin() + i);
+    return true;
+  }
+
+  for (size_t layer_idx = 0; layer_idx < layers.size(); layer_idx++)
+  {
+    Layer& layer = layers[layer_idx];
+    for (size_t i = 0; i < layer.features.size(); i++)
+    {
+      if (!layer.features[i].selected())
+        continue;
+
+      for (size_t j = 0; j < constraints.size(); j++)
+        if (constraints[j].includes_id(layer.features[i].id()))
+          return false;
+
+      layer.features.erase(layer.features.begin() + i);
+      return true;
+    }
+  }
+
   return true;
 }
 
@@ -464,6 +527,41 @@ void Level::get_selected_items(
     {
       Level::SelectedItem item;
       item.polygon_idx = i;
+      items.push_back(item);
+    }
+  }
+
+  for (size_t i = 0; i < floorplan_features.size(); i++)
+  {
+    if (floorplan_features[i].selected())
+    {
+      Level::SelectedItem item;
+      item.feature_idx = i;
+      item.feature_layer_idx = 0;
+      items.push_back(item);
+    }
+  }
+
+  for (size_t layer_idx = 0; layer_idx < layers.size(); layer_idx++)
+  {
+    for (size_t i = 0; i < layers[layer_idx].features.size(); i++)
+    {
+      if (layers[layer_idx].features[i].selected())
+      {
+        Level::SelectedItem item;
+        item.feature_idx = i;
+        item.feature_layer_idx = layer_idx + 1;
+        items.push_back(item);
+      }
+    }
+  }
+
+  for (size_t i = 0; i < constraints.size(); i++)
+  {
+    if (constraints[i].selected())
+    {
+      Level::SelectedItem item;
+      item.constraint_idx = i;
       items.push_back(item);
     }
   }
@@ -945,6 +1043,15 @@ void Level::clear_selection()
 
   for (auto& fiducial : fiducials)
     fiducial.selected = false;
+
+  for (auto& feature : floorplan_features)
+    feature.setSelected(false);
+
+  for (auto& layer : layers)
+    layer.clear_selection();
+
+  for (auto& constraint : constraints)
+    constraint.setSelected(false);
 }
 
 void Level::draw(
@@ -1018,8 +1125,8 @@ void Level::draw(
       drawing_meters_per_pixel);
   }
 
-  for (const auto& constraint : constraints)
-    draw_constraint(scene, constraint);
+  for (size_t i = 0; i < constraints.size(); i++)
+    draw_constraint(scene, constraints[i], i);
 }
 
 void Level::clear_scene()
@@ -1478,7 +1585,8 @@ bool Level::get_feature_point(const QUuid& id, QPointF& point) const
 
 void Level::draw_constraint(
     QGraphicsScene* scene,
-    const Constraint& constraint) const
+    const Constraint& constraint,
+    int constraint_idx) const
 {
   const std::vector<QUuid>& feature_ids = constraint.ids();
   if (feature_ids.size() != 2)
@@ -1520,6 +1628,8 @@ void Level::draw_constraint(
     p2.y(),
     pen);
   line->setZValue(199.0);
+  line->setData(0, "constraint");
+  line->setData(1, constraint_idx);
 }
 
 class TransformResidual
@@ -1719,5 +1829,309 @@ void Level::optimize_layer_transforms()
     layers[i].transform.setScale(scale);
     layers[i].transform.setTranslation(
       QPointF(translation[0], translation[1]));
+  }
+}
+
+void Level::mouse_select_press(
+    const double x,
+    const double y,
+    QGraphicsItem* graphics_item,
+    const RenderingOptions& rendering_options)
+{
+  clear_selection();
+
+  const NearestItem ni = nearest_items(x, y);
+
+  const double vertex_dist_thresh = vertex_radius / drawing_meters_per_pixel;
+
+  const double feature_dist_thresh =
+    Feature::radius_meters / drawing_meters_per_pixel;
+
+  // todo: use QGraphics stuff to see if we clicked a model pixmap...
+  const double model_dist_thresh = 0.5 / drawing_meters_per_pixel;
+
+  if (rendering_options.show_models &&
+    ni.model_idx >= 0 &&
+    ni.model_dist < model_dist_thresh)
+    models[ni.model_idx].selected = true;
+  else if (ni.vertex_idx >= 0 && ni.vertex_dist < vertex_dist_thresh)
+    vertices[ni.vertex_idx].selected = true;
+  else if (ni.feature_idx >= 0 && ni.feature_dist < feature_dist_thresh)
+  {
+    //levels[level_idx].feature_sets[
+    printf("feature_layer_idx = %d, feature_idx = %d, feature_dist = %.3f\n",
+      ni.feature_layer_idx,
+      ni.feature_idx,
+      ni.feature_dist);
+
+    if (ni.feature_layer_idx == 0)
+      floorplan_features[ni.feature_idx].setSelected(true);
+    else
+      layers[ni.feature_layer_idx-1].
+        features[ni.feature_idx].setSelected(true);
+  }
+  else if (ni.fiducial_idx >= 0 && ni.fiducial_dist < 10.0)
+    fiducials[ni.fiducial_idx].selected = true;
+  else
+  {
+    // use the QGraphics stuff to see if it's an edge segment or polygon
+    if (graphics_item)
+    {
+      switch (graphics_item->type())
+      {
+        case QGraphicsLineItem::Type:
+          set_selected_line_item(
+            qgraphicsitem_cast<QGraphicsLineItem*>(graphics_item),
+            rendering_options);
+          break;
+
+        case QGraphicsPolygonItem::Type:
+          set_selected_containing_polygon(x, y);
+          break;
+
+        default:
+          printf("clicked unhandled type: %d\n",
+            static_cast<int>(graphics_item->type()));
+          break;
+      }
+    }
+  }
+}
+
+Level::NearestItem Level::nearest_items(const double x, const double y)
+{
+  NearestItem ni;
+
+  for (size_t i = 0; i < vertices.size(); i++)
+  {
+    const Vertex& p = vertices[i];
+    const double dx = x - p.x;
+    const double dy = y - p.y;
+    const double dist = sqrt(dx*dx + dy*dy);
+    if (dist < ni.vertex_dist)
+    {
+      ni.vertex_dist = dist;
+      ni.vertex_idx = i;
+    }
+  }
+
+  // search the floorplan features
+  for (size_t i = 0; i < floorplan_features.size(); i++)
+  {
+    const Feature& f = floorplan_features[i];
+    const double dx = x - f.x();
+    const double dy = y - f.y();
+    const double dist = sqrt(dx*dx + dy*dy);
+    if (dist < ni.feature_dist)
+    {
+      ni.feature_layer_idx = 0;
+      ni.feature_dist = dist;
+      ni.feature_idx = i;
+    }
+  }
+
+  // now search all "other" layer features
+  for (size_t layer_idx = 0; layer_idx < layers.size(); layer_idx++)
+  {
+    const Layer& layer = layers[layer_idx];
+    for (size_t i = 0; i < layer.features.size(); i++)
+    {
+      const Feature& f = layer.features[i];
+
+      // transform this point into parent level's pixel space
+      QPointF p(layer.transform.forwards(f.qpoint()));
+      p /= drawing_meters_per_pixel;
+
+      const double dx = x - p.x();
+      const double dy = y - p.y();
+      const double dist = sqrt(dx*dx + dy*dy);
+      if (dist < ni.feature_dist)
+      {
+        ni.feature_layer_idx = layer_idx + 1;
+        ni.feature_dist = dist;
+        ni.feature_idx = i;
+      }
+    }
+  }
+
+  for (size_t i = 0; i < fiducials.size(); i++)
+  {
+    const Fiducial& f = fiducials[i];
+    const double dx = x - f.x;
+    const double dy = y - f.y;
+    const double dist = sqrt(dx*dx + dy*dy);
+    if (dist < ni.fiducial_dist)
+    {
+      ni.fiducial_dist = dist;
+      ni.fiducial_idx = i;
+    }
+  }
+
+  for (size_t i = 0; i < models.size(); i++)
+  {
+    const Model& m = models[i];
+    const double dx = x - m.state.x;
+    const double dy = y - m.state.y;
+    const double dist = sqrt(dx*dx + dy*dy);  // no need for sqrt each time
+    if (dist < ni.model_dist)
+    {
+      ni.model_dist = dist;
+      ni.model_idx = i;
+    }
+  }
+
+  return ni;
+}
+
+int Level::nearest_item_index_if_within_distance(
+  const double x,
+  const double y,
+  const double distance_threshold,
+  const ItemType item_type)
+{
+  double min_dist = 1e100;
+  int min_index = -1;
+  if (item_type == VERTEX)
+  {
+    for (size_t i = 0; i < vertices.size(); i++)
+    {
+      const Vertex& p = vertices[i];
+      const double dx = x - p.x;
+      const double dy = y - p.y;
+      const double dist2 = dx*dx + dy*dy;  // no need for sqrt each time
+      if (dist2 < min_dist)
+      {
+        min_dist = dist2;
+        min_index = i;
+      }
+    }
+  }
+  else if (item_type == FIDUCIAL)
+  {
+    for (size_t i = 0; i < fiducials.size(); i++)
+    {
+      const Fiducial& f = fiducials[i];
+      const double dx = x - f.x;
+      const double dy = y - f.y;
+      const double dist2 = dx*dx + dy*dy;
+      if (dist2 < min_dist)
+      {
+        min_dist = dist2;
+        min_index = i;
+      }
+    }
+  }
+  else if (item_type == MODEL)
+  {
+    for (size_t i = 0; i < models.size(); i++)
+    {
+      const Model& m = models[i];
+      const double dx = x - m.state.x;
+      const double dy = y - m.state.y;
+      const double dist2 = dx*dx + dy*dy;  // no need for sqrt each time
+      if (dist2 < min_dist)
+      {
+        min_dist = dist2;
+        min_index = i;
+      }
+    }
+  }
+  if (sqrt(min_dist) < distance_threshold)
+    return min_index;
+  return -1;
+}
+
+void Level::set_selected_line_item(
+  QGraphicsLineItem* line_item,
+  const RenderingOptions& rendering_options)
+{
+  clear_selection();
+  if (line_item == nullptr)
+    return;
+
+  // look up the line's vertices
+  const double x1 = line_item->line().x1();
+  const double y1 = line_item->line().y1();
+  const double x2 = line_item->line().x2();
+  const double y2 = line_item->line().y2();
+
+
+  // find if any of our lanes match those vertices
+  for (auto& edge : edges)
+  {
+    if ((edge.type == Edge::LANE) &&
+      (edge.get_graph_idx() != rendering_options.active_traffic_map_idx))
+      continue;
+
+    const auto& v_start = vertices[edge.start_idx];
+    const auto& v_end = vertices[edge.end_idx];
+
+    // calculate distances
+    const double dx1 = v_start.x - x1;
+    const double dy1 = v_start.y - y1;
+    const double dx2 = v_end.x - x2;
+    const double dy2 = v_end.y - y2;
+    const double v1_dist = std::sqrt(dx1*dx1 + dy1*dy1);
+    const double v2_dist = std::sqrt(dx2*dx2 + dy2*dy2);
+
+    const double thresh = 10.0;  // it should be really tiny if it matches
+    if (v1_dist < thresh && v2_dist < thresh)
+    {
+      edge.selected = true;
+      return;  // stop after first one is found, don't select multiple
+    }
+  }
+
+  // see if the constraint index is stored in the QGraphicsItem
+  if (line_item->data(0).toString() == "constraint")
+  {
+    if (line_item->data(1).isValid())
+    {
+      const int constraint_idx = line_item->data(1).toInt();
+      printf("constraint index: %d\n", constraint_idx);
+      if (constraint_idx >= 0 &&
+          constraint_idx < static_cast<int>(constraints.size()))
+        constraints[constraint_idx].setSelected(true);
+      return;
+    }
+  }
+}
+
+void Level::set_selected_containing_polygon(
+  const double x,
+  const double y)
+{
+  // holes are "higher" in our Z-stack (to make them clickable), so first
+  // we need to make a list of all polygons that contain this point.
+  vector<Polygon*> containing_polygons;
+  for (size_t i = 0; i < polygons.size(); i++)
+  {
+    Polygon& polygon = polygons[i];
+    QVector<QPointF> polygon_vertices;
+    for (const auto& vertex_idx: polygon.vertices)
+    {
+      const Vertex& v = vertices[vertex_idx];
+      polygon_vertices.append(QPointF(v.x, v.y));
+    }
+    QPolygonF qpolygon(polygon_vertices);
+    if (qpolygon.containsPoint(QPoint(x, y), Qt::OddEvenFill))
+      containing_polygons.push_back(&polygons[i]);
+  }
+
+  // first search for holes
+  for (Polygon* p : containing_polygons)
+  {
+    if (p->type == Polygon::HOLE)
+    {
+      p->selected = true;
+      return;
+    }
+  }
+
+  // if we get here, just return the first thing.
+  for (Polygon* p : containing_polygons)
+  {
+    p->selected = true;
+    return;
   }
 }

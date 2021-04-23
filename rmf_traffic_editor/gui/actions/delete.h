@@ -24,6 +24,13 @@ private:
   std::vector<Polygon> _polygons;
   std::vector<int> _polygon_idx;
 
+  std::vector<Feature> _features;
+  std::vector<int> _feature_layer_idx;
+  std::vector<int> _feature_idx;
+
+  std::vector<Constraint> _constraints;
+  std::vector<int> _constraint_idx;
+
   Building* _building;
   int _level_idx;
 };
