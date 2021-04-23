@@ -25,8 +25,7 @@ workspace in `~/colcon_workspace` and build `traffic-editor` there:
 ```bash
 sudo apt update
 sudo apt install libyaml-cpp-dev qt5-default \
-  libopencv-dev libopencv-videoio-dev \
-  libignition-plugin-dev libignition-common3-dev
+  libopencv-dev libopencv-videoio-dev
 mkdir -p ~/colcon_workspace/src
 cd ~/colcon_workspace/src
 git clone https://github.com/open-rmf/rmf_traffic_editor
