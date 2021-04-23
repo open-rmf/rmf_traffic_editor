@@ -1844,15 +1844,21 @@ void Editor::mouse_move(
       Level& level = building.levels[level_idx];
       Feature* feature = nullptr;
 
+      QPointF q(p);  // transform if necessary to layer coordinates
       if (mouse_feature_layer_idx == 0)
         feature = &level.floorplan_features[mouse_feature_idx];
       else
-        feature =
-          &level.layers[mouse_feature_layer_idx-1].features[mouse_feature_idx];
+      {
+        Layer& layer = level.layers[mouse_feature_layer_idx - 1];
+        const double mpp = level.drawing_meters_per_pixel;
+        const QPointF p_meters(p.x() * mpp, p.y() * mpp);
+        q = layer.transform.backwards(p_meters);
+        feature = &layer.features[mouse_feature_idx];
+      }
 
-      feature->set_x(p.x());
-      feature->set_y(p.y());
-      latest_move_feature->set_final_destination(p.x(), p.y());
+      feature->set_x(q.x());
+      feature->set_y(q.y());
+      latest_move_feature->set_final_destination(q.x(), q.y());
 
       printf("moved feature %d on layer %d to (%.1f, %.1f)\n",
         mouse_feature_idx,
