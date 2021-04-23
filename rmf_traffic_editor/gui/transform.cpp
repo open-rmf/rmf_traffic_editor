@@ -69,7 +69,7 @@ QPointF Transform::backwards(const QPointF& p) const
   const double tsy = (p.y() - _translation.y()) / _scale;
 
   // rotate back
-  const double rx =  cos(-_yaw) * tsx + sin(-_yaw) * tsy;
+  const double rx = cos(-_yaw) * tsx + sin(-_yaw) * tsy;
   const double ry = -sin(-_yaw) * tsx + cos(-_yaw) * tsy;
   return QPointF(rx, ry);
 }

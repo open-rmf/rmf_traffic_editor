@@ -183,9 +183,8 @@ QUuid Layer::add_feature(
     level_meters_per_pixel);
 
   // convert clicks in the working area to meters
-  QPointF layer_pixel =
-    transform.backwards(
-      QPointF(x * level_meters_per_pixel, y * level_meters_per_pixel));
+  const double mpp = level_meters_per_pixel;
+  QPointF layer_pixel = transform.backwards(QPointF(x * mpp, y * mpp));
 
   printf("  transformed: (%.3f, %.3f)\n", layer_pixel.x(), layer_pixel.y());
   features.push_back(Feature(layer_pixel));
@@ -198,9 +197,8 @@ const Feature* Layer::find_feature(
   const double y,
   const double level_meters_per_pixel) const
 {
-  QPointF layer_pixel =
-    transform.backwards(
-      QPointF(x * level_meters_per_pixel, y * level_meters_per_pixel));
+  const double mpp = level_meters_per_pixel;
+  QPointF layer_pixel = transform.backwards(QPointF(x * mpp, y * mpp));
 
   double min_dist = 1e9;
   const Feature* min_feature = nullptr;

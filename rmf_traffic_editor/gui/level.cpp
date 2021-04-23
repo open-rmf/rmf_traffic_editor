@@ -298,8 +298,10 @@ bool Level::can_delete_current_selection()
     if (!feature.selected())
       continue;
     for (const Constraint& constraint : constraints)
+    {
       if (constraint.includes_id(feature.id()))
         return false;
+    }
   }
 
   for (const Layer& layer : layers)
@@ -310,8 +312,10 @@ bool Level::can_delete_current_selection()
         continue;
 
       for (const Constraint& constraint : constraints)
+      {
         if (constraint.includes_id(feature.id()))
           return false;
+      }
     }
   }
 
@@ -451,8 +455,10 @@ bool Level::delete_selected()
       continue;
 
     for (size_t j = 0; j < constraints.size(); j++)
+    {
       if (constraints[j].includes_id(floorplan_features[i].id()))
         return false;
+    }
 
     floorplan_features.erase(floorplan_features.begin() + i);
     return true;
@@ -467,8 +473,10 @@ bool Level::delete_selected()
         continue;
 
       for (size_t j = 0; j < constraints.size(); j++)
+      {
         if (constraints[j].includes_id(layer.features[i].id()))
           return false;
+      }
 
       layer.features.erase(layer.features.begin() + i);
       return true;
@@ -1584,9 +1592,9 @@ bool Level::get_feature_point(const QUuid& id, QPointF& point) const
 }
 
 void Level::draw_constraint(
-    QGraphicsScene* scene,
-    const Constraint& constraint,
-    int constraint_idx) const
+  QGraphicsScene* scene,
+  const Constraint& constraint,
+  int constraint_idx) const
 {
   const std::vector<QUuid>& feature_ids = constraint.ids();
   if (feature_ids.size() != 2)
@@ -1649,7 +1657,7 @@ public:
   {
   }
 
-  template <typename T>
+  template<typename T>
   bool operator()(
     const T* const yaw,
     const T* const scale,
@@ -1833,10 +1841,10 @@ void Level::optimize_layer_transforms()
 }
 
 void Level::mouse_select_press(
-    const double x,
-    const double y,
-    QGraphicsItem* graphics_item,
-    const RenderingOptions& rendering_options)
+  const double x,
+  const double y,
+  QGraphicsItem* graphics_item,
+  const RenderingOptions& rendering_options)
 {
   clear_selection();
 
@@ -1865,10 +1873,14 @@ void Level::mouse_select_press(
       ni.feature_dist);
 
     if (ni.feature_layer_idx == 0)
+    {
       floorplan_features[ni.feature_idx].setSelected(true);
+    }
     else
+    {
       layers[ni.feature_layer_idx-1].
-        features[ni.feature_idx].setSelected(true);
+      features[ni.feature_idx].setSelected(true);
+    }
   }
   else if (ni.fiducial_idx >= 0 && ni.fiducial_dist < 10.0)
     fiducials[ni.fiducial_idx].selected = true;
@@ -2090,8 +2102,10 @@ void Level::set_selected_line_item(
       const int constraint_idx = line_item->data(1).toInt();
       printf("constraint index: %d\n", constraint_idx);
       if (constraint_idx >= 0 &&
-          constraint_idx < static_cast<int>(constraints.size()))
+        constraint_idx < static_cast<int>(constraints.size()))
+      {
         constraints[constraint_idx].setSelected(true);
+      }
       return;
     }
   }
