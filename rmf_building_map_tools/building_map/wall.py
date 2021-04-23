@@ -222,7 +222,6 @@ class Wall:
             f.write('illum 2\n')  # illumination model (enum)
             f.write(f'map_Kd {texture_filename}\n')
 
-
     def generate(
         self,
         model_ele,
