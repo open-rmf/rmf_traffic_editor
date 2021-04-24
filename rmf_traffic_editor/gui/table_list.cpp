@@ -32,13 +32,11 @@ TableList::TableList(const int num_cols)
   setMinimumSize(400, 200);
 
   verticalHeader()->setVisible(false);
-  verticalHeader()->setSectionResizeMode(
-    QHeaderView::ResizeToContents);
+  verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
 
   horizontalHeader()->setVisible(true);
   horizontalHeader()->setDefaultAlignment(Qt::AlignLeft);
-  horizontalHeader()->setSectionResizeMode(
-    0, QHeaderView::Stretch);
+  horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
 
   for (int col = 1; col < num_cols; col++)
     horizontalHeader()->setSectionResizeMode(

@@ -32,7 +32,7 @@
 #include <QUndoStack>
 
 #include "actions/add_edge.h"
-#include "actions/move_correspondence_point.h"
+#include "actions/move_feature.h"
 #include "actions/move_fiducial.h"
 #include "actions/move_model.h"
 #include "actions/move_vertex.h"
@@ -43,18 +43,14 @@
 
 #include "crowd_sim/crowd_sim_editor_table.h"
 
-class BuildingLevelTable;
+class BuildingTable;
+class LayerTable;
+class LevelTable;
 class MapView;
 class Level;
 class LiftTable;
 class TrafficTable;
 class CrowdSimTable;
-
-#ifdef HAS_OPENCV
-namespace cv {
-class VideoWriter;
-}
-#endif
 
 QT_BEGIN_NAMESPACE
 class QAction;
@@ -122,7 +118,8 @@ private:
     TOOL_ADD_FLOOR,
     TOOL_EDIT_POLYGON,
     TOOL_ADD_ZONE,
-    TOOL_ADD_CORRESPONDENCE_POINT,
+    TOOL_ADD_FEATURE,
+    TOOL_ADD_CONSTRAINT,
     TOOL_ADD_FIDUCIAL,
     TOOL_ADD_ROI,
     TOOL_ADD_HOLE,
@@ -136,7 +133,7 @@ private:
   void building_new();
   void building_open();
   bool building_save();
-  bool building_export_correspondence_points();
+  bool building_export_features();
 
   bool maybe_save();
   void edit_undo();
@@ -144,11 +141,15 @@ private:
   void edit_preferences();
   void edit_building_properties();
   void edit_project_properties();
-  void edit_transform();
+  void edit_rotate_all_models();
+  void edit_optimize_layer_transforms();
 
   void level_add();
   void level_edit();
   void level_table_update_slot();
+
+  void layer_table_update(const int row_idx);
+  void layer_table_update_slot();
 
   void zoom_reset();
   void view_models();
@@ -177,6 +178,10 @@ private:
   int prev_clicked_idx = -1; // Previously clicked ID.
   //int polygon_idx = -1;  // currently selected polygon
   Polygon* selected_polygon = nullptr;
+  QUuid clicked_feature_id;
+
+  const Level* active_level() const;
+  const Layer* active_layer() const;
 
   QGraphicsScene* scene = nullptr;
   MapView* map_view = nullptr;
@@ -191,7 +196,6 @@ private:
   QTableWidget* create_tabbed_table();
   void update_tables();
 
-  QTableWidget* layers_table = nullptr;
   void populate_layers_table();
   void layers_table_set_row(
     const int row_idx,
@@ -199,10 +203,9 @@ private:
     const bool checked);
   void layer_edit_button_clicked(const int row_idx);
   void layer_add_button_clicked();
-  void update_active_layer_checkboxes(int row_idx);
-  void layer_table_update(const int row_idx);
 
-  BuildingLevelTable* level_table = nullptr;
+  LevelTable* level_table = nullptr;
+  LayerTable* layer_table = nullptr;
   LiftTable* lift_table = nullptr;
   TrafficTable* traffic_table = nullptr;
   CrowdSimEditorTable* crowd_sim_table = nullptr;
@@ -213,8 +216,7 @@ private:
   void populate_property_editor(const Edge& edge);
   void populate_property_editor(const Model& model);
   void populate_property_editor(const Vertex& vertex);
-  void populate_property_editor(
-    const CorrespondencePoint& correspondence_point);
+  void populate_property_editor(const Feature& feature);
   void populate_property_editor(const Fiducial& fiducial);
   void populate_property_editor(const Polygon& polygon);
 
@@ -279,7 +281,8 @@ private:
 
   int mouse_model_idx = -1;
   int mouse_vertex_idx = -1;
-  int mouse_correspondence_point_idx = -1;
+  int mouse_feature_idx = -1;
+  int mouse_feature_layer_idx = -1;
   int mouse_fiducial_idx = -1;
   std::vector<int> mouse_motion_polygon_vertices;
   //int mouse_motion_polygon_vertex_idx = -1;
@@ -324,10 +327,7 @@ private:
   void mouse_rotate(const MouseType t, QMouseEvent* e, const QPointF& p);
 
   void mouse_add_vertex(const MouseType t, QMouseEvent* e, const QPointF& p);
-  void mouse_add_correspondence_point(
-    const MouseType t,
-    QMouseEvent* e,
-    const QPointF& p);
+  void mouse_add_feature(const MouseType t, QMouseEvent* e, const QPointF& p);
   void mouse_add_fiducial(const MouseType t, QMouseEvent* e, const QPointF& p);
   void mouse_add_lane(const MouseType t, QMouseEvent* e, const QPointF& p);
   void mouse_add_wall(const MouseType t, QMouseEvent* e, const QPointF& p);
@@ -342,15 +342,22 @@ private:
   void mouse_add_human_lane(const MouseType t, QMouseEvent* e,
     const QPointF& p);
 
+  void mouse_add_constraint(
+    const MouseType t,
+    QMouseEvent* e,
+    const QPointF& p);
+
   QPointF previous_mouse_point;
 
   // For undo related support
   AddEdgeCommand* latest_add_edge = nullptr;
-  MoveCorrespondencePointCommand* latest_move_correspondence_point = nullptr;
+  MoveFeatureCommand* latest_move_feature = nullptr;
   MoveFiducialCommand* latest_move_fiducial = nullptr;
   MoveModelCommand* latest_move_model = nullptr;
   MoveVertexCommand* latest_move_vertex = nullptr;
   RotateModelCommand* latest_rotate_model = nullptr;
+
+  void sanity_check();
 };
 
 #endif

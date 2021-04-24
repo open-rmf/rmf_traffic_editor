@@ -29,8 +29,10 @@ Lift::Lift()
 {
 }
 
-void Lift::from_yaml(const std::string& _name, const YAML::Node& data,
-  const std::vector<BuildingLevel>& levels)
+void Lift::from_yaml(
+  const std::string& _name,
+  const YAML::Node& data,
+  const std::vector<Level>& levels)
 {
   if (!data.IsMap())
     throw std::runtime_error("Lift::from_yaml() expected a map");
@@ -222,7 +224,7 @@ void Lift::draw(
 bool Lift::level_door_opens(
   const std::string& level_name,
   const std::string& door_name,
-  const std::vector<BuildingLevel>& levels) const
+  const std::vector<Level>& levels) const
 {
   LevelDoorMap::const_iterator level_it = level_doors.find(level_name);
   if (level_it == level_doors.end())

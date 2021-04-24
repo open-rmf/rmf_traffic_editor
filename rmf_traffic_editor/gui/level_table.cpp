@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2020 Open Source Robotics Foundation
+ * Copyright (C) 2019-2021 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,11 @@
  *
 */
 
-#include "building_level_table.h"
-#include "building_level_dialog.h"
+#include "level_table.h"
+#include "level_dialog.h"
 #include <QtWidgets>
 
-BuildingLevelTable::BuildingLevelTable()
+LevelTable::LevelTable()
 : TableList(6)
 {
   const QStringList labels =
@@ -27,11 +27,11 @@ BuildingLevelTable::BuildingLevelTable()
   setHorizontalHeaderLabels(labels);
 }
 
-BuildingLevelTable::~BuildingLevelTable()
+LevelTable::~LevelTable()
 {
 }
 
-void BuildingLevelTable::update(Building& building)
+void LevelTable::update(Building& building)
 {
   blockSignals(true);  // avoid tons of callbacks
 
@@ -76,7 +76,7 @@ void BuildingLevelTable::update(Building& building)
       &QAbstractButton::clicked,
       [this, &building, i]()
       {
-        BuildingLevelDialog level_dialog(building.levels[i], building);
+        LevelDialog level_dialog(building.levels[i], building);
         if (level_dialog.exec() == QDialog::Accepted)
         {
           building.levels[i].load_drawing();
@@ -98,8 +98,8 @@ void BuildingLevelTable::update(Building& building)
     &QAbstractButton::clicked,
     [this, &building]()
     {
-      BuildingLevel level;
-      BuildingLevelDialog level_dialog(level, building);
+      Level level;
+      LevelDialog level_dialog(level, building);
       if (level_dialog.exec() == QDialog::Accepted)
       {
         level.load_drawing();
