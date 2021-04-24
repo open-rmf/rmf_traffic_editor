@@ -6,8 +6,12 @@ endif()
 
 project(rmf_traffic_editor)
 
-find_package(yaml-cpp REQUIRED)
 find_package(ament_cmake REQUIRED)
+find_package(ament_index_cpp REQUIRED)
+find_package(Ceres REQUIRED)
+find_package(Eigen3 REQUIRED)
+find_package(Qt5 COMPONENTS Widgets Concurrent Test REQUIRED)
+find_package(yaml-cpp REQUIRED)
 
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
 # set(CMAKE_VERBOSE_MAKEFILE TRUE)
@@ -22,24 +26,22 @@ if(CMAKE_VERSION VERSION_LESS "3.7.0")
   set(CMAKE_INCLUDE_CURRENT_DIR ON)
 endif()
 
-find_package(Qt5 COMPONENTS Widgets Concurrent Test REQUIRED)
-find_package(ament_index_cpp REQUIRED)
-
 include_directories(.)
 include_directories(gui)
 include_directories(include)
 include_directories(${ament_index_cpp_INCLUDE_DIRS})
 
 set(gui_sources
-  gui/actions/add_correspondence_point.cpp
+  gui/actions/add_constraint.cpp
   gui/actions/add_edge.cpp
+  gui/actions/add_feature.cpp
   gui/actions/add_fiducial.cpp
   gui/actions/add_model.cpp
   gui/actions/add_polygon.cpp
   gui/actions/add_property.cpp
   gui/actions/add_vertex.cpp
   gui/actions/delete.cpp
-  gui/actions/move_correspondence_point.cpp
+  gui/actions/move_feature.cpp
   gui/actions/move_fiducial.cpp
   gui/actions/move_model.cpp
   gui/actions/move_vertex.cpp
@@ -49,17 +51,18 @@ set(gui_sources
   gui/add_param_dialog.cpp
   gui/building.cpp
   gui/building_dialog.cpp
-  gui/building_level.cpp
-  gui/building_level_dialog.cpp
-  gui/building_level_table.cpp
-  gui/correspondence_point.cpp
+  gui/constraint.cpp
+  gui/feature.cpp
   gui/edge.cpp
   gui/editor.cpp
   gui/editor_model.cpp
   gui/fiducial.cpp
   gui/layer.cpp
   gui/layer_dialog.cpp
+  gui/layer_table.cpp
   gui/level.cpp
+  gui/level_dialog.cpp
+  gui/level_table.cpp
   gui/lift.cpp
   gui/lift_dialog.cpp
   gui/lift_door.cpp
@@ -75,6 +78,7 @@ set(gui_sources
   gui/table_list.cpp
   gui/traffic_table.cpp
   gui/traffic_map.cpp
+  gui/transform.cpp
   gui/vertex.cpp
   gui/yaml_utils.cpp
 
@@ -108,6 +112,8 @@ add_library(
 
 target_link_libraries(
   gui_lib
+  ceres
+  Eigen3::Eigen
   Qt5::Widgets
   Qt5::Concurrent
   yaml-cpp

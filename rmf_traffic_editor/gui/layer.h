@@ -24,7 +24,10 @@
 #include <QPixmap>
 #include <yaml-cpp/yaml.h>
 
+#include "feature.hpp"
+#include "transform.hpp"
 
+class QGraphicsScene;
 class QGraphicsPixmapItem;
 
 
@@ -38,18 +41,49 @@ public:
   std::string filename;
   bool visible = true;
 
+  /*
   double meters_per_pixel = 0.05;  // relative to the parent floorplan scale
   double translation_x = 0.0;
   double translation_y = 0.0;
   double rotation = 0.0;
+  */
+
+  Transform transform;
 
   QPixmap pixmap;
   QGraphicsPixmapItem* scene_item = nullptr;  // Borrowed pointer, not owned, don't delete
+
+  std::vector<Feature> features;
 
   bool from_yaml(const std::string& name, const YAML::Node& data);
   YAML::Node to_yaml() const;
 
   bool load_image();
+
+  void draw(
+    QGraphicsScene* scene,
+    const double level_meters_per_pixel);
+
+  QColor color;
+
+  static QColor default_color(const int layer_idx);
+
+  QUuid add_feature(
+    const double x,
+    const double y,
+    const double level_meters_per_pixel);
+
+  void remove_feature(QUuid feature_uuid);
+
+  const Feature* find_feature(
+    const double x,
+    const double y,
+    const double drawing_meters_per_pixel) const;
+
+  QPointF transform_global_to_layer(const QPointF& global_point);
+  QPointF transform_layer_to_global(const QPointF& layer_point);
+
+  void clear_selection();
 };
 
 #endif

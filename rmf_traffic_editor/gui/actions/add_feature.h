@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2020 Open Source Robotics Foundation
+ * Copyright (C) 2021 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,26 +15,32 @@
  *
 */
 
-#ifndef BUILDING_LEVEL_TABLE_H
-#define BUILDING_LEVEL_TABLE_H
+#ifndef ACTIONS__ADD_FEATURE_H_
+#define ACTIONS__ADD_FEATURE_H_
 
-#include <QTableWidget>
+#include <QUndoCommand>
+#include <QUuid>
 
-#include "table_list.h"
 #include "building.h"
 
-class BuildingLevelTable : public TableList
+class AddFeatureCommand : public QUndoCommand
 {
-  Q_OBJECT
-
 public:
-  BuildingLevelTable();
-  ~BuildingLevelTable();
+  AddFeatureCommand(
+    Building* building,
+    int level,
+    int layer,
+    double x,
+    double y);
 
-  void update(Building& building);
+  void undo() override;
+  void redo() override;
 
-signals:
-  void redraw_scene();
+private:
+  Building* _building;
+  int _level, _layer;
+  double _x, _y;
+  QUuid _uuid;
 };
 
-#endif
+#endif  // ACTIONS__ADD_FEATURE_H_

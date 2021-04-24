@@ -15,11 +15,11 @@
  *
 */
 
-#include "building_level_dialog.h"
+#include "level_dialog.h"
 #include <QtWidgets>
 
 
-BuildingLevelDialog::BuildingLevelDialog(BuildingLevel& _level,
+LevelDialog::LevelDialog(Level& _level,
   Building& _building)
 : building_level(_level), building(_building)
 {
@@ -50,12 +50,12 @@ BuildingLevelDialog::BuildingLevelDialog(BuildingLevel& _level,
     drawing_filename_button,
     &QAbstractButton::clicked,
     this,
-    &BuildingLevelDialog::drawing_filename_button_clicked);
+    &LevelDialog::drawing_filename_button_clicked);
   connect(
     drawing_filename_line_edit,
     &QLineEdit::textEdited,
     this,
-    &BuildingLevelDialog::drawing_filename_line_edited);
+    &LevelDialog::drawing_filename_line_edited);
 
   QHBoxLayout* instr_hbox = new QHBoxLayout;
   instr_hbox->addWidget(
@@ -93,7 +93,7 @@ BuildingLevelDialog::BuildingLevelDialog(BuildingLevel& _level,
     ok_button,
     &QAbstractButton::clicked,
     this,
-    &BuildingLevelDialog::ok_button_clicked);
+    &LevelDialog::ok_button_clicked);
   connect(
     cancel_button,
     &QAbstractButton::clicked,
@@ -117,11 +117,11 @@ BuildingLevelDialog::BuildingLevelDialog(BuildingLevel& _level,
   enable_dimensions(building_level.drawing_filename.empty());
 }
 
-BuildingLevelDialog::~BuildingLevelDialog()
+LevelDialog::~LevelDialog()
 {
 }
 
-void BuildingLevelDialog::drawing_filename_button_clicked()
+void LevelDialog::drawing_filename_button_clicked()
 {
   QFileDialog file_dialog(this, "Find Drawing");
   file_dialog.setFileMode(QFileDialog::ExistingFile);
@@ -148,7 +148,7 @@ void BuildingLevelDialog::drawing_filename_button_clicked()
   enable_dimensions(false);
 }
 
-void BuildingLevelDialog::ok_button_clicked()
+void LevelDialog::ok_button_clicked()
 {
   if (!drawing_filename_line_edit->text().isEmpty())
   {
@@ -229,7 +229,7 @@ void BuildingLevelDialog::ok_button_clicked()
   accept();
 }
 
-void BuildingLevelDialog::enable_dimensions(const bool enable)
+void LevelDialog::enable_dimensions(const bool enable)
 {
   if (enable)
   {
@@ -245,7 +245,7 @@ void BuildingLevelDialog::enable_dimensions(const bool enable)
   }
 }
 
-void BuildingLevelDialog::drawing_filename_line_edited(const QString& text)
+void LevelDialog::drawing_filename_line_edited(const QString& text)
 {
   enable_dimensions(text.isEmpty());
 }

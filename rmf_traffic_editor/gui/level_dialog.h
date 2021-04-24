@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2020 Open Source Robotics Foundation
+ * Copyright (C) 2019-2021 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,23 +15,23 @@
  *
 */
 
-#ifndef BUILDING_LEVEL_DIALOG_H
-#define BUILDING_LEVEL_DIALOG_H
+#ifndef LEVEL_DIALOG_H
+#define LEVEL_DIALOG_H
 
 #include <QDialog>
 #include "building.h"
-#include "building_level.h"
+#include "level.h"
 class QLineEdit;
 
 
-class BuildingLevelDialog : public QDialog
+class LevelDialog : public QDialog
 {
 public:
-  BuildingLevelDialog(BuildingLevel& level, Building& building);
-  ~BuildingLevelDialog();
+  LevelDialog(Level& level, Building& building);
+  ~LevelDialog();
 
 private:
-  BuildingLevel& building_level;
+  Level& building_level;
   Building& building;
 
   QLineEdit* name_line_edit, * drawing_filename_line_edit;

@@ -19,7 +19,7 @@ jobs:
     - name: non-ros-deps
       run: |
         sudo apt-get update
-        sudo apt-get install -y git cmake wget libyaml-cpp-dev qt5-default
+        sudo apt-get install -y git cmake wget libyaml-cpp-dev qt5-default libceres-dev libeigen3-dev
 
     - name: build
       shell: bash

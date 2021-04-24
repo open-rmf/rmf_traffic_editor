@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Open Source Robotics Foundation
+ * Copyright (C) 2019-2021 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,32 +15,34 @@
  *
 */
 
-#ifndef ACTIONS__ADD_CORRESPONDENCE_POINT_H_
-#define ACTIONS__ADD_CORRESPONDENCE_POINT_H_
+#ifndef _ADD_CONSTRAINT_H_
+#define _ADD_CONSTRAINT_H_
 
 #include <QUndoCommand>
 #include <QUuid>
 
 #include "building.h"
 
-class AddCorrespondencePointCommand : public QUndoCommand
+class AddConstraintCommand : public QUndoCommand
 {
-public:
-  AddCorrespondencePointCommand(
-    Building* building,
-    int level,
-    int layer,
-    double x,
-    double y);
 
+public:
+  AddConstraintCommand(
+    Building* building,
+    const int level_idx,
+    const QUuid& a,
+    const QUuid& b);
+  virtual ~AddConstraintCommand();
   void undo() override;
   void redo() override;
 
 private:
-  Building* building_;
-  int level_, layer_;
-  double x_, y_;
-  QUuid uuid_;
+  Building* _building;
+  int _level_idx;
+  QUuid _id_a;
+  QUuid _id_b;
+  std::vector<Constraint> _constraints_snapshot;
 };
 
-#endif  // ACTIONS__ADD_CORRESPONDENCE_POINT_H_
+
+#endif

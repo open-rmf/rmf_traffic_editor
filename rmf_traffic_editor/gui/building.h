@@ -29,7 +29,7 @@ class QGraphicsScene;
 #include <QGraphicsLineItem>
 #include <QPointF>
 
-#include "building_level.h"
+#include "level.h"
 #include "lift.h"
 #include <traffic_editor/crowd_sim/crowd_sim_impl.h>
 #include "rendering_options.h"
@@ -42,7 +42,7 @@ public:
 
   std::string name;
   std::string reference_level_name;
-  std::vector<BuildingLevel> levels;
+  std::vector<Level> levels;
   std::vector<Lift> lifts;
 
   mutable crowd_sim::CrowdSimImplPtr crowd_sim_impl;
@@ -54,50 +54,32 @@ public:
   bool save();
   void clear();  // clear all internal data structures
 
-  bool export_correspondence_points(
+  bool export_features(
     int level_index,
     const std::string& dest_filename) const;
 
   void clear_selection(const int level_idx);
   bool can_delete_current_selection(const int level_idx);
 
-  void add_level(const BuildingLevel& level);
+  void add_level(const Level& level);
 
   void add_vertex(int level_index, double x, double y);
   QUuid add_fiducial(int level_index, double x, double y);
-  QUuid add_correspondence_point(int level, int layer, double x, double y);
+  QUuid add_feature(int level, int layer, double x, double y);
+  void remove_feature(const int level, const int layer, QUuid feature_uuid);
 
-  int find_nearest_vertex_index(
-    int level_index, double x, double y, double& distance);
-
-  enum ItemType { VERTEX=1, MODEL, FIDUCIAL };
-  struct NearestItem
-  {
-    double model_dist = 1e100;
-    int model_idx = -1;
-
-    double vertex_dist = 1e100;
-    int vertex_idx = -1;
-
-    double correspondence_point_dist = 1e100;
-    int correspondence_point_idx = -1;
-
-    double fiducial_dist = 1e100;
-    int fiducial_idx = -1;
-  };
-
-  NearestItem nearest_items(
-    const int level_index,
-    const int layer_index,
-    const double x,
-    const double y);
+  void add_constraint(const int level_idx, const QUuid& a, const QUuid& b);
+  void remove_constraint(const int level_idx, const QUuid& a, const QUuid& b);
 
   int nearest_item_index_if_within_distance(
-    const int level_index,
+    const double level_idx,
     const double x,
     const double y,
     const double distance_threshold,
-    const ItemType item_type);
+    const Level::ItemType item_type);
+
+  int find_nearest_vertex_index(
+    int level_index, double x, double y, double& distance);
 
   void add_edge(
     const int level_idx,
@@ -182,7 +164,7 @@ public:
   void rotate_all_models(const double rotation);
 
   void get_selected_items(const int level_idx,
-    std::vector<BuildingLevel::SelectedItem>& selected);
+    std::vector<Level::SelectedItem>& selected);
 
   void draw(
     QGraphicsScene* scene,
@@ -192,23 +174,12 @@ public:
 
   void mouse_select_press(
     const int level_idx,
-    const int layer_index,
     const double x,
     const double y,
     QGraphicsItem* graphics_item,
     const RenderingOptions& rendering_options);
 
   Polygon* get_selected_polygon(const int level_idx);
-
-  void set_selected_line_item(
-    const int level_idx,
-    QGraphicsLineItem* line_item,
-    const RenderingOptions& rendering_options);
-
-  void set_selected_containing_polygon(
-    const int level_idx,
-    const double x,
-    const double y);
 
   Polygon::EdgeDragPolygon polygon_edge_drag_press(
     const int level_idx,
