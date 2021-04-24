@@ -40,12 +40,36 @@ bool Layer::from_yaml(const std::string& _name, const YAML::Node& y)
   name = _name;
   filename = y["filename"].as<string>();
 
-  /*
-  meters_per_pixel = y["meters_per_pixel"].as<double>();
-  translation_x = y["translation_x"].as<double>();
-  translation_y = y["translation_y"].as<double>();
-  rotation = y["rotation"].as<double>();
-  */
+  if (y["meters_per_pixel"])
+  {
+    // legacy transform format, need to re-compute transform
+    // because the origin has changed from the lower-left to the
+    // upper-left of the layer image, to be consistent with the
+    // handling of the base floorplan image
+    transform.setScale(y["meters_per_pixel"].as<double>());
+
+    double image_height = 0;
+    QImageReader image_reader(QString::fromStdString(filename));
+    image_reader.setAutoTransform(true);
+    QImage image = image_reader.read();
+    if (!image.isNull())
+      image_height = image.size().height() * transform.scale();
+
+    QPointF offset;
+    if (y["rotation"]) // legacy key
+    {
+      const double yaw = y["rotation"].as<double>();
+      transform.setYaw(yaw);
+      offset.setX(-image_height * sin(yaw));
+      offset.setY(-image_height * cos(yaw));
+    }
+
+    if (y["translation_x"] && y["translation_y"]) // legacy keys
+      transform.setTranslation(
+        QPointF(
+          offset.x() - y["translation_x"].as<double>(),
+          offset.y() + y["translation_y"].as<double>()));
+  }
 
   if (y["visible"])
     visible = y["visible"].as<bool>();
@@ -59,6 +83,8 @@ bool Layer::from_yaml(const std::string& _name, const YAML::Node& y)
       y["color"][1].as<double>(),
       y["color"][2].as<double>(),
       y["color"][3].as<double>());
+  else
+    color = QColor::fromRgbF(0, 0, 1, 0.5);
 
   if (y["features"] && y["features"].IsSequence())
   {
@@ -133,9 +159,13 @@ void Layer::draw(
 
   item->setRotation(-1.0 * transform.yaw() * 180.0 / M_PI);
 
-  QGraphicsColorizeEffect* colorize_effect = new QGraphicsColorizeEffect;
-  colorize_effect->setColor(color);
-  item->setGraphicsEffect(colorize_effect);
+  QGraphicsOpacityEffect* effect = new QGraphicsOpacityEffect;
+  // TODO: use QGraphicsColorizeEffect as well as OpacityEffect
+  // will need a custom effect to do both of those, as well as
+  // a nice palette for rendering "typical" robot occupancy grids
+  // effect->setColor(color);
+  effect->setOpacity(0.5);
+  item->setGraphicsEffect(effect);
 
   for (Feature& feature : features)
     feature.draw(scene, color, transform, level_meters_per_pixel);
