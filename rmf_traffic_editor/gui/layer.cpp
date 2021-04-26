@@ -20,6 +20,7 @@
 #include <QImageReader>
 #include <QGraphicsPixmapItem>
 #include <QGraphicsColorizeEffect>
+#include "layer_graphics_effect.hpp"
 #include <QGraphicsScene>
 #include "layer.h"
 using std::string;
@@ -159,12 +160,14 @@ void Layer::draw(
 
   item->setRotation(-1.0 * transform.yaw() * 180.0 / M_PI);
 
-  QGraphicsOpacityEffect* effect = new QGraphicsOpacityEffect;
+  //QGraphicsOpacityEffect* effect = new QGraphicsOpacityEffect;
+  //effect->setOpacity(0.5);
+
+  LayerGraphicsEffect* effect = new LayerGraphicsEffect;
   // TODO: use QGraphicsColorizeEffect as well as OpacityEffect
   // will need a custom effect to do both of those, as well as
   // a nice palette for rendering "typical" robot occupancy grids
   // effect->setColor(color);
-  effect->setOpacity(0.5);
   item->setGraphicsEffect(effect);
 
   for (Feature& feature : features)

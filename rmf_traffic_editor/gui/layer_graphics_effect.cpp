@@ -31,5 +31,6 @@ void LayerGraphicsEffect::draw(QPainter* painter)
 {
   QPoint offset;
   const QPixmap pixmap = sourcePixmap(Qt::LogicalCoordinates, &offset);
+  painter->setOpacity(0.5);
   painter->drawPixmap(offset, pixmap);
 }
