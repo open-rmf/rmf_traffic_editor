@@ -6,7 +6,7 @@ import numpy as np
 from xml.etree.ElementTree import SubElement
 
 from .edge import Edge
-from .material_utils import copy_texture
+from .material_utils import add_pbr_material, copy_texture, get_pbr_textures
 from .param_value import ParamValue
 
 
@@ -18,20 +18,15 @@ class Wall:
         self.transformed_vertices = []  # check if use vertex indics?? todo
         self.walls = []
         self.wall_cnt = 0
-        self.texture_name = wall_params[0]
-        self.alpha = wall_params[1]  # val 0.0-1.0 transparency of wall
+        self.texture_name = wall_params['texture_name']
+        self.alpha = wall_params['alpha']  # val 0.0-1.0 transparency of wall
+        self.pbr_textures = get_pbr_textures(wall_params)
 
-        # Wall filtering according to wall_params. todo: better way?
-        # for backward compatability. if param exists, if not use default val
-        for wall in yaml_node:
-            curr_tex = "default"    # default png
-            curr_alpha = 1.0        # default opaque
-            if "texture_name" in wall.params:
-                curr_tex = wall.params["texture_name"].value
-            if "alpha" in wall.params:
-                curr_alpha = wall.params["alpha"].value
-            if self.alpha == curr_alpha and self.texture_name == curr_tex:
-                self.walls.append(wall)
+        # Wall filtering according to wall_params
+        for checked_wall in yaml_node:
+            if wall_params == checked_wall.params:
+                self.walls.append(checked_wall)
+
 
     def __str__(self):
         return f'wall {self.wall_cnt} with param {self.texture_name}, \
@@ -40,7 +35,7 @@ class Wall:
     def __repr__(self):
         return self.__str__()
 
-    def generate_wall_visual_mesh(self, model_name, model_path):
+    def generate_wall_visual_mesh(self, model_name, model_path, texture_filename):
         print(f'generate_wall_visual_mesh({model_name}, {model_path})')
 
         meshes_path = f'{model_path}/meshes'
@@ -186,8 +181,6 @@ class Wall:
                 f.write(f'f {w*8+2}/1/1 {w*8+6}/1/1 {w*8+4}/1/1\n')
                 f.write(f'f {w*8+2}/1/1 {w*8+8}/1/1 {w*8+6}/1/1\n')
 
-        texture_filename = copy_texture(self.texture_name, meshes_path)
-
         mtl_path = f'{meshes_path}/wall_{self.wall_cnt}.mtl'
         print(f'  generating {mtl_path}')
         with open(mtl_path, 'w') as f:
@@ -219,7 +212,6 @@ class Wall:
 
         link_ele = SubElement(
             model_ele, 'link', {'name': f'wall_{self.wall_cnt}'})
-        self.generate_wall_visual_mesh(model_name, model_path)
 
         obj_path = f'model://{model_name}/meshes/wall_{self.wall_cnt}.obj'
 
@@ -244,3 +236,6 @@ class Wall:
         c_contact_ele = SubElement(c_surface_ele, 'contact')
         c_bitmask_ele = SubElement(c_contact_ele, 'collide_bitmask')
         c_bitmask_ele.text = '0x01'
+
+        texture_filename = add_pbr_material(visual_ele, model_name, f'wall_{wall_cnt}', self.texture_name.value, f'{model_path}/meshes', self.pbr_textures)
+        self.generate_wall_visual_mesh(model_name, model_path, texture_filename)
