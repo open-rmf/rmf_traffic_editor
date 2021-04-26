@@ -6,6 +6,7 @@ from ament_index_python.packages import get_package_share_directory
 from urllib.parse import urlparse
 from xml.etree.ElementTree import ElementTree, Element, SubElement
 
+
 def copy_texture(texture_name, dest_path):
     texture_filename = f'{texture_name}.png'
     texture_path_dest = f'{dest_path}/{texture_filename}'
