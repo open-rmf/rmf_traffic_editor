@@ -14,12 +14,14 @@ def copy_texture(texture_name, dest_path):
     result = urlparse(texture_name)
     texture_is_url = all([result.scheme, result.netloc, result.path])
     if texture_is_url:
-        req = requests.get(texture_name)
         # Update filename from the URL
         texture_filename = texture_name.split('/')[-1]
         texture_path_dest = f'{dest_path}/{texture_filename}'
-        with open(texture_path_dest, 'wb') as f:
-            f.write(req.content)
+        # Skip downloading if existing
+        if not os.path.isfile(texture_path_dest):
+            req = requests.get(texture_name)
+            with open(texture_path_dest, 'wb') as f:
+                f.write(req.content)
     else:
         texture_path_source = os.path.join(
             get_package_share_directory('rmf_building_map_tools'),
