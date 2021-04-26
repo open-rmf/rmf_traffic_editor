@@ -1979,23 +1979,6 @@ void Editor::mouse_add_constraint(
 
   if (t == MOUSE_PRESS)
   {
-    /*
-    if (e->buttons() & Qt::RightButton)
-    {
-      // right button means "exit edge drawing mode please"
-      clicked_idx = -1;
-      prev_clicked_idx = -1;
-      if (latest_add_edge != NULL)
-      {
-        //Need to check if new vertex was added.
-        delete latest_add_edge;
-        latest_add_edge = NULL;
-      }
-      remove_mouse_motion_item();
-      return;
-    }
-    */
-
     // look up the feature nearest this click
     const Feature* f = level->find_feature(p.x(), p.y());
     if (!f)
@@ -2029,69 +2012,14 @@ void Editor::mouse_add_constraint(
     {
       clicked_feature_id = f->id();
     }
-
-#if 0
-    if (prev_clicked_constraint_feature_idx < 0)
-    {
-      latest_add_edge = new AddEdgeCommand(
-        &building,
-        level_idx,
-        rendering_options);
-      clicked_idx = latest_add_edge->set_first_point(
-        p_aligned.x(),
-        p_aligned.y());
-      latest_add_edge->set_edge_type(edge_type);
-      prev_clicked_idx = clicked_idx;
-      create_scene();
-      setWindowModified(true);
-      return; // no previous vertex click happened; nothing else to do
-    }
-
-    clicked_idx =
-      latest_add_edge->set_second_point(p_aligned.x(), p_aligned.y());
-
-    if (clicked_idx == prev_clicked_idx)  // don't create self edge loops
-    {
-      remove_mouse_motion_item();
-      return;
-    }
-    undo_stack.push(latest_add_edge);
-
-    if (edge_type == Edge::DOOR || edge_type == Edge::MEAS)
-    {
-      clicked_idx = -1;  // doors and measurements don't usually chain
-      latest_add_edge = NULL;
-      remove_mouse_motion_item();
-    }
-    else
-    {
-      latest_add_edge = new AddEdgeCommand(
-        &building,
-        level_idx,
-        rendering_options);
-      latest_add_edge->set_first_point(p_aligned.x(), p_aligned.y());
-      latest_add_edge->set_edge_type(edge_type);
-    }
-    prev_clicked_idx = clicked_idx;
-    create_scene();
-    setWindowModified(true);
-#endif
   }
   else if (t == MOUSE_MOVE)
   {
-    //printf("add_constraint mouse move\n");
     if (clicked_feature_id.isNull())
       return;
-    //printf("add_constraint mouse move 2\n");
 
-    const Feature* clicked_feature = level->find_feature(clicked_feature_id);
-    if (!clicked_feature)
-      return;
-    //printf("add_constraint mouse move 3\n");
-
-    // todo: translate feature points to floorplan coords
-    const double fx = clicked_feature->x();
-    const double fy = clicked_feature->y();
+    QPointF feature_point;
+    level->get_feature_point(clicked_feature_id, feature_point);
 
     QPen pen(
       QBrush(QColor::fromRgbF(0.8, 0.8, 0.4, 0.8)),
@@ -2101,11 +2029,13 @@ void Editor::mouse_add_constraint(
 
     if (!mouse_motion_line)
     {
-      mouse_motion_line = scene->addLine(fx, fy, p.x(), p.y(), pen);
+      mouse_motion_line = scene->addLine(
+        QLineF(feature_point, p),
+        pen);
       mouse_motion_line->setZValue(300);
     }
     else
-      mouse_motion_line->setLine(fx, fy, p.x(), p.y());
+      mouse_motion_line->setLine(QLineF(feature_point, p));
   }
 }
 

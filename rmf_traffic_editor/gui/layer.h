@@ -50,6 +50,7 @@ public:
 
   Transform transform;
 
+  QImage image, colorized_image;
   QPixmap pixmap;
   QGraphicsPixmapItem* scene_item = nullptr;  // Borrowed pointer, not owned, don't delete
 
@@ -59,6 +60,7 @@ public:
   YAML::Node to_yaml() const;
 
   bool load_image();
+  void colorize_image();
 
   void draw(
     QGraphicsScene* scene,
