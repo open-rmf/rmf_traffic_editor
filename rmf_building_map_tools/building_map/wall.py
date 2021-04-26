@@ -1,13 +1,12 @@
 import math
 import os
-import shutil
 
 import numpy as np
 
 from xml.etree.ElementTree import SubElement
-from ament_index_python.packages import get_package_share_directory
 
 from .edge import Edge
+from .material_utils import copy_texture
 from .param_value import ParamValue
 
 
@@ -187,6 +186,8 @@ class Wall:
                 f.write(f'f {w*8+2}/1/1 {w*8+6}/1/1 {w*8+4}/1/1\n')
                 f.write(f'f {w*8+2}/1/1 {w*8+8}/1/1 {w*8+6}/1/1\n')
 
+        texture_filename = copy_texture(self.texture_name, meshes_path)
+
         mtl_path = f'{meshes_path}/wall_{self.wall_cnt}.mtl'
         print(f'  generating {mtl_path}')
         with open(mtl_path, 'w') as f:
@@ -199,14 +200,7 @@ class Wall:
             f.write('Ni 1.0\n')  # no idea what this is
             f.write(f'd {self.alpha}\n')  # alpha
             f.write('illum 2\n')  # illumination model (enum)
-            f.write(f'map_Kd {self.texture_name}.png\n')
-
-        print(f'  copying wall textures into {meshes_path}')
-        texture_path_source = os.path.join(
-            get_package_share_directory('rmf_building_map_tools'),
-            f'textures/{self.texture_name}.png')
-        texture_path_dest = f'{meshes_path}/{self.texture_name}.png'
-        shutil.copyfile(texture_path_source, texture_path_dest)
+            f.write(f'map_Kd {texture_filename}\n')
 
     def generate(
         self,
