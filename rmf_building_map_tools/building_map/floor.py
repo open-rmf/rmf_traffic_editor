@@ -292,7 +292,9 @@ class Floor:
             texture_name = self.params['texture_name'].value
 
         pbr_textures = get_pbr_textures(self.params)
-        texture_filename = add_pbr_material(visual_ele, model_name, f'floor_{floor_cnt}', texture_name, f'{model_path}/meshes', pbr_textures)
+        texture_filename = add_pbr_material(
+                visual_ele, model_name, f'floor_{floor_cnt}', texture_name,
+                f'{model_path}/meshes', pbr_textures)
 
         mtl_path = f'{model_path}/meshes/floor_{floor_cnt}.mtl'
         with open(mtl_path, 'w') as f:

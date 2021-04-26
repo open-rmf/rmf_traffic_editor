@@ -9,12 +9,13 @@ from xml.etree.ElementTree import ElementTree, Element, SubElement
 
 def get_pbr_textures(params):
     pbr_texture_types = ['metalness_map', 'roughness_map',
-            'normal_map', 'environment_map', 'light_map']
+                         'normal_map', 'environment_map', 'light_map']
     pbr_textures = {}
     for pbr_key, param in params.items():
         if pbr_key in pbr_texture_types:
             pbr_textures[pbr_key] = param.value
     return pbr_textures
+
 
 def copy_texture(texture_name, dest_path):
     texture_filename = f'{texture_name}.png'
@@ -40,14 +41,16 @@ def copy_texture(texture_name, dest_path):
     print(f'  wrote {texture_path_dest}')
     return texture_filename
 
-def add_pbr_material(visual_ele, model_name, obj_name, texture_name, meshes_path, pbr_textures = {}):
+
+def add_pbr_material(visual_ele, model_name, obj_name,
+                     texture_name, meshes_path, pbr_textures):
     # Check if the texture is a URL and copy texture
     texture_filename = copy_texture(texture_name, meshes_path)
     material_ele = SubElement(visual_ele, 'material')
     diffuse_ele = SubElement(material_ele, 'diffuse')
     diffuse_ele.text = '1.0 1.0 1.0'
     specular_ele = SubElement(material_ele, 'specular')
-    specular_ele.text = '0.1 0.1 0.1' # TODO check specular value
+    specular_ele.text = '0.1 0.1 0.1'  # TODO check specular value
     pbr_ele = SubElement(material_ele, 'pbr')
     metal_ele = SubElement(pbr_ele, 'metal')
     # Diffuse tag for PBR

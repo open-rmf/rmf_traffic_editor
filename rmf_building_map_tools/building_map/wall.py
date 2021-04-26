@@ -27,7 +27,6 @@ class Wall:
             if wall_params == checked_wall.params:
                 self.walls.append(checked_wall)
 
-
     def __str__(self):
         return f'wall {self.wall_cnt} with param {self.texture_name}, \
             {self.alpha})'
@@ -35,7 +34,8 @@ class Wall:
     def __repr__(self):
         return self.__str__()
 
-    def generate_wall_visual_mesh(self, model_name, model_path, texture_filename):
+    def generate_wall_visual_mesh(self, model_name, model_path,
+                                  texture_filename):
         print(f'generate_wall_visual_mesh({model_name}, {model_path})')
 
         meshes_path = f'{model_path}/meshes'
@@ -237,5 +237,9 @@ class Wall:
         c_bitmask_ele = SubElement(c_contact_ele, 'collide_bitmask')
         c_bitmask_ele.text = '0x01'
 
-        texture_filename = add_pbr_material(visual_ele, model_name, f'wall_{wall_cnt}', self.texture_name.value, f'{model_path}/meshes', self.pbr_textures)
-        self.generate_wall_visual_mesh(model_name, model_path, texture_filename)
+        texture_filename = add_pbr_material(
+                visual_ele, model_name, f'wall_{wall_cnt}',
+                self.texture_name.value, f'{model_path}/meshes',
+                self.pbr_textures)
+        self.generate_wall_visual_mesh(model_name, model_path,
+                                       texture_filename)
