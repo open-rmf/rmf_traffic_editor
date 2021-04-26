@@ -1,13 +1,12 @@
 import math
 import os
-import shutil
 
 import shapely.geometry
 import shapely.ops
 
 from xml.etree.ElementTree import SubElement
-from ament_index_python.packages import get_package_share_directory
 
+from .material_utils import copy_texture
 from .param_value import ParamValue
 
 triangulation_debugging = False
@@ -292,6 +291,8 @@ class Floor:
         if 'texture_name' in self.params:
             texture_name = self.params['texture_name'].value
 
+        texture_filename = copy_texture(texture_name, meshes_path)
+
         mtl_path = f'{model_path}/meshes/floor_{floor_cnt}.mtl'
         with open(mtl_path, 'w') as f:
             f.write('# The Great Editor v0.0.1\n')
@@ -303,13 +304,6 @@ class Floor:
             f.write('Ni 1.0\n')  # no idea what this is
             f.write('d 1.0\n')  # alpha (maybe?)
             f.write('illum 2\n')  # illumination model (enum)
-            f.write(f'map_Kd {texture_name}.png\n')
+            f.write(f'map_Kd {texture_filename}\n')
 
         print(f'  wrote {mtl_path}')
-
-        texture_path_source = os.path.join(
-            get_package_share_directory('rmf_building_map_tools'),
-            f'textures/{texture_name}.png')
-        texture_path_dest = f'{model_path}/meshes/{texture_name}.png'
-        shutil.copyfile(texture_path_source, texture_path_dest)
-        print(f'  wrote {texture_path_dest}')
