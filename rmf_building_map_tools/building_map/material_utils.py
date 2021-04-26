@@ -53,6 +53,10 @@ def add_pbr_material(visual_ele, model_name, obj_name,
     specular_ele.text = '0.1 0.1 0.1'  # TODO check specular value
     pbr_ele = SubElement(material_ele, 'pbr')
     metal_ele = SubElement(pbr_ele, 'metal')
+    metalness_ele = SubElement(metal_ele, 'metalness')
+    # Sensible default for floors / walls not to be made out of metal
+    # TODO parametrize
+    metalness_ele.text = '0.0'
     # Diffuse tag for PBR
     albedo_map_ele = SubElement(metal_ele, 'albedo_map')
     albedo_map_ele.text = f'model://{model_name}/meshes/{texture_filename}'
