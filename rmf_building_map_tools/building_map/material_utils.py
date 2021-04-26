@@ -60,6 +60,8 @@ def add_pbr_material(visual_ele, model_name, obj_name,
     pbr_map_eles = []
     for pbr_type, pbr_name in pbr_textures.items():
         pbr_map_eles.append(SubElement(metal_ele, pbr_type))
+        if (pbr_type == 'light_map'):
+            pbr_map_eles[-1].set('uv_set', '1')
         pbr_filename = copy_texture(pbr_name, meshes_path)
         pbr_map_eles[-1].text = f'model://{model_name}/meshes/{pbr_filename}'
 
