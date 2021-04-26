@@ -269,21 +269,16 @@ void Layer::colorize_image()
   colorized_image = QImage(image.size(), QImage::Format_ARGB32);
   for (int row_idx = 0; row_idx < image.height(); row_idx++)
   {
-    const uint8_t * const in_row = (uint8_t *)image.scanLine(row_idx);
-    QRgb *out_row = (QRgb *)colorized_image.scanLine(row_idx);
+    const uint8_t* const in_row = (uint8_t*)image.scanLine(row_idx);
+    QRgb* out_row = (QRgb*)colorized_image.scanLine(row_idx);
 
     for (int col_idx = 0; col_idx < image.width(); col_idx++)
     {
       const uint8_t in = in_row[col_idx];
       if (in < 100)
-      {
         out_row[col_idx] = color.rgba();
-        //rgb().qRgba(color[in[col_idx], in[col_idx], in[col_idx], 10);
-      }
       else if (in > 200)
-      {
         out_row[col_idx] = qRgba(0, 0, 0, 0);
-      }
       else
         out_row[col_idx] = qRgba(in, in, in, 50);
     }
