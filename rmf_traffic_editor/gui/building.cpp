@@ -117,7 +117,7 @@ bool Building::load(const string& _filename)
   const YAML::Node yl = y["levels"];
   for (YAML::const_iterator it = yl.begin(); it != yl.end(); ++it)
   {
-    BuildingLevel level;
+    Level level;
     level.from_yaml(it->first.as<string>(), it->second);
     levels.push_back(level);
   }
@@ -181,11 +181,11 @@ bool Building::save()
   return true;
 }
 
-bool Building::export_correspondence_points(
+bool Building::export_features(
   int level_index,
   const std::string& dest_filename) const
 {
-  return levels[level_index].export_correspondence_points(dest_filename);
+  return levels[level_index].export_features(dest_filename);
 }
 
 void Building::add_vertex(int level_index, double x, double y)
@@ -203,18 +203,26 @@ QUuid Building::add_fiducial(int level_index, double x, double y)
   return levels[level_index].fiducials.rbegin()->uuid;
 }
 
-QUuid Building::add_correspondence_point(
-  int level,
-  int layer,
+QUuid Building::add_feature(
+  int level_idx,
+  int layer_idx,
   double x,
   double y)
 {
-  if (level >= static_cast<int>(levels.size()))
+  if (level_idx >= static_cast<int>(levels.size()))
     return NULL;
-  if (layer >=
-    static_cast<int>(levels[level].correspondence_point_sets().size()))
-    return NULL;
-  return levels[level].add_correspondence_point(layer, x, y);
+  return levels[level_idx].add_feature(layer_idx, x, y);
+}
+
+void Building::remove_feature(
+  const int level_idx,
+  const int layer_idx,
+  QUuid feature_uuid)
+{
+  if (level_idx >= static_cast<int>(levels.size()))
+    return;
+
+  levels[level_idx].remove_feature(layer_idx, feature_uuid);
 }
 
 int Building::find_nearest_vertex_index(
@@ -239,141 +247,6 @@ int Building::find_nearest_vertex_index(
   }
   distance = sqrt(min_dist);
   return min_index;  // will be -1 if vertices vector is empty
-}
-
-Building::NearestItem Building::nearest_items(
-  const int level_index,
-  const int layer_index,
-  const double x,
-  const double y)
-{
-  NearestItem ni;
-  if (level_index >= static_cast<int>(levels.size()))
-    return ni;
-  const BuildingLevel& level = levels[level_index];
-
-  for (size_t i = 0; i < level.vertices.size(); i++)
-  {
-    const Vertex& p = level.vertices[i];
-    const double dx = x - p.x;
-    const double dy = y - p.y;
-    const double dist = sqrt(dx*dx + dy*dy);
-    if (dist < ni.vertex_dist)
-    {
-      ni.vertex_dist = dist;
-      ni.vertex_idx = i;
-    }
-  }
-
-  if (layer_index <
-    static_cast<int>(level.correspondence_point_sets().size()))
-  {
-    for (size_t ii = 0;
-      ii < level.correspondence_point_sets()[layer_index].size();
-      ++ii)
-    {
-      const CorrespondencePoint& cp =
-        level.correspondence_point_sets()[layer_index][ii];
-      const double dx = x - cp.x();
-      const double dy = y - cp.y();
-      const double dist = sqrt(dx*dx + dy*dy);
-      if (dist < ni.correspondence_point_dist)
-      {
-        ni.correspondence_point_dist = dist;
-        ni.correspondence_point_idx = ii;
-      }
-    }
-  }
-
-  for (size_t i = 0; i < level.fiducials.size(); i++)
-  {
-    const Fiducial& f = level.fiducials[i];
-    const double dx = x - f.x;
-    const double dy = y - f.y;
-    const double dist = sqrt(dx*dx + dy*dy);
-    if (dist < ni.fiducial_dist)
-    {
-      ni.fiducial_dist = dist;
-      ni.fiducial_idx = i;
-    }
-  }
-
-  for (size_t i = 0; i < level.models.size(); i++)
-  {
-    const Model& m = level.models[i];
-    const double dx = x - m.state.x;
-    const double dy = y - m.state.y;
-    const double dist = sqrt(dx*dx + dy*dy);  // no need for sqrt each time
-    if (dist < ni.model_dist)
-    {
-      ni.model_dist = dist;
-      ni.model_idx = i;
-    }
-  }
-
-  return ni;
-}
-
-int Building::nearest_item_index_if_within_distance(
-  const int level_index,
-  const double x,
-  const double y,
-  const double distance_threshold,
-  const ItemType item_type)
-{
-  if (level_index >= static_cast<int>(levels.size()))
-    return -1;
-
-  double min_dist = 1e100;
-  int min_index = -1;
-  if (item_type == VERTEX)
-  {
-    for (size_t i = 0; i < levels[level_index].vertices.size(); i++)
-    {
-      const Vertex& p = levels[level_index].vertices[i];
-      const double dx = x - p.x;
-      const double dy = y - p.y;
-      const double dist2 = dx*dx + dy*dy;  // no need for sqrt each time
-      if (dist2 < min_dist)
-      {
-        min_dist = dist2;
-        min_index = i;
-      }
-    }
-  }
-  else if (item_type == FIDUCIAL)
-  {
-    for (size_t i = 0; i < levels[level_index].fiducials.size(); i++)
-    {
-      const Fiducial& f = levels[level_index].fiducials[i];
-      const double dx = x - f.x;
-      const double dy = y - f.y;
-      const double dist2 = dx*dx + dy*dy;
-      if (dist2 < min_dist)
-      {
-        min_dist = dist2;
-        min_index = i;
-      }
-    }
-  }
-  else if (item_type == MODEL)
-  {
-    for (size_t i = 0; i < levels[level_index].models.size(); i++)
-    {
-      const Model& m = levels[level_index].models[i];
-      const double dx = x - m.state.x;
-      const double dy = y - m.state.y;
-      const double dist2 = dx*dx + dy*dy;  // no need for sqrt each time
-      if (dist2 < min_dist)
-      {
-        min_dist = dist2;
-        min_index = i;
-      }
-    }
-  }
-  if (sqrt(min_dist) < distance_threshold)
-    return min_index;
-  return -1;
 }
 
 void Building::add_edge(
@@ -419,7 +292,6 @@ bool Building::delete_selected(const int level_index)
   if (level_index >= static_cast<int>(levels.size()))
     return false;
 
-  printf("Building::delete_keypress()\n");
   if (!levels[level_index].delete_selected())
     return false;
 
@@ -472,7 +344,7 @@ void Building::clear()
   clear_transform_cache();
 }
 
-void Building::add_level(const BuildingLevel& new_level)
+void Building::add_level(const Level& new_level)
 {
   // make sure we don't have this level already
   for (const auto& level : levels)
@@ -485,7 +357,7 @@ void Building::add_level(const BuildingLevel& new_level)
 
 void Building::draw_lifts(QGraphicsScene* scene, const int level_idx)
 {
-  const BuildingLevel& level = levels[level_idx];
+  const Level& level = levels[level_idx];
   for (const auto& lift : lifts)
   {
     // find the level index referenced by the lift
@@ -585,8 +457,8 @@ Building::Transform Building::compute_transform(
   }
 
   // this internal function assumes that bounds checking has already happened
-  const BuildingLevel& from_level = levels[from_level_idx];
-  const BuildingLevel& to_level = levels[to_level_idx];
+  const Level& from_level = levels[from_level_idx];
+  const Level& to_level = levels[to_level_idx];
 
   // assemble a vector of fudicials in common to these levels
   vector<std::pair<Fiducial, Fiducial>> fiducials;
@@ -799,7 +671,7 @@ bool Building::can_delete_current_selection(const int level_idx)
 
 void Building::get_selected_items(
   const int level_idx,
-  std::vector<BuildingLevel::SelectedItem>& selected)
+  std::vector<Level::SelectedItem>& selected)
 {
   if (level_idx >= static_cast<int>(levels.size()))
     return;
@@ -832,146 +704,6 @@ Polygon* Building::get_selected_polygon(const int level_idx)
   return nullptr;
 }
 
-void Building::mouse_select_press(
-  const int level_idx,
-  const int layer_idx,
-  const double x,
-  const double y,
-  QGraphicsItem* graphics_item,
-  const RenderingOptions& rendering_options)
-{
-  clear_selection(level_idx);
-  const NearestItem ni = nearest_items(level_idx, layer_idx, x, y);
-
-  const double vertex_dist_thresh =
-    levels[level_idx].vertex_radius /
-    levels[level_idx].drawing_meters_per_pixel;
-
-  // todo: use QGraphics stuff to see if we clicked a model pixmap...
-  const double model_dist_thresh = 0.5 /
-    levels[level_idx].drawing_meters_per_pixel;
-
-  if (rendering_options.show_models &&
-    ni.model_idx >= 0 &&
-    ni.model_dist < model_dist_thresh)
-    levels[level_idx].models[ni.model_idx].selected = true;
-  else if (ni.vertex_idx >= 0 && ni.vertex_dist < vertex_dist_thresh)
-    levels[level_idx].vertices[ni.vertex_idx].selected = true;
-  else if (ni.fiducial_idx >= 0 && ni.fiducial_dist < 10.0)
-    levels[level_idx].fiducials[ni.fiducial_idx].selected = true;
-  else
-  {
-    // use the QGraphics stuff to see if it's an edge segment or polygon
-    if (graphics_item)
-    {
-      switch (graphics_item->type())
-      {
-        case QGraphicsLineItem::Type:
-          set_selected_line_item(
-            level_idx,
-            qgraphicsitem_cast<QGraphicsLineItem*>(graphics_item),
-            rendering_options);
-          break;
-
-        case QGraphicsPolygonItem::Type:
-          set_selected_containing_polygon(level_idx, x, y);
-          break;
-
-        default:
-          printf("clicked unhandled type: %d\n",
-            static_cast<int>(graphics_item->type()));
-          break;
-      }
-    }
-  }
-}
-
-void Building::set_selected_line_item(
-  const int level_idx,
-  QGraphicsLineItem* line_item,
-  const RenderingOptions& rendering_options)
-{
-  clear_selection(level_idx);
-  if (line_item == nullptr)
-    return;
-
-  // find if any of our lanes match those vertices
-  for (auto& edge : levels[level_idx].edges)
-  {
-    if ((edge.type == Edge::LANE) &&
-      (edge.get_graph_idx() != rendering_options.active_traffic_map_idx))
-      continue;
-
-    // look up the line's vertices
-    const double x1 = line_item->line().x1();
-    const double y1 = line_item->line().y1();
-    const double x2 = line_item->line().x2();
-    const double y2 = line_item->line().y2();
-
-    const auto& v_start = levels[level_idx].vertices[edge.start_idx];
-    const auto& v_end = levels[level_idx].vertices[edge.end_idx];
-
-    // calculate distances
-    const double dx1 = v_start.x - x1;
-    const double dy1 = v_start.y - y1;
-    const double dx2 = v_end.x - x2;
-    const double dy2 = v_end.y - y2;
-    const double v1_dist = std::sqrt(dx1*dx1 + dy1*dy1);
-    const double v2_dist = std::sqrt(dx2*dx2 + dy2*dy2);
-
-    const double thresh = 10.0;  // it should be really tiny if it matches
-    if (v1_dist < thresh && v2_dist < thresh)
-    {
-      edge.selected = true;
-      return;  // stop after first one is found, don't select multiple
-    }
-  }
-}
-
-void Building::set_selected_containing_polygon(
-  const int level_idx,
-  const double x,
-  const double y)
-{
-  if (level_idx >= static_cast<int>(levels.size()))
-    return;
-  Level& level = levels[level_idx];
-
-  // holes are "higher" in our Z-stack (to make them clickable), so first
-  // we need to make a list of all polygons that contain this point.
-  vector<Polygon*> containing_polygons;
-  for (size_t i = 0; i < level.polygons.size(); i++)
-  {
-    Polygon& polygon = level.polygons[i];
-    QVector<QPointF> polygon_vertices;
-    for (const auto& vertex_idx: polygon.vertices)
-    {
-      const Vertex& v = level.vertices[vertex_idx];
-      polygon_vertices.append(QPointF(v.x, v.y));
-    }
-    QPolygonF qpolygon(polygon_vertices);
-    if (qpolygon.containsPoint(QPoint(x, y), Qt::OddEvenFill))
-      containing_polygons.push_back(&level.polygons[i]);
-  }
-
-  // first search for holes
-  for (Polygon* p : containing_polygons)
-  {
-    if (p->type == Polygon::HOLE)
-    {
-      p->selected = true;
-      return;
-    }
-  }
-
-  // if we get here, just return the first thing.
-  for (Polygon* p : containing_polygons)
-  {
-    p->selected = true;
-    return;
-  }
-}
-
 Polygon::EdgeDragPolygon Building::polygon_edge_drag_press(
   const int level_idx,
   const Polygon* polygon,
@@ -980,8 +712,45 @@ Polygon::EdgeDragPolygon Building::polygon_edge_drag_press(
 {
   Polygon::EdgeDragPolygon edp;
 
-  if (level_idx < 0 || level_idx > static_cast<int>(levels.size()))
+  if (level_idx < 0 || level_idx >= static_cast<int>(levels.size()))
     return edp;
 
   return levels[level_idx].polygon_edge_drag_press(polygon, x, y);
+}
+
+void Building::add_constraint(
+  const int level_idx,
+  const QUuid& a,
+  const QUuid& b)
+{
+  if (level_idx < 0 || level_idx >= static_cast<int>(levels.size()))
+    return;
+  levels[level_idx].add_constraint(a, b);
+}
+
+void Building::remove_constraint(
+  const int level_idx,
+  const QUuid& a,
+  const QUuid& b)
+{
+  if (level_idx < 0 || level_idx >= static_cast<int>(levels.size()))
+    return;
+  levels[level_idx].remove_constraint(a, b);
+}
+
+int Building::nearest_item_index_if_within_distance(
+  const double level_idx,
+  const double x,
+  const double y,
+  const double distance_threshold,
+  const Level::ItemType item_type)
+{
+  if (level_idx >= levels.size())
+    return -1;
+
+  return levels[level_idx].nearest_item_index_if_within_distance(
+    x,
+    y,
+    distance_threshold,
+    item_type);
 }

@@ -15,14 +15,21 @@
  *
 */
 
+#include <string>
+
+#include <QSettings>
+#include <QtWidgets>
+
+#include "glog/logging.h"
+
 #include "editor.h"
 #include "preferences_keys.h"
-#include <QtWidgets>
-#include <string>
-#include <QSettings>
+
 
 int main(int argc, char* argv[])
 {
+  google::InitGoogleLogging(argv[0]);  // used later by Ceres
+
   QApplication app(argc, argv);
   app.setOrganizationName("open-robotics");
   app.setOrganizationDomain("openrobotics.org");
