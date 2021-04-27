@@ -2149,3 +2149,48 @@ void Level::set_selected_containing_polygon(
     return;
   }
 }
+
+void Level::compute_layer_transforms()
+{
+  printf("Level::compute_layer_transforms()\n");
+  for (size_t i = 0; i < layers.size(); i++)
+    compute_layer_transform(i);
+}
+
+void Level::compute_layer_transform(const size_t layer_idx)
+{
+  printf("Level::compute_layer_transform(%d)\n", static_cast<int>(layer_idx));
+  if (layer_idx >= layers.size())
+    return;
+  Layer& layer = layers[layer_idx];
+
+  layer.transform_strings.clear();
+
+  const double ff_scale = 0.05;  // standard 5cm grid cell size
+  Transform ff_rmf;
+  ff_rmf.setScale(layer.transform.scale() / ff_scale);
+
+  const double ff_map_height =
+    ff_scale * ff_rmf.scale() * layer.image.height();
+
+  ff_rmf.setYaw(-(fmod(layer.transform.yaw() + M_PI, 2 * M_PI) - M_PI));
+  ff_rmf.setTranslation(
+    QPointF(
+      layer.transform.translation().x() -
+      ff_rmf.scale() * ff_map_height * sin(ff_rmf.yaw()),
+      layer.transform.translation().y() +
+      ff_rmf.scale() * ff_map_height * cos(ff_rmf.yaw())));
+
+  printf("tx = %.5f ty = %.5f mh = %.5f sy = %.5f cy = %.5f\n",
+    layer.transform.translation().x(),
+    layer.transform.translation().y(),
+    ff_map_height,
+    sin(ff_rmf.yaw()),
+    cos(ff_rmf.yaw()));
+
+  layer.transform_strings.push_back(
+    std::make_pair("5cm FreeFleet -> RMF", ff_rmf.to_string()));
+
+  layer.transform_strings.push_back(
+    std::make_pair("RMF -> 5cm FreeFleet", ff_rmf.inverse().to_string()));
+}

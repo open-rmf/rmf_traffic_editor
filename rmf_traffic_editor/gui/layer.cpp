@@ -20,6 +20,7 @@
 #include <QImageReader>
 #include <QGraphicsPixmapItem>
 #include <QGraphicsScene>
+#include <QTableWidget>
 #include "layer.h"
 using std::string;
 using std::vector;
@@ -284,4 +285,24 @@ void Layer::colorize_image()
     }
   }
   pixmap = QPixmap::fromImage(colorized_image);
+}
+
+void Layer::populate_property_editor(QTableWidget* property_editor) const
+{
+  property_editor->blockSignals(true);
+  property_editor->setRowCount(transform_strings.size());
+  for (size_t i = 0; i < transform_strings.size(); i++)
+  {
+    QTableWidgetItem* label_item = new QTableWidgetItem(
+      QString::fromStdString(transform_strings[i].first));
+    label_item->setFlags(Qt::NoItemFlags);
+
+    QTableWidgetItem* value_item = new QTableWidgetItem(
+      QString::fromStdString(transform_strings[i].second));
+    value_item->setFlags(Qt::NoItemFlags);
+
+    property_editor->setItem(i, 0, label_item);
+    property_editor->setItem(i, 1, value_item);
+  }
+  property_editor->blockSignals(false);
 }
