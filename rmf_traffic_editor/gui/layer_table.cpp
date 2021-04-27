@@ -120,6 +120,7 @@ void LayerTable::set_row(
         {
           selected_color.setAlphaF(0.5);
           level.layers[row_idx - 1].color = selected_color;
+          level.layers[row_idx - 1].colorize_image();
           emit redraw_scene();
         }
       }

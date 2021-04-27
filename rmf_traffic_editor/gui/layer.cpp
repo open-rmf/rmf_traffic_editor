@@ -19,7 +19,6 @@
 
 #include <QImageReader>
 #include <QGraphicsPixmapItem>
-#include <QGraphicsColorizeEffect>
 #include <QGraphicsScene>
 #include "layer.h"
 using std::string;
@@ -51,9 +50,11 @@ bool Layer::from_yaml(const std::string& _name, const YAML::Node& y)
     double image_height = 0;
     QImageReader image_reader(QString::fromStdString(filename));
     image_reader.setAutoTransform(true);
-    QImage image = image_reader.read();
-    if (!image.isNull())
-      image_height = image.size().height() * transform.scale();
+
+    // we'll load this image here just for the purpose of getting its height
+    QImage img = image_reader.read();
+    if (!img.isNull())
+      image_height = img.size().height() * transform.scale();
 
     QPointF offset;
     if (y["rotation"]) // legacy key
@@ -104,7 +105,7 @@ bool Layer::load_image()
 {
   QImageReader image_reader(QString::fromStdString(filename));
   image_reader.setAutoTransform(true);
-  QImage image = image_reader.read();
+  image = image_reader.read();
   if (image.isNull())
   {
     qWarning("unable to read %s: %s",
@@ -113,7 +114,7 @@ bool Layer::load_image()
     return false;
   }
   image = image.convertToFormat(QImage::Format_Grayscale8);
-  pixmap = QPixmap::fromImage(image);
+  colorize_image();
   printf("successfully opened %s\n", filename.c_str());
 
   return true;
@@ -158,14 +159,6 @@ void Layer::draw(
   item->setScale(transform.scale() / level_meters_per_pixel);
 
   item->setRotation(-1.0 * transform.yaw() * 180.0 / M_PI);
-
-  QGraphicsOpacityEffect* effect = new QGraphicsOpacityEffect;
-  // TODO: use QGraphicsColorizeEffect as well as OpacityEffect
-  // will need a custom effect to do both of those, as well as
-  // a nice palette for rendering "typical" robot occupancy grids
-  // effect->setColor(color);
-  effect->setOpacity(0.5);
-  item->setGraphicsEffect(effect);
 
   for (Feature& feature : features)
     feature.draw(scene, color, transform, level_meters_per_pixel);
@@ -247,8 +240,8 @@ const Feature* Layer::find_feature(
   }
 
   printf("min_dist = %.3f   layer scale = %.3f\n", min_dist, transform.scale());
-  // scale calculation? probably wrong...
-  if (min_dist * level_meters_per_pixel < Feature::radius_meters)
+
+  if (min_dist * transform.scale() < Feature::radius_meters)
     return min_feature;
 
   return nullptr;
@@ -268,4 +261,27 @@ void Layer::clear_selection()
 {
   for (auto& feature : features)
     feature.setSelected(false);
+}
+
+void Layer::colorize_image()
+{
+  color.setAlphaF(0.5);
+  colorized_image = QImage(image.size(), QImage::Format_ARGB32);
+  for (int row_idx = 0; row_idx < image.height(); row_idx++)
+  {
+    const uint8_t* const in_row = (uint8_t*)image.scanLine(row_idx);
+    QRgb* out_row = (QRgb*)colorized_image.scanLine(row_idx);
+
+    for (int col_idx = 0; col_idx < image.width(); col_idx++)
+    {
+      const uint8_t in = in_row[col_idx];
+      if (in < 100)
+        out_row[col_idx] = color.rgba();
+      else if (in > 200)
+        out_row[col_idx] = qRgba(0, 0, 0, 0);
+      else
+        out_row[col_idx] = qRgba(in, in, in, 50);
+    }
+  }
+  pixmap = QPixmap::fromImage(colorized_image);
 }
