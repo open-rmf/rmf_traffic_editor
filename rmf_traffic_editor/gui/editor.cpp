@@ -98,7 +98,8 @@ Editor::Editor()
       {
         layer_idx = row;
         layer_table->update(building, level_idx, layer_idx);
-        populate_property_editor(building.levels[level_idx].layers[layer_idx-1]);
+        populate_property_editor(
+          building.levels[level_idx].layers[layer_idx-1]);
       }
     });
 
