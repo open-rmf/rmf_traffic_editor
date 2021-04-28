@@ -1748,9 +1748,12 @@ void Level::optimize_layer_transforms()
   {
     ceres::Problem problem;
 
-    double yaw = 0;
+    double yaw = layers[i].transform.yaw();
     double scale = layers[i].transform.scale();
-    double translation[2] = {0};
+    double translation[2] = {
+      layers[i].transform.translation().x(),
+      layers[i].transform.translation().y()
+    };
 
     for (const Constraint& constraint : constraints)
     {
@@ -1821,6 +1824,8 @@ void Level::optimize_layer_transforms()
         &translation[0]);
 
     }
+
+    problem.SetParameterLowerBound(&scale, 0, 0.01);
 
     ceres::Solver::Options options;
     options.minimizer_progress_to_stdout = true;
@@ -2168,18 +2173,31 @@ void Level::compute_layer_transform(const size_t layer_idx)
 
   const double ff_scale = 0.05;  // standard 5cm grid cell size
   Transform ff_rmf;
-  ff_rmf.setScale(layer.transform.scale() / ff_scale);
+  ff_rmf.setScale(ff_scale / layer.transform.scale());
 
   const double ff_map_height =
-    ff_scale * ff_rmf.scale() * layer.image.height();
+    ff_scale * layer.image.height();
 
   ff_rmf.setYaw(-(fmod(layer.transform.yaw() + M_PI, 2 * M_PI) - M_PI));
+
+  const double tx =
+    -(layer.transform.translation().x() -
+    ff_map_height / ff_rmf.scale() * sin(ff_rmf.yaw())) *
+    ff_rmf.scale();
+
+  const double ty =
+    (layer.transform.translation().y() +
+    ff_map_height / ff_rmf.scale() * cos(ff_rmf.yaw())) *
+    ff_rmf.scale();
+
+  // FreeFleet does its translation first, so... we have to rotate this
+  // translation vector and scale it into the FreeFleet robot's frame
+
+  const double yaw = ff_rmf.yaw();
   ff_rmf.setTranslation(
     QPointF(
-      layer.transform.translation().x() -
-      ff_rmf.scale() * ff_map_height * sin(ff_rmf.yaw()),
-      layer.transform.translation().y() +
-      ff_rmf.scale() * ff_map_height * cos(ff_rmf.yaw())));
+      cos(-yaw) * tx + sin(-yaw) * ty,
+      -sin(-yaw) * tx + cos(-yaw) * ty));
 
   printf("tx = %.5f ty = %.5f mh = %.5f sy = %.5f cy = %.5f\n",
     layer.transform.translation().x(),
@@ -2189,8 +2207,34 @@ void Level::compute_layer_transform(const size_t layer_idx)
     cos(ff_rmf.yaw()));
 
   layer.transform_strings.push_back(
-    std::make_pair("5cm FreeFleet -> RMF", ff_rmf.to_string()));
+    std::make_pair(
+      "5cm FreeFleet -> RMF\ntranslate, rotate, scale",
+      ff_rmf.to_string()));
+
+  /*
+  layer.transform_strings.push_back(
+    std::make_pair(
+      "RMF -> 5cm FreeFleet\nscale, rotate, translate",
+      ff_rmf.inverse().to_string()));
+  */
+
+  Transform grid_rmf;
+  grid_rmf.setScale(layer.transform.scale());
+  grid_rmf.setYaw(-(fmod(layer.transform.yaw() + M_PI, 2 * M_PI) - M_PI));
+  const double gx =
+    (layer.transform.translation().x() -
+    layer.image.height() * sin(grid_rmf.yaw())); // * grid_rmf.scale();
+  const double gy =
+    (layer.transform.translation().y() +
+    layer.image.height() * cos(grid_rmf.yaw())); // * grid_rmf.scale();
+  grid_rmf.setTranslation(QPointF(gx, gy));
 
   layer.transform_strings.push_back(
-    std::make_pair("RMF -> 5cm FreeFleet", ff_rmf.inverse().to_string()));
+    std::make_pair(
+      "RMF -> grid cells\nscale, rotate, translate",
+      grid_rmf.inverse().to_string()));
+  layer.transform_strings.push_back(
+    std::make_pair(
+      "grid cells -> RMF\nscale, rotate, translate",
+      grid_rmf.to_string()));
 }

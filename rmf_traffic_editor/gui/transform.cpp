@@ -82,6 +82,7 @@ Transform Transform::inverse() const
   inv.setYaw(-_yaw);
   inv.setScale(1.0 / _scale);
   inv.setTranslation(
+    _scale *
     QPointF(
       cos(-_yaw) * translation().x() - sin(-_yaw) * translation().y(),
       sin(-_yaw) * translation().x() + cos(-_yaw) * translation().y()));
