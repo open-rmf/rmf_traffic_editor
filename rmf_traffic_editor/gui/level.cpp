@@ -2211,13 +2211,6 @@ void Level::compute_layer_transform(const size_t layer_idx)
       "5cm FreeFleet -> RMF\ntranslate, rotate, scale",
       ff_rmf.to_string()));
 
-  /*
-  layer.transform_strings.push_back(
-    std::make_pair(
-      "RMF -> 5cm FreeFleet\nscale, rotate, translate",
-      ff_rmf.inverse().to_string()));
-  */
-
   Transform grid_rmf;
   grid_rmf.setScale(layer.transform.scale());
   grid_rmf.setYaw(-(fmod(layer.transform.yaw() + M_PI, 2 * M_PI) - M_PI));
