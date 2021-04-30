@@ -233,9 +233,6 @@ private:
     double hinge_y,
     double door_length,
     double door_angle) const;
-
-public:
-  double transform_cost(const size_t layer_idx, const Transform& t);
 };
 
 #endif

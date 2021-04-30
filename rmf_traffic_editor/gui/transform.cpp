@@ -82,7 +82,7 @@ Transform Transform::inverse() const
   inv.setYaw(-_yaw);
   inv.setScale(1.0 / _scale);
   inv.setTranslation(
-    _scale *
+    1.0 / _scale *
     QPointF(
       cos(-_yaw) * translation().x() - sin(-_yaw) * translation().y(),
       sin(-_yaw) * translation().x() + cos(-_yaw) * translation().y()));
@@ -98,8 +98,8 @@ string Transform::to_string() const
     sizeof(buf),
     "rotation: %.5f\n"
     "scale: %.5f\n"
-    "translation X: %.5f\n"
-    "translation Y: %.5f",
+    "trans X: %.5f\n"
+    "trans Y: %.5f",
     _yaw,
     _scale,
     _translation.x(),

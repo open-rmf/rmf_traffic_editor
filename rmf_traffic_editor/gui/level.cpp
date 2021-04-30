@@ -1684,62 +1684,6 @@ private:
   double _layer_x, _layer_y;
 };
 
-double Level::transform_cost(const size_t layer_idx, const Transform& t)
-{
-  /*
-  printf("transform_cost(%d, %.3f, %.3f, %.3f, %.3f)\n",
-    (int)layer_idx,
-    t.yaw(),
-    t.scale(),
-    t.translation().x(),
-    t.translation().y());
-  */
-
-  if (layer_idx >= layers.size())
-    return 0;
-
-  Layer& layer = layers[layer_idx];
-  const Transform previous_transform = layer.transform;
-  layer.transform = t;
-
-  // transform all constraint pairs by t and sum the distances
-  double total_cost = 0;
-
-  for (const Constraint& constraint : constraints)
-  {
-    const std::vector<QUuid>& feature_ids = constraint.ids();
-    if (feature_ids.size() != 2)
-      continue;
-
-    QPointF p1, p2;
-
-    if (!get_feature_point(feature_ids[0], p1))
-    {
-      printf("woah! couldn't find constraint feature ID %s\n",
-        feature_ids[0].toString().toStdString().c_str());
-      continue;
-    }
-    if (!get_feature_point(feature_ids[1], p2))
-    {
-      printf("woah! couldn't find constraint feature ID %s\n",
-        feature_ids[1].toString().toStdString().c_str());
-      continue;
-    }
-
-    const double dx = p1.x() - p2.x();
-    const double dy = p1.y() - p2.y();
-    const double d = sqrt(dx * dx + dy * dy);
-
-    // todo: someday could weight some constraints more than others
-
-    total_cost += d;
-  }
-
-  layer.transform = previous_transform;
-
-  return total_cost;
-}
-
 void Level::optimize_layer_transforms()
 {
   printf("level %s optimizing layer transforms...\n", name.c_str());
@@ -2171,12 +2115,11 @@ void Level::compute_layer_transform(const size_t layer_idx)
 
   layer.transform_strings.clear();
 
-  const double ff_scale = 0.05;  // standard 5cm grid cell size
+  const double ff_rmf_scale = 0.05;  // standard 5cm grid cell size
   Transform ff_rmf;
-  ff_rmf.setScale(ff_scale / layer.transform.scale());
+  ff_rmf.setScale(ff_rmf_scale / layer.transform.scale());
 
-  const double ff_map_height =
-    ff_scale * layer.image.height();
+  const double ff_map_height = ff_rmf_scale * layer.image.height();
 
   ff_rmf.setYaw(-(fmod(layer.transform.yaw() + M_PI, 2 * M_PI) - M_PI));
 
@@ -2211,23 +2154,23 @@ void Level::compute_layer_transform(const size_t layer_idx)
       "5cm FreeFleet -> RMF\ntranslate, rotate, scale",
       ff_rmf.to_string()));
 
-  Transform grid_rmf;
-  grid_rmf.setScale(layer.transform.scale());
-  grid_rmf.setYaw(-(fmod(layer.transform.yaw() + M_PI, 2 * M_PI) - M_PI));
+  Transform gridcells_rmf;
+  gridcells_rmf.setScale(layer.transform.scale());
+  gridcells_rmf.setYaw(fmod(layer.transform.yaw() + M_PI, 2 * M_PI) - M_PI);
   const double gx =
-    (layer.transform.translation().x() -
-    layer.image.height() * sin(grid_rmf.yaw())); // * grid_rmf.scale();
-  const double gy =
+    (layer.transform.translation().x() +
+    layer.image.height() * gridcells_rmf.scale() * sin(gridcells_rmf.yaw()));  const double gy =
     (layer.transform.translation().y() +
-    layer.image.height() * cos(grid_rmf.yaw())); // * grid_rmf.scale();
-  grid_rmf.setTranslation(QPointF(gx, gy));
+    layer.image.height() * gridcells_rmf.scale() * cos(gridcells_rmf.yaw()));
+  gridcells_rmf.setTranslation(QPointF(gx, gy));
+
+  layer.transform_strings.push_back(
+    std::make_pair(
+      "grid cells -> RMF\nscale, rotate, translate",
+      gridcells_rmf.to_string()));
 
   layer.transform_strings.push_back(
     std::make_pair(
       "RMF -> grid cells\nscale, rotate, translate",
-      grid_rmf.inverse().to_string()));
-  layer.transform_strings.push_back(
-    std::make_pair(
-      "grid cells -> RMF\nscale, rotate, translate",
-      grid_rmf.to_string()));
+      gridcells_rmf.inverse().to_string()));
 }
