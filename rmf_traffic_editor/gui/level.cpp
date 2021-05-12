@@ -2159,7 +2159,8 @@ void Level::compute_layer_transform(const size_t layer_idx)
   gridcells_rmf.setYaw(fmod(layer.transform.yaw() + M_PI, 2 * M_PI) - M_PI);
   const double gx =
     (layer.transform.translation().x() +
-    layer.image.height() * gridcells_rmf.scale() * sin(gridcells_rmf.yaw()));  const double gy =
+    layer.image.height() * gridcells_rmf.scale() * sin(gridcells_rmf.yaw()));
+  const double gy =
     (layer.transform.translation().y() +
     layer.image.height() * gridcells_rmf.scale() * cos(gridcells_rmf.yaw()));
   gridcells_rmf.setTranslation(QPointF(gx, gy));

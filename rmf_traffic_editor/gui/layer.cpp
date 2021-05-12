@@ -168,10 +168,12 @@ void Layer::draw(
   // for purposes of the origin mark, let's say the origin is the center
   // of the first pixel of the image
   const QPointF origin(
-    transform.translation().x() / level_meters_per_pixel +
-      0.5 * transform.scale() / level_meters_per_pixel * cos(transform.yaw() - M_PI / 4),
-    transform.translation().y() / level_meters_per_pixel -
-      0.5 * transform.scale() / level_meters_per_pixel * sin(transform.yaw() - M_PI / 4));
+    transform.translation().x() / level_meters_per_pixel
+    + 0.5 * transform.scale() / level_meters_per_pixel *
+    cos(transform.yaw() - M_PI / 4),
+    transform.translation().y() / level_meters_per_pixel
+    - 0.5 * transform.scale() / level_meters_per_pixel *
+    sin(transform.yaw() - M_PI / 4));
 
   scene->addEllipse(
     origin.x() - origin_radius,
