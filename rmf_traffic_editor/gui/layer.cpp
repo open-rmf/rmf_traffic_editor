@@ -20,6 +20,7 @@
 #include <QImageReader>
 #include <QGraphicsPixmapItem>
 #include <QGraphicsScene>
+#include <QTableWidget>
 #include "layer.h"
 using std::string;
 using std::vector;
@@ -160,6 +161,33 @@ void Layer::draw(
 
   item->setRotation(-1.0 * transform.yaw() * 180.0 / M_PI);
 
+  double origin_radius = 0.5 / level_meters_per_pixel;
+  QPen origin_pen(color, origin_radius / 4.0, Qt::SolidLine, Qt::RoundCap);
+  //origin_pen.setWidthF(origin_radius / 4);
+
+  // for purposes of the origin mark, let's say the origin is the center
+  // of the first pixel of the image
+  const QPointF origin(
+    transform.translation().x() / level_meters_per_pixel
+    + 0.5 * transform.scale() / level_meters_per_pixel *
+    cos(transform.yaw() - M_PI / 4),
+    transform.translation().y() / level_meters_per_pixel
+    - 0.5 * transform.scale() / level_meters_per_pixel *
+    sin(transform.yaw() - M_PI / 4));
+
+  scene->addEllipse(
+    origin.x() - origin_radius,
+    origin.y() - origin_radius,
+    2 * origin_radius,
+    2 * origin_radius,
+    origin_pen);
+
+  QPointF x_arrow(
+    origin.x() + 2.0 * origin_radius * cos(transform.yaw()),
+    origin.y() - 2.0 * origin_radius * sin(transform.yaw()));
+  scene->addLine(QLineF(origin, x_arrow), origin_pen);
+
+
   for (Feature& feature : features)
     feature.draw(scene, color, transform, level_meters_per_pixel);
 }
@@ -275,13 +303,39 @@ void Layer::colorize_image()
     for (int col_idx = 0; col_idx < image.width(); col_idx++)
     {
       const uint8_t in = in_row[col_idx];
-      if (in < 100)
+      if (in < 100 || row_idx == 0 || row_idx == image.height() - 1)
         out_row[col_idx] = color.rgba();
       else if (in > 200)
         out_row[col_idx] = qRgba(0, 0, 0, 0);
       else
         out_row[col_idx] = qRgba(in, in, in, 50);
     }
+
+    // draw bold first/last columns the requested color on the image,
+    // so it's easier to see what's going on with its transform
+    out_row[0] = color.rgba();
+    out_row[image.width()-1] = color.rgba();
   }
+
   pixmap = QPixmap::fromImage(colorized_image);
+}
+
+void Layer::populate_property_editor(QTableWidget* property_editor) const
+{
+  property_editor->blockSignals(true);
+  property_editor->setRowCount(transform_strings.size());
+  for (size_t i = 0; i < transform_strings.size(); i++)
+  {
+    QTableWidgetItem* label_item = new QTableWidgetItem(
+      QString::fromStdString(transform_strings[i].first));
+    label_item->setFlags(Qt::NoItemFlags);
+
+    QTableWidgetItem* value_item = new QTableWidgetItem(
+      QString::fromStdString(transform_strings[i].second));
+    value_item->setFlags(Qt::NoItemFlags);
+
+    property_editor->setItem(i, 0, label_item);
+    property_editor->setItem(i, 1, value_item);
+  }
+  property_editor->blockSignals(false);
 }

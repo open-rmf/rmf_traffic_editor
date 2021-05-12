@@ -1684,62 +1684,6 @@ private:
   double _layer_x, _layer_y;
 };
 
-double Level::transform_cost(const size_t layer_idx, const Transform& t)
-{
-  /*
-  printf("transform_cost(%d, %.3f, %.3f, %.3f, %.3f)\n",
-    (int)layer_idx,
-    t.yaw(),
-    t.scale(),
-    t.translation().x(),
-    t.translation().y());
-  */
-
-  if (layer_idx >= layers.size())
-    return 0;
-
-  Layer& layer = layers[layer_idx];
-  const Transform previous_transform = layer.transform;
-  layer.transform = t;
-
-  // transform all constraint pairs by t and sum the distances
-  double total_cost = 0;
-
-  for (const Constraint& constraint : constraints)
-  {
-    const std::vector<QUuid>& feature_ids = constraint.ids();
-    if (feature_ids.size() != 2)
-      continue;
-
-    QPointF p1, p2;
-
-    if (!get_feature_point(feature_ids[0], p1))
-    {
-      printf("woah! couldn't find constraint feature ID %s\n",
-        feature_ids[0].toString().toStdString().c_str());
-      continue;
-    }
-    if (!get_feature_point(feature_ids[1], p2))
-    {
-      printf("woah! couldn't find constraint feature ID %s\n",
-        feature_ids[1].toString().toStdString().c_str());
-      continue;
-    }
-
-    const double dx = p1.x() - p2.x();
-    const double dy = p1.y() - p2.y();
-    const double d = sqrt(dx * dx + dy * dy);
-
-    // todo: someday could weight some constraints more than others
-
-    total_cost += d;
-  }
-
-  layer.transform = previous_transform;
-
-  return total_cost;
-}
-
 void Level::optimize_layer_transforms()
 {
   printf("level %s optimizing layer transforms...\n", name.c_str());
@@ -1748,9 +1692,12 @@ void Level::optimize_layer_transforms()
   {
     ceres::Problem problem;
 
-    double yaw = 0;
+    double yaw = layers[i].transform.yaw();
     double scale = layers[i].transform.scale();
-    double translation[2] = {0};
+    double translation[2] = {
+      layers[i].transform.translation().x(),
+      layers[i].transform.translation().y()
+    };
 
     for (const Constraint& constraint : constraints)
     {
@@ -1821,6 +1768,8 @@ void Level::optimize_layer_transforms()
         &translation[0]);
 
     }
+
+    problem.SetParameterLowerBound(&scale, 0, 0.01);
 
     ceres::Solver::Options options;
     options.minimizer_progress_to_stdout = true;
@@ -2148,4 +2097,81 @@ void Level::set_selected_containing_polygon(
     p->selected = true;
     return;
   }
+}
+
+void Level::compute_layer_transforms()
+{
+  printf("Level::compute_layer_transforms()\n");
+  for (size_t i = 0; i < layers.size(); i++)
+    compute_layer_transform(i);
+}
+
+void Level::compute_layer_transform(const size_t layer_idx)
+{
+  printf("Level::compute_layer_transform(%d)\n", static_cast<int>(layer_idx));
+  if (layer_idx >= layers.size())
+    return;
+  Layer& layer = layers[layer_idx];
+
+  layer.transform_strings.clear();
+
+  const double ff_rmf_scale = 0.05;  // standard 5cm grid cell size
+  Transform ff_rmf;
+  ff_rmf.setScale(ff_rmf_scale / layer.transform.scale());
+
+  const double ff_map_height = ff_rmf_scale * layer.image.height();
+
+  ff_rmf.setYaw(-(fmod(layer.transform.yaw() + M_PI, 2 * M_PI) - M_PI));
+
+  const double tx =
+    -(layer.transform.translation().x() -
+    ff_map_height / ff_rmf.scale() * sin(ff_rmf.yaw())) *
+    ff_rmf.scale();
+
+  const double ty =
+    (layer.transform.translation().y() +
+    ff_map_height / ff_rmf.scale() * cos(ff_rmf.yaw())) *
+    ff_rmf.scale();
+
+  // FreeFleet does its translation first, so... we have to rotate this
+  // translation vector and scale it into the FreeFleet robot's frame
+
+  const double yaw = ff_rmf.yaw();
+  ff_rmf.setTranslation(
+    QPointF(
+      cos(-yaw) * tx + sin(-yaw) * ty,
+      -sin(-yaw) * tx + cos(-yaw) * ty));
+
+  printf("tx = %.5f ty = %.5f mh = %.5f sy = %.5f cy = %.5f\n",
+    layer.transform.translation().x(),
+    layer.transform.translation().y(),
+    ff_map_height,
+    sin(ff_rmf.yaw()),
+    cos(ff_rmf.yaw()));
+
+  layer.transform_strings.push_back(
+    std::make_pair(
+      "5cm FreeFleet -> RMF\ntranslate, rotate, scale",
+      ff_rmf.to_string()));
+
+  Transform gridcells_rmf;
+  gridcells_rmf.setScale(layer.transform.scale());
+  gridcells_rmf.setYaw(fmod(layer.transform.yaw() + M_PI, 2 * M_PI) - M_PI);
+  const double gx =
+    (layer.transform.translation().x() +
+    layer.image.height() * gridcells_rmf.scale() * sin(gridcells_rmf.yaw()));
+  const double gy =
+    (layer.transform.translation().y() +
+    layer.image.height() * gridcells_rmf.scale() * cos(gridcells_rmf.yaw()));
+  gridcells_rmf.setTranslation(QPointF(gx, gy));
+
+  layer.transform_strings.push_back(
+    std::make_pair(
+      "grid cells -> RMF\nscale, rotate, translate",
+      gridcells_rmf.to_string()));
+
+  layer.transform_strings.push_back(
+    std::make_pair(
+      "RMF -> grid cells\nscale, rotate, translate",
+      gridcells_rmf.inverse().to_string()));
 }

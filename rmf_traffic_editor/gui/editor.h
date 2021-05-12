@@ -180,8 +180,8 @@ private:
   Polygon* selected_polygon = nullptr;
   QUuid clicked_feature_id;
 
-  const Level* active_level() const;
-  const Layer* active_layer() const;
+  Level* active_level();
+  Layer* active_layer();
 
   QGraphicsScene* scene = nullptr;
   MapView* map_view = nullptr;
@@ -219,6 +219,7 @@ private:
   void populate_property_editor(const Feature& feature);
   void populate_property_editor(const Fiducial& fiducial);
   void populate_property_editor(const Polygon& polygon);
+  void populate_property_editor(const Layer& layer);
 
   QTableWidgetItem* create_table_item(const QString& str,
     bool editable = false);

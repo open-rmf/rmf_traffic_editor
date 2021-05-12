@@ -53,6 +53,10 @@ public:
 
   bool from_yaml(const YAML::Node& data);
   YAML::Node to_yaml() const;
+
+  Transform inverse() const;
+
+  std::string to_string() const;
 };
 
 #endif  // TRAFFIC_EDITOR__TRANSFORM_HPP

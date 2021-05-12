@@ -98,6 +98,9 @@ Editor::Editor()
       {
         layer_idx = row;
         layer_table->update(building, level_idx, layer_idx);
+        if (layer_idx > 0)
+          populate_property_editor(
+            building.levels[level_idx].layers[layer_idx-1]);
       }
     });
 
@@ -1440,6 +1443,15 @@ void Editor::populate_property_editor(const Polygon& polygon)
   property_editor->blockSignals(false);  // re-enable callbacks
 }
 
+void Editor::populate_property_editor(const Layer& layer)
+{
+  Level* level = active_level();
+  if (level == nullptr)
+    return;
+  level->compute_layer_transforms();
+  layer.populate_property_editor(property_editor);
+}
+
 void Editor::clear_property_editor()
 {
   property_editor->setRowCount(0);
@@ -2616,7 +2628,7 @@ void Editor::layer_table_update_slot()
   create_scene();
 }
 
-const Level* Editor::active_level() const
+Level* Editor::active_level()
 {
   if (level_idx < static_cast<int>(building.levels.size()))
     return &building.levels[level_idx];
@@ -2624,12 +2636,12 @@ const Level* Editor::active_level() const
   return nullptr;
 }
 
-const Layer* Editor::active_layer() const
+Layer* Editor::active_layer()
 {
   if (layer_idx <= 0)
     return nullptr;
 
-  const Level* const level = active_level();
+  Level* const level = active_level();
   if (!level)
     return nullptr;
 

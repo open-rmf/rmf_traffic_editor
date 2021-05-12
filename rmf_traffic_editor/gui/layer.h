@@ -29,6 +29,7 @@
 
 class QGraphicsScene;
 class QGraphicsPixmapItem;
+class QTableWidget;
 
 
 class Layer
@@ -86,6 +87,10 @@ public:
   QPointF transform_layer_to_global(const QPointF& layer_point);
 
   void clear_selection();
+
+  void populate_property_editor(QTableWidget* property_editor) const;
+
+  std::vector<std::pair<std::string, std::string>> transform_strings;
 };
 
 #endif
