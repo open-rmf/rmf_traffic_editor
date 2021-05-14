@@ -2,10 +2,16 @@
 Changelog for package test_maps
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.3.0 (2021-05-14)
+------------------
+* rename building_map_tools (`#310 <https://github.com/open-rmf/rmf_traffic_editor/issues/310>`_)
+* Rename packages and delete moved packages (`#308 <https://github.com/open-rmf/rmf_traffic_editor/issues/308>`_)
+* Contributors: Geoffrey Biggs, youliang
+
 1.2.0 (2021-01-05)
 ------------------
 * Add first pass of quality declarations for all packages (`#235 <https://github.com/osrf/traffic_editor/issues/235>`_)
-* Contributors: Geoffrey Biggs, Marco A. Gutiérrez
+* Contributors: Geoffrey Biggs, Marco A. Gutiérre
 
 1.1.0 (2020-09-24)
 -----------------

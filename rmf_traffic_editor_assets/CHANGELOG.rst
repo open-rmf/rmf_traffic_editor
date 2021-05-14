@@ -2,6 +2,13 @@
 Changelog for package rmf_traffic_editor_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.3.0 (2021-05-14)
+------------------
+* Rename package
+* Merge remote-tracking branch 'sourcedir/master'
+* Move files in preparation for repository shift
+* Contributors: Geoffrey Biggs
+
 1.1.0 (2020-09-24)
 ------------------
 * Fixed PatientWheelChair on Fuel, updated thumbnail, added MetalCabinet `#13 <https://github.com/osrf/traffic_editor_assets/issues/13>`_
