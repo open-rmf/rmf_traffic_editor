@@ -2,9 +2,23 @@
 Changelog for package rmf_building_map_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1.2.0 (2021-03-29)
+1.3.0 (2021-05-14)
 ------------------
+* Added support for fuel textures (`#342 <https://github.com/open-rmf/rmf_traffic_editor/issues/342>`_)
+* Convert wall textures from 1d to 2d (`#338 <https://github.com/open-rmf/rmf_traffic_editor/issues/338>`_)
+* [Optimization] Remove duplicated textures (`#337 <https://github.com/open-rmf/rmf_traffic_editor/issues/337>`_)
+* clean dep and update readme (`#336 <https://github.com/open-rmf/rmf_traffic_editor/issues/336>`_)
+* building_map_server: don't crash when missing image file (`#334 <https://github.com/open-rmf/rmf_traffic_editor/issues/334>`_)
+* Fix material values for sdf compliance (`#330 <https://github.com/open-rmf/rmf_traffic_editor/issues/330>`_)
+* avoid crashing when generating undefined floor polygons. cleanup. (`#322 <https://github.com/open-rmf/rmf_traffic_editor/issues/322>`_)
+* improve usage of Shapely on very complex floor polygons (`#321 <https://github.com/open-rmf/rmf_traffic_editor/issues/321>`_)
+* auto download crowdsim models (`#316 <https://github.com/open-rmf/rmf_traffic_editor/issues/316>`_)
+* rename building_map_tools (`#310 <https://github.com/open-rmf/rmf_traffic_editor/issues/310>`_)
+* Account for package rename
+* Rename packages and delete moved packages (`#308 <https://github.com/open-rmf/rmf_traffic_editor/issues/308>`_)
 * migration to open-rmf org, rename to `rmf_building_map_tools`
+* Contributors: Geoffrey Biggs, Luca Della Vedova, Morgan Quigley, youliang
+
 
 1.2.0 (2021-01-06)
 ------------------

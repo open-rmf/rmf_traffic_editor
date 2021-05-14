@@ -2,9 +2,23 @@
 Changelog for package rmf_traffic_editor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1.2.x (2021-03-29)
------------------
+1.3.0 (2021-05-14)
+------------------
+* Feature/display layer transforms in freefleet format (`#347 <https://github.com/open-rmf/rmf_traffic_editor/issues/347>`_)
+* Feature/layer rendering palette mapping (`#344 <https://github.com/open-rmf/rmf_traffic_editor/issues/344>`_)
+* Fix asset path after package renaming (`#341 <https://github.com/open-rmf/rmf_traffic_editor/issues/341>`_)
+* Automatic alignment of robot-map layers to floorplans (`#340 <https://github.com/open-rmf/rmf_traffic_editor/issues/340>`_)
+* Fix/ci package name (`#339 <https://github.com/open-rmf/rmf_traffic_editor/issues/339>`_)
+* clarify labels on property add/delete buttons (`#326 <https://github.com/open-rmf/rmf_traffic_editor/issues/326>`_)
+* handle editing multiple layers with same name. (`#328 <https://github.com/open-rmf/rmf_traffic_editor/issues/328>`_)
+* fix `#324 <https://github.com/open-rmf/rmf_traffic_editor/issues/324>`_, update layer image immediately after OK button (`#327 <https://github.com/open-rmf/rmf_traffic_editor/issues/327>`_)
+* Bug/add layer button not visible in new building (`#313 <https://github.com/open-rmf/rmf_traffic_editor/issues/313>`_)
+* provide zoom-reset and clamp on scale factor (`#318 <https://github.com/open-rmf/rmf_traffic_editor/issues/318>`_)
+* avoid crash in empty crowdsim save routine (`#312 <https://github.com/open-rmf/rmf_traffic_editor/issues/312>`_)
+* rename building_map_tools (`#310 <https://github.com/open-rmf/rmf_traffic_editor/issues/310>`_)
+* Rename packages and delete moved packages (`#308 <https://github.com/open-rmf/rmf_traffic_editor/issues/308>`_)
 * Refactoring and Migration `#308 https://github.com/open-rmf/rmf_traffic_editor/pull/308`
+* Contributors: Geoffrey Biggs, Luca Della Vedova, Morgan Quigley, youliang
 
 1.2.0 (2021-01-05)
 ------------------
@@ -30,6 +44,7 @@ Changelog for package rmf_traffic_editor
 * Merge pull request `#249 <https://github.com/osrf/traffic_editor/issues/249>`_ from osrf/fix/lift_dialog_saving
 * Add first pass of quality declarations for all packages (`#235 <https://github.com/osrf/traffic_editor/issues/235>`_)
 * Contributors: Aaron Chong, Arjo Chakravarty, Chen Bainian, Geoffrey Biggs, Guoliang (Fred) Shao, Marco A. Gutiérrez, Morgan Quigley, Tian En
+
 
 1.1.0 (2020-09-24)
 ------------------
