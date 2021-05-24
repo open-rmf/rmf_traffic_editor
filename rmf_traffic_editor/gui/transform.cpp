@@ -19,6 +19,8 @@
 
 #include "transform.hpp"
 
+using std::string;
+
 
 Transform::Transform()
 {
@@ -72,4 +74,35 @@ QPointF Transform::backwards(const QPointF& p) const
   const double rx = cos(-_yaw) * tsx + sin(-_yaw) * tsy;
   const double ry = -sin(-_yaw) * tsx + cos(-_yaw) * tsy;
   return QPointF(rx, ry);
+}
+
+Transform Transform::inverse() const
+{
+  Transform inv;
+  inv.setYaw(-_yaw);
+  inv.setScale(1.0 / _scale);
+  inv.setTranslation(
+    1.0 / _scale *
+    QPointF(
+      cos(-_yaw) * translation().x() - sin(-_yaw) * translation().y(),
+      sin(-_yaw) * translation().x() + cos(-_yaw) * translation().y()));
+  return inv;
+}
+
+string Transform::to_string() const
+{
+  // make a string the old fashioned way...
+  char buf[1024] = {0};
+  snprintf(
+    buf,
+    sizeof(buf),
+    "rotation: %.5f\n"
+    "scale: %.5f\n"
+    "trans X: %.5f\n"
+    "trans Y: %.5f",
+    _yaw,
+    _scale,
+    _translation.x(),
+    _translation.y());
+  return string(buf);
 }

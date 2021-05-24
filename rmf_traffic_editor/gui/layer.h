@@ -29,6 +29,7 @@
 
 class QGraphicsScene;
 class QGraphicsPixmapItem;
+class QTableWidget;
 
 
 class Layer
@@ -50,6 +51,7 @@ public:
 
   Transform transform;
 
+  QImage image, colorized_image;
   QPixmap pixmap;
   QGraphicsPixmapItem* scene_item = nullptr;  // Borrowed pointer, not owned, don't delete
 
@@ -59,6 +61,7 @@ public:
   YAML::Node to_yaml() const;
 
   bool load_image();
+  void colorize_image();
 
   void draw(
     QGraphicsScene* scene,
@@ -84,6 +87,10 @@ public:
   QPointF transform_layer_to_global(const QPointF& layer_point);
 
   void clear_selection();
+
+  void populate_property_editor(QTableWidget* property_editor) const;
+
+  std::vector<std::pair<std::string, std::string>> transform_strings;
 };
 
 #endif
