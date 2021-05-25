@@ -27,6 +27,7 @@ jobs:
         cd ws
         source /opt/ros/foxy/setup.bash
         colcon build --packages-select rmf_traffic_editor --cmake-args -DNO_DOWNLOAD_MODELS=True
+        colcon build --packages-up-to rmf_traffic_editor_test_maps -DNO_DOWNLOAD_MODELS=True
 
     - name: test
       shell: bash
