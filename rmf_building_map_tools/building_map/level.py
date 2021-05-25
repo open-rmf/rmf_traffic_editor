@@ -156,7 +156,7 @@ class Level:
             # check if param exists, if not use default val
             if "texture_name" not in wall.params:
                 wall.params["texture_name"] =
-                    ParamValue([ParamValue.STRING, 'default'])
+                ParamValue([ParamValue.STRING, 'default'])
             if "alpha" not in wall.params:
                 wall.params["alpha"] = ParamValue([ParamValue.DOUBLE, 1.0])
             if wall.params not in wall_params_list:
