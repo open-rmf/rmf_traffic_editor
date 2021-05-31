@@ -13,26 +13,29 @@ class DoubleSwingDoor(Door):
             self.left_right_ratio = door_edge.params['left_right_ratio'].value
 
     def generate(self, world_ele, options):
+        left_segment_length = (1 / (1 + self.left_right_ratio)) * self.length
+        right_segment_length = self.length - left_segment_length
+
+        x_flip_sign = 1.0
         if self.motion_direction > 0:
-            x_flip_sign = 1.0
-        else:
             x_flip_sign = -1.0
+            right_segment_length = left_segment_length
+            left_segment_length = self.length - right_segment_length
 
         self.generate_swing_section(
             'right',
-            (1 / (1 + self.left_right_ratio)) * self.length - 0.01,
-            x_flip_sign * -self.length / 4,
+            right_segment_length - 0.01,
+            x_flip_sign * (self.length / 2 - right_segment_length / 2),
             (0, self.motion_radians),
-            (x_flip_sign * -self.length / 4, 0, 0),
+            (x_flip_sign * (right_segment_length / 2), 0, 0),
             options)
 
         self.generate_swing_section(
             'left',
-            (self.left_right_ratio / (1 + self.left_right_ratio)) * self.length
-                - 0.01,
-            x_flip_sign * self.length / 4,
+            left_segment_length - 0.01,
+            x_flip_sign * (-self.length / 2 + left_segment_length / 2),
             (-self.motion_radians, 0),
-            (x_flip_sign * self.length / 4, 0, 0),
+            (x_flip_sign * (-left_segment_length / 2), 0, 0),
             options)
 
         if not self.plugin == 'none':
