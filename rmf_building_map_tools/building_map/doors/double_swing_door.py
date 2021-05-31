@@ -8,6 +8,9 @@ class DoubleSwingDoor(Door):
         motion_degrees = door_edge.params['motion_degrees'].value
         self.motion_radians = 3.14 * motion_degrees / 180.0
         self.motion_direction = door_edge.params['motion_direction'].value
+        self.left_right_ratio = 1.0
+        if 'left_right_ratio' in door_edge.params:
+            self.left_right_ratio = door_edge.params['left_right_ratio'].value
 
     def generate(self, world_ele, options):
         if self.motion_direction > 0:
@@ -17,7 +20,7 @@ class DoubleSwingDoor(Door):
 
         self.generate_swing_section(
             'right',
-            self.length / 2 - 0.01,
+            (1 / (1 + self.left_right_ratio)) * self.length - 0.01,
             x_flip_sign * -self.length / 4,
             (0, self.motion_radians),
             (x_flip_sign * -self.length / 4, 0, 0),
@@ -25,7 +28,8 @@ class DoubleSwingDoor(Door):
 
         self.generate_swing_section(
             'left',
-            self.length / 2 - 0.01,
+            (self.left_right_ratio / (1 + self.left_right_ratio)) * self.length
+                - 0.01,
             x_flip_sign * self.length / 4,
             (-self.motion_radians, 0),
             (x_flip_sign * self.length / 4, 0, 0),

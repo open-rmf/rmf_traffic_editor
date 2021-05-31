@@ -818,6 +818,11 @@ void Level::draw_door(QGraphicsScene* scene, const Edge& edge) const
   if (motion_dir_it != edge.params.end())
     motion_dir = motion_dir_it->second.value_int;
 
+  double left_right_ratio = 1.0;
+  auto left_right_ratio_it = edge.params.find("left_right_ratio");
+  if (left_right_ratio_it != edge.params.end())
+    left_right_ratio = left_right_ratio_it->second.value_double;
+
   QPainterPath door_motion_path;
 
   const double door_dx = v_end.x - v_start.x;
@@ -852,7 +857,7 @@ void Level::draw_door(QGraphicsScene* scene, const Edge& edge) const
         door_motion_path,
         v_start.x,
         v_start.y,
-        door_length / 2,
+        (left_right_ratio / (1 + left_right_ratio)) * door_length,
         door_angle,
         door_angle + DEG2RAD * motion_dir * motion_degrees);
 
@@ -860,7 +865,7 @@ void Level::draw_door(QGraphicsScene* scene, const Edge& edge) const
         door_motion_path,
         v_end.x,
         v_end.y,
-        door_length / 2,
+        (1 / (1 + left_right_ratio)) * door_length,
         door_angle + M_PI,
         door_angle + M_PI - DEG2RAD * motion_dir * motion_degrees);
     }
