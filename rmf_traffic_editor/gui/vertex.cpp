@@ -233,7 +233,7 @@ void Vertex::draw(
     pixmap_item->setPos(
       x + icon_ring_radius * cos(icon_bearing),
       y - icon_ring_radius * sin(icon_bearing));
-    pixmap_item->setToolTip("This vertex is a pickup dispenser");
+    pixmap_item->setToolTip(("Vertex is " + icon_name).c_str());
   }
 
   if (!name.empty())
