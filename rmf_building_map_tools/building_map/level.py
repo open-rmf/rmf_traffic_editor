@@ -14,6 +14,7 @@ from .floor import Floor
 from .wall import Wall
 from .hole import Hole
 from .model import Model
+from .param_value import ParamValue
 from .transform import Transform
 from .vertex import Vertex
 from .doors.swing_door import SwingDoor
@@ -153,14 +154,13 @@ class Level:
         # crude method to identify all unique params list in walls
         for wall in self.walls:
             # check if param exists, if not use default val
-            tex = "default"
-            alpha = 1.0
-            if "texture_name" in wall.params:
-                tex = wall.params["texture_name"].value
-            if "alpha" in wall.params:
-                alpha = wall.params["alpha"].value
-            if [tex, alpha] not in wall_params_list:
-                wall_params_list.append([tex, alpha])
+            if "texture_name" not in wall.params:
+                wall.params["texture_name"] = ParamValue(
+                        [ParamValue.STRING, 'default'])
+            if "alpha" not in wall.params:
+                wall.params["alpha"] = ParamValue([ParamValue.DOUBLE, 1.0])
+            if wall.params not in wall_params_list:
+                wall_params_list.append(wall.params)
         print(f'Walls Generation, wall params list: {wall_params_list}')
 
         wall_cnt = 0

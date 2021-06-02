@@ -11,3 +11,6 @@ class ParamValue:
 
     def to_yaml(self):
         return [self.type, self.value]
+
+    def __eq__(self, other):
+        return self.type == other.type and self.value == other.value
