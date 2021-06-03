@@ -48,9 +48,9 @@ def add_pbr_material(visual_ele, model_name, obj_name,
     texture_filename = copy_texture(texture_name, meshes_path)
     material_ele = SubElement(visual_ele, 'material')
     diffuse_ele = SubElement(material_ele, 'diffuse')
-    diffuse_ele.text = '1.0 1.0 1.0'
+    diffuse_ele.text = '1.0 1.0 1.0 1.0'
     specular_ele = SubElement(material_ele, 'specular')
-    specular_ele.text = '0.1 0.1 0.1'  # TODO check specular value
+    specular_ele.text = '0.1 0.1 0.1 1.0'  # TODO check specular value
     pbr_ele = SubElement(material_ele, 'pbr')
     metal_ele = SubElement(pbr_ele, 'metal')
     metalness_ele = SubElement(metal_ele, 'metalness')
