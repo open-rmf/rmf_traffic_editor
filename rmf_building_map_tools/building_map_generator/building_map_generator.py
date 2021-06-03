@@ -28,6 +28,14 @@ def main():
             args.options
         )
 
+    if args.command == "ignition_dae_export":
+        g.generate_ignition_sdf_with_dae_export(
+            args.INPUT,
+            args.OUTPUT_WORLD,
+            args.OUTPUT_MODEL_DIR,
+            args.options
+        )
+
     if args.command == "nav":
         g.generate_nav(args.INPUT, args.OUTPUT_DIR)
 

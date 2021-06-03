@@ -32,6 +32,12 @@ ignition_parser = subparsers.add_parser(
     parents=[shared_parser]
 )
 
+dae_export_parser = subparsers.add_parser(
+    'ignition_dae_export',
+    help='Generate .world file with dae export tag and map model.sdf for Ignition',
+    parents=[shared_parser]
+)
+
 nav_parser = subparsers.add_parser(
     'nav',
     help='Generate nav map .yaml file',
@@ -40,3 +46,4 @@ nav_parser.add_argument("INPUT", type=str,
                         help="Input building.yaml file to process")
 nav_parser.add_argument("OUTPUT_DIR", type=str,
                         help="Path to output the nav .yaml files")
+

@@ -117,10 +117,13 @@ class Building:
     def generate_sdf_world(self, options):
         """ Return an etree of this Building in SDF starting from a template"""
         print(f'generator options: {options}')
+        dae_export_plugin = False
         if 'gazebo' in options:
             template_name = 'gz_world.sdf'
         elif 'ignition' in options:
             template_name = 'ign_world.sdf'
+            if 'dae_export' in options:
+                dae_export_plugin = True
         else:
             raise RuntimeError("expected either gazebo or ignition in options")
 
@@ -132,10 +135,20 @@ class Building:
 
         world = sdf.find('world')
 
-        for level_name, level in self.levels.items():
-            level.generate_sdf_models(world)  # todo: a better name
-            level.generate_doors(world, options)
+        if dae_export_plugin:
+            world_export_plugin_ele = SubElement(
+                world, 
+                'plugin',
+                {
+                    'name': 'ignition::gazebo::systems::ColladaWorldExporter',
+                    'filename': 'ignition-gazebo-collada-world-exporter-system'
+                })
+            
 
+        for level_name, level in self.levels.items():
+            level.generate_sdf_models(world, dae_export_plugin)  # todo: a better name
+            level.generate_doors(world, options)
+            
             level_include_ele = SubElement(world, 'include')
             level_model_name = f'{self.name}_{level_name}'
             name_ele = SubElement(level_include_ele, 'name')

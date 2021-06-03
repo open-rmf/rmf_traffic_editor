@@ -174,7 +174,7 @@ class Level:
                 model_path,
                 self.transformed_vertices)
 
-    def generate_sdf_models(self, world_ele):
+    def generate_sdf_models(self, world_ele, dae_export_plugin):
         for model in self.models:
             model.generate(
                 world_ele,
@@ -182,9 +182,10 @@ class Level:
                 self.elevation)
 
         # sniff around in our vertices and spawn robots if requested
-        for vertex_idx, vertex in enumerate(self.vertices):
-            if 'spawn_robot_type' in vertex.params:
-                self.generate_robot_at_vertex_idx(vertex_idx, world_ele)
+        if dae_export_plugin is False:
+            for vertex_idx, vertex in enumerate(self.vertices):
+                if 'spawn_robot_type' in vertex.params:
+                    self.generate_robot_at_vertex_idx(vertex_idx, world_ele)
 
     def generate_doors(self, world_ele, options):
         for door_edge in self.doors:
