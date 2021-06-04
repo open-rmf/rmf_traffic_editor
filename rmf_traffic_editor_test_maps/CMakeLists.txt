@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(test_maps)
+project(rmf_traffic_editor_test_maps)
 
 find_package(ament_cmake REQUIRED)
 
