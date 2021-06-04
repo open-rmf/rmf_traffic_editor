@@ -137,18 +137,18 @@ class Building:
 
         if dae_export_plugin:
             world_export_plugin_ele = SubElement(
-                world, 
+                world,
                 'plugin',
                 {
                     'name': 'ignition::gazebo::systems::ColladaWorldExporter',
                     'filename': 'ignition-gazebo-collada-world-exporter-system'
                 })
-            
 
         for level_name, level in self.levels.items():
-            level.generate_sdf_models(world, dae_export_plugin)  # todo: a better name
+            # todo: a better name
+            level.generate_sdf_models(world, dae_export_plugin)
             level.generate_doors(world, options)
-            
+
             level_include_ele = SubElement(world, 'include')
             level_model_name = f'{self.name}_{level_name}'
             name_ele = SubElement(level_include_ele, 'name')
