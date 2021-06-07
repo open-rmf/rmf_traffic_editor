@@ -1,5 +1,5 @@
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Changelog for package test_maps
+Changelog for package rmf_traffic_editor_test_maps
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 1.3.0 (2021-05-14)
