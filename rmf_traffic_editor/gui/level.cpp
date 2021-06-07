@@ -818,10 +818,10 @@ void Level::draw_door(QGraphicsScene* scene, const Edge& edge) const
   if (motion_dir_it != edge.params.end())
     motion_dir = motion_dir_it->second.value_int;
 
-  double left_right_ratio = 1.0;
-  auto left_right_ratio_it = edge.params.find("left_right_ratio");
-  if (left_right_ratio_it != edge.params.end())
-    left_right_ratio = left_right_ratio_it->second.value_double;
+  double right_left_ratio = 1.0;
+  auto right_left_ratio_it = edge.params.find("right_left_ratio");
+  if (right_left_ratio_it != edge.params.end())
+    right_left_ratio = right_left_ratio_it->second.value_double;
 
   QPainterPath door_motion_path;
 
@@ -852,23 +852,23 @@ void Level::draw_door(QGraphicsScene* scene, const Edge& edge) const
     }
     else if (door_type == "double_hinged")
     {
-      // left door
-      add_door_swing_path(
-        door_motion_path,
-        v_end.x,
-        v_end.y,
-        (left_right_ratio / (1 + left_right_ratio)) * door_length,
-        door_angle + M_PI,
-        door_angle + M_PI - DEG2RAD * motion_dir * motion_degrees);
-
       // right door
       add_door_swing_path(
         door_motion_path,
         v_start.x,
         v_start.y,
-        (1 / (1 + left_right_ratio)) * door_length,
+        (right_left_ratio / (1 + right_left_ratio)) * door_length,
         door_angle,
         door_angle + DEG2RAD * motion_dir * motion_degrees);
+
+      // left door
+      add_door_swing_path(
+        door_motion_path,
+        v_end.x,
+        v_end.y,
+        (1 / (1 + right_left_ratio)) * door_length,
+        door_angle + M_PI,
+        door_angle + M_PI - DEG2RAD * motion_dir * motion_degrees);
     }
     else if (door_type == "sliding")
     {
@@ -881,20 +881,20 @@ void Level::draw_door(QGraphicsScene* scene, const Edge& edge) const
     }
     else if (door_type == "double_sliding")
     {
-      // left door
+      // right door
       add_door_slide_path(
         door_motion_path,
         v_start.x,
         v_start.y,
-        (left_right_ratio / (1 + left_right_ratio)) * door_length,
+        (right_left_ratio / (1 + right_left_ratio)) * door_length,
         door_angle);
 
-      // right door
+      // left door
       add_door_slide_path(
         door_motion_path,
         v_end.x,
         v_end.y,
-        (1 / (1 + left_right_ratio)) * door_length,
+        (1 / (1 + right_left_ratio)) * door_length,
         door_angle + M_PI);
     }
     else

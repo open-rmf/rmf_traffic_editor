@@ -8,34 +8,42 @@ class DoubleSwingDoor(Door):
         motion_degrees = door_edge.params['motion_degrees'].value
         self.motion_radians = 3.14 * motion_degrees / 180.0
         self.motion_direction = door_edge.params['motion_direction'].value
-        self.left_right_ratio = 1.0
-        if 'left_right_ratio' in door_edge.params:
-            self.left_right_ratio = door_edge.params['left_right_ratio'].value
+        self.right_left_ratio = 1.0
+        if 'right_left_ratio' in door_edge.params:
+            self.right_left_ratio = door_edge.params['right_left_ratio'].value
 
     def generate(self, world_ele, options):
-        left_segment_length = (1 / (1 + self.left_right_ratio)) * self.length
-        right_segment_length = self.length - left_segment_length
+        right_segment_length = \
+            (self.right_left_ratio / (1 + self.right_left_ratio)) * self.length
+        left_segment_length = self.length - right_segment_length;
 
-        x_flip_sign = 1.0
-        if self.motion_direction > 0:
-            x_flip_sign = -1.0
-            right_segment_length = left_segment_length
-            left_segment_length = self.length - right_segment_length
+        x_offsets = [
+            self.length / 2 - right_segment_length / 2,
+            -self.length / 2 + left_segment_length/ 2]
+        bounds = [(0, self.motion_radians), (-self.motion_radians, 0)]
+        axis_pose = [
+            (right_segment_length / 2, 0, 0),
+            (-left_segment_length / 2, 0, 0)]
+        # This is configured to be negative by default to reflect how it is
+        # rendered on rmf_traffic_editor.
+        axis = 'z' if self.motion_direction < 0 else '-z'
 
         self.generate_swing_section(
             'right',
             right_segment_length - 0.01,
-            x_flip_sign * (self.length / 2 - right_segment_length / 2),
-            (0, self.motion_radians),
-            (x_flip_sign * (right_segment_length / 2), 0, 0),
+            x_offsets[0],
+            bounds[0],
+            axis_pose[0],
+            axis,
             options)
 
         self.generate_swing_section(
             'left',
             left_segment_length - 0.01,
-            x_flip_sign * (-self.length / 2 + left_segment_length / 2),
-            (-self.motion_radians, 0),
-            (x_flip_sign * (-left_segment_length / 2), 0, 0),
+            x_offsets[1],
+            bounds[1],
+            axis_pose[1],
+            axis,
             options)
 
         if not self.plugin == 'none':

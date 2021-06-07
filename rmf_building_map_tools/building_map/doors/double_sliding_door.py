@@ -5,20 +5,27 @@ from .door import Door
 class DoubleSlidingDoor(Door):
     def __init__(self, door_edge, level_elevation):
         super().__init__(door_edge, level_elevation)
+        self.right_left_ratio = 1.0
+        if 'right_left_ratio' in door_edge.params:
+            self.right_left_ratio = door_edge.params['right_left_ratio'].value
 
     def generate(self, world_ele, options):
-        self.generate_sliding_section(
-            'left',
-            self.length/2 - 0.01,
-            -self.length/4,
-            (-self.length/2, 0.0),
-            options)
+        right_segment_length = \
+            (self.right_left_ratio / (1 + self.right_left_ratio)) * self.length
+        left_segment_length = self.length - right_segment_length;
 
         self.generate_sliding_section(
             'right',
-            self.length/2 - 0.01,
-            self.length/4,
-            (0.0, self.length/2),
+            right_segment_length - 0.01,
+            self.length / 2 - right_segment_length / 2,
+            (0.0, right_segment_length),
+            options)
+
+        self.generate_sliding_section(
+            'left',
+            left_segment_length - 0.01,
+            -self.length / 2 + left_segment_length / 2,
+            (-left_segment_length, 0.0),
             options)
 
         if not self.plugin == 'none':
