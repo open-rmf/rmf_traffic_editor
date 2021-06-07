@@ -15,11 +15,11 @@ class DoubleSwingDoor(Door):
     def generate(self, world_ele, options):
         right_segment_length = \
             (self.right_left_ratio / (1 + self.right_left_ratio)) * self.length
-        left_segment_length = self.length - right_segment_length;
+        left_segment_length = self.length - right_segment_length
 
         x_offsets = [
             self.length / 2 - right_segment_length / 2,
-            -self.length / 2 + left_segment_length/ 2]
+            -self.length / 2 + left_segment_length / 2]
         bounds = [(0, self.motion_radians), (-self.motion_radians, 0)]
         axis_pose = [
             (right_segment_length / 2, 0, 0),

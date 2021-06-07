@@ -21,7 +21,7 @@ class SwingDoor(Door):
             (0, self.motion_radians),
             (self.length / 2, 0, 0),
             axis,
-            options);
+            options)
 
         if not self.plugin == 'none':
             plugin_ele = SubElement(self.model_ele, 'plugin')
@@ -45,4 +45,3 @@ class SwingDoor(Door):
             door_ele.set('right_joint_name', 'right_joint')
 
         world_ele.append(self.model_ele)
-

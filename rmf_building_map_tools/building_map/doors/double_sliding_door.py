@@ -12,7 +12,7 @@ class DoubleSlidingDoor(Door):
     def generate(self, world_ele, options):
         right_segment_length = \
             (self.right_left_ratio / (1 + self.right_left_ratio)) * self.length
-        left_segment_length = self.length - right_segment_length;
+        left_segment_length = self.length - right_segment_length
 
         self.generate_sliding_section(
             'right',
