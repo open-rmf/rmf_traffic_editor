@@ -37,7 +37,8 @@ parser.add_argument("-m", "--model-path", type=str,
 parser.add_argument("-c", "--cache", type=str,
                     default="~/.pit_crew/model_cache.json",
                     help="Path to pit_crew model cache")
-
+parser.add_argument("-i", "--include", type=str,
+                    help="Search this directory first for models")
 
 def get_crowdsim_models(input_filename):
     if not os.path.isfile(input_filename):
@@ -58,7 +59,7 @@ def get_crowdsim_models(input_filename):
         return actor_names
 
 
-def download_models(input_yaml, model_path=None, cache=None):
+def download_models(input_yaml, model_path=None, cache=None, include=None):
     """Download models for a given input building yaml."""
     # Construct model set
     model_set = set()
@@ -86,7 +87,8 @@ def download_models(input_yaml, model_path=None, cache=None):
         model_set,
         model_path=model_path,
         cache_file_path=cache,
-        lower=True
+        lower=True,
+        priority_dir=include
     )
 
     logger.info("\n== REQUESTED MODEL REPORT ==")
@@ -122,7 +124,7 @@ def download_models(input_yaml, model_path=None, cache=None):
 
 def main():
     args = parser.parse_args()
-    download_models(args.INPUT_YAML, args.model_path, args.cache)
+    download_models(args.INPUT_YAML, args.model_path, args.cache, args.include)
 
 
 if __name__ == "__main__":

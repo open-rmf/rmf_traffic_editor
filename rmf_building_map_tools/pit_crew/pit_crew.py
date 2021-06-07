@@ -32,6 +32,7 @@ See Also:
 """
 
 from collections import namedtuple
+from pprint import pprint
 import xml.etree.ElementTree as ET
 
 import requests
@@ -98,7 +99,8 @@ def swag(print_swag=True):
 def get_missing_models(model_names, model_path=None,
                        config_file="model.config",
                        cache_file_path=None, update_cache=True, lower=True,
-                       use_dir_as_name=False, ign=False):
+                       use_dir_as_name=False, ign=False,
+                       priority_dir=None):
     """
     Classify models as missing, downloadable, or available from a model list.
 
@@ -122,6 +124,8 @@ def get_missing_models(model_names, model_path=None,
             name as its model_name. Defaults to False.
         ign (bool, optional): If True, will parse model directory as if it is
             following Ignition's directory structure. Defaults to False.
+        priority_dir (str, optional): Check this directory first to see if the
+            a model is there.
 
     Returns:
         dict: A dictionary of classified model names.
@@ -145,7 +149,19 @@ def get_missing_models(model_names, model_path=None,
         cache = load_cache(cache_file_path, lower=lower)
 
     fuel_models = get_model_to_author_dict(cache['model_cache'], lower=lower)
+    priority_models = {}
     local_models = {}
+
+    if priority_dir is not None:
+        logger.info("Will check '%s' directory first for models" % (priority_dir))
+        for priority_model in get_local_model_name_tuples(
+            priority_dir, config_file=config_file, lower=lower,
+            use_dir_as_name=use_dir_as_name, ign=ign
+        ):
+            if priority_model[0] in priority_models:
+                priority_models[priority_model[0]].append(priority_model[1])
+            else:
+                priority_models[priority_model[0]] = [[priority_model[1]]]
 
     for local_model in get_local_model_name_tuples(
         model_path, config_file=config_file, lower=lower,
@@ -176,9 +192,19 @@ def get_missing_models(model_names, model_path=None,
             model_name = model_name.lower()
             author_name = author_name.lower()
 
-        if model_name in local_models:
-            output['available'].append(model_name)
+        if model_name in priority_models and model_name in local_models:
+            logger.warning("Model %s found in both '%s' and '%s'! Will use model in priority folder '%s'" %
+                (model_name, priority_dir, model_path, priority_dir))
 
+        if model_name in priority_models:
+            output['available'].append(model_name)
+            if author_name:
+                if author_name not in priority_models[model_name]:
+                    logger.warning("Model %s in local model directory is not "
+                                   "by the requested author %s!"
+                                   % (model_name, author_name))
+        elif model_name in local_models:
+            output['available'].append(model_name)
             if author_name:
                 if author_name not in local_models[model_name]:
                     logger.warning("Model %s in local model directory is not "
