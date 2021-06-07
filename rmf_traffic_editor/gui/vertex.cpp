@@ -217,7 +217,7 @@ void Vertex::draw(
     icon_name = ":icons/dropoff.svg";
   else if (is_cleaning_zone())
     icon_name = ":icons/clean.svg";
-  
+
   if (!icon_name.empty())
   {
     const double icon_bearing = -45.0 * M_PI / 180.0;
