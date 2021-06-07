@@ -98,7 +98,8 @@ def download_models(input_yaml, model_path=None, cache=None, include=None):
     pprint(stringent_dict)
     print()
 
-    for downloadable_model in missing_models.get('downloadable', []):
+    missing_downloadables = missing_models.get('downloadable', [])
+    for key, downloadable_model in enumerate(missing_downloadables):
         model_name, author_names = downloadable_model
 
         if model_name in stringent_dict:
@@ -114,6 +115,7 @@ def download_models(input_yaml, model_path=None, cache=None, include=None):
                            "using first valid author '%s'" %
                            (model_name, author_name))
 
+        logger.info("Downloading model %s / %s : %s" %(key+1, len(missing_downloadables), model_name))
         pit_crew.download_model(model_name, author_name, sync_names=True,
                                 download_path=model_path)
 
