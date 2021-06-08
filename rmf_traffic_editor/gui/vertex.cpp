@@ -31,7 +31,9 @@ const vector<pair<string, Param::Type>> Vertex::allowed_params
   { "is_parking_spot", Param::Type::BOOL },
   { "is_charger", Param::Type::BOOL},
   { "dock_name", Param::Type::STRING},
-  { "workcell_name", Param::Type::STRING },
+  { "is_cleaning_zone", Param::Type::BOOL},
+  { "dropoff_ingestor", Param::Type::STRING },
+  { "pickup_dispenser", Param::Type::STRING },
   { "spawn_robot_type", Param::Type::STRING },
   { "spawn_robot_name", Param::Type::STRING },
   { "is_holding_point", Param::Type::BOOL },
@@ -205,6 +207,35 @@ void Vertex::draw(
     pixmap_item->setToolTip("This vertex is a charger");
   }
 
+  /// For now, we only show one of the icon below as there's limited
+  /// space for the icon, also "pickup_dispenser, dropoff_ingestor,
+  /// is_cleaning_zone" should be exclusive to one another
+  std::string icon_name;
+  if (!pickup_dispenser().empty())
+    icon_name = ":icons/pickup.svg";
+  else if (!dropoff_ingestor().empty())
+    icon_name = ":icons/dropoff.svg";
+  else if (is_cleaning_zone())
+    icon_name = ":icons/clean.svg";
+
+  if (!icon_name.empty())
+  {
+    const double icon_bearing = -45.0 * M_PI / 180.0;
+
+    QIcon icon(icon_name.c_str());
+    QPixmap pixmap(icon.pixmap(icon.actualSize(QSize(128, 128))));
+    QGraphicsPixmapItem* pixmap_item = scene->addPixmap(pixmap);
+    pixmap_item->setOffset(
+      -pixmap.width() / 2,
+      -pixmap.height() / 2);
+    pixmap_item->setScale(icon_scale);
+    pixmap_item->setZValue(20.0);
+    pixmap_item->setPos(
+      x + icon_ring_radius * cos(icon_bearing),
+      y - icon_ring_radius * sin(icon_bearing));
+    pixmap_item->setToolTip(("Vertex is " + icon_name).c_str());
+  }
+
   if (!name.empty())
   {
     QGraphicsSimpleTextItem* text_item = scene->addSimpleText(
@@ -251,4 +282,31 @@ bool Vertex::is_charger() const
     return false;
 
   return it->second.value_bool;
+}
+
+bool Vertex::is_cleaning_zone() const
+{
+  const auto it = params.find("is_cleaning_zone");
+  if (it == params.end())
+    return false;
+
+  return it->second.value_bool;
+}
+
+std::string Vertex::dropoff_ingestor() const
+{
+  const auto it = params.find("dropoff_ingestor");
+  if (it == params.end())
+    return "";
+
+  return it->second.value_string;
+}
+
+std::string Vertex::pickup_dispenser() const
+{
+  const auto it = params.find("pickup_dispenser");
+  if (it == params.end())
+    return "";
+
+  return it->second.value_string;
 }

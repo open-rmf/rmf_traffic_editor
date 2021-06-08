@@ -5,6 +5,8 @@
 
 Welcome!
 
+![](docs/rmf_traffic_editor_gui.png)
+
 This repository has the following directories:
  * `rmf_traffic_editor`: GUI for annotating floorplans to create traffic patterns
  * `rmf_building_map_tools`: Python-based tools to use and manipulate the map files created by `rmf_traffic_editor`, such as:
