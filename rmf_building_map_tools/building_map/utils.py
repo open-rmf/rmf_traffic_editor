@@ -131,9 +131,16 @@ def joint(
         xyz.text = '0 1 0'
     elif joint_axis == 'z':
         xyz.text = '0 0 1'
+    elif joint_axis == '-x':
+        xyz.text = '-1 0 0'
+    elif joint_axis == '-y':
+        xyz.text = '0 -1 0'
+    elif joint_axis == '-z':
+        xyz.text = '0 0 -1'
     else:
         raise RuntimeError(
-            'Axis requested is undefined, only "x", "y" and "z" available')
+            'Axis requested is undefined, only "x", "-x", "y", "-y", '
+            '"z" and "-"z" available')
 
     if lower_limit is not None and upper_limit is not None:
         limit = SubElement(axis, 'limit')

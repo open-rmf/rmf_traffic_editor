@@ -818,6 +818,11 @@ void Level::draw_door(QGraphicsScene* scene, const Edge& edge) const
   if (motion_dir_it != edge.params.end())
     motion_dir = motion_dir_it->second.value_int;
 
+  double right_left_ratio = 1.0;
+  auto right_left_ratio_it = edge.params.find("right_left_ratio");
+  if (right_left_ratio_it != edge.params.end())
+    right_left_ratio = right_left_ratio_it->second.value_double;
+
   QPainterPath door_motion_path;
 
   const double door_dx = v_end.x - v_start.x;
@@ -847,20 +852,21 @@ void Level::draw_door(QGraphicsScene* scene, const Edge& edge) const
     }
     else if (door_type == "double_hinged")
     {
-      // each door section is half as long as door_length
+      // right door
       add_door_swing_path(
         door_motion_path,
         v_start.x,
         v_start.y,
-        door_length / 2,
+        (right_left_ratio / (1 + right_left_ratio)) * door_length,
         door_angle,
         door_angle + DEG2RAD * motion_dir * motion_degrees);
 
+      // left door
       add_door_swing_path(
         door_motion_path,
         v_end.x,
         v_end.y,
-        door_length / 2,
+        (1 / (1 + right_left_ratio)) * door_length,
         door_angle + M_PI,
         door_angle + M_PI - DEG2RAD * motion_dir * motion_degrees);
     }
@@ -875,18 +881,20 @@ void Level::draw_door(QGraphicsScene* scene, const Edge& edge) const
     }
     else if (door_type == "double_sliding")
     {
-      // each door section is half as long as door_length
+      // right door
       add_door_slide_path(
         door_motion_path,
         v_start.x,
         v_start.y,
-        door_length / 2,
+        (right_left_ratio / (1 + right_left_ratio)) * door_length,
         door_angle);
+
+      // left door
       add_door_slide_path(
         door_motion_path,
         v_end.x,
         v_end.y,
-        door_length / 2,
+        (1 / (1 + right_left_ratio)) * door_length,
         door_angle + M_PI);
     }
     else
