@@ -33,12 +33,21 @@ parser.add_argument("INPUT_YAML", type=str,
                     help="Input building.yaml file to process")
 parser.add_argument("-m", "--model-path", type=str,
                     default="~/.gazebo/models/",
-                    help="Path to check models from and download models to")
+                    help="Path to check models from and download models to. \
+                        Redundant if using ignition fuel tools flag")
 parser.add_argument("-c", "--cache", type=str,
                     default="~/.pit_crew/model_cache.json",
                     help="Path to pit_crew model cache")
 parser.add_argument("-i", "--include", type=str,
-                    help="Search this directory first for models")
+                    help="Search this directory first for models. Directory structure \
+                        must follow -f flag")
+parser.add_argument("-f", "--fuel_tools", action='store_true',
+                    help="Use ignition fuel tools to download models instead of http")
+parser.add_argument("-e", "--export_path", type=str,
+                    default=None,
+                    help="Export model downloaded using ignition fuel to a folder \
+                    with classic gazebo directory structure. Only relevant if using \
+                    ignition fuel is used to download models.")
 
 def get_crowdsim_models(input_filename):
     if not os.path.isfile(input_filename):
@@ -59,7 +68,7 @@ def get_crowdsim_models(input_filename):
         return actor_names
 
 
-def download_models(input_yaml, model_path=None, cache=None, include=None):
+def download_models(input_yaml, model_path=None, cache=None, include=None, fuel_tools=False, export_path=None):
     """Download models for a given input building yaml."""
     # Construct model set
     model_set = set()
@@ -83,12 +92,21 @@ def download_models(input_yaml, model_path=None, cache=None, include=None):
             else:
                 model_set.add(model.model_name)
 
+    # If we are using ignition fuel tools to download the models and we do not need
+    # to parse them, it means the model directory follows ignitions's directory structure
+    ign=fuel_tools
+    logging.info("\nUsing Ignition Fuel directory struture : %s\n" %(ign))
+    # Ignitional fuel tools can only download to this folder, so we set the model path to it
+    if fuel_tools:
+        model_path = "~/.ignition/fuel/"
+
     missing_models = pit_crew.get_missing_models(
         model_set,
         model_path=model_path,
         cache_file_path=cache,
         lower=True,
-        priority_dir=include
+        priority_dir=include,
+        ign=ign
     )
 
     logger.info("\n== REQUESTED MODEL REPORT ==")
@@ -116,8 +134,13 @@ def download_models(input_yaml, model_path=None, cache=None, include=None):
                            (model_name, author_name))
 
         logger.info("Downloading model %s / %s : %s" %(key+1, len(missing_downloadables), model_name))
-        pit_crew.download_model(model_name, author_name, sync_names=True,
-                                download_path=model_path)
+
+        if fuel_tools:
+            pit_crew.download_model_fuel_tools(model_name, author_name, 
+                                                sync_names=True, export_path=export_path)
+        else:
+            pit_crew.download_model(model_name, author_name, sync_names=True,
+                                download_path=model_path, ign=ign)
 
     if missing_models.get('missing', []):
         logger.warning("\nMissing models (not in local or Fuel):")
@@ -126,8 +149,9 @@ def download_models(input_yaml, model_path=None, cache=None, include=None):
 
 def main():
     args = parser.parse_args()
-    download_models(args.INPUT_YAML, args.model_path, args.cache, args.include)
+    download_models(args.INPUT_YAML, args.model_path, args.cache, args.include, args.fuel_tools, args.export_path)
 
 
 if __name__ == "__main__":
     main()
+
