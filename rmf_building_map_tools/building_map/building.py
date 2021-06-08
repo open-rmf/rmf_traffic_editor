@@ -147,7 +147,8 @@ class Building:
         for level_name, level in self.levels.items():
             # todo: a better name
             level.generate_sdf_models(world, dae_export_plugin)
-            level.generate_doors(world, options)
+            if dae_export_plugin is False:
+                level.generate_doors(world, options)
 
             level_include_ele = SubElement(world, 'include')
             level_model_name = f'{self.name}_{level_name}'
@@ -158,12 +159,13 @@ class Building:
             pose_ele = SubElement(level_include_ele, 'pose')
             pose_ele.text = f'0 0 {level.elevation} 0 0 0'
 
-        for lift_name, lift in self.lifts.items():
-            if not lift.level_doors:
-                print(f'[{lift_name}] is not serving any floor, ignoring.')
-                continue
-            lift.generate_shaft_doors(world)
-            lift.generate_cabin(world, options)
+        if dae_export_plugin is False:
+            for lift_name, lift in self.lifts.items():
+                if not lift.level_doors:
+                    print(f'[{lift_name}] is not serving any floor, ignoring.')
+                    continue
+                lift.generate_shaft_doors(world)
+                lift.generate_cabin(world, options)
 
         charger_waypoints_ele = SubElement(
           world,
