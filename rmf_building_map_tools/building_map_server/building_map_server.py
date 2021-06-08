@@ -23,6 +23,7 @@ from rmf_building_map_msgs.msg import Place
 from rmf_building_map_msgs.msg import AffineImage
 from rmf_building_map_msgs.msg import Door
 from rmf_building_map_msgs.msg import Lift
+from rmf_building_map_msgs.msg import Param
 
 from building_map.building import Building
 
@@ -135,6 +136,29 @@ class BuildingMapServer(Node):
                 gn.x = v[0]
                 gn.y = v[1]
                 gn.name = v[2]['name']
+
+                # add specific params to builidng_map_msg
+                for str_param in ["dock_name",
+                                  "pickup_dispenser",
+                                  "dropoff_ingestor"]:
+                    if (str_param in v[2]):
+                        p = Param()
+                        p.name = str_param
+                        p.type = p.TYPE_STRING
+                        p.value_string = v[2][str_param]
+                        gn.params.append(p)
+
+                for bool_param in ["is_charger",
+                                   "is_cleaning_zone",
+                                   "is_holding_point",
+                                   "is_parking_spot"]:
+                    if (bool_param in v[2]):
+                        p = Param()
+                        p.name = bool_param
+                        p.type = p.TYPE_BOOL
+                        p.value_bool = v[2][bool_param]
+                        gn.params.append(p)
+
                 graph_msg.vertices.append(gn)
             for l in g['lanes']:
                 ge = GraphEdge()
