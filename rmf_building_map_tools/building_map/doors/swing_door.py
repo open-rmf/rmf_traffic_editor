@@ -10,7 +10,19 @@ class SwingDoor(Door):
         self.motion_direction = door_edge.params['motion_direction'].value
 
     def generate(self, world_ele, options):
-        door_ele = None
+        # This is configured to be negative by default to reflect how it is
+        # rendered on rmf_traffic_editor.
+        axis = 'z' if self.motion_direction < 0 else '-z'
+
+        self.generate_swing_section(
+            'right',
+            self.length - 0.01,
+            0,
+            (0, self.motion_radians),
+            (self.length / 2, 0, 0),
+            axis,
+            options)
+
         if not self.plugin == 'none':
             plugin_ele = SubElement(self.model_ele, 'plugin')
             plugin_ele.set('name', 'door')
@@ -29,28 +41,7 @@ class SwingDoor(Door):
             door_ele = SubElement(plugin_ele, 'door')
             door_ele.set('name', self.name)
             door_ele.set('type', 'SwingDoor')
-
-        if self.motion_direction > 0:
-            self.generate_swing_section(
-                'left',
-                self.length - 0.01,
-                0,
-                (-self.motion_radians, 0),
-                (self.length / 2, 0, 0),
-                options)
-            if door_ele is not None:
-                door_ele.set('left_joint_name', 'left_joint')
-                door_ele.set('right_joint_name', 'empty_joint')
-        else:
-            self.generate_swing_section(
-                'right',
-                self.length - 0.01,
-                0,
-                (0, self.motion_radians),
-                (self.length / 2, 0, 0),
-                options)
-            if door_ele is not None:
-                door_ele.set('left_joint_name', 'empty_joint')
-                door_ele.set('right_joint_name', 'right_joint')
+            door_ele.set('left_joint_name', 'empty_joint')
+            door_ele.set('right_joint_name', 'right_joint')
 
         world_ele.append(self.model_ele)
