@@ -57,7 +57,12 @@ public:
 
   bool is_parking_point() const;
   bool is_holding_point() const;
+  bool is_cleaning_zone() const;
   bool is_charger() const;
+
+  std::string dropoff_ingestor() const;
+  std::string pickup_dispenser() const;
+
 
   ////////////////////////////////////////////////////////////
   static const std::vector<std::pair<std::string, Param::Type>> allowed_params;

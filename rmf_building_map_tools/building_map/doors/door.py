@@ -73,7 +73,8 @@ class Door:
     x_offset = offset of the center of the door section from the center
                of the entire door (this will be non-zero for double doors)
     bounds = bounds for the range of motion of this section, in radians
-    axis = pose of the joint axis, in the door *section* frame
+    axis_pose = pose of the joint axis, in the door *section* frame
+    axis = direction of the axis
     '''
     def generate_swing_section(
         self,
@@ -81,18 +82,19 @@ class Door:
         width,
         x_offset,
         bounds,
+        axis_pose,
         axis,
         options
     ):
         self.generate_section(name, width, x_offset, options)
 
         pose_ele = Element('pose')
-        pose_ele.text = f'{axis[0]} {axis[1]} {axis[2]} 0 0 0'
+        pose_ele.text = f'{axis_pose[0]} {axis_pose[1]} {axis_pose[2]} 0 0 0'
         self.model_ele.append(joint(f'{name}_joint',
                                     'revolute',
                                     'world',
                                     name,
-                                    joint_axis='z',
+                                    joint_axis=axis,
                                     lower_limit=bounds[0],
                                     upper_limit=bounds[1],
                                     pose=pose_ele))
