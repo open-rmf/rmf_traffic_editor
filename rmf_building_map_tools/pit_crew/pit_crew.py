@@ -610,7 +610,7 @@ def download_model_fuel_tools(model_name, author_name,
 
     try:
         # Currently, ignition fuel download can only download to this folder.
-        # Fuel tools write create this folder if it does not yet exist
+        # Fuel tools creates this folder if it does not yet exist
         download_path = os.path.expanduser(
                     "~/.ignition/fuel/fuel.ignitionrobotics.org"
                 )

@@ -39,15 +39,15 @@ parser.add_argument("-c", "--cache", type=str,
                     default="~/.pit_crew/model_cache.json",
                     help="Path to pit_crew model cache")
 parser.add_argument("-i", "--include", type=str,
-                    help="Search this directory first for models. Directory structure \
-                        must follow -f flag")
+                    help="Search this directory first for models. If -f flag is specified, \
+                        then directory must follow ignition fuel tools directory structure.")
 parser.add_argument("-f", "--fuel_tools", action='store_true',
                     help="Use ignition fuel tools to download models instead of http")
 parser.add_argument("-e", "--export_path", type=str,
                     default=None,
-                    help="Export model downloaded using ignition fuel to a folder \
-                    with classic gazebo directory structure. Only relevant if using \
-                    ignition fuel is used to download models.")
+                    help="Export model downloaded using ignition fuel tools to a folder \
+                    with classic gazebo directory structure. Only relevant if \
+                    ignition fuel tools is used to download models.")
 
 def get_crowdsim_models(input_filename):
     if not os.path.isfile(input_filename):
