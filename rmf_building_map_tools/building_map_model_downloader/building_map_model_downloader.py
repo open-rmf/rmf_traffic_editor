@@ -38,25 +38,18 @@ parser.add_argument("-m", "--model-path", type=str,
 parser.add_argument("-c", "--cache", type=str,
                     default="~/.pit_crew/model_cache.json",
                     help="Path to pit_crew model cache")
-parser.add_argument(
-    "-i",
-    "--include",
-    type=str,
-    help="Search this directory first for models. If -f flag is specified, \
-          then directory must follow ignition gazebo directory structure.")
-parser.add_argument(
-    "-f",
-    "--fuel_tools",
-    action='store_true',
-    help="Use ignition fuel tools to download models instead of http")
-parser.add_argument(
-    "-e",
-    "--export_path",
-    type=str,
-    default=None,
-    help="Export model downloaded using ignition fuel tools to a folder \
-                    with classic gazebo directory structure. Only relevant if \
-                    ignition fuel tools is used to download models.")
+parser.add_argument("-i", "--include", type=str,
+                    help="Search this directory first for models. "
+                         "If -f flag is specified, then directory must "
+                         "follow ignition gazebo directory structure.")
+parser.add_argument("-f", "--fuel-tools", action='store_true',
+                    help="Use ignition fuel tools to download models instead "
+                         "of http")
+parser.add_argument("-e", "--export-path", type=str, default=None,
+                    help="Export model downloaded using ignition fuel tools "
+                         "to a folder with classic gazebo directory structure."
+                         " Only relevant if ignition fuel tools is used to "
+                         "download models.")
 
 
 def get_crowdsim_models(input_filename):
@@ -113,7 +106,7 @@ def download_models(
     # the ignition gazebo directory structure
     ign = fuel_tools
     logging.info("\nUsing Ignition Fuel directory struture : %s\n" % (ign))
-    # Ignitional fuel tools can only download to this folder, so we set the
+    # Ignition fuel tools can only download to this folder, so we set the
     # model path to it
     if fuel_tools:
         model_path = "~/.ignition/fuel/"

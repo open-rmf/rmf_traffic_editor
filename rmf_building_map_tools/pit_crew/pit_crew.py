@@ -32,9 +32,9 @@ See Also:
 """
 
 from collections import namedtuple
-from pprint import pprint
 import xml.etree.ElementTree as ET
 
+import subprocess
 import requests
 import logging
 import zipfile
@@ -45,7 +45,6 @@ import sys
 import io
 import os
 import re
-import subprocess
 
 __all__ = [
     "swag",
