@@ -34,6 +34,7 @@ See Also:
 from collections import namedtuple
 import xml.etree.ElementTree as ET
 
+from urllib import parse
 import subprocess
 import requests
 import logging
@@ -619,17 +620,24 @@ def download_model_fuel_tools(model_name, author_name,
             "~/.ignition/fuel/fuel.ignitionrobotics.org"
         )
         # Command line
+        url_model_name = parse.quote(model_name)
         full_url = ("https://fuel.ignitionrobotics.org/1.0" +
-                    '/' + author_name + '/models' + '/' + model_name)
+                    '/' + author_name + '/models' + '/' + url_model_name)
         full_command = full_command = ("ign fuel download -u "
                                        + full_url + " -v 4")
         subprocess.call([full_command], shell=True)
 
-        extract_path = os.path.join(
+        extract_path_base = os.path.join(
             download_path,
             author_name.lower(),
-            "models",
+            "models")
+        extract_path = os.path.join(
+            extract_path_base,
             model_name.lower())
+
+        if " " in model_name:
+            os.rename(os.path.join(extract_path_base, url_model_name.lower()),
+                      extract_path)
 
         # Get the latest version downloaded by looking at the subdirectories
         # with the largest numbered name
