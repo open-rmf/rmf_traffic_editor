@@ -131,8 +131,8 @@ def download_models(
     for key, downloadable_model in enumerate(missing_downloadables):
         model_name, author_names = downloadable_model
 
-        if model_name in stringent_dict:
-            author_name = stringent_dict[model_name]
+        if model_name.lower() in stringent_dict:
+            author_name = stringent_dict[model_name.lower()]
             logger.info("\nDownloading %s by %s from Fuel"
                         % (model_name, author_name))
         else:
