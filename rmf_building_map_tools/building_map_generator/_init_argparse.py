@@ -40,7 +40,7 @@ dae_export_parser = subparsers.add_parser(
 
 baked_parser = subparsers.add_parser(
     'ignition_baked_assets',
-    help='Generate .world file with baked models based off the input building.yaml',
+    help='Generate .world file with baked models for Ignition',
     parents=[shared_parser]
 )
 
