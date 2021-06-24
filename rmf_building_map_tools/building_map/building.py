@@ -118,12 +118,15 @@ class Building:
         """ Return an etree of this Building in SDF starting from a template"""
         print(f'generator options: {options}')
         dae_export_plugin = False
+        use_baked_assets = False
         if 'gazebo' in options:
             template_name = 'gz_world.sdf'
         elif 'ignition' in options:
             template_name = 'ign_world.sdf'
             if 'dae_export' in options:
                 dae_export_plugin = True
+            if 'baked_assets' in options:
+                use_baked_assets = True
         else:
             raise RuntimeError("expected either gazebo or ignition in options")
 
@@ -146,18 +149,33 @@ class Building:
 
         for level_name, level in self.levels.items():
             # todo: a better name
-            level.generate_sdf_models(world, dae_export_plugin)
+            if dae_export_plugin:
+                level.generate_sdf_models(world, True, False)
+            elif use_baked_assets:
+                level.generate_sdf_models(world, False, True)
+                # use the baked asset in our world file
+                baked_include_ele = SubElement(world, 'include')
+                name_ele = SubElement(baked_include_ele, 'name')
+                name_ele.text = level_name
+                uri_ele = SubElement(baked_include_ele, 'uri')
+                uri_ele.text = f'model://{level_name}'
+                pose_ele = SubElement(baked_include_ele, 'pose')
+                pose_ele.text = f'0 0 {level.elevation} 0 0 0'
+            else:
+                level.generate_sdf_models(world, True, True)
+
             if dae_export_plugin is False:
                 level.generate_doors(world, options)
 
-            level_include_ele = SubElement(world, 'include')
-            level_model_name = f'{self.name}_{level_name}'
-            name_ele = SubElement(level_include_ele, 'name')
-            name_ele.text = level_model_name
-            uri_ele = SubElement(level_include_ele, 'uri')
-            uri_ele.text = f'model://{level_model_name}'
-            pose_ele = SubElement(level_include_ele, 'pose')
-            pose_ele.text = f'0 0 {level.elevation} 0 0 0'
+            if use_baked_assets is False:
+                level_include_ele = SubElement(world, 'include')
+                level_model_name = f'{self.name}_{level_name}'
+                name_ele = SubElement(level_include_ele, 'name')
+                name_ele.text = level_model_name
+                uri_ele = SubElement(level_include_ele, 'uri')
+                uri_ele.text = f'model://{level_model_name}'
+                pose_ele = SubElement(level_include_ele, 'pose')
+                pose_ele.text = f'0 0 {level.elevation} 0 0 0'
 
         if dae_export_plugin is False:
             for lift_name, lift in self.lifts.items():

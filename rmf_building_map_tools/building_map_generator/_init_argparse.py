@@ -38,6 +38,12 @@ dae_export_parser = subparsers.add_parser(
     parents=[shared_parser]
 )
 
+baked_parser = subparsers.add_parser(
+    'ignition_baked_assets',
+    help='Generate .world file with baked models based off the input building.yaml',
+    parents=[shared_parser]
+)
+
 nav_parser = subparsers.add_parser(
     'nav',
     help='Generate nav map .yaml file',

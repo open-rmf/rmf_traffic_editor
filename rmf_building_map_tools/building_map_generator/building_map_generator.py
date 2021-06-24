@@ -36,6 +36,14 @@ def main():
             args.options
         )
 
+    if args.command == "ignition_baked_assets":
+        g.generate_ignition_sdf_with_baked_assets(
+            args.INPUT,
+            args.OUTPUT_WORLD,
+            args.OUTPUT_MODEL_DIR,
+            args.options
+        )
+
     if args.command == "nav":
         g.generate_nav(args.INPUT, args.OUTPUT_DIR)
 
