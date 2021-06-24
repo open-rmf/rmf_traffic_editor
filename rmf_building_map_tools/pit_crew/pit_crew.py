@@ -34,6 +34,8 @@ See Also:
 from collections import namedtuple
 import xml.etree.ElementTree as ET
 
+from urllib import parse
+import subprocess
 import requests
 import logging
 import zipfile
@@ -60,7 +62,9 @@ __all__ = [
     "build_and_update_cache",
     "init_logging",
     "PitCrewFormatter",
-    "ModelNames"
+    "ModelNames",
+    "download_model_fuel_tools",
+    "sync_sdf"
 ]
 
 # Init logger
@@ -98,7 +102,8 @@ def swag(print_swag=True):
 def get_missing_models(model_names, model_path=None,
                        config_file="model.config",
                        cache_file_path=None, update_cache=True, lower=True,
-                       use_dir_as_name=False, ign=False):
+                       use_dir_as_name=False, ign=False,
+                       priority_dir=None):
     """
     Classify models as missing, downloadable, or available from a model list.
 
@@ -122,6 +127,8 @@ def get_missing_models(model_names, model_path=None,
             name as its model_name. Defaults to False.
         ign (bool, optional): If True, will parse model directory as if it is
             following Ignition's directory structure. Defaults to False.
+        priority_dir (str, optional): Check this directory first to see if the
+            a model is there.
 
     Returns:
         dict: A dictionary of classified model names.
@@ -134,7 +141,7 @@ def get_missing_models(model_names, model_path=None,
                 and also missing from Fuel.
     """
     for key, model_name in enumerate(model_names):
-        if type(model_name) is ModelNames or type(model_name) is tuple:
+        if isinstance(model_name, ModelNames) or isinstance(model_name, tuple):
             assert len(model_name) == 2, \
                 "Invalid model name tuple given: %s!" % model_name
 
@@ -145,7 +152,20 @@ def get_missing_models(model_names, model_path=None,
         cache = load_cache(cache_file_path, lower=lower)
 
     fuel_models = get_model_to_author_dict(cache['model_cache'], lower=lower)
+    priority_models = {}
     local_models = {}
+
+    if priority_dir is not None:
+        logger.info("Will check '%s' directory first for models"
+                    % (priority_dir))
+        for priority_model in get_local_model_name_tuples(
+            priority_dir, config_file=config_file, lower=lower,
+            use_dir_as_name=use_dir_as_name, ign=ign
+        ):
+            if priority_model[0] in priority_models:
+                priority_models[priority_model[0]].append(priority_model[1])
+            else:
+                priority_models[priority_model[0]] = [[priority_model[1]]]
 
     for local_model in get_local_model_name_tuples(
         model_path, config_file=config_file, lower=lower,
@@ -162,13 +182,13 @@ def get_missing_models(model_names, model_path=None,
 
     for model in model_names:
         # Obtain model and author names
-        if type(model) is str:
+        if isinstance(model, str):
             model_name = model
             author_name = ""
-        elif type(model) is tuple:
+        elif isinstance(model, tuple):
             model_name = model[0]
             author_name = model[1]
-        elif type(model) is ModelNames:
+        elif isinstance(model, ModelNames):
             model_name = model.model_name
             author_name = model.author_name
 
@@ -176,13 +196,25 @@ def get_missing_models(model_names, model_path=None,
             model_name = model_name.lower()
             author_name = author_name.lower()
 
-        if model_name in local_models:
-            output['available'].append(model_name)
+        if model_name in priority_models and model_name in local_models:
+            logger.warning(
+                "Model %s found in both '%s'and '%s'! "
+                " Will use model in priority folder '%s'" %
+                (model_name, priority_dir, model_path, priority_dir))
 
+        if model_name in priority_models:
+            output['available'].append(model_name)
+            if author_name:
+                if author_name not in priority_models[model_name]:
+                    logger.warning("Model %s in local model directory"
+                                   " is not by the requested author %s!"
+                                   % (model_name, author_name))
+        elif model_name in local_models:
+            output['available'].append(model_name)
             if author_name:
                 if author_name not in local_models[model_name]:
-                    logger.warning("Model %s in local model directory is not "
-                                   "by the requested author %s!"
+                    logger.warning("Model %s in local model directory"
+                                   " is not by the requested author %s!"
                                    % (model_name, author_name))
         elif model_name in fuel_models:
             output['downloadable'].append((model_name,
@@ -406,7 +438,7 @@ def get_fuel_authors(model_name, cache_file_path=None, update_cache=True):
     else:
         cache = load_cache(cache_file_path)
 
-    if type(model_name) is ModelNames or type(model_name) is tuple:
+    if isinstance(model_name, ModelNames) or isinstance(model_name, tuple):
         assert len(model_name) == 2, "Invalid model name tuple given: %s!" \
             % model_name
         model_name = model_name[0]
@@ -424,10 +456,9 @@ def list_fuel_models(cache_file_path=None, update_cache=True, model_limit=-1,
     else:
         cache = load_cache(cache_file_path, lower=lower)
 
-    sorted_authors = list(
+    sorted_authors = sorted(
         get_author_to_model_dict(cache['model_cache'], lower=lower).items()
     )
-    sorted_authors.sort()
     print("\n[Models]\n")
 
     for (author_name, model_names) in sorted_authors:
@@ -547,88 +578,127 @@ def download_model(model_name, author_name, version="tip",
 
         logger.info("%s downloaded to: %s" % (model_name, extract_path))
 
-        try:
-            # Sync all instances of the model name in sdf to the folder name
-            if sync_names:
-                tree = ET.parse(os.path.join(extract_path, "model.sdf"))
-                sdf = tree.findall("model")[0]
-                old_name = sdf.attrib.get("name")
-
-                if old_name != model_name:
-                    # Sync name attribute
-                    sdf.attrib['name'] = model_name
-
-                    # Sync instances of name in child tags
-                    for uri in tree.findall('.//uri'):
-                        old_text = uri.text
-                        replace_str = re.sub("model://%s/" % old_name,
-                                             "model://%s/" % model_name,
-                                             uri.text,
-                                             flags=re.IGNORECASE)
-
-                        if old_text != replace_str:
-                            uri.text = replace_str
-                            logger.warning("Internal name reference for %s "
-                                           "changed from %s to %s"
-                                           % (model_name,
-                                              old_text,
-                                              replace_str))
-                    logger.warning("Synced SDF names for %s! "
-                                   "Changed from %s to %s"
-                                   % (model_name, old_name, model_name))
-
-                # NOTE(CH3): Sanitise malformed SDFs
-                # Replaces 'close-enough' names with the appropriate folder
-                # name.
-                #
-                # E.g.: If folder name is Lamp Post, but internal reference
-                #       uses lamp_post, replaces those with Lamp Post.
-                #
-                # This catches cases where the internal reference is not
-                # replaced because it is simply not the same as the sdf model
-                # name.
-                #
-                # (Usually in the case of http://models.gazebosim.org/ models)
-
-                # NOTE(CH3): Introduces the edge case where Lamp Post
-                # is interdependent on another model called lamp_post. But
-                # that case should be so rare, and so bad in a coding standard
-                # standpoint where it should more or less never occur.
-                for uri in tree.findall('.//uri'):
-                    old_text = uri.text
-                    regex_search_exp = re.sub("[ _]",
-                                              "[ _]",
-                                              old_name)
-
-                    replace_str = re.sub(
-                        "model://%s/" % regex_search_exp,
-                        "model://%s/" % model_name,
-                        uri.text,
-                        flags=re.IGNORECASE
-                    )
-
-                    if old_text != replace_str:
-                        uri.text = replace_str
-                        logger.warning("Sanitising name reference for %s. "
-                                       "Changed from %s to %s"
-                                       % (model_name,
-                                          old_text,
-                                          replace_str))
-
-                if old_name != model_name:
-                    logger.warning("Synced SDF names for %s! "
-                                   "Changed from %s to %s"
-                                   % (model_name, old_name, model_name))
-                tree.write(os.path.join(extract_path, "model.sdf"))
-
-        except Exception as e:
-            logger.error("Syncing of names for %s failed! %s"
-                         % (model_name, e))
+        if sync_names:
+            sync_sdf(model_name=model_name, extract_path=extract_path)
 
         return True, metadata_dict
     except Exception as e:
         logger.error("Could not download model '%s'! %s" % (model_name, e))
         return False, None
+
+
+def download_model_fuel_tools(model_name, author_name,
+                              sync_names=False, export_path=None,
+                              overwrite=True):
+    """
+    Fetch and download a model from Fuel using the official Fuel Tools API
+
+    Supports exporting the downloaded models into a directory with
+    Gazebo structure
+
+    Args:
+        model_name (str): Model name as listed on Fuel. Case insensitive.
+        author_name (str): Model Author/Owner as listed on Fuel. Case
+            insensitive.
+        sync_names (bool, optional): Change downloaded model.sdf model name to
+            match folder name. Defaults to False.
+        export_path (string, optional): If not none, then will export
+            downloaded models to specified directory with gazebo
+            directory structure.
+        overwrite (bool, optional) : Overwrite existing model files in the
+            export_path directory. Only revelant if export_path is defined.
+            Defaults to True.
+
+    Returns:
+        bool: True if successful. False otherwise.
+    """
+
+    try:
+        # Currently, ignition fuel download can only download to this folder.
+        # Fuel tools creates this folder if it does not yet exist
+        download_path = os.path.expanduser(
+            "~/.ignition/fuel/fuel.ignitionrobotics.org"
+        )
+        # Command line
+        url_model_name = parse.quote(model_name)
+        full_url = ("https://fuel.ignitionrobotics.org/1.0" +
+                    '/' + author_name + '/models' + '/' + url_model_name)
+        full_command = full_command = ("ign fuel download -u "
+                                       + full_url + " -v 4")
+        subprocess.call([full_command], shell=True)
+
+        extract_path_base = os.path.join(
+            download_path,
+            author_name.lower(),
+            "models")
+        extract_path = os.path.join(
+            extract_path_base,
+            model_name.lower())
+
+        if " " in model_name:
+            os.rename(os.path.join(extract_path_base, url_model_name.lower()),
+                      extract_path)
+
+        # Get the latest version downloaded by looking at the subdirectories
+        # with the largest numbered name
+        sub_dirs = []
+        for dirname, dirnames, filenames in os.walk(extract_path):
+            for subdirname in dirnames:
+                try:
+                    n = int(subdirname)
+                    sub_dirs.append(n)
+                except ValueError as e:
+                    logger.error(
+                        "Ignoring subdirectory %s "
+                        "which is not a version number" %
+                        (subdirname))
+                    pass
+            break
+        latest_ver = max(sub_dirs)
+        extract_path = os.path.join(extract_path, str(latest_ver))
+
+        if sync_names:
+            sync_sdf(model_name=model_name.lower(), extract_path=extract_path)
+
+        export_path = os.path.expanduser(export_path)
+        if export_path is not None:
+            # Make directory if missing
+            if not os.path.isdir(export_path):
+                os.makedirs(export_path, exist_ok=True)
+                logger.warning("Export path does not exist! Created: %s"
+                               % export_path)
+            # Model does not currently exist
+            if not os.path.isdir(os.path.join(export_path, model_name)):
+                export_path = os.path.join(export_path, model_name)
+                try:
+                    shutil.copytree(src=extract_path, dst=export_path)
+                    logger.info(
+                        "Exporting %s to %s" %
+                        (model_name, export_path))
+                except Exception as e:
+                    logger.error(
+                        "Could not export %s to %s" %
+                        (extract_path, export_path))
+            else:
+                if overwrite:
+                    export_path = os.path.join(export_path, model_name)
+                    logger.info("Overwriting model %s" % (export_path))
+                    try:
+                        shutil.rmtree(path=export_path)
+                        shutil.copytree(src=extract_path, dst=export_path)
+                    except Exception as e:
+                        logger.error(
+                            "Could not export %s to %s" %
+                            (extract_path, export_path))
+                else:
+                    logger.info(
+                        "Model %s already exists at %s" %
+                        (model_name, export_path))
+
+        return True
+    except Exception as e:
+        logger.error("Could not download model '%s'! %s" % (model_name, e))
+        return False
 
 
 def _construct_license(fuel_metadata_dict):
@@ -821,3 +891,82 @@ def init_logging():
     logger = logging.getLogger()
     logger.addHandler(handler)
     logger.setLevel(logging.INFO)
+
+
+def sync_sdf(model_name, extract_path):
+    # Sync all instances of the model name in sdf to the folder name
+    try:
+        tree = ET.parse(os.path.join(extract_path, "model.sdf"))
+        sdf = tree.findall("model")[0]
+        old_name = sdf.attrib.get("name")
+
+        if old_name != model_name:
+            # Sync name attribute
+            sdf.attrib['name'] = model_name
+
+            # Sync instances of name in child tags
+            for uri in tree.findall('.//uri'):
+                old_text = uri.text
+                replace_str = re.sub("model://%s/" % old_name,
+                                     "model://%s/" % model_name,
+                                     uri.text,
+                                     flags=re.IGNORECASE)
+
+                if old_text != replace_str:
+                    uri.text = replace_str
+                    logger.warning("Internal name reference for %s "
+                                   "changed from %s to %s"
+                                   % (model_name,
+                                       old_text,
+                                       replace_str))
+            logger.warning("Synced SDF names for %s! "
+                           "Changed from %s to %s"
+                           % (model_name, old_name, model_name))
+
+        # NOTE(CH3): Sanitise malformed SDFs
+        # Replaces 'close-enough' names with the appropriate folder
+        # name.
+        #
+        # E.g.: If folder name is Lamp Post, but internal reference
+        #       uses lamp_post, replaces those with Lamp Post.
+        #
+        # This catches cases where the internal reference is not
+        # replaced because it is simply not the same as the sdf model
+        # name.
+        #
+        # (Usually in the case of http://models.gazebosim.org/ models)
+
+        # NOTE(CH3): Introduces the edge case where Lamp Post
+        # is interdependent on another model called lamp_post. But
+        # that case should be so rare, and so bad in a coding standard
+        # standpoint where it should more or less never occur.
+        for uri in tree.findall('.//uri'):
+            old_text = uri.text
+            regex_search_exp = re.sub("[ _]",
+                                      "[ _]",
+                                      old_name)
+
+            replace_str = re.sub(
+                "model://%s/" % regex_search_exp,
+                "model://%s/" % model_name,
+                uri.text,
+                flags=re.IGNORECASE
+            )
+
+            if old_text != replace_str:
+                uri.text = replace_str
+                logger.warning("Sanitising name reference for %s. "
+                               "Changed from %s to %s"
+                               % (model_name,
+                                   old_text,
+                                   replace_str))
+
+        if old_name != model_name:
+            logger.warning("Synced SDF names for %s! "
+                           "Changed from %s to %s"
+                           % (model_name, old_name, model_name))
+        tree.write(os.path.join(extract_path, "model.sdf"))
+
+    except Exception as e:
+        logger.error("Syncing of names for %s failed! %s"
+                     % (model_name, e))
