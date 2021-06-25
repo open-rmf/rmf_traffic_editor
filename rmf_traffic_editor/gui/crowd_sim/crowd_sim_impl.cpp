@@ -96,6 +96,8 @@ YAML::Node CrowdSimImplementation::to_yaml()
   {
     top_node["goal_sets"].push_back(goal_set.to_yaml());
   }
+  if (!_goal_sets.size())
+    top_node["goal_sets"].SetStyle(YAML::EmitterStyle::Flow);
 
   top_node["agent_profiles"] = YAML::Node(YAML::NodeType::Sequence);
   for (auto profile : _agent_profiles)
@@ -108,6 +110,8 @@ YAML::Node CrowdSimImplementation::to_yaml()
   {
     top_node["transitions"].push_back(transition.to_yaml());
   }
+  if (!_transitions.size())
+    top_node["transitions"].SetStyle(YAML::EmitterStyle::Flow);
 
   top_node["obstacle_set"] = _output_obstacle_node();
 
@@ -122,6 +126,8 @@ YAML::Node CrowdSimImplementation::to_yaml()
   {
     top_node["model_types"].push_back(model_type.to_yaml());
   }
+  if (!_model_types.size())
+    top_node["model_types"].SetStyle(YAML::EmitterStyle::Flow);
 
   return top_node;
 }
