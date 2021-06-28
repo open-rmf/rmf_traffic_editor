@@ -192,6 +192,8 @@ def get_missing_models(model_names, model_path=None,
             model_name = model.model_name
             author_name = model.author_name
 
+        model_name_original = model_name
+
         if lower:
             model_name = model_name.lower()
             author_name = author_name.lower()
@@ -203,21 +205,21 @@ def get_missing_models(model_names, model_path=None,
                 (model_name, priority_dir, model_path, priority_dir))
 
         if model_name in priority_models:
-            output['available'].append(model_name)
+            output['available'].append(model_name_original)
             if author_name:
                 if author_name not in priority_models[model_name]:
                     logger.warning("Model %s in local model directory"
                                    " is not by the requested author %s!"
                                    % (model_name, author_name))
         elif model_name in local_models:
-            output['available'].append(model_name)
+            output['available'].append(model_name_original)
             if author_name:
                 if author_name not in local_models[model_name]:
                     logger.warning("Model %s in local model directory"
                                    " is not by the requested author %s!"
                                    % (model_name, author_name))
         elif model_name in fuel_models:
-            output['downloadable'].append((model_name,
+            output['downloadable'].append((model_name_original,
                                           fuel_models[model_name]))
 
             if author_name:
@@ -226,7 +228,7 @@ def get_missing_models(model_names, model_path=None,
                                    "by the requested author %s!"
                                    % (model_name, author_name))
         else:
-            output['missing'].append(model_name)
+            output['missing'].append(model_name_original)
 
     return output
 
