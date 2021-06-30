@@ -164,6 +164,8 @@ bool Building::save()
   y["lifts"] = YAML::Node(YAML::NodeType::Map);
   for (const auto& lift : lifts)
     y["lifts"][lift.name] = lift.to_yaml();
+  if (lifts.empty())
+    y["lifts"].SetStyle(YAML::EmitterStyle::Flow);
 
   if (crowd_sim_impl)
     y["crowd_sim"] = crowd_sim_impl->to_yaml();
