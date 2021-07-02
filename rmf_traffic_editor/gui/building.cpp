@@ -489,6 +489,8 @@ Building::Transform Building::compute_transform(
     }
   }
 
+  if (distances.empty())
+    return Building::Transform();
 
   // for now, we'll just compute the mean of the relative scale estimates.
   // we can do fancier statistics later, if needed.
