@@ -5,6 +5,7 @@
   <version>1.3.0</version>
   <description>RMF Building map tools</description>
   <maintainer email="mquigley@openrobotics.org">Morgan Quigley</maintainer>
+  <maintainer email="marco@openrobotics.org">Marco A. Gutiérrez</maintainer>
   <license>Apache License 2.0</license>
 
   <build_depend>rmf_building_map_msgs</build_depend>

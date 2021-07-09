@@ -6,6 +6,7 @@
   <description>Assets for use with traffic_editor.</description>
 
   <maintainer email="brandon@openrobotics.org">Brandon Ong</maintainer>
+  <maintainer email="marco@openrobotics.org">Marco A. Gutiérrez</maintainer>
   <license>Apache License 2.0</license>
 
   <export>
