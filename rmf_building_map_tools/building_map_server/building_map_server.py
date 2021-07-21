@@ -170,6 +170,44 @@ class BuildingMapServer(Node):
                     ge.edge_type = GraphEdge.EDGE_TYPE_UNIDIRECTIONAL
                 graph_msg.edges.append(ge)
             msg.nav_graphs.append(graph_msg)
+
+
+        # Populate the wall graph
+        wall_graph = level.generate_wall_graph()
+        msg.wall_graph.name = "WallGraph"
+        for v in wall_graph['vertices']:
+            gn = GraphNode()
+            gn.x = v[0]
+            gn.y = v[1]
+            gn.name = v[2]['name']
+
+            # Ignore any other vertex params - not needed for wall graph
+            msg.wall_graph.vertices.append(gn)
+
+        for w in wall_graph['walls']:
+            ge = GraphEdge()
+            ge.edge_type = GraphEdge.EDGE_TYPE_BIDIRECTIONAL
+            ge.v1_idx = w[0]
+            ge.v2_idx = w[1]
+
+            for param_name, param_obj in w[2].items():
+                p = Param()
+                p.name = param_name
+                p.type = param_obj.type
+                
+                if p.type == Param.TYPE_STRING:
+                    p.value_string = str(param_obj.value)
+                elif p.type == Param.TYPE_INT:
+                    p.value_int = int(param_obj.value)
+                elif p.type == Param.TYPE_DOUBLE:
+                    p.value_float = float(param_obj.value)
+                elif p.type == Param.TYPE_BOOL:
+                    p.value_bool = bool(param_obj.value)
+
+                ge.params.append(p)
+            
+            msg.wall_graph.edges.append(ge)
+
         return msg
 
     def lift_msg(self, lift):
