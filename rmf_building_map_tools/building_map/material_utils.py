@@ -20,6 +20,9 @@ def get_pbr_textures(params):
 def copy_texture(texture_name, dest_path):
     texture_filename = f'{texture_name}.png'
     texture_path_dest = f'{dest_path}/{texture_filename}'
+    # Create the destination path if it does not exist
+    if not os.path.exists(dest_path):
+        os.makedirs(dest_path)
     # If the texture name is a URL fetch it
     result = urlparse(texture_name)
     texture_is_url = all([result.scheme, result.netloc, result.path])
