@@ -2191,6 +2191,7 @@ void Level::align_colinear()
   struct SelectedVertex
   {
     size_t index;
+    bool expanded;
     vector<size_t> connected_vertex_indices;
   };
 
@@ -2202,6 +2203,7 @@ void Level::align_colinear()
     {
       SelectedVertex sv;
       sv.index = i;
+      sv.expanded = false;
 
       for (size_t j = 0; j < edges.size(); j++)
       {
@@ -2212,6 +2214,27 @@ void Level::align_colinear()
         else if (end_idx == i && vertices[start_idx].selected)
           sv.connected_vertex_indices.push_back(start_idx);
       }
+
+      // sort the connected vertices by edge length
+      // to try to be somewhat more "as expected" if loops
+      // are involved.
+      std::sort(
+        sv.connected_vertex_indices.begin(),
+        sv.connected_vertex_indices.end(),
+        [this, i](int v1_idx, int v2_idx) {
+          const Vertex& v = vertices[i];
+          const Vertex& v1 = vertices[v1_idx];
+          const Vertex& v2 = vertices[v2_idx];
+          
+          const double d1x = v.x - v1.x;
+          const double d1y = v.y - v1.y;
+          const double dist_v1 = sqrt(d1x * d1x + d1y * d1y);
+
+          const double d2x = v.x - v2.x;
+          const double d2y = v.y - v2.y;
+          const double dist_v2 = sqrt(d2x * d2x + d2y * d2y);
+          return dist_v1 < dist_v2;
+        });
 
       selected_vertices.push_back(sv);
     }
@@ -2246,8 +2269,22 @@ void Level::align_colinear()
 
   if (chain.empty())
   {
-    printf("could not find starting point of chain :(\n");
-    return;
+    printf("could not find starting point of chain; I'll just make a guess\n");
+    // for now, just use the element with the smallest horizontal coordinate
+    // to be more fancy in the future, we could make a regression line and
+    // choose the point closest to its end
+    size_t min_idx = 0;
+    double min_value = 1e42;
+    for (size_t i = 0; i < selected_vertices.size(); i++)
+    {
+      const Vertex& v = vertices[selected_vertices[i].index];
+      if (v.x < min_value)
+      {
+        min_value = v.x;
+        min_idx = i;
+      }
+    }
+    chain.push_back(selected_vertices[min_idx]);
   }
 
   // keep expanding the last endpoint

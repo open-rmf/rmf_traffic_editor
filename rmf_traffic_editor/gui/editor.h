@@ -216,7 +216,7 @@ private:
   void clear_property_editor();
   void populate_property_editor(const Edge& edge);
   void populate_property_editor(const Model& model);
-  void populate_property_editor(const Vertex& vertex);
+  void populate_property_editor(const Vertex& vertex, const int index);
   void populate_property_editor(const Feature& feature);
   void populate_property_editor(const Fiducial& fiducial);
   void populate_property_editor(const Polygon& polygon);
