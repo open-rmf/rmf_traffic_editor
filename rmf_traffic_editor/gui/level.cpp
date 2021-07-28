@@ -2215,27 +2215,6 @@ void Level::align_colinear()
           sv.connected_vertex_indices.push_back(start_idx);
       }
 
-      // sort the connected vertices by edge length
-      // to try to be somewhat more "as expected" if loops
-      // are involved.
-      std::sort(
-        sv.connected_vertex_indices.begin(),
-        sv.connected_vertex_indices.end(),
-        [this, i](int v1_idx, int v2_idx) {
-          const Vertex& v = vertices[i];
-          const Vertex& v1 = vertices[v1_idx];
-          const Vertex& v2 = vertices[v2_idx];
-          
-          const double d1x = v.x - v1.x;
-          const double d1y = v.y - v1.y;
-          const double dist_v1 = sqrt(d1x * d1x + d1y * d1y);
-
-          const double d2x = v.x - v2.x;
-          const double d2y = v.y - v2.y;
-          const double dist_v2 = sqrt(d2x * d2x + d2y * d2y);
-          return dist_v1 < dist_v2;
-        });
-
       selected_vertices.push_back(sv);
     }
   }
@@ -2320,6 +2299,32 @@ void Level::align_colinear()
     if (chain_complete)
       break;
   }
+
+  printf("  chain before sorting:");
+  for (const SelectedVertex& sv : chain)
+    printf(" %zu", sv.index);
+  printf("\n");
+
+  // sort the chain vertices by distance from the starting vertex
+  const SelectedVertex starting_vertex = chain[0];
+  std::sort(
+    chain.begin() + 1,
+    chain.end(),
+    [this, starting_vertex](SelectedVertex sv1, SelectedVertex sv2)
+    {
+      const Vertex& v = vertices[starting_vertex.index];
+      const Vertex& v1 = vertices[sv1.index];
+      const Vertex& v2 = vertices[sv2.index];
+
+      const double d1x = v.x - v1.x;
+      const double d1y = v.y - v1.y;
+      const double dist_v1 = sqrt(d1x * d1x + d1y * d1y);
+
+      const double d2x = v.x - v2.x;
+      const double d2y = v.y - v2.y;
+      const double dist_v2 = sqrt(d2x * d2x + d2y * d2y);
+      return dist_v1 < dist_v2;
+    });
 
   printf("  chain:");
   for (const SelectedVertex& sv : chain)
