@@ -2188,19 +2188,23 @@ void Level::compute_layer_transform(const size_t layer_idx)
 
 void Level::align_colinear()
 {
-  struct SelectedVertex {
+  struct SelectedVertex
+  {
     size_t index;
     vector<size_t> connected_vertex_indices;
   };
 
   // build up a vector of selected vertex indices
   vector<SelectedVertex> selected_vertices;
-  for (size_t i = 0; i < vertices.size(); i++) {
-    if (vertices[i].selected) {
+  for (size_t i = 0; i < vertices.size(); i++)
+  {
+    if (vertices[i].selected)
+    {
       SelectedVertex sv;
       sv.index = i;
 
-      for (size_t j = 0; j < edges.size(); j++) {
+      for (size_t j = 0; j < edges.size(); j++)
+      {
         const size_t start_idx = static_cast<size_t>(edges[j].start_idx);
         const size_t end_idx = static_cast<size_t>(edges[j].end_idx);
         if (start_idx == i && vertices[end_idx].selected)
@@ -2214,14 +2218,16 @@ void Level::align_colinear()
   }
 
   printf("align_colinear() vertices:\n");
-  for (const SelectedVertex& sv : selected_vertices) {
+  for (const SelectedVertex& sv : selected_vertices)
+  {
     printf("  %zu:", sv.index);
     for (const size_t i : sv.connected_vertex_indices)
       printf(" %zu", i);
     printf("\n");
   }
 
-  if (selected_vertices.size() < 3) {
+  if (selected_vertices.size() < 3)
+  {
     printf("%zu vertices were selected; >= 3 required for colinear align!\n",
       selected_vertices.size());
     return;
@@ -2229,32 +2235,38 @@ void Level::align_colinear()
 
   // start at one endpoint and go down the chain
   vector<SelectedVertex> chain;
-  for (size_t i = 0; i < selected_vertices.size(); i++) {
-    if (selected_vertices[i].connected_vertex_indices.size() == 1) {
+  for (size_t i = 0; i < selected_vertices.size(); i++)
+  {
+    if (selected_vertices[i].connected_vertex_indices.size() == 1)
+    {
       chain.push_back(selected_vertices[i]);
       break;
     }
   }
+
   // keep expanding the last endpoint
-  while (true) {
-    //const SelectedVertex& sv = chain.back();
-    // see if the last vertex in the chain
+  while (true)
+  {
     bool chain_complete = true;
-    for (size_t i = 0; i < chain.back().connected_vertex_indices.size(); i++) {
+    for (size_t i = 0; i < chain.back().connected_vertex_indices.size(); i++)
+    {
       const size_t test_vertex_idx = chain.back().connected_vertex_indices[i];
       // see if this is a new vertex to add to the chain
       bool found = false;
-      for (size_t j = 0; j < chain.size() - 1; j++) {
-        if (chain[j].index == test_vertex_idx) {
+      for (size_t j = 0; j < chain.size() - 1; j++)
+      {
+        if (chain[j].index == test_vertex_idx)
+        {
           found = true;
           break;
         }
       }
 
-      if (!found) {
-        //chain.push_back(chain.back().connected_vertex_indices[i]);
+      if (!found)
+      {
         printf("  adding vertex %zu to chain\n", test_vertex_idx);
-        for (size_t j = 0; j < selected_vertices.size(); j++) {
+        for (size_t j = 0; j < selected_vertices.size(); j++)
+        {
           if (selected_vertices[j].index == test_vertex_idx)
             chain.push_back(selected_vertices[j]);
         }
@@ -2271,7 +2283,8 @@ void Level::align_colinear()
     printf(" %zu", sv.index);
   printf("\n");
 
-  if (chain.size() < 3) {
+  if (chain.size() < 3)
+  {
     printf("could not find a connected chain of >= 3 vertices!\n");
     return;
   }
@@ -2283,7 +2296,8 @@ void Level::align_colinear()
   // compute unit vector pointing from v1 to v2
   const double line_length =
     sqrt((v2.x - v1.x) * (v2.x - v1.x) + (v2.y - v1.y) * (v2.y - v1.y));
-  if (line_length < 0.001) {
+  if (line_length < 0.001)
+  {
     printf("ill-defined line! bailing to avoid numerical blowups\n");
     return;
   }
@@ -2294,7 +2308,8 @@ void Level::align_colinear()
     v1.x, v1.y, v2.x, v2.y, ux, uy);
 
   // project intermediate vertices onto this line
-  for (size_t i = 1; i < chain.size() - 1; i++) {
+  for (size_t i = 1; i < chain.size() - 1; i++)
+  {
     Vertex& v = vertices[chain[i].index];
     const double t = ((v1.x - v.x) * ux) + ((v1.y - v.y) * uy);
     v.x = v1.x - t * ux;
