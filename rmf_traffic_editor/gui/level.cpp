@@ -2244,6 +2244,12 @@ void Level::align_colinear()
     }
   }
 
+  if (chain.empty())
+  {
+    printf("could not find starting point of chain :(\n");
+    return;
+  }
+
   // keep expanding the last endpoint
   while (true)
   {
