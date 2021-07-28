@@ -1801,9 +1801,11 @@ void Level::mouse_select_press(
   const double x,
   const double y,
   QGraphicsItem* graphics_item,
-  const RenderingOptions& rendering_options)
+  const RenderingOptions& rendering_options,
+  const Qt::KeyboardModifiers& modifiers)
 {
-  clear_selection();
+  if (!(modifiers & Qt::ShiftModifier))
+    clear_selection();
 
   const NearestItem ni = nearest_items(x, y);
 

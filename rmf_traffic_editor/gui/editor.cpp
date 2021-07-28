@@ -1623,7 +1623,8 @@ void Editor::mouse_select(
     p.x(),
     p.y(),
     item,
-    rendering_options);
+    rendering_options,
+    e->modifiers());
 
   // todo: figure out something smarter than this abomination
   selected_polygon = building.get_selected_polygon(level_idx);

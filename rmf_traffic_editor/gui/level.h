@@ -128,7 +128,8 @@ public:
     const double x,
     const double y,
     QGraphicsItem* graphics_item,
-    const RenderingOptions& rendering_options);
+    const RenderingOptions& rendering_options,
+    const Qt::KeyboardModifiers& modifiers);
 
   struct SelectedItem
   {
