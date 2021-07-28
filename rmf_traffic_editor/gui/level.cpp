@@ -2185,3 +2185,119 @@ void Level::compute_layer_transform(const size_t layer_idx)
       "RMF -> grid cells\nscale, rotate, translate",
       gridcells_rmf.inverse().to_string()));
 }
+
+void Level::align_colinear()
+{
+  struct SelectedVertex {
+    size_t index;
+    vector<size_t> connected_vertex_indices;
+  };
+
+  // build up a vector of selected vertex indices
+  vector<SelectedVertex> selected_vertices;
+  for (size_t i = 0; i < vertices.size(); i++) {
+    if (vertices[i].selected) {
+      SelectedVertex sv;
+      sv.index = i;
+
+      for (size_t j = 0; j < edges.size(); j++) {
+        const size_t start_idx = static_cast<size_t>(edges[j].start_idx);
+        const size_t end_idx = static_cast<size_t>(edges[j].end_idx);
+        if (start_idx == i && vertices[end_idx].selected)
+          sv.connected_vertex_indices.push_back(end_idx);
+        else if (end_idx == i && vertices[start_idx].selected)
+          sv.connected_vertex_indices.push_back(start_idx);
+      }
+
+      selected_vertices.push_back(sv);
+    }
+  }
+
+  printf("align_colinear() vertices:\n");
+  for (const SelectedVertex& sv : selected_vertices) {
+    printf("  %zu:", sv.index);
+    for (const size_t i : sv.connected_vertex_indices)
+      printf(" %zu", i);
+    printf("\n");
+  }
+
+  if (selected_vertices.size() < 3) {
+    printf("%zu vertices were selected; >= 3 required for colinear align!\n",
+      selected_vertices.size());
+    return;
+  }
+
+  // start at one endpoint and go down the chain
+  vector<SelectedVertex> chain;
+  for (size_t i = 0; i < selected_vertices.size(); i++) {
+    if (selected_vertices[i].connected_vertex_indices.size() == 1) {
+      chain.push_back(selected_vertices[i]);
+      break;
+    }
+  }
+  // keep expanding the last endpoint
+  while (true) {
+    //const SelectedVertex& sv = chain.back();
+    // see if the last vertex in the chain
+    bool chain_complete = true;
+    for (size_t i = 0; i < chain.back().connected_vertex_indices.size(); i++) {
+      const size_t test_vertex_idx = chain.back().connected_vertex_indices[i];
+      // see if this is a new vertex to add to the chain
+      bool found = false;
+      for (size_t j = 0; j < chain.size() - 1; j++) {
+        if (chain[j].index == test_vertex_idx) {
+          found = true;
+          break;
+        }
+      }
+
+      if (!found) {
+        //chain.push_back(chain.back().connected_vertex_indices[i]);
+        printf("  adding vertex %zu to chain\n", test_vertex_idx);
+        for (size_t j = 0; j < selected_vertices.size(); j++) {
+          if (selected_vertices[j].index == test_vertex_idx)
+            chain.push_back(selected_vertices[j]);
+        }
+        chain_complete = false;
+      }
+    }
+
+    if (chain_complete)
+      break;
+  }
+
+  printf("  chain:");
+  for (const SelectedVertex& sv : chain)
+    printf(" %zu", sv.index);
+  printf("\n");
+
+  if (chain.size() < 3) {
+    printf("could not find a connected chain of >= 3 vertices!\n");
+    return;
+  }
+
+  // compute line between first and last vertices
+  const Vertex& v1 = vertices[chain.front().index];
+  const Vertex& v2 = vertices[chain.back().index];
+
+  // compute unit vector pointing from v1 to v2
+  const double line_length =
+    sqrt((v2.x - v1.x) * (v2.x - v1.x) + (v2.y - v1.y) * (v2.y - v1.y));
+  if (line_length < 0.001) {
+    printf("ill-defined line! bailing to avoid numerical blowups\n");
+    return;
+  }
+  const double ux = (v2.x - v1.x) / line_length;
+  const double uy = (v2.y - v1.y) / line_length;
+
+  printf("line: (%.3f, %.3f), (%.3f, %.3f)  u = (%.3f, %.3f)\n",
+    v1.x, v1.y, v2.x, v2.y, ux, uy);
+
+  // project intermediate vertices onto this line
+  for (size_t i = 1; i < chain.size() - 1; i++) {
+    Vertex& v = vertices[chain[i].index];
+    const double t = ((v1.x - v.x) * ux) + ((v1.y - v.y) * uy);
+    v.x = v1.x - t * ux;
+    v.y = v1.y - t * uy;
+  }
+}

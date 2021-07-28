@@ -143,6 +143,7 @@ private:
   void edit_project_properties();
   void edit_rotate_all_models();
   void edit_optimize_layer_transforms();
+  void edit_align_colinear();
 
   void level_add();
   void level_edit();

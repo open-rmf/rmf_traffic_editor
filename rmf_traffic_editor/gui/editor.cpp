@@ -337,6 +337,13 @@ Editor::Editor()
     QKeySequence(Qt::CTRL + Qt::Key_T));
   edit_menu->addSeparator();
 
+  edit_menu->addAction(
+    "Align &colinear",
+    this,
+    &Editor::edit_align_colinear,
+    QKeySequence(Qt::Key_Slash));
+  edit_menu->addSeparator();
+
   edit_menu->addAction("&Preferences...", this, &Editor::edit_preferences);
 
   // VIEW MENU
@@ -765,6 +772,16 @@ void Editor::edit_optimize_layer_transforms()
   printf("Editor::edit_optimize_layer_transforms()\n");
   if (level_idx < static_cast<int>(building.levels.size()))
     building.levels[level_idx].optimize_layer_transforms();
+  create_scene();
+}
+
+void Editor::edit_align_colinear()
+{
+  printf("Editor::edit_align_colinear()\n");
+  Level* level = active_level();
+  if (!level)
+    return;
+  level->align_colinear();
   create_scene();
 }
 

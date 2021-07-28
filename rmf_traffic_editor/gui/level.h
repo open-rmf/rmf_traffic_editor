@@ -178,6 +178,8 @@ public:
   void compute_layer_transforms();
   void compute_layer_transform(const size_t layer_idx);
 
+  void align_colinear();
+
 private:
   double point_to_line_segment_distance(
     const double x,
