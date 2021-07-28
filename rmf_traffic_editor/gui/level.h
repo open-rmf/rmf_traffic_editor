@@ -128,7 +128,8 @@ public:
     const double x,
     const double y,
     QGraphicsItem* graphics_item,
-    const RenderingOptions& rendering_options);
+    const RenderingOptions& rendering_options,
+    const Qt::KeyboardModifiers& modifiers);
 
   struct SelectedItem
   {
@@ -176,6 +177,8 @@ public:
 
   void compute_layer_transforms();
   void compute_layer_transform(const size_t layer_idx);
+
+  void align_colinear();
 
 private:
   double point_to_line_segment_distance(
