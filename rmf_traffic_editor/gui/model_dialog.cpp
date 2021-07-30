@@ -103,8 +103,12 @@ ModelDialog::ModelDialog(
     });
 
   for (const auto& sorted_name : sorted_names)
-    _model_name_list_widget->addItem(QString::fromStdString(sorted_name.second));
-  _model_name_list_widget->setMinimumWidth(_model_name_list_widget->sizeHintForColumn(0) + 30);
+  {
+    _model_name_list_widget->addItem(
+      QString::fromStdString(sorted_name.second));
+  }
+  _model_name_list_widget->setMinimumWidth(
+    _model_name_list_widget->sizeHintForColumn(0) + 30);
 
   if (!_editor_models.empty())
     _model_name_list_widget->setCurrentItem(

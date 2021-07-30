@@ -44,7 +44,7 @@ public:
 private:
   Model& _model;
   std::vector<EditorModel> _editor_models;
-  std::vector<std::pair<std::string, std::string> > sorted_names;
+  std::vector<std::pair<std::string, std::string>> sorted_names;
 
   QLineEdit* _model_name_line_edit;
   QListWidget* _model_name_list_widget;
