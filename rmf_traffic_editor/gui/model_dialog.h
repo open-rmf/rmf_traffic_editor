@@ -23,6 +23,8 @@
 #include "model.h"
 #include "editor_model.h"
 #include <vector>
+#include <string>
+#include <utility>
 class QLineEdit;
 class QListWidget;
 class QLabel;
@@ -42,6 +44,7 @@ public:
 private:
   Model& _model;
   std::vector<EditorModel> _editor_models;
+  std::vector<std::pair<std::string, std::string>> sorted_names;
 
   QLineEdit* _model_name_line_edit;
   QListWidget* _model_name_list_widget;

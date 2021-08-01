@@ -16,8 +16,10 @@
 */
 
 #include "model_dialog.h"
+#include <algorithm>
 #include <QtWidgets>
 using std::vector;
+using std::string;
 
 
 ModelDialog::ModelDialog(
@@ -63,7 +65,7 @@ ModelDialog::ModelDialog(
     &ModelDialog::model_name_list_widget_changed);
 
   _model_preview_label = new QLabel;
-  _model_preview_label->setMinimumSize(400, 400);
+  _model_preview_label->setMinimumSize(600, 600);
   _model_preview_label->setSizePolicy(
     QSizePolicy::MinimumExpanding,
     QSizePolicy::Expanding);
@@ -80,7 +82,33 @@ ModelDialog::ModelDialog(
   setLayout(vbox_layout);
 
   for (const auto& em : _editor_models)
-    _model_name_list_widget->addItem(QString::fromStdString(em.name));
+  {
+    string::size_type token_start = em.name.find_first_of('/');
+    string token_string = em.name;
+    if (token_start != std::string::npos && em.name.size() > token_start)
+      token_string = em.name.substr(token_start + 1);
+
+    for (size_t i = 0; i < token_string.size(); i++)
+      token_string[i] = tolower(token_string[i]);
+
+    sorted_names.push_back(std::make_pair(token_string, em.name));
+  }
+
+  std::sort(
+    sorted_names.begin(),
+    sorted_names.end(),
+    [](std::pair<string, string> a, std::pair<string, string> b)
+    {
+      return a.first < b.first;
+    });
+
+  for (const auto& sorted_name : sorted_names)
+  {
+    _model_name_list_widget->addItem(
+      QString::fromStdString(sorted_name.second));
+  }
+  _model_name_list_widget->setMinimumWidth(
+    _model_name_list_widget->sizeHintForColumn(0) + 30);
 
   if (!_editor_models.empty())
     _model_name_list_widget->setCurrentItem(
@@ -118,9 +146,9 @@ void ModelDialog::model_name_line_edited(const QString& text)
   const std::string user_text_lower(text.toLower().toStdString());
   // could become super fancy but for now let's just do linear search...
   size_t closest_idx = 0;
-  for (size_t i = 0; i < _editor_models.size(); i++)
+  for (size_t i = 0; i < sorted_names.size(); i++)
   {
-    if (user_text_lower < _editor_models[i].name_lowercase)
+    if (user_text_lower <= sorted_names[i].first)
     {
       closest_idx = i;
       break;
@@ -135,13 +163,22 @@ void ModelDialog::model_name_line_edited(const QString& text)
 
 void ModelDialog::model_name_list_widget_changed(int row)
 {
-  _model.model_name = _editor_models[row].name;
-  const QPixmap& model_pixmap = _editor_models[row].get_pixmap();
-  if (model_pixmap.isNull())
-    return;// we don't have a pixmap to draw :(
-  // scale the pixmap so it fits within the currently allotted space
-  const int w = _model_preview_label->width();
-  const int h = _model_preview_label->height();
-  _model_preview_label->setPixmap(
-    model_pixmap.scaled(w, h, Qt::KeepAspectRatio));
+  _model.model_name = sorted_names[row].second;
+
+  // look up the _editor_model instance that has this name
+  for (auto& em : _editor_models)
+  {
+    if (em.name == _model.model_name)
+    {
+      const QPixmap& model_pixmap = em.get_pixmap();
+      if (model_pixmap.isNull())
+        return;// we don't have a pixmap to draw :(
+      // scale the pixmap so it fits within the currently allotted space
+      const int w = _model_preview_label->width();
+      const int h = _model_preview_label->height();
+      _model_preview_label->setPixmap(
+        model_pixmap.scaled(w, h, Qt::KeepAspectRatio));
+      break;
+    }
+  }
 }
