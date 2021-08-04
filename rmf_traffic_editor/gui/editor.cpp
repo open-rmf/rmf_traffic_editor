@@ -337,6 +337,13 @@ Editor::Editor()
     QKeySequence(Qt::CTRL + Qt::Key_T));
   edit_menu->addSeparator();
 
+  edit_menu->addAction(
+    "Align &colinear",
+    this,
+    &Editor::edit_align_colinear,
+    QKeySequence(Qt::Key_Slash));
+  edit_menu->addSeparator();
+
   edit_menu->addAction("&Preferences...", this, &Editor::edit_preferences);
 
   // VIEW MENU
@@ -768,6 +775,16 @@ void Editor::edit_optimize_layer_transforms()
   create_scene();
 }
 
+void Editor::edit_align_colinear()
+{
+  printf("Editor::edit_align_colinear()\n");
+  Level* level = active_level();
+  if (!level)
+    return;
+  level->align_colinear();
+  create_scene();
+}
+
 void Editor::view_models()
 {
   rendering_options.show_models = view_models_action->isChecked();
@@ -1085,11 +1102,12 @@ void Editor::update_property_editor()
     }
   }
 
-  for (const auto& v : building.levels[level_idx].vertices)
+  for (size_t i = 0; i < building.levels[level_idx].vertices.size(); i++)
   {
+    const Vertex& v = building.levels[level_idx].vertices[i];
     if (v.selected)
     {
-      populate_property_editor(v);
+      populate_property_editor(v, i);
       return;  // stop after finding the first one
     }
   }
@@ -1204,7 +1222,8 @@ void Editor::add_param_button_clicked()
     undo_stack.push(cmd);
     auto updated_id = cmd->get_vertex_updated();
     populate_property_editor(
-      building.levels[level_idx].vertices[updated_id]);
+      building.levels[level_idx].vertices[updated_id],
+      updated_id);
     setWindowModified(true);
   }
 }
@@ -1326,25 +1345,26 @@ void Editor::populate_property_editor(const Edge& edge)
   property_editor->blockSignals(false);  // re-enable callbacks
 }
 
-void Editor::populate_property_editor(const Vertex& vertex)
+void Editor::populate_property_editor(const Vertex& vertex, const int index)
 {
   const Level& level = building.levels[level_idx];
   const double scale = level.drawing_meters_per_pixel;
 
   property_editor->blockSignals(true);  // otherwise we get tons of callbacks
-  property_editor->setRowCount(5 + vertex.params.size());
+  property_editor->setRowCount(6 + vertex.params.size());
 
-  property_editor_set_row(0, "x (pixels)", vertex.x, 3, true);
-  property_editor_set_row(1, "y (pixels)", vertex.y, 3, true);
-  property_editor_set_row(2, "x (m)", vertex.x * scale);
-  property_editor_set_row(3, "y (m)", -1.0 * vertex.y * scale);
+  property_editor_set_row(0, "index", index);
+  property_editor_set_row(1, "x (pixels)", vertex.x, 3, true);
+  property_editor_set_row(2, "y (pixels)", vertex.y, 3, true);
+  property_editor_set_row(3, "x (m)", vertex.x * scale);
+  property_editor_set_row(4, "y (m)", -1.0 * vertex.y * scale);
   property_editor_set_row(
-    4,
+    5,
     "name",
     QString::fromStdString(vertex.name),
     true);
 
-  int row = 5;
+  int row = 6;
   for (const auto& param : vertex.params)
   {
     property_editor_set_row(
@@ -1623,7 +1643,8 @@ void Editor::mouse_select(
     p.x(),
     p.y(),
     item,
-    rendering_options);
+    rendering_options,
+    e->modifiers());
 
   // todo: figure out something smarter than this abomination
   selected_polygon = building.get_selected_polygon(level_idx);

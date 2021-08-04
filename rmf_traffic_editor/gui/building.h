@@ -172,12 +172,14 @@ public:
     std::vector<EditorModel>& editor_models,
     const RenderingOptions& rendering_options);
 
+  /*
   void mouse_select_press(
     const int level_idx,
     const double x,
     const double y,
     QGraphicsItem* graphics_item,
     const RenderingOptions& rendering_options);
+  */
 
   Polygon* get_selected_polygon(const int level_idx);
 
