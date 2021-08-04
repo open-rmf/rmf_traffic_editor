@@ -38,7 +38,7 @@ void LevelTable::update(Building& building)
   setRowCount(1 + building.levels.size());
   const int reference_level_idx = building.get_reference_level_idx();
 
-  for (size_t i = 0; i < building.levels.size(); i++)
+  for (std::size_t i = 0; i < building.levels.size(); i++)
   {
     QTableWidgetItem* name_item =
       new QTableWidgetItem(QString::fromStdString(building.levels[i].name));

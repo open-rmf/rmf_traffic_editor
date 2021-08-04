@@ -19,6 +19,6 @@
 
 RenderingOptions::RenderingOptions()
 {
-  for (size_t i = 0; i < show_building_lanes.size(); i++)
+  for (std::size_t i = 0; i < show_building_lanes.size(); i++)
     show_building_lanes[i] = true;
 }

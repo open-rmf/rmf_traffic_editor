@@ -53,7 +53,7 @@ void LayerTable::update(
     level.get_drawing_visible(),
     layer_idx == 0);
 
-  for (size_t i = 0; i < level.layers.size(); i++)
+  for (std::size_t i = 0; i < level.layers.size(); i++)
   {
     set_row(
       level,

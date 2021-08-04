@@ -117,8 +117,8 @@ void ModelDialog::model_name_line_edited(const QString& text)
   // scroll the list box to the first thing
   const std::string user_text_lower(text.toLower().toStdString());
   // could become super fancy but for now let's just do linear search...
-  size_t closest_idx = 0;
-  for (size_t i = 0; i < _editor_models.size(); i++)
+  std::size_t closest_idx = 0;
+  for (std::size_t i = 0; i < _editor_models.size(); i++)
   {
     if (user_text_lower < _editor_models[i].name_lowercase)
     {

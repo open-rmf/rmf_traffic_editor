@@ -62,7 +62,7 @@ public:
     const double y);
 
   void add_vertex(const double x, const double y);
-  size_t get_vertex_by_id(QUuid vertex_id);
+  std::size_t get_vertex_by_id(QUuid vertex_id);
 
   std::string drawing_filename;
   int drawing_width = 0;
@@ -175,7 +175,7 @@ public:
   void optimize_layer_transforms();
 
   void compute_layer_transforms();
-  void compute_layer_transform(const size_t layer_idx);
+  void compute_layer_transform(const std::size_t layer_idx);
 
 private:
   double point_to_line_segment_distance(
