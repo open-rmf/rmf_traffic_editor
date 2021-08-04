@@ -570,7 +570,7 @@ void Editor::restore_previous_viewport()
   {
     const std::string level_name =
       settings.value(preferences_keys::level_name).toString().toStdString();
-    for (size_t i = 0; i < building.levels.size(); i++)
+    for (std::size_t i = 0; i < building.levels.size(); i++)
     {
       if (building.levels[i].name == level_name)
       {
@@ -1270,7 +1270,7 @@ void Editor::layer_edit_button_clicked(const int row_idx)
 void Editor::sanity_check()
 {
   // do some checks on the building and pop up errors if we find them
-  for (size_t i = 0; i < building.levels.size(); i++)
+  for (std::size_t i = 0; i < building.levels.size(); i++)
   {
     if (!building.levels[i].are_layer_names_unique())
     {

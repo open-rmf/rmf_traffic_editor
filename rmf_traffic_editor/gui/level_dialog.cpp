@@ -184,7 +184,7 @@ void LevelDialog::ok_button_clicked()
   auto original_name = building_level.name;
   building_level.name = name_line_edit->text().toStdString();
   building_level.elevation = elevation_line_edit->text().toDouble();
-  for (size_t i = 0; i < building.lifts.size(); i ++)
+  for (std::size_t i = 0; i < building.lifts.size(); i ++)
   {
     if (original_name != building_level.name)
     {
