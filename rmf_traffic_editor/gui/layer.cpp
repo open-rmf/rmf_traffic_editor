@@ -210,7 +210,7 @@ void Layer::remove_feature(QUuid feature_id)
 {
   int index_to_remove = -1;
 
-  for (size_t i = 0; i < features.size(); i++)
+  for (std::size_t i = 0; i < features.size(); i++)
   {
     if (feature_id == features[i].id())
       index_to_remove = i;
@@ -254,7 +254,7 @@ const Feature* Layer::find_feature(
   double min_dist = 1e9;
   const Feature* min_feature = nullptr;
 
-  for (size_t i = 0; i < features.size(); i++)
+  for (std::size_t i = 0; i < features.size(); i++)
   {
     const Feature& f = features[i];
     const double dx = layer_pixel.x() - f.x();
@@ -324,7 +324,7 @@ void Layer::populate_property_editor(QTableWidget* property_editor) const
 {
   property_editor->blockSignals(true);
   property_editor->setRowCount(transform_strings.size());
-  for (size_t i = 0; i < transform_strings.size(); i++)
+  for (std::size_t i = 0; i < transform_strings.size(); i++)
   {
     QTableWidgetItem* label_item = new QTableWidgetItem(
       QString::fromStdString(transform_strings[i].first));

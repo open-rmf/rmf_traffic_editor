@@ -88,7 +88,7 @@ ModelDialog::ModelDialog(
     if (token_start != std::string::npos && em.name.size() > token_start)
       token_string = em.name.substr(token_start + 1);
 
-    for (size_t i = 0; i < token_string.size(); i++)
+    for (std::size_t i = 0; i < token_string.size(); i++)
       token_string[i] = tolower(token_string[i]);
 
     sorted_names.push_back(std::make_pair(token_string, em.name));
@@ -145,8 +145,8 @@ void ModelDialog::model_name_line_edited(const QString& text)
   // scroll the list box to the first thing
   const std::string user_text_lower(text.toLower().toStdString());
   // could become super fancy but for now let's just do linear search...
-  size_t closest_idx = 0;
-  for (size_t i = 0; i < sorted_names.size(); i++)
+  std::size_t closest_idx = 0;
+  for (std::size_t i = 0; i < sorted_names.size(); i++)
   {
     if (user_text_lower <= sorted_names[i].first)
     {
