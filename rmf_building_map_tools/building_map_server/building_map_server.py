@@ -171,7 +171,6 @@ class BuildingMapServer(Node):
                 graph_msg.edges.append(ge)
             msg.nav_graphs.append(graph_msg)
 
-
         # Populate the wall graph
         wall_graph = level.generate_wall_graph()
         msg.wall_graph.name = "WallGraph"
@@ -194,7 +193,7 @@ class BuildingMapServer(Node):
                 p = Param()
                 p.name = param_name
                 p.type = param_obj.type
-                
+
                 if p.type == Param.TYPE_STRING:
                     p.value_string = str(param_obj.value)
                 elif p.type == Param.TYPE_INT:
@@ -205,7 +204,7 @@ class BuildingMapServer(Node):
                     p.value_bool = bool(param_obj.value)
 
                 ge.params.append(p)
-            
+
             msg.wall_graph.edges.append(ge)
 
         return msg

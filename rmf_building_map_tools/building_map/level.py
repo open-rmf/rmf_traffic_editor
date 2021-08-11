@@ -512,14 +512,14 @@ class Level:
         for i in range(next_idx):
             v = self.transformed_vertices[mapped_idx_to_vidx[i]]
             p = {'name': v.name}
-            
+
             for param_name, param_value in v.params.items():
                 p[param_name] = param_value.value
 
             wall_data['vertices'].append([v.x, v.y, p])
 
         wall_data['walls'] = []
-        
+
         for w in self.walls:
             v1 = self.vertices[w.start_idx]
             v2 = self.vertices[w.end_idx]
@@ -528,5 +528,5 @@ class Level:
             end_idx = vidx_to_mapped_idx[w.end_idx]
 
             wall_data['walls'].append([start_idx, end_idx, w.params])
-            
+
         return wall_data
