@@ -17,6 +17,12 @@ class Building:
             self.name = yaml_node['name']
         print(f'building name: {self.name}')
 
+        if 'coordinate_system' in yaml_node:
+            self.coordinate_system = yaml_node['coordinate_system']
+        else:
+            self.coordinate_system = 'reference_image'
+        print(f'coordinate system: {self.coordinate_system}')
+
         self.levels = {}
         self.model_counts = {}
         for level_name, level_yaml in yaml_node['levels'].items():
