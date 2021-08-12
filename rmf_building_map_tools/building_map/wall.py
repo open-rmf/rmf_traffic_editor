@@ -114,6 +114,16 @@ class Wall:
                 # need to scale the texture coordinates currently.
                 texture_lengths.append(wlen)
 
+            """
+            Instead of having potentially-huge wall vertex values,
+            let's instead translate them all towards the origin
+            and then push the entire wall OBJ to its final location
+            so that Gazebo/Ignition "Move To" command is useful.
+            """
+
+            self.wall_mesh_offsets = np.min(wall_verts, axis=0)
+            wall_verts = wall_verts - self.wall_mesh_offsets
+
             for v in wall_verts:
                 f.write(f'v {v[0]:.4f} {v[1]:.4f} 0.000\n')
                 f.write(f'v {v[0]:.4f} {v[1]:.4f} {h:.4f}\n')
@@ -241,5 +251,11 @@ class Wall:
                 visual_ele, model_name, f'wall_{wall_cnt}',
                 self.texture_name.value, f'{model_path}/meshes',
                 self.pbr_textures)
+
         self.generate_wall_visual_mesh(model_name, model_path,
                                        texture_filename)
+
+        pose_ele = SubElement(link_ele, 'pose')
+        link_x = self.wall_mesh_offsets[0]
+        link_y = self.wall_mesh_offsets[1]
+        pose_ele.text = f'{link_x} {link_y} 0 0 0 0'
