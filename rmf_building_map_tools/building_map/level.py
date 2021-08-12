@@ -26,7 +26,13 @@ from .web_mercator_transform import WebMercatorTransform
 
 
 class Level:
-    def __init__(self, yaml_node, name, model_counts={}, coordinate_system='reference_image'):
+    def __init__(
+        self,
+        yaml_node,
+        name,
+        model_counts={},
+        coordinate_system='reference_image'
+    ):
         self.name = name
         print(f'parsing level {name}')
 
