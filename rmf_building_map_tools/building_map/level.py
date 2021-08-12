@@ -15,16 +15,18 @@ from .wall import Wall
 from .hole import Hole
 from .model import Model
 from .param_value import ParamValue
-from .transform import Transform
 from .vertex import Vertex
 from .doors.swing_door import SwingDoor
 from .doors.sliding_door import SlidingDoor
 from .doors.double_swing_door import DoubleSwingDoor
 from .doors.double_sliding_door import DoubleSlidingDoor
 
+from .transform import Transform
+from .web_mercator_transform import WebMercatorTransform
+
 
 class Level:
-    def __init__(self, yaml_node, name, model_counts={}):
+    def __init__(self, yaml_node, name, model_counts={}, coordinate_system='reference_image'):
         self.name = name
         print(f'parsing level {name}')
 
@@ -41,7 +43,10 @@ class Level:
             for fiducial_yaml in yaml_node['fiducials']:
                 self.fiducials.append(Fiducial(fiducial_yaml))
 
-        self.transform = Transform()
+        if coordinate_system == 'reference_image':
+            self.transform = Transform()
+        elif coordinate_system == 'web_mercator':
+            self.transform = WebMercatorTransform()
 
         self.vertices = []
         if 'vertices' in yaml_node and yaml_node['vertices']:

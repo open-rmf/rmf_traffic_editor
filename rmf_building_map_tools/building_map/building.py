@@ -29,7 +29,8 @@ class Building:
             self.levels[level_name] = Level(
                 level_yaml,
                 level_name,
-                self.model_counts)
+                self.model_counts,
+                self.coordinate_system)
 
         if 'reference_level_name' in yaml_node:
             self.reference_level_name = yaml_node['reference_level_name']
@@ -37,7 +38,9 @@ class Building:
             self.reference_level_name = next(iter(self.levels))
         self.ref_level = self.levels[self.reference_level_name]  # save typing
 
-        self.calculate_level_offsets_and_scales()
+        # we only need to calculate offsets/scales if we're in pixel space
+        if self.coordinate_system == 'reference_image':
+            self.calculate_level_offsets_and_scales()
 
         self.transform_all_vertices()
 
