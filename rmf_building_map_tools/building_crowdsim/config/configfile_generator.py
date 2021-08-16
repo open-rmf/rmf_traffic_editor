@@ -73,8 +73,7 @@ class ConfigFileGenerator:
             for item in self.crowd_sim_yaml['agent_groups']:
                 cur_group = AgentGroup()
                 cur_group.load_from_yaml(item)
-                cur_generator = cur_group.sub_elements[-1]
-                if len(cur_generator.sub_elements) != 0:
+                if cur_group.sub_elements[-1].is_valid():
                     self.scene_file.sub_elements.append(cur_group)
 
         write_xml_file(
