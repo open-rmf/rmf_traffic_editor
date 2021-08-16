@@ -8,10 +8,15 @@ class WebMercatorTransform:
 
     def __init__(self):
         # crs_4326 = CRS.from_epsg(4326)  # also known as WGS84...
+        self.crs_name = 'EPSG:3414'  # todo: either set explicitly or calculate
+        self.offset = (0, 0)
         self.web_mercator_to_wgs84 = \
             Transformer.from_crs("EPSG:3857", "EPSG:4326")
-        self.web_mercator_to_svy21 = \
-            Transformer.from_crs("EPSG:3857", "EPSG:3414")
+        self.web_mercator_to_tm = \
+            Transformer.from_crs("EPSG:3857", self.crs_name)
+
+    def set_offset(self, new_offset):
+        self.offset = new_offset
 
     def transform_point(self, p):
         # first convert from "Web Mercator" (256, 256) scale to meters
@@ -27,12 +32,15 @@ class WebMercatorTransform:
 
         # now we need to choose a TM plane. In the future we should be more
         # generic, but for now let's start by using SVY21
-        (svy21_northing, svy21_easting) = \
-            self.web_mercator_to_svy21.transform(meters_east, meters_north)
+        (tm_northing, tm_easting) = \
+            self.web_mercator_to_tm.transform(meters_east, meters_north)
 
-        # crs_svy21 = CRS.from_epsg(3414)
-        # svy21_false_easting = crs_svy21.to_dict()['x_0']
-        # svy21_false_northing = crs_svy21.to_dict()['y_0']
-        # print(f'offset: {svy21_false_easting}, {svy21_false_northing}')
+        # crs_tm = CRS.from_epsg(3414)
+        # tm_false_easting = crs_tm.to_dict()['x_0']
+        # tm_false_northing = crs_tm.to_dict()['y_0']
+        # print(f'offset: {tm_false_easting}, {tm_false_northing}')
 
-        return (svy21_easting, svy21_northing)
+        tm_easting -= self.offset[0]
+        tm_northing -= self.offset[1]
+
+        return (tm_easting, tm_northing)

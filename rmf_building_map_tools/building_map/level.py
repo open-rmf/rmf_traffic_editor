@@ -49,15 +49,20 @@ class Level:
             for fiducial_yaml in yaml_node['fiducials']:
                 self.fiducials.append(Fiducial(fiducial_yaml))
 
-        if coordinate_system == 'reference_image':
-            self.transform = Transform()
-        elif coordinate_system == 'web_mercator':
-            self.transform = WebMercatorTransform()
-
         self.vertices = []
         if 'vertices' in yaml_node and yaml_node['vertices']:
             for vertex_yaml in yaml_node['vertices']:
                 self.vertices.append(Vertex(vertex_yaml))
+
+        if coordinate_system == 'reference_image':
+            self.transform = Transform()
+        elif coordinate_system == 'web_mercator':
+            self.transform = WebMercatorTransform()
+            for v in self.vertices:
+                if v.name == 'origin':
+                    self.transform.set_offset(
+                        self.transform.transform_point((v.x, v.y)))
+                    break
 
         self.transformed_vertices = []  # will be calculated in a later pass
 

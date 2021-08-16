@@ -175,6 +175,16 @@ class Building:
                       {'name': vertex.name, 'x': str(vertex.x),
                        'y': str(vertex.y), 'level': level_name})
 
+        for level_name, level in self.levels.items():
+            if type(level.transform).__name__ == 'WebMercatorTransform':
+                offset = level.transform.offset
+                offset_ele = SubElement(world, 'offset')
+                offset_ele.text = f'{offset[0]} {offset[1]} 0 0 0 0'
+
+                crs_ele = SubElement(world, 'crs')
+                crs_ele.text = level.transform.crs_name
+                break
+
         gui_ele = world.find('gui')
         c = self.center()
         camera_pose = f'{c[0]} {c[1]-20} 10 0 0.6 1.57'
