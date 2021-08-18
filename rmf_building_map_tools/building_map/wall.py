@@ -127,7 +127,7 @@ class Wall:
                 f.write(f'v {v[0]:.4f} {v[1]:.4f} {h:.4f}\n')
 
             vt_h = h/(self.texture_height/self.texture_width)
-            s = self.texture_scale  # default is 1 --> img stretches to 1m in width
+            s = self.texture_scale
             if s == 0:  # full wall (by height)
                 s = vt_h
 
@@ -136,10 +136,14 @@ class Wall:
                 f.write(f'vt 0.000 {(vt_h/s):.4f}\n')
                 f.write(f'vt {(length/s):.4f} 0.000\n')
                 f.write(f'vt {(length/s):.4f} {(vt_h/s):.4f}\n')
-                f.write(f'vt {((length + self.wall_thickness)/s):.4f} 0.000\n')
-                f.write(f'vt {((length + self.wall_thickness)/s):.4f} {(vt_h/s):.4f}\n')
-                f.write(f'vt {((2*length + self.wall_thickness)/s):.4f} 0.000\n')
-                f.write(f'vt {((2*length + self.wall_thickness)/s):.4f} {(vt_h/s):.4f}\n')
+                f.write(f'vt {((length + self.wall_thickness)/s):.4f} \
+                    0.000\n')
+                f.write(f'vt {((length + self.wall_thickness)/s):.4f} \
+                    {(vt_h/s):.4f}\n')
+                f.write(f'vt {((2*length + self.wall_thickness)/s):.4f} \
+                    0.000\n')
+                f.write(f'vt {((2*length + self.wall_thickness)/s):.4f} \
+                    {(vt_h/s):.4f}\n')
 
             for norm in norms:
                 f.write(f'vn {norm[0]:.4f} {norm[1]:.4f} {norm[2]:.4f}\n')
