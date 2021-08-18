@@ -6,9 +6,10 @@ import math
 class WebMercatorTransform:
     """Transforms between Web Mercator points and transverse mercator planes"""
 
-    def __init__(self):
+    def __init__(self, crs_name):
         # crs_4326 = CRS.from_epsg(4326)  # also known as WGS84...
-        self.crs_name = 'EPSG:3414'  # todo: either set explicitly or calculate
+        print(f'WebMercatorTransform({crs_name})')
+        self.crs_name = crs_name
         self.offset = (0, 0)
         self.web_mercator_to_wgs84 = \
             Transformer.from_crs("EPSG:3857", "EPSG:4326")

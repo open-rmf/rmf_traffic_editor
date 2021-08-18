@@ -22,7 +22,6 @@ from .doors.double_swing_door import DoubleSwingDoor
 from .doors.double_sliding_door import DoubleSlidingDoor
 
 from .transform import Transform
-from .web_mercator_transform import WebMercatorTransform
 
 
 class Level:
@@ -31,7 +30,7 @@ class Level:
         yaml_node,
         name,
         model_counts={},
-        coordinate_system='reference_image'
+        transform=None
     ):
         self.name = name
         print(f'parsing level {name}')
@@ -54,15 +53,10 @@ class Level:
             for vertex_yaml in yaml_node['vertices']:
                 self.vertices.append(Vertex(vertex_yaml))
 
-        if coordinate_system == 'reference_image':
+        if transform is None:
             self.transform = Transform()
-        elif coordinate_system == 'web_mercator':
-            self.transform = WebMercatorTransform()
-            for v in self.vertices:
-                if v.name == 'origin':
-                    self.transform.set_offset(
-                        self.transform.transform_point((v.x, v.y)))
-                    break
+        else:
+            self.transform = transform
 
         self.transformed_vertices = []  # will be calculated in a later pass
 

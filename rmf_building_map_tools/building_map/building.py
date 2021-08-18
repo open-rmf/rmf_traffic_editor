@@ -8,6 +8,7 @@ from ament_index_python.packages import get_package_share_directory
 from .level import Level
 from .lift import Lift
 from .param_value import ParamValue
+from .web_mercator_transform import WebMercatorTransform
 
 
 class Building:
@@ -30,9 +31,34 @@ class Building:
             self.coordinate_system = 'reference_image'
         print(f'coordinate system: {self.coordinate_system}')
 
-        if (self.coordinate_system == 'web_mercator' and 
+        if (self.coordinate_system == 'web_mercator' and
                 'generate_crs' not in self.params):
             raise ValueError('generate_crs must be defined for global nav!')
+
+        self.global_transform = None
+        if self.coordinate_system == 'web_mercator':
+            crs_name = self.params['generate_crs'].value
+            self.global_transform = WebMercatorTransform(crs_name)
+
+            origin_name = 'origin'
+            if 'generate_origin_vertex' in self.params:
+                origin_name = self.params['generate_origin_vertex'].value
+
+            # this is weird, but we have to pre-parse the level vertices
+            # in order to find the offset vertex :|
+            origin_found = False
+            for level_name, level_yaml in yaml_node['levels'].items():
+                for vertex in level_yaml['vertices']:
+                    if vertex[3] == origin_name:
+                        origin_found = True
+                        break
+                if origin_found:
+                    # transform the origin to the target frame
+                    x = float(vertex[0])
+                    y = -float(vertex[1])  # invert due to historical reasons
+                    self.global_transform.set_offset(
+                        self.global_transform.transform_point((x, y)))
+                    break
 
         self.levels = {}
         self.model_counts = {}
@@ -41,7 +67,7 @@ class Building:
                 level_yaml,
                 level_name,
                 self.model_counts,
-                self.coordinate_system)
+                self.global_transform)
 
         if 'reference_level_name' in yaml_node:
             self.reference_level_name = yaml_node['reference_level_name']
@@ -124,6 +150,10 @@ class Building:
             g = {}
             g['building_name'] = self.name
             g['levels'] = {}
+            if self.global_transform is not None:
+                g['crs_name'] = self.global_transform.crs_name
+                g['offset'] = [*self.global_transform.offset]
+
             empty = True
             for level_name, level in self.levels.items():
                 level_graph = level.generate_nav_graph(i)
@@ -186,14 +216,13 @@ class Building:
                       {'name': vertex.name, 'x': str(vertex.x),
                        'y': str(vertex.y), 'level': level_name})
 
-        if type(level.transform).__name__ == 'WebMercatorTransform':
-            offset = level.transform.offset
+        if self.global_transform is not None:
+            offset = self.global_transform.offset
             offset_ele = SubElement(world, 'offset')
             offset_ele.text = f'{offset[0]} {offset[1]} 0 0 0 0'
 
             crs_ele = SubElement(world, 'crs')
-            crs_ele.text = level.transform.crs_name
-            break
+            crs_ele.text = self.global_transform.crs_name
 
         gui_ele = world.find('gui')
         c = self.center()
