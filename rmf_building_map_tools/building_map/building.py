@@ -7,6 +7,7 @@ from ament_index_python.packages import get_package_share_directory
 
 from .level import Level
 from .lift import Lift
+from .param_value import ParamValue
 
 
 class Building:
@@ -17,11 +18,21 @@ class Building:
             self.name = yaml_node['name']
         print(f'building name: {self.name}')
 
+        self.params = {}
+        if 'parameters' in yaml_node and yaml_node['parameters']:
+            for param_name, param_yaml in yaml_node['parameters'].items():
+                self.params[param_name] = ParamValue(param_yaml)
+        print('parsed parameters' + str(self.params))
+
         if 'coordinate_system' in yaml_node:
             self.coordinate_system = yaml_node['coordinate_system']
         else:
             self.coordinate_system = 'reference_image'
         print(f'coordinate system: {self.coordinate_system}')
+
+        if (self.coordinate_system == 'web_mercator' and 
+                'generate_crs' not in self.params):
+            raise ValueError('generate_crs must be defined for global nav!')
 
         self.levels = {}
         self.model_counts = {}
@@ -175,15 +186,14 @@ class Building:
                       {'name': vertex.name, 'x': str(vertex.x),
                        'y': str(vertex.y), 'level': level_name})
 
-        for level_name, level in self.levels.items():
-            if type(level.transform).__name__ == 'WebMercatorTransform':
-                offset = level.transform.offset
-                offset_ele = SubElement(world, 'offset')
-                offset_ele.text = f'{offset[0]} {offset[1]} 0 0 0 0'
+        if type(level.transform).__name__ == 'WebMercatorTransform':
+            offset = level.transform.offset
+            offset_ele = SubElement(world, 'offset')
+            offset_ele.text = f'{offset[0]} {offset[1]} 0 0 0 0'
 
-                crs_ele = SubElement(world, 'crs')
-                crs_ele.text = level.transform.crs_name
-                break
+            crs_ele = SubElement(world, 'crs')
+            crs_ele.text = level.transform.crs_name
+            break
 
         gui_ele = world.find('gui')
         c = self.center()
