@@ -257,4 +257,3 @@ class Wall:
                 self.pbr_textures)
         self.generate_wall_visual_mesh(model_name, model_path,
                                        texture_filename)
-
