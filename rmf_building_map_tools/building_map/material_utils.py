@@ -16,6 +16,7 @@ def get_pbr_textures(params):
             pbr_textures[pbr_key] = param.value
     return pbr_textures
 
+
 def get_ceiling_pbr_textures(params):
     ceiling_pbr_texture_types = {'ceiling_metalness_map': 'metalness_map',
                                  'ceiling_roughness_map': 'roughness_map',

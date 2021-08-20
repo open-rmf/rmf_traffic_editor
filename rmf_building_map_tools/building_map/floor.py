@@ -6,7 +6,7 @@ import shapely.ops
 
 from xml.etree.ElementTree import SubElement
 
-from .material_utils import (add_pbr_material, get_pbr_textures, 
+from .material_utils import (add_pbr_material, get_pbr_textures,
                              get_ceiling_pbr_textures)
 from .param_value import ParamValue
 
