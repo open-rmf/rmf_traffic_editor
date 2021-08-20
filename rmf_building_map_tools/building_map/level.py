@@ -236,6 +236,7 @@ class Level:
 
     def generate_floors(self, world_ele, model_name, model_path):
         i = 0
+        j = 0
         for floor in self.floors:
             i += 1
             floor.generate(
@@ -246,6 +247,16 @@ class Level:
                 self.transformed_vertices,
                 self.holes,
                 self.lift_vert_lists)
+            if floor.has_ceiling():
+                j += 1
+                floor.generate_ceiling(
+                    world_ele,
+                    j,
+                    model_name,
+                    model_path,
+                    self.transformed_vertices,
+                    self.holes,
+                    self.lift_vert_lists)
 
     def write_sdf(self, model_name, model_path):
         sdf_ele = Element('sdf', {'version': '1.7'})

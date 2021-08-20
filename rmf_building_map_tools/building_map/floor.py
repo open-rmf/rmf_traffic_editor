@@ -21,6 +21,7 @@ class Floor:
         self.vertex_indices = []
         self.vertices = []
         self.thickness = 0.1
+        self.wall_height = 2.5
         if 'vertices' in yaml_node and yaml_node['vertices'] is not None:
             self.vertex_indices = [i for i in yaml_node['vertices']]
 
@@ -28,6 +29,10 @@ class Floor:
         if 'parameters' in yaml_node and yaml_node['parameters']:
             for param_name, param_yaml in yaml_node['parameters'].items():
                 self.params[param_name] = ParamValue(param_yaml)
+
+        self.indoor = 0
+        if 'indoor' in self.params:
+            self.indoor = self.params['indoor'].value
 
     def to_yaml(self):
         y = {}
@@ -42,6 +47,9 @@ class Floor:
 
     def __repr__(self):
         return self.__str__()
+
+    def has_ceiling(self):
+        return self.indoor
 
     def find_vertex_idx(self, x, y, failure_ok=False):
         for v_idx, v in enumerate(self.vertices):
@@ -300,6 +308,156 @@ class Floor:
         with open(mtl_path, 'w') as f:
             f.write('# The Great Editor v0.0.1\n')
             f.write(f'newmtl floor_{floor_cnt}\n')
+            f.write('Ka 1.0 1.0 1.0\n')  # ambient
+            f.write('Kd 1.0 1.0 1.0\n')  # diffuse
+            f.write('Ke 0.0 0.0 0.0\n')  # emissive
+            f.write('Ns 50.0\n')  # specular highlight, 0..100 (?)
+            f.write('Ni 1.0\n')  # no idea what this is
+            f.write('d 1.0\n')  # alpha (maybe?)
+            f.write('illum 2\n')  # illumination model (enum)
+            f.write(f'map_Kd {texture_filename}\n')
+
+        print(f'  wrote {mtl_path}')
+
+    def generate_ceiling(
+        self,
+        model_ele,
+        ceiling_cnt,
+        model_name,
+        model_path,
+        transformed_vertices,
+        holes,
+        lift_vert_lists
+    ):
+        print(f'generating ceiling polygon {ceiling_cnt} on floor {model_name}')
+
+        vert_list = []
+        self.vertices = []
+        for v_idx in self.vertex_indices:
+            vx, vy = transformed_vertices[v_idx].xy()
+            self.vertices.append(shapely.geometry.Point(vx, vy))
+            vert_list.append((vx, vy))
+
+        if len(vert_list) < 3:
+            print(f'not enough vertices for {model_name} polygon {ceiling_cnt}!')
+            self.polygon = None
+            return
+
+        hole_vert_lists = []
+        for hole in holes:
+            hole_vertices = []
+            for v_idx in hole.vertex_indices:
+                vx, vy = transformed_vertices[v_idx].xy()
+                hole_vertices.append((vx, vy))
+            hole_vert_lists.append(hole_vertices)
+        print(f'hole vertices: {hole_vert_lists}')
+        print(f'lift vertices: {lift_vert_lists}')
+
+        self.polygon = shapely.geometry.Polygon(vert_list)
+
+        for hole_vert_list in hole_vert_lists:
+            hole_polygon = shapely.geometry.Polygon(hole_vert_list)
+            self.polygon = self.polygon.difference(hole_polygon)
+
+        for lift_vert_list in lift_vert_lists.values():
+            lift_polygon = shapely.geometry.Polygon(lift_vert_list)
+            self.polygon = self.polygon.difference(lift_polygon)
+
+        link_ele = SubElement(model_ele, 'link')
+        link_ele.set('name', f'ceiling_{ceiling_cnt}')
+
+        visual_ele = SubElement(link_ele, 'visual')
+        visual_ele.set('name', 'visual')
+
+        visual_geometry_ele = SubElement(visual_ele, 'geometry')
+
+        mesh_ele = SubElement(visual_geometry_ele, 'mesh')
+        mesh_uri_ele = SubElement(mesh_ele, 'uri')
+
+        meshes_path = f'{model_path}/meshes'
+        if not os.path.exists(meshes_path):
+            os.makedirs(meshes_path)
+
+        obj_model_rel_path = f'meshes/ceiling_{ceiling_cnt}.obj'
+        mesh_uri_ele.text = f'model://{model_name}/{obj_model_rel_path}'
+
+        collision_ele = SubElement(link_ele, 'collision')
+        collision_ele.set('name', 'collision')
+        # Use the mesh as a collision element
+        collision_geometry_ele = SubElement(collision_ele, 'geometry')
+        collision_mesh_ele = SubElement(collision_geometry_ele, 'mesh')
+        collision_mesh_uri_ele = SubElement(collision_mesh_ele, 'uri')
+        collision_mesh_uri_ele.text = \
+            f'model://{model_name}/{obj_model_rel_path}'
+
+        surface_ele = SubElement(collision_ele, 'surface')
+        contact_ele = SubElement(surface_ele, 'contact')
+        collide_bitmask_ele = SubElement(contact_ele, 'collide_bitmask')
+        collide_bitmask_ele.text = '0x01'
+
+        triangles = []
+        self.triangulate_polygon(self.polygon, triangles)
+
+        for triangle in triangles:
+            for coord in triangle.exterior.coords:
+                self.add_vertex_if_needed(coord[0], coord[1])
+
+        if triangulation_debugging:
+            plt.axis('equal')
+            plt.show()
+
+        tri_vertex_indices = []
+        for triangle in triangles:
+            tri_vertex_indices.append(
+                self.triangle_to_vertex_index_list(triangle, self.vertices))
+        print(tri_vertex_indices)
+
+        ceiling_scale = 1.0
+        if 'ceiling_scale' in self.params:
+            ceiling_scale = self.params['ceiling_scale'].value
+
+        obj_path = f'{model_path}/{obj_model_rel_path}'
+        with open(obj_path, 'w') as f:
+            f.write('# The Great Editor v0.0.1\n')
+            f.write(f'mtllib ceiling_{ceiling_cnt}.mtl\n')
+            f.write(f'o ceiling_{ceiling_cnt}\n')
+
+            # Ceiling only visible from below
+            # Invisible from above to allow bird-eye view
+            for v in self.vertices:
+                f.write(f'v {v.x} {v.y} {self.wall_height}\n')
+
+            # TO DO: adjust scale texture if not square tiles
+            for v in self.vertices:
+                f.write(f'vt {v.x / ceiling_scale} {v.y / ceiling_scale} 0\n')
+
+            f.write(f'vn 0 0 -1\n')
+
+            f.write(f'usemtl ceiling_{ceiling_cnt}\n')
+            f.write('s off\n')
+
+            for triangle in tri_vertex_indices:
+
+                f.write('f')
+                for v_idx in reversed(triangle):
+                    f.write(f' {v_idx+1}/{v_idx+1}/1')
+                f.write('\n')
+
+        print(f'  wrote {obj_path}')
+
+        ceiling_texture = 'blue_linoleum'
+        if 'ceiling_texture' in self.params:
+            ceiling_texture = self.params['ceiling_texture'].value
+
+        pbr_textures = get_pbr_textures(self.params)
+        texture_filename = add_pbr_material(
+                visual_ele, model_name, f'ceiling_{ceiling_cnt}', ceiling_texture,
+                f'{model_path}/meshes', pbr_textures)
+
+        mtl_path = f'{model_path}/meshes/ceiling_{ceiling_cnt}.mtl'
+        with open(mtl_path, 'w') as f:
+            f.write('# The Great Editor v0.0.1\n')
+            f.write(f'newmtl ceiling_{ceiling_cnt}\n')
             f.write('Ka 1.0 1.0 1.0\n')  # ambient
             f.write('Kd 1.0 1.0 1.0\n')  # diffuse
             f.write('Ke 0.0 0.0 0.0\n')  # emissive
