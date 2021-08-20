@@ -6,7 +6,8 @@ import shapely.ops
 
 from xml.etree.ElementTree import SubElement
 
-from .material_utils import add_pbr_material, copy_texture, get_pbr_textures
+from .material_utils import (add_pbr_material, get_pbr_textures, 
+                             get_ceiling_pbr_textures)
 from .param_value import ParamValue
 
 triangulation_debugging = False
@@ -451,11 +452,11 @@ class Floor:
         if 'ceiling_texture' in self.params:
             ceiling_texture = self.params['ceiling_texture'].value
 
-        pbr_textures = get_pbr_textures(self.params)
+        ceiling_pbr_textures = get_ceiling_pbr_textures(self.params)
         texture_filename = add_pbr_material(
                 visual_ele, model_name,
                 f'ceiling_{ceiling_cnt}', ceiling_texture,
-                f'{model_path}/meshes', pbr_textures)
+                f'{model_path}/meshes', ceiling_pbr_textures)
 
         mtl_path = f'{model_path}/meshes/ceiling_{ceiling_cnt}.mtl'
         with open(mtl_path, 'w') as f:
