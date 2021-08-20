@@ -453,7 +453,7 @@ class Floor:
 
         pbr_textures = get_pbr_textures(self.params)
         texture_filename = add_pbr_material(
-                visual_ele, model_name, 
+                visual_ele, model_name,
                 f'ceiling_{ceiling_cnt}', ceiling_texture,
                 f'{model_path}/meshes', pbr_textures)
 
