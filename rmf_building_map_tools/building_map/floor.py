@@ -329,7 +329,8 @@ class Floor:
         holes,
         lift_vert_lists
     ):
-        print(f'generating ceiling polygon {ceiling_cnt} on floor {model_name}')
+        print(
+            f'generating ceiling polygon {ceiling_cnt} on floor {model_name}')
 
         vert_list = []
         self.vertices = []
@@ -339,7 +340,8 @@ class Floor:
             vert_list.append((vx, vy))
 
         if len(vert_list) < 3:
-            print(f'not enough vertices for {model_name} polygon {ceiling_cnt}!')
+            print(
+                f'not enough vertices for {model_name} polygon {ceiling_cnt}!')
             self.polygon = None
             return
 
@@ -451,7 +453,8 @@ class Floor:
 
         pbr_textures = get_pbr_textures(self.params)
         texture_filename = add_pbr_material(
-                visual_ele, model_name, f'ceiling_{ceiling_cnt}', ceiling_texture,
+                visual_ele, model_name, 
+                f'ceiling_{ceiling_cnt}', ceiling_texture,
                 f'{model_path}/meshes', pbr_textures)
 
         mtl_path = f'{model_path}/meshes/ceiling_{ceiling_cnt}.mtl'
