@@ -246,6 +246,15 @@ class Level:
                 self.transformed_vertices,
                 self.holes,
                 self.lift_vert_lists)
+            if floor.has_ceiling():
+                floor.generate_ceiling(
+                    world_ele,
+                    i,
+                    model_name,
+                    model_path,
+                    self.transformed_vertices,
+                    self.holes,
+                    self.lift_vert_lists)
 
     def write_sdf(self, model_name, model_path):
         sdf_ele = Element('sdf', {'version': '1.7'})
