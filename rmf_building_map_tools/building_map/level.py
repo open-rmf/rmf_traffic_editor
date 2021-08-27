@@ -496,3 +496,46 @@ class Level:
             lane_out.start_idx += v_idx_offset
             lane_out.end_idx += v_idx_offset
             self.lanes.append(lane_out)
+
+    def generate_wall_graph(self):
+        """ Genereate a wall graph without unnecessary (non-wall) vertices"""
+
+        # first remap the vertices. Store both directions; we'll need them
+        next_idx = 0
+        vidx_to_mapped_idx = {}
+        mapped_idx_to_vidx = {}
+
+        for w in self.walls:
+            if w.start_idx not in vidx_to_mapped_idx:
+                vidx_to_mapped_idx[w.start_idx] = next_idx
+                mapped_idx_to_vidx[next_idx] = w.start_idx
+                next_idx += 1
+            if w.end_idx not in vidx_to_mapped_idx:
+                vidx_to_mapped_idx[w.end_idx] = next_idx
+                mapped_idx_to_vidx[next_idx] = w.end_idx
+                next_idx += 1
+
+        wall_data = {}
+        wall_data['vertices'] = []
+
+        for i in range(next_idx):
+            v = self.transformed_vertices[mapped_idx_to_vidx[i]]
+            p = {'name': v.name}
+
+            for param_name, param_value in v.params.items():
+                p[param_name] = param_value.value
+
+            wall_data['vertices'].append([v.x, v.y, p])
+
+        wall_data['walls'] = []
+
+        for w in self.walls:
+            v1 = self.vertices[w.start_idx]
+            v2 = self.vertices[w.end_idx]
+
+            start_idx = vidx_to_mapped_idx[w.start_idx]
+            end_idx = vidx_to_mapped_idx[w.end_idx]
+
+            wall_data['walls'].append([start_idx, end_idx, w.params])
+
+        return wall_data
