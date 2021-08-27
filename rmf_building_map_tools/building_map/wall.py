@@ -21,6 +21,14 @@ class Wall:
         self.texture_name = wall_params['texture_name']
         self.alpha = wall_params['alpha']  # val 0.0-1.0 transparency of wall
         self.pbr_textures = get_pbr_textures(wall_params)
+        if 'texture_height' in wall_params:  # check for new parameters
+            self.texture_height = wall_params['texture_height'].value
+            self.texture_width = wall_params['texture_width'].value
+            self.texture_scale = wall_params['texture_scale'].value
+        else:
+            self.texture_height = self.wall_height
+            self.texture_width = 1
+            self.texture_scale = 1
 
         # Wall filtering according to wall_params
         for checked_wall in yaml_node:
@@ -29,7 +37,7 @@ class Wall:
 
     def __str__(self):
         return f'wall {self.wall_cnt} with param {self.texture_name}, \
-            {self.alpha})'
+            {self.alpha}'
 
     def __repr__(self):
         return self.__str__()
@@ -128,15 +136,21 @@ class Wall:
                 f.write(f'v {v[0]:.4f} {v[1]:.4f} 0.000\n')
                 f.write(f'v {v[0]:.4f} {v[1]:.4f} {h:.4f}\n')
 
+            vt_h = h/(self.texture_height/self.texture_width)
+            s = self.texture_scale
+            if s == 0:  # full wall (by height)
+                s = vt_h
+
+            t = self.wall_thickness
             for length in texture_lengths:
                 f.write(f'vt 0.000 0.000\n')
-                f.write(f'vt 0.000 1.000\n')
-                f.write(f'vt {length:.4f} 0.000\n')
-                f.write(f'vt {length:.4f} 1.000\n')
-                f.write(f'vt {(length + self.wall_thickness):.4f} 0.000\n')
-                f.write(f'vt {(length + self.wall_thickness):.4f} 1.000\n')
-                f.write(f'vt {(2*length + self.wall_thickness):.4f} 0.000\n')
-                f.write(f'vt {(2*length + self.wall_thickness):.4f} 1.000\n')
+                f.write(f'vt 0.000 {(vt_h/s):.4f}\n')
+                f.write(f'vt {(length/s):.4f} 0.000\n')
+                f.write(f'vt {(length/s):.4f} {(vt_h/s):.4f}\n')
+                f.write(f'vt {((length + t)/s):.4f} 0.000\n')
+                f.write(f'vt {((length + t)/s):.4f} {(vt_h/s):.4f}\n')
+                f.write(f'vt {((2*length + t)/s):.4f} 0.000\n')
+                f.write(f'vt {((2*length + t)/s):.4f} {(vt_h/s):.4f}\n')
 
             for norm in norms:
                 f.write(f'vn {norm[0]:.4f} {norm[1]:.4f} {norm[2]:.4f}\n')
