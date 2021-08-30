@@ -26,6 +26,7 @@
 #include "editor_model.h"
 #include "feature.hpp"
 #include "fiducial.h"
+#include "graph.h"
 #include "layer.h"
 #include "model.h"
 #include "polygon.h"
@@ -161,7 +162,8 @@ public:
   void draw(
     QGraphicsScene* scene,
     std::vector<EditorModel>& editor_models,
-    const RenderingOptions& rendering_options);
+    const RenderingOptions& rendering_options,
+    const std::vector<Graph>& graphs);
 
   void clear_scene();
 
@@ -203,7 +205,8 @@ private:
   void draw_lane(
     QGraphicsScene* scene,
     const Edge& edge,
-    const RenderingOptions& rendering_options) const;
+    const RenderingOptions& rendering_options,
+    const std::vector<Graph>& graphs) const;
 
   void draw_wall(QGraphicsScene* scene, const Edge& edge) const;
   void draw_meas(QGraphicsScene* scene, const Edge& edge) const;

@@ -616,7 +616,8 @@ void Level::calculate_scale()
 void Level::draw_lane(
   QGraphicsScene* scene,
   const Edge& edge,
-  const RenderingOptions& opts) const
+  const RenderingOptions& opts,
+  const vector<Graph>& graphs) const
 {
   const int graph_idx = edge.get_graph_idx();
   if (graph_idx >= 0 &&
@@ -630,8 +631,24 @@ void Level::draw_lane(
   const double dy = v_end.y - v_start.y;
   const double len = std::sqrt(dx*dx + dy*dy);
 
-  double pen_width_in_meters = edge.get_width() > 0 ? edge.get_width() : 1.0;
-  const double lane_pen_width = pen_width_in_meters / drawing_meters_per_pixel;
+  // see if there is a default width for this graph_idx
+  double graph_default_width = -1.0;
+  for (const auto& graph : graphs)
+  {
+    if (graph.idx == graph_idx)
+    {
+      graph_default_width = graph.default_lane_width;
+      break;
+    }
+  }
+
+  double lane_width_meters = 1.0;
+  if (edge.get_width() > 0)
+    lane_width_meters = edge.get_width();
+  else if (graph_default_width > 0)
+    lane_width_meters = graph_default_width;
+
+  const double lane_pen_width = lane_width_meters / drawing_meters_per_pixel;
 
   const QPen arrow_pen(
     QBrush(QColor::fromRgbF(0.0, 0.0, 0.0, 0.5)),
@@ -1073,7 +1090,8 @@ void Level::clear_selection()
 void Level::draw(
   QGraphicsScene* scene,
   vector<EditorModel>& editor_models,
-  const RenderingOptions& rendering_options)
+  const RenderingOptions& rendering_options,
+  const vector<Graph>& graphs)
 {
   if (drawing_filename.size() && _drawing_visible)
   {
@@ -1110,11 +1128,21 @@ void Level::draw(
   {
     switch (edge.type)
     {
-      case Edge::LANE: draw_lane(scene, edge, rendering_options); break;
-      case Edge::WALL: draw_wall(scene, edge); break;
-      case Edge::MEAS: draw_meas(scene, edge); break;
-      case Edge::DOOR: draw_door(scene, edge); break;
-      case Edge::HUMAN_LANE: draw_lane(scene, edge, rendering_options); break;
+      case Edge::LANE:
+        draw_lane(scene, edge, rendering_options, graphs);
+        break;
+      case Edge::WALL:
+        draw_wall(scene, edge);
+        break;
+      case Edge::MEAS:
+        draw_meas(scene, edge);
+        break;
+      case Edge::DOOR:
+        draw_door(scene, edge);
+        break;
+      case Edge::HUMAN_LANE:
+        draw_lane(scene, edge, rendering_options, graphs);
+        break;
       default:
         printf("tried to draw unknown edge type: %d\n",
           static_cast<int>(edge.type));
