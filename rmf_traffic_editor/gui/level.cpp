@@ -67,7 +67,7 @@ bool Level::from_yaml(
   {
     x_meters = _data["x_meters"].as<double>();
     y_meters = _data["y_meters"].as<double>();
-    drawing_meters_per_pixel = 0.05;  // something reasonable
+    drawing_meters_per_pixel = 1.0;
     drawing_width = x_meters / drawing_meters_per_pixel;
     drawing_height = y_meters / drawing_meters_per_pixel;
   }
