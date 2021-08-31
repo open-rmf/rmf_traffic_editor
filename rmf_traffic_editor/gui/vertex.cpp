@@ -102,7 +102,8 @@ YAML::Node Vertex::to_yaml() const
 
 void Vertex::draw(
   QGraphicsScene* scene,
-  const double radius) const
+  const double radius,
+  const QFont& font) const
 {
   QPen vertex_pen(Qt::black);
   vertex_pen.setWidthF(radius / 2.0);
@@ -240,9 +241,9 @@ void Vertex::draw(
   {
     QGraphicsSimpleTextItem* text_item = scene->addSimpleText(
       QString::fromStdString(name),
-      QFont("Helvetica", 6));
+      font);
     text_item->setBrush(selected ? selected_color : vertex_color);
-    text_item->setPos(x, y + radius);
+    text_item->setPos(x, y - 1 + radius);
   }
 }
 

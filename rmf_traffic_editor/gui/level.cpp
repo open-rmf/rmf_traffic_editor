@@ -1150,10 +1150,18 @@ void Level::draw(
     }
   }
 
+  QFont vertex_name_font("Helvetica");
+  double vertex_name_font_size =
+    vertex_radius / drawing_meters_per_pixel * 1.5;
+  if (vertex_name_font_size < 1.0)
+    vertex_name_font_size = 1.0;
+  vertex_name_font.setPointSizeF(vertex_name_font_size);
+
   for (const auto& v : vertices)
     v.draw(
       scene,
-      vertex_radius / drawing_meters_per_pixel);
+      vertex_radius / drawing_meters_per_pixel,
+      vertex_name_font);
 
   for (const auto& f : fiducials)
     f.draw(scene, drawing_meters_per_pixel);
