@@ -53,7 +53,8 @@ public:
 
   void draw(
     QGraphicsScene* scene,
-    const double radius) const;
+    const double radius,
+    const QFont& font) const;
 
   bool is_parking_point() const;
   bool is_holding_point() const;

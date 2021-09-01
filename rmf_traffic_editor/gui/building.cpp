@@ -143,6 +143,17 @@ bool Building::load(const string& _filename)
     }
   }
 
+  if (y["graphs"] && y["graphs"].IsMap())
+  {
+    const YAML::Node& g_map = y["graphs"];
+    for (YAML::const_iterator it = g_map.begin(); it != g_map.end(); ++it)
+    {
+      Graph graph;
+      graph.from_yaml(it->first.as<int>(), it->second);
+      graphs.push_back(graph);
+    }
+  }
+
   calculate_all_transforms();
   return true;
 }
@@ -169,6 +180,10 @@ bool Building::save()
 
   if (crowd_sim_impl)
     y["crowd_sim"] = crowd_sim_impl->to_yaml();
+
+  y["graphs"] = YAML::Node(YAML::NodeType::Map);
+  for (const auto& graph : graphs)
+    y["graphs"][graph.idx] = graph.to_yaml();
 
   YAML::Emitter emitter;
   yaml_utils::write_node(y, emitter);
@@ -694,7 +709,7 @@ void Building::draw(
     return;
   }
 
-  levels[level_idx].draw(scene, editor_models, rendering_options);
+  levels[level_idx].draw(scene, editor_models, rendering_options, graphs);
   draw_lifts(scene, level_idx);
 }
 

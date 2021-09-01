@@ -29,6 +29,7 @@ class QGraphicsScene;
 #include <QGraphicsLineItem>
 #include <QPointF>
 
+#include "graph.h"
 #include "level.h"
 #include "lift.h"
 #include <traffic_editor/crowd_sim/crowd_sim_impl.h>
@@ -44,6 +45,7 @@ public:
   std::string reference_level_name;
   std::vector<Level> levels;
   std::vector<Lift> lifts;
+  std::vector<Graph> graphs;
 
   mutable crowd_sim::CrowdSimImplPtr crowd_sim_impl;
 
