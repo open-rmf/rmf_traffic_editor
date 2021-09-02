@@ -39,10 +39,10 @@ void TrafficTable::update(RenderingOptions& opts)
 {
   blockSignals(true);
 
-  const size_t num_lanes = opts.show_building_lanes.size();
+  const std::size_t num_lanes = opts.show_building_lanes.size();
   setRowCount(num_lanes);
 
-  for (size_t i = 0; i < num_lanes; i++)
+  for (std::size_t i = 0; i < num_lanes; i++)
   {
     QCheckBox* checkbox = new QCheckBox;
     checkbox->setChecked(opts.show_building_lanes[i]);

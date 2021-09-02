@@ -17,7 +17,7 @@ void MultiSelectComboBox::build_list()
     }
   );
 
-  for (size_t i = 0; i < selections.size(); i++)
+  for (std::size_t i = 0; i < selections.size(); i++)
   {
     QListWidgetItem* pListItem = new QListWidgetItem(pListWidget);
     pListWidget->addItem(pListItem);
@@ -44,10 +44,10 @@ void MultiSelectComboBox::build_list()
 void MultiSelectComboBox::box_checked(int /*state*/)
 {
   blockSignals(true);
-  size_t list_count = pListWidget->count();
+  std::size_t list_count = pListWidget->count();
   selectedText.clear();
 
-  for (size_t i = 0; i < list_count; i++)
+  for (std::size_t i = 0; i < list_count; i++)
   {
     QListWidgetItem* pItem = pListWidget->item(i);
     QCheckBox* pCheckBox = static_cast<QCheckBox*>(pListWidget->itemWidget(

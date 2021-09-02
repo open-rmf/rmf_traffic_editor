@@ -143,6 +143,7 @@ private:
   void edit_project_properties();
   void edit_rotate_all_models();
   void edit_optimize_layer_transforms();
+  void edit_align_colinear();
 
   void level_add();
   void level_edit();
@@ -215,7 +216,7 @@ private:
   void clear_property_editor();
   void populate_property_editor(const Edge& edge);
   void populate_property_editor(const Model& model);
-  void populate_property_editor(const Vertex& vertex);
+  void populate_property_editor(const Vertex& vertex, const int index);
   void populate_property_editor(const Feature& feature);
   void populate_property_editor(const Fiducial& fiducial);
   void populate_property_editor(const Polygon& polygon);

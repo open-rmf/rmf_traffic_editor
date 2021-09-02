@@ -17,9 +17,27 @@ def get_pbr_textures(params):
     return pbr_textures
 
 
+def get_ceiling_pbr_textures(params):
+    ceiling_pbr_texture_types = {'ceiling_metalness_map': 'metalness_map',
+                                 'ceiling_roughness_map': 'roughness_map',
+                                 'ceiling_environment_map': 'environment_map',
+                                 'ceiling_normal_map': 'normal_map',
+                                 'ceiling_light_map': 'light_map',
+                                 'ceiling_emissive_map': 'emissive_map'}
+    ceiling_pbr_textures = {}
+    for ceiling_pbr_key, param in params.items():
+        if ceiling_pbr_key in ceiling_pbr_texture_types:
+            pbr_key = ceiling_pbr_texture_types[ceiling_pbr_key]
+            ceiling_pbr_textures[pbr_key] = param.value
+    return ceiling_pbr_textures
+
+
 def copy_texture(texture_name, dest_path):
     texture_filename = f'{texture_name}.png'
     texture_path_dest = f'{dest_path}/{texture_filename}'
+    # Create the destination path if it does not exist
+    if not os.path.exists(dest_path):
+        os.makedirs(dest_path)
     # If the texture name is a URL fetch it
     result = urlparse(texture_name)
     texture_is_url = all([result.scheme, result.netloc, result.path])

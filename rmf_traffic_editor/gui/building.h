@@ -29,6 +29,7 @@ class QGraphicsScene;
 #include <QGraphicsLineItem>
 #include <QPointF>
 
+#include "graph.h"
 #include "level.h"
 #include "lift.h"
 #include <traffic_editor/crowd_sim/crowd_sim_impl.h>
@@ -44,6 +45,7 @@ public:
   std::string reference_level_name;
   std::vector<Level> levels;
   std::vector<Lift> lifts;
+  std::vector<Graph> graphs;
 
   mutable crowd_sim::CrowdSimImplPtr crowd_sim_impl;
 
@@ -172,12 +174,14 @@ public:
     std::vector<EditorModel>& editor_models,
     const RenderingOptions& rendering_options);
 
+  /*
   void mouse_select_press(
     const int level_idx,
     const double x,
     const double y,
     QGraphicsItem* graphics_item,
     const RenderingOptions& rendering_options);
+  */
 
   Polygon* get_selected_polygon(const int level_idx);
 

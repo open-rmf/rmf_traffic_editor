@@ -119,6 +119,12 @@ void Polygon::create_required_parameters()
       std::string("blue_linoleum"));
     create_param_if_needed("texture_scale", Param::DOUBLE, 1.0);
     create_param_if_needed("texture_rotation", Param::DOUBLE, 0.0);
+    create_param_if_needed("indoor", Param::INT, 0);
+    create_param_if_needed(
+      "ceiling_texture",
+      Param::STRING,
+      std::string("blue_linoleum"));
+    create_param_if_needed("ceiling_scale", Param::DOUBLE, 1.0);
   }
 }
 

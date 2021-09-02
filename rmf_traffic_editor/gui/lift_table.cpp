@@ -34,7 +34,7 @@ void LiftTable::update(Building& building)
 {
   blockSignals(true);
   setRowCount(1 + building.lifts.size());
-  for (size_t i = 0; i < building.lifts.size(); i++)
+  for (std::size_t i = 0; i < building.lifts.size(); i++)
   {
     setItem(
       i,

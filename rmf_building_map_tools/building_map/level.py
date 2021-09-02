@@ -15,16 +15,23 @@ from .wall import Wall
 from .hole import Hole
 from .model import Model
 from .param_value import ParamValue
-from .transform import Transform
 from .vertex import Vertex
 from .doors.swing_door import SwingDoor
 from .doors.sliding_door import SlidingDoor
 from .doors.double_swing_door import DoubleSwingDoor
 from .doors.double_sliding_door import DoubleSlidingDoor
 
+from .transform import Transform
+
 
 class Level:
-    def __init__(self, yaml_node, name, model_counts={}):
+    def __init__(
+        self,
+        yaml_node,
+        name,
+        model_counts={},
+        transform=None
+    ):
         self.name = name
         print(f'parsing level {name}')
 
@@ -41,12 +48,15 @@ class Level:
             for fiducial_yaml in yaml_node['fiducials']:
                 self.fiducials.append(Fiducial(fiducial_yaml))
 
-        self.transform = Transform()
-
         self.vertices = []
         if 'vertices' in yaml_node and yaml_node['vertices']:
             for vertex_yaml in yaml_node['vertices']:
                 self.vertices.append(Vertex(vertex_yaml))
+
+        if transform is None:
+            self.transform = Transform()
+        else:
+            self.transform = transform
 
         self.transformed_vertices = []  # will be calculated in a later pass
 
@@ -248,6 +258,15 @@ class Level:
                 self.transformed_vertices,
                 self.holes,
                 self.lift_vert_lists)
+            if floor.has_ceiling():
+                floor.generate_ceiling(
+                    world_ele,
+                    i,
+                    model_name,
+                    model_path,
+                    self.transformed_vertices,
+                    self.holes,
+                    self.lift_vert_lists)
 
     def write_sdf(self, model_name, model_path):
         sdf_ele = Element('sdf', {'version': '1.7'})
@@ -489,3 +508,46 @@ class Level:
             lane_out.start_idx += v_idx_offset
             lane_out.end_idx += v_idx_offset
             self.lanes.append(lane_out)
+
+    def generate_wall_graph(self):
+        """ Genereate a wall graph without unnecessary (non-wall) vertices"""
+
+        # first remap the vertices. Store both directions; we'll need them
+        next_idx = 0
+        vidx_to_mapped_idx = {}
+        mapped_idx_to_vidx = {}
+
+        for w in self.walls:
+            if w.start_idx not in vidx_to_mapped_idx:
+                vidx_to_mapped_idx[w.start_idx] = next_idx
+                mapped_idx_to_vidx[next_idx] = w.start_idx
+                next_idx += 1
+            if w.end_idx not in vidx_to_mapped_idx:
+                vidx_to_mapped_idx[w.end_idx] = next_idx
+                mapped_idx_to_vidx[next_idx] = w.end_idx
+                next_idx += 1
+
+        wall_data = {}
+        wall_data['vertices'] = []
+
+        for i in range(next_idx):
+            v = self.transformed_vertices[mapped_idx_to_vidx[i]]
+            p = {'name': v.name}
+
+            for param_name, param_value in v.params.items():
+                p[param_name] = param_value.value
+
+            wall_data['vertices'].append([v.x, v.y, p])
+
+        wall_data['walls'] = []
+
+        for w in self.walls:
+            v1 = self.vertices[w.start_idx]
+            v2 = self.vertices[w.end_idx]
+
+            start_idx = vidx_to_mapped_idx[w.start_idx]
+            end_idx = vidx_to_mapped_idx[w.end_idx]
+
+            wall_data['walls'].append([start_idx, end_idx, w.params])
+
+        return wall_data

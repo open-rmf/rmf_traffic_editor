@@ -156,7 +156,7 @@ void Model::draw(
       {
         // Get ending token
         std::string ending_token;
-        size_t delimiter_index = editor_model.name.find("/");
+        std::size_t delimiter_index = editor_model.name.find("/");
 
         if (delimiter_index != std::string::npos)
         {

@@ -46,7 +46,7 @@ void yaml_utils::write_node(
     case YAML::NodeType::Sequence:
     {
       emitter << YAML::BeginSeq;
-      for (size_t i = 0; i < node.size(); i++)
+      for (std::size_t i = 0; i < node.size(); i++)
         write_node(node[i], emitter);
       emitter << YAML::EndSeq;
       break;
@@ -60,7 +60,7 @@ void yaml_utils::write_node(
       for (YAML::const_iterator it = node.begin(); it != node.end(); ++it)
         keys.push_back(it->first.as<string>());
       std::sort(keys.begin(), keys.end());
-      for (size_t i = 0; i < keys.size(); i++)
+      for (std::size_t i = 0; i < keys.size(); i++)
       {
         emitter << YAML::Key << keys[i] << YAML::Value;
         write_node(node[keys[i]], emitter);

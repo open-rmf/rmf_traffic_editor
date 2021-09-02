@@ -7,6 +7,7 @@ models:
 - OpenRobotics/AirportSign3
 - OpenRobotics/AirportSign4
 - OpenRobotics/AirportSign5
+- OpenRobotics/Ambulance
 - OpenRobotics/Ambulance2
 - OpenRobotics/AnesthesiaMachine
 - OpenRobotics/ArmoredPillars

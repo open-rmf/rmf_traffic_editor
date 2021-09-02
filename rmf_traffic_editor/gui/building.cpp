@@ -143,6 +143,17 @@ bool Building::load(const string& _filename)
     }
   }
 
+  if (y["graphs"] && y["graphs"].IsMap())
+  {
+    const YAML::Node& g_map = y["graphs"];
+    for (YAML::const_iterator it = g_map.begin(); it != g_map.end(); ++it)
+    {
+      Graph graph;
+      graph.from_yaml(it->first.as<int>(), it->second);
+      graphs.push_back(graph);
+    }
+  }
+
   calculate_all_transforms();
   return true;
 }
@@ -169,6 +180,10 @@ bool Building::save()
 
   if (crowd_sim_impl)
     y["crowd_sim"] = crowd_sim_impl->to_yaml();
+
+  y["graphs"] = YAML::Node(YAML::NodeType::Map);
+  for (const auto& graph : graphs)
+    y["graphs"][graph.idx] = graph.to_yaml();
 
   YAML::Emitter emitter;
   yaml_utils::write_node(y, emitter);
@@ -235,7 +250,7 @@ int Building::find_nearest_vertex_index(
 {
   double min_dist = 1e100;
   int min_index = -1;
-  for (size_t i = 0; i < levels[level_index].vertices.size(); i++)
+  for (std::size_t i = 0; i < levels[level_index].vertices.size(); i++)
   {
     const Vertex& v = levels[level_index].vertices[i];
     const double dx = x - v.x;
@@ -364,7 +379,7 @@ void Building::draw_lifts(QGraphicsScene* scene, const int level_idx)
   {
     // find the level index referenced by the lift
     int reference_floor_idx = -1;
-    for (size_t i = 0; i < levels.size(); i++)
+    for (std::size_t i = 0; i < levels.size(); i++)
     {
       if (levels[i].name == lift.reference_floor_name)
       {
@@ -397,7 +412,7 @@ bool Building::transform_between_levels(
 {
   int from_level_idx = -1;
   int to_level_idx = -1;
-  for (size_t i = 0; i < levels.size(); i++)
+  for (std::size_t i = 0; i < levels.size(); i++)
   {
     if (levels[i].name == from_level_name)
       from_level_idx = i;
@@ -478,9 +493,9 @@ Building::Transform Building::compute_transform(
 
   // calculate the distances between each fiducial on their levels
   vector<std::pair<double, double>> distances;
-  for (size_t f0_idx = 0; f0_idx < fiducials.size(); f0_idx++)
+  for (std::size_t f0_idx = 0; f0_idx < fiducials.size(); f0_idx++)
   {
-    for (size_t f1_idx = f0_idx + 1; f1_idx < fiducials.size(); f1_idx++)
+    for (std::size_t f1_idx = f0_idx + 1; f1_idx < fiducials.size(); f1_idx++)
     {
       distances.push_back(
         make_pair(
@@ -489,11 +504,13 @@ Building::Transform Building::compute_transform(
     }
   }
 
+  if (distances.empty())
+    return Building::Transform();
 
   // for now, we'll just compute the mean of the relative scale estimates.
   // we can do fancier statistics later, if needed.
   double relative_scale_sum = 0;
-  for (size_t i = 0; i < distances.size(); i++)
+  for (std::size_t i = 0; i < distances.size(); i++)
     relative_scale_sum += distances[i].second / distances[i].first;
   const double scale = relative_scale_sum / distances.size();
 
@@ -555,9 +572,9 @@ void Building::calculate_all_transforms()
     return;// let's not crash
 
   clear_transform_cache();
-  for (size_t i = 0; i < levels.size(); i++)
+  for (std::size_t i = 0; i < levels.size(); i++)
   {
-    for (size_t j = 0; j < levels.size(); j++)
+    for (std::size_t j = 0; j < levels.size(); j++)
     {
       get_transform(i, j);
     }
@@ -581,7 +598,7 @@ int Building::get_reference_level_idx()
 {
   if (reference_level_name.empty())
     return 0;
-  for (size_t i = 0; i < levels.size(); i++)
+  for (std::size_t i = 0; i < levels.size(); i++)
   {
     if (levels[i].name == reference_level_name)
       return static_cast<int>(i);
@@ -639,7 +656,7 @@ bool Building::set_filename(const std::string& _fn)
 
   const string no_suffix(_fn.substr(0, _fn.size() - suffix.size()));
 
-  const size_t last_slash_pos = no_suffix.rfind('/', no_suffix.size());
+  const std::size_t last_slash_pos = no_suffix.rfind('/', no_suffix.size());
 
   const string stem(
     (last_slash_pos == string::npos) ?
@@ -692,13 +709,13 @@ void Building::draw(
     return;
   }
 
-  levels[level_idx].draw(scene, editor_models, rendering_options);
+  levels[level_idx].draw(scene, editor_models, rendering_options, graphs);
   draw_lifts(scene, level_idx);
 }
 
 Polygon* Building::get_selected_polygon(const int level_idx)
 {
-  for (size_t i = 0; i < levels[level_idx].polygons.size(); i++)
+  for (std::size_t i = 0; i < levels[level_idx].polygons.size(); i++)
   {
     if (levels[level_idx].polygons[i].selected)
       return &levels[level_idx].polygons[i];// abomination

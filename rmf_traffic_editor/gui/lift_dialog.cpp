@@ -423,7 +423,7 @@ void LiftDialog::update_lift_wps()
   QPointF to_point;
 
   bool found = false;
-  for (size_t level_idx = 0; level_idx < _level_names.size(); level_idx++)
+  for (std::size_t level_idx = 0; level_idx < _level_names.size(); level_idx++)
   {
     const std::string level_name = _level_names[level_idx].toStdString();
     // Vertices will only be generated on levels that the lift is serving (has
@@ -461,7 +461,7 @@ void LiftDialog::update_lift_wps()
 void LiftDialog::update_door_table()
 {
   _door_table->setRowCount(1 + _lift.doors.size());
-  for (size_t i = 0; i < _lift.doors.size(); i++)
+  for (std::size_t i = 0; i < _lift.doors.size(); i++)
   {
     const LiftDoor& door = _lift.doors[i];  // save some typing
     set_door_cell(i, 0, QString::fromStdString(door.name));
@@ -520,7 +520,7 @@ void LiftDialog::update_level_table()
 {
   _level_table->setColumnCount(1 + static_cast<int>(_lift.doors.size()));
   _level_table->setHorizontalHeaderItem(0, new QTableWidgetItem("Level"));
-  for (size_t door_idx = 0; door_idx < _lift.doors.size(); door_idx++)
+  for (std::size_t door_idx = 0; door_idx < _lift.doors.size(); door_idx++)
   {
     _level_table->setHorizontalHeaderItem(
       door_idx + 1,
@@ -529,14 +529,14 @@ void LiftDialog::update_level_table()
   }
   //blockSignals(true);
   _level_table->setRowCount(_level_names.size());
-  for (size_t level_idx = 0; level_idx < _level_names.size(); level_idx++)
+  for (std::size_t level_idx = 0; level_idx < _level_names.size(); level_idx++)
   {
     const QString& level_name = _level_names[level_idx];
     QTableWidgetItem* name_item = new QTableWidgetItem(level_name);
     name_item->setFlags(name_item->flags() & ~Qt::ItemIsEditable);
     _level_table->setItem(level_idx, 0, name_item);
 
-    for (size_t door_idx = 0; door_idx < _lift.doors.size(); door_idx++)
+    for (std::size_t door_idx = 0; door_idx < _lift.doors.size(); door_idx++)
     {
       QCheckBox* checkbox = new QCheckBox;
       checkbox->setStyleSheet("margin-left: 50%; margin-right: 50%");

@@ -449,12 +449,12 @@ bool Level::delete_selected()
   }
 
   // if a feature is selected, refuse to delete it if it's in a constraint
-  for (size_t i = 0; i < floorplan_features.size(); i++)
+  for (std::size_t i = 0; i < floorplan_features.size(); i++)
   {
     if (!floorplan_features[i].selected())
       continue;
 
-    for (size_t j = 0; j < constraints.size(); j++)
+    for (std::size_t j = 0; j < constraints.size(); j++)
     {
       if (constraints[j].includes_id(floorplan_features[i].id()))
         return false;
@@ -464,15 +464,15 @@ bool Level::delete_selected()
     return true;
   }
 
-  for (size_t layer_idx = 0; layer_idx < layers.size(); layer_idx++)
+  for (std::size_t layer_idx = 0; layer_idx < layers.size(); layer_idx++)
   {
     Layer& layer = layers[layer_idx];
-    for (size_t i = 0; i < layer.features.size(); i++)
+    for (std::size_t i = 0; i < layer.features.size(); i++)
     {
       if (!layer.features[i].selected())
         continue;
 
-      for (size_t j = 0; j < constraints.size(); j++)
+      for (std::size_t j = 0; j < constraints.size(); j++)
       {
         if (constraints[j].includes_id(layer.features[i].id()))
           return false;
@@ -489,7 +489,7 @@ bool Level::delete_selected()
 void Level::get_selected_items(
   std::vector<Level::SelectedItem>& items)
 {
-  for (size_t i = 0; i < edges.size(); i++)
+  for (std::size_t i = 0; i < edges.size(); i++)
   {
     if (edges[i].selected)
     {
@@ -499,7 +499,7 @@ void Level::get_selected_items(
     }
   }
 
-  for (size_t i = 0; i < models.size(); i++)
+  for (std::size_t i = 0; i < models.size(); i++)
   {
     if (models[i].selected)
     {
@@ -509,7 +509,7 @@ void Level::get_selected_items(
     }
   }
 
-  for (size_t i = 0; i < vertices.size(); i++)
+  for (std::size_t i = 0; i < vertices.size(); i++)
   {
     if (vertices[i].selected)
     {
@@ -519,7 +519,7 @@ void Level::get_selected_items(
     }
   }
 
-  for (size_t i = 0; i < fiducials.size(); i++)
+  for (std::size_t i = 0; i < fiducials.size(); i++)
   {
     if (fiducials[i].selected)
     {
@@ -529,7 +529,7 @@ void Level::get_selected_items(
     }
   }
 
-  for (size_t i = 0; i < polygons.size(); i++)
+  for (std::size_t i = 0; i < polygons.size(); i++)
   {
     if (polygons[i].selected)
     {
@@ -539,7 +539,7 @@ void Level::get_selected_items(
     }
   }
 
-  for (size_t i = 0; i < floorplan_features.size(); i++)
+  for (std::size_t i = 0; i < floorplan_features.size(); i++)
   {
     if (floorplan_features[i].selected())
     {
@@ -550,9 +550,9 @@ void Level::get_selected_items(
     }
   }
 
-  for (size_t layer_idx = 0; layer_idx < layers.size(); layer_idx++)
+  for (std::size_t layer_idx = 0; layer_idx < layers.size(); layer_idx++)
   {
-    for (size_t i = 0; i < layers[layer_idx].features.size(); i++)
+    for (std::size_t i = 0; i < layers[layer_idx].features.size(); i++)
     {
       if (layers[layer_idx].features[i].selected())
       {
@@ -564,7 +564,7 @@ void Level::get_selected_items(
     }
   }
 
-  for (size_t i = 0; i < constraints.size(); i++)
+  for (std::size_t i = 0; i < constraints.size(); i++)
   {
     if (constraints[i].selected())
     {
@@ -616,7 +616,8 @@ void Level::calculate_scale()
 void Level::draw_lane(
   QGraphicsScene* scene,
   const Edge& edge,
-  const RenderingOptions& opts) const
+  const RenderingOptions& opts,
+  const vector<Graph>& graphs) const
 {
   const int graph_idx = edge.get_graph_idx();
   if (graph_idx >= 0 &&
@@ -630,8 +631,24 @@ void Level::draw_lane(
   const double dy = v_end.y - v_start.y;
   const double len = std::sqrt(dx*dx + dy*dy);
 
-  double pen_width_in_meters = edge.get_width() > 0 ? edge.get_width() : 1.0;
-  const double lane_pen_width = pen_width_in_meters / drawing_meters_per_pixel;
+  // see if there is a default width for this graph_idx
+  double graph_default_width = -1.0;
+  for (const auto& graph : graphs)
+  {
+    if (graph.idx == graph_idx)
+    {
+      graph_default_width = graph.default_lane_width;
+      break;
+    }
+  }
+
+  double lane_width_meters = 1.0;
+  if (edge.get_width() > 0)
+    lane_width_meters = edge.get_width();
+  else if (graph_default_width > 0)
+    lane_width_meters = graph_default_width;
+
+  const double lane_pen_width = lane_width_meters / drawing_meters_per_pixel;
 
   const QPen arrow_pen(
     QBrush(QColor::fromRgbF(0.0, 0.0, 0.0, 0.5)),
@@ -1073,7 +1090,8 @@ void Level::clear_selection()
 void Level::draw(
   QGraphicsScene* scene,
   vector<EditorModel>& editor_models,
-  const RenderingOptions& rendering_options)
+  const RenderingOptions& rendering_options,
+  const vector<Graph>& graphs)
 {
   if (drawing_filename.size() && _drawing_visible)
   {
@@ -1110,11 +1128,21 @@ void Level::draw(
   {
     switch (edge.type)
     {
-      case Edge::LANE: draw_lane(scene, edge, rendering_options); break;
-      case Edge::WALL: draw_wall(scene, edge); break;
-      case Edge::MEAS: draw_meas(scene, edge); break;
-      case Edge::DOOR: draw_door(scene, edge); break;
-      case Edge::HUMAN_LANE: draw_lane(scene, edge, rendering_options); break;
+      case Edge::LANE:
+        draw_lane(scene, edge, rendering_options, graphs);
+        break;
+      case Edge::WALL:
+        draw_wall(scene, edge);
+        break;
+      case Edge::MEAS:
+        draw_meas(scene, edge);
+        break;
+      case Edge::DOOR:
+        draw_door(scene, edge);
+        break;
+      case Edge::HUMAN_LANE:
+        draw_lane(scene, edge, rendering_options, graphs);
+        break;
       default:
         printf("tried to draw unknown edge type: %d\n",
           static_cast<int>(edge.type));
@@ -1122,10 +1150,18 @@ void Level::draw(
     }
   }
 
+  QFont vertex_name_font("Helvetica");
+  double vertex_name_font_size =
+    vertex_radius / drawing_meters_per_pixel * 1.5;
+  if (vertex_name_font_size < 1.0)
+    vertex_name_font_size = 1.0;
+  vertex_name_font.setPointSizeF(vertex_name_font_size);
+
   for (const auto& v : vertices)
     v.draw(
       scene,
-      vertex_radius / drawing_meters_per_pixel);
+      vertex_radius / drawing_meters_per_pixel,
+      vertex_name_font);
 
   for (const auto& f : fiducials)
     f.draw(scene, drawing_meters_per_pixel);
@@ -1141,7 +1177,7 @@ void Level::draw(
       drawing_meters_per_pixel);
   }
 
-  for (size_t i = 0; i < constraints.size(); i++)
+  for (std::size_t i = 0; i < constraints.size(); i++)
     draw_constraint(scene, constraints[i], i);
 }
 
@@ -1173,7 +1209,7 @@ void Level::remove_feature(const int layer_idx, QUuid feature_id)
   {
     int index_to_remove = -1;
 
-    for (size_t i = 0; i < floorplan_features.size(); i++)
+    for (std::size_t i = 0; i < floorplan_features.size(); i++)
     {
       if (feature_id == floorplan_features[i].id())
         index_to_remove = i;
@@ -1387,12 +1423,12 @@ Polygon::EdgeDragPolygon Level::polygon_edge_drag_press(
   int min_idx = 0;
   double min_dist = 1.0e9;
 
-  for (size_t v0_idx = 0; v0_idx < polygon->vertices.size(); v0_idx++)
+  for (std::size_t v0_idx = 0; v0_idx < polygon->vertices.size(); v0_idx++)
   {
-    const size_t v1_idx =
+    const std::size_t v1_idx =
       v0_idx < polygon->vertices.size() - 1 ? v0_idx + 1 : 0;
-    const size_t v0 = polygon->vertices[v0_idx];
-    const size_t v1 = polygon->vertices[v1_idx];
+    const std::size_t v0 = polygon->vertices[v0_idx];
+    const std::size_t v1 = polygon->vertices[v1_idx];
 
     const double x0 = vertices[v0].x;
     const double y0 = vertices[v0].y;
@@ -1416,7 +1452,7 @@ Polygon::EdgeDragPolygon Level::polygon_edge_drag_press(
 
   // create the mouse motion polygon and insert a new edge
   QVector<QPointF> polygon_vertices;
-  for (size_t i = 0; i < polygon->vertices.size(); i++)
+  for (std::size_t i = 0; i < polygon->vertices.size(); i++)
   {
     const int v_idx = polygon->vertices[i];
     const Vertex& v = vertices[v_idx];
@@ -1452,9 +1488,9 @@ void Level::add_vertex(const double x, const double y)
   vertices.push_back(Vertex(x, y));
 }
 
-size_t Level::get_vertex_by_id(QUuid vertex_id)
+std::size_t Level::get_vertex_by_id(QUuid vertex_id)
 {
-  for (size_t i = 0; i < vertices.size(); i++)
+  for (std::size_t i = 0; i < vertices.size(); i++)
   {
     if (vertices[i].uuid == vertex_id)
     {
@@ -1469,9 +1505,9 @@ bool Level::are_layer_names_unique()
   // Just do the trivial n^2 approach for now, if we ever have a zillion
   // layers, we can do something more sophisticated.
 
-  for (size_t i = 0; i < layers.size(); i++)
+  for (std::size_t i = 0; i < layers.size(); i++)
   {
-    for (size_t j = i + 1; j < layers.size(); j++)
+    for (std::size_t j = i + 1; j < layers.size(); j++)
     {
       if (layers[i].name == layers[j].name)
       {
@@ -1491,14 +1527,14 @@ bool Level::are_layer_names_unique()
 
 const Feature* Level::find_feature(const QUuid& id) const
 {
-  for (size_t i = 0; i < floorplan_features.size(); i++)
+  for (std::size_t i = 0; i < floorplan_features.size(); i++)
   {
     if (floorplan_features[i].id() == id)
       return &floorplan_features[i];
   }
-  for (size_t layer_idx = 0; layer_idx < layers.size(); layer_idx++)
+  for (std::size_t layer_idx = 0; layer_idx < layers.size(); layer_idx++)
   {
-    for (size_t i = 0; i < layers[layer_idx].features.size(); i++)
+    for (std::size_t i = 0; i < layers[layer_idx].features.size(); i++)
     {
       if (layers[layer_idx].features[i].id() == id)
         return &layers[layer_idx].features[i];
@@ -1509,7 +1545,7 @@ const Feature* Level::find_feature(const QUuid& id) const
 
 const Feature* Level::find_feature(const double x, const double y) const
 {
-  for (size_t layer_idx = 0; layer_idx < layers.size(); layer_idx++)
+  for (std::size_t layer_idx = 0; layer_idx < layers.size(); layer_idx++)
   {
     if (!layers[layer_idx].visible)
       continue;
@@ -1524,7 +1560,7 @@ const Feature* Level::find_feature(const double x, const double y) const
   double min_dist = 1e9;
   const Feature* min_feature = nullptr;
 
-  for (size_t i = 0; i < floorplan_features.size(); i++)
+  for (std::size_t i = 0; i < floorplan_features.size(); i++)
   {
     const Feature& f = floorplan_features[i];
     const double dx = x - f.x();
@@ -1557,7 +1593,7 @@ void Level::remove_constraint(const QUuid& a, const QUuid& b)
   const Constraint c(a, b);
   int index_to_remove = -1;
 
-  for (size_t i = 0; i < constraints.size(); i++)
+  for (std::size_t i = 0; i < constraints.size(); i++)
   {
     if (constraints[i] == c)
     {
@@ -1574,7 +1610,7 @@ void Level::remove_constraint(const QUuid& a, const QUuid& b)
 
 bool Level::get_feature_point(const QUuid& id, QPointF& point) const
 {
-  for (size_t i = 0; i < floorplan_features.size(); i++)
+  for (std::size_t i = 0; i < floorplan_features.size(); i++)
   {
     if (floorplan_features[i].id() == id)
     {
@@ -1582,9 +1618,9 @@ bool Level::get_feature_point(const QUuid& id, QPointF& point) const
       return true;
     }
   }
-  for (size_t layer_idx = 0; layer_idx < layers.size(); layer_idx++)
+  for (std::size_t layer_idx = 0; layer_idx < layers.size(); layer_idx++)
   {
-    for (size_t i = 0; i < layers[layer_idx].features.size(); i++)
+    for (std::size_t i = 0; i < layers[layer_idx].features.size(); i++)
     {
       const Layer& layer = layers[layer_idx];
       if (layer.features[i].id() == id)
@@ -1696,7 +1732,7 @@ void Level::optimize_layer_transforms()
 {
   printf("level %s optimizing layer transforms...\n", name.c_str());
 
-  for (size_t i = 0; i < layers.size(); i++)
+  for (std::size_t i = 0; i < layers.size(); i++)
   {
     ceres::Problem problem;
 
@@ -1801,9 +1837,11 @@ void Level::mouse_select_press(
   const double x,
   const double y,
   QGraphicsItem* graphics_item,
-  const RenderingOptions& rendering_options)
+  const RenderingOptions& rendering_options,
+  const Qt::KeyboardModifiers& modifiers)
 {
-  clear_selection();
+  if (!(modifiers & Qt::ShiftModifier))
+    clear_selection();
 
   const NearestItem ni = nearest_items(x, y);
 
@@ -1871,7 +1909,7 @@ Level::NearestItem Level::nearest_items(const double x, const double y)
 {
   NearestItem ni;
 
-  for (size_t i = 0; i < vertices.size(); i++)
+  for (std::size_t i = 0; i < vertices.size(); i++)
   {
     const Vertex& p = vertices[i];
     const double dx = x - p.x;
@@ -1885,7 +1923,7 @@ Level::NearestItem Level::nearest_items(const double x, const double y)
   }
 
   // search the floorplan features
-  for (size_t i = 0; i < floorplan_features.size(); i++)
+  for (std::size_t i = 0; i < floorplan_features.size(); i++)
   {
     const Feature& f = floorplan_features[i];
     const double dx = x - f.x();
@@ -1900,10 +1938,10 @@ Level::NearestItem Level::nearest_items(const double x, const double y)
   }
 
   // now search all "other" layer features
-  for (size_t layer_idx = 0; layer_idx < layers.size(); layer_idx++)
+  for (std::size_t layer_idx = 0; layer_idx < layers.size(); layer_idx++)
   {
     const Layer& layer = layers[layer_idx];
-    for (size_t i = 0; i < layer.features.size(); i++)
+    for (std::size_t i = 0; i < layer.features.size(); i++)
     {
       const Feature& f = layer.features[i];
 
@@ -1923,7 +1961,7 @@ Level::NearestItem Level::nearest_items(const double x, const double y)
     }
   }
 
-  for (size_t i = 0; i < fiducials.size(); i++)
+  for (std::size_t i = 0; i < fiducials.size(); i++)
   {
     const Fiducial& f = fiducials[i];
     const double dx = x - f.x;
@@ -1936,7 +1974,7 @@ Level::NearestItem Level::nearest_items(const double x, const double y)
     }
   }
 
-  for (size_t i = 0; i < models.size(); i++)
+  for (std::size_t i = 0; i < models.size(); i++)
   {
     const Model& m = models[i];
     const double dx = x - m.state.x;
@@ -1962,7 +2000,7 @@ int Level::nearest_item_index_if_within_distance(
   int min_index = -1;
   if (item_type == VERTEX)
   {
-    for (size_t i = 0; i < vertices.size(); i++)
+    for (std::size_t i = 0; i < vertices.size(); i++)
     {
       const Vertex& p = vertices[i];
       const double dx = x - p.x;
@@ -1977,7 +2015,7 @@ int Level::nearest_item_index_if_within_distance(
   }
   else if (item_type == FIDUCIAL)
   {
-    for (size_t i = 0; i < fiducials.size(); i++)
+    for (std::size_t i = 0; i < fiducials.size(); i++)
     {
       const Fiducial& f = fiducials[i];
       const double dx = x - f.x;
@@ -1992,7 +2030,7 @@ int Level::nearest_item_index_if_within_distance(
   }
   else if (item_type == MODEL)
   {
-    for (size_t i = 0; i < models.size(); i++)
+    for (std::size_t i = 0; i < models.size(); i++)
     {
       const Model& m = models[i];
       const double dx = x - m.state.x;
@@ -2075,7 +2113,7 @@ void Level::set_selected_containing_polygon(
   // holes are "higher" in our Z-stack (to make them clickable), so first
   // we need to make a list of all polygons that contain this point.
   vector<Polygon*> containing_polygons;
-  for (size_t i = 0; i < polygons.size(); i++)
+  for (std::size_t i = 0; i < polygons.size(); i++)
   {
     Polygon& polygon = polygons[i];
     QVector<QPointF> polygon_vertices;
@@ -2110,11 +2148,11 @@ void Level::set_selected_containing_polygon(
 void Level::compute_layer_transforms()
 {
   printf("Level::compute_layer_transforms()\n");
-  for (size_t i = 0; i < layers.size(); i++)
+  for (std::size_t i = 0; i < layers.size(); i++)
     compute_layer_transform(i);
 }
 
-void Level::compute_layer_transform(const size_t layer_idx)
+void Level::compute_layer_transform(const std::size_t layer_idx)
 {
   printf("Level::compute_layer_transform(%d)\n", static_cast<int>(layer_idx));
   if (layer_idx >= layers.size())
@@ -2182,4 +2220,183 @@ void Level::compute_layer_transform(const size_t layer_idx)
     std::make_pair(
       "RMF -> grid cells\nscale, rotate, translate",
       gridcells_rmf.inverse().to_string()));
+}
+
+void Level::align_colinear()
+{
+  struct SelectedVertex
+  {
+    size_t index;
+    bool expanded;
+    vector<size_t> connected_vertex_indices;
+  };
+
+  // build up a vector of selected vertex indices
+  vector<SelectedVertex> selected_vertices;
+  for (size_t i = 0; i < vertices.size(); i++)
+  {
+    if (vertices[i].selected)
+    {
+      SelectedVertex sv;
+      sv.index = i;
+      sv.expanded = false;
+
+      for (size_t j = 0; j < edges.size(); j++)
+      {
+        const size_t start_idx = static_cast<size_t>(edges[j].start_idx);
+        const size_t end_idx = static_cast<size_t>(edges[j].end_idx);
+        if (start_idx == i && vertices[end_idx].selected)
+          sv.connected_vertex_indices.push_back(end_idx);
+        else if (end_idx == i && vertices[start_idx].selected)
+          sv.connected_vertex_indices.push_back(start_idx);
+      }
+
+      selected_vertices.push_back(sv);
+    }
+  }
+
+  printf("align_colinear() vertices:\n");
+  for (const SelectedVertex& sv : selected_vertices)
+  {
+    printf("  %zu:", sv.index);
+    for (const size_t i : sv.connected_vertex_indices)
+      printf(" %zu", i);
+    printf("\n");
+  }
+
+  if (selected_vertices.size() < 3)
+  {
+    printf("%zu vertices were selected; >= 3 required for colinear align!\n",
+      selected_vertices.size());
+    return;
+  }
+
+  // start at one endpoint and go down the chain
+  vector<SelectedVertex> chain;
+  for (size_t i = 0; i < selected_vertices.size(); i++)
+  {
+    if (selected_vertices[i].connected_vertex_indices.size() == 1)
+    {
+      chain.push_back(selected_vertices[i]);
+      break;
+    }
+  }
+
+  if (chain.empty())
+  {
+    printf("could not find starting point of chain; I'll just make a guess\n");
+    // for now, just use the element with the smallest horizontal coordinate
+    // to be more fancy in the future, we could make a regression line and
+    // choose the point closest to its end
+    size_t min_idx = 0;
+    double min_value = 1e42;
+    for (size_t i = 0; i < selected_vertices.size(); i++)
+    {
+      const Vertex& v = vertices[selected_vertices[i].index];
+      if (v.x < min_value)
+      {
+        min_value = v.x;
+        min_idx = i;
+      }
+    }
+    chain.push_back(selected_vertices[min_idx]);
+  }
+
+  // keep expanding the last endpoint
+  while (true)
+  {
+    bool chain_complete = true;
+    for (size_t i = 0; i < chain.back().connected_vertex_indices.size(); i++)
+    {
+      const size_t test_vertex_idx = chain.back().connected_vertex_indices[i];
+      // see if this is a new vertex to add to the chain
+      bool found = false;
+      for (size_t j = 0; j < chain.size() - 1; j++)
+      {
+        if (chain[j].index == test_vertex_idx)
+        {
+          found = true;
+          break;
+        }
+      }
+
+      if (!found)
+      {
+        printf("  adding vertex %zu to chain\n", test_vertex_idx);
+        for (size_t j = 0; j < selected_vertices.size(); j++)
+        {
+          if (selected_vertices[j].index == test_vertex_idx)
+            chain.push_back(selected_vertices[j]);
+        }
+        chain_complete = false;
+      }
+    }
+
+    if (chain_complete)
+      break;
+  }
+
+  printf("  chain before sorting:");
+  for (const SelectedVertex& sv : chain)
+    printf(" %zu", sv.index);
+  printf("\n");
+
+  // sort the chain vertices by distance from the starting vertex
+  const SelectedVertex starting_vertex = chain[0];
+  std::sort(
+    chain.begin() + 1,
+    chain.end(),
+    [this, starting_vertex](SelectedVertex sv1, SelectedVertex sv2)
+    {
+      const Vertex& v = vertices[starting_vertex.index];
+      const Vertex& v1 = vertices[sv1.index];
+      const Vertex& v2 = vertices[sv2.index];
+
+      const double d1x = v.x - v1.x;
+      const double d1y = v.y - v1.y;
+      const double dist_v1 = sqrt(d1x * d1x + d1y * d1y);
+
+      const double d2x = v.x - v2.x;
+      const double d2y = v.y - v2.y;
+      const double dist_v2 = sqrt(d2x * d2x + d2y * d2y);
+      return dist_v1 < dist_v2;
+    });
+
+  printf("  chain:");
+  for (const SelectedVertex& sv : chain)
+    printf(" %zu", sv.index);
+  printf("\n");
+
+  if (chain.size() < 3)
+  {
+    printf("could not find a connected chain of >= 3 vertices!\n");
+    return;
+  }
+
+  // compute line between first and last vertices
+  const Vertex& v1 = vertices[chain.front().index];
+  const Vertex& v2 = vertices[chain.back().index];
+
+  // compute unit vector pointing from v1 to v2
+  const double line_length =
+    sqrt((v2.x - v1.x) * (v2.x - v1.x) + (v2.y - v1.y) * (v2.y - v1.y));
+  if (line_length < 0.001)
+  {
+    printf("ill-defined line! bailing to avoid numerical blowups\n");
+    return;
+  }
+  const double ux = (v2.x - v1.x) / line_length;
+  const double uy = (v2.y - v1.y) / line_length;
+
+  printf("line: (%.3f, %.3f), (%.3f, %.3f)  u = (%.3f, %.3f)\n",
+    v1.x, v1.y, v2.x, v2.y, ux, uy);
+
+  // project intermediate vertices onto this line
+  for (size_t i = 1; i < chain.size() - 1; i++)
+  {
+    Vertex& v = vertices[chain[i].index];
+    const double t = ((v1.x - v.x) * ux) + ((v1.y - v.y) * uy);
+    v.x = v1.x - t * ux;
+    v.y = v1.y - t * uy;
+  }
 }

@@ -57,6 +57,7 @@ set(gui_sources
   gui/editor.cpp
   gui/editor_model.cpp
   gui/fiducial.cpp
+  gui/graph.cpp
   gui/layer.cpp
   gui/layer_dialog.cpp
   gui/layer_table.cpp
