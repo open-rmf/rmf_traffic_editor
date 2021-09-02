@@ -2,6 +2,12 @@
 Changelog for package rmf_traffic_editor_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.4.0 (2021-09-02)
+------------------
+* add ambulance icon to model_list (`#376 <https://github.com/open-rmf/rmf_traffic_editor/issues/376>`_)
+* adding maintainer for buildfarm notifications (`#368 <https://github.com/open-rmf/rmf_traffic_editor/issues/368>`_)
+* Contributors: Marco A. Gutiérrez, ddengster
+
 1.3.0 (2021-05-14)
 ------------------
 * Rename package

@@ -2,6 +2,18 @@
 Changelog for package rmf_building_map_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.4.0 (2021-09-02)
+------------------
+* Feature/map generator using global coordinates (`#379 <https://github.com/open-rmf/rmf_traffic_editor/issues/379>`_)
+* added support for ceilings with texture (`#383 <https://github.com/open-rmf/rmf_traffic_editor/issues/383>`_)
+* Feature/wall graph (`#377 <https://github.com/open-rmf/rmf_traffic_editor/issues/377>`_)
+* added scaling features to wall texture (`#382 <https://github.com/open-rmf/rmf_traffic_editor/issues/382>`_)
+* fix crowdsim map generation when there are no robots (`#380 <https://github.com/open-rmf/rmf_traffic_editor/issues/380>`_)
+* Fix crash when level has no floors (`#370 <https://github.com/open-rmf/rmf_traffic_editor/issues/370>`_)
+* adding maintainer for buildfarm notifications (`#368 <https://github.com/open-rmf/rmf_traffic_editor/issues/368>`_)
+* Fix issues with building map tools using Ignition tools (`#362 <https://github.com/open-rmf/rmf_traffic_editor/issues/362>`_)
+* Contributors: Luca Della Vedova, Marco A. Gutiérrez, Matthew Booker, Morgan Quigley, Nicholas, Xiyu
+
 1.3.0 (2021-05-14)
 ------------------
 * Added support for fuel textures (`#342 <https://github.com/open-rmf/rmf_traffic_editor/issues/342>`_)
