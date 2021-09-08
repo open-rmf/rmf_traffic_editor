@@ -638,6 +638,8 @@ def download_model_fuel_tools(model_name, author_name,
             model_name.lower())
 
         if " " in model_name:
+            if os.path.isdir(extract_path):
+                shutil.rmtree(extract_path)
             os.rename(os.path.join(extract_path_base, url_model_name.lower()),
                       extract_path)
 
