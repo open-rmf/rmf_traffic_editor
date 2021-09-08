@@ -8,6 +8,7 @@ from ament_index_python.packages import get_package_share_directory
 from .level import Level
 from .lift import Lift
 from .param_value import ParamValue
+from .passthrough_transform import PassthroughTransform
 from .web_mercator_transform import WebMercatorTransform
 
 
@@ -23,7 +24,6 @@ class Building:
         if 'parameters' in yaml_node and yaml_node['parameters']:
             for param_name, param_yaml in yaml_node['parameters'].items():
                 self.params[param_name] = ParamValue(param_yaml)
-        print('parsed parameters' + str(self.params))
 
         if 'coordinate_system' in yaml_node:
             self.coordinate_system = yaml_node['coordinate_system']
@@ -31,12 +31,11 @@ class Building:
             self.coordinate_system = 'reference_image'
         print(f'coordinate system: {self.coordinate_system}')
 
-        if (self.coordinate_system == 'web_mercator' and
-                'generate_crs' not in self.params):
-            raise ValueError('generate_crs must be defined for global nav!')
-
         self.global_transform = None
         if self.coordinate_system == 'web_mercator':
+            if 'generate_crs' not in self.params:
+                raise ValueError('generate_crs must be defined for global nav')
+
             crs_name = self.params['generate_crs'].value
             self.global_transform = WebMercatorTransform(crs_name)
 
@@ -59,6 +58,25 @@ class Building:
                     self.global_transform.set_offset(
                         self.global_transform.transform_point((x, y)))
                     break
+
+        elif self.coordinate_system == 'cartesian_meters':
+            if 'offset_x' in self.params:
+                offset_x = self.params['offset_x'].value
+            else:
+                offset_x = 0
+
+            if 'offset_y' in self.params:
+                offset_y = self.params['offset_y'].value
+            else:
+                offset_y = 0
+
+            if 'generate_crs' in self.params:
+                crs_name = self.params['generate_crs'].value
+            else:
+                crs_name = ''
+
+            self.global_transform = \
+                PassthroughTransform(offset_x, offset_y, crs_name)
 
         self.levels = {}
         self.model_counts = {}
@@ -150,9 +168,14 @@ class Building:
             g = {}
             g['building_name'] = self.name
             g['levels'] = {}
-            if self.global_transform is not None:
+
+            if self.coordinate_system == 'web_mercator':
                 g['crs_name'] = self.global_transform.crs_name
                 g['offset'] = [*self.global_transform.offset]
+            elif self.coordinate_system == 'cartesian_meters':
+                if 'generate_crs' in self.params:
+                    g['crs_name'] = self.params['generate_crs'].value
+                g['offset'] = [*self.global_transform.translation]
 
             empty = True
             for level_name, level in self.levels.items():
@@ -216,13 +239,22 @@ class Building:
                       {'name': vertex.name, 'x': str(vertex.x),
                        'y': str(vertex.y), 'level': level_name})
 
-        if self.global_transform is not None:
-            offset = self.global_transform.offset
+        if self.coordinate_system == 'web_mercator':
+            (tx, ty) = self.global_transform.x, self.global_transform.y
             offset_ele = SubElement(world, 'offset')
-            offset_ele.text = f'{offset[0]} {offset[1]} 0 0 0 0'
+            offset_ele.text = f'{tx} {ty} 0 0 0 0'
 
             crs_ele = SubElement(world, 'crs')
-            crs_ele.text = self.global_transform.crs_name
+            crs_ele.text = self.global_transform.frame_name
+
+        elif self.coordinate_system == 'cartesian_meters':
+            tx, ty = self.global_transform.x, self.global_transform.y
+            offset_ele = SubElement(world, 'offset')
+            offset_ele.text = f'{tx} {ty} 0 0 0 0'
+
+            if self.global_transform.frame_name:
+                crs_ele = SubElement(world, 'crs')
+                crs_ele.text = self.global_transform.frame_name
 
         gui_ele = world.find('gui')
         c = self.center()
