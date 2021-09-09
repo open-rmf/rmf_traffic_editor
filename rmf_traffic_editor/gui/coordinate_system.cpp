@@ -59,7 +59,7 @@ CoordinateSystem CoordinateSystem::from_string(const std::string& s)
   return cs;
 }
 
-bool CoordinateSystem::is_y_flipped()
+bool CoordinateSystem::is_y_flipped() const
 {
   return value == Legacy;
 }

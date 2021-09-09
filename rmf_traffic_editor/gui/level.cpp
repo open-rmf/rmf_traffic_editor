@@ -1091,7 +1091,8 @@ void Level::draw(
   QGraphicsScene* scene,
   vector<EditorModel>& editor_models,
   const RenderingOptions& rendering_options,
-  const vector<Graph>& graphs)
+  const vector<Graph>& graphs,
+  const CoordinateSystem& coordinate_system)
 {
   if (drawing_filename.size() && _drawing_visible)
   {
@@ -1161,7 +1162,8 @@ void Level::draw(
     v.draw(
       scene,
       vertex_radius / drawing_meters_per_pixel,
-      vertex_name_font);
+      vertex_name_font,
+      coordinate_system);
 
   for (const auto& f : fiducials)
     f.draw(scene, drawing_meters_per_pixel);

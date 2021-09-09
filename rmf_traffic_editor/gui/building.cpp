@@ -729,7 +729,13 @@ void Building::draw(
     return;
   }
 
-  levels[level_idx].draw(scene, editor_models, rendering_options, graphs);
+  levels[level_idx].draw(
+    scene,
+    editor_models,
+    rendering_options,
+    graphs,
+    coordinate_system);
+
   draw_lifts(scene, level_idx);
 }
 
