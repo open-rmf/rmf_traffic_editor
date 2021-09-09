@@ -173,10 +173,10 @@ class Building:
             g['building_name'] = self.name
             g['levels'] = {}
 
-            if self.coordinate_system == CoordinateSystem.WEB_MERCATOR:
+            if self.coordinate_system == CoordinateSystem.web_mercator:
                 g['crs_name'] = self.global_transform.crs_name
                 g['offset'] = [*self.global_transform.offset]
-            elif self.coordinate_system == CoordinateSystem.CARTESIAN_METERS:
+            elif self.coordinate_system == CoordinateSystem.cartesian_meters:
                 if 'generate_crs' in self.params:
                     g['crs_name'] = self.params['generate_crs'].value
                 tx, ty = self.global_transform.x, self.global_transform.y
@@ -244,7 +244,7 @@ class Building:
                       {'name': vertex.name, 'x': str(vertex.x),
                        'y': str(vertex.y), 'level': level_name})
 
-        if self.coordinate_system == CoordinateSystem.WEB_MERCATOR:
+        if self.coordinate_system == CoordinateSystem.web_mercator:
             (tx, ty) = self.global_transform.x, self.global_transform.y
             offset_ele = SubElement(world, 'offset')
             offset_ele.text = f'{tx} {ty} 0 0 0 0'
@@ -252,7 +252,7 @@ class Building:
             crs_ele = SubElement(world, 'crs')
             crs_ele.text = self.global_transform.frame_name
 
-        elif self.coordinate_system == CoordinateSystem.CARTESIAN_METERS:
+        elif self.coordinate_system == CoordinateSystem.cartesian_meters:
             tx, ty = self.global_transform.x, self.global_transform.y
             offset_ele = SubElement(world, 'offset')
             offset_ele.text = f'{tx} {ty} 0 0 0 0'
