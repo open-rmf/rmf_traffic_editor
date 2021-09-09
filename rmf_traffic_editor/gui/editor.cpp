@@ -612,7 +612,7 @@ void Editor::restore_previous_viewport()
     viewport_center_y,
     viewport_scale);
 
-  double y_flip = building.coordinate_system.is_y_flipped() : 1 : -1;
+  double y_flip = building.coordinate_system.is_y_flipped() ? 1 : -1;
 
   QTransform t;
   t.scale(viewport_scale, y_flip * viewport_scale);

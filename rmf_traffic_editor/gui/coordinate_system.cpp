@@ -61,5 +61,5 @@ CoordinateSystem CoordinateSystem::from_string(const std::string& s)
 
 bool CoordinateSystem::is_y_flipped()
 {
-  return cs.value == Legacy;
+  return value == Legacy;
 }
