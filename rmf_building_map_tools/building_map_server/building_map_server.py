@@ -15,6 +15,7 @@ from rclpy.node import Node
 
 from rmf_building_map_msgs.srv import GetBuildingMap
 from rmf_building_map_msgs.msg import BuildingMap
+from rmf_building_map_msgs.msg import SiteMap
 from rmf_building_map_msgs.msg import Level
 from rmf_building_map_msgs.msg import Graph
 from rmf_building_map_msgs.msg import GraphNode
@@ -45,6 +46,7 @@ class BuildingMapServer(Node):
             self.building = Building(yaml.safe_load(f))
 
         self.map_msg = self.building_map_msg(self.building)
+        self.sitemap_msg = self.site_map_msg(self.building)
 
         self.get_building_map_srv = self.create_service(
             GetBuildingMap, 'get_building_map', self.get_building_map)
@@ -58,8 +60,12 @@ class BuildingMapServer(Node):
         self.building_map_pub = self.create_publisher(
             BuildingMap, 'map', qos_profile=qos)
 
+        self.site_map_pub = self.create_publisher(
+            SiteMap, 'site_map', qos_profile=qos)
+
         self.get_logger().info('publishing map...')
         self.building_map_pub.publish(self.map_msg)
+        self.site_map_pub.publish(self.site_map_msg)
 
         self.get_logger().info(
             'ready to serve map: "{}"  Ctrl+C to exit...'.format(
@@ -73,6 +79,16 @@ class BuildingMapServer(Node):
         for _, lift_data in building.lifts.items():
             msg.lifts.append(self.lift_msg(lift_data))
         return msg
+
+    def site_map_msg(self, site):
+        # Site is a superset of building with a coordinate frame
+        msg = self.building_map_msg(site)
+        msg.frame.coordinate_system = site.coordinate_system
+        if site.global_transform.frame_name:
+            msg.frame.crs_name = site.global_transform.frame_name
+        # TODO implement Z offset
+        msg.frame.offset = [site.global_transform.tx,
+                site.global_transform.ty, 0]
 
     def level_msg(self, level):
         msg = Level()
