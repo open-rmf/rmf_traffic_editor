@@ -46,7 +46,7 @@ class BuildingMapServer(Node):
             self.building = Building(yaml.safe_load(f))
 
         self.map_msg = self.building_map_msg(self.building)
-        self.sitemap_msg = self.site_map_msg(self.building)
+        self.sitemap_msg = self.make_site_map_msg(self.building)
 
         self.get_building_map_srv = self.create_service(
             GetBuildingMap, 'get_building_map', self.get_building_map)
@@ -80,15 +80,22 @@ class BuildingMapServer(Node):
             msg.lifts.append(self.lift_msg(lift_data))
         return msg
 
-    def site_map_msg(self, site):
+    def make_site_map_msg(self, site):
         # Site is a superset of building with a coordinate frame
-        msg = self.building_map_msg(site)
+        msg = SiteMap()
+        building_msg = self.building_map_msg(site)
+        msg.name = building_msg.name
+        msg.levels = building_msg.levels
+        msg.lifts = building_msg.lifts
         msg.frame.coordinate_system = site.coordinate_system
-        if site.global_transform.frame_name:
-            msg.frame.crs_name = site.global_transform.frame_name
-        # TODO implement Z offset
-        msg.frame.offset = [site.global_transform.tx,
-                site.global_transform.ty, 0]
+        # Only populate if there is a global transform
+        if site.global_transform:
+            if site.global_transform.frame_name:
+                msg.frame.crs_name = site.global_transform.frame_name
+            # TODO implement Z offset
+            msg.frame.offset = [site.global_transform.tx,
+                    site.global_transform.ty, 0]
+        return msg
 
     def level_msg(self, level):
         msg = Level()
