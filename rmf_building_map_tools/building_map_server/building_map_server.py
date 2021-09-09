@@ -46,16 +46,16 @@ class BuildingMapServer(Node):
             self.building = Building(yaml.safe_load(f))
 
         self.map_msg = self.building_map_msg(self.building)
-        self.sitemap_msg = self.make_site_map_msg(self.building)
+        self.site_map_msg = self.make_site_map_msg(self.building)
 
         self.get_building_map_srv = self.create_service(
             GetBuildingMap, 'get_building_map', self.get_building_map)
 
         qos = QoSProfile(
-            history=History.RMW_QOS_POLICY_HISTORY_KEEP_LAST,
+            history=History.KEEP_LAST,
             depth=1,
-            reliability=Reliability.RMW_QOS_POLICY_RELIABILITY_RELIABLE,
-            durability=Durability.RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL)
+            reliability=Reliability.RELIABLE,
+            durability=Durability.TRANSIENT_LOCAL)
 
         self.building_map_pub = self.create_publisher(
             BuildingMap, 'map', qos_profile=qos)
@@ -93,8 +93,8 @@ class BuildingMapServer(Node):
             if site.global_transform.frame_name:
                 msg.frame.crs_name = site.global_transform.frame_name
             # TODO implement Z offset
-            msg.frame.offset = [site.global_transform.tx,
-                    site.global_transform.ty, 0]
+            msg.frame.offset = [site.global_transform.x,
+                    site.global_transform.y, 0.0]
         return msg
 
     def level_msg(self, level):
