@@ -6,7 +6,7 @@ class CoordinateSystem(Enum):
     cartesian_meters = 3
 
     def y_flip_scalar(self):
-        if self.value == self.reference_image:
+        if self == CoordinateSystem.reference_image:
             return -1
         else:
             return 1
