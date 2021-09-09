@@ -26,6 +26,7 @@ class WebMercatorTransform:
         meters_east = R * math.pi * (p[0] - 128) / 128
         # because our legacy code is all in image coordinates, the Y coord
         # is negated... this step will flip it back
+        # TODO: revisit this now that loading is not always flipped...
         meters_north = R * math.pi * (128 + p[1]) / 128
 
         (lat, lon) = \
