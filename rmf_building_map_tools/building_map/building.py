@@ -175,7 +175,8 @@ class Building:
             elif self.coordinate_system == 'cartesian_meters':
                 if 'generate_crs' in self.params:
                     g['crs_name'] = self.params['generate_crs'].value
-                g['offset'] = [*self.global_transform.translation]
+                tx, ty = self.global_transform.x, self.global_transform.y
+                g['offset'] = [tx, ty]
 
             empty = True
             for level_name, level in self.levels.items():

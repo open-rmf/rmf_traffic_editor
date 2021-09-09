@@ -29,6 +29,7 @@ class QGraphicsScene;
 #include <QGraphicsLineItem>
 #include <QPointF>
 
+#include "coordinate_system.h"
 #include "graph.h"
 #include "level.h"
 #include "lift.h"
@@ -46,6 +47,7 @@ public:
   std::vector<Level> levels;
   std::vector<Lift> lifts;
   std::vector<Graph> graphs;
+  CoordinateSystem coordinate_system;
 
   mutable crowd_sim::CrowdSimImplPtr crowd_sim_impl;
 

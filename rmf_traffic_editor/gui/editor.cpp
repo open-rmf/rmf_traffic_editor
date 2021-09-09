@@ -157,7 +157,8 @@ Editor::Editor()
         create_scene();
 
         QTransform t;
-        t.scale(scale, scale);
+        double y_flip = building.coordinate_system.is_y_flipped() ? 1 : -1;
+        t.scale(scale, y_flip * scale);
         map_view->setTransform(t);
         map_view->centerOn(p_transformed);
       }
@@ -611,8 +612,10 @@ void Editor::restore_previous_viewport()
     viewport_center_y,
     viewport_scale);
 
+  double y_flip = building.coordinate_system.is_y_flipped() : 1 : -1;
+
   QTransform t;
-  t.scale(viewport_scale, viewport_scale);
+  t.scale(viewport_scale, y_flip * viewport_scale);
   map_view->setTransform(t);
   map_view->centerOn(QPointF(viewport_center_x, viewport_center_y));
 }
@@ -794,8 +797,10 @@ void Editor::view_models()
 void Editor::zoom_reset()
 {
   const double viewport_scale = 1.0;
+  const double y_flip = building.coordinate_system.is_y_flipped() ? 1 : -1;
+
   QTransform t;
-  t.scale(viewport_scale, viewport_scale);
+  t.scale(viewport_scale, y_flip * viewport_scale);
   map_view->setTransform(t);
 }
 

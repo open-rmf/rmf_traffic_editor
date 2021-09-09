@@ -38,7 +38,8 @@ using std::shared_ptr;
 
 
 Building::Building()
-: name("building")
+: name("building"),
+  coordinate_system(CoordinateSystem::Legacy)
 {
 }
 
@@ -88,6 +89,11 @@ bool Building::load(const string& _filename)
 
   if (y["name"])
     name = y["name"].as<string>();
+
+  if (y["coordinate_system"])
+    coordinate_system =
+      CoordinateSystem::from_string(
+        y["coordinate_system"].as<string>());
 
   if (y["reference_level_name"])
     reference_level_name = y["reference_level_name"].as<string>();
@@ -154,6 +160,19 @@ bool Building::load(const string& _filename)
     }
   }
 
+  /*
+  // load the parameters
+  if (y["parameters"] && y["parameters"].IsMap())
+  {
+    for (YAML::const_iterator it = data[2].begin(); it != data[2].end(); ++it)
+    {
+      Param p;
+      p.from_yaml(it->second);
+      params[it->first.as<string>()] = p;
+    }
+  }
+  */
+
   calculate_all_transforms();
   return true;
 }
@@ -164,6 +183,8 @@ bool Building::save()
 
   YAML::Node y;
   y["name"] = name;
+
+  y["coordinate_system"] = coordinate_system.to_string();
 
   if (!reference_level_name.empty())
     y["reference_level_name"] = reference_level_name;
