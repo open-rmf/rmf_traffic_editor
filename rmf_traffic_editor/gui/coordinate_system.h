@@ -23,7 +23,8 @@
 class CoordinateSystem
 {
 public:
-  enum Value {
+  enum Value
+  {
     Undefined,
     Legacy,
     WebMercator,

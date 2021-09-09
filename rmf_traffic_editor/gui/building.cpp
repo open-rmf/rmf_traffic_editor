@@ -92,8 +92,7 @@ bool Building::load(const string& _filename)
 
   if (y["coordinate_system"])
     coordinate_system =
-      CoordinateSystem::from_string(
-        y["coordinate_system"].as<string>());
+      CoordinateSystem::from_string(y["coordinate_system"].as<string>());
 
   if (y["reference_level_name"])
     reference_level_name = y["reference_level_name"].as<string>();
