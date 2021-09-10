@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class CoordinateSystem(Enum):
     reference_image = 1
     web_mercator = 2
