@@ -2,6 +2,21 @@
 Changelog for package rmf_traffic_editor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.4.0 (2021-09-02)
+------------------
+* Feature/graph names and widths (`#384 <https://github.com/open-rmf/rmf_traffic_editor/issues/384>`_)
+  * Graph data structure: default lane widths and a step towards `#378 <https://github.com/open-rmf/rmf_traffic_editor/issues/378>`_
+* added support for ceilings with texture (`#383 <https://github.com/open-rmf/rmf_traffic_editor/issues/383>`_)
+* added scaling features to wall texture (`#382 <https://github.com/open-rmf/rmf_traffic_editor/issues/382>`_)
+* resolve build error on some systems with size_t namespace (`#374 <https://github.com/open-rmf/rmf_traffic_editor/issues/374>`_)
+  fix build error on some compilers/systems reported in https://github.com/open-rmf/rmf/discussions/85   by adding std:: prefix to size_t
+* sort list by model name, not Fuel group name (`#373 <https://github.com/open-rmf/rmf_traffic_editor/issues/373>`_)
+* Feature: align vertices colinear (`#372 <https://github.com/open-rmf/rmf_traffic_editor/issues/372>`_)
+* adding maintainer for buildfarm notifications (`#368 <https://github.com/open-rmf/rmf_traffic_editor/issues/368>`_)
+* hotfix for `#366 <https://github.com/open-rmf/rmf_traffic_editor/issues/366>`_, avoid exploding transform for 1 fudicual (`#367 <https://github.com/open-rmf/rmf_traffic_editor/issues/367>`_)
+* Minor tweak to how empty crowd_sim and lift structures are serialized in YAML (`#364 <https://github.com/open-rmf/rmf_traffic_editor/issues/364>`_)
+* Contributors: Marco A. Gutiérrez, Morgan Quigley, Xiyu
+
 1.3.0 (2021-05-14)
 ------------------
 * Feature/display layer transforms in freefleet format (`#347 <https://github.com/open-rmf/rmf_traffic_editor/issues/347>`_)
