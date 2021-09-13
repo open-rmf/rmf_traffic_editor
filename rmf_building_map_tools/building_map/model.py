@@ -29,6 +29,9 @@ class Model:
                 self.static = True
 
         self.yaw = yaml_node['yaw']
+        self.lightmap = ''
+        if 'lightmap' in yaml_node:
+            self.lightmap = yaml_node['lightmap']
 
     def to_yaml(self):
         y = {}
@@ -39,6 +42,7 @@ class Model:
         y['name'] = self.name
         y['yaw'] = self.yaw
         y['static'] = self.static
+        y['lightmap'] = self.lightmap
         return y
 
     def generate(self, world_ele, transform, elevation):
@@ -55,3 +59,13 @@ class Model:
 
         static_ele = SubElement(include_ele, 'static')
         static_ele.text = str(self.static)
+        
+        # is lightmapped, turn off shadows
+        if self.lightmap != '':
+            params_ele = SubElement(include_ele, 'experimental:params')
+            visual_ele = SubElement(params_ele, 'visual')
+            visual_ele.attrib['element_id'] = 'body::visual'
+
+            cast_shadows_ele = SubElement(visual_ele, 'cast_shadows')
+            cast_shadows_ele.attrib['action'] = 'add'
+            cast_shadows_ele.text = '0'

@@ -17,6 +17,14 @@ class Generator:
             y = yaml.safe_load(f)
             return Building(y)
 
+    # Remove namespaces in models
+    def trim_model_namespaces(self, building):
+        for level_name, level in building.levels.items():
+            for model in level.models:
+                if "/" in model.model_name:
+                    model.model_name = \
+                        "/".join(model.model_name.split("/")[1:])
+
     def generate_sdf(
         self,
         input_filename,
@@ -29,12 +37,8 @@ class Generator:
         building = self.parse_editor_yaml(input_filename)
 
         # Remove namespaces in models
-        for level_name, level in building.levels.items():
-            for model in level.models:
-                if "/" in model.model_name:
-                    model.model_name = \
-                        "/".join(model.model_name.split("/")[1:])
-
+        self.trim_model_namespaces(building)
+        
         if not os.path.exists(output_models_dir):
             os.makedirs(output_models_dir)
 
@@ -48,6 +52,69 @@ class Generator:
         with open(output_filename, 'w') as f:
             f.write(sdf_str)
         print(f'{len(sdf_str)} bytes written to {output_filename}')
+
+    def generate_export_worlds(self,
+        input_filename,
+        output_worlds_dir,
+        output_models_dir
+    ):
+        building = self.parse_editor_yaml(input_filename)
+        
+        # Remove namespaces in models
+        self.trim_model_namespaces(building)
+
+        all_export_worlds = set()
+        delimiter = ';'
+
+        for level_name, level in building.levels.items():
+
+            for floor in level.floors:
+                if 'lightmap' not in floor.params:
+                    continue
+                floor_lightmap = floor.params['lightmap']
+                splits = floor_lightmap.value.split(delimiter)
+                # print(floor_lightmap.value)
+                for split in splits:
+                    all_export_worlds.add(split)
+
+            for model in level.models:
+                worlds_split = model.lightmap.split(delimiter)
+                # print(lightmaps_split)
+                for lightmap in worlds_split:
+                    all_export_worlds.add(lightmap)
+
+        print(f'worlds: {all_export_worlds}')
+
+        if not os.path.exists(output_models_dir):
+            os.makedirs(output_models_dir)
+        print(f'output models dir: {output_models_dir}')
+
+        if not os.path.exists(output_worlds_dir):
+            os.makedirs(output_worlds_dir)
+        print(f'output world dir: {output_worlds_dir}')
+        # building.generate_sdf_models(output_models_dir)
+
+        for export_world_name in all_export_worlds:
+            if export_world_name == '':
+                export_world_file = output_worlds_dir + "/default.world"
+            else:
+                export_world_file = output_worlds_dir + "/" + export_world_name + ".world"
+
+            print(export_world_file)
+
+            # output walls and floors specific to the lightmap
+            filter_world = export_world_name
+            building.generate_sdf_models(output_models_dir, filter_world)
+
+            # generate a top-level SDF for export
+            sdf = building.generate_sdf_world_for_dae_export(export_world_name, 'ignition')
+
+            indent_etree(sdf)
+            sdf_str = str(ElementToString(sdf), 'utf-8')
+            with open(export_world_file, 'w') as f:
+                f.write(sdf_str)
+            print(f'{len(sdf_str)} bytes written to {export_world_file}')
+        
 
     def generate_gazebo_sdf(
         self,
@@ -78,15 +145,17 @@ class Generator:
     def generate_ignition_sdf_with_dae_export(
         self,
         input_filename,
-        output_filename,
+        output_worlds_dir,
         output_models_dir,
         options
     ):
-        self.generate_sdf(
-            input_filename,
-            output_filename,
-            output_models_dir,
-            options + ['ignition'] + ['dae_export'])
+        self.generate_export_worlds(
+            input_filename, output_worlds_dir, output_models_dir)
+        # self.generate_sdf(
+        #     input_filename,
+        #     output_filename,
+        #     output_models_dir,
+        #     options + ['ignition'] + ['dae_export'])
 
     def generate_ignition_sdf_with_baked_assets(
         self,

@@ -159,10 +159,16 @@ class Level:
             edges.append(Edge(edge_yaml))
         return edges
 
-    def generate_walls(self, model_ele, model_name, model_path):
+    def generate_walls(self, model_ele, model_name, model_path, filter_world):
         wall_params_list = []
+        print(f'walls: {model_name}')
         # crude method to identify all unique params list in walls
         for wall in self.walls:
+            lightmap_splits = wall.params['lightmap'].value.split(';')
+            v = wall.params['lightmap'].value
+            # print(f'split : {lightmap_splits}')
+            if filter_world not in lightmap_splits:
+                continue
             # check if param exists, if not use default val
             if "texture_name" not in wall.params:
                 wall.params["texture_name"] = ParamValue(
@@ -171,11 +177,13 @@ class Level:
                 wall.params["alpha"] = ParamValue([ParamValue.DOUBLE, 1.0])
             if wall.params not in wall_params_list:
                 wall_params_list.append(wall.params)
+            print(wall.params['lightmap'].value)
         print(f'Walls Generation, wall params list: {wall_params_list}')
 
         wall_cnt = 0
         for wall_params in wall_params_list:
             wall_cnt += 1
+            print("generate single_texture_walls walls")
             single_texture_walls = Wall(self.walls, wall_params)
             single_texture_walls.generate(
                 model_ele,
@@ -246,10 +254,12 @@ class Level:
         pose_ele = SubElement(include_ele, 'pose')
         pose_ele.text = f'{vertex.x} {vertex.y} {vertex.z} 0 0 {yaw}'
 
-    def generate_floors(self, world_ele, model_name, model_path):
+    def generate_floors(self, world_ele, model_name, model_path, filter_world):
         i = 0
         for floor in self.floors:
             i += 1
+            if 'lightmap' in floor.params and filter_world != floor.params['lightmap'].value:
+                continue
             floor.generate(
                 world_ele,
                 i,
@@ -268,7 +278,7 @@ class Level:
                     self.holes,
                     self.lift_vert_lists)
 
-    def write_sdf(self, model_name, model_path):
+    def write_sdf(self, model_name, model_path, filter_world):
         sdf_ele = Element('sdf', {'version': '1.7'})
 
         model_ele = SubElement(sdf_ele, 'model', {'name': model_name})
@@ -276,8 +286,8 @@ class Level:
         static_ele = SubElement(model_ele, 'static')
         static_ele.text = 'true'
 
-        self.generate_floors(model_ele, model_name, model_path)
-        self.generate_walls(model_ele, model_name, model_path)
+        self.generate_floors(model_ele, model_name, model_path, filter_world)
+        self.generate_walls(model_ele, model_name, model_path, filter_world)
 
         sdf_tree = ElementTree(sdf_ele)
         indent_etree(sdf_ele)
@@ -285,13 +295,13 @@ class Level:
         sdf_tree.write(sdf_path, encoding='utf-8', xml_declaration=True)
         print(f'  wrote {sdf_path}')
 
-    def generate_sdf_model(self, model_name, model_path):
+    def generate_sdf_model(self, model_name, model_path, filter_world):
         print(f'generating model of level {self.name} in {model_path}')
         config_fn = os.path.join(model_path, 'model.config')
         self.write_config(model_name, config_fn)
         print(f'  wrote {config_fn}')
 
-        self.write_sdf(model_name, model_path)
+        self.write_sdf(model_name, model_path, filter_world)
 
     def write_config(self, model_name, path):
         config_ele = Element('model')
@@ -477,7 +487,7 @@ class Level:
         return math.atan2(dy, dx)
 
     def center(self):
-        if not self.floors or self.floors[0].polygon is None:
+        if not self.floors or (len(self.floors) >= 1 and self.floors[0].polygon is None):
             return (0, 0)
         bounds = self.floors[0].polygon.bounds
         return ((bounds[0] + bounds[2]) / 2.0, (bounds[1] + bounds[3]) / 2.0)

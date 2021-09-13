@@ -125,6 +125,7 @@ void Polygon::create_required_parameters()
       Param::STRING,
       std::string("blue_linoleum"));
     create_param_if_needed("ceiling_scale", Param::DOUBLE, 1.0);
+    create_param_if_needed("lightmap", Param::STRING, std::string(""));
   }
 }
 

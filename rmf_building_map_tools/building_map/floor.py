@@ -34,6 +34,7 @@ class Floor:
         self.indoor = 0
         if 'indoor' in self.params:
             self.indoor = self.params['indoor'].value
+        self.polygon = None
 
     def to_yaml(self):
         y = {}

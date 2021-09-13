@@ -220,7 +220,7 @@ class Wall:
             f.write('Ke 0.0 0.0 0.0\n')  # emissive
             f.write('Ns 50.0\n')  # specular highlight, 0..100 (?)
             f.write('Ni 1.0\n')  # no idea what this is
-            f.write(f'd {self.alpha.value}\n')  # alpha
+            f.write(f'd {self.alpha}\n')  # alpha
             f.write('illum 2\n')  # illumination model (enum)
             f.write(f'map_Kd {texture_filename}\n')
 

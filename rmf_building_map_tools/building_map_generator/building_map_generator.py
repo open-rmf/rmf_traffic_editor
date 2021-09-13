@@ -31,7 +31,7 @@ def main():
     if args.command == "ignition_dae_export":
         g.generate_ignition_sdf_with_dae_export(
             args.INPUT,
-            args.OUTPUT_WORLD,
+            args.OUTPUT_WORLD_DIR,
             args.OUTPUT_MODEL_DIR,
             args.options
         )
