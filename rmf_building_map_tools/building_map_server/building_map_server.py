@@ -87,7 +87,7 @@ class BuildingMapServer(Node):
         msg.name = building_msg.name
         msg.levels = building_msg.levels
         msg.lifts = building_msg.lifts
-        msg.frame.coordinate_system = site.coordinate_system
+        msg.frame.coordinate_system = site.coordinate_system.name
         # Only populate if there is a global transform
         if site.global_transform:
             if site.global_transform.frame_name:
