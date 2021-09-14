@@ -112,7 +112,8 @@ class Building:
                 else:
                     transform = self.ref_level.transform
                 self.lifts[lift_name] = \
-                    Lift(lift_yaml, lift_name, transform, self.levels)
+                    Lift(lift_yaml, lift_name, transform, self.levels,
+                         self.coordinate_system)
 
         self.set_lift_vert_lists()
 
