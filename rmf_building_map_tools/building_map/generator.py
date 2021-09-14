@@ -53,68 +53,81 @@ class Generator:
             f.write(sdf_str)
         print(f'{len(sdf_str)} bytes written to {output_filename}')
 
-    def generate_export_worlds(self,
-        input_filename,
-        output_worlds_dir,
-        output_models_dir
-    ):
-        building = self.parse_editor_yaml(input_filename)
-        
-        # Remove namespaces in models
-        self.trim_model_namespaces(building)
-
-        all_export_worlds = set()
+    def get_prebaked_worlds(self, building):
+        all_prebaked_worlds = set()
         delimiter = ';'
 
         for level_name, level in building.levels.items():
-
             for floor in level.floors:
-                if 'lightmap' not in floor.params:
-                    continue
-                floor_lightmap = floor.params['lightmap']
-                splits = floor_lightmap.value.split(delimiter)
-                # print(floor_lightmap.value)
-                for split in splits:
-                    all_export_worlds.add(split)
+                if 'lightmap' in floor.params:
+                    floor_lightmap = floor.params['lightmap']
+                    splits = floor_lightmap.value.split(delimiter)
+                    # print(floor_lightmap.value)
+                    for split in splits:
+                        all_prebaked_worlds.add(split)
+
+            for wall in level.walls:
+                if 'lightmap' in wall.params:
+                    splits = wall.params['lightmap'].value.split(';')
+                    for split in splits:
+                        all_prebaked_worlds.add(split)
 
             for model in level.models:
                 worlds_split = model.lightmap.split(delimiter)
                 # print(lightmaps_split)
                 for lightmap in worlds_split:
-                    all_export_worlds.add(lightmap)
+                    all_prebaked_worlds.add(lightmap)
 
-        print(f'worlds: {all_export_worlds}')
+        return all_prebaked_worlds
+
+    def generate_baked_worlds(self,
+        input_filename,
+        output_worlds_dir,
+        output_baked_file,
+        output_models_dir
+    ):
+        building = self.parse_editor_yaml(input_filename)
+        self.trim_model_namespaces(building)
+
+        all_prebaked_worlds = self.get_prebaked_worlds(building)
+        print(f'all_prebaked_worlds: {all_prebaked_worlds}')
 
         if not os.path.exists(output_models_dir):
             os.makedirs(output_models_dir)
-        print(f'output models dir: {output_models_dir}')
 
         if not os.path.exists(output_worlds_dir):
             os.makedirs(output_worlds_dir)
-        print(f'output world dir: {output_worlds_dir}')
-        # building.generate_sdf_models(output_models_dir)
 
-        for export_world_name in all_export_worlds:
-            if export_world_name == '':
+        for prebaked_world_name in all_prebaked_worlds:
+            if prebaked_world_name == '':
                 export_world_file = output_worlds_dir + "/default.world"
             else:
-                export_world_file = output_worlds_dir + "/" + export_world_name + ".world"
+                export_world_file = output_worlds_dir + "/" + prebaked_world_name + ".world"
 
             print(export_world_file)
 
             # output walls and floors specific to the lightmap
-            filter_world = export_world_name
+            filter_world = prebaked_world_name
             building.generate_sdf_models(output_models_dir, filter_world)
 
             # generate a top-level SDF for export
-            sdf = building.generate_sdf_world_for_dae_export(export_world_name, 'ignition')
+            sdf = building.generate_sdf_world_for_dae_export(prebaked_world_name, 'ignition')
 
             indent_etree(sdf)
             sdf_str = str(ElementToString(sdf), 'utf-8')
             with open(export_world_file, 'w') as f:
                 f.write(sdf_str)
             print(f'{len(sdf_str)} bytes written to {export_world_file}')
-        
+
+        # generate top level sdf
+        baked_sdf = building.generate_sdf_world(['ignition'] + ['baked_assets'],
+            all_prebaked_worlds)
+
+        indent_etree(baked_sdf)
+        baked_sdf_str = str(ElementToString(baked_sdf), 'utf-8')
+        with open(output_baked_file, 'w') as f:
+            f.write(baked_sdf_str)
+        print(f'{len(baked_sdf_str)} bytes written to {output_baked_file}')
 
     def generate_gazebo_sdf(
         self,
@@ -142,33 +155,15 @@ class Generator:
             output_models_dir,
             options + ['ignition'])
 
-    def generate_ignition_sdf_with_dae_export(
+    def generate_ignition_sdf_with_baked_worlds(
         self,
         input_filename,
         output_worlds_dir,
-        output_models_dir,
-        options
+        output_baked_file,
+        output_models_dir
     ):
-        self.generate_export_worlds(
-            input_filename, output_worlds_dir, output_models_dir)
-        # self.generate_sdf(
-        #     input_filename,
-        #     output_filename,
-        #     output_models_dir,
-        #     options + ['ignition'] + ['dae_export'])
-
-    def generate_ignition_sdf_with_baked_assets(
-        self,
-        input_filename,
-        output_filename,
-        output_models_dir,
-        options
-    ):
-        self.generate_sdf(
-            input_filename,
-            output_filename,
-            output_models_dir,
-            options + ['ignition'] + ['baked_assets'])
+        self.generate_baked_worlds(
+            input_filename, output_worlds_dir, output_baked_file, output_models_dir)
 
     def generate_nav(self, input_filename, output_dir):
         building = self.parse_editor_yaml(input_filename)

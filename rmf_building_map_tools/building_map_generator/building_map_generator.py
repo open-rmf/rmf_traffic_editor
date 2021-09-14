@@ -29,19 +29,11 @@ def main():
         )
 
     if args.command == "ignition_dae_export":
-        g.generate_ignition_sdf_with_dae_export(
+        g.generate_ignition_sdf_with_baked_worlds(
             args.INPUT,
             args.OUTPUT_WORLD_DIR,
-            args.OUTPUT_MODEL_DIR,
-            args.options
-        )
-
-    if args.command == "ignition_baked_assets":
-        g.generate_ignition_sdf_with_baked_assets(
-            args.INPUT,
-            args.OUTPUT_WORLD,
-            args.OUTPUT_MODEL_DIR,
-            args.options
+            args.BAKED_WORLD_FILE,
+            args.OUTPUT_MODEL_DIR
         )
 
     if args.command == "nav":

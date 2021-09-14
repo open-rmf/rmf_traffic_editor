@@ -164,11 +164,14 @@ class Level:
         print(f'walls: {model_name}')
         # crude method to identify all unique params list in walls
         for wall in self.walls:
-            lightmap_splits = wall.params['lightmap'].value.split(';')
-            v = wall.params['lightmap'].value
-            # print(f'split : {lightmap_splits}')
-            if filter_world not in lightmap_splits:
-                continue
+            if 'lightmap' in wall.params:
+                lightmap_splits = wall.params['lightmap'].value.split(';')
+                v = wall.params['lightmap'].value
+
+                # print(f'split : {lightmap_splits}')
+                if filter_world not in lightmap_splits:
+                    continue
+
             # check if param exists, if not use default val
             if "texture_name" not in wall.params:
                 wall.params["texture_name"] = ParamValue(
@@ -177,7 +180,7 @@ class Level:
                 wall.params["alpha"] = ParamValue([ParamValue.DOUBLE, 1.0])
             if wall.params not in wall_params_list:
                 wall_params_list.append(wall.params)
-            print(wall.params['lightmap'].value)
+
         print(f'Walls Generation, wall params list: {wall_params_list}')
 
         wall_cnt = 0

@@ -37,6 +37,8 @@ dae_export_arg_parser.add_argument("INPUT", type=str,
                                    help="Input building.yaml file to process")
 dae_export_arg_parser.add_argument("OUTPUT_WORLD_DIR", type=str,
                                    help="Output directory of worlds")
+dae_export_arg_parser.add_argument("BAKED_WORLD_FILE", type=str,
+                                   help="Path of the file that uses the baked models")
 dae_export_arg_parser.add_argument("OUTPUT_MODEL_DIR", type=str,
                                     help="Path to output the map model files")
 dae_export_arg_parser.add_argument("-o", "--options", type=str, nargs='*', default=[],
@@ -45,12 +47,6 @@ dae_export_parser = subparsers.add_parser(
     'ignition_dae_export',
     help='Generate multiple .world files ready for dae exporting through Ignition',
     parents=[dae_export_arg_parser]
-)
-
-baked_parser = subparsers.add_parser(
-    'ignition_baked_assets',
-    help='Generate .world file with baked models for Ignition',
-    parents=[shared_parser]
 )
 
 nav_parser = subparsers.add_parser(
