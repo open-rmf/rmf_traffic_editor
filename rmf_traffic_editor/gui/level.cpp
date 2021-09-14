@@ -649,24 +649,22 @@ void Level::draw_lane(
     lane_width_meters = graph_default_width;
 
   const double lane_pen_width = lane_width_meters / drawing_meters_per_pixel;
-
-  const QPen arrow_pen(
-    QBrush(QColor::fromRgbF(0.0, 0.0, 0.0, 0.5)),
-    lane_pen_width / 8);
-
-  // dimensions for the direction indicators along this path
-  const double arrow_w = lane_pen_width / 2.5;  // width of arrowheads
-  const double arrow_l = lane_pen_width / 2.5;  // length of arrowheads
-  const double arrow_spacing = lane_pen_width / 2.0;
-
   const double norm_x = dx / len;
   const double norm_y = dy / len;
 
   // only draw arrows if it's a unidirectional lane. We used to draw
   // arrows in both directions for bidirectional, but it was messy.
-
   if (!edge.is_bidirectional())
   {
+    const QPen arrow_pen(
+      QBrush(QColor::fromRgbF(0.0, 0.0, 0.0, 0.5)),
+      lane_pen_width / 8);
+
+    // dimensions for the direction indicators along this path
+    const double arrow_w = lane_pen_width / 2.5;  // width of arrowheads
+    const double arrow_l = lane_pen_width / 2.5;  // length of arrowheads
+    const double arrow_spacing = lane_pen_width * 4.0;
+
     for (double d = 0.0; d < len; d += arrow_spacing)
     {
       // first calculate the center vertex of this arrowhead
