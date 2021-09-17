@@ -440,6 +440,9 @@ class Level:
                 dock_name = v1.params['dock_name'].value
                 dock_at_end = False
 
+            if 'speed_limit' in l.params:
+                p['speed_limit'] = l.params['speed_limit'].value
+
             if always_unidirectional and l.is_bidirectional():
                 # now flip things around and make the second link
                 forward_params = copy.deepcopy(p)
