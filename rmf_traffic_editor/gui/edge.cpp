@@ -131,6 +131,7 @@ void Edge::create_required_parameters()
     create_param_if_needed("demo_mock_floor_name", Param::STRING,
       std::string());
     create_param_if_needed("demo_mock_lift_name", Param::STRING, std::string());
+    create_param_if_needed("speed_limit", Param::DOUBLE, 0.0);
   }
   else if (type == DOOR)
   {
