@@ -191,6 +191,12 @@ class BuildingMapServer(Node):
                     ge.edge_type = GraphEdge.EDGE_TYPE_BIDIRECTIONAL
                 else:
                     ge.edge_type = GraphEdge.EDGE_TYPE_UNIDIRECTIONAL
+                if "speed_limit" in l[2]:
+                    p = Param()
+                    p.name = "speed_limit"
+                    p.type = p.TYPE_DOUBLE
+                    p.value_float = l[2]["speed_limit"]
+                    ge.params.append(p)
                 graph_msg.edges.append(ge)
             msg.nav_graphs.append(graph_msg)
 
