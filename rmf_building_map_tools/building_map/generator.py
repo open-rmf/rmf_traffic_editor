@@ -75,9 +75,9 @@ class Generator:
             output_models_dir,
             options + ['ignition'])
 
-    def generate_nav(self, input_filename, output_dir):
+    def generate_nav(self, input_filename, output_dir, version):
         building = self.parse_editor_yaml(input_filename)
-        nav_graphs = building.generate_nav_graphs()
+        nav_graphs = building.generate_nav_graphs(version)
 
         class CustomDumper(yaml.Dumper):
             def ignore_aliases(self, _):

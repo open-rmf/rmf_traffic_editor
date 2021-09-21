@@ -40,3 +40,5 @@ nav_parser.add_argument("INPUT", type=str,
                         help="Input building.yaml file to process")
 nav_parser.add_argument("OUTPUT_DIR", type=str,
                         help="Path to output the nav .yaml files")
+nav_parser.add_argument("-f", "--format", type=int, default=1,
+                        help="File format number")

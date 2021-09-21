@@ -163,7 +163,7 @@ class Building:
             fiducials,
             self.ref_level.transform.scale)
 
-    def generate_nav_graphs(self):
+    def generate_nav_graphs(self, version):
         """ Returns a dict of all non-empty nav graphs """
         print("generating nav data")
         nav_graphs = {}
@@ -172,7 +172,6 @@ class Building:
         for i in range(0, 9):
             g = {}
             g['building_name'] = self.name
-            g['levels'] = {}
 
             if self.coordinate_system == CoordinateSystem.web_mercator:
                 g['crs_name'] = self.global_transform.crs_name
@@ -183,14 +182,27 @@ class Building:
                 tx, ty = self.global_transform.x, self.global_transform.y
                 g['offset'] = [tx, ty]
 
-            empty = True
-            for level_name, level in self.levels.items():
-                level_graph = level.generate_nav_graph(i)
-                g['levels'][level_name] = level_graph
-                if level_graph['lanes']:
-                    empty = False
-            if not empty:
-                nav_graphs[f'{i}'] = g
+            if version == 1:
+                g['levels'] = {}
+                empty = True
+                for level_name, level in self.levels.items():
+                    level_graph = level.generate_nav_graph(i)
+                    g['levels'][level_name] = level_graph
+                    if level_graph['lanes']:
+                        empty = False
+                if not empty:
+                    nav_graphs[f'{i}'] = g
+            else:
+                g['levels'] = []
+                empty = True
+                for level_name, level in self.levels.items():
+                    level_graph = level.generate_nav_graph(i, version=version)
+                    #g['levels'][level_name] = level_graph
+                    g['levels'].append(level_graph)
+                    if level_graph['lanes']:
+                        empty = False
+                if not empty:
+                    nav_graphs[f'{i}'] = g
         return nav_graphs
 
     def generate_sdf_world(self, options):
