@@ -197,7 +197,6 @@ class Building:
                 empty = True
                 for level_name, level in self.levels.items():
                     level_graph = level.generate_nav_graph(i, version=version)
-                    #g['levels'][level_name] = level_graph
                     g['levels'].append(level_graph)
                     if level_graph['lanes']:
                         empty = False

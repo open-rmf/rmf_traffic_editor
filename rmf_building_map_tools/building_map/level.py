@@ -365,7 +365,10 @@ class Level:
         else:
             return False
 
-    def generate_nav_graph(self, graph_idx, always_unidirectional=True, version=1):
+    def generate_nav_graph(self,
+                           graph_idx,
+                           always_unidirectional=True,
+                           version=1):
         """ Generate a graph without unnecessary (non-lane) vertices """
         # first remap the vertices. Store both directions; we'll need them
         next_idx = 0
@@ -456,7 +459,11 @@ class Level:
                     else:
                         forward_params['undock_name'] = dock_name
                 if version == 1:
-                    nav_data['lanes'].append([start_idx, end_idx, forward_params])
+                    nav_data['lanes'].append([
+                        start_idx,
+                        end_idx,
+                        forward_params
+                    ])
                 else:
                     nav_data['lanes'].append({
                         'start': start_idx,
@@ -474,7 +481,11 @@ class Level:
                     backward_params['orientation_constraint'] = \
                         l.reverse_orientation()
                 if version == 1:
-                    nav_data['lanes'].append([end_idx, start_idx, backward_params])
+                    nav_data['lanes'].append([
+                        end_idx,
+                        start_idx,
+                        backward_params
+                    ])
                 else:
                     nav_data['lanes'].append({
                         'start': end_idx,
