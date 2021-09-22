@@ -184,24 +184,22 @@ class Building:
 
             if version == 1:
                 g['levels'] = {}
-                empty = True
-                for level_name, level in self.levels.items():
-                    level_graph = level.generate_nav_graph(i)
-                    g['levels'][level_name] = level_graph
-                    if level_graph['lanes']:
-                        empty = False
-                if not empty:
-                    nav_graphs[f'{i}'] = g
             else:
                 g['levels'] = []
-                empty = True
-                for level_name, level in self.levels.items():
-                    level_graph = level.generate_nav_graph(i, version=version)
+
+            empty = True
+            for level_name, level in self.levels.items():
+                level_graph = level.generate_nav_graph(i, version=version)
+                if version == 1:
+                    g['levels'][level_name] = level_graph
+                else:
                     g['levels'].append(level_graph)
-                    if level_graph['lanes']:
-                        empty = False
-                if not empty:
-                    nav_graphs[f'{i}'] = g
+
+                if level_graph['lanes']:
+                    empty = False
+            if not empty:
+                nav_graphs[f'{i}'] = g
+
         return nav_graphs
 
     def generate_sdf_world(self, options):
