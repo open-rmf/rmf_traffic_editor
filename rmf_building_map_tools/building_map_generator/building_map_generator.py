@@ -29,7 +29,7 @@ def main():
         )
 
     if args.command == "nav":
-        g.generate_nav(args.INPUT, args.OUTPUT_DIR)
+        g.generate_nav(args.INPUT, args.OUTPUT_DIR, args.format)
 
 
 if __name__ == "__main__":
