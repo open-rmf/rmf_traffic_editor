@@ -1,6 +1,5 @@
 import os
 import yaml
-from yaml import CLoader as Loader
 from xml.etree.ElementTree import tostring as ElementToString
 from .building import Building
 from .etree_utils import indent_etree
@@ -15,7 +14,7 @@ class Generator:
             raise FileNotFoundError(f'input file {input_filename} not found')
 
         with open(input_filename, 'r') as f:
-            y = yaml.load(f, Loader=Loader)
+            y = yaml.load(f, Loader=yaml.CLoader)
             return Building(y)
 
     def generate_sdf(
@@ -95,4 +94,4 @@ class Generator:
                     graph_data,
                     f,
                     default_flow_style=None,
-                    Dumper=CustomDumper)
+                    Dumper=yaml.CDumper)
