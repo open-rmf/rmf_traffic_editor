@@ -391,6 +391,7 @@ class Level:
         # now output the mapped vertices (in order)
         nav_data = {}
         nav_data['vertices'] = []
+        nav_data['name'] = self.name  # backwards-compatible, this is fine
         for i in range(0, next_idx):
             v = self.transformed_vertices[mapped_idx_to_vidx[i]]
             p = {'name': v.name}
@@ -400,9 +401,15 @@ class Level:
                 if self.is_in_lift([v.x, v.y], lift_vert_list):
                     p['lift'] = lift_name
                     break
-            nav_data['vertices'].append([v.x, v.y, p])
+            nav_data['vertices'].append(
+                self.nav_vertex(
+                    v.x,
+                    v.y,
+                    v.name,
+                    p,
+                    version))
 
-        nav_data['lanes'] = []
+        nav_lanes = []
         for l in self.lanes:
             if l.params['graph_idx'].value != graph_idx:
                 continue
@@ -448,58 +455,81 @@ class Level:
 
             if always_unidirectional and l.is_bidirectional():
                 # now flip things around and make the second link
-                forward_params = copy.deepcopy(p)
-                backward_params = copy.deepcopy(p)
+                forward_p = copy.deepcopy(p)
+                backward_p = copy.deepcopy(p)
 
                 # we need to create two unidirectional lane segments
                 # todo: clean up this logic, it's overly spaghetti
                 if dock_name:
                     if dock_at_end:
-                        forward_params['dock_name'] = dock_name
+                        forward_p['dock_name'] = dock_name
                     else:
-                        forward_params['undock_name'] = dock_name
-                if version == 1:
-                    nav_data['lanes'].append([
-                        start_idx,
-                        end_idx,
-                        forward_params
-                    ])
-                else:
-                    nav_data['lanes'].append({
-                        'start': start_idx,
-                        'end': end_idx,
-                        'parameters': forward_params
-                    })
+                        forward_p['undock_name'] = dock_name
+                nav_lanes.append(
+                    self.nav_lane(start_idx, end_idx, forward_p, version))
 
                 if dock_name:
                     if dock_at_end:
-                        backward_params['undock_name'] = dock_name
+                        backward_p['undock_name'] = dock_name
                     else:
-                        backward_params['dock_name'] = dock_name
+                        backward_p['dock_name'] = dock_name
 
                 if l.orientation():
-                    backward_params['orientation_constraint'] = \
+                    backward_p['orientation_constraint'] = \
                         l.reverse_orientation()
-                if version == 1:
-                    nav_data['lanes'].append([
-                        end_idx,
-                        start_idx,
-                        backward_params
-                    ])
-                else:
-                    nav_data['lanes'].append({
-                        'start': end_idx,
-                        'end': start_idx,
-                        'parameters': backward_params
-                    })
+                nav_lanes.append(
+                    self.nav_lane(end_idx, start_idx, backward_p, version))
             else:
                 # ensure the directionality parameter is set
                 p['is_bidirectional'] = l.is_bidirectional()
                 if dock_name:
                     p['dock_name'] = dock_name
-                nav_data['lanes'].append([start_idx, end_idx, p])
+                nav_lanes.append(
+                    self.nav_lane(start_idx, end_idx, p, version))
 
+        nav_data['lanes'] = nav_lanes
         return nav_data
+
+    def nav_vertex(self, x, y, params, version):
+        if version == 1:
+            return [x, y, params]
+        elif version == 2:
+            if 'name' in params:
+                name = params['name']
+                del params['name']
+            else:
+                name = ''
+
+            return {
+                'name': name,
+                'x': x,
+                'y': y,
+                'parameters': self.nav_parameters(params, version)}
+        else:
+            raise ValueError(f'unknown nav vertex version: {version}')
+
+    def nav_parameters(self, parameters, version):
+        p = []
+        type_map = {
+          'is_holding_point': bool,
+          'is_parking_spot': bool,
+          'pickup_dispenser': str,
+        }
+        for param_name, param_value in parameters.items():
+            p.append({'name': param_name, 'value': param_value})
+        return p
+
+    def nav_lane(self, start_idx, end_idx, params, version):
+        if version == 1:
+            return [start_idx, end_idx, params]
+        elif version == 2:
+            return {
+                'start': start_idx,
+                'end': end_idx,
+                'parameters': params
+            }
+        else:
+            raise ValueError(f'unknown nav lane version: {version}')
 
     def edge_heading(self, edge):
         vs_x, vs_y = self.transformed_vertices[edge.start_idx].xy()
