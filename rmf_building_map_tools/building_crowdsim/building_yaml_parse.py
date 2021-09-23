@@ -4,12 +4,13 @@ import os
 import copy
 
 from building_map.building import Building
+from building_map.coordinate_system import CoordinateSystem
 from building_map.level import Level
 
 
 class LevelWithHumanLanes (Level):
-    def __init__(self, yaml_node, name, graph_idx=9):
-        Level.__init__(self, yaml_node, name)
+    def __init__(self, yaml_node, name, coordinate_system, graph_idx=9):
+        Level.__init__(self, yaml_node, name, coordinate_system)
 
         # default graph_idx for human_lanes is 9
         self.current_graph_idx = graph_idx
@@ -54,6 +55,12 @@ class BuildingYamlParse:
         with open(self.building_file) as f:
             self.yaml_node = yaml.load(f, yaml.SafeLoader)
 
+        if 'coordinate_system' in self.yaml_node:
+            coordinate_system = \
+                CoordinateSystem[self.yaml_node['coordinate_system']]
+        else:
+            coordinate_system = CoordinateSystem.reference_image
+
         # human_lanes for navmesh
         self.levels_with_human_lanes = {}
         self.levels_name = []
@@ -61,7 +68,7 @@ class BuildingYamlParse:
             if 'human_lanes' not in level_yaml:
                 raise ValueError(f'expected human_lanes in level')
             self.levels_with_human_lanes[level_name] = LevelWithHumanLanes(
-                level_yaml, level_name)
+                level_yaml, level_name, coordinate_system)
             self.levels_name.append(level_name)
 
         # crowd_sim for configuration

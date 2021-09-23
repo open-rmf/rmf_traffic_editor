@@ -52,6 +52,7 @@ set(gui_sources
   gui/building.cpp
   gui/building_dialog.cpp
   gui/constraint.cpp
+  gui/coordinate_system.cpp
   gui/feature.cpp
   gui/edge.cpp
   gui/editor.cpp

@@ -22,6 +22,7 @@
 #include <string>
 
 #include "constraint.hpp"
+#include "coordinate_system.h"
 #include "edge.h"
 #include "editor_model.h"
 #include "feature.hpp"
@@ -163,7 +164,8 @@ public:
     QGraphicsScene* scene,
     std::vector<EditorModel>& editor_models,
     const RenderingOptions& rendering_options,
-    const std::vector<Graph>& graphs);
+    const std::vector<Graph>& graphs,
+    const CoordinateSystem& coordinate_system);
 
   void clear_scene();
 
