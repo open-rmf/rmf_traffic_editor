@@ -19,7 +19,12 @@ class Wall:
         self.walls = []
         self.wall_cnt = 0
         self.texture_name = wall_params['texture_name']
-        self.alpha = wall_params['alpha']  # val 0.0-1.0 transparency of wall
+
+        # alpha/transparency 0.0-1.0
+        if wall_params['alpha'].type is ParamValue.DOUBLE:
+            self.alpha = float(wall_params['alpha'].value)
+        else:
+            self.alpha = float(1.0)
         self.pbr_textures = get_pbr_textures(wall_params)
         if 'texture_height' in wall_params:  # check for new parameters
             self.texture_height = wall_params['texture_height'].value
@@ -215,7 +220,7 @@ class Wall:
             f.write('Ke 0.0 0.0 0.0\n')  # emissive
             f.write('Ns 50.0\n')  # specular highlight, 0..100 (?)
             f.write('Ni 1.0\n')  # no idea what this is
-            f.write(f'd {self.alpha.value}\n')  # alpha
+            f.write(f'd {self.alpha}\n')  # alpha
             f.write('illum 2\n')  # illumination model (enum)
             f.write(f'map_Kd {texture_filename}\n')
 

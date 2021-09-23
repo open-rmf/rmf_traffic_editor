@@ -32,6 +32,23 @@ ignition_parser = subparsers.add_parser(
     parents=[shared_parser]
 )
 
+dae_export_arg_parser = argparse.ArgumentParser(add_help=False)
+dae_export_arg_parser.add_argument("INPUT", type=str,
+                                   help="Input building.yaml file to process")
+dae_export_arg_parser.add_argument("OUTPUT_WORLD_DIR", type=str,
+                                   help="Output directory of worlds")
+dae_export_arg_parser.add_argument("BAKED_WORLD_FILE", type=str,
+                                   help="Path of the file that uses the baked models")
+dae_export_arg_parser.add_argument("OUTPUT_MODEL_DIR", type=str,
+                                    help="Path to output the map model files")
+dae_export_arg_parser.add_argument("-o", "--options", type=str, nargs='*', default=[],
+                                    help="Generator options")
+dae_export_parser = subparsers.add_parser(
+    'ignition_dae_export',
+    help='Generate multiple .world files ready for dae exporting through Ignition',
+    parents=[dae_export_arg_parser]
+)
+
 nav_parser = subparsers.add_parser(
     'nav',
     help='Generate nav map .yaml file',

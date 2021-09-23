@@ -48,6 +48,7 @@ public:
   bool selected = false;  // only for visualization, not saved to YAML
   bool is_static = true;
   bool is_active = false;
+  std::string lightmap = "";
   bool error_printed = false;
   std::string starting_level;  // used when resetting a test scenario
   QGraphicsPixmapItem* pixmap_item = nullptr;

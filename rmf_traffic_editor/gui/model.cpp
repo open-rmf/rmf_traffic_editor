@@ -68,6 +68,11 @@ void Model::from_yaml(const YAML::Node& data, const string& level_name)
     is_static = data["static"].as<bool>();
   else
     is_static = true;
+
+  if (data["lightmap"])
+    lightmap = data["lightmap"].as<string>();
+  else
+    lightmap = "";
 }
 
 YAML::Node Model::to_yaml() const
@@ -85,6 +90,7 @@ YAML::Node Model::to_yaml() const
   n["name"] = instance_name;
   n["model_name"] = model_name;
   n["static"] = is_static;
+  n["lightmap"] = lightmap;
   return n;
 }
 
@@ -115,6 +121,10 @@ void Model::set_param(const std::string& name, const std::string& value)
       is_static = true;
     else
       is_static = false;
+  }
+  else if (name == "lightmap")
+  {
+    lightmap = value;
   }
   else if (name == "name")
   {

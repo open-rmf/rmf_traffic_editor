@@ -1413,7 +1413,7 @@ void Editor::populate_property_editor(const Model& model)
 {
   property_editor->blockSignals(true);  // otherwise we get tons of callbacks
 
-  property_editor->setRowCount(4);
+  property_editor->setRowCount(5);
 
   property_editor_set_row(
     0,
@@ -1437,6 +1437,12 @@ void Editor::populate_property_editor(const Model& model)
     3,
     "static",
     model.is_static ? QString("true") : QString("false"),
+    true);
+
+  property_editor_set_row(
+    4,
+    "lightmap",
+    QString::fromStdString(model.lightmap),
     true);
 
   property_editor->blockSignals(false);  // re-enable callbacks

@@ -164,13 +164,16 @@ class Building:
                 nav_graphs[f'{i}'] = g
         return nav_graphs
 
-    def generate_sdf_world(self, options):
+    def generate_sdf_world(self, options, baked_sdfs_postfix = set()):
         """ Return an etree of this Building in SDF starting from a template"""
         print(f'generator options: {options}')
+        use_baked_assets = False
         if 'gazebo' in options:
             template_name = 'gz_world.sdf'
         elif 'ignition' in options:
             template_name = 'ign_world.sdf'
+            if 'baked_assets' in options:
+                use_baked_assets = True
         else:
             raise RuntimeError("expected either gazebo or ignition in options")
 
@@ -183,17 +186,37 @@ class Building:
         world = sdf.find('world')
 
         for level_name, level in self.levels.items():
-            level.generate_sdf_models(world)  # todo: a better name
+            # todo: a better name
+            if use_baked_assets:
+                level.generate_sdf_models(world, False, True)
+                # use the baked asset in our world file
+                for postfix in baked_sdfs_postfix:
+                    baked_include_ele = SubElement(world, 'include')
+                    name_ele = SubElement(baked_include_ele, 'name')
+                    
+                    uri_ele = SubElement(baked_include_ele, 'uri')
+                    if postfix == '':
+                        name_ele.text = level_name
+                        uri_ele.text = f'model://{self.name}_{level_name}'
+                    else:
+                        name_ele.text = f'{level_name}_{postfix}'
+                        uri_ele.text = f'model://{self.name}_{level_name}_{postfix}'
+                    pose_ele = SubElement(baked_include_ele, 'pose')
+                    pose_ele.text = f'0 0 {level.elevation} 0 0 0'
+            else:
+                level_include_ele = SubElement(world, 'include')
+                level_model_name = f'{self.name}_{level_name}'
+                name_ele = SubElement(level_include_ele, 'name')
+                name_ele.text = level_model_name
+                uri_ele = SubElement(level_include_ele, 'uri')
+                uri_ele.text = f'model://{level_model_name}'
+                pose_ele = SubElement(level_include_ele, 'pose')
+                pose_ele.text = f'0 0 {level.elevation} 0 0 0'
+                
+                level.generate_sdf_models(world, True, True)
+
             level.generate_doors(world, options)
 
-            level_include_ele = SubElement(world, 'include')
-            level_model_name = f'{self.name}_{level_name}'
-            name_ele = SubElement(level_include_ele, 'name')
-            name_ele.text = level_model_name
-            uri_ele = SubElement(level_include_ele, 'uri')
-            uri_ele.text = f'model://{level_model_name}'
-            pose_ele = SubElement(level_include_ele, 'pose')
-            pose_ele.text = f'0 0 {level.elevation} 0 0 0'
 
         for lift_name, lift in self.lifts.items():
             if not lift.level_doors:
@@ -281,14 +304,64 @@ class Building:
 
         return sdf
 
-    def generate_sdf_models(self, models_path):
+    def generate_sdf_world_for_dae_export(self, export_world_name, options):
+        if 'gazebo' in options:
+            template_name = 'gz_world.sdf'
+        elif 'ignition' in options:
+            template_name = 'ign_world.sdf'
+        else:
+            raise RuntimeError("expected either gazebo or ignition in options")
+
+        template_path = os.path.join(
+            get_package_share_directory('rmf_building_map_tools'),
+            f'templates/{template_name}')
+        tree = parse(template_path)
+        sdf = tree.getroot()
+
+        world_ele = sdf.find('world')
+
+        world_export_plugin_ele = SubElement(
+            world_ele,
+            'plugin',
+            {
+                'name': 'ignition::gazebo::systems::ColladaWorldExporter',
+                'filename': 'ignition-gazebo-collada-world-exporter-system'
+            })
+
         for level_name, level in self.levels.items():
-            model_name = f'{self.name}_{level_name}'
+            for model in level.models:
+                if model.lightmap == export_world_name:
+                    model.generate(
+                        world_ele,
+                        level.transform,
+                        level.elevation)
+
+            level_include_ele = SubElement(world_ele, 'include')
+            if export_world_name == '':
+                level_model_name = f'{self.name}_{level_name}'
+            else:
+                level_model_name = f'{self.name}_{level_name}_{export_world_name}'
+            name_ele = SubElement(level_include_ele, 'name')
+            name_ele.text = level_model_name
+            uri_ele = SubElement(level_include_ele, 'uri')
+            uri_ele.text = f'model://{level_model_name}'
+            pose_ele = SubElement(level_include_ele, 'pose')
+            pose_ele.text = f'0 0 {level.elevation} 0 0 0'
+
+        return sdf
+
+
+    def generate_sdf_models(self, models_path, filter_world = ''):
+        for level_name, level in self.levels.items():
+            if filter_world != '':
+                model_name = f'{self.name}_{level_name}_{filter_world}'
+            else:
+                model_name = f'{self.name}_{level_name}'
             model_path = os.path.join(models_path, model_name)
             if not os.path.exists(model_path):
                 os.makedirs(model_path)
 
-            level.generate_sdf_model(model_name, model_path)
+            level.generate_sdf_model(model_name, model_path, filter_world)
 
     def center(self):
         # todo: something smarter in the future. For now just the center
