@@ -79,10 +79,6 @@ class Generator:
         building = self.parse_editor_yaml(input_filename)
         nav_graphs = building.generate_nav_graphs()
 
-        class CustomDumper(yaml.Dumper):
-            def ignore_aliases(self, _):
-                return True
-
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
