@@ -43,7 +43,7 @@ class BuildingMapServer(Node):
         self.map_dir = os.path.dirname(map_path)  # for calculating image paths
 
         with open(map_path, 'r') as f:
-            self.building = Building(yaml.safe_load(f))
+            self.building = Building(yaml.load(f, Loader=yaml.CLoader))
 
         self.map_msg = self.building_map_msg(self.building)
         self.site_map_msg = self.make_site_map_msg(self.building)
