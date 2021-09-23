@@ -14,7 +14,7 @@ class Generator:
             raise FileNotFoundError(f'input file {input_filename} not found')
 
         with open(input_filename, 'r') as f:
-            y = yaml.safe_load(f)
+            y = yaml.load(f, Loader=yaml.CLoader)
             return Building(y)
 
     def generate_sdf(
@@ -79,10 +79,6 @@ class Generator:
         building = self.parse_editor_yaml(input_filename)
         nav_graphs = building.generate_nav_graphs()
 
-        class CustomDumper(yaml.Dumper):
-            def ignore_aliases(self, _):
-                return True
-
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
@@ -94,4 +90,4 @@ class Generator:
                     graph_data,
                     f,
                     default_flow_style=None,
-                    Dumper=CustomDumper)
+                    Dumper=yaml.CDumper)
