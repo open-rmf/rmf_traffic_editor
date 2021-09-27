@@ -38,6 +38,9 @@ parser.add_argument("-m", "--model-path", type=str,
 parser.add_argument("-c", "--cache", type=str,
                     default="~/.pit_crew/model_cache.json",
                     help="Path to pit_crew model cache")
+parser.add_argument("-f", "--fuel-tools", action='store_true',
+                    help="Use ignition fuel tools to download models instead "
+                         "of http")
 parser.add_argument("-i", "--include", type=str,
                     help="Search this directory first for models.")
 parser.add_argument("-e", "--export-path", type=str, default=None,
@@ -145,6 +148,8 @@ def download_models(
 
 def main():
     args = parser.parse_args()
+    print("The -f option of package building_map_mode_downloader has been deprecated. \
+Please remove it from your builds.", file=sys.stderr)
     download_models(
         args.INPUT_YAML,
         args.model_path,
