@@ -39,12 +39,7 @@ parser.add_argument("-c", "--cache", type=str,
                     default="~/.pit_crew/model_cache.json",
                     help="Path to pit_crew model cache")
 parser.add_argument("-i", "--include", type=str,
-                    help="Search this directory first for models. "
-                         "If -f flag is specified, then directory must "
-                         "follow ignition gazebo directory structure.")
-parser.add_argument("-f", "--fuel-tools", action='store_true',
-                    help="Use ignition fuel tools to download models instead "
-                         "of http")
+                    help="Search this directory first for models.")
 parser.add_argument("-e", "--export-path", type=str, default=None,
                     help="Export model downloaded using ignition fuel tools "
                          "to a folder with classic gazebo directory structure."
@@ -76,7 +71,6 @@ def download_models(
         model_path=None,
         cache=None,
         include=None,
-        fuel_tools=False,
         export_path=None):
     """Download models for a given input building yaml."""
     # Construct model set
@@ -101,19 +95,9 @@ def download_models(
             else:
                 model_set.add(model.model_name)
 
-    # If we are using ignition fuel tools to download the models
-    # and we do not need to parse them, it means the model directory follows
-    # the ignition gazebo directory structure
-    ign = fuel_tools
-    logging.info("\nUsing Ignition Fuel directory struture : %s\n" % (ign))
     # Ignition fuel tools can only download to this folder, so we set the
     # model path to it
-    if fuel_tools:
-        if export_path is not None:
-            model_path = export_path
-            ign = False
-        else:
-            model_path = "~/.ignition/fuel/"
+    model_path = "~/.ignition/fuel/"
 
     missing_models = pit_crew.get_missing_models(
         model_set,
@@ -121,7 +105,6 @@ def download_models(
         cache_file_path=cache,
         lower=True,
         priority_dir=include,
-        ign=ign
     )
 
     logger.info("\n== REQUESTED MODEL REPORT ==")
@@ -151,13 +134,9 @@ def download_models(
         logger.info("Downloading model %s / %s : %s" %
                     (key + 1, len(missing_downloadables), model_name))
 
-        if fuel_tools:
-            pit_crew.download_model_fuel_tools(
-                model_name, author_name,
-                sync_names=True, export_path=export_path)
-        else:
-            pit_crew.download_model(model_name, author_name, sync_names=True,
-                                    download_path=model_path, ign=ign)
+        pit_crew.download_model_fuel_tools(
+            model_name, author_name,
+            sync_names=True, export_path=export_path)
 
     if missing_models.get('missing', []):
         logger.warning("\nMissing models (not in local or Fuel):")
@@ -171,7 +150,6 @@ def main():
         args.model_path,
         args.cache,
         args.include,
-        args.fuel_tools,
         args.export_path)
 
 
