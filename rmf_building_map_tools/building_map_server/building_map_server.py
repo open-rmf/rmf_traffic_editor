@@ -79,7 +79,6 @@ class BuildingMapServer(Node):
             building = Building(yaml.load(f, Loader=yaml.CLoader))
 
         self.map_msg = BuildingMap()
-        self.map_msg = BuildingMap()
         self.map_msg.name = building.name
         for _, level_data in building.levels.items():
             self.map_msg.levels.append(self.level_msg(level_data))
