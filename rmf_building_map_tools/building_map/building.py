@@ -1,7 +1,12 @@
+import fiona
 import math
 import numpy as np
 import os
+import pyproj.crs
+import sqlite3
+import tempfile
 import yaml
+
 from xml.etree.ElementTree import Element, SubElement, parse
 from ament_index_python.packages import get_package_share_directory
 
@@ -362,3 +367,85 @@ class Building:
                 d['lifts'][lift_name] = lift.to_yaml()
 
             yaml.dump(d, f)
+
+    def generate_geopackage(self):
+        print('generating geopackage...')
+        if self.coordinate_system != CoordinateSystem.cartesian_meters:
+            print('Not a Cartesian map; not generating GeoPackage.')
+            return []
+
+        if 'generate_crs' not in self.params:
+            print('Map does not have CRS defined; not generating GeoPackage.')
+            return []
+
+        with tempfile.TemporaryDirectory() as tempdirname:
+            gpkg_filename = os.path.join(tempdirname, 'temp.gpkg')
+            self.generate_geopackage_file(gpkg_filename)
+            with open(gpkg_filename, 'rb') as f:
+                b = f.read()
+
+        print(f'GeoPackage is {len(b)} bytes')
+        return b
+
+    def generate_geopackage_file(self, gpkg_filename):
+        print(f'generating GeoPackage in {gpkg_filename}')
+        lane_schema = {
+            'geometry': 'LineString',
+            'properties': [
+                ('level_idx', 'int'),
+                ('graph_idx', 'int'),
+                ('speed_limit', 'float'),
+                ('parameters', 'str')
+            ]
+        }
+
+        point_schema = {
+            'geometry': 'Point',
+            'properties': [
+                ('name', 'str'),
+                ('level_idx', 'int'),
+                ('parameters', 'str')
+            ]
+        }
+
+        measurement_schema = {
+            'geometry': 'LineString',
+            'properties': [
+                ('level_idx', 'int'),
+                ('distance', 'float'),
+                ('parameters', 'str')
+            ]
+        }
+
+        proj_crs = pyproj.crs.CRS(self.params['generate_crs'].value)
+        fio_crs = proj_crs.to_wkt()
+        
+        # print(f'writing {len(self.lanes)} lanes...')
+        with fiona.open(gpkg_filename,
+                        'w',
+                        layer='lanes',
+                        driver='GPKG',
+                        crs=fio_crs,
+                        schema=lane_schema) as collection:
+            pass
+            # collection.writerecords(self.lanes)
+
+        # print(f'writing {len(self.vertices)} vertices...')
+        with fiona.open(gpkg_filename,
+                        'w',
+                        layer='vertices',
+                        driver='GPKG',
+                        crs=fio_crs,
+                        schema=point_schema) as collection:
+            pass
+            # collection.writerecords(self.vertices)
+
+        # print(f'writing {len(self.measurements)} measurements...')
+        with fiona.open(gpkg_filename,
+                        'w',
+                        layer='measurements',
+                        driver='GPKG',
+                        crs=fio_crs,
+                        schema=measurement_schema) as collection:
+            pass
+            # collection.writerecords(self.measurements)

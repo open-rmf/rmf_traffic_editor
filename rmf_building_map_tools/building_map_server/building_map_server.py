@@ -77,12 +77,18 @@ class BuildingMapServer(Node):
     def load_building_yaml_map(self, map_path):
         with open(map_path, 'r') as f:
             building = Building(yaml.load(f, Loader=yaml.CLoader))
-            self.map_msg = self.building_map_msg(building)
+
+        self.map_msg = BuildingMap()
+        self.map_msg = BuildingMap()
+        self.map_msg.name = building.name
+        for _, level_data in building.levels.items():
+            self.map_msg.levels.append(self.level_msg(level_data))
+        for _, lift_data in building.lifts.items():
+            self.map_msg.lifts.append(self.lift_msg(lift_data))
 
         self.site_map_msg = SiteMap()
-        self.site_map_msg.encoding = SiteMap.MAP_DATA_UNDEFINED
-        # todo: create a GeoPackage from the building map YAML
-        # For now, we'll leave it empty...
+        self.site_map_msg.encoding = SiteMap.MAP_DATA_GPKG
+        self.site_map_msg.data = building.generate_geopackage()
 
     def load_geopackage(self, map_path):
         with open(map_path, 'rb') as f:
@@ -94,15 +100,6 @@ class BuildingMapServer(Node):
         self.map_msg = BuildingMap()
         # todo: populate the BuildingMap from the GeoPackage. For now we
         # will leave it empty...
-
-    def building_map_msg(self, building):
-        msg = BuildingMap()
-        msg.name = building.name
-        for _, level_data in building.levels.items():
-            msg.levels.append(self.level_msg(level_data))
-        for _, lift_data in building.lifts.items():
-            msg.lifts.append(self.lift_msg(lift_data))
-        return msg
 
     def level_msg(self, level):
         msg = Level()
