@@ -15,7 +15,6 @@ from rclpy.node import Node
 
 from rmf_building_map_msgs.srv import GetBuildingMap
 from rmf_building_map_msgs.msg import BuildingMap
-from rmf_building_map_msgs.msg import SiteMap
 from rmf_building_map_msgs.msg import Level
 from rmf_building_map_msgs.msg import Graph
 from rmf_building_map_msgs.msg import GraphNode
@@ -25,6 +24,8 @@ from rmf_building_map_msgs.msg import AffineImage
 from rmf_building_map_msgs.msg import Door
 from rmf_building_map_msgs.msg import Lift
 from rmf_building_map_msgs.msg import Param
+
+from rmf_site_map_msgs.msg import SiteMap
 
 from building_map.building import Building
 
@@ -42,11 +43,13 @@ class BuildingMapServer(Node):
                 errno.ENOENT, os.strerror(errno.ENOENT), map_path)
         self.map_dir = os.path.dirname(map_path)  # for calculating image paths
 
-        with open(map_path, 'r') as f:
-            self.building = Building(yaml.load(f, Loader=yaml.CLoader))
-
-        self.map_msg = self.building_map_msg(self.building)
-        self.site_map_msg = self.make_site_map_msg(self.building)
+        if map_path.endswith('.building.yaml'):
+            self.load_building_yaml_map(map_path)
+        elif map_path.endswith('.gpkg'):
+            self.load_geopackage(map_path)
+        else:
+            self.get_logger().fatal('unknown filename suffix')
+            sys.exit(1)
 
         self.get_building_map_srv = self.create_service(
             GetBuildingMap, 'get_building_map', self.get_building_map)
@@ -71,6 +74,27 @@ class BuildingMapServer(Node):
             'ready to serve map: "{}"  Ctrl+C to exit...'.format(
                 self.map_msg.name))
 
+    def load_building_yaml_map(self, map_path):
+        with open(map_path, 'r') as f:
+            building = Building(yaml.load(f, Loader=yaml.CLoader))
+            self.map_msg = self.building_map_msg(building)
+
+        self.site_map_msg = SiteMap()
+        self.site_map_msg.encoding = SiteMap.MAP_DATA_UNDEFINED
+        # todo: create a GeoPackage from the building map YAML
+        # For now, we'll leave it empty...
+
+    def load_geopackage(self, map_path):
+        with open(map_path, 'rb') as f:
+            self.site_map_msg = SiteMap()
+            self.site_map_msg.encoding = SiteMap.MAP_DATA_GPKG
+            self.site_map_msg.data = f.read()
+        self.get_logger().info(f'read {len(self.site_map_msg.data)} byte GPKG')
+
+        self.map_msg = BuildingMap()
+        # todo: populate the BuildingMap from the GeoPackage. For now we
+        # will leave it empty...
+
     def building_map_msg(self, building):
         msg = BuildingMap()
         msg.name = building.name
@@ -78,26 +102,6 @@ class BuildingMapServer(Node):
             msg.levels.append(self.level_msg(level_data))
         for _, lift_data in building.lifts.items():
             msg.lifts.append(self.lift_msg(lift_data))
-        return msg
-
-    def make_site_map_msg(self, site):
-        # Site is a superset of building with a coordinate frame
-        msg = SiteMap()
-        building_msg = self.building_map_msg(site)
-        msg.name = building_msg.name
-        msg.levels = building_msg.levels
-        msg.lifts = building_msg.lifts
-        msg.frame.coordinate_system = site.coordinate_system.name
-        # Only populate if there is a global transform
-        if site.global_transform:
-            if site.global_transform.frame_name:
-                msg.frame.crs_name = site.global_transform.frame_name
-            # TODO implement Z offset
-            msg.frame.offset = [
-                site.global_transform.x,
-                site.global_transform.y,
-                0.0
-            ]
         return msg
 
     def level_msg(self, level):
