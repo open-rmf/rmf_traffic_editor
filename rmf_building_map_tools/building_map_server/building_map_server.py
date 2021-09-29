@@ -93,8 +93,11 @@ class BuildingMapServer(Node):
             if site.global_transform.frame_name:
                 msg.frame.crs_name = site.global_transform.frame_name
             # TODO implement Z offset
-            msg.frame.offset = [site.global_transform.x,
-                    site.global_transform.y, 0.0]
+            msg.frame.offset = [
+                site.global_transform.x,
+                site.global_transform.y,
+                0.0
+            ]
         return msg
 
     def level_msg(self, level):
