@@ -419,7 +419,7 @@ class Building:
 
         proj_crs = pyproj.crs.CRS(self.params['generate_crs'].value)
         fio_crs = proj_crs.to_wkt()
-        
+
         # print(f'writing {len(self.lanes)} lanes...')
         with fiona.open(gpkg_filename,
                         'w',
