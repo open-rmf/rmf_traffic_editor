@@ -389,12 +389,11 @@ class Building:
 
     def generate_geopackage_file(self, gpkg_filename):
         print(f'generating GeoPackage in {gpkg_filename}')
-        lane_schema = {
+        edge_schema = {
             'geometry': 'LineString',
             'properties': [
                 ('level_idx', 'int'),
-                ('graph_idx', 'int'),
-                ('speed_limit', 'float'),
+                ('edge_type', 'int'),
                 ('parameters', 'str')
             ]
         }
@@ -420,25 +419,70 @@ class Building:
         proj_crs = pyproj.crs.CRS(self.params['generate_crs'].value)
         fio_crs = proj_crs.to_wkt()
 
-        # print(f'writing {len(self.lanes)} lanes...')
-        with fiona.open(gpkg_filename,
-                        'w',
-                        layer='lanes',
-                        driver='GPKG',
-                        crs=fio_crs,
-                        schema=lane_schema) as collection:
-            pass
-            # collection.writerecords(self.lanes)
+        level_idx_table = {}
+        level_idx = 0
+        for level_name, level in self.levels.items():
+            level_idx_table[level_name] = level_idx
+            level_idx += 1
 
-        # print(f'writing {len(self.vertices)} vertices...')
+        all_vertices = []
+        all_edges = []
+        for level_name, level in self.levels.items():
+            level_idx = level_idx_table[level_name]
+            for vertex in level.vertices:
+                vertex_params = {}
+                for param_name, param_value in vertex.params.items():
+                    vertex_params[param_name] = param_value.value
+                all_vertices.append({
+                    'geometry': {
+                        'type': 'Point',
+                        'coordinates': [vertex.x, vertex.y],
+                    },
+                    'properties': {
+                        'name': vertex.name,
+                        'level_idx': level_idx,
+                        'parameters': yaml.dump(vertex_params),
+                    }
+                })
+            for lane in level.lanes:
+                lane_params = {}
+                for param_name, param_value in lane.params.items():
+                    lane_params[param_name] = param_value.value
+                v1 = level.vertices[lane.start_idx]
+                v2 = level.vertices[lane.end_idx]
+                all_edges.append({
+                    'geometry': {
+                        'type': 'LineString',
+                        'coordinates': [
+                            [v1.x, v1.y],
+                            [v2.x, v2.y],
+                        ]
+                    },
+                    'properties': {
+                        'level_idx': level_idx,
+                        'edge_type': 1,  # todo: nice enum somewhere
+                        'parameters': yaml.dump(lane_params)
+                    }
+                })
+
+
+        print(f'writing {len(all_vertices)} vertices...')
         with fiona.open(gpkg_filename,
                         'w',
                         layer='vertices',
                         driver='GPKG',
                         crs=fio_crs,
                         schema=point_schema) as collection:
-            pass
-            # collection.writerecords(self.vertices)
+            collection.writerecords(all_vertices)
+
+        print(f'writing {len(all_edges)} edges...')
+        with fiona.open(gpkg_filename,
+                        'w',
+                        layer='edges',
+                        driver='GPKG',
+                        crs=fio_crs,
+                        schema=edge_schema) as collection:
+            collection.writerecords(all_edges)
 
         # print(f'writing {len(self.measurements)} measurements...')
         with fiona.open(gpkg_filename,
