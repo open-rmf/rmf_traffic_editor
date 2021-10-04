@@ -465,7 +465,6 @@ class Building:
                     }
                 })
 
-
         print(f'writing {len(all_vertices)} vertices...')
         with fiona.open(gpkg_filename,
                         'w',
