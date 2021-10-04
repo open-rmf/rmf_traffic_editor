@@ -11,6 +11,7 @@ from xml.etree.ElementTree import Element, SubElement, parse
 from ament_index_python.packages import get_package_share_directory
 
 from .coordinate_system import CoordinateSystem
+from .geopackage import GeoPackage
 from .level import Level
 from .lift import Lift
 from .param_value import ParamValue
@@ -355,7 +356,7 @@ class Building:
             d = {}
             d['name'] = self.name
             d['reference_level_name'] = self.reference_level_name
-            d['coordinate_system'] = str(self.coordinate_system)
+            d['coordinate_system'] = self.coordinate_system.name
 
             d['levels'] = {}
             for level_name, level_data in self.levels.items():
@@ -407,11 +408,11 @@ class Building:
             ]
         }
 
-        measurement_schema = {
-            'geometry': 'LineString',
+        level_schema = {
+            'geometry': 'MultiPolygon',
             'properties': [
-                ('level_idx', 'int'),
-                ('distance', 'float'),
+                ('name', 'str'),
+                ('elevation', 'float'),
                 ('parameters', 'str')
             ]
         }
@@ -464,6 +465,7 @@ class Building:
                         'parameters': yaml.dump(lane_params)
                     }
                 })
+            # todo: add measurement edges
 
         print(f'writing {len(all_vertices)} vertices...')
         with fiona.open(gpkg_filename,
@@ -483,12 +485,12 @@ class Building:
                         schema=edge_schema) as collection:
             collection.writerecords(all_edges)
 
-        # print(f'writing {len(self.measurements)} measurements...')
-        with fiona.open(gpkg_filename,
-                        'w',
-                        layer='measurements',
-                        driver='GPKG',
-                        crs=fio_crs,
-                        schema=measurement_schema) as collection:
-            pass
-            # collection.writerecords(self.measurements)
+        metadata = {
+            'name': self.name,
+            'coordinate_system': self.coordinate_system.name,
+        }
+        for param_name, param_value in self.params.items():
+            metadata[param_name] = param_value.value
+
+        with GeoPackage(gpkg_filename) as gpkg:
+            gpkg.set_metadata(yaml.dump(metadata))
