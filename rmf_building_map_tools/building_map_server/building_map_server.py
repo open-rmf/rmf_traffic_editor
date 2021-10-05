@@ -84,6 +84,9 @@ class BuildingMapServer(Node):
         # Site is a superset of building with a coordinate frame
         msg = SiteMap()
         building_msg = self.building_map_msg(site)
+        # Get the suggested offsets
+        if 'suggested_offset_x' in site.params and 'suggested_offset_y' in site.params:
+            msg.frame.offset = [site.params['suggested_offset_x'].value, site.params['suggested_offset_y'].value, 0.0]
         msg.name = building_msg.name
         msg.levels = building_msg.levels
         msg.lifts = building_msg.lifts
@@ -92,9 +95,6 @@ class BuildingMapServer(Node):
         if site.global_transform:
             if site.global_transform.frame_name:
                 msg.frame.crs_name = site.global_transform.frame_name
-            # TODO implement Z offset
-            msg.frame.offset = [site.global_transform.x,
-                    site.global_transform.y, 0.0]
         return msg
 
     def level_msg(self, level):
