@@ -33,6 +33,7 @@ class QGraphicsScene;
 #include "graph.h"
 #include "level.h"
 #include "lift.h"
+#include "param.h"
 #include <traffic_editor/crowd_sim/crowd_sim_impl.h>
 #include "rendering_options.h"
 
@@ -47,6 +48,7 @@ public:
   std::vector<Level> levels;
   std::vector<Lift> lifts;
   std::vector<Graph> graphs;
+  std::map<std::string, Param> params;
   CoordinateSystem coordinate_system;
 
   mutable crowd_sim::CrowdSimImplPtr crowd_sim_impl;

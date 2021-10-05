@@ -1092,6 +1092,7 @@ void Level::draw(
   const vector<Graph>& graphs,
   const CoordinateSystem& coordinate_system)
 {
+  printf("Level::draw()\n");
   if (drawing_filename.size() && _drawing_visible)
   {
     const double extra_scroll_area_width = 1.0 * drawing_width;
@@ -1840,6 +1841,8 @@ void Level::mouse_select_press(
   const RenderingOptions& rendering_options,
   const Qt::KeyboardModifiers& modifiers)
 {
+  printf("Level::mouse_select_press()\n");
+
   if (!(modifiers & Qt::ShiftModifier))
     clear_selection();
 

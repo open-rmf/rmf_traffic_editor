@@ -159,18 +159,17 @@ bool Building::load(const string& _filename)
     }
   }
 
-  /*
-  // load the parameters
   if (y["parameters"] && y["parameters"].IsMap())
   {
-    for (YAML::const_iterator it = data[2].begin(); it != data[2].end(); ++it)
+    for (YAML::const_iterator it = y["parameters"].begin();
+        it != y["parameters"].end();
+        ++it)
     {
       Param p;
       p.from_yaml(it->second);
       params[it->first.as<string>()] = p;
     }
   }
-  */
 
   calculate_all_transforms();
   return true;
@@ -204,6 +203,14 @@ bool Building::save()
   y["graphs"] = YAML::Node(YAML::NodeType::Map);
   for (const auto& graph : graphs)
     y["graphs"][graph.idx] = graph.to_yaml();
+
+  if (!params.empty())
+  {
+    YAML::Node params_node(YAML::NodeType::Map);
+    for (const auto& param : params)
+      params_node[param.first] = param.second.to_yaml();
+    y["parameters"] = params_node;
+  }
 
   YAML::Emitter emitter;
   yaml_utils::write_node(y, emitter);

@@ -802,6 +802,26 @@ void Editor::zoom_reset()
   QTransform t;
   t.scale(viewport_scale, y_flip * viewport_scale);
   map_view->setTransform(t);
+
+  // compute center of all vertices on the active level
+  Level* level = active_level();
+  if (level)
+  {
+    const size_t n_vertex = level->vertices.size();
+    if (n_vertex > 0)
+    {
+      double x_sum = 0, y_sum = 0;
+      for (const auto& v : level->vertices)
+      {
+        x_sum += v.x;
+        y_sum += v.y;
+      }
+      const double xc = x_sum / n_vertex;
+      const double yc = y_sum / n_vertex;
+      printf("center: (%.3f, %.3f)\n", xc, yc);
+      map_view->centerOn(QPointF(xc, yc));
+    }
+  }
 }
 
 void Editor::mouse_event(const MouseType t, QMouseEvent* e)
