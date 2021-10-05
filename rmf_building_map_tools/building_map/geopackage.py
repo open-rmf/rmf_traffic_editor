@@ -40,7 +40,8 @@ class GeoPackage:
                               "WHERE md_scope = 'rmfTrafficMap'")
         if not rows:
             return ''
-        return rows[0][0]
+        for row in rows:
+            return row[0]
 
     def create_metadata_tables(self):
         cursor = self.conn.cursor()
