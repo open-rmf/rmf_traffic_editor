@@ -20,7 +20,8 @@ class GeoPackage:
         cursor = self.conn.cursor()
 
         # remove our previous metadata document (if any)
-        cursor.execute('DELETE FROM gpkg_metadata WHERE md_scope = "rmfTrafficMap";')
+        cursor.execute('DELETE FROM gpkg_metadata '
+                       'WHERE md_scope = "rmfTrafficMap";')
 
         cursor.execute(
             'INSERT INTO gpkg_metadata('
@@ -32,6 +33,14 @@ class GeoPackage:
                 'text/yaml',
                 metadata
             ))
+
+    def get_metadata(self):
+        cursor = self.conn.cursor()
+        rows = cursor.execute("SELECT metadata FROM gpkg_metadata "
+                              "WHERE md_scope = 'rmfTrafficMap'")
+        if not rows:
+            return ''
+        return rows[0][0]
 
     def create_metadata_tables(self):
         cursor = self.conn.cursor()
@@ -58,12 +67,25 @@ class GeoPackage:
                 timestamp DATETIME NOT NULL,
                 md_file_id INTEGER NOT NULL,
                 md_parent_id INTEGER,
-                CONSTRAINT crmr_mfi_fk FOREIGN KEY (md_file_id) REFERENCES gpkg_metadata(id),
-                CONSTRAINT crmr_mpi_fk FOREIGN KEY (md_parent_id) REFERENCES gpkg_metadata(id)
+                CONSTRAINT crmr_mfi_fk
+                    FOREIGN KEY (md_file_id)
+                    REFERENCES gpkg_metadata(id),
+                CONSTRAINT crmr_mpi_fk
+                    FOREIGN KEY (md_parent_id)
+                    REFERENCES gpkg_metadata(id)
             );''')
 
         cursor.execute('''
-            INSERT INTO gpkg_extensions(table_name, column_name, extension_name, definition, scope) VALUES(
+            INSERT INTO gpkg_extensions
+            (
+                table_name,
+                column_name,
+                extension_name,
+                definition,
+                scope
+            )
+            VALUES
+            (
                 'gpkg_metadata',
                 NULL,
                 'gpkg_metadata',
@@ -72,7 +94,16 @@ class GeoPackage:
             );''')
 
         cursor.execute('''
-            INSERT INTO gpkg_extensions(table_name, column_name, extension_name, definition, scope) VALUES(
+            INSERT INTO gpkg_extensions
+            (
+                table_name,
+                column_name,
+                extension_name,
+                definition,
+                scope
+            )
+            VALUES
+            (
                 'gpkg_metadata_reference',
                 NULL,
                 'gpkg_metadata',
