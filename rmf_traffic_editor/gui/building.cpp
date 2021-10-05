@@ -161,9 +161,8 @@ bool Building::load(const string& _filename)
 
   if (y["parameters"] && y["parameters"].IsMap())
   {
-    for (YAML::const_iterator it = y["parameters"].begin();
-        it != y["parameters"].end();
-        ++it)
+    const YAML::Node& gp = y["parameters"];
+    for (YAML::const_iterator it = gp.begin(); it != gp.end(); ++it)
     {
       Param p;
       p.from_yaml(it->second);
