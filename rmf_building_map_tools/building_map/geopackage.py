@@ -30,7 +30,7 @@ class GeoPackage:
             (
                 'rmfTrafficMap',
                 'http://open-rmf.org',
-                'text/yaml',
+                'application/json',
                 metadata
             ))
 

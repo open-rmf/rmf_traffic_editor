@@ -1,4 +1,5 @@
 import fiona
+import json
 import math
 import numpy as np
 import os
@@ -442,7 +443,7 @@ class Building:
                     'properties': {
                         'name': vertex.name,
                         'level_idx': level_idx,
-                        'parameters': yaml.dump(vertex_params),
+                        'parameters': json.dumps(vertex_params),
                     }
                 })
             for lane in level.lanes:
@@ -462,7 +463,7 @@ class Building:
                     'properties': {
                         'level_idx': level_idx,
                         'edge_type': 1,  # todo: nice enum somewhere
-                        'parameters': yaml.dump(lane_params)
+                        'parameters': json.dumps(lane_params)
                     }
                 })
             # todo: add measurement edges
@@ -493,4 +494,4 @@ class Building:
             metadata[param_name] = param_value.value
 
         with GeoPackage(gpkg_filename) as gpkg:
-            gpkg.set_metadata(yaml.dump(metadata))
+            gpkg.set_metadata(json.dumps(metadata))
