@@ -10,6 +10,7 @@ import sys
 import os
 import yaml
 
+
 __all__ = [
     "download_models"
 ]
@@ -22,6 +23,12 @@ logger.setLevel(logging.INFO)
 
 g = Generator()
 
+
+class HTTPDownloadDeprecated(argparse.Action):
+  def __call__(self, parser, namespace, values, option_string=None):
+    logger.warn('DEPRECATED: The Options -f and -m is no longer in use. Please remove these.')
+    setattr(namespace, self.dest, values)
+
 # Init overall parser
 parser = argparse.ArgumentParser(
     prog="building_map_model_downloader",
@@ -33,14 +40,15 @@ parser.add_argument("INPUT_YAML", type=str,
                     help="Input building.yaml file to process")
 parser.add_argument("-m", "--model-path", type=str,
                     default="~/.gazebo/models/",
+                    action=HTTPDownloadDeprecated,
                     help="Path to check models from and download models to. \
                         Redundant if using ignition fuel tools flag")
 parser.add_argument("-c", "--cache", type=str,
                     default="~/.pit_crew/model_cache.json",
                     help="Path to pit_crew model cache")
-parser.add_argument("-f", "--fuel-tools", action='store_true',
+parser.add_argument("-f", "--fuel-tools", action=HTTPDownloadDeprecated,
                     help="Use ignition fuel tools to download models instead "
-                         "of http")
+                         "of http", nargs=0)
 parser.add_argument("-i", "--include", type=str,
                     help="Search this directory first for models.")
 parser.add_argument("-e", "--export-path", type=str, default=None,
@@ -71,7 +79,6 @@ def get_crowdsim_models(input_filename):
 
 def download_models(
         input_yaml,
-        model_path=None,
         cache=None,
         include=None,
         export_path=None):
@@ -148,11 +155,8 @@ def download_models(
 
 def main():
     args = parser.parse_args()
-    print("The -f option of package building_map_mode_downloader has been deprecated. \
-Please remove it from your builds.", file=sys.stderr)
     download_models(
         args.INPUT_YAML,
-        args.model_path,
         args.cache,
         args.include,
         args.export_path)
