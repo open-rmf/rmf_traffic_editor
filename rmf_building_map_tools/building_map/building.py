@@ -418,7 +418,10 @@ class Building:
             ]
         }
 
-        proj_crs = pyproj.crs.CRS(self.params['generate_crs'].value)
+        if 'generate_crs' in self.params:
+            proj_crs = pyproj.crs.CRS(self.params['generate_crs'].value)
+        else:
+            proj_crs = pyproj.crs.CRS('EPSG:404000')  # not geographic
         fio_crs = proj_crs.to_wkt()
 
         level_idx_table = {}
