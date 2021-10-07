@@ -25,9 +25,11 @@ g = Generator()
 
 
 class HTTPDownloadDeprecated(argparse.Action):
-  def __call__(self, parser, namespace, values, option_string=None):
-    logger.warn('DEPRECATED: The Options -f and -m is no longer in use. Please remove these.')
-    setattr(namespace, self.dest, values)
+    def __call__(self, parser, namespace, values, option_string=None):
+        logger.warn('DEPRECATED: The Options -f and -m is no longer in use. \
+            Please remove these.')
+        setattr(namespace, self.dest, values)
+
 
 # Init overall parser
 parser = argparse.ArgumentParser(
@@ -84,6 +86,9 @@ def download_models(
         export_path=None):
     """Download models for a given input building yaml."""
     # Construct model set
+
+    IGN_FUEL_MODEL_PATH = "~/.ignition/fuel/"
+
     model_set = set()
     stringent_dict = {}  # Dict to tighten download scope
 
@@ -105,13 +110,9 @@ def download_models(
             else:
                 model_set.add(model.model_name)
 
-    # Ignition fuel tools can only download to this folder, so we set the
-    # model path to it
-    model_path = "~/.ignition/fuel/"
-
     missing_models = pit_crew.get_missing_models(
         model_set,
-        model_path=model_path,
+        model_path=IGN_FUEL_MODEL_PATH,
         cache_file_path=cache,
         lower=True,
         priority_dir=include,
