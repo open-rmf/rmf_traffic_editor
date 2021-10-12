@@ -198,7 +198,7 @@ class BuildingMapServer(Node):
                     p = Param()
                     p.name = "speed_limit"
                     p.type = p.TYPE_DOUBLE
-                    p.value_float = l[2]["speed_limit"]
+                    p.value_float = float(l[2]["speed_limit"])
                     ge.params.append(p)
                 graph_msg.edges.append(ge)
             msg.nav_graphs.append(graph_msg)
