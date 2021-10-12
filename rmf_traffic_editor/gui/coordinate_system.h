@@ -26,7 +26,7 @@ public:
   enum Value
   {
     Undefined,
-    Legacy,
+    ReferenceImage,
     WebMercator,
     CartesianMeters
   } value;

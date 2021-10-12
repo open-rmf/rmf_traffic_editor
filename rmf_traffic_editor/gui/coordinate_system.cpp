@@ -35,7 +35,7 @@ std::string CoordinateSystem::to_string()
 {
   switch (value)
   {
-    case Legacy: return "legacy";
+    case ReferenceImage: return "reference_image";
     case WebMercator: return "web_mercator";
     case CartesianMeters: return "cartesian_meters";
 
@@ -48,8 +48,8 @@ std::string CoordinateSystem::to_string()
 CoordinateSystem CoordinateSystem::from_string(const std::string& s)
 {
   CoordinateSystem cs;
-  if (s == "legacy")
-    cs.value = Legacy;
+  if (s == "reference_image")
+    cs.value = ReferenceImage;
   else if (s == "web_mercator")
     cs.value = WebMercator;
   else if (s == "cartesian_meters")
@@ -61,5 +61,5 @@ CoordinateSystem CoordinateSystem::from_string(const std::string& s)
 
 bool CoordinateSystem::is_y_flipped() const
 {
-  return value == Legacy;
+  return value == ReferenceImage;
 }

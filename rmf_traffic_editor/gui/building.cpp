@@ -39,7 +39,7 @@ using std::shared_ptr;
 
 Building::Building()
 : name("building"),
-  coordinate_system(CoordinateSystem::Legacy)
+  coordinate_system(CoordinateSystem::ReferenceImage)
 {
 }
 
