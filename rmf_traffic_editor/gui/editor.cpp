@@ -389,7 +389,8 @@ Editor::Editor()
     "Add Measurement (T)");
   create_tool_button(TOOL_ADD_DOOR, ":icons/door.svg", "Add Door (D)");
   create_tool_button(TOOL_ADD_MODEL, "", "Add Model (O)");
-  create_tool_button(TOOL_ADD_FLOOR, ":icons/floor.svg", "Add floor polygon (F)");
+  create_tool_button(TOOL_ADD_FLOOR, ":icons/floor.svg",
+    "Add floor polygon (F)");
   create_tool_button(TOOL_ADD_HOLE, ":icons/hole.svg", "Add hole polygon");
   create_tool_button(TOOL_ADD_ROI, ":icons/roi.svg", "Add region of interest");
   create_tool_button(TOOL_EDIT_POLYGON, "", "Edit Polygon (E)");
