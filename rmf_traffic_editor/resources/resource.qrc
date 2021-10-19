@@ -20,5 +20,6 @@
   <file>icons/stopwatch.svg</file>
   <file>icons/vertex.svg</file>
   <file>icons/wall.svg</file>
+  <file>icons/traffic_editor.svg</file>
 </qresource>
 </RCC>

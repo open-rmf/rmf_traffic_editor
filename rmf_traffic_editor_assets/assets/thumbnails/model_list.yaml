@@ -37,6 +37,8 @@ models:
 - OpenRobotics/ElderLadyPatient
 - OpenRobotics/ElderMalePatient
 - OpenRobotics/ElectronicsRecycling
+- OpenRobotics/EscalatorEnd
+- OpenRobotics/EscalatorStart
 - OpenRobotics/FemaleVisitor
 - OpenRobotics/FemaleVisitorSit
 - OpenRobotics/FoodCourtBarricade
@@ -48,6 +50,7 @@ models:
 - OpenRobotics/Gazebo
 - OpenRobotics/HeadphonesRack1
 - OpenRobotics/HeadphonesRack2
+- OpenRobotics/InformationCounter
 - OpenRobotics/InstrumentCart1
 - OpenRobotics/InstrumentCart2
 - OpenRobotics/IVStand
@@ -91,6 +94,8 @@ models:
 - OpenRobotics/Postbox
 - OpenRobotics/PotatoChipChair
 - OpenRobotics/RecTable
+- OpenRobotics/RetailKiosk1
+- OpenRobotics/RetailKiosk2
 - OpenRobotics/RobotPlaceholder
 - OpenRobotics/Scrubber
 - OpenRobotics/Scrubs
