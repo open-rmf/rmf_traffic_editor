@@ -899,7 +899,8 @@ void Editor::keyPressEvent(QKeyEvent* e)
         QMessageBox::critical(
           this,
           "Could not delete item",
-          "If deleting a vertex, it must not be in any edges or polygons. "
+          "If deleting a vertex, it must not be in any edges or polygons "
+          "or lifts. "
           "If deleting a feature, it must not be in any constraints.");
 
         building.clear_selection(level_idx);
