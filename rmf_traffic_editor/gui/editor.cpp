@@ -73,6 +73,7 @@ Editor::Editor()
 {
   instance = this;
 
+  setWindowIcon(QIcon(":icons/traffic_editor.svg"));
   setWindowTitle("Traffic Editor[*]");
 
   QSettings settings;
@@ -385,13 +386,14 @@ Editor::Editor()
   create_tool_button(
     TOOL_ADD_MEAS,
     ":icons/measurement.svg",
-    "Add Measurement");
-  create_tool_button(TOOL_ADD_DOOR, ":icons/door.svg", "Add Door");
-  create_tool_button(TOOL_ADD_MODEL, "", "Add Model");
-  create_tool_button(TOOL_ADD_FLOOR, ":icons/floor.svg", "Add floor polygon");
+    "Add Measurement (T)");
+  create_tool_button(TOOL_ADD_DOOR, ":icons/door.svg", "Add Door (D)");
+  create_tool_button(TOOL_ADD_MODEL, "", "Add Model (O)");
+  create_tool_button(TOOL_ADD_FLOOR, ":icons/floor.svg",
+    "Add floor polygon (F)");
   create_tool_button(TOOL_ADD_HOLE, ":icons/hole.svg", "Add hole polygon");
   create_tool_button(TOOL_ADD_ROI, ":icons/roi.svg", "Add region of interest");
-  create_tool_button(TOOL_EDIT_POLYGON, "", "Edit Polygon");
+  create_tool_button(TOOL_EDIT_POLYGON, "", "Edit Polygon (E)");
   create_tool_button(TOOL_ADD_HUMAN_LANE, "", "Add Human Lane with width");
 
   connect(
@@ -522,6 +524,7 @@ QToolButton* Editor::create_tool_button(
   else
   {
     b->setText(tool_id_to_string(id));
+    b->setToolTip(tooltip);
     //b->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum);
   }
   tools[id] = toolbar->addWidget(b);
@@ -896,7 +899,8 @@ void Editor::keyPressEvent(QKeyEvent* e)
         QMessageBox::critical(
           this,
           "Could not delete item",
-          "If deleting a vertex, it must not be in any edges or polygons. "
+          "If deleting a vertex, it must not be in any edges or polygons "
+          "or lifts. "
           "If deleting a feature, it must not be in any constraints.");
 
         building.clear_selection(level_idx);
@@ -939,6 +943,9 @@ void Editor::keyPressEvent(QKeyEvent* e)
       break;
     case Qt::Key_E:
       tool_button_group->button(TOOL_EDIT_POLYGON)->click();
+      break;
+    case Qt::Key_D:
+      tool_button_group->button(TOOL_ADD_DOOR)->click();
       break;
     case Qt::Key_B:
       for (auto& edge : building.levels[level_idx].edges)

@@ -63,6 +63,7 @@ public:
 
   std::string dropoff_ingestor() const;
   std::string pickup_dispenser() const;
+  std::string lift_cabin() const;
 
 
   ////////////////////////////////////////////////////////////
