@@ -125,7 +125,7 @@ void Edge::create_required_parameters()
   }
   else if (type == LANE)
   {
-    create_param_if_needed("bidirectional", Param::BOOL, false);
+    create_param_if_needed("bidirectional", Param::BOOL, true);
     create_param_if_needed("orientation", Param::STRING, std::string());
     create_param_if_needed("graph_idx", Param::INT, 0);
     create_param_if_needed("demo_mock_floor_name", Param::STRING,
@@ -135,7 +135,7 @@ void Edge::create_required_parameters()
   }
   else if (type == DOOR)
   {
-    create_param_if_needed("name", Param::STRING, std::string());
+    create_param_if_needed("name", Param::STRING, std::string("null")); // default door name
     create_param_if_needed("type", Param::STRING, std::string("hinged"));
     create_param_if_needed("motion_axis", Param::STRING, std::string("start"));
     create_param_if_needed("motion_direction", Param::INT, 1);
