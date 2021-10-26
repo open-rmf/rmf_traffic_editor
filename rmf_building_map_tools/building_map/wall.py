@@ -241,7 +241,7 @@ class Wall:
 
         visual_ele = SubElement(link_ele, 'visual')
         visual_ele.set('name', f'wall_{self.wall_cnt}')
-        
+
         # Note: Material visual profile in the sdf will override the profile
         # in .mtl in the obj file. TODO will need to soon allign both profiles
         v_geom_ele = SubElement(visual_ele, 'geometry')
