@@ -32,5 +32,9 @@ def main():
         g.generate_nav(args.INPUT, args.OUTPUT_DIR)
 
 
+    if args.command == "navgraph_visualization":
+        g.generate_navgraph_visualization(args.INPUT, args.OUTPUT_DIR)
+
+
 if __name__ == "__main__":
     main()
