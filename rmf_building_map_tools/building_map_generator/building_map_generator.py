@@ -31,7 +31,6 @@ def main():
     if args.command == "nav":
         g.generate_nav(args.INPUT, args.OUTPUT_DIR)
 
-
     if args.command == "navgraph_visualization":
         g.generate_navgraph_visualization(args.INPUT, args.OUTPUT_DIR)
 

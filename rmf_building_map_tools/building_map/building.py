@@ -251,7 +251,7 @@ class Building:
                 rot = np.array([
                     [math.cos(yaw), math.sin(yaw)],
                     [-math.sin(yaw), math.cos(yaw)]])
-                
+
                 rot_verts = lane_footprint_at_origin.dot(rot)
                 verts = rot_verts + np.array([[cx, cy]])
 
@@ -342,7 +342,6 @@ class Building:
         sdf_path = os.path.join(output_dir, name, 'model.sdf')
         sdf_tree.write(sdf_path, encoding='utf-8', xml_declaration=True)
         print(f'  wrote {sdf_path}')
-
 
     def generate_sdf_world(self, options):
         """ Return an etree of this Building in SDF starting from a template"""
