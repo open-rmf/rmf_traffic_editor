@@ -16,10 +16,10 @@ from .etree_utils import indent_etree
 from .geopackage import GeoPackage
 from .level import Level
 from .lift import Lift
+from .material_utils import copy_texture
 from .param_value import ParamValue
 from .passthrough_transform import PassthroughTransform
 from .web_mercator_transform import WebMercatorTransform
-from .material_utils import copy_texture
 
 
 class Building:
