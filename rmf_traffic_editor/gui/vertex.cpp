@@ -219,6 +219,8 @@ void Vertex::draw(
     icon_name = ":icons/dropoff.svg";
   else if (is_cleaning_zone())
     icon_name = ":icons/clean.svg";
+  else if (!lift_cabin().empty())
+    icon_name = ":icons/lift.svg";
 
   if (!icon_name.empty())
   {
@@ -319,6 +321,19 @@ std::string Vertex::dropoff_ingestor() const
 std::string Vertex::pickup_dispenser() const
 {
   const auto it = params.find("pickup_dispenser");
+  if (it == params.end())
+    return "";
+
+  return it->second.value_string;
+}
+
+std::string Vertex::lift_cabin() const
+{
+  /// Note: currently lift_cabin vertex is auto-generated when adding
+  /// a lift on traffic editor. Therefore lift cabin param is part of the
+  /// 'allowed_params' above. For now, the param 'lift_cabin' doesn't
+  /// serve any purpose in rmf building map generation and rmf graph.
+  const auto it = params.find("lift_cabin");
   if (it == params.end())
     return "";
 

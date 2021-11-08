@@ -375,8 +375,8 @@ class Lift:
 
         pose = Element('pose')
         pose.text = f'{x} {y} {self.cabin_height / 2} 0 0 {yaw}'
-        platform.append(visual(name, pose, dims, lift_material()))
-        platform.append(collision(name, pose, dims, '0x01'))
+        platform.append(visual(f'{name}_visual', pose, dims, lift_material()))
+        platform.append(collision(f'{name}_collision', pose, dims, '0x01'))
 
     def generate_cabin(self, world_ele, options):
         # materials missing for now
@@ -401,15 +401,15 @@ class Lift:
 
         # visuals and collisions for floor and walls of cabin
         floor_dims = [self.width, self.depth, self.floor_thickness]
-        floor_name = 'floor'
         floor_pose = Element('pose')
         floor_pose.text = f'0 0 {-self.floor_thickness / 2} 0 0 0'
-        platform.append(visual(floor_name,
+        platform.append(visual("floor_visual",
                                floor_pose,
                                floor_dims,
                                lift_material()))
 
-        platform.append(collision(floor_name, floor_pose, floor_dims, '0x01'))
+        platform.append(
+            collision("floor_collision", floor_pose, floor_dims, '0x01'))
 
         # Wall generation
         # get each pair of end_points on each side, generate a section of wall
