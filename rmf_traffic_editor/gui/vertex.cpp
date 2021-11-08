@@ -103,7 +103,8 @@ YAML::Node Vertex::to_yaml() const
 void Vertex::draw(
   QGraphicsScene* scene,
   const double radius,
-  const QFont& font) const
+  const QFont& font,
+  const CoordinateSystem& coordinate_system) const
 {
   QPen vertex_pen(Qt::black);
   vertex_pen.setWidthF(radius / 2.0);
@@ -245,7 +246,19 @@ void Vertex::draw(
       QString::fromStdString(name),
       font);
     text_item->setBrush(selected ? selected_color : vertex_color);
-    text_item->setPos(x, y - 1 + radius);
+
+    if (coordinate_system.is_y_flipped())
+    {
+      // default screen coordinates: +Y=down. Nothing special needed.
+      text_item->setPos(x, y - 1 + radius);
+    }
+    else
+    {
+      // if Y is not flipped, this means we have +Y=up, so we have to
+      // flip the text, because Qt's default is for +Y=down screen coords
+      text_item->setTransform(QTransform::fromScale(1.0, -1.0));
+      text_item->setPos(x, y + 1 + radius);
+    }
   }
 }
 

@@ -211,7 +211,7 @@ class LiftDoor:
 
 
 class Lift:
-    def __init__(self, yaml_node, name, transform, levels):
+    def __init__(self, yaml_node, name, transform, levels, coordinate_system):
         self.name = name
         print(f'parsing lift {name}')
 
@@ -249,7 +249,10 @@ class Lift:
         if 'plugins' in yaml_node:
             self.plugins = bool(yaml_node['plugins'])
 
-        self.raw_pos = (float(yaml_node['x']), -float(yaml_node['y']))
+        self.raw_pos = (
+            float(yaml_node['x']),
+            float(yaml_node['y'] * coordinate_system.y_flip_scalar())
+        )
         self.x, self.y = transform.transform_point(self.raw_pos)
         self.cabin_height = 2.5
         self.wall_thickness = 0.05
@@ -298,7 +301,7 @@ class Lift:
             self.end_points[side] += [left, right]
             self.end_points[side].sort()
 
-    def to_yaml(self):
+    def to_yaml(self, coordinate_system):
         y = {}
         y['depth'] = self.depth
         y['width'] = self.width
@@ -312,7 +315,7 @@ class Lift:
             y['reference_floor_name'] = self.reference_floor_name
         y['plugins'] = self.plugins
         y['x'] = self.raw_pos[0]
-        y['y'] = -self.raw_pos[1]  # invert back to image coords
+        y['y'] = self.raw_pos[1] * coordinate_system.y_flip_scalar()
         y['level_doors'] = {}
         print(self.level_doors)
         for level_name, door_names in self.level_doors.items():

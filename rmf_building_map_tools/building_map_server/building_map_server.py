@@ -25,6 +25,8 @@ from rmf_building_map_msgs.msg import Door
 from rmf_building_map_msgs.msg import Lift
 from rmf_building_map_msgs.msg import Param
 
+from rmf_site_map_msgs.msg import SiteMap
+
 from building_map.building import Building
 
 from building_map.transform import Transform
@@ -41,38 +43,62 @@ class BuildingMapServer(Node):
                 errno.ENOENT, os.strerror(errno.ENOENT), map_path)
         self.map_dir = os.path.dirname(map_path)  # for calculating image paths
 
-        with open(map_path, 'r') as f:
-            self.building = Building(yaml.safe_load(f))
-
-        self.map_msg = self.building_map_msg(self.building)
+        if map_path.endswith('.building.yaml'):
+            self.load_building_yaml_map(map_path)
+        elif map_path.endswith('.gpkg'):
+            self.load_geopackage(map_path)
+        else:
+            self.get_logger().fatal('unknown filename suffix')
+            sys.exit(1)
 
         self.get_building_map_srv = self.create_service(
             GetBuildingMap, 'get_building_map', self.get_building_map)
 
         qos = QoSProfile(
-            history=History.RMW_QOS_POLICY_HISTORY_KEEP_LAST,
+            history=History.KEEP_LAST,
             depth=1,
-            reliability=Reliability.RMW_QOS_POLICY_RELIABILITY_RELIABLE,
-            durability=Durability.RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL)
+            reliability=Reliability.RELIABLE,
+            durability=Durability.TRANSIENT_LOCAL)
 
         self.building_map_pub = self.create_publisher(
             BuildingMap, 'map', qos_profile=qos)
 
+        self.site_map_pub = self.create_publisher(
+            SiteMap, 'site_map', qos_profile=qos)
+
         self.get_logger().info('publishing map...')
         self.building_map_pub.publish(self.map_msg)
+        self.site_map_pub.publish(self.site_map_msg)
 
         self.get_logger().info(
             'ready to serve map: "{}"  Ctrl+C to exit...'.format(
                 self.map_msg.name))
 
-    def building_map_msg(self, building):
-        msg = BuildingMap()
-        msg.name = building.name
+    def load_building_yaml_map(self, map_path):
+        with open(map_path, 'r') as f:
+            building = Building(yaml.load(f, Loader=yaml.CLoader))
+
+        self.map_msg = BuildingMap()
+        self.map_msg.name = building.name
         for _, level_data in building.levels.items():
-            msg.levels.append(self.level_msg(level_data))
+            self.map_msg.levels.append(self.level_msg(level_data))
         for _, lift_data in building.lifts.items():
-            msg.lifts.append(self.lift_msg(lift_data))
-        return msg
+            self.map_msg.lifts.append(self.lift_msg(lift_data))
+
+        self.site_map_msg = SiteMap()
+        self.site_map_msg.encoding = SiteMap.MAP_DATA_GPKG
+        self.site_map_msg.data = building.generate_geopackage()
+
+    def load_geopackage(self, map_path):
+        with open(map_path, 'rb') as f:
+            self.site_map_msg = SiteMap()
+            self.site_map_msg.encoding = SiteMap.MAP_DATA_GPKG
+            self.site_map_msg.data = f.read()
+        self.get_logger().info(f'read {len(self.site_map_msg.data)} byte GPKG')
+
+        self.map_msg = BuildingMap()
+        # todo: populate the BuildingMap from the GeoPackage. For now we
+        # will leave it empty...
 
     def level_msg(self, level):
         msg = Level()
@@ -168,6 +194,12 @@ class BuildingMapServer(Node):
                     ge.edge_type = GraphEdge.EDGE_TYPE_BIDIRECTIONAL
                 else:
                     ge.edge_type = GraphEdge.EDGE_TYPE_UNIDIRECTIONAL
+                if "speed_limit" in l[2]:
+                    p = Param()
+                    p.name = "speed_limit"
+                    p.type = p.TYPE_DOUBLE
+                    p.value_float = float(l[2]["speed_limit"])
+                    ge.params.append(p)
                 graph_msg.edges.append(ge)
             msg.nav_graphs.append(graph_msg)
 

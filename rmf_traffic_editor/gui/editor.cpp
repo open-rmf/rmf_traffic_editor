@@ -158,7 +158,8 @@ Editor::Editor()
         create_scene();
 
         QTransform t;
-        t.scale(scale, scale);
+        double y_flip = building.coordinate_system.is_y_flipped() ? 1 : -1;
+        t.scale(scale, y_flip * scale);
         map_view->setTransform(t);
         map_view->centerOn(p_transformed);
       }
@@ -614,8 +615,10 @@ void Editor::restore_previous_viewport()
     viewport_center_y,
     viewport_scale);
 
+  double y_flip = building.coordinate_system.is_y_flipped() ? 1 : -1;
+
   QTransform t;
-  t.scale(viewport_scale, viewport_scale);
+  t.scale(viewport_scale, y_flip * viewport_scale);
   map_view->setTransform(t);
   map_view->centerOn(QPointF(viewport_center_x, viewport_center_y));
 }
@@ -797,9 +800,31 @@ void Editor::view_models()
 void Editor::zoom_reset()
 {
   const double viewport_scale = 1.0;
+  const double y_flip = building.coordinate_system.is_y_flipped() ? 1 : -1;
+
   QTransform t;
-  t.scale(viewport_scale, viewport_scale);
+  t.scale(viewport_scale, y_flip * viewport_scale);
   map_view->setTransform(t);
+
+  // compute center of all vertices on the active level
+  Level* level = active_level();
+  if (level)
+  {
+    const size_t n_vertex = level->vertices.size();
+    if (n_vertex > 0)
+    {
+      double x_sum = 0, y_sum = 0;
+      for (const auto& v : level->vertices)
+      {
+        x_sum += v.x;
+        y_sum += v.y;
+      }
+      const double xc = x_sum / n_vertex;
+      const double yc = y_sum / n_vertex;
+      printf("center: (%.3f, %.3f)\n", xc, yc);
+      map_view->centerOn(QPointF(xc, yc));
+    }
+  }
 }
 
 void Editor::mouse_event(const MouseType t, QMouseEvent* e)

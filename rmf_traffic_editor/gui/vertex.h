@@ -26,6 +26,7 @@
 
 #include <QColor>
 
+#include "coordinate_system.h"
 #include "param.h"
 
 class QGraphicsScene;
@@ -54,7 +55,8 @@ public:
   void draw(
     QGraphicsScene* scene,
     const double radius,
-    const QFont& font) const;
+    const QFont& font,
+    const CoordinateSystem& coordinate_system) const;
 
   bool is_parking_point() const;
   bool is_holding_point() const;

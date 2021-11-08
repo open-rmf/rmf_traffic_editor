@@ -2,13 +2,17 @@ import math
 
 
 class Fiducial:
-    def __init__(self, yaml_node):
+    def __init__(self, yaml_node, coordinate_system):
         self.x = yaml_node[0]
-        self.y = -yaml_node[1]
+        self.y = yaml_node[1] * coordinate_system.y_flip_scalar()
         self.name = yaml_node[2]
 
-    def to_yaml(self):
-        return [self.x, -self.y, self.name]
+    def to_yaml(self, coordinate_system):
+        return [
+            self.x,
+            self.y * coordinate_system.y_flip_scalar(),
+            self.name
+        ]
 
     def distance(self, f):
         """ Calculate distance to another fiducial """

@@ -29,6 +29,7 @@ class Level:
         self,
         yaml_node,
         name,
+        coordinate_system,
         model_counts={},
         transform=None
     ):
@@ -46,12 +47,13 @@ class Level:
         self.fiducials = []
         if 'fiducials' in yaml_node:
             for fiducial_yaml in yaml_node['fiducials']:
-                self.fiducials.append(Fiducial(fiducial_yaml))
+                self.fiducials.append(
+                    Fiducial(fiducial_yaml, coordinate_system))
 
         self.vertices = []
         if 'vertices' in yaml_node and yaml_node['vertices']:
             for vertex_yaml in yaml_node['vertices']:
-                self.vertices.append(Vertex(vertex_yaml))
+                self.vertices.append(Vertex(vertex_yaml, coordinate_system))
 
         if transform is None:
             self.transform = Transform()
@@ -86,11 +88,15 @@ class Level:
                 name = model_yaml["name"]
                 if name not in model_counts:
                     model_counts[name] = 1
-                    self.models.append(Model(name, model_yaml))
+                    self.models.append(
+                        Model(name, model_yaml, coordinate_system))
                 else:
                     model_counts[name] += 1
                     self.models.append(
-                            Model(f'{name}_{model_counts[name]}', model_yaml))
+                        Model(
+                            f'{name}_{model_counts[name]}',
+                            model_yaml,
+                            coordinate_system))
 
         self.floors = []
         if 'floors' in yaml_node:
@@ -102,20 +108,20 @@ class Level:
             for hole_yaml in yaml_node['holes']:
                 self.holes.append(Hole(hole_yaml))
 
-    def to_yaml(self):
+    def to_yaml(self, coordinate_system):
         y = {}
         if self.drawing_name:
             y['drawing'] = {}
             y['drawing']['filename'] = self.drawing_name
         y['elevation'] = self.elevation
 
-        y['fiducials'] = [f.to_yaml() for f in self.fiducials]
-        y['vertices'] = [v.to_yaml() for v in self.vertices]
+        y['fiducials'] = [f.to_yaml(coordinate_system) for f in self.fiducials]
+        y['vertices'] = [v.to_yaml(coordinate_system) for v in self.vertices]
         y['measurements'] = [e.to_yaml() for e in self.meas]
         y['lanes'] = [e.to_yaml() for e in self.lanes]
         y['walls'] = [e.to_yaml() for e in self.walls]
         y['doors'] = [e.to_yaml() for e in self.doors]
-        y['models'] = [m.to_yaml() for m in self.models]
+        y['models'] = [m.to_yaml(coordinate_system) for m in self.models]
         y['floors'] = [f.to_yaml() for f in self.floors]
         y['holes'] = [h.to_yaml() for h in self.holes]
         return y
@@ -437,6 +443,9 @@ class Level:
             elif 'dock_name' in v1.params:
                 dock_name = v1.params['dock_name'].value
                 dock_at_end = False
+
+            if 'speed_limit' in l.params:
+                p['speed_limit'] = l.params['speed_limit'].value
 
             if always_unidirectional and l.is_bidirectional():
                 # now flip things around and make the second link

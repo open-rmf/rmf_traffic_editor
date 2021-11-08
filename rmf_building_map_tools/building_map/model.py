@@ -2,11 +2,11 @@ from xml.etree.ElementTree import SubElement
 
 
 class Model:
-    def __init__(self, name, yaml_node):
+    def __init__(self, name, yaml_node, coordinate_system):
         self.name = name
         self.model_name = yaml_node['model_name']
         self.x = yaml_node['x']
-        self.y = -yaml_node['y']
+        self.y = yaml_node['y'] * coordinate_system.y_flip_scalar()
         self.z = 0.0
         if 'z' in yaml_node:
             self.z = yaml_node['z']
@@ -30,10 +30,10 @@ class Model:
 
         self.yaw = yaml_node['yaw']
 
-    def to_yaml(self):
+    def to_yaml(self, coordinate_system):
         y = {}
         y['x'] = self.x
-        y['y'] = -self.y  # invert it back for the file format...
+        y['y'] = self.y * coordinate_system.y_flip_scalar()
         y['z'] = self.z
         y['model_name'] = self.model_name
         y['name'] = self.name

@@ -19,7 +19,7 @@ jobs:
     - name: non-ros-deps
       run: |
         sudo apt-get update
-        sudo apt-get install -y git cmake wget libyaml-cpp-dev qt5-default libceres-dev libeigen3-dev python3-shapely python3-requests python3-yaml python3-pyproj
+        sudo apt-get install -y git cmake wget libyaml-cpp-dev qt5-default libceres-dev libeigen3-dev python3-shapely python3-requests python3-yaml python3-pyproj python3-fiona
 
     - name: build
       shell: bash

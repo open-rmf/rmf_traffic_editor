@@ -1,13 +1,22 @@
+import fiona
+import json
 import math
 import numpy as np
 import os
+import pyproj.crs
+import sqlite3
+import tempfile
 import yaml
+
 from xml.etree.ElementTree import Element, SubElement, parse
 from ament_index_python.packages import get_package_share_directory
 
+from .coordinate_system import CoordinateSystem
+from .geopackage import GeoPackage
 from .level import Level
 from .lift import Lift
 from .param_value import ParamValue
+from .passthrough_transform import PassthroughTransform
 from .web_mercator_transform import WebMercatorTransform
 
 
@@ -23,20 +32,19 @@ class Building:
         if 'parameters' in yaml_node and yaml_node['parameters']:
             for param_name, param_yaml in yaml_node['parameters'].items():
                 self.params[param_name] = ParamValue(param_yaml)
-        print('parsed parameters' + str(self.params))
 
         if 'coordinate_system' in yaml_node:
-            self.coordinate_system = yaml_node['coordinate_system']
+            self.coordinate_system = \
+                CoordinateSystem[yaml_node['coordinate_system']]
         else:
-            self.coordinate_system = 'reference_image'
+            self.coordinate_system = CoordinateSystem.reference_image
         print(f'coordinate system: {self.coordinate_system}')
 
-        if (self.coordinate_system == 'web_mercator' and
-                'generate_crs' not in self.params):
-            raise ValueError('generate_crs must be defined for global nav!')
-
         self.global_transform = None
-        if self.coordinate_system == 'web_mercator':
+        if self.coordinate_system == CoordinateSystem.web_mercator:
+            if 'generate_crs' not in self.params:
+                raise ValueError('generate_crs must be defined for global nav')
+
             crs_name = self.params['generate_crs'].value
             self.global_transform = WebMercatorTransform(crs_name)
 
@@ -55,10 +63,30 @@ class Building:
                 if origin_found:
                     # transform the origin to the target frame
                     x = float(vertex[0])
+                    # TODO: revisit this y inversion...
                     y = -float(vertex[1])  # invert due to historical reasons
                     self.global_transform.set_offset(
                         self.global_transform.transform_point((x, y)))
                     break
+
+        elif self.coordinate_system == CoordinateSystem.cartesian_meters:
+            if 'offset_x' in self.params:
+                offset_x = self.params['offset_x'].value
+            else:
+                offset_x = 0
+
+            if 'offset_y' in self.params:
+                offset_y = self.params['offset_y'].value
+            else:
+                offset_y = 0
+
+            if 'generate_crs' in self.params:
+                crs_name = self.params['generate_crs'].value
+            else:
+                crs_name = ''
+
+            self.global_transform = \
+                PassthroughTransform(offset_x, offset_y, crs_name)
 
         self.levels = {}
         self.model_counts = {}
@@ -66,6 +94,7 @@ class Building:
             self.levels[level_name] = Level(
                 level_yaml,
                 level_name,
+                self.coordinate_system,
                 self.model_counts,
                 self.global_transform)
 
@@ -76,7 +105,7 @@ class Building:
         self.ref_level = self.levels[self.reference_level_name]  # save typing
 
         # we only need to calculate offsets/scales if we're in pixel space
-        if self.coordinate_system == 'reference_image':
+        if self.coordinate_system == CoordinateSystem.reference_image:
             self.calculate_level_offsets_and_scales()
 
         self.transform_all_vertices()
@@ -90,7 +119,8 @@ class Building:
                 else:
                     transform = self.ref_level.transform
                 self.lifts[lift_name] = \
-                    Lift(lift_yaml, lift_name, transform, self.levels)
+                    Lift(lift_yaml, lift_name, transform, self.levels,
+                         self.coordinate_system)
 
         self.set_lift_vert_lists()
 
@@ -150,9 +180,15 @@ class Building:
             g = {}
             g['building_name'] = self.name
             g['levels'] = {}
-            if self.global_transform is not None:
+
+            if self.coordinate_system == CoordinateSystem.web_mercator:
                 g['crs_name'] = self.global_transform.crs_name
                 g['offset'] = [*self.global_transform.offset]
+            elif self.coordinate_system == CoordinateSystem.cartesian_meters:
+                if 'generate_crs' in self.params:
+                    g['crs_name'] = self.params['generate_crs'].value
+                tx, ty = self.global_transform.x, self.global_transform.y
+                g['offset'] = [tx, ty]
 
             empty = True
             for level_name, level in self.levels.items():
@@ -216,13 +252,22 @@ class Building:
                       {'name': vertex.name, 'x': str(vertex.x),
                        'y': str(vertex.y), 'level': level_name})
 
-        if self.global_transform is not None:
-            offset = self.global_transform.offset
+        if self.coordinate_system == CoordinateSystem.web_mercator:
+            (tx, ty) = self.global_transform.x, self.global_transform.y
             offset_ele = SubElement(world, 'offset')
-            offset_ele.text = f'{offset[0]} {offset[1]} 0 0 0 0'
+            offset_ele.text = f'{tx} {ty} 0 0 0 0'
 
             crs_ele = SubElement(world, 'crs')
-            crs_ele.text = self.global_transform.crs_name
+            crs_ele.text = self.global_transform.frame_name
+
+        elif self.coordinate_system == CoordinateSystem.cartesian_meters:
+            tx, ty = self.global_transform.x, self.global_transform.y
+            offset_ele = SubElement(world, 'offset')
+            offset_ele.text = f'{tx} {ty} 0 0 0 0'
+
+            if self.global_transform.frame_name:
+                crs_ele = SubElement(world, 'crs')
+                crs_ele.text = self.global_transform.frame_name
 
         gui_ele = world.find('gui')
         c = self.center()
@@ -312,13 +357,144 @@ class Building:
             d = {}
             d['name'] = self.name
             d['reference_level_name'] = self.reference_level_name
+            d['coordinate_system'] = self.coordinate_system.name
 
             d['levels'] = {}
             for level_name, level_data in self.levels.items():
-                d['levels'][level_name] = level_data.to_yaml()
+                d['levels'][level_name] = \
+                    level_data.to_yaml(self.coordinate_system)
 
             d['lifts'] = {}
             for lift_name, lift in self.lifts.items():
                 d['lifts'][lift_name] = lift.to_yaml()
 
             yaml.dump(d, f)
+
+    def generate_geopackage(self):
+        print('generating geopackage...')
+        if self.coordinate_system != CoordinateSystem.cartesian_meters:
+            print('Not a Cartesian map; not generating GeoPackage.')
+            return []
+
+        if 'generate_crs' not in self.params:
+            print('Map does not have CRS defined; not generating GeoPackage.')
+            return []
+
+        with tempfile.TemporaryDirectory() as tempdirname:
+            gpkg_filename = os.path.join(tempdirname, 'temp.gpkg')
+            self.generate_geopackage_file(gpkg_filename)
+            with open(gpkg_filename, 'rb') as f:
+                b = f.read()
+
+        print(f'GeoPackage is {len(b)} bytes')
+        return b
+
+    def generate_geopackage_file(self, gpkg_filename):
+        print(f'generating GeoPackage in {gpkg_filename}')
+        edge_schema = {
+            'geometry': 'LineString',
+            'properties': [
+                ('level_idx', 'int'),
+                ('edge_type', 'int'),
+                ('parameters', 'str')
+            ]
+        }
+
+        point_schema = {
+            'geometry': 'Point',
+            'properties': [
+                ('name', 'str'),
+                ('level_idx', 'int'),
+                ('parameters', 'str')
+            ]
+        }
+
+        level_schema = {
+            'geometry': 'MultiPolygon',
+            'properties': [
+                ('name', 'str'),
+                ('elevation', 'float'),
+                ('parameters', 'str')
+            ]
+        }
+
+        if 'generate_crs' in self.params:
+            proj_crs = pyproj.crs.CRS(self.params['generate_crs'].value)
+        else:
+            proj_crs = pyproj.crs.CRS('EPSG:404000')  # not geographic
+        fio_crs = proj_crs.to_wkt()
+
+        level_idx_table = {}
+        level_idx = 0
+        for level_name, level in self.levels.items():
+            level_idx_table[level_name] = level_idx
+            level_idx += 1
+
+        all_vertices = []
+        all_edges = []
+        for level_name, level in self.levels.items():
+            level_idx = level_idx_table[level_name]
+            for vertex in level.vertices:
+                vertex_params = {}
+                for param_name, param_value in vertex.params.items():
+                    vertex_params[param_name] = param_value.value
+                all_vertices.append({
+                    'geometry': {
+                        'type': 'Point',
+                        'coordinates': [vertex.x, vertex.y],
+                    },
+                    'properties': {
+                        'name': vertex.name,
+                        'level_idx': level_idx,
+                        'parameters': json.dumps(vertex_params),
+                    }
+                })
+            for lane in level.lanes:
+                lane_params = {}
+                for param_name, param_value in lane.params.items():
+                    lane_params[param_name] = param_value.value
+                v1 = level.vertices[lane.start_idx]
+                v2 = level.vertices[lane.end_idx]
+                all_edges.append({
+                    'geometry': {
+                        'type': 'LineString',
+                        'coordinates': [
+                            [v1.x, v1.y],
+                            [v2.x, v2.y],
+                        ]
+                    },
+                    'properties': {
+                        'level_idx': level_idx,
+                        'edge_type': 1,  # todo: nice enum somewhere
+                        'parameters': json.dumps(lane_params)
+                    }
+                })
+            # todo: add measurement edges
+
+        print(f'writing {len(all_vertices)} vertices...')
+        with fiona.open(gpkg_filename,
+                        'w',
+                        layer='vertices',
+                        driver='GPKG',
+                        crs=fio_crs,
+                        schema=point_schema) as collection:
+            collection.writerecords(all_vertices)
+
+        print(f'writing {len(all_edges)} edges...')
+        with fiona.open(gpkg_filename,
+                        'w',
+                        layer='edges',
+                        driver='GPKG',
+                        crs=fio_crs,
+                        schema=edge_schema) as collection:
+            collection.writerecords(all_edges)
+
+        metadata = {
+            'name': self.name,
+            'coordinate_system': self.coordinate_system.name,
+        }
+        for param_name, param_value in self.params.items():
+            metadata[param_name] = param_value.value
+
+        with GeoPackage(gpkg_filename) as gpkg:
+            gpkg.set_metadata(json.dumps(metadata))
