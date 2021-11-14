@@ -149,6 +149,8 @@ void Vertex::draw(
     pixmap_item->setPos(
       x + icon_ring_radius * cos(icon_bearing),
       y - icon_ring_radius * sin(icon_bearing));
+    if (!coordinate_system.is_y_flipped())
+      pixmap_item->setTransform(pixmap_item->transform().scale(1, -1));
     pixmap_item->setToolTip("This vertex is a holding point");
   }
 
@@ -166,6 +168,8 @@ void Vertex::draw(
     pixmap_item->setPos(
       x + icon_ring_radius * cos(icon_bearing),
       y - icon_ring_radius * sin(icon_bearing));
+    if (!coordinate_system.is_y_flipped())
+      pixmap_item->setTransform(pixmap_item->transform().scale(1, -1));
     pixmap_item->setToolTip("This vertex is a parking point");
 
     /*
@@ -206,6 +210,8 @@ void Vertex::draw(
     pixmap_item->setPos(
       x + icon_ring_radius * cos(icon_bearing),
       y - icon_ring_radius * sin(icon_bearing));
+    if (!coordinate_system.is_y_flipped())
+      pixmap_item->setTransform(pixmap_item->transform().scale(1, -1));
     pixmap_item->setToolTip("This vertex is a charger");
   }
 
@@ -237,6 +243,8 @@ void Vertex::draw(
     pixmap_item->setPos(
       x + icon_ring_radius * cos(icon_bearing),
       y - icon_ring_radius * sin(icon_bearing));
+    if (!coordinate_system.is_y_flipped())
+      pixmap_item->setTransform(pixmap_item->transform().scale(1, -1));
     pixmap_item->setToolTip(("Vertex is " + icon_name).c_str());
   }
 
