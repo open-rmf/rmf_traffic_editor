@@ -38,6 +38,7 @@ public:
   std::string to_string();
   static CoordinateSystem from_string(const std::string& s);
   bool is_y_flipped() const;
+  double default_scale() const;
 };
 
 #endif

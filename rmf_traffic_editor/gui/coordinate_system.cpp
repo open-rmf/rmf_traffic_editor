@@ -63,3 +63,11 @@ bool CoordinateSystem::is_y_flipped() const
 {
   return value == ReferenceImage;
 }
+
+double CoordinateSystem::default_scale() const
+{
+  if (value == CoordinateSystem::ReferenceImage)
+    return 0.05; // default robot grid cell size
+  else
+    return 1.0;
+}

@@ -123,7 +123,7 @@ bool Building::load(const string& _filename)
   for (YAML::const_iterator it = yl.begin(); it != yl.end(); ++it)
   {
     Level level;
-    level.from_yaml(it->first.as<string>(), it->second);
+    level.from_yaml(it->first.as<string>(), it->second, coordinate_system);
     levels.push_back(level);
   }
 
