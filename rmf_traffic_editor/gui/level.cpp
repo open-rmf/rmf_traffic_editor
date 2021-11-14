@@ -1120,7 +1120,7 @@ void Level::draw(
     const double w = x_meters / drawing_meters_per_pixel;
     const double h = y_meters / drawing_meters_per_pixel;
     scene->setSceneRect(QRectF(0, 0, w, h));
-    scene->addRect(0, 0, w, h, QPen(), Qt::white);
+    scene->addRect(0, 0, w, h, Qt::NoPen, Qt::white);
   }
 
   draw_polygons(scene);
