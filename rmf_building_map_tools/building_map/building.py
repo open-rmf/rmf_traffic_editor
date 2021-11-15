@@ -418,10 +418,11 @@ class Building:
             ]
         }
 
-        if 'generate_crs' in self.params:
-            proj_crs = pyproj.crs.CRS(self.params['generate_crs'].value)
-        else:
-            proj_crs = pyproj.crs.CRS('EPSG:404000')  # not geographic
+        if 'generate_crs' not in self.params:
+            print(f'cannot generate GeoPackage: map does not declare a CRS')
+            return
+
+        proj_crs = pyproj.crs.CRS(self.params['generate_crs'].value)
         fio_crs = proj_crs.to_wkt()
 
         level_idx_table = {}
@@ -498,3 +499,84 @@ class Building:
 
         with GeoPackage(gpkg_filename) as gpkg:
             gpkg.set_metadata(json.dumps(metadata))
+
+    def generate_geojson_file(self, filename):
+        print(f'generating GeoJSON in {filename}')
+
+        if 'generate_crs' not in self.params:
+            print(f'cannot generate GeoJSON: map does not declare a CRS')
+            return
+
+        proj_crs = pyproj.crs.CRS(self.params['generate_crs'].value)
+        fio_crs = proj_crs.to_wkt()
+
+        features = []
+
+        # todo: re-order levels by elevation
+        level_idx_table = {}
+        level_idx = 0
+        for level_name, level in self.levels.items():
+            level_idx_table[level_name] = level_idx
+            level_idx += 1
+
+        all_vertices = []
+        all_edges = []
+        for level_name, level in self.levels.items():
+            level_idx = level_idx_table[level_name]
+            for vertex in level.vertices:
+                vertex_params = {}
+                for param_name, param_value in vertex.params.items():
+                    vertex_params[param_name] = param_value.value
+                features.append({
+                    'type': 'Feature',
+                    'feature_type': 'nav_vertex',
+                    'geometry': {
+                        'type': 'Point',
+                        'coordinates': [vertex.x, vertex.y],
+                    },
+                    'properties': {
+                        'name': vertex.name,
+                        'level_idx': level_idx,
+                        'parameters': json.dumps(vertex_params),
+                    }
+                })
+
+            for lane in level.lanes:
+                lane_params = {}
+                for param_name, param_value in lane.params.items():
+                    lane_params[param_name] = param_value.value
+                v1 = level.vertices[lane.start_idx]
+                v2 = level.vertices[lane.end_idx]
+
+                features.append({
+                    'type': 'Feature',
+                    'feature_type': 'nav_lane',
+                    'geometry': {
+                        'type': 'LineString',
+                        'coordinates': [
+                            [v1.x, v1.y],
+                            [v2.x, v2.y],
+                        ]
+                    },
+                    'properties': {
+                        'level_idx': level_idx,
+                        'edge_type': 1,  # todo: nice enum somewhere
+                        'parameters': json.dumps(lane_params),
+                    }
+                })
+
+            # todo: add measurement edges
+            # todo: add wall edges
+            # todo: add door edges
+            # todo: add lifts
+
+        j = {
+            'site_name': self.name,
+            'coordinate_system': self.coordinate_system.name,
+            'type': 'FeatureCollection',
+            'features': features,
+        }
+
+        print(f'writing {len(features)} features...')
+        with open(filename, 'w') as f:
+            json.dump(j, f, indent=2, sort_keys=True)
