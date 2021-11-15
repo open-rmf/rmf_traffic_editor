@@ -88,7 +88,10 @@ public:
 
   QPixmap floorplan_pixmap;
 
-  bool from_yaml(const std::string& name, const YAML::Node& data);
+  bool from_yaml(
+    const std::string& name,
+    const YAML::Node& data,
+    const CoordinateSystem& coordinate_system);
   YAML::Node to_yaml() const;
 
   const Feature* find_feature(const QUuid& id) const;

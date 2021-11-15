@@ -44,7 +44,8 @@ Level::~Level()
 
 bool Level::from_yaml(
   const std::string& _name,
-  const YAML::Node& _data)
+  const YAML::Node& _data,
+  const CoordinateSystem& coordinate_system)
 {
   printf("parsing level [%s]\n", _name.c_str());
   name = _name;
@@ -67,7 +68,7 @@ bool Level::from_yaml(
   {
     x_meters = _data["x_meters"].as<double>();
     y_meters = _data["y_meters"].as<double>();
-    drawing_meters_per_pixel = 0.05;  // something reasonable
+    drawing_meters_per_pixel = coordinate_system.default_scale();
     drawing_width = x_meters / drawing_meters_per_pixel;
     drawing_height = y_meters / drawing_meters_per_pixel;
   }
@@ -75,7 +76,7 @@ bool Level::from_yaml(
   {
     x_meters = 100.0;
     y_meters = 100.0;
-    drawing_meters_per_pixel = 0.05;
+    drawing_meters_per_pixel = coordinate_system.default_scale();
     drawing_width = x_meters / drawing_meters_per_pixel;
     drawing_height = y_meters / drawing_meters_per_pixel;
   }
@@ -1119,7 +1120,7 @@ void Level::draw(
     const double w = x_meters / drawing_meters_per_pixel;
     const double h = y_meters / drawing_meters_per_pixel;
     scene->setSceneRect(QRectF(0, 0, w, h));
-    scene->addRect(0, 0, w, h, QPen(), Qt::white);
+    scene->addRect(0, 0, w, h, Qt::NoPen, Qt::white);
   }
 
   draw_polygons(scene);
@@ -1850,7 +1851,7 @@ void Level::mouse_select_press(
   const RenderingOptions& rendering_options,
   const Qt::KeyboardModifiers& modifiers)
 {
-  printf("Level::mouse_select_press()\n");
+  printf("Level::mouse_select_press(%.3f, %.3f)\n", x, y);
 
   if (!(modifiers & Qt::ShiftModifier))
     clear_selection();
@@ -2074,7 +2075,8 @@ void Level::set_selected_line_item(
   const double x2 = line_item->line().x2();
   const double y2 = line_item->line().y2();
 
-
+  double min_edge_dist = 1e9;
+  Edge* min_edge = nullptr;
   // find if any of our lanes match those vertices
   for (auto& edge : edges)
   {
@@ -2093,12 +2095,19 @@ void Level::set_selected_line_item(
     const double v1_dist = std::sqrt(dx1*dx1 + dy1*dy1);
     const double v2_dist = std::sqrt(dx2*dx2 + dy2*dy2);
 
-    const double thresh = 10.0;  // it should be really tiny if it matches
-    if (v1_dist < thresh && v2_dist < thresh)
+    const double max_dist = (v1_dist > v2_dist ? v1_dist : v2_dist);
+    if (max_dist < min_edge_dist)
     {
-      edge.selected = true;
-      return;  // stop after first one is found, don't select multiple
+      min_edge_dist = max_dist;
+      min_edge = &edge;
     }
+  }
+
+  const double thresh = 10.0;  // should be really tiny if it matches
+  if (min_edge_dist < thresh && min_edge != nullptr)
+  {
+    min_edge->selected = true;
+    return;
   }
 
   // see if the constraint index is stored in the QGraphicsItem
