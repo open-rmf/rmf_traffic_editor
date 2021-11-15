@@ -16,12 +16,6 @@ def main():
                         help='building.yaml filename')
     parser.add_argument('OUTPUT', type=str,
                         help='output filename')
-    parser.add_argument('-f',
-                        '--format',
-                        type=str,
-                        default='geopackage',
-                        help='format: either geopackage or geojson')
-
 
     args = parser.parse_args()
 
@@ -33,12 +27,14 @@ def main():
 
     b = Building(y)
 
-    if args.format == 'geopackage':
+    if args.OUTPUT.endswith('.gpkg'):
         b.generate_geopackage_file(args.OUTPUT)
-    elif args.format == 'geojson':
+    elif args.OUTPUT.endswith('.geojson'):
         b.generate_geojson_file(args.OUTPUT)
+    elif args.OUTPUT.endswith('.geojson.gz'):
+        b.generate_geojson_file(args.OUTPUT, True)
     else:
-        raise ValueError(f'unknown format: {args.format}')
+        raise ValueError(f'unknown filename suffix: {args.OUTPUT}')
 
 
 if __name__ == '__main__':

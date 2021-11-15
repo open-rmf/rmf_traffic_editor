@@ -1,4 +1,5 @@
 import fiona
+import gzip
 import json
 import math
 import numpy as np
@@ -500,7 +501,7 @@ class Building:
         with GeoPackage(gpkg_filename) as gpkg:
             gpkg.set_metadata(json.dumps(metadata))
 
-    def generate_geojson_file(self, filename):
+    def generate_geojson_file(self, filename, compress=False):
         print(f'generating GeoJSON in {filename}')
 
         if 'generate_crs' not in self.params:
@@ -578,5 +579,12 @@ class Building:
         }
 
         print(f'writing {len(features)} features...')
-        with open(filename, 'w') as f:
-            json.dump(j, f, indent=2, sort_keys=True)
+
+        if compress:
+            data_str = json.dumps(j, indent=2, sort_keys=True)
+            data_gzip = gzip.compress(bytes(data_str, 'utf-8'))
+            with open(filename, 'wb') as f:
+                f.write(data_gzip)
+        else:
+            with open(filename, 'w') as f:
+                json.dump(j, f, indent=2, sort_keys=True)
