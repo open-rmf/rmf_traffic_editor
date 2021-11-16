@@ -574,7 +574,7 @@ class Building:
 
         j = {
             'site_name': self.name,
-            'coordinate_system': self.params['generate_crs'].value,
+            'preferred_crs': self.params['generate_crs'].value,
             'type': 'FeatureCollection',
             'features': features,
         }
