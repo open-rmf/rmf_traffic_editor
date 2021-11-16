@@ -4,15 +4,14 @@ import json
 import math
 import numpy as np
 import os
-from pyproj import Transformer
-from pyproj.crs import CRS
-#import pyproj.crs
 import sqlite3
 import tempfile
 import yaml
 
-from xml.etree.ElementTree import Element, SubElement, parse
 from ament_index_python.packages import get_package_share_directory
+from pyproj import Transformer
+from pyproj.crs import CRS
+from xml.etree.ElementTree import Element, SubElement, parse
 
 from .coordinate_system import CoordinateSystem
 from .geopackage import GeoPackage
@@ -425,7 +424,7 @@ class Building:
             print(f'cannot generate GeoPackage: map does not declare a CRS')
             return
 
-        proj_crs = pyproj.crs.CRS(self.params['generate_crs'].value)
+        proj_crs = CRS(self.params['generate_crs'].value)
         fio_crs = proj_crs.to_wkt()
 
         level_idx_table = {}
@@ -510,8 +509,8 @@ class Building:
             print(f'cannot generate GeoJSON: map does not declare a CRS')
             return
 
-        proj_crs = pyproj.crs.CRS(self.params['generate_crs'].value)
-        fio_crs = proj_crs.to_wkt()
+        source_crs = self.params['generate_crs'].value
+        wgs_transformer = Transformer.from_crs(source_crs, 'EPSG:4326')
 
         features = []
 
@@ -527,32 +526,33 @@ class Building:
         for level_name, level in self.levels.items():
             level_idx = level_idx_table[level_name]
             for vertex in level.vertices:
-                # todo: project into WGS84
-                vertex_params = {}
+                (lat, lon) = wgs_transformer.transform(vertex.y, vertex.x)
+                properties = {
+                    'name': vertex.name,
+                    'level_idx': level_idx
+                }
                 for param_name, param_value in vertex.params.items():
-                    vertex_params[param_name] = param_value.value
+                    properties[param_name] = param_value.value
                 features.append({
                     'type': 'Feature',
                     'feature_type': 'nav_vertex',
                     'geometry': {
                         'type': 'Point',
-                        'coordinates': [vertex.x, vertex.y],
+                        'coordinates': [lon, lat],
                     },
-                    'properties': {
-                        'name': vertex.name,
-                        'level_idx': level_idx,
-                        'parameters': json.dumps(vertex_params),
-                    }
+                    'properties': properties
                 })
 
             for lane in level.lanes:
-                lane_params = {}
+                properties = {
+                    'level_idx': level_idx,
+                }
                 for param_name, param_value in lane.params.items():
-                    lane_params[param_name] = param_value.value
+                    properties[param_name] = param_value.value
                 v1 = level.vertices[lane.start_idx]
                 v2 = level.vertices[lane.end_idx]
-
-                # todo: project into WGS84
+                (v1_lat, v1_lon) = wgs_transformer.transform(v1.y, v1.x)
+                (v2_lat, v2_lon) = wgs_transformer.transform(v2.y, v2.x)
 
                 features.append({
                     'type': 'Feature',
@@ -560,15 +560,11 @@ class Building:
                     'geometry': {
                         'type': 'LineString',
                         'coordinates': [
-                            [v1.x, v1.y],
-                            [v2.x, v2.y],
+                            [v1_lon, v1_lat],
+                            [v2_lon, v2_lat],
                         ]
                     },
-                    'properties': {
-                        'level_idx': level_idx,
-                        'edge_type': 1,  # todo: nice enum somewhere
-                        'parameters': json.dumps(lane_params),
-                    }
+                    'properties': properties
                 })
 
             # todo: add measurement edges
