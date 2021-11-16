@@ -4,7 +4,9 @@ import json
 import math
 import numpy as np
 import os
-import pyproj.crs
+from pyproj import Transformer
+from pyproj.crs import CRS
+#import pyproj.crs
 import sqlite3
 import tempfile
 import yaml
@@ -525,6 +527,7 @@ class Building:
         for level_name, level in self.levels.items():
             level_idx = level_idx_table[level_name]
             for vertex in level.vertices:
+                # todo: project into WGS84
                 vertex_params = {}
                 for param_name, param_value in vertex.params.items():
                     vertex_params[param_name] = param_value.value
@@ -548,6 +551,8 @@ class Building:
                     lane_params[param_name] = param_value.value
                 v1 = level.vertices[lane.start_idx]
                 v2 = level.vertices[lane.end_idx]
+
+                # todo: project into WGS84
 
                 features.append({
                     'type': 'Feature',
@@ -573,7 +578,7 @@ class Building:
 
         j = {
             'site_name': self.name,
-            'coordinate_system': self.coordinate_system.name,
+            'coordinate_system': self.params['generate_crs'].value,
             'type': 'FeatureCollection',
             'features': features,
         }
