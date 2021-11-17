@@ -503,11 +503,27 @@ class Building:
             gpkg.set_metadata(json.dumps(metadata))
 
     def generate_geojson_file(self, filename, compress=False):
-        print(f'generating GeoJSON in {filename}')
+        j = self.generate_geojson()
+        if j is None:
+            return None
+
+        if compress:
+            data_str = json.dumps(j, indent=2, sort_keys=True)
+            data_gzip = gzip.compress(bytes(data_str, 'utf-8'))
+            with open(filename, 'wb') as f:
+                f.write(data_gzip)
+        else:
+            with open(filename, 'w') as f:
+                json.dump(j, f, indent=2, sort_keys=True)
+
+        print(f'wrote {filename}')
+
+    def generate_geojson(self):
+        print(f'generating GeoJSON...')
 
         if 'generate_crs' not in self.params:
             print(f'cannot generate GeoJSON: map does not declare a CRS')
-            return
+            return None
 
         source_crs = self.params['generate_crs'].value
         wgs_transformer = Transformer.from_crs(source_crs, 'EPSG:4326')
@@ -579,13 +595,10 @@ class Building:
             'features': features,
         }
 
-        print(f'writing {len(features)} features...')
+        if 'suggested_offset_x' in self.params:
+            j['suggested_offset_x'] = self.params['suggested_offset_x'].value
+        if 'suggested_offset_y' in self.params:
+            j['suggested_offset_y'] = self.params['suggested_offset_y'].value
 
-        if compress:
-            data_str = json.dumps(j, indent=2, sort_keys=True)
-            data_gzip = gzip.compress(bytes(data_str, 'utf-8'))
-            with open(filename, 'wb') as f:
-                f.write(data_gzip)
-        else:
-            with open(filename, 'w') as f:
-                json.dump(j, f, indent=2, sort_keys=True)
+        print(f'generated {len(features)} features...')
+        return j
