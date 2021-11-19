@@ -94,7 +94,7 @@ class BuildingMapServer(Node):
         self.site_map_msg = SiteMap()
         uncompressed = building.generate_geojson()
         if 'features' in uncompressed and len(uncompressed['features']):
-            data_str = json.dumps(uncompressed)
+            data_str = json.dumps(uncompressed, sort_keys=True)
             data_gzip = gzip.compress(bytes(data_str, 'utf-8'))
 
             self.get_logger().info(f'compressed GeoJSON: {len(data_gzip)} B')
