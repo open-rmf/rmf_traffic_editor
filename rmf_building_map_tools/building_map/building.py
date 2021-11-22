@@ -523,7 +523,7 @@ class Building:
 
         if 'generate_crs' not in self.params:
             print(f'cannot generate GeoJSON: map does not declare a CRS')
-            return None
+            return {}
 
         source_crs = self.params['generate_crs'].value
         wgs_transformer = Transformer.from_crs(source_crs, 'EPSG:4326')
