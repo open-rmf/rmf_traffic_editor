@@ -1,15 +1,17 @@
 import fiona
+import gzip
 import json
 import math
 import numpy as np
 import os
-import pyproj.crs
 import sqlite3
 import tempfile
 import yaml
 
-from xml.etree.ElementTree import Element, SubElement, parse
 from ament_index_python.packages import get_package_share_directory
+from pyproj import Transformer
+from pyproj.crs import CRS
+from xml.etree.ElementTree import Element, SubElement, parse
 
 from .coordinate_system import CoordinateSystem
 from .geopackage import GeoPackage
@@ -418,10 +420,11 @@ class Building:
             ]
         }
 
-        if 'generate_crs' in self.params:
-            proj_crs = pyproj.crs.CRS(self.params['generate_crs'].value)
-        else:
-            proj_crs = pyproj.crs.CRS('EPSG:404000')  # not geographic
+        if 'generate_crs' not in self.params:
+            print(f'cannot generate GeoPackage: map does not declare a CRS')
+            return
+
+        proj_crs = CRS(self.params['generate_crs'].value)
         fio_crs = proj_crs.to_wkt()
 
         level_idx_table = {}
@@ -498,3 +501,104 @@ class Building:
 
         with GeoPackage(gpkg_filename) as gpkg:
             gpkg.set_metadata(json.dumps(metadata))
+
+    def generate_geojson_file(self, filename, compress=False):
+        j = self.generate_geojson()
+        if j is None:
+            return None
+
+        if compress:
+            data_str = json.dumps(j, indent=2, sort_keys=True)
+            data_gzip = gzip.compress(bytes(data_str, 'utf-8'))
+            with open(filename, 'wb') as f:
+                f.write(data_gzip)
+        else:
+            with open(filename, 'w') as f:
+                json.dump(j, f, indent=2, sort_keys=True)
+
+        print(f'wrote {filename}')
+
+    def generate_geojson(self):
+        print(f'generating GeoJSON...')
+
+        if 'generate_crs' not in self.params:
+            print(f'cannot generate GeoJSON: map does not declare a CRS')
+            return {}
+
+        source_crs = self.params['generate_crs'].value
+        wgs_transformer = Transformer.from_crs(source_crs, 'EPSG:4326')
+
+        features = []
+
+        # todo: re-order levels by elevation
+        level_idx_table = {}
+        level_idx = 0
+        for level_name, level in self.levels.items():
+            level_idx_table[level_name] = level_idx
+            level_idx += 1
+
+        all_vertices = []
+        all_edges = []
+        for level_name, level in self.levels.items():
+            level_idx = level_idx_table[level_name]
+            for vertex in level.vertices:
+                (lat, lon) = wgs_transformer.transform(vertex.y, vertex.x)
+                properties = {
+                    'name': vertex.name,
+                    'level_idx': level_idx
+                }
+                for param_name, param_value in vertex.params.items():
+                    properties[param_name] = param_value.value
+                features.append({
+                    'type': 'Feature',
+                    'feature_type': 'nav_vertex',
+                    'geometry': {
+                        'type': 'Point',
+                        'coordinates': [lon, lat],
+                    },
+                    'properties': properties
+                })
+
+            for lane in level.lanes:
+                properties = {
+                    'level_idx': level_idx,
+                }
+                for param_name, param_value in lane.params.items():
+                    properties[param_name] = param_value.value
+                v1 = level.vertices[lane.start_idx]
+                v2 = level.vertices[lane.end_idx]
+                (v1_lat, v1_lon) = wgs_transformer.transform(v1.y, v1.x)
+                (v2_lat, v2_lon) = wgs_transformer.transform(v2.y, v2.x)
+
+                features.append({
+                    'type': 'Feature',
+                    'feature_type': 'nav_lane',
+                    'geometry': {
+                        'type': 'LineString',
+                        'coordinates': [
+                            [v1_lon, v1_lat],
+                            [v2_lon, v2_lat],
+                        ]
+                    },
+                    'properties': properties
+                })
+
+            # todo: add measurement edges
+            # todo: add wall edges
+            # todo: add door edges
+            # todo: add lifts
+
+        j = {
+            'site_name': self.name,
+            'preferred_crs': self.params['generate_crs'].value,
+            'type': 'FeatureCollection',
+            'features': features,
+        }
+
+        if 'suggested_offset_x' in self.params:
+            j['suggested_offset_x'] = self.params['suggested_offset_x'].value
+        if 'suggested_offset_y' in self.params:
+            j['suggested_offset_y'] = self.params['suggested_offset_y'].value
+
+        print(f'generated {len(features)} features...')
+        return j

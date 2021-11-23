@@ -1,4 +1,6 @@
 import errno
+import gzip
+import json
 import math
 import os
 import sys
@@ -47,6 +49,10 @@ class BuildingMapServer(Node):
             self.load_building_yaml_map(map_path)
         elif map_path.endswith('.gpkg'):
             self.load_geopackage(map_path)
+        elif map_path.endswith('.geojson'):
+            self.load_geojson(map_path)
+        elif map_path.endswith('.geojson.gz'):
+            self.load_geojson(map_path, True)
         else:
             self.get_logger().fatal('unknown filename suffix')
             sys.exit(1)
@@ -86,8 +92,16 @@ class BuildingMapServer(Node):
             self.map_msg.lifts.append(self.lift_msg(lift_data))
 
         self.site_map_msg = SiteMap()
-        self.site_map_msg.encoding = SiteMap.MAP_DATA_GPKG
-        self.site_map_msg.data = building.generate_geopackage()
+        uncompressed = building.generate_geojson()
+        if 'features' in uncompressed and len(uncompressed['features']):
+            data_str = json.dumps(uncompressed, sort_keys=True)
+            data_gzip = gzip.compress(bytes(data_str, 'utf-8'))
+
+            self.get_logger().info(f'compressed GeoJSON: {len(data_gzip)} B')
+            self.site_map_msg.encoding = SiteMap.MAP_DATA_GEOJSON_GZ
+            self.site_map_msg.data = data_gzip
+        else:
+            self.get_logger().info(f'unable to generate GeoJSON for this map.')
 
     def load_geopackage(self, map_path):
         with open(map_path, 'rb') as f:
@@ -98,6 +112,22 @@ class BuildingMapServer(Node):
 
         self.map_msg = BuildingMap()
         # todo: populate the BuildingMap from the GeoPackage. For now we
+        # will leave it empty...
+
+    def load_geojson(self, map_path, compressed=False):
+        self.site_map_msg = SiteMap()
+        if compressed:
+            self.site_map_msg.encoding = SiteMap.MAP_DATA_GEOJSON_GZ
+        else:
+            self.site_map_msg.encoding = SiteMap.MAP_DATA_GEOJSON
+
+        with open(map_path, 'rb') as f:
+            self.site_map_msg.data = f.read()
+
+        self.get_logger().info(f'read {len(self.site_map_msg.data)} bytes')
+
+        self.map_msg = BuildingMap()
+        # todo: populate the BuildingMap from the GeoJSON. For now we
         # will leave it empty...
 
     def level_msg(self, level):
