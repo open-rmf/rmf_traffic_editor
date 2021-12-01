@@ -49,7 +49,7 @@ class Level:
         model_counts={},
         transform=None
     ):
-        print(f'parsing level {name}')
+        print(f'parsing level {self.name}')
 
         self.drawing_name = None
         if 'drawing' in yaml_node:
