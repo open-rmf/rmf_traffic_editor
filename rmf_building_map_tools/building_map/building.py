@@ -184,7 +184,9 @@ class Building:
 
         self.transform_all_vertices()
         for level_name, level in self.levels.items():
-            print(f'level {level_name} has {len(level.vertices)} vertices')
+            print(f'level {level_name}:')
+            print(f'  bbox: {level.bbox}')
+            print(f'  {len(level.vertices)} vertices')
 
     def parse_geojson_vertex(self, feature, transformer):
         if 'geometry' not in feature:
@@ -200,8 +202,6 @@ class Building:
         lon = geometry['coordinates'][0]
         lat = geometry['coordinates'][1]
         y, x = transformer.transform(lat, lon)
-        x += offset_x
-        y += offset_y
 
         level_idx = 0
         vertex_name = ''
@@ -216,8 +216,10 @@ class Building:
         level_name = f'level_{level_idx}'
 
         if level_name not in self.levels:
-            self.levels[level_name] = Level(level_name)
-            self.levels[level_name].bbox = [[x, y], [x, y]]
+            level = Level(level_name)
+            level.bbox = [[x, y], [x, y]]
+            level.transform = self.global_transform
+            self.levels[level_name] = level
 
         level = self.levels[level_name]
 
@@ -682,7 +684,7 @@ class Building:
 
                 features.append({
                     'type': 'Feature',
-                    'feature_type': 'nav_lane',
+                    'feature_type': 'rmf_lane',
                     'geometry': {
                         'type': 'LineString',
                         'coordinates': [
