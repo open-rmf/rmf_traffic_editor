@@ -10,7 +10,8 @@ from building_map.level import Level
 
 class LevelWithHumanLanes (Level):
     def __init__(self, yaml_node, name, coordinate_system, graph_idx=9):
-        Level.__init__(self, yaml_node, name, coordinate_system)
+        Level.__init__(self, name)
+        self.parse_yaml(yaml_node, coordinate_system)
 
         # default graph_idx for human_lanes is 9
         self.current_graph_idx = graph_idx

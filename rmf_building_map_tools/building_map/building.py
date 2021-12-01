@@ -19,11 +19,20 @@ from .level import Level
 from .lift import Lift
 from .param_value import ParamValue
 from .passthrough_transform import PassthroughTransform
+from .vertex import Vertex
 from .web_mercator_transform import WebMercatorTransform
 
 
 class Building:
-    def __init__(self, yaml_node):
+    def __init__(self, data, data_format='yaml'):
+        if data_format == 'yaml':
+            self.parse_yaml(data)
+        elif data_format == 'geojson':
+            self.parse_geojson(data)
+        else:
+            raise ValueError(f'unknown data format: {data_format}')
+
+    def parse_yaml(self, yaml_node):
         if 'building_name' in yaml_node:
             self.name = yaml_node['building_name']
         else:
@@ -93,9 +102,9 @@ class Building:
         self.levels = {}
         self.model_counts = {}
         for level_name, level_yaml in yaml_node['levels'].items():
-            self.levels[level_name] = Level(
+            self.levels[level_name] = Level(level_name)
+            self.levels[level_name].parse_yaml(
                 level_yaml,
-                level_name,
                 self.coordinate_system,
                 self.model_counts,
                 self.global_transform)
@@ -125,6 +134,107 @@ class Building:
                          self.coordinate_system)
 
         self.set_lift_vert_lists()
+
+    def parse_geojson(self, json_node):
+        self.levels = {}
+        self.lifts = {}
+
+        if 'site_name' in json_node:
+            self.name = json_node['site_name']
+        else:
+            self.name = 'no_name'
+        print(f'name: {self.name}')
+
+        if 'features' not in json_node:
+            return
+
+        self.coordinate_system = CoordinateSystem.cartesian_meters
+        if 'suggested_offset_x' in json_node:
+            offset_x = json_node['suggested_offset_x']
+        else:
+            offset_x = 0
+
+        if 'suggested_offset_y' in json_node:
+            offset_y = json_node['suggested_offset_y']
+        else:
+            offset_y = 0
+
+        if 'preferred_crs' in json_node:
+            crs_name = json_node['preferred_crs']
+        else:
+            crs_name = ''  # todo: calculate based on UTM grid
+            print('CRS not specified. TODO: infer one.')
+            return
+
+        self.global_transform = \
+            PassthroughTransform(offset_x, offset_y, crs_name)
+
+        # project from WGS 84 to whatever is requested by this file
+        transformer = Transformer.from_crs('EPSG:4326', crs_name)
+
+        # Spin through all items and see how many levels we have.
+        # todo: encode level polygons and names in GeoJSON files.
+        # For now, just compute a bounding box and expand it a bit
+
+        for feature in json_node['features']:
+            if 'feature_type' not in feature:
+                continue
+            if feature['feature_type'] == 'rmf_vertex':
+                self.parse_geojson_vertex(feature, transformer)
+
+        self.transform_all_vertices()
+        for level_name, level in self.levels.items():
+            print(f'level {level_name} has {len(level.vertices)} vertices')
+
+    def parse_geojson_vertex(self, feature, transformer):
+        if 'geometry' not in feature:
+            return
+
+        geometry = feature['geometry']
+        if 'type' not in geometry:
+            return
+        if geometry['type'] != 'Point':
+            return
+        if 'coordinates' not in geometry:
+            return
+        lon = geometry['coordinates'][0]
+        lat = geometry['coordinates'][1]
+        y, x = transformer.transform(lat, lon)
+        x += offset_x
+        y += offset_y
+
+        level_idx = 0
+        vertex_name = ''
+        if 'properties' in feature:
+            props = feature['properties']
+            if 'level_idx' in props:
+                level_idx = props['level_idx']
+            if 'name' in props:
+                vertex_name = props['name']
+
+        # todo: look up the real level name somewhere
+        level_name = f'level_{level_idx}'
+
+        if level_name not in self.levels:
+            self.levels[level_name] = Level(level_name)
+            self.levels[level_name].bbox = [[x, y], [x, y]]
+
+        level = self.levels[level_name]
+
+        level.bbox[0][0] = min(level.bbox[0][0], x)
+        level.bbox[0][1] = min(level.bbox[0][1], y)
+        level.bbox[1][0] = max(level.bbox[1][0], x)
+        level.bbox[1][1] = max(level.bbox[1][1], y)
+
+        # todo: parse params from json properties
+        vertex_params = {}
+
+        level.vertices.append(
+            Vertex(
+                [x, y, 0, vertex_name, vertex_params],
+                self.coordinate_system
+            )
+        )
 
     def __str__(self):
         s = ''
@@ -551,7 +661,7 @@ class Building:
                     properties[param_name] = param_value.value
                 features.append({
                     'type': 'Feature',
-                    'feature_type': 'nav_vertex',
+                    'feature_type': 'rmf_vertex',
                     'geometry': {
                         'type': 'Point',
                         'coordinates': [lon, lat],

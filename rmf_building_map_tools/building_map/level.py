@@ -25,15 +25,30 @@ from .transform import Transform
 
 
 class Level:
-    def __init__(
+    def __init__(self, name):
+        self.name = name
+        self.drawing_name = None
+        self.elevation = 0.0
+        self.fiducials = []
+        self.vertices = []
+        self.transformed_vertices = []  # will be calculated in a later pass
+        self.lift_vert_lists = {}  # will be calculated in a later pass
+        self.meas = []
+        self.lanes = []
+        self.walls = []
+        self.doors = []
+        self.models = []
+        self.floors = []
+        self.holes = []
+        self.transform = Transform()
+
+    def parse_yaml(
         self,
         yaml_node,
-        name,
         coordinate_system,
         model_counts={},
         transform=None
     ):
-        self.name = name
         print(f'parsing level {name}')
 
         self.drawing_name = None
