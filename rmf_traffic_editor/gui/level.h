@@ -150,7 +150,7 @@ public:
 
   bool can_delete_current_selection();
   bool delete_selected();
-  void calculate_scale();
+  void calculate_scale(const CoordinateSystem& coordinate_system);
   void clear_selection();
 
   void get_selected_items(std::vector<SelectedItem>& selected_items);

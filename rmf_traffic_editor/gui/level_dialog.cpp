@@ -225,7 +225,7 @@ void LevelDialog::ok_button_clicked()
   building_level.flattened_y_offset =
     flattened_y_offset_line_edit->text().toDouble();
 
-  building_level.calculate_scale();
+  building_level.calculate_scale(building.coordinate_system);
   accept();
 }
 

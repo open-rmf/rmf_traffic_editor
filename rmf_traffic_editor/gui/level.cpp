@@ -585,7 +585,7 @@ void Level::get_selected_items(
   }
 }
 
-void Level::calculate_scale()
+void Level::calculate_scale(const CoordinateSystem& coordinate_system)
 {
   // for now, just calculate the mean of the scale estimates
   double scale_sum = 0.0;
@@ -613,7 +613,7 @@ void Level::calculate_scale()
       scale_count, drawing_meters_per_pixel);
   }
   else
-    drawing_meters_per_pixel = 0.05;// default to something reasonable
+    drawing_meters_per_pixel = coordinate_system.default_scale();
 
   if (drawing_width && drawing_height && drawing_meters_per_pixel > 0.0)
   {
