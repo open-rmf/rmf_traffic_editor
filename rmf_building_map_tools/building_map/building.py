@@ -139,32 +139,22 @@ class Building:
         self.levels = {}
         self.lifts = {}
 
-        if 'site_name' in json_node:
-            self.name = json_node['site_name']
-        else:
-            self.name = 'no_name'
+        self.name = json_node.get('site_name', 'no_name')
         print(f'name: {self.name}')
 
         if 'features' not in json_node:
             return
 
         self.coordinate_system = CoordinateSystem.cartesian_meters
-        if 'suggested_offset_x' in json_node:
-            offset_x = json_node['suggested_offset_x']
-        else:
-            offset_x = 0
 
-        if 'suggested_offset_y' in json_node:
-            offset_y = json_node['suggested_offset_y']
-        else:
-            offset_y = 0
-
-        if 'preferred_crs' in json_node:
-            crs_name = json_node['preferred_crs']
-        else:
-            crs_name = ''  # todo: calculate based on UTM grid
+        if 'preferred_crs' not in json_node:
+            # todo: calculate based on UTM grid
             print('CRS not specified. TODO: infer one.')
             return
+
+        crs_name = json_node.get('preferred_crs', '')
+        offset_x = json_node.get('suggested_offset_x', 0)
+        offset_y = json_node.get('suggested_offset_y', 0)
 
         self.global_transform = \
             PassthroughTransform(offset_x, offset_y, crs_name)
@@ -181,12 +171,31 @@ class Building:
                 continue
             if feature['feature_type'] == 'rmf_vertex':
                 self.parse_geojson_vertex(feature, transformer)
+            elif feature['feature_type'] == 'rmf_lane':
+                self.parse_geojson_lane(feature, transformer)
 
         self.transform_all_vertices()
         for level_name, level in self.levels.items():
             print(f'level {level_name}:')
             print(f'  bbox: {level.bbox}')
             print(f'  {len(level.vertices)} vertices')
+
+    def parse_geojson_lane(self, feature, transformer):
+        if 'geometry' not in feature:
+            return
+        geometry = feature['geometry']
+        if 'type' not in geometry:
+            return
+        if geometry['type'] != 'LineString':
+            return
+        if 'coordinates' not in geometry:
+            return
+        start_lon = geometry['coordinates'][0][0]
+        start_lat = geometry['coordinates'][0][1]
+        end_lon = geometry['coordinates'][1][0]
+        end_lat = geometry['coordinates'][1][1]
+        start_y, start_x = transformer.transform(start_lat, start_lon)
+        end_y, end_x = transformer.transform(end_lat, end_lon)
 
     def parse_geojson_vertex(self, feature, transformer):
         if 'geometry' not in feature:
@@ -207,10 +216,8 @@ class Building:
         vertex_name = ''
         if 'properties' in feature:
             props = feature['properties']
-            if 'level_idx' in props:
-                level_idx = props['level_idx']
-            if 'name' in props:
-                vertex_name = props['name']
+            level_idx = props.get('level_idx', 0)
+            vertex_name = props.get('name', '')
 
         # todo: look up the real level name somewhere
         level_name = f'level_{level_idx}'
@@ -228,7 +235,7 @@ class Building:
         level.bbox[1][0] = max(level.bbox[1][0], x)
         level.bbox[1][1] = max(level.bbox[1][1], y)
 
-        # todo: parse params from json properties
+        # todo: parse all remaining params from json properties
         vertex_params = {}
 
         level.vertices.append(
