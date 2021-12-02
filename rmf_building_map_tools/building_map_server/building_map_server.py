@@ -162,7 +162,7 @@ class BuildingMapServer(Node):
             else:
                 self.get_logger().error(f'unable to open image: {image_path}')
 
-        if (len(level.doors)):
+        if len(level.doors):
             for door in level.doors:
                 door_msg = Door()
                 door_msg.name = door.params['name'].value
@@ -194,6 +194,7 @@ class BuildingMapServer(Node):
                 continue  # empty graph :(
             graph_msg = Graph()
             graph_msg.name = str(i)  # todo: someday, string names...
+            print(f"graph {i} has {len(g['vertices'])} vertices")
             for v in g['vertices']:
                 gn = GraphNode()
                 gn.x = v[0]
@@ -223,6 +224,7 @@ class BuildingMapServer(Node):
                         gn.params.append(p)
 
                 graph_msg.vertices.append(gn)
+
             for l in g['lanes']:
                 ge = GraphEdge()
                 ge.v1_idx = l[0]

@@ -14,6 +14,7 @@ from pyproj.crs import CRS
 from xml.etree.ElementTree import Element, SubElement, parse
 
 from .coordinate_system import CoordinateSystem
+from .edge_type import EdgeType
 from .geopackage import GeoPackage
 from .level import Level
 from .lift import Lift
@@ -171,7 +172,16 @@ class Building:
                 continue
             if feature['feature_type'] == 'rmf_vertex':
                 self.parse_geojson_vertex(feature, transformer)
-            elif feature['feature_type'] == 'rmf_lane':
+
+        for level_name in self.levels:
+            self.levels[level_name].build_spatial_index()
+
+        # now spin through and find the lanes, and assign them to vertices
+        # using the rtree that was just built
+        for feature in json_node['features']:
+            if 'feature_type' not in feature:
+                continue
+            if feature['feature_type'] == 'rmf_lane':
                 self.parse_geojson_lane(feature, transformer)
 
         self.transform_all_vertices()
@@ -179,6 +189,7 @@ class Building:
             print(f'level {level_name}:')
             print(f'  bbox: {level.bbox}')
             print(f'  {len(level.vertices)} vertices')
+            print(f'  {len(level.lanes)} lanes')
 
     def parse_geojson_lane(self, feature, transformer):
         if 'geometry' not in feature:
@@ -196,6 +207,20 @@ class Building:
         end_lat = geometry['coordinates'][1][1]
         start_y, start_x = transformer.transform(start_lat, start_lon)
         end_y, end_x = transformer.transform(end_lat, end_lon)
+
+        if 'properties' in feature:
+            props = feature['properties']
+            level_idx = props.get('level_idx', 0)
+
+        # todo: look up the real level name somewhere
+        level_name = f'level_{level_idx}'
+
+        level = self.levels[level_name]
+        level.add_edge_from_coords(
+            EdgeType.LANE,
+            (start_x, start_y),
+            (end_x, end_y),
+            props)
 
     def parse_geojson_vertex(self, feature, transformer):
         if 'geometry' not in feature:

@@ -6,9 +6,11 @@ import numpy as np
 
 from xml.etree.ElementTree import ElementTree, Element, SubElement
 from .etree_utils import indent_etree
+import rtree
 
 from ament_index_python.packages import get_package_share_directory
 from .edge import Edge
+from .edge_type import EdgeType
 from .fiducial import Fiducial
 from .floor import Floor
 from .wall import Wall
@@ -41,6 +43,7 @@ class Level:
         self.floors = []
         self.holes = []
         self.transform = Transform()
+        self.vertices_index = None
 
     def parse_yaml(
         self,
@@ -177,8 +180,40 @@ class Level:
     def parse_edge_sequence(self, sequence_yaml):
         edges = []
         for edge_yaml in sequence_yaml:
-            edges.append(Edge(edge_yaml))
+            edge = Edge()
+            edge.parse_yaml(edge_yaml)
+            edges.append(edge)
         return edges
+
+    def nearest_vertex_index(self, p):
+        return next(self.vertices_index.nearest((p[0], p[1], p[0], p[1]), 1))
+
+    def build_spatial_index(self):
+        self.vertices_index = rtree.index.Index()
+        for i, v in enumerate(self.vertices):
+            self.vertices_index.insert(i, (v.x, v.y, v.x, v.y))
+
+    def add_edge_from_coords(self, edge_type, p1, p2, props):
+        edge = Edge()
+        edge.start_idx = self.nearest_vertex_index(p1)
+        edge.end_idx = self.nearest_vertex_index(p2)
+
+        if edge_type == EdgeType.LANE:
+            edge.params['graph_idx'] = ParamValue([
+                ParamValue.INT,
+                props.get('graph_idx', 0)
+            ])
+            edge.params['is_bidirectional'] = ParamValue([
+                ParamValue.BOOL,
+                props.get('is_bidirectional', False)
+            ])
+            edge.params['speed_limit'] = ParamValue([
+                ParamValue.DOUBLE,
+                props.get('speed_limit', 0.0)
+            ])
+            self.lanes.append(edge)
+        else:
+            raise ValueError('unknown edge type!')
 
     def generate_walls(self, model_ele, model_name, model_path):
         wall_params_list = []
