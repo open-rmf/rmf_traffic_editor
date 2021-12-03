@@ -1126,7 +1126,7 @@ void Level::draw(
   draw_polygons(scene);
 
   for (auto& layer : layers)
-    layer.draw(scene, drawing_meters_per_pixel);
+    layer.draw(scene, drawing_meters_per_pixel, coordinate_system);
 
   if (rendering_options.show_models)
   {
