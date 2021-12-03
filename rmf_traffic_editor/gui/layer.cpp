@@ -143,7 +143,8 @@ YAML::Node Layer::to_yaml() const
 
 void Layer::draw(
   QGraphicsScene* scene,
-  const double level_meters_per_pixel)
+  const double level_meters_per_pixel,
+  const CoordinateSystem& coordinate_system)
 {
   if (!visible)
     return;
@@ -160,6 +161,9 @@ void Layer::draw(
   item->setScale(transform.scale() / level_meters_per_pixel);
 
   item->setRotation(-1.0 * transform.yaw() * 180.0 / M_PI);
+
+  if (!coordinate_system.is_y_flipped())
+    item->setTransform(item->transform().scale(1, -1));
 
   double origin_radius = 0.5 / level_meters_per_pixel;
   QPen origin_pen(color, origin_radius / 4.0, Qt::SolidLine, Qt::RoundCap);
