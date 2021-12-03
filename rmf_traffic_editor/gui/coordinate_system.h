@@ -28,7 +28,8 @@ public:
     Undefined,
     ReferenceImage,
     WebMercator,
-    CartesianMeters
+    CartesianMeters,
+    WGS84
   } value;
 
   CoordinateSystem();

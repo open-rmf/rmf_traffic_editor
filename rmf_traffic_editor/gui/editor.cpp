@@ -59,6 +59,7 @@
 #include "preferences_dialog.h"
 #include "preferences_keys.h"
 #include "traffic_table.h"
+#include "ui_new_building_dialog.h"
 #include "ui_transform_dialog.h"
 
 
@@ -635,19 +636,37 @@ bool Editor::load_previous_building()
 
 void Editor::building_new()
 {
-  QFileDialog dialog(this, "New Building");
-  dialog.setNameFilter("*.building.yaml");
-  dialog.setDefaultSuffix(".building.yaml");
-  dialog.setAcceptMode(QFileDialog::AcceptMode::AcceptSave);
-  dialog.setConfirmOverwrite(true);
+  QFileDialog file_dialog(this, "New Building");
+  file_dialog.setNameFilter("*.building.yaml");
+  file_dialog.setDefaultSuffix(".building.yaml");
+  file_dialog.setAcceptMode(QFileDialog::AcceptMode::AcceptSave);
+  file_dialog.setConfirmOverwrite(true);
 
-  if (dialog.exec() != QDialog::Accepted)
+  if (file_dialog.exec() != QDialog::Accepted)
     return;
 
-  QFileInfo file_info(dialog.selectedFiles().first());
+  QFileInfo file_info(file_dialog.selectedFiles().first());
   std::string fn = file_info.fileName().toStdString();
 
+  // Guess the building name as the "filename before the dot".
+  // User can override this guess in the dialog that opens afterwards.
+  std::string guessed_building_name(fn.begin(), fn.begin() + fn.find('.'));
+
+  QDialog new_building_dialog;
+  Ui::NewBuildingDialog new_building_dialog_ui;
+  new_building_dialog_ui.setupUi(&new_building_dialog);
+  new_building_dialog_ui.name_line_edit->setText(
+      QString::fromStdString(guessed_building_name));
+
+  if (new_building_dialog.exec() != QDialog::Accepted)
+    return;
+
   building.clear();
+  if (new_building_dialog_ui.geolocated_radio->isChecked())
+    building.coordinate_system.value = CoordinateSystem::Value::WGS84;
+  else
+    building.coordinate_system.value = CoordinateSystem::Value::ReferenceImage;
+
   building.set_filename(file_info.absoluteFilePath().toStdString());
   QString dir_path = file_info.dir().path();
   QDir::setCurrent(dir_path);

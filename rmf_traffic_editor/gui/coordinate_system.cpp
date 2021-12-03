@@ -38,6 +38,7 @@ std::string CoordinateSystem::to_string()
     case ReferenceImage: return "reference_image";
     case WebMercator: return "web_mercator";
     case CartesianMeters: return "cartesian_meters";
+    case WGS84: return "wgs84";
 
     case Undefined:
     default:
@@ -54,6 +55,8 @@ CoordinateSystem CoordinateSystem::from_string(const std::string& s)
     cs.value = WebMercator;
   else if (s == "cartesian_meters")
     cs.value = CartesianMeters;
+  else if (s == "wgs84")
+    cs.value = WGS84;
   else
     cs.value = Undefined;
   return cs;
