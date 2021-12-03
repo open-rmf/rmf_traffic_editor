@@ -134,7 +134,7 @@ bool Building::load(const string& _filename)
   // now that all images are loaded, we can calculate scale for annotated
   // measurement lanes
   for (auto& level : levels)
-    level.calculate_scale();
+    level.calculate_scale(coordinate_system);
 
   lifts.clear();
   if (y["lifts"] && y["lifts"].IsMap())
