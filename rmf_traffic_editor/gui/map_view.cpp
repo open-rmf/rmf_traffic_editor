@@ -52,6 +52,7 @@ void MapView::wheelEvent(QWheelEvent* e)
   // translate the map back so hopefully the mouse stays in the same spot
   const QPointF diff = p_end - p_start;
   translate(diff.x(), diff.y());
+  update_tiles();
 }
 
 void MapView::mousePressEvent(QMouseEvent* e)
@@ -90,9 +91,15 @@ void MapView::mouseMoveEvent(QMouseEvent* e)
     pan_start_x = e->x();
     pan_start_y = e->y();
     e->accept();
+    update_tiles();
     return;
   }
   e->ignore();
+}
+
+void MapView::resizeEvent(QResizeEvent *e)
+{
+  update_tiles();
 }
 
 void MapView::zoom_fit(int level_index)
@@ -111,10 +118,20 @@ void MapView::zoom_fit(int level_index)
   //centerOn(cx, cy);
 }
 
-void MapView::draw_osm_tiles()
+void MapView::draw_tiles()
 {
-  if (!show_osm_tiles)
+  if (!show_tiles || !building.coordinate_system.has_tiles())
     return;
-  if (!building.coordinate_system.has_tiles())
+  printf("MapView::draw_tiles()\n");
+}
+
+void MapView::update_tiles()
+{
+  if (!show_tiles || !building.coordinate_system.has_tiles())
     return;
+  printf("MapView::update_tiles()\n");
+  QPointF ul = mapToScene(QPoint(0, 0));
+  QPointF lr = mapToScene(QPoint(viewport()->width(), viewport()->height()));
+  printf("  ul: (%.3f, %.3f)\n", ul.x(), ul.y());
+  printf("  lr: (%.3f, %.3f)\n", lr.x(), lr.y());
 }

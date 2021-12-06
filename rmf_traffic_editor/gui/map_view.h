@@ -18,11 +18,13 @@
 #ifndef MAP_VIEW_H
 #define MAP_VIEW_H
 
+#include <vector>
+
+#include <QGraphicsPixmapItem>
 #include <QGraphicsView>
 #include <QWheelEvent>
 
 #include "building.h"
-
 
 class MapView : public QGraphicsView
 {
@@ -31,16 +33,19 @@ class MapView : public QGraphicsView
 public:
   MapView(QWidget* parent, const Building& building_);
   void zoom_fit(int level_index);
-  void set_show_osm_tiles(const bool show_osm_tiles_)
+  void set_show_tiles(const bool show_tiles_)
   {
-    show_osm_tiles = show_osm_tiles_;
+    show_tiles = show_tiles_;
   }
+  void draw_tiles();
+  void update_tiles();
 
 protected:
   void wheelEvent(QWheelEvent* event);
   void mouseMoveEvent(QMouseEvent* e);
   void mousePressEvent(QMouseEvent* e);
   void mouseReleaseEvent(QMouseEvent* e);
+  void resizeEvent(QResizeEvent *e);
 
 private:
   bool is_panning = false;
@@ -48,9 +53,9 @@ private:
   int pan_start_y = 0;
 
   const Building& building;
-  bool show_osm_tiles = false;
+  bool show_tiles = true;
 
-  void update_osm_tiles();
+  std::vector<QGraphicsPixmapItem *> map_tiles;
 };
 
 #endif

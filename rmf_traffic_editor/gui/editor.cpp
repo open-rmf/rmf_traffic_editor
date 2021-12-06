@@ -355,6 +355,12 @@ Editor::Editor()
     view_menu->addAction("&Models", this, &Editor::view_models);
   view_models_action->setCheckable(true);
   view_models_action->setChecked(true);
+
+  view_tiles_action =
+    view_menu->addAction("Map &Tiles", this, &Editor::view_tiles);
+  view_tiles_action->setCheckable(true);
+  view_tiles_action->setChecked(true);
+
   view_menu->addSeparator();
 
   view_menu->addAction("&Reset zoom level", this, &Editor::zoom_reset);
@@ -555,6 +561,7 @@ bool Editor::load_building(const QString& filename)
     previous_mouse_point = QPointF(level.drawing_width, level.drawing_height);
   }
 
+  map_view->update_tiles();
   create_scene();
 
   update_tables();
@@ -656,7 +663,7 @@ void Editor::building_new()
   Ui::NewBuildingDialog new_building_dialog_ui;
   new_building_dialog_ui.setupUi(&new_building_dialog);
   new_building_dialog_ui.name_line_edit->setText(
-      QString::fromStdString(guessed_building_name));
+    QString::fromStdString(guessed_building_name));
 
   if (new_building_dialog.exec() != QDialog::Accepted)
     return;
@@ -673,6 +680,7 @@ void Editor::building_new()
 
   create_scene();
   building_save();
+  zoom_reset();
   update_tables();
 
   QSettings settings;
@@ -816,6 +824,12 @@ void Editor::view_models()
   create_scene();
 }
 
+void Editor::view_tiles()
+{
+  map_view->set_show_tiles(view_tiles_action->isChecked());
+  create_scene();
+}
+
 void Editor::zoom_reset()
 {
   const double viewport_scale = 1.0;
@@ -844,6 +858,8 @@ void Editor::zoom_reset()
       map_view->centerOn(QPointF(xc, yc));
     }
   }
+
+  map_view->update_tiles();
 }
 
 void Editor::mouse_event(const MouseType t, QMouseEvent* e)
@@ -1602,6 +1618,9 @@ bool Editor::create_scene()
   mouse_motion_model = nullptr;
   mouse_motion_ellipse = nullptr;
   mouse_motion_polygon = nullptr;
+
+  // first draw the background map tiles (if requested)
+  map_view->draw_tiles();
 
   building.draw(scene, level_idx, editor_models, rendering_options);
 
