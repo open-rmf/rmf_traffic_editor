@@ -25,6 +25,7 @@
 #include <QWheelEvent>
 
 #include "building.h"
+#include "map_tile_cache.h"
 
 class MapView : public QGraphicsView
 {
@@ -45,7 +46,7 @@ protected:
   void mouseMoveEvent(QMouseEvent* e);
   void mousePressEvent(QMouseEvent* e);
   void mouseReleaseEvent(QMouseEvent* e);
-  void resizeEvent(QResizeEvent *e);
+  void resizeEvent(QResizeEvent* e);
 
 private:
   bool is_panning = false;
@@ -53,9 +54,9 @@ private:
   int pan_start_y = 0;
 
   const Building& building;
-  bool show_tiles = true;
+  bool show_tiles = false;  // ignore first few resize events during startup
 
-  std::vector<QGraphicsPixmapItem *> map_tiles;
+  MapTileCache cache;
 };
 
 #endif

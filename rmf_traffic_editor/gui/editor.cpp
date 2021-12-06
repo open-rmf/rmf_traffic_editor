@@ -629,6 +629,8 @@ void Editor::restore_previous_viewport()
   t.scale(viewport_scale, y_flip * viewport_scale);
   map_view->setTransform(t);
   map_view->centerOn(QPointF(viewport_center_x, viewport_center_y));
+  map_view->set_show_tiles(true);
+  map_view->update_tiles();
 }
 
 bool Editor::load_previous_building()
@@ -682,6 +684,7 @@ void Editor::building_new()
   building_save();
   zoom_reset();
   update_tables();
+  map_view->update_tiles();
 
   QSettings settings;
   settings.setValue(

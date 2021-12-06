@@ -69,6 +69,7 @@ set(gui_sources
   gui/lift_dialog.cpp
   gui/lift_door.cpp
   gui/lift_table.cpp
+  gui/map_tile_cache.cpp
   gui/map_view.cpp
   gui/model.cpp
   gui/model_dialog.cpp

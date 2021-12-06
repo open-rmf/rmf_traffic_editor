@@ -15,8 +15,9 @@
  *
 */
 
-#include "map_view.h"
+#include <cmath>
 #include <QScrollBar>
+#include "map_view.h"
 
 MapView::MapView(QWidget* parent, const Building& building_)
 : QGraphicsView(parent),
@@ -97,7 +98,7 @@ void MapView::mouseMoveEvent(QMouseEvent* e)
   e->ignore();
 }
 
-void MapView::resizeEvent(QResizeEvent *)
+void MapView::resizeEvent(QResizeEvent*)
 {
   update_tiles();
 }
@@ -136,7 +137,50 @@ void MapView::update_tiles()
   QPointF lr = mapToScene(QPoint(viewport_width, viewport_height));
   printf("  ul: (%.3f, %.3f)\n", ul.x(), ul.y());
   printf("  lr: (%.3f, %.3f)\n", lr.x(), lr.y());
+
   const double lon_extent = lr.x() - ul.x();
   printf("  lon extent: %.3f\n", lon_extent);
-  const double ntiles_x = viewport_width / 256.0;
+  const double tiles_visible_x = viewport_width / 256.0;
+  printf("  tiles_visible_x: %.3f\n", tiles_visible_x);
+  const double lon_per_tile = lon_extent / tiles_visible_x;
+  printf("  lon_per_tile: %.3f\n", lon_per_tile);
+  const double zoom_exact = log(360 / lon_per_tile) / log(2);
+  printf("  zoom_exact: %.3f\n", zoom_exact);
+
+  int zoom_approx = static_cast<int>(ceil(zoom_exact));
+  const int MAX_ZOOM = 19;
+  if (zoom_approx < 0)
+    zoom_approx = 0;
+  if (zoom_approx > MAX_ZOOM)
+    zoom_approx = MAX_ZOOM;
+  printf("  zoom_approx = %d\n", zoom_approx);
+
+  const double ulx_clamped = std::max(std::min(ul.x(), 180.0), -180.0);
+  const double lrx_clamped = std::max(std::min(lr.x(), 180.0), -180.0);
+  printf("  clamped lon range: (%.3f, %.3f)\n", ulx_clamped, lrx_clamped);
+
+  int x_min_tile = floor((ulx_clamped + 180.) / 360. * (1 << zoom_approx));
+  int x_max_tile = floor((lrx_clamped + 180.) / 360. * (1 << zoom_approx));
+  printf("  x tile range: [%d, %d]\n", x_min_tile, x_max_tile);
+
+  const double MAX_LAT = 85.0511;
+  const double uly_clamped = std::max(std::min(ul.y(), MAX_LAT), -MAX_LAT);
+  const double lry_clamped = std::max(std::min(lr.y(), MAX_LAT), -MAX_LAT);
+  printf("  clamped lat range: (%.3f, %.3f)\n", lry_clamped, uly_clamped);
+
+  // some trig magic from the OpenStreetMap "Slippy map tilenames" wiki page
+  const int y_min_tile = floor(
+    ((1.0 - asinh(tan(uly_clamped * M_PI / 180.)) / M_PI) / 2.0 * (1 << zoom_approx))
+  );
+  const int y_max_tile = floor(
+    ((1.0 - asinh(tan(lry_clamped * M_PI / 180.)) / M_PI) / 2.0 * (1 << zoom_approx))
+  );
+  printf("  y tile range: [%d, %d]\n", y_min_tile, y_max_tile);
+
+  // todo: loop through the tile X, Y rectangle
+  //   * see if we're rendering any tiles outside that rectangle or wrong zoom. remove them from the scene
+  //   * see if we're already rendering the needed tile.
+  //     * if not, see if it's in the cache.
+  //     * if it's not in the cache, request it from the tile server
+  // todo: when a request from the tile server returns, add it to the cache and render it
 }
