@@ -97,7 +97,7 @@ void MapView::mouseMoveEvent(QMouseEvent* e)
   e->ignore();
 }
 
-void MapView::resizeEvent(QResizeEvent *e)
+void MapView::resizeEvent(QResizeEvent *)
 {
   update_tiles();
 }
@@ -130,8 +130,13 @@ void MapView::update_tiles()
   if (!show_tiles || !building.coordinate_system.has_tiles())
     return;
   printf("MapView::update_tiles()\n");
+  const int viewport_width = viewport()->width();
+  const int viewport_height = viewport()->height();
   QPointF ul = mapToScene(QPoint(0, 0));
-  QPointF lr = mapToScene(QPoint(viewport()->width(), viewport()->height()));
+  QPointF lr = mapToScene(QPoint(viewport_width, viewport_height));
   printf("  ul: (%.3f, %.3f)\n", ul.x(), ul.y());
   printf("  lr: (%.3f, %.3f)\n", lr.x(), lr.y());
+  const double lon_extent = lr.x() - ul.x();
+  printf("  lon extent: %.3f\n", lon_extent);
+  const double ntiles_x = viewport_width / 256.0;
 }
