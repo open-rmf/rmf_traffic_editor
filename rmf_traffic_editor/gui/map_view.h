@@ -57,6 +57,24 @@ private:
   bool show_tiles = false;  // ignore first few resize events during startup
 
   MapTileCache cache;
+
+  struct MapTilePixmapItem
+  {
+    int zoom = 0;
+    int x = 0;
+    int y = 0;
+    QGraphicsPixmapItem* item = nullptr;
+  };
+  std::vector<MapTilePixmapItem> tile_pixmap_items;
+
+  struct MapTileRequest
+  {
+    int zoom = 0;
+    int x = 0;
+    int y = 0;
+    // todo: time it was requested?
+  };
+  std::vector<MapTileRequest> tile_requests;
 };
 
 #endif

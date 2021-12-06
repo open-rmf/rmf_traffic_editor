@@ -27,16 +27,44 @@ MapTileCache::~MapTileCache()
 {
 }
 
-bool MapTileCache::contains(const int zoom, const int x, const int y) const
+QPixmap* MapTileCache::get(
+  const int zoom,
+  const int x,
+  const int y) const
 {
-  return false;
-}
-
-const QPixmap* const MapTileCache::get(const int zoom, const int x, const int y) const
-{
+  for (auto it = cache.begin(); it != cache.end(); ++it)
+  {
+    if (it->zoom == zoom && it->x == x && it->y == y)
+      return it->pixmap;
+  }
   return nullptr;
 }
 
-void MapTileCache::set(const int zoom, const int x, const int y, QPixmap* item)
+void MapTileCache::set(const int zoom, const int x, const int y, QPixmap* pixmap)
 {
+  for (auto it = cache.begin(); it != cache.end(); ++it)
+  {
+    if (it->zoom == zoom && it->x == x && it->y == y)
+    {
+      it->pixmap = pixmap;
+      if (it->pixmap)
+        delete it->pixmap;
+      return;
+    }
+  }
+  // if we get here, we didn't find it, so we should create a cache entry
+  MapTileCacheElement e;
+  e.zoom = zoom;
+  e.x = x;
+  e.y = y;
+  e.pixmap = pixmap;
+
+  cache.push_front(e);
+  
+  if (cache.size() > MAX_CACHE_SIZE)
+  {
+    MapTileCacheElement old = cache.back();
+    delete old.pixmap;
+    cache.pop_back();
+  }
 }

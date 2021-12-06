@@ -159,8 +159,8 @@ void MapView::update_tiles()
   const double lrx_clamped = std::max(std::min(lr.x(), 180.0), -180.0);
   printf("  clamped lon range: (%.3f, %.3f)\n", ulx_clamped, lrx_clamped);
 
-  int x_min_tile = floor((ulx_clamped + 180.) / 360. * (1 << zoom_approx));
-  int x_max_tile = floor((lrx_clamped + 180.) / 360. * (1 << zoom_approx));
+  const int x_min_tile = floor((ulx_clamped + 180.) / 360. * (1 << zoom_approx));
+  const int x_max_tile = floor((lrx_clamped + 180.) / 360. * (1 << zoom_approx));
   printf("  x tile range: [%d, %d]\n", x_min_tile, x_max_tile);
 
   const double MAX_LAT = 85.0511;
@@ -169,13 +169,60 @@ void MapView::update_tiles()
   printf("  clamped lat range: (%.3f, %.3f)\n", lry_clamped, uly_clamped);
 
   // some trig magic from the OpenStreetMap "Slippy map tilenames" wiki page
-  const int y_min_tile = floor(
-    ((1.0 - asinh(tan(uly_clamped * M_PI / 180.)) / M_PI) / 2.0 * (1 << zoom_approx))
-  );
-  const int y_max_tile = floor(
-    ((1.0 - asinh(tan(lry_clamped * M_PI / 180.)) / M_PI) / 2.0 * (1 << zoom_approx))
-  );
+  const int y_min_tile =
+    floor(
+      (1.0 - asinh(tan(uly_clamped * M_PI / 180.)) / M_PI)
+      / 2.0 * (1 << zoom_approx)
+    );
+
+  const int y_max_tile =
+    floor(
+      (1.0 - asinh(tan(lry_clamped * M_PI / 180.)) / M_PI)
+      / 2.0 * (1 << zoom_approx)
+    );
+
   printf("  y tile range: [%d, %d]\n", y_min_tile, y_max_tile);
+
+  std::vector<size_t> remove_idx;
+  for (size_t i = 0; i < tile_pixmap_items.size(); i++)
+  {
+    const MapTilePixmapItem& item = tile_pixmap_items[i];
+    if (item.zoom != zoom_approx
+        || item.x < x_min_tile
+        || item.x > x_max_tile
+        || item.y < y_min_tile
+        || item.y > y_max_tile)
+      remove_idx.push_back(i);
+  }
+
+  for (auto idx_it = remove_idx.rbegin(); idx_it != remove_idx.rend(); ++idx_it)
+  {
+    MapTilePixmapItem& item = tile_pixmap_items[*idx_it];
+    scene()->removeItem(item.item);
+    delete item.item;
+    tile_pixmap_items.erase(tile_pixmap_items.begin() + *idx_it);
+  }
+
+  for (int y = y_min_tile; y <= y_max_tile; y++)
+  {
+    for (int x = x_min_tile; x <= x_max_tile; x++)
+    {
+      bool found = false;
+      for (size_t i = 0; i < tile_pixmap_items.size(); i++)
+      {
+        const MapTilePixmapItem& item = tile_pixmap_items[i];
+        if (item.x == x && item.y == y)
+        {
+          found = true;
+          break;
+        }
+      }
+      if (!found)
+      {
+        printf("request zoom=%d, x=%d, y=%d)\n", zoom_approx, x, y);
+      }
+    }
+  }
 
   // todo: loop through the tile X, Y rectangle
   //   * see if we're rendering any tiles outside that rectangle or wrong zoom. remove them from the scene
