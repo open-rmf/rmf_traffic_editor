@@ -82,7 +82,7 @@ Editor::Editor()
 
   scene = new QGraphicsScene(this);
 
-  map_view = new MapView(this);
+  map_view = new MapView(this, building);
   map_view->setScene(scene);
   map_view->setStyleSheet(
     "QToolTip { color: #000000; background-color: #ffff88; border: 0px; }");

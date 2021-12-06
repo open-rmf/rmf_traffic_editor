@@ -29,8 +29,12 @@ class MapView : public QGraphicsView
   Q_OBJECT
 
 public:
-  MapView(QWidget* parent = nullptr);
-  void zoom_fit(const Building& building, int level_index);
+  MapView(QWidget* parent, const Building& building_);
+  void zoom_fit(int level_index);
+  void set_show_osm_tiles(const bool show_osm_tiles_)
+  {
+    show_osm_tiles = show_osm_tiles_;
+  }
 
 protected:
   void wheelEvent(QWheelEvent* event);
@@ -38,8 +42,15 @@ protected:
   void mousePressEvent(QMouseEvent* e);
   void mouseReleaseEvent(QMouseEvent* e);
 
-  bool is_panning;
-  int pan_start_x, pan_start_y;
+private:
+  bool is_panning = false;
+  int pan_start_x = 0;
+  int pan_start_y = 0;
+
+  const Building& building;
+  bool show_osm_tiles = false;
+
+  void update_osm_tiles();
 };
 
 #endif

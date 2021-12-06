@@ -18,11 +18,9 @@
 #include "map_view.h"
 #include <QScrollBar>
 
-MapView::MapView(QWidget* parent)
+MapView::MapView(QWidget* parent, const Building& building_)
 : QGraphicsView(parent),
-  is_panning(false),
-  pan_start_x(0),
-  pan_start_y(0)
+  building(building_)
 {
   setMouseTracking(true);
   viewport()->setMouseTracking(true);
@@ -97,7 +95,7 @@ void MapView::mouseMoveEvent(QMouseEvent* e)
   e->ignore();
 }
 
-void MapView::zoom_fit(const Building& building, int level_index)
+void MapView::zoom_fit(int level_index)
 {
   if (building.levels.empty())
     return;
@@ -111,4 +109,12 @@ void MapView::zoom_fit(const Building& building, int level_index)
   //resetTransform();
   //fitInView(cx, cy, w, h, Qt::KeepAspectRatio);
   //centerOn(cx, cy);
+}
+
+void MapView::draw_osm_tiles()
+{
+  if (!show_osm_tiles)
+    return;
+  if (!building.coordinate_system.has_tiles())
+    return;
 }

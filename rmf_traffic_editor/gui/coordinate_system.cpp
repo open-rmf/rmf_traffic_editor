@@ -84,3 +84,8 @@ double CoordinateSystem::default_scale() const
   else
     return 1.0;
 }
+
+bool CoordinateSystem::has_tiles() const
+{
+  return (value == CoordinateSystem::WGS84);
+}

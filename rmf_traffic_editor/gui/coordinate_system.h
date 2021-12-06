@@ -40,6 +40,8 @@ public:
   static CoordinateSystem from_string(const std::string& s);
   bool is_y_flipped() const;
   double default_scale() const;
+
+  bool has_tiles() const;
 };
 
 #endif
