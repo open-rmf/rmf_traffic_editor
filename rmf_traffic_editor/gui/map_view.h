@@ -56,7 +56,7 @@ private:
   const Building& building;
   bool show_tiles = false;  // ignore first few resize events during startup
 
-  MapTileCache cache;
+  MapTileCache tile_cache;
 
   struct MapTilePixmapItem
   {
@@ -75,6 +75,8 @@ private:
     // todo: time it was requested?
   };
   std::vector<MapTileRequest> tile_requests;
+
+  void request_tile(const int zoom, const int x, const int y);
 };
 
 #endif

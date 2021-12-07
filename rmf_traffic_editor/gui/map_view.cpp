@@ -159,8 +159,10 @@ void MapView::update_tiles()
   const double lrx_clamped = std::max(std::min(lr.x(), 180.0), -180.0);
   printf("  clamped lon range: (%.3f, %.3f)\n", ulx_clamped, lrx_clamped);
 
-  const int x_min_tile = floor((ulx_clamped + 180.) / 360. * (1 << zoom_approx));
-  const int x_max_tile = floor((lrx_clamped + 180.) / 360. * (1 << zoom_approx));
+  const int x_min_tile =
+    floor((ulx_clamped + 180.) / 360. * (1 << zoom_approx));
+  const int x_max_tile =
+    floor((lrx_clamped + 180.) / 360. * (1 << zoom_approx));
   printf("  x tile range: [%d, %d]\n", x_min_tile, x_max_tile);
 
   const double MAX_LAT = 85.0511;
@@ -169,17 +171,13 @@ void MapView::update_tiles()
   printf("  clamped lat range: (%.3f, %.3f)\n", lry_clamped, uly_clamped);
 
   // some trig magic from the OpenStreetMap "Slippy map tilenames" wiki page
-  const int y_min_tile =
-    floor(
-      (1.0 - asinh(tan(uly_clamped * M_PI / 180.)) / M_PI)
-      / 2.0 * (1 << zoom_approx)
-    );
+  const int y_min_tile = floor(
+    (1.0 - asinh(tan(uly_clamped * M_PI / 180.)) / M_PI)
+    / 2.0 * (1 << zoom_approx));
 
-  const int y_max_tile =
-    floor(
-      (1.0 - asinh(tan(lry_clamped * M_PI / 180.)) / M_PI)
-      / 2.0 * (1 << zoom_approx)
-    );
+  const int y_max_tile = floor(
+    (1.0 - asinh(tan(lry_clamped * M_PI / 180.)) / M_PI)
+    / 2.0 * (1 << zoom_approx));
 
   printf("  y tile range: [%d, %d]\n", y_min_tile, y_max_tile);
 
@@ -188,10 +186,10 @@ void MapView::update_tiles()
   {
     const MapTilePixmapItem& item = tile_pixmap_items[i];
     if (item.zoom != zoom_approx
-        || item.x < x_min_tile
-        || item.x > x_max_tile
-        || item.y < y_min_tile
-        || item.y > y_max_tile)
+      || item.x < x_min_tile
+      || item.x > x_max_tile
+      || item.y < y_min_tile
+      || item.y > y_max_tile)
       remove_idx.push_back(i);
   }
 
@@ -217,9 +215,18 @@ void MapView::update_tiles()
           break;
         }
       }
-      if (!found)
+      if (found)
+        continue;
+
+      printf("request zoom=%d, x=%d, y=%d)\n", zoom_approx, x, y);
+      QPixmap* pixmap = tile_cache.get(zoom_approx, x, y);
+      if (pixmap)
       {
-        printf("request zoom=%d, x=%d, y=%d)\n", zoom_approx, x, y);
+        printf("  HOORAY found the pixmap\n");
+      }
+      else
+      {
+        request_tile(zoom_approx, x, y);
       }
     }
   }
@@ -230,4 +237,10 @@ void MapView::update_tiles()
   //     * if not, see if it's in the cache.
   //     * if it's not in the cache, request it from the tile server
   // todo: when a request from the tile server returns, add it to the cache and render it
+
+}
+
+void MapView::request_tile(const int zoom, const int x, const int y)
+{
+  printf("  requesting tile: zoom=%d, x=%d, y=%d\n", zoom, x, y);
 }
