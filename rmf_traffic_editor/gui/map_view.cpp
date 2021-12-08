@@ -243,4 +243,19 @@ void MapView::update_tiles()
 void MapView::request_tile(const int zoom, const int x, const int y)
 {
   printf("  requesting tile: zoom=%d, x=%d, y=%d\n", zoom, x, y);
+
+  // create a dummy image for debugging
+  QImage image(256, 256, QImage::Format_RGB888);
+  image.fill(qRgb(255, 255, 255));
+
+  QPainter painter;
+  painter.begin(&image);
+  painter.setPen(QPen(Qt::red));
+  //p.setFont(QFont('helvetica', 12, QFont::Bold));
+  //QPen pen = 
+  painter.drawText(10, 10, 245, 100, Qt::AlignLeft, tr("hello world"));
+  painter.end();
+  QPixmap *pixmap = new QPixmap(QPixmap::fromImage(image));
+
+  tile_cache.set(zoom, x, y, pixmap);
 }

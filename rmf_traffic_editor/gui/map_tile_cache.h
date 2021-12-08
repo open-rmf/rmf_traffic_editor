@@ -28,7 +28,7 @@ public:
   ~MapTileCache();
 
   QPixmap* get(const int zoom, const int x, const int y) const;
-  void set(const int zoom, const int x, const int y, QPixmap* item);
+  void set(const int zoom, const int x, const int y, QPixmap* pixmap);
 
 private:
   struct MapTileCacheElement
