@@ -38,7 +38,11 @@ void MapView::wheelEvent(QWheelEvent* e)
 
   if (e->delta() > 0)
   {
-    if (scale_factor < 100)
+    double max_scale_factor = 100;
+    if (building.coordinate_system.value == CoordinateSystem::WGS84)
+      max_scale_factor = 10000;
+
+    if (scale_factor < max_scale_factor)
       scale(1.1, 1.1);
   }
   else
@@ -130,22 +134,22 @@ void MapView::update_tiles()
 {
   if (!show_tiles || !building.coordinate_system.has_tiles())
     return;
-  printf("MapView::update_tiles()\n");
+  // printf("MapView::update_tiles()\n");
   const int viewport_width = viewport()->width();
   const int viewport_height = viewport()->height();
   QPointF ul = mapToScene(QPoint(0, 0));
   QPointF lr = mapToScene(QPoint(viewport_width, viewport_height));
-  printf("  ul: (%.3f, %.3f)\n", ul.x(), ul.y());
-  printf("  lr: (%.3f, %.3f)\n", lr.x(), lr.y());
+  // printf("  ul: (%.3f, %.3f)\n", ul.x(), ul.y());
+  // printf("  lr: (%.3f, %.3f)\n", lr.x(), lr.y());
 
   const double lon_extent = lr.x() - ul.x();
-  printf("  lon extent: %.3f\n", lon_extent);
+  // printf("  lon extent: %.3f\n", lon_extent);
   const double tiles_visible_x = viewport_width / 256.0;
-  printf("  tiles_visible_x: %.3f\n", tiles_visible_x);
+  // printf("  tiles_visible_x: %.3f\n", tiles_visible_x);
   const double lon_per_tile = lon_extent / tiles_visible_x;
-  printf("  lon_per_tile: %.3f\n", lon_per_tile);
+  // printf("  lon_per_tile: %.3f\n", lon_per_tile);
   const double zoom_exact = log(360 / lon_per_tile) / log(2);
-  printf("  zoom_exact: %.3f\n", zoom_exact);
+  // printf("  zoom_exact: %.3f\n", zoom_exact);
 
   int zoom_approx = static_cast<int>(ceil(zoom_exact));
   const int MAX_ZOOM = 19;
@@ -153,22 +157,23 @@ void MapView::update_tiles()
     zoom_approx = 0;
   if (zoom_approx > MAX_ZOOM)
     zoom_approx = MAX_ZOOM;
-  printf("  zoom_approx = %d\n", zoom_approx);
+  // printf("  zoom_approx = %d\n", zoom_approx);
 
-  const double ulx_clamped = std::max(std::min(ul.x(), 180.0), -180.0);
-  const double lrx_clamped = std::max(std::min(lr.x(), 180.0), -180.0);
-  printf("  clamped lon range: (%.3f, %.3f)\n", ulx_clamped, lrx_clamped);
+  const double eps = 0.0000001;
+  const double ulx_clamped = std::max(std::min(ul.x(), 180.0 - eps), -180.0);
+  const double lrx_clamped = std::max(std::min(lr.x(), 180.0 - eps), -180.0);
+  // printf("  clamped lon range: (%.3f, %.3f)\n", ulx_clamped, lrx_clamped);
 
   const int x_min_tile =
     floor((ulx_clamped + 180.) / 360. * (1 << zoom_approx));
   const int x_max_tile =
     floor((lrx_clamped + 180.) / 360. * (1 << zoom_approx));
-  printf("  x tile range: [%d, %d]\n", x_min_tile, x_max_tile);
+  // printf("  x tile range: [%d, %d]\n", x_min_tile, x_max_tile);
 
   const double MAX_LAT = 85.0511;
   const double uly_clamped = std::max(std::min(ul.y(), MAX_LAT), -MAX_LAT);
   const double lry_clamped = std::max(std::min(lr.y(), MAX_LAT), -MAX_LAT);
-  printf("  clamped lat range: (%.3f, %.3f)\n", lry_clamped, uly_clamped);
+  // printf("  clamped lat range: (%.3f, %.3f)\n", lry_clamped, uly_clamped);
 
   // some trig magic from the OpenStreetMap "Slippy map tilenames" wiki page
   const int y_min_tile = floor(
@@ -179,7 +184,7 @@ void MapView::update_tiles()
     (1.0 - asinh(tan(lry_clamped * M_PI / 180.)) / M_PI)
     / 2.0 * (1 << zoom_approx));
 
-  printf("  y tile range: [%d, %d]\n", y_min_tile, y_max_tile);
+  // printf("  y tile range: [%d, %d]\n", y_min_tile, y_max_tile);
 
   std::vector<size_t> remove_idx;
   for (size_t i = 0; i < tile_pixmap_items.size(); i++)
@@ -190,7 +195,10 @@ void MapView::update_tiles()
       || item.x > x_max_tile
       || item.y < y_min_tile
       || item.y > y_max_tile)
+    {
       remove_idx.push_back(i);
+      printf("will remove tile: zoom=%d, (%d, %d)\n", item.zoom, item.x, item.y); 
+    }
   }
 
   for (auto idx_it = remove_idx.rbegin(); idx_it != remove_idx.rend(); ++idx_it)
@@ -218,11 +226,12 @@ void MapView::update_tiles()
       if (found)
         continue;
 
-      printf("request zoom=%d, x=%d, y=%d)\n", zoom_approx, x, y);
+      //printf("request zoom=%d, x=%d, y=%d)\n", zoom_approx, x, y);
       QPixmap* pixmap = tile_cache.get(zoom_approx, x, y);
       if (pixmap)
       {
-        printf("  HOORAY found the pixmap\n");
+        //printf("  HOORAY found the pixmap\n");
+        render_tile(zoom_approx, x, y, pixmap);
       }
       else
       {
@@ -242,7 +251,7 @@ void MapView::update_tiles()
 
 void MapView::request_tile(const int zoom, const int x, const int y)
 {
-  printf("  requesting tile: zoom=%d, x=%d, y=%d\n", zoom, x, y);
+  // printf("  requesting tile: zoom=%d, x=%d, y=%d\n", zoom, x, y);
 
   // create a dummy image for debugging
   QImage image(256, 256, QImage::Format_RGB888);
@@ -253,9 +262,45 @@ void MapView::request_tile(const int zoom, const int x, const int y)
   painter.setPen(QPen(Qt::red));
   //p.setFont(QFont('helvetica', 12, QFont::Bold));
   //QPen pen = 
-  painter.drawText(10, 10, 245, 100, Qt::AlignLeft, tr("hello world"));
+  QString label;
+  label.sprintf("%d (%d,%d)", zoom, x, y);
+  painter.drawText(10, 10, 245, 100, Qt::AlignLeft, label);
   painter.end();
   QPixmap *pixmap = new QPixmap(QPixmap::fromImage(image));
 
   tile_cache.set(zoom, x, y, pixmap);
+
+  render_tile(zoom, x, y, pixmap);
+}
+
+void MapView::render_tile(const int zoom, const int x, const int y, QPixmap* pixmap)
+{
+  printf("rendering tile: zoom=%d, (%d, %d)\n", zoom, x, y); 
+  QGraphicsPixmapItem *pixmap_item = scene()->addPixmap(*pixmap);
+  pixmap_item->setScale(360. / 256.0 / (1 << zoom));
+
+  // magic math from the OpenStreetMap "Slippy map tilenames" wiki page
+  const double lon_deg = x / static_cast<double>(1 << zoom) * 360. - 180.;
+  const double n = M_PI - 2.0 * M_PI * y / static_cast<double>(1 << zoom);
+  const double lat = atan(0.5 * (exp(n) - exp(-n)));
+
+  // project the latitude to "web mercator" latitude
+  const double lat_deg_mercator = 180. / M_PI * log(tan(lat) + 1. / cos(lat));
+
+  // printf("  %.5f -> %.5f\n", 180. / M_PI * lat, lat_deg_mercator);
+  
+  pixmap_item->setPos(lon_deg, lat_deg_mercator);
+  
+  // flip Y because we want +Y = up
+  pixmap_item->setTransform(pixmap_item->transform().scale(1., -1.));
+
+  // todo: pixmap_item->setOffset() to deal with the upside-down rendering?
+  // or setTransformOriginPoint?
+
+  MapTilePixmapItem item;
+  item.zoom = zoom;
+  item.x = x;
+  item.y = y;
+  item.item = pixmap_item;
+  tile_pixmap_items.push_back(item);
 }

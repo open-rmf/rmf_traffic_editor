@@ -77,6 +77,7 @@ private:
   std::vector<MapTileRequest> tile_requests;
 
   void request_tile(const int zoom, const int x, const int y);
+  void render_tile(const int zoom, const int x, const int y, QPixmap* pixmap);
 };
 
 #endif
