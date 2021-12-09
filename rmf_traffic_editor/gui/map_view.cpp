@@ -17,12 +17,21 @@
 
 #include <cmath>
 #include <QScrollBar>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
 #include "map_view.h"
 
 MapView::MapView(QWidget* parent, const Building& building_)
 : QGraphicsView(parent),
   building(building_)
 {
+  network = new QNetworkAccessManager(this);
+  connect(
+    network,
+    &QNetworkAccessManager::finished,
+    this,
+    &MapView::request_finished);
+
   setMouseTracking(true);
   viewport()->setMouseTracking(true);
   setTransformationAnchor(QGraphicsView::NoAnchor);
@@ -185,6 +194,11 @@ void MapView::update_tiles()
     / 2.0 * (1 << zoom_approx));
 
   // printf("  y tile range: [%d, %d]\n", y_min_tile, y_max_tile);
+  printf("tile range: (%d, %d) -> (%d, %d)\n",
+    x_min_tile,
+    y_min_tile,
+    x_max_tile,
+    y_max_tile);
 
   std::vector<size_t> remove_idx;
   for (size_t i = 0; i < tile_pixmap_items.size(); i++)
@@ -197,7 +211,7 @@ void MapView::update_tiles()
       || item.y > y_max_tile)
     {
       remove_idx.push_back(i);
-      printf("will remove tile: zoom=%d, (%d, %d)\n", item.zoom, item.x, item.y); 
+      printf("  removing tile: zoom=%d, (%d, %d)\n", item.zoom, item.x, item.y); 
     }
   }
 
@@ -251,7 +265,21 @@ void MapView::update_tiles()
 
 void MapView::request_tile(const int zoom, const int x, const int y)
 {
-  // printf("  requesting tile: zoom=%d, x=%d, y=%d\n", zoom, x, y);
+  static int s_num_requests = 0;
+
+  s_num_requests++;
+
+  if (s_num_requests <= 1)
+  {
+    printf("  requesting tile: zoom=%d, x=%d, y=%d\n", zoom, x, y);
+    QString request_url;
+    request_url.sprintf(
+      "http://tiles.demo.open-rmf.org/tile/%d/%d/%d.png",
+      zoom,
+      x,
+      y);
+    network->get(QNetworkRequest(QUrl(request_url)));
+  }
 
   // create a dummy image for debugging
   QImage image(256, 256, QImage::Format_RGB888);
@@ -275,7 +303,7 @@ void MapView::request_tile(const int zoom, const int x, const int y)
 
 void MapView::render_tile(const int zoom, const int x, const int y, QPixmap* pixmap)
 {
-  printf("rendering tile: zoom=%d, (%d, %d)\n", zoom, x, y); 
+  printf("  adding tile: zoom=%d, (%d, %d)\n", zoom, x, y); 
   QGraphicsPixmapItem *pixmap_item = scene()->addPixmap(*pixmap);
   pixmap_item->setScale(360. / 256.0 / (1 << zoom));
 
@@ -303,4 +331,11 @@ void MapView::render_tile(const int zoom, const int x, const int y, QPixmap* pix
   item.y = y;
   item.item = pixmap_item;
   tile_pixmap_items.push_back(item);
+}
+
+void MapView::request_finished(QNetworkReply* reply)
+{
+  printf("mapview::request_finished()\n");
+  printf("  request url: %s\n",
+    reply->request().url().path().toStdString().c_str());
 }

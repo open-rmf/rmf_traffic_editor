@@ -27,6 +27,9 @@
 #include "building.h"
 #include "map_tile_cache.h"
 
+class QNetworkAccessManager;
+class QNetworkReply;
+
 class MapView : public QGraphicsView
 {
   Q_OBJECT
@@ -76,8 +79,11 @@ private:
   };
   std::vector<MapTileRequest> tile_requests;
 
+  QNetworkAccessManager *network = nullptr;
+
   void request_tile(const int zoom, const int x, const int y);
   void render_tile(const int zoom, const int x, const int y, QPixmap* pixmap);
+  void request_finished(QNetworkReply* reply);
 };
 
 #endif

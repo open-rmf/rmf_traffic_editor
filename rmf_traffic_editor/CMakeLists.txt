@@ -10,7 +10,7 @@ find_package(ament_cmake REQUIRED)
 find_package(ament_index_cpp REQUIRED)
 find_package(Ceres REQUIRED)
 find_package(Eigen3 REQUIRED)
-find_package(Qt5 COMPONENTS Widgets Concurrent Test REQUIRED)
+find_package(Qt5 COMPONENTS Widgets Concurrent Test Network REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
@@ -119,6 +119,7 @@ target_link_libraries(
   Eigen3::Eigen
   Qt5::Widgets
   Qt5::Concurrent
+  Qt5::Network
   yaml-cpp
   ${ament_index_cpp_LIBRARIES}
 )
