@@ -288,8 +288,6 @@ void MapView::request_tile(const int zoom, const int x, const int y)
   QPainter painter;
   painter.begin(&image);
   painter.setPen(QPen(Qt::red));
-  //p.setFont(QFont('helvetica', 12, QFont::Bold));
-  //QPen pen = 
   QString label;
   label.sprintf("%d (%d,%d)", zoom, x, y);
   painter.drawText(10, 10, 245, 100, Qt::AlignLeft, label);
@@ -303,7 +301,7 @@ void MapView::request_tile(const int zoom, const int x, const int y)
 
 void MapView::render_tile(const int zoom, const int x, const int y, QPixmap* pixmap)
 {
-  printf("  adding tile: zoom=%d, (%d, %d)\n", zoom, x, y); 
+  printf("  adding tile: zoom=%d, (%d, %d)\n", zoom, x, y);
   QGraphicsPixmapItem *pixmap_item = scene()->addPixmap(*pixmap);
   pixmap_item->setScale(360. / 256.0 / (1 << zoom));
 
@@ -316,9 +314,8 @@ void MapView::render_tile(const int zoom, const int x, const int y, QPixmap* pix
   const double lat_deg_mercator = 180. / M_PI * log(tan(lat) + 1. / cos(lat));
 
   // printf("  %.5f -> %.5f\n", 180. / M_PI * lat, lat_deg_mercator);
-  
   pixmap_item->setPos(lon_deg, lat_deg_mercator);
-  
+
   // flip Y because we want +Y = up
   pixmap_item->setTransform(pixmap_item->transform().scale(1., -1.));
 
@@ -338,4 +335,9 @@ void MapView::request_finished(QNetworkReply* reply)
   printf("mapview::request_finished()\n");
   printf("  request url: %s\n",
     reply->request().url().path().toStdString().c_str());
+  std::string url = reply->request().url().path().toStdString;
+  if (url.size() < 10)
+    return;
+  // size_t zoom_start_pos = 6;
+  // size_t zoom_end_pos = url.find('/', zoom_start_pos);
 }
