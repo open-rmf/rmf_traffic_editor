@@ -553,7 +553,11 @@ bool Editor::load_building(const QString& filename)
 
   level_idx = 0;
 
-  if (!building.levels.empty())
+  if (building.coordinate_system.is_global())
+  {
+    scene->setSceneRect(QRectF(-180., 180., 360., -360.));
+  }
+  else if (!building.levels.empty())
   {
     const Level& level = building.levels[level_idx];
     scene->setSceneRect(

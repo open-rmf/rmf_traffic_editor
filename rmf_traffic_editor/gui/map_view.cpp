@@ -150,6 +150,8 @@ void MapView::update_tiles()
   const int viewport_height = viewport()->height();
   QPointF ul = mapToScene(QPoint(0, 0));
   QPointF lr = mapToScene(QPoint(viewport_width, viewport_height));
+  //QPointF c = mapToScene(QPoint(viewport_width/2, viewport_height/2));
+  //printf("viewport center: (%.3f, %.3f)\n", c.x(), c.y());
   // printf("  ul: (%.3f, %.3f)\n", ul.x(), ul.y());
   // printf("  lr: (%.3f, %.3f)\n", lr.x(), lr.y());
 

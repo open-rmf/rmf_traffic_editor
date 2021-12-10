@@ -61,7 +61,7 @@ void MapTileCache::set(const int zoom, const int x, const int y, const QPixmap& 
   
   if (cache.size() > MAX_CACHE_SIZE)
   {
-    printf("trimming oldest element from the tile cache...\n");
+    printf("cache has %d elements. trimming oldest element...\n", (int)cache.size());
     //MapTileCacheElement old = cache.back();
     //printf("about to delete z=%d, x=%d, y=%d...\n", old.zoom, old.x, old.y);
     //delete old.pixmap;

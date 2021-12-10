@@ -67,6 +67,11 @@ bool CoordinateSystem::is_y_flipped() const
   return value == ReferenceImage;
 }
 
+bool CoordinateSystem::is_global() const
+{
+  return value == WGS84;
+}
+
 double CoordinateSystem::default_scale() const
 {
   // Image-based maps are often somewhere around 5cm

@@ -1103,24 +1103,34 @@ void Level::draw(
   const CoordinateSystem& coordinate_system)
 {
   printf("Level::draw()\n");
-  if (drawing_filename.size() && _drawing_visible)
+  if (!coordinate_system.is_global())
   {
-    const double extra_scroll_area_width = 1.0 * drawing_width;
-    const double extra_scroll_area_height = 1.0 * drawing_height;
-    scene->setSceneRect(
-      QRectF(
-        -extra_scroll_area_width,
-        -extra_scroll_area_height,
-        drawing_width + 2 * extra_scroll_area_width,
-        drawing_height + 2 * extra_scroll_area_height));
-    scene->addPixmap(floorplan_pixmap);
+    vertex_radius = 0.1;
+    if (drawing_filename.size() && _drawing_visible)
+    {
+      const double extra_scroll_area_width = 1.0 * drawing_width;
+      const double extra_scroll_area_height = 1.0 * drawing_height;
+      scene->setSceneRect(
+        QRectF(
+          -extra_scroll_area_width,
+          -extra_scroll_area_height,
+          drawing_width + 2 * extra_scroll_area_width,
+          drawing_height + 2 * extra_scroll_area_height));
+      scene->addPixmap(floorplan_pixmap);
+    }
+    else
+    {
+      const double w = x_meters / drawing_meters_per_pixel;
+      const double h = y_meters / drawing_meters_per_pixel;
+      scene->setSceneRect(QRectF(0, 0, w, h));
+      scene->addRect(0, 0, w, h, Qt::NoPen, Qt::white);
+    }
   }
   else
   {
-    const double w = x_meters / drawing_meters_per_pixel;
-    const double h = y_meters / drawing_meters_per_pixel;
-    scene->setSceneRect(QRectF(0, 0, w, h));
-    scene->addRect(0, 0, w, h, Qt::NoPen, Qt::white);
+    // leave the SceneRect as-is; no need to adjust it for each level
+    //vertex_radius = 0.1 * 0.000009009;  // meters-at-equator to degrees
+    vertex_radius = 0.1 * 0.00009009;  // meters-at-equator to degrees
   }
 
   draw_polygons(scene);

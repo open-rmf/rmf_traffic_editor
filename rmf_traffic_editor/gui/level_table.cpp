@@ -17,6 +17,8 @@
 
 #include "level_table.h"
 #include "level_dialog.h"
+#include "ui_level_dialog_wgs84.h"
+
 #include <QtWidgets>
 
 LevelTable::LevelTable()
@@ -76,11 +78,26 @@ void LevelTable::update(Building& building)
       &QAbstractButton::clicked,
       [this, &building, i]()
       {
-        LevelDialog level_dialog(building.levels[i], building);
-        if (level_dialog.exec() == QDialog::Accepted)
+        if (!building.coordinate_system.is_global())
         {
-          building.levels[i].load_drawing();
-          setWindowModified(true);  // not sure why, but this doesn't work
+          LevelDialog level_dialog(building.levels[i], building);
+          if (level_dialog.exec() == QDialog::Accepted)
+          {
+            building.levels[i].load_drawing();
+            setWindowModified(true);  // not sure why, but this doesn't work
+          }
+        }
+        else
+        {
+          QDialog dialog;
+          Ui::LevelDialogWGS84 ui;
+          ui.setupUi(&dialog);
+          if (dialog.exec() == QDialog::Accepted)
+          {
+            building.levels[i].name = ui.name_line_edit->text().toStdString();
+            building.levels[i].elevation = ui.elevation_line_edit->text().toDouble();
+            setWindowModified(true);  // not sure why, but this doesn't work
+          }
         }
         update(building);
       });
@@ -98,15 +115,35 @@ void LevelTable::update(Building& building)
     &QAbstractButton::clicked,
     [this, &building]()
     {
-      Level level;
-      LevelDialog level_dialog(level, building);
-      if (level_dialog.exec() == QDialog::Accepted)
+      if (!building.coordinate_system.is_global())
       {
-        level.load_drawing();
-        building.add_level(level);
-        setWindowModified(true);
-        update(building);
-        emit redraw_scene();
+        Level level;
+        LevelDialog level_dialog(level, building);
+        if (level_dialog.exec() == QDialog::Accepted)
+        {
+          level.load_drawing();
+          building.add_level(level);
+          setWindowModified(true);
+          update(building);
+          emit redraw_scene();
+        }
+      }
+      else
+      {
+        QDialog dialog;
+        Ui::LevelDialogWGS84 ui;
+        ui.setupUi(&dialog);
+        if (dialog.exec() == QDialog::Accepted)
+        {
+          Level level;
+          level.name = ui.name_line_edit->text().toStdString();
+          level.elevation = ui.elevation_line_edit->text().toDouble();
+          level.drawing_meters_per_pixel = 1.0;
+          building.add_level(level);
+          setWindowModified(true);  // not sure why, but this doesn't work
+          update(building);
+          emit redraw_scene();
+        }
       }
     });
 

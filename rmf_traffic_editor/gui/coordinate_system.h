@@ -42,6 +42,7 @@ public:
   double default_scale() const;
 
   bool has_tiles() const;
+  bool is_global() const;
 };
 
 #endif

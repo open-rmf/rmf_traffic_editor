@@ -79,10 +79,16 @@ private:
   };
   std::vector<MapTileRequest> tile_requests;
 
-  QNetworkAccessManager *network = nullptr;
+  QNetworkAccessManager* network = nullptr;
 
   void request_tile(const int zoom, const int x, const int y);
-  void render_tile(const int zoom, const int x, const int y, const QPixmap& pixmap);
+
+  void render_tile(
+    const int zoom,
+    const int x,
+    const int y,
+    const QPixmap& pixmap);
+
   void request_finished(QNetworkReply* reply);
 };
 
