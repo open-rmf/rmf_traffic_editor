@@ -27,7 +27,7 @@ MapTileCache::~MapTileCache()
 {
 }
 
-QPixmap* MapTileCache::get(
+std::optional<const QPixmap> MapTileCache::get(
   const int zoom,
   const int x,
   const int y) const
@@ -35,20 +35,18 @@ QPixmap* MapTileCache::get(
   for (auto it = cache.begin(); it != cache.end(); ++it)
   {
     if (it->zoom == zoom && it->x == x && it->y == y)
-      return it->pixmap;
+      return {it->pixmap};
   }
-  return nullptr;
+  return {};
 }
 
-void MapTileCache::set(const int zoom, const int x, const int y, QPixmap* pixmap)
+void MapTileCache::set(const int zoom, const int x, const int y, const QPixmap& pixmap)
 {
   for (auto it = cache.begin(); it != cache.end(); ++it)
   {
     if (it->zoom == zoom && it->x == x && it->y == y)
     {
       it->pixmap = pixmap;
-      if (it->pixmap)
-        delete it->pixmap;
       return;
     }
   }
@@ -63,8 +61,11 @@ void MapTileCache::set(const int zoom, const int x, const int y, QPixmap* pixmap
   
   if (cache.size() > MAX_CACHE_SIZE)
   {
-    MapTileCacheElement old = cache.back();
-    delete old.pixmap;
+    printf("trimming oldest element from the tile cache...\n");
+    //MapTileCacheElement old = cache.back();
+    //printf("about to delete z=%d, x=%d, y=%d...\n", old.zoom, old.x, old.y);
+    //delete old.pixmap;
+    //printf("done\n");
     cache.pop_back();
   }
 }

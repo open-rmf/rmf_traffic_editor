@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10.0)
 
 if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 14)
+  set(CMAKE_CXX_STANDARD 17)
 endif()
 
 project(rmf_traffic_editor)

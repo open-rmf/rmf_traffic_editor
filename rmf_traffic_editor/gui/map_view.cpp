@@ -51,7 +51,7 @@ void MapView::wheelEvent(QWheelEvent* e)
   {
     double max_scale_factor = 100;
     if (building.coordinate_system.value == CoordinateSystem::WGS84)
-      max_scale_factor = 10000;
+      max_scale_factor = 1000000;
 
     if (scale_factor < max_scale_factor)
       scale(1.1, 1.1);
@@ -195,12 +195,14 @@ void MapView::update_tiles()
     (1.0 - asinh(tan(lry_clamped * M_PI / 180.)) / M_PI)
     / 2.0 * (1 << zoom_approx));
 
+  /*
   // printf("  y tile range: [%d, %d]\n", y_min_tile, y_max_tile);
   printf("tile range: (%d, %d) -> (%d, %d)\n",
     x_min_tile,
     y_min_tile,
     x_max_tile,
     y_max_tile);
+  */
 
   std::vector<size_t> remove_idx;
   for (size_t i = 0; i < tile_pixmap_items.size(); i++)
@@ -213,7 +215,7 @@ void MapView::update_tiles()
       || item.y > y_max_tile)
     {
       remove_idx.push_back(i);
-      printf("  removing tile: zoom=%d, (%d, %d)\n", item.zoom, item.x, item.y); 
+      // printf("  removing tile: zoom=%d, (%d, %d)\n", item.zoom, item.x, item.y); 
     }
   }
 
@@ -243,11 +245,11 @@ void MapView::update_tiles()
         continue;
 
       //printf("request zoom=%d, x=%d, y=%d)\n", zoom_approx, x, y);
-      QPixmap* pixmap = tile_cache.get(zoom_approx, x, y);
-      if (pixmap)
+      std::optional<const QPixmap> p = tile_cache.get(zoom_approx, x, y);
+      if (p.has_value())
       {
         //printf("  HOORAY found the pixmap\n");
-        render_tile(zoom_approx, x, y, pixmap);
+        render_tile(zoom_approx, x, y, p.value());
       }
       else
       {
@@ -255,14 +257,6 @@ void MapView::update_tiles()
       }
     }
   }
-
-  // todo: loop through the tile X, Y rectangle
-  //   * see if we're rendering any tiles outside that rectangle or wrong zoom. remove them from the scene
-  //   * see if we're already rendering the needed tile.
-  //     * if not, see if it's in the cache.
-  //     * if it's not in the cache, request it from the tile server
-  // todo: when a request from the tile server returns, add it to the cache and render it
-
 }
 
 void MapView::request_tile(const int zoom, const int x, const int y)
@@ -271,9 +265,9 @@ void MapView::request_tile(const int zoom, const int x, const int y)
 
   s_num_requests++;
 
-  if (s_num_requests <= 1)
+  if (s_num_requests <= 2000)
   {
-    printf("  requesting tile: zoom=%d, x=%d, y=%d\n", zoom, x, y);
+    printf("  requesting tile %d: zoom=%d, x=%d, y=%d\n", s_num_requests, zoom, x, y);
     QString request_url;
     request_url.sprintf(
       "http://tiles.demo.open-rmf.org/tile/%d/%d/%d.png",
@@ -294,17 +288,21 @@ void MapView::request_tile(const int zoom, const int x, const int y)
   label.sprintf("%d (%d,%d)", zoom, x, y);
   painter.drawText(10, 10, 245, 100, Qt::AlignLeft, label);
   painter.end();
-  QPixmap *pixmap = new QPixmap(QPixmap::fromImage(image));
+  QPixmap pixmap(QPixmap::fromImage(image));
 
   tile_cache.set(zoom, x, y, pixmap);
 
   render_tile(zoom, x, y, pixmap);
 }
 
-void MapView::render_tile(const int zoom, const int x, const int y, QPixmap* pixmap)
+void MapView::render_tile(
+  const int zoom,
+  const int x,
+  const int y,
+  const QPixmap& pixmap)
 {
-  printf("  adding tile: zoom=%d, (%d, %d)\n", zoom, x, y);
-  QGraphicsPixmapItem *pixmap_item = scene()->addPixmap(*pixmap);
+  // printf("  adding tile: zoom=%d, (%d, %d)\n", zoom, x, y);
+  QGraphicsPixmapItem *pixmap_item = scene()->addPixmap(pixmap);
   pixmap_item->setScale(360. / 256.0 / (1 << zoom));
 
   // magic math from the OpenStreetMap "Slippy map tilenames" wiki page
@@ -334,9 +332,11 @@ void MapView::render_tile(const int zoom, const int x, const int y, QPixmap* pix
 
 void MapView::request_finished(QNetworkReply* reply)
 {
+  /*
   printf("mapview::request_finished()\n");
   printf("  request url: %s\n",
     reply->request().url().path().toStdString().c_str());
+  */
   const string url(reply->request().url().path().toStdString());
   if (url.size() < 10)
     return;
@@ -345,25 +345,44 @@ void MapView::request_finished(QNetworkReply* reply)
   if (zoom_end == string::npos)
     return;
   const string zoom_str = url.substr(zoom_start, zoom_end - zoom_start);
-  printf("zoom str: [%s]\n", zoom_str.c_str());
 
   const size_t x_start = zoom_end + 1;
   if (x_start >= url.size())
     return;
   const size_t x_end = url.find('/', x_start);
   const string x_str = url.substr(x_start, x_end - x_start);
-  printf("x str: [%s]\n", x_str.c_str());
 
   const size_t y_start = x_end + 1;
   if (y_start >= url.size())
     return;
   const size_t y_end = url.find('.', y_start);
   const string y_str = url.substr(y_start, y_end - y_start);
-  printf("y str: [%s]\n", y_str.c_str());
 
   const int zoom = std::stoi(zoom_str);
   const int x = std::stoi(x_str);
   const int y = std::stoi(y_str);
 
-  printf("received tile: zoom=%d x=%d y=%d\n", zoom, x, y);
+  QByteArray bytes = reply->readAll();
+  printf("received %d-byte tile: zoom=%d x=%d y=%d\n", bytes.length(), zoom, x, y);
+  QImage image;
+  bool parse_ok = image.loadFromData(bytes);
+  if (parse_ok)
+  {
+    // printf("  parse OK to %d x %d image\n", image.width(), image.height());
+    QPixmap pixmap(QPixmap::fromImage(image));
+    tile_cache.set(zoom, x, y, pixmap);
+    // find the placeholder pixmapitem and update its pixmap
+    for (auto& item : tile_pixmap_items)
+    {
+      if (item.x == x && item.y == y && item.zoom == zoom)
+      {
+        item.item->setPixmap(pixmap);
+        break;
+      }
+    }
+  }
+  else
+  {
+    printf("  unable to parse\n");
+  }
 }

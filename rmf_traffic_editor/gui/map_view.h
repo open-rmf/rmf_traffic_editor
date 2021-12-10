@@ -82,7 +82,7 @@ private:
   QNetworkAccessManager *network = nullptr;
 
   void request_tile(const int zoom, const int x, const int y);
-  void render_tile(const int zoom, const int x, const int y, QPixmap* pixmap);
+  void render_tile(const int zoom, const int x, const int y, const QPixmap& pixmap);
   void request_finished(QNetworkReply* reply);
 };
 

@@ -19,6 +19,8 @@
 #define TRAFFIC_EDITOR_MAP_TILE_CACHE_H
 
 #include <deque>
+#include <optional>
+
 #include <QPixmap>
 
 class MapTileCache
@@ -27,8 +29,8 @@ public:
   MapTileCache();
   ~MapTileCache();
 
-  QPixmap* get(const int zoom, const int x, const int y) const;
-  void set(const int zoom, const int x, const int y, QPixmap* pixmap);
+  std::optional<const QPixmap> get(const int zoom, const int x, const int y) const;
+  void set(const int zoom, const int x, const int y, const QPixmap& pixmap);
 
 private:
   struct MapTileCacheElement
@@ -36,11 +38,11 @@ private:
     int zoom = 0;
     int x = 0;
     int y = 0;
-    QPixmap* pixmap = nullptr;
+    QPixmap pixmap;
   };
 
   std::deque<MapTileCacheElement> cache;
-  const size_t MAX_CACHE_SIZE = 100;
+  const size_t MAX_CACHE_SIZE = 1000;
 };
 
 #endif
