@@ -21,6 +21,8 @@
 #include <QNetworkReply>
 #include "map_view.h"
 
+using std::string;
+
 MapView::MapView(QWidget* parent, const Building& building_)
 : QGraphicsView(parent),
   building(building_)
@@ -335,9 +337,33 @@ void MapView::request_finished(QNetworkReply* reply)
   printf("mapview::request_finished()\n");
   printf("  request url: %s\n",
     reply->request().url().path().toStdString().c_str());
-  std::string url = reply->request().url().path().toStdString;
+  const string url(reply->request().url().path().toStdString());
   if (url.size() < 10)
     return;
-  // size_t zoom_start_pos = 6;
-  // size_t zoom_end_pos = url.find('/', zoom_start_pos);
+  const size_t zoom_start = 6;
+  const size_t zoom_end = url.find('/', zoom_start);
+  if (zoom_end == string::npos)
+    return;
+  const string zoom_str = url.substr(zoom_start, zoom_end - zoom_start);
+  printf("zoom str: [%s]\n", zoom_str.c_str());
+
+  const size_t x_start = zoom_end + 1;
+  if (x_start >= url.size())
+    return;
+  const size_t x_end = url.find('/', x_start);
+  const string x_str = url.substr(x_start, x_end - x_start);
+  printf("x str: [%s]\n", x_str.c_str());
+
+  const size_t y_start = x_end + 1;
+  if (y_start >= url.size())
+    return;
+  const size_t y_end = url.find('.', y_start);
+  const string y_str = url.substr(y_start, y_end - y_start);
+  printf("y str: [%s]\n", y_str.c_str());
+
+  const int zoom = std::stoi(zoom_str);
+  const int x = std::stoi(x_str);
+  const int y = std::stoi(y_str);
+
+  printf("received tile: zoom=%d x=%d y=%d\n", zoom, x, y);
 }
