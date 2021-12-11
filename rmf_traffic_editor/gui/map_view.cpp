@@ -68,7 +68,7 @@ void MapView::wheelEvent(QWheelEvent* e)
   // translate the map back so hopefully the mouse stays in the same spot
   const QPointF diff = p_end - p_start;
   translate(diff.x(), diff.y());
-  update_tiles();
+  draw_tiles();
 }
 
 void MapView::mousePressEvent(QMouseEvent* e)
@@ -107,7 +107,7 @@ void MapView::mouseMoveEvent(QMouseEvent* e)
     pan_start_x = e->x();
     pan_start_y = e->y();
     e->accept();
-    update_tiles();
+    draw_tiles();
     return;
   }
   e->ignore();
@@ -115,7 +115,7 @@ void MapView::mouseMoveEvent(QMouseEvent* e)
 
 void MapView::resizeEvent(QResizeEvent*)
 {
-  update_tiles();
+  draw_tiles();
 }
 
 void MapView::zoom_fit(int level_index)
@@ -138,14 +138,6 @@ void MapView::draw_tiles()
 {
   if (!show_tiles || !building.coordinate_system.has_tiles())
     return;
-  printf("MapView::draw_tiles()\n");
-}
-
-void MapView::update_tiles()
-{
-  if (!show_tiles || !building.coordinate_system.has_tiles())
-    return;
-  // printf("MapView::update_tiles()\n");
   const int viewport_width = viewport()->width();
   const int viewport_height = viewport()->height();
   QPointF ul = mapToScene(QPoint(0, 0));
@@ -217,13 +209,22 @@ void MapView::update_tiles()
       || item.y > y_max_tile)
     {
       remove_idx.push_back(i);
-      // printf("  removing tile: zoom=%d, (%d, %d)\n", item.zoom, item.x, item.y); 
+      printf("  need to remove remove tile idx %d: zoom=%d, (%d, %d)\n",
+        (int)i,
+        item.zoom,
+        item.x,
+        item.y); 
     }
   }
 
   for (auto idx_it = remove_idx.rbegin(); idx_it != remove_idx.rend(); ++idx_it)
   {
     MapTilePixmapItem& item = tile_pixmap_items[*idx_it];
+    printf("  now removing tile idx %d: zoom=%d, (%d, %d)\n",
+      (int)*idx_it,
+      item.zoom,
+      item.x,
+      item.y);
     scene()->removeItem(item.item);
     delete item.item;
     tile_pixmap_items.erase(tile_pixmap_items.begin() + *idx_it);
@@ -387,4 +388,9 @@ void MapView::request_finished(QNetworkReply* reply)
   {
     printf("  unable to parse\n");
   }
+}
+
+void MapView::clear()
+{
+  tile_pixmap_items.clear();
 }

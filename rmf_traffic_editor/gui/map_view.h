@@ -42,7 +42,7 @@ public:
     show_tiles = show_tiles_;
   }
   void draw_tiles();
-  void update_tiles();
+  void clear();
 
 protected:
   void wheelEvent(QWheelEvent* event);

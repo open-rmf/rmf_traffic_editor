@@ -565,7 +565,6 @@ bool Editor::load_building(const QString& filename)
     previous_mouse_point = QPointF(level.drawing_width, level.drawing_height);
   }
 
-  map_view->update_tiles();
   create_scene();
 
   update_tables();
@@ -634,7 +633,7 @@ void Editor::restore_previous_viewport()
   map_view->setTransform(t);
   map_view->centerOn(QPointF(viewport_center_x, viewport_center_y));
   map_view->set_show_tiles(true);
-  map_view->update_tiles();
+  map_view->draw_tiles();
 }
 
 bool Editor::load_previous_building()
@@ -688,7 +687,6 @@ void Editor::building_new()
   building_save();
   zoom_reset();
   update_tables();
-  map_view->update_tiles();
 
   QSettings settings;
   settings.setValue(
@@ -866,7 +864,7 @@ void Editor::zoom_reset()
     }
   }
 
-  map_view->update_tiles();
+  map_view->draw_tiles();
 }
 
 void Editor::mouse_event(const MouseType t, QMouseEvent* e)
@@ -1620,6 +1618,7 @@ void Editor::property_editor_cell_changed(int row, int column)
 bool Editor::create_scene()
 {
   scene->clear();  // destroys the mouse_motion_* items if they are there
+  map_view->clear();  // reset the list of currently rendered tiles
   building.clear_scene();  // forget all pointers to the graphics items
   mouse_motion_line = nullptr;
   mouse_motion_model = nullptr;
