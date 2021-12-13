@@ -15,6 +15,9 @@
   <build_depend>libqt5-widgets</build_depend>
   <build_depend>qtbase5-dev</build_depend>
   <build_depend>eigen</build_depend>
+  <build_depend>rmf_utils</build_depend>
+
+  <test_depend>ament_cmake_uncrustify</test_depend>
 
   <depend>libceres-dev</depend>
   <depend>libgoogle-glog-dev</depend>

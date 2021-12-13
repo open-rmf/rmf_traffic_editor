@@ -10,13 +10,7 @@ jobs:
     - name: deps
       run: |
         sudo apt-get update
-        sudo apt-get install pycodestyle wget
+        sudo apt-get install pycodestyle
     - name: pycodestyle
       run: |
         pycodestyle .
-    - name: rmf_uncrustify
-      shell: bash
-      run: |
-        wget https://raw.githubusercontent.com/open-rmf/rmf_utils/main/rmf_utils/test/format/rmf_code_style.cfg
-        source /opt/ros/eloquent/setup.bash
-        ament_uncrustify -c rmf_code_style.cfg .

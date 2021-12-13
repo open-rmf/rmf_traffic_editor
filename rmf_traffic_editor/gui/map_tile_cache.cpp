@@ -19,9 +19,11 @@
 
 MapTileCache::MapTileCache()
 {
+  /*
   std::string tile_cache_root = QStandardPaths::writableLocation(
     QStandardPaths::CacheLocation).toStdString();
   printf("tile_cache_root: %s\n", tile_cache_root.c_str());
+  */
 }
 
 MapTileCache::~MapTileCache()
@@ -63,10 +65,11 @@ void MapTileCache::set(
   e.pixmap = pixmap;
 
   cache.push_front(e);
-  
+
   if (cache.size() > MAX_CACHE_SIZE)
   {
-    printf("cache has %d elements. trimming oldest element...\n", (int)cache.size());
+    printf("cache has %d elements. trimming oldest element...\n",
+      (int)cache.size());
     //MapTileCacheElement old = cache.back();
     //printf("about to delete z=%d, x=%d, y=%d...\n", old.zoom, old.x, old.y);
     //delete old.pixmap;

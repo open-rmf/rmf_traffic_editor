@@ -152,7 +152,21 @@ install(
     include)
 
 if (BUILD_TESTING)
+  find_package(ament_cmake_uncrustify REQUIRED)
+  find_package(rmf_utils REQUIRED)
+
   add_subdirectory(test)
+
+  find_file(uncrustify_config_file
+    NAMES "rmf_code_style.cfg"
+    PATHS "${rmf_utils_DIR}/../../../share/rmf_utils/")
+
+  ament_uncrustify(
+    ARGN include gui
+    CONFIG_FILE ${uncrustify_config_file}
+    MAX_LINE_LENGTH 80
+    LANGUAGE "C++"
+  )
 endif()
 
 ament_export_include_directories(include)

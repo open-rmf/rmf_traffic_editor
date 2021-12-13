@@ -372,10 +372,10 @@ void MapView::request_finished(QNetworkReply* reply)
 
   QByteArray bytes = reply->readAll();
   printf("received %d-byte tile: zoom=%d x=%d y=%d\n",
-     ytes.length(),
-     zoom,
-     x,
-     y);
+    bytes.length(),
+    zoom,
+    x,
+    y);
 
   QImage image;
   bool parse_ok = image.loadFromData(bytes);
