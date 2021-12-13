@@ -19,8 +19,8 @@
 
 MapTileCache::MapTileCache()
 {
-  // use a deque so that LRU cleanup of the cache is fast?
-  // or use an unordered_map so that lookup is fast?
+  std::string tile_cache_root = QStandardPaths::writableLocation(QStandardPaths::CacheLocation).toStdString();
+  printf("tile_cache_root: %s\n", tile_cache_root.c_str());
 }
 
 MapTileCache::~MapTileCache()
