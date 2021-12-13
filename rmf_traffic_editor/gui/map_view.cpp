@@ -248,11 +248,21 @@ void MapView::draw_tiles()
         continue;
 
       //printf("request zoom=%d, x=%d, y=%d)\n", zoom_approx, x, y);
-      std::optional<const QPixmap> p = tile_cache.get(zoom_approx, x, y);
+      std::optional<const QByteArray> p = tile_cache.get(zoom_approx, x, y);
       if (p.has_value())
       {
         //printf("  HOORAY found the pixmap\n");
-        render_tile(zoom_approx, x, y, p.value());
+        QImage image;
+        bool parse_ok = image.loadFromData(p.value());
+        if (parse_ok)
+        {
+          QPixmap pixmap(QPixmap::fromImage(image));
+          render_tile(zoom_approx, x, y, pixmap);
+        }
+        else
+        {
+          printf("oh no! couldn't parse image file in cache\n");
+        }
       }
       else
       {
@@ -298,7 +308,7 @@ void MapView::request_tile(const int zoom, const int x, const int y)
   painter.end();
   QPixmap pixmap(QPixmap::fromImage(image));
 
-  tile_cache.set(zoom, x, y, pixmap);
+  // tile_cache.set(zoom, x, y, pixmap);
 
   render_tile(zoom, x, y, pixmap);
 }
@@ -383,7 +393,7 @@ void MapView::request_finished(QNetworkReply* reply)
   {
     // printf("  parse OK to %d x %d image\n", image.width(), image.height());
     QPixmap pixmap(QPixmap::fromImage(image));
-    tile_cache.set(zoom, x, y, pixmap);
+    tile_cache.set(zoom, x, y, bytes);
     // find the placeholder pixmapitem and update its pixmap
     for (auto& item : tile_pixmap_items)
     {

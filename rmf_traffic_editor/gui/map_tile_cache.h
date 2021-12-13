@@ -29,7 +29,7 @@ public:
   MapTileCache();
   ~MapTileCache();
 
-  std::optional<const QPixmap> get(
+  std::optional<const QByteArray> get(
     const int zoom,
     const int x,
     const int y) const;
@@ -38,9 +38,10 @@ public:
     const int zoom,
     const int x,
     const int y,
-    const QPixmap& pixmap);
+    const QByteArray& bytes);
 
 private:
+  /*
   struct MapTileCacheElement
   {
     int zoom = 0;
@@ -48,9 +49,17 @@ private:
     int y = 0;
     QPixmap pixmap;
   };
+  */
 
-  std::deque<MapTileCacheElement> cache;
-  const size_t MAX_CACHE_SIZE = 1000;
+  // std::deque<MapTileCacheElement> cache;
+  // const size_t MAX_CACHE_SIZE = 1000;
+
+  QString tile_cache_root;
+
+  QString tile_path(
+    int zoom,
+    int x,
+    int y) const;
 };
 
 #endif

@@ -15,40 +15,61 @@
  *
 */
 
+#include <QDir>
+#include <QSaveFile>
+#include <QStandardPaths>
 #include "map_tile_cache.h"
 
 MapTileCache::MapTileCache()
 {
-  /*
-  std::string tile_cache_root = QStandardPaths::writableLocation(
-    QStandardPaths::CacheLocation).toStdString();
-  printf("tile_cache_root: %s\n", tile_cache_root.c_str());
-  */
+  tile_cache_root =
+    QStandardPaths::writableLocation(QStandardPaths::CacheLocation)
+    + QDir::separator()
+    + QString("tiles");
+  printf("tile_cache_root: %s\n", tile_cache_root.toStdString().c_str());
+  QDir tile_cache_dir(tile_cache_root);
+  if (!tile_cache_dir.exists())
+  {
+    printf("creating tile cache directory in %s\n",
+      tile_cache_root.toStdString().c_str());
+    QDir::root().mkpath(tile_cache_root); 
+  }
 }
 
 MapTileCache::~MapTileCache()
 {
 }
 
-std::optional<const QPixmap> MapTileCache::get(
+std::optional<const QByteArray> MapTileCache::get(
   const int zoom,
   const int x,
   const int y) const
 {
-  for (auto it = cache.begin(); it != cache.end(); ++it)
+  QString path = tile_path(zoom, x, y);
+  QFile file(path);
+  if (!file.open(QIODevice::ReadOnly))
   {
-    if (it->zoom == zoom && it->x == x && it->y == y)
-      return {it->pixmap};
+    printf("cache miss: %d %d %d\n", zoom, x, y);
+    return {};
   }
-  return {};
+  printf("cache hit: %s\n", path.toStdString().c_str());
+  return {file.readAll()};
 }
 
 void MapTileCache::set(
   const int zoom,
   const int x,
   const int y,
-  const QPixmap& pixmap)
+  const QByteArray& bytes)
 {
+  QString path = tile_path(zoom, x, y);
+  printf("cache write to %s\n", path.toStdString().c_str());
+  QSaveFile save_file(path);
+  save_file.open(QIODevice::WriteOnly);
+  save_file.write(bytes);
+  save_file.commit();
+
+  /*
   for (auto it = cache.begin(); it != cache.end(); ++it)
   {
     if (it->zoom == zoom && it->x == x && it->y == y)
@@ -76,4 +97,27 @@ void MapTileCache::set(
     //printf("done\n");
     cache.pop_back();
   }
+  */
+}
+
+QString MapTileCache::tile_path(int zoom, int x, int y) const
+{
+  // sanitize the input...
+  if (zoom < 0)
+    zoom = 0;
+  if (x < 0)
+    x = 0;
+  if (y < 0)
+    y = 0;
+
+  QString path = tile_cache_root
+    + QDir::separator()
+    + QString::number(zoom)
+    + QString("_")
+    + QString::number(y)
+    + QString("_")
+    + QString::number(x)
+    + QString(".png");
+
+  return path;
 }
