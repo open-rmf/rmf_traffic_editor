@@ -213,7 +213,7 @@ void MapView::draw_tiles()
         (int)i,
         item.zoom,
         item.x,
-        item.y); 
+        item.y);
     }
   }
 
@@ -270,7 +270,12 @@ void MapView::request_tile(const int zoom, const int x, const int y)
 
   if (s_num_requests <= 2000)
   {
-    printf("  requesting tile %d: zoom=%d, x=%d, y=%d\n", s_num_requests, zoom, x, y);
+    printf("  requesting tile %d: zoom=%d, x=%d, y=%d\n",
+      s_num_requests,
+      zoom,
+      x,
+      y);
+
     QString request_url;
     request_url.sprintf(
       "http://tiles.demo.open-rmf.org/tile/%d/%d/%d.png",
@@ -305,7 +310,7 @@ void MapView::render_tile(
   const QPixmap& pixmap)
 {
   // printf("  adding tile: zoom=%d, (%d, %d)\n", zoom, x, y);
-  QGraphicsPixmapItem *pixmap_item = scene()->addPixmap(pixmap);
+  QGraphicsPixmapItem* pixmap_item = scene()->addPixmap(pixmap);
   pixmap_item->setScale(360. / 256.0 / (1 << zoom));
 
   // magic math from the OpenStreetMap "Slippy map tilenames" wiki page
@@ -366,7 +371,12 @@ void MapView::request_finished(QNetworkReply* reply)
   const int y = std::stoi(y_str);
 
   QByteArray bytes = reply->readAll();
-  printf("received %d-byte tile: zoom=%d x=%d y=%d\n", bytes.length(), zoom, x, y);
+  printf("received %d-byte tile: zoom=%d x=%d y=%d\n",
+     ytes.length(),
+     zoom,
+     x,
+     y);
+
   QImage image;
   bool parse_ok = image.loadFromData(bytes);
   if (parse_ok)

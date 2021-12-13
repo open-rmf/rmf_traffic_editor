@@ -19,7 +19,8 @@
 
 MapTileCache::MapTileCache()
 {
-  std::string tile_cache_root = QStandardPaths::writableLocation(QStandardPaths::CacheLocation).toStdString();
+  std::string tile_cache_root = QStandardPaths::writableLocation(
+    QStandardPaths::CacheLocation).toStdString();
   printf("tile_cache_root: %s\n", tile_cache_root.c_str());
 }
 
@@ -40,7 +41,11 @@ std::optional<const QPixmap> MapTileCache::get(
   return {};
 }
 
-void MapTileCache::set(const int zoom, const int x, const int y, const QPixmap& pixmap)
+void MapTileCache::set(
+  const int zoom,
+  const int x,
+  const int y,
+  const QPixmap& pixmap)
 {
   for (auto it = cache.begin(); it != cache.end(); ++it)
   {

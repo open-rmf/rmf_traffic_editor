@@ -29,8 +29,16 @@ public:
   MapTileCache();
   ~MapTileCache();
 
-  std::optional<const QPixmap> get(const int zoom, const int x, const int y) const;
-  void set(const int zoom, const int x, const int y, const QPixmap& pixmap);
+  std::optional<const QPixmap> get(
+    const int zoom,
+    const int x,
+    const int y) const;
+
+  void set(
+    const int zoom,
+    const int x,
+    const int y,
+    const QPixmap& pixmap);
 
 private:
   struct MapTileCacheElement
