@@ -159,13 +159,15 @@ if (BUILD_TESTING)
 
   find_file(uncrustify_config_file
     NAMES "rmf_code_style.cfg"
-    PATHS "${rmf_utils_DIR}/../../../share/rmf_utils/")
+    PATHS
+      "${rmf_utils_DIR}/../../../share/rmf_utils/"
+      "/opt/ros/galactic/share/rmf_utils")
 
   ament_uncrustify(
     ARGN include gui
     CONFIG_FILE ${uncrustify_config_file}
     MAX_LINE_LENGTH 80
-    LANGUAGE "C++"
+    LANGUAGE CPP
   )
 endif()
 
