@@ -40,6 +40,14 @@ public:
     const int y,
     const QByteArray& bytes);
 
+  struct CacheSize
+  {
+    int bytes = 0;
+    int files = 0;
+  };
+
+  CacheSize getSize();
+
 private:
   /*
   struct MapTileCacheElement
@@ -60,6 +68,9 @@ private:
     int zoom,
     int x,
     int y) const;
+
+  bool modified_since_last_size_check = true;  // for an initial size check
+  CacheSize last_size = {0, 0};
 };
 
 #endif

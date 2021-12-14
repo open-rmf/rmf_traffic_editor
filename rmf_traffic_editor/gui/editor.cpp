@@ -415,6 +415,11 @@ Editor::Editor()
     "QToolBar {background-color: #404040; border: none; spacing: 5px} QToolButton {background-color: #c0c0c0; color: blue; border: 1px solid black;} QToolButton:checked {background-color: #808080; color: red; border: 1px solid black;}");
   addToolBar(Qt::TopToolBarArea, toolbar);
 
+  // STATUS BAR
+  cache_size_label = new QLabel("cache size");
+  statusBar()->addPermanentWidget(cache_size_label);
+  map_view->update_cache_size_label(cache_size_label);
+
   ///////////////////////////////////////////////////////////
   // SET SIZE
   const int width =
@@ -445,6 +450,14 @@ Editor::Editor()
 
   load_model_names();
   level_table->setCurrentCell(level_idx, 0);
+
+  cache_size_update_timer = new QTimer;
+  connect(
+    cache_size_update_timer,
+    &QTimer::timeout,
+    this,
+    &Editor::cache_size_update_timer_timeout);
+  cache_size_update_timer->start(10 * 1000);
 }
 
 Editor::~Editor()
@@ -2746,4 +2759,10 @@ Layer* Editor::active_layer()
     return &level->layers[layer_idx - 1];
 
   return nullptr;
+}
+
+void Editor::cache_size_update_timer_timeout()
+{
+  printf("cache_size_update_timer_timeout()\n");
+  map_view->update_cache_size_label(cache_size_label);
 }

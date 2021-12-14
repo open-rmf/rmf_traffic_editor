@@ -362,6 +362,10 @@ private:
   RotateModelCommand* latest_rotate_model = nullptr;
 
   void sanity_check();
+
+  QLabel* cache_size_label = nullptr;
+  QTimer* cache_size_update_timer = nullptr;
+  void cache_size_update_timer_timeout();
 };
 
 #endif

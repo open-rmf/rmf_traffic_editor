@@ -16,6 +16,7 @@
 */
 
 #include <QDir>
+#include <QDirIterator>
 #include <QSaveFile>
 #include <QStandardPaths>
 #include "map_tile_cache.h"
@@ -34,6 +35,7 @@ MapTileCache::MapTileCache()
       tile_cache_root.toStdString().c_str());
     QDir::root().mkpath(tile_cache_root); 
   }
+  getSize();
 }
 
 MapTileCache::~MapTileCache()
@@ -69,6 +71,7 @@ void MapTileCache::set(
   save_file.write(bytes);
   save_file.commit();
 
+  modified_since_last_size_check = true;
   /*
   for (auto it = cache.begin(); it != cache.end(); ++it)
   {
@@ -120,4 +123,25 @@ QString MapTileCache::tile_path(int zoom, int x, int y) const
     + QString(".png");
 
   return path;
+}
+
+MapTileCache::CacheSize MapTileCache::getSize()
+{
+  if (!modified_since_last_size_check)
+    return last_size;
+
+  CacheSize size = {0, 0};
+  QDirIterator it(tile_cache_root, QDir::Files);
+  while (it.hasNext())
+  {
+    const QFileInfo info = it.fileInfo();
+    it.next();
+
+    size.files++;
+    size.bytes += info.size();
+  }
+  printf("cache: %d files, %.3f MB\n", size.files, size.bytes / 1.0e6);
+  modified_since_last_size_check = false;
+  last_size = size;
+  return size;
 }

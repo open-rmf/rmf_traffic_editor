@@ -29,6 +29,7 @@
 
 class QNetworkAccessManager;
 class QNetworkReply;
+class QLabel;
 
 class MapView : public QGraphicsView
 {
@@ -43,6 +44,7 @@ public:
   }
   void draw_tiles();
   void clear();
+  void update_cache_size_label(QLabel* label);
 
 protected:
   void wheelEvent(QWheelEvent* event);
