@@ -419,11 +419,11 @@ void MapView::clear()
 void MapView::update_cache_size_label(QLabel* label)
 {
   if (!label)
-    return;  // always sanity check :|
+    return;
 
   MapTileCache::CacheSize size = tile_cache.getSize();
   label->setText(
     QString("Tile cache: %1 files, %2 MB")
-      .arg(size.files)
-      .arg(size.bytes / 1.0e6, 0, 'g', 3));
+    .arg(size.files)
+    .arg(size.bytes / 1.0e6, 0, 'g', 3));
 }

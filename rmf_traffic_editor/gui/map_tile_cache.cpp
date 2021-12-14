@@ -33,7 +33,7 @@ MapTileCache::MapTileCache()
   {
     printf("creating tile cache directory in %s\n",
       tile_cache_root.toStdString().c_str());
-    QDir::root().mkpath(tile_cache_root); 
+    QDir::root().mkpath(tile_cache_root);
   }
   getSize();
 }
