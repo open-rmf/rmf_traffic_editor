@@ -43,6 +43,9 @@ public:
 
   bool has_tiles() const;
   bool is_global() const;
+
+  // equatorial radius of the earth in WGS84 (meters)
+  static constexpr double WGS84_A = 6378137.0;
 };
 
 #endif

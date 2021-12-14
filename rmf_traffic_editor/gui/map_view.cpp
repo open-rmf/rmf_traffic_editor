@@ -51,15 +51,19 @@ void MapView::wheelEvent(QWheelEvent* e)
   if (e->delta() > 0)
   {
     double max_scale_factor = 100;
-    if (building.coordinate_system.value == CoordinateSystem::WGS84)
-      max_scale_factor = 1000000;
+    //if (building.coordinate_system.value == CoordinateSystem::WGS84)
+    //  max_scale_factor = 1000000;
 
     if (scale_factor < max_scale_factor)
       scale(1.1, 1.1);
   }
   else
   {
-    if (scale_factor > 0.01)
+    double min_scale_factor = 0.01;
+    if (building.coordinate_system.is_global())  //value == CoordinateSystem::WGS84)
+      min_scale_factor = 0.00001;
+
+    if (scale_factor > min_scale_factor)
       scale(0.9, 0.9);
   }
 
@@ -143,18 +147,19 @@ void MapView::draw_tiles()
   const int viewport_height = viewport()->height();
   QPointF ul = mapToScene(QPoint(0, 0));
   QPointF lr = mapToScene(QPoint(viewport_width, viewport_height));
-  //QPointF c = mapToScene(QPoint(viewport_width/2, viewport_height/2));
-  //printf("viewport center: (%.3f, %.3f)\n", c.x(), c.y());
+  // QPointF c = mapToScene(QPoint(viewport_width/2, viewport_height/2));
+  // printf("viewport center: (%.3f, %.3f)\n", c.x(), c.y());
   // printf("  ul: (%.3f, %.3f)\n", ul.x(), ul.y());
   // printf("  lr: (%.3f, %.3f)\n", lr.x(), lr.y());
 
-  const double lon_extent = lr.x() - ul.x();
-  // printf("  lon extent: %.3f\n", lon_extent);
+  const double x_extent = lr.x() - ul.x();
+  // printf("  x extent: %.3f\n", x_extent);
   const double tiles_visible_x = viewport_width / 256.0;
   // printf("  tiles_visible_x: %.3f\n", tiles_visible_x);
-  const double lon_per_tile = lon_extent / tiles_visible_x;
-  // printf("  lon_per_tile: %.3f\n", lon_per_tile);
-  const double zoom_exact = log(360 / lon_per_tile) / log(2);
+  const double x_meters_per_tile = x_extent / tiles_visible_x;
+  // printf("  x_meters_per_tile: %.3f\n", x_meters_per_tile);
+  const double zoom_exact =
+    log(2. * M_PI * CoordinateSystem::WGS84_A / x_meters_per_tile) / log(2);
   // printf("  zoom_exact: %.3f\n", zoom_exact);
 
   int zoom_approx = static_cast<int>(ceil(zoom_exact));
@@ -165,39 +170,32 @@ void MapView::draw_tiles()
     zoom_approx = MAX_ZOOM;
   // printf("  zoom_approx = %d\n", zoom_approx);
 
-  const double eps = 0.0000001;
-  const double ulx_clamped = std::max(std::min(ul.x(), 180.0 - eps), -180.0);
-  const double lrx_clamped = std::max(std::min(lr.x(), 180.0 - eps), -180.0);
-  // printf("  clamped lon range: (%.3f, %.3f)\n", ulx_clamped, lrx_clamped);
+  const double eps = 0.0001;
+  const double MAX_X = M_PI * CoordinateSystem::WGS84_A;
+  const double ulx_clamped = std::max(std::min(ul.x(), MAX_X - eps), -MAX_X);
+  const double lrx_clamped = std::max(std::min(lr.x(), MAX_X - eps), -MAX_X);
+  // printf("  clamped x range: (%.3f, %.3f)\n", ulx_clamped, lrx_clamped);
 
   const int x_min_tile =
-    floor((ulx_clamped + 180.) / 360. * (1 << zoom_approx));
+    floor((ulx_clamped + MAX_X) / (2. * MAX_X) * (1 << zoom_approx));
   const int x_max_tile =
-    floor((lrx_clamped + 180.) / 360. * (1 << zoom_approx));
+    floor((lrx_clamped + MAX_X) / (2. * MAX_X) * (1 << zoom_approx));
   // printf("  x tile range: [%d, %d]\n", x_min_tile, x_max_tile);
 
-  const double MAX_LAT = 85.0511;
-  const double uly_clamped = std::max(std::min(ul.y(), MAX_LAT), -MAX_LAT);
-  const double lry_clamped = std::max(std::min(lr.y(), MAX_LAT), -MAX_LAT);
-  // printf("  clamped lat range: (%.3f, %.3f)\n", lry_clamped, uly_clamped);
+  // because EPSG 3857 is a square, we can use MAX_X for the Y extents also
+  const double uly_clamped = std::max(std::min(ul.y(), MAX_X - eps), -MAX_X);
+  const double lry_clamped = std::max(std::min(lr.y(), MAX_X - eps), -MAX_X);
+  // printf("  clamped y range: (%.3f, %.3f)\n", lry_clamped, uly_clamped);
 
-  // some trig magic from the OpenStreetMap "Slippy map tilenames" wiki page
-  const int y_min_tile = floor(
-    (1.0 - asinh(tan(uly_clamped * M_PI / 180.)) / M_PI)
-    / 2.0 * (1 << zoom_approx));
-
-  const int y_max_tile = floor(
-    (1.0 - asinh(tan(lry_clamped * M_PI / 180.)) / M_PI)
-    / 2.0 * (1 << zoom_approx));
-
-  /*
+  const int y_min_tile =
+    (1 << zoom_approx)
+    - 1
+    - floor((uly_clamped + MAX_X) / (2. * MAX_X) * (1 << zoom_approx));
+  const int y_max_tile =
+    (1 << zoom_approx)
+    - 1
+    - floor((lry_clamped + MAX_X) / (2. * MAX_X) * (1 << zoom_approx));
   // printf("  y tile range: [%d, %d]\n", y_min_tile, y_max_tile);
-  printf("tile range: (%d, %d) -> (%d, %d)\n",
-    x_min_tile,
-    y_min_tile,
-    x_max_tile,
-    y_max_tile);
-  */
 
   std::vector<size_t> remove_idx;
   for (size_t i = 0; i < tile_pixmap_items.size(); i++)
@@ -316,24 +314,29 @@ void MapView::request_tile(const int zoom, const int x, const int y)
 
 void MapView::render_tile(
   const int zoom,
-  const int x,
-  const int y,
+  const int tile_x,
+  const int tile_y,
   const QPixmap& pixmap)
 {
+  const double MAX_X = M_PI * CoordinateSystem::WGS84_A;
   // printf("  adding tile: zoom=%d, (%d, %d)\n", zoom, x, y);
   QGraphicsPixmapItem* pixmap_item = scene()->addPixmap(pixmap);
-  pixmap_item->setScale(360. / 256.0 / (1 << zoom));
+  pixmap_item->setScale(2. * MAX_X / 256.0 / (1 << zoom));
+  //pixmap_item->setScale(360. / 256.0 / (1 << zoom));
 
   // magic math from the OpenStreetMap "Slippy map tilenames" wiki page
-  const double lon_deg = x / static_cast<double>(1 << zoom) * 360. - 180.;
-  const double n = M_PI - 2.0 * M_PI * y / static_cast<double>(1 << zoom);
-  const double lat = atan(0.5 * (exp(n) - exp(-n)));
+  // const double lon_deg = x / static_cast<double>(1 << zoom) * 360. - 180.;
+  // const double n = M_PI - 2.0 * M_PI * y / static_cast<double>(1 << zoom);
+  // const double lat = atan(0.5 * (exp(n) - exp(-n)));
+  const double x = tile_x / static_cast<double>(1 << zoom) * 2. * MAX_X - MAX_X;
+  const double y = -tile_y / static_cast<double>(1 << zoom) * 2. * MAX_X + MAX_X;
 
   // project the latitude to "web mercator" latitude
-  const double lat_deg_mercator = 180. / M_PI * log(tan(lat) + 1. / cos(lat));
+  //const double lat_deg_mercator = 180. / M_PI * log(tan(lat) + 1. / cos(lat));
 
   // printf("  %.5f -> %.5f\n", 180. / M_PI * lat, lat_deg_mercator);
-  pixmap_item->setPos(lon_deg, lat_deg_mercator);
+  //pixmap_item->setPos(lon_deg, lat_deg_mercator);
+  pixmap_item->setPos(x, y);
 
   // flip Y because we want +Y = up
   pixmap_item->setTransform(pixmap_item->transform().scale(1., -1.));
@@ -343,8 +346,8 @@ void MapView::render_tile(
 
   MapTilePixmapItem item;
   item.zoom = zoom;
-  item.x = x;
-  item.y = y;
+  item.x = tile_x;
+  item.y = tile_y;
   item.item = pixmap_item;
   tile_pixmap_items.push_back(item);
 }

@@ -568,7 +568,12 @@ bool Editor::load_building(const QString& filename)
 
   if (building.coordinate_system.is_global())
   {
-    scene->setSceneRect(QRectF(-180., 180., 360., -360.));
+    // use the EPSG 3857 extents: "projected-meters"
+    scene->setSceneRect(QRectF(
+      -M_PI * CoordinateSystem::WGS84_A,
+      M_PI * CoordinateSystem::WGS84_A,
+      2. * M_PI * CoordinateSystem::WGS84_A,
+      -2. * M_PI * CoordinateSystem::WGS84_A));
   }
   else if (!building.levels.empty())
   {
