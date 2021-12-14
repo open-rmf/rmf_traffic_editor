@@ -29,6 +29,7 @@
 #include <QListWidget>
 #include <QToolBar>
 
+#include <proj.h>
 #include <yaml-cpp/yaml.h>
 
 #include "ament_index_cpp/get_package_share_directory.hpp"
@@ -1286,7 +1287,7 @@ void Editor::property_editor_set_row(
   property_editor_set_row(
     row_idx,
     label,
-    QString::number(value, 'g', num_decimal_places + 1),
+    QString::number(value, 'f', num_decimal_places + 1),
     editable);
 }
 
@@ -1353,6 +1354,16 @@ void Editor::layer_edit_button_clicked(const int row_idx)
     {
       layer_table->update(building, level_idx, layer_idx);
       create_scene();
+    }
+  );
+  connect(
+    dialog,
+    &LayerDialog::center_layer,
+    [=]()
+    {
+      dialog->set_center(
+        map_view->get_center().x(),
+        map_view->get_center().y());
     }
   );
 }
@@ -1444,10 +1455,22 @@ void Editor::populate_property_editor(const Vertex& vertex, const int index)
   property_editor->setRowCount(6 + vertex.params.size());
 
   property_editor_set_row(0, "index", index);
-  property_editor_set_row(1, "x (pixels)", vertex.x, 3, true);
-  property_editor_set_row(2, "y (pixels)", vertex.y, 3, true);
-  property_editor_set_row(3, "x (m)", vertex.x * scale);
-  property_editor_set_row(4, "y (m)", -1.0 * vertex.y * scale);
+  if (!building.coordinate_system.is_global())
+  {
+    property_editor_set_row(1, "x (pixels)", vertex.x, 3, true);
+    property_editor_set_row(2, "y (pixels)", vertex.y, 3, true);
+    property_editor_set_row(3, "x (m)", vertex.x * scale);
+    const double y_flip = building.coordinate_system.is_y_flipped() ? -1 : 1;
+    property_editor_set_row(4, "y (m)", y_flip * vertex.y * scale);
+  }
+  else
+  {
+    property_editor_set_row(1, "x (m)", vertex.x);
+    property_editor_set_row(2, "y (m)", vertex.y);
+
+    //property_editor_set_row(1, "lon (deg)", vertex.x, 3, true);
+    //property_editor_set_row(2, "lat (deg)", vertex.y, 3, true);
+  }
   property_editor_set_row(
     5,
     "name",
@@ -1660,15 +1683,15 @@ void Editor::draw_mouse_motion_line_item(
   switch (tool_id)
   {
     case TOOL_ADD_LANE:
-      pen_width = 20;
+      pen_width = 1.0 / building.coordinate_system.default_scale();
       color = QColor::fromRgbF(0, 0, 1, 0.5);
       break;
     case TOOL_ADD_WALL:
-      pen_width = 5;
+      pen_width = 0.25 / building.coordinate_system.default_scale();
       color = QColor::fromRgbF(0, 0, 1, 0.5);
       break;
     case TOOL_ADD_MEAS:
-      pen_width = 5;
+      pen_width = 0.25 / building.coordinate_system.default_scale();
       color = QColor::fromRgbF(1, 0, 1, 0.5);
       break;
     default:

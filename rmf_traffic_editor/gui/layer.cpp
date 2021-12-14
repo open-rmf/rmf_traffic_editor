@@ -171,12 +171,13 @@ void Layer::draw(
 
   // for purposes of the origin mark, let's say the origin is the center
   // of the first pixel of the image
+  const double y_flip = coordinate_system.is_y_flipped() ? -1 : 1;
   const QPointF origin(
     transform.translation().x() / level_meters_per_pixel
     + 0.5 * transform.scale() / level_meters_per_pixel *
     cos(transform.yaw() - M_PI / 4),
     transform.translation().y() / level_meters_per_pixel
-    - 0.5 * transform.scale() / level_meters_per_pixel *
+    + y_flip * 0.5 * transform.scale() / level_meters_per_pixel *
     sin(transform.yaw() - M_PI / 4));
 
   scene->addEllipse(
@@ -188,9 +189,8 @@ void Layer::draw(
 
   QPointF x_arrow(
     origin.x() + 2.0 * origin_radius * cos(transform.yaw()),
-    origin.y() - 2.0 * origin_radius * sin(transform.yaw()));
+    origin.y() + y_flip * 2.0 * origin_radius * sin(transform.yaw()));
   scene->addLine(QLineF(origin, x_arrow), origin_pen);
-
 
   for (Feature& feature : features)
     feature.draw(scene, color, transform, level_meters_per_pixel);

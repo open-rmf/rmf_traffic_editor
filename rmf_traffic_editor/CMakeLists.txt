@@ -120,6 +120,7 @@ target_link_libraries(
   Qt5::Widgets
   Qt5::Concurrent
   Qt5::Network
+  proj
   yaml-cpp
   ${ament_index_cpp_LIBRARIES}
 )

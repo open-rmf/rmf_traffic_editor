@@ -48,24 +48,59 @@ void MapView::wheelEvent(QWheelEvent* e)
   // sanity check: clamp the scale if it has become super tiny
   const double scale_factor = transform().m11();
 
-  if (e->delta() > 0)
+  if (!building.coordinate_system.is_global())
   {
-    double max_scale_factor = 100;
-    //if (building.coordinate_system.value == CoordinateSystem::WGS84)
-    //  max_scale_factor = 1000000;
-
-    if (scale_factor < max_scale_factor)
-      scale(1.1, 1.1);
+    if (e->delta() > 0)
+    {
+      scale(1.25, 1.25);
+    }
+    else
+    {
+      if (scale_factor > 0.01)
+        scale(0.75, 0.75);
+    }
   }
   else
   {
-    double min_scale_factor = 0.01;
-    if (building.coordinate_system.is_global())  //value == CoordinateSystem::WGS84)
-      min_scale_factor = 0.00001;
+    //const double dx = transform().dx();
+    //const double dy = transform().dy();
+    //const double scale_pow2 = pow(2, round(log(scale_factor)/log(2)));
+    //resetTransform();
+    //scale(scale_pow2, scale_pow2);
+    //translate(dx, dy);
 
-    if (scale_factor > min_scale_factor)
-      scale(0.9, 0.9);
+    // in the global frame when we're rendering map tiles,
+    // we want to keep to an even scaling of the tile
+    // so it doesn't have too many aliasing effects
+    if (e->delta() > 0)
+    {
+      //double max_scale_factor = 100;
+      // go to the nearest power of 2 above where we are
+      // const double next_scale = pow(2, round(log(scale_factor*2)/log(2)));
+      scale(2.0, 2.0);
+    }
+    else
+    {
+      // double min_scale_factor = 0.01;
+
+      // go to the nearest power of 2 below where we are
+      // const double next_scale = pow(2, round(log(scale_factor/2)/log(2)));
+
+      // limit to 2^-17 = 0.0000076294
+      //if (next_scale < 0.0000076294)
+      //  next_scale = 0.0000076294;
+
+      if (scale_factor > 0.0000076294)
+        scale(0.5, 0.5);
+ 
+      //if (scale_factor > min_scale_factor)
+      //  scale(0.75, 0.75);
+    }
   }
+
+  printf("scale factor: %.3f\n", scale_factor);
+  //const double nearest_nice_scale_factor = pow(2.0, round(log(scale_factor)/log(2.0)));
+  //printf("nearest nice scale factor: %.3f\n", nearest_nice_scale_factor);
 
   // calculate the mouse map position now that we've scaled
   const QPointF p_end = mapToScene(e->pos());
@@ -147,7 +182,7 @@ void MapView::draw_tiles()
   const int viewport_height = viewport()->height();
   QPointF ul = mapToScene(QPoint(0, 0));
   QPointF lr = mapToScene(QPoint(viewport_width, viewport_height));
-  // QPointF c = mapToScene(QPoint(viewport_width/2, viewport_height/2));
+  last_center = mapToScene(QPoint(viewport_width/2, viewport_height/2));
   // printf("viewport center: (%.3f, %.3f)\n", c.x(), c.y());
   // printf("  ul: (%.3f, %.3f)\n", ul.x(), ul.y());
   // printf("  lr: (%.3f, %.3f)\n", lr.x(), lr.y());
@@ -159,11 +194,11 @@ void MapView::draw_tiles()
   const double x_meters_per_tile = x_extent / tiles_visible_x;
   // printf("  x_meters_per_tile: %.3f\n", x_meters_per_tile);
   const double zoom_exact =
-    log(2. * M_PI * CoordinateSystem::WGS84_A / x_meters_per_tile) / log(2);
+    log(M_PI * CoordinateSystem::WGS84_A / x_meters_per_tile) / log(2);
   // printf("  zoom_exact: %.3f\n", zoom_exact);
 
   int zoom_approx = static_cast<int>(ceil(zoom_exact));
-  const int MAX_ZOOM = 19;
+  const int MAX_ZOOM = 20;
   if (zoom_approx < 0)
     zoom_approx = 0;
   if (zoom_approx > MAX_ZOOM)
@@ -255,7 +290,8 @@ void MapView::draw_tiles()
         bool parse_ok = image.loadFromData(p.value());
         if (parse_ok)
         {
-          QPixmap pixmap(QPixmap::fromImage(image));
+          QPixmap pixmap(QPixmap::fromImage(image.convertToFormat(QImage::Format_Grayscale8)));
+          // QPixmap pixmap(QPixmap::fromImage(image));
           render_tile(zoom_approx, x, y, pixmap);
         }
         else
@@ -322,6 +358,7 @@ void MapView::render_tile(
   // printf("  adding tile: zoom=%d, (%d, %d)\n", zoom, x, y);
   QGraphicsPixmapItem* pixmap_item = scene()->addPixmap(pixmap);
   pixmap_item->setScale(2. * MAX_X / 256.0 / (1 << zoom));
+  pixmap_item->setZValue(-10.0);
   //pixmap_item->setScale(360. / 256.0 / (1 << zoom));
 
   // magic math from the OpenStreetMap "Slippy map tilenames" wiki page
@@ -396,7 +433,8 @@ void MapView::request_finished(QNetworkReply* reply)
   if (parse_ok)
   {
     // printf("  parse OK to %d x %d image\n", image.width(), image.height());
-    QPixmap pixmap(QPixmap::fromImage(image));
+    // QPixmap pixmap(QPixmap::fromImage(image));
+    QPixmap pixmap(QPixmap::fromImage(image.convertToFormat(QImage::Format_Grayscale8)));
     tile_cache.set(zoom, x, y, bytes);
     // find the placeholder pixmapitem and update its pixmap
     for (auto& item : tile_pixmap_items)

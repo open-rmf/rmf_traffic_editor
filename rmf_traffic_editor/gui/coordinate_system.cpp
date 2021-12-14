@@ -94,3 +94,10 @@ bool CoordinateSystem::has_tiles() const
 {
   return value == CoordinateSystem::WGS84;
 }
+
+CoordinateSystem::ProjectedPoint CoordinateSystem::to_epsg3857(
+  const double coord_0,
+  const double coord_1)
+{
+  return ProjectedPoint{0, 0};
+}

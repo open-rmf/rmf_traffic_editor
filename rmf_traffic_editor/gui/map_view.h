@@ -45,6 +45,7 @@ public:
   void draw_tiles();
   void clear();
   void update_cache_size_label(QLabel* label);
+  QPointF get_center() { return last_center; }
 
 protected:
   void wheelEvent(QWheelEvent* event);
@@ -92,6 +93,7 @@ private:
     const QPixmap& pixmap);
 
   void request_finished(QNetworkReply* reply);
+  QPointF last_center;
 };
 
 #endif

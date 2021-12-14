@@ -19,6 +19,7 @@
 #define COORDINATE_SYSTEM_H
 
 #include <string>
+#include <proj.h>
 
 class CoordinateSystem
 {
@@ -46,6 +47,13 @@ public:
 
   // equatorial radius of the earth in WGS84 (meters)
   static constexpr double WGS84_A = 6378137.0;
+
+  struct ProjectedPoint
+  {
+    double x = 0.0;
+    double y = 0.0;
+  };
+  ProjectedPoint to_epsg3857(const double coord_0, const double coord_1);
 };
 
 #endif

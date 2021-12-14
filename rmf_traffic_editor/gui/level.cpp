@@ -1103,9 +1103,13 @@ void Level::draw(
   const CoordinateSystem& coordinate_system)
 {
   printf("Level::draw()\n");
+  vertex_radius = 0.1;
+
   if (!coordinate_system.is_global())
   {
-    vertex_radius = 0.1;
+    // If we're using an image-defined coordinate system, we should
+    // adjust the SceneRect to match the reference image, so the
+    // scrollbar range makes sense for this level.
     if (drawing_filename.size() && _drawing_visible)
     {
       const double extra_scroll_area_width = 1.0 * drawing_width;
@@ -1125,11 +1129,6 @@ void Level::draw(
       scene->setSceneRect(QRectF(0, 0, w, h));
       scene->addRect(0, 0, w, h, Qt::NoPen, Qt::white);
     }
-  }
-  else
-  {
-    // leave the SceneRect as-is; no need to adjust it for each level
-    vertex_radius = 0.1 * 0.00009009;  // meters-at-equator to degrees
   }
 
   draw_polygons(scene);
