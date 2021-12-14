@@ -1129,7 +1129,6 @@ void Level::draw(
   else
   {
     // leave the SceneRect as-is; no need to adjust it for each level
-    //vertex_radius = 0.1 * 0.000009009;  // meters-at-equator to degrees
     vertex_radius = 0.1 * 0.00009009;  // meters-at-equator to degrees
   }
 
