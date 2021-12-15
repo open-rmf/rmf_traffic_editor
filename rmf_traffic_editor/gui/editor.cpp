@@ -29,7 +29,6 @@
 #include <QListWidget>
 #include <QToolBar>
 
-#include <proj.h>
 #include <yaml-cpp/yaml.h>
 
 #include "ament_index_cpp/get_package_share_directory.hpp"
@@ -1468,8 +1467,11 @@ void Editor::populate_property_editor(const Vertex& vertex, const int index)
     property_editor_set_row(1, "x (m)", vertex.x);
     property_editor_set_row(2, "y (m)", vertex.y);
 
-    //property_editor_set_row(1, "lon (deg)", vertex.x, 3, true);
-    //property_editor_set_row(2, "lat (deg)", vertex.y, 3, true);
+    CoordinateSystem::WGS84Point wgs84_point =
+      building.coordinate_system.to_wgs84(vertex.x, vertex.y);
+
+    property_editor_set_row(3, "lon (deg)", wgs84_point.lon, 6, true);
+    property_editor_set_row(4, "lat (deg)", wgs84_point.lat, 6, true);
   }
   property_editor_set_row(
     5,

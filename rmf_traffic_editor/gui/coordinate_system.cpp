@@ -20,15 +20,57 @@
 CoordinateSystem::CoordinateSystem()
 : value(CoordinateSystem::Undefined)
 {
+  printf("CoordinateSystem::CoordinateSystem()\n");
+  throw;
+  init_proj();
 }
 
 CoordinateSystem::CoordinateSystem(const CoordinateSystem::Value& _value)
 : value(_value)
 {
+  printf("CoordinateSystem::CoordinateSystem(value)\n");
+  init_proj();
+}
+
+void CoordinateSystem::init_proj()
+{
+  printf("CoordinateSystem::init_proj()\n");
+  if (proj_context)
+  {
+    printf("CoordinateSystem::init_proj() called twice!\n");
+    return;
+  }
+  proj_context = proj_context_create();
+  epsg_3857_to_wgs84 = proj_create_crs_to_crs(
+    proj_context,
+    "EPSG:3857",
+    "EPSG:4326",
+    NULL);
 }
 
 CoordinateSystem::~CoordinateSystem()
 {
+  printf("CoordinateSystem::~CoordinateSystem()\n");
+  if (epsg_3857_to_wgs84)
+  {
+    proj_destroy(epsg_3857_to_wgs84);
+    epsg_3857_to_wgs84 = nullptr;
+  }
+  else
+  {
+    printf("no epsg_3857_to_wgs84 during CoordinateSystem destructor!\n");
+  }
+
+  if (proj_context)
+  {
+    proj_context_destroy(proj_context);
+    proj_context = nullptr;
+  }
+  else
+  {
+    printf("no proj_context during CoordinateSystem destructor!\n");
+  }
+
 }
 
 std::string CoordinateSystem::to_string()
@@ -46,20 +88,18 @@ std::string CoordinateSystem::to_string()
   }
 }
 
-CoordinateSystem CoordinateSystem::from_string(const std::string& s)
+CoordinateSystem::Value CoordinateSystem::value_from_string(const std::string& s)
 {
-  CoordinateSystem cs;
   if (s == "reference_image")
-    cs.value = ReferenceImage;
+    return ReferenceImage;
   else if (s == "web_mercator")
-    cs.value = WebMercator;
+    return WebMercator;
   else if (s == "cartesian_meters")
-    cs.value = CartesianMeters;
+    return CartesianMeters;
   else if (s == "wgs84")
-    cs.value = WGS84;
+    return WGS84;
   else
-    cs.value = Undefined;
-  return cs;
+    return Undefined;
 }
 
 bool CoordinateSystem::is_y_flipped() const
@@ -95,9 +135,28 @@ bool CoordinateSystem::has_tiles() const
   return value == CoordinateSystem::WGS84;
 }
 
-CoordinateSystem::ProjectedPoint CoordinateSystem::to_epsg3857(
-  const double coord_0,
-  const double coord_1)
+CoordinateSystem::WGS84Point CoordinateSystem::to_wgs84(
+  const double easting,
+  const double northing)
 {
-  return ProjectedPoint{0, 0};
+  if (value != CoordinateSystem::ReferenceImage)
+  {
+    const PJ_COORD c = proj_coord(easting, northing, 0, 0);
+    const PJ_COORD wgs84_coord = proj_trans(
+      epsg_3857_to_wgs84,
+      PJ_FWD,
+      c);
+    return WGS84Point{wgs84_coord.v[0], wgs84_coord.v[1]};
+  }
+  else
+  {
+    return {0, 0};
+  }
+}
+
+CoordinateSystem::ProjectedPoint CoordinateSystem::to_epsg3857(
+  const double easting,
+  const double northing)
+{
+  return {0, 0};
 }

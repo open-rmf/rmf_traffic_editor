@@ -38,7 +38,7 @@ public:
   ~CoordinateSystem();
 
   std::string to_string();
-  static CoordinateSystem from_string(const std::string& s);
+  static CoordinateSystem::Value value_from_string(const std::string& s);
   bool is_y_flipped() const;
   double default_scale() const;
 
@@ -53,7 +53,19 @@ public:
     double x = 0.0;
     double y = 0.0;
   };
-  ProjectedPoint to_epsg3857(const double coord_0, const double coord_1);
+  ProjectedPoint to_epsg3857(const double easting, const double northing);
+
+  struct WGS84Point
+  {
+    double lat = 0;
+    double lon = 0;
+  };
+  WGS84Point to_wgs84(const double easting, const double northing);
+
+  PJ_CONTEXT* proj_context = nullptr;
+  PJ* epsg_3857_to_wgs84 = nullptr;
+
+  void init_proj();
 };
 
 #endif
