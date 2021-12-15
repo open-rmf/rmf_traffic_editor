@@ -67,6 +67,15 @@ public:
   PJ* epsg_3857_to_wgs84 = nullptr;
 
   void init_proj();
+
+  /*
+  // even for maps defined in WGS84, we often want to generate a local
+  // cartesian plane for simulation and navigation. This field is
+  // intended to hold the CRS name, such as "EPSG:XXXXX" that will be
+  // eventually used by downstream tools to generate cartesian
+  // approximations of this world.
+  std::string generate_crs;
+  */
 };
 
 #endif
