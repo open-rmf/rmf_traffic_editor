@@ -53,14 +53,15 @@ public:
     double x = 0.0;
     double y = 0.0;
   };
-  ProjectedPoint to_epsg3857(const double easting, const double northing);
 
   struct WGS84Point
   {
     double lat = 0;
     double lon = 0;
   };
-  WGS84Point to_wgs84(const double easting, const double northing);
+
+  ProjectedPoint to_epsg3857(const WGS84Point& wgs84_point) const;
+  WGS84Point to_wgs84(const ProjectedPoint& point) const;
 
   PJ_CONTEXT* proj_context = nullptr;
   PJ* epsg_3857_to_wgs84 = nullptr;

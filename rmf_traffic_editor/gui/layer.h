@@ -58,8 +58,12 @@ public:
 
   std::vector<Feature> features;
 
-  bool from_yaml(const std::string& name, const YAML::Node& data);
-  YAML::Node to_yaml() const;
+  bool from_yaml(
+    const std::string& name,
+    const YAML::Node& data,
+    const CoordinateSystem& coordinate_system);
+
+  YAML::Node to_yaml(const CoordinateSystem& coordinate_system) const;
 
   bool load_image();
   void colorize_image();

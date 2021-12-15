@@ -1468,7 +1468,7 @@ void Editor::populate_property_editor(const Vertex& vertex, const int index)
     property_editor_set_row(2, "y (m)", vertex.y);
 
     CoordinateSystem::WGS84Point wgs84_point =
-      building.coordinate_system.to_wgs84(vertex.x, vertex.y);
+      building.coordinate_system.to_wgs84({vertex.x, vertex.y});
 
     property_editor_set_row(3, "lon (deg)", wgs84_point.lon, 6, true);
     property_editor_set_row(4, "lat (deg)", wgs84_point.lat, 6, true);

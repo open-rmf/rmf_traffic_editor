@@ -137,12 +137,12 @@ bool CoordinateSystem::has_tiles() const
 }
 
 CoordinateSystem::WGS84Point CoordinateSystem::to_wgs84(
-  const double easting,
-  const double northing)
+  const ProjectedPoint& point) const
 {
-  if (value != CoordinateSystem::ReferenceImage)
+  if (value != ReferenceImage)
   {
-    const PJ_COORD c = proj_coord(easting, northing, 0, 0);
+    // todo: if CartesianMeters, use the CRS name provided somewhere
+    const PJ_COORD c = proj_coord(point.x, point.y, 0, 0);
     const PJ_COORD wgs84_coord = proj_trans(
       epsg_3857_to_wgs84,
       PJ_FWD,
@@ -156,8 +156,19 @@ CoordinateSystem::WGS84Point CoordinateSystem::to_wgs84(
 }
 
 CoordinateSystem::ProjectedPoint CoordinateSystem::to_epsg3857(
-  const double easting,
-  const double northing)
+  const WGS84Point& point) const
 {
-  return {0, 0};
+  if (value == WGS84)
+  {
+    const PJ_COORD p_in = proj_coord(point.lat, point.lon, 0, 0);
+    const PJ_COORD p_out = proj_trans(
+      epsg_3857_to_wgs84,
+      PJ_INV,
+      p_in);
+    return ProjectedPoint({p_out.v[0], p_out.v[1]});
+  }
+  else
+  {
+    return {0, 0};
+  }
 }

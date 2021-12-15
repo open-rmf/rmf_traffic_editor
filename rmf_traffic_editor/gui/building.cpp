@@ -188,7 +188,7 @@ bool Building::save()
 
   y["levels"] = YAML::Node(YAML::NodeType::Map);
   for (const auto& level : levels)
-    y["levels"][level.name] = level.to_yaml();
+    y["levels"][level.name] = level.to_yaml(coordinate_system);
 
   y["lifts"] = YAML::Node(YAML::NodeType::Map);
   for (const auto& lift : lifts)

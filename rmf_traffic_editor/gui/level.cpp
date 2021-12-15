@@ -81,7 +81,16 @@ bool Level::from_yaml(
     drawing_height = y_meters / drawing_meters_per_pixel;
   }
 
-  parse_vertices(_data);
+  if (_data["vertices"] && _data["vertices"].IsSequence())
+  {
+    const YAML::Node& pts = _data["vertices"];
+    for (YAML::const_iterator it = pts.begin(); it != pts.end(); ++it)
+    {
+      Vertex v;
+      v.from_yaml(*it, coordinate_system);
+      vertices.push_back(v);
+    }
+  }
 
   if (_data["fiducials"] && _data["fiducials"].IsSequence())
   {
@@ -164,7 +173,7 @@ bool Level::from_yaml(
     for (YAML::const_iterator it = yl.begin(); it != yl.end(); ++it)
     {
       Layer layer;
-      layer.from_yaml(it->first.as<string>(), it->second);
+      layer.from_yaml(it->first.as<string>(), it->second, coordinate_system);
       layers.push_back(layer);
     }
   }
@@ -200,7 +209,7 @@ bool Level::load_drawing()
   return true;
 }
 
-YAML::Node Level::to_yaml() const
+YAML::Node Level::to_yaml(const CoordinateSystem& coordinate_system) const
 {
   YAML::Node y;
   if (!drawing_filename.empty())
@@ -217,7 +226,7 @@ YAML::Node Level::to_yaml() const
   y["elevation"] = elevation;
 
   for (const auto& v : vertices)
-    y["vertices"].push_back(v.to_yaml());
+    y["vertices"].push_back(v.to_yaml(coordinate_system));
 
   for (const auto& feature : floorplan_features)
     y["features"].push_back(feature.to_yaml());
@@ -279,7 +288,7 @@ YAML::Node Level::to_yaml() const
 
   y["layers"] = YAML::Node(YAML::NodeType::Map);
   for (const auto& layer : layers)
-    y["layers"][layer.name] = layer.to_yaml();
+    y["layers"][layer.name] = layer.to_yaml(coordinate_system);
 
   return y;
 }
@@ -1478,21 +1487,6 @@ Polygon::EdgeDragPolygon Level::polygon_edge_drag_press(
   edp.polygon = QPolygonF(polygon_vertices);
 
   return edp;
-}
-
-bool Level::parse_vertices(const YAML::Node& _data)
-{
-  if (_data["vertices"] && _data["vertices"].IsSequence())
-  {
-    const YAML::Node& pts = _data["vertices"];
-    for (YAML::const_iterator it = pts.begin(); it != pts.end(); ++it)
-    {
-      Vertex v;
-      v.from_yaml(*it);
-      vertices.push_back(v);
-    }
-  }
-  return true;
 }
 
 void Level::add_vertex(const double x, const double y)

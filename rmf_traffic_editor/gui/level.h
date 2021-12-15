@@ -87,7 +87,7 @@ public:
     const std::string& name,
     const YAML::Node& data,
     const CoordinateSystem& coordinate_system);
-  YAML::Node to_yaml() const;
+  YAML::Node to_yaml(const CoordinateSystem& coordinate_system) const;
 
   const Feature* find_feature(const QUuid& id) const;
   const Feature* find_feature(const double x, const double y) const;
@@ -197,8 +197,6 @@ private:
     const YAML::Node& data,
     const char* sequence_name,
     const Edge::Type type);
-
-  bool parse_vertices(const YAML::Node& _data);
 
   bool _drawing_visible = true;
 
