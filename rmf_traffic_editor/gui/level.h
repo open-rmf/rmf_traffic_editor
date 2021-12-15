@@ -76,11 +76,6 @@ public:
   double x_meters = 10.0;  // manually specified if no drawing supplied
   double y_meters = 10.0;  // manually specified if no drawing supplied
 
-  // when generating the building in "flattened" mode, the levels have
-  // to be offset in the (x, y) plane to avoid clobbering each other.
-  double flattened_x_offset = 0.0;
-  double flattened_y_offset = 0.0;
-
   std::vector<Model> models;
   std::vector<Fiducial> fiducials;
   std::vector<Feature> floorplan_features;

@@ -116,11 +116,6 @@ bool Level::from_yaml(
     }
   }
 
-  if (_data["flattened_x_offset"])
-    flattened_x_offset = _data["flattened_x_offset"].as<double>();
-  if (_data["flattened_y_offset"])
-    flattened_y_offset = _data["flattened_y_offset"].as<double>();
-
   load_yaml_edge_sequence(_data, "lanes", Edge::LANE);
   load_yaml_edge_sequence(_data, "walls", Edge::WALL);
   load_yaml_edge_sequence(_data, "measurements", Edge::MEAS);
@@ -220,8 +215,6 @@ YAML::Node Level::to_yaml() const
     y["y_meters"] = y_meters;
   }
   y["elevation"] = elevation;
-  y["flattened_x_offset"] = flattened_x_offset;
-  y["flattened_y_offset"] = flattened_y_offset;
 
   for (const auto& v : vertices)
     y["vertices"].push_back(v.to_yaml());
