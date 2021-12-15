@@ -88,7 +88,8 @@ std::string CoordinateSystem::to_string()
   }
 }
 
-CoordinateSystem::Value CoordinateSystem::value_from_string(const std::string& s)
+CoordinateSystem::Value CoordinateSystem::value_from_string(
+  const std::string& s)
 {
   if (s == "reference_image")
     return ReferenceImage;
