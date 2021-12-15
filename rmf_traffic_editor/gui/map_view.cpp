@@ -92,9 +92,6 @@ void MapView::wheelEvent(QWheelEvent* e)
 
       if (scale_factor > 0.0000076294)
         scale(0.5, 0.5);
- 
-      //if (scale_factor > min_scale_factor)
-      //  scale(0.75, 0.75);
     }
   }
 
@@ -290,7 +287,8 @@ void MapView::draw_tiles()
         bool parse_ok = image.loadFromData(p.value());
         if (parse_ok)
         {
-          QPixmap pixmap(QPixmap::fromImage(image.convertToFormat(QImage::Format_Grayscale8)));
+          QPixmap pixmap(QPixmap::fromImage(image.convertToFormat(
+              QImage::Format_Grayscale8)));
           // QPixmap pixmap(QPixmap::fromImage(image));
           render_tile(zoom_approx, x, y, pixmap);
         }
@@ -366,7 +364,8 @@ void MapView::render_tile(
   // const double n = M_PI - 2.0 * M_PI * y / static_cast<double>(1 << zoom);
   // const double lat = atan(0.5 * (exp(n) - exp(-n)));
   const double x = tile_x / static_cast<double>(1 << zoom) * 2. * MAX_X - MAX_X;
-  const double y = -tile_y / static_cast<double>(1 << zoom) * 2. * MAX_X + MAX_X;
+  const double y =
+    -tile_y / static_cast<double>(1 << zoom) * 2. * MAX_X + MAX_X;
 
   // project the latitude to "web mercator" latitude
   //const double lat_deg_mercator = 180. / M_PI * log(tan(lat) + 1. / cos(lat));
@@ -434,7 +433,8 @@ void MapView::request_finished(QNetworkReply* reply)
   {
     // printf("  parse OK to %d x %d image\n", image.width(), image.height());
     // QPixmap pixmap(QPixmap::fromImage(image));
-    QPixmap pixmap(QPixmap::fromImage(image.convertToFormat(QImage::Format_Grayscale8)));
+    QPixmap pixmap(QPixmap::fromImage(image.convertToFormat(
+        QImage::Format_Grayscale8)));
     tile_cache.set(zoom, x, y, bytes);
     // find the placeholder pixmapitem and update its pixmap
     for (auto& item : tile_pixmap_items)
