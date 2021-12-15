@@ -70,10 +70,8 @@ YAML::Node Transform::to_yaml(const CoordinateSystem& coordinate_system) const
   }
   else
   {
-    const CoordinateSystem::WGS84Point p = coordinate_system.to_wgs84({
-      _translation.x(),
-      _translation.y()
-    });
+    const CoordinateSystem::WGS84Point p =
+      coordinate_system.to_wgs84({_translation.x(), _translation.y()});
     y["translation_lat"] = p.lat;
     y["translation_lon"] = p.lon;
   }
