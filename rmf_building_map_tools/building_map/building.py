@@ -726,7 +726,8 @@ class Building:
                 (lat, lon) = wgs_transformer.transform(vertex.y, vertex.x)
                 properties = {
                     'name': vertex.name,
-                    'level_idx': level_idx
+                    'level_idx': level_idx,
+                    'feature_type': 'rmf_vertex'
                 }
                 for param_name, param_value in vertex.params.items():
                     properties[param_name] = param_value.value
@@ -743,6 +744,7 @@ class Building:
             for lane in level.lanes:
                 properties = {
                     'level_idx': level_idx,
+                    'feature_type': 'rmf_lane'
                 }
                 for param_name, param_value in lane.params.items():
                     properties[param_name] = param_value.value
@@ -750,6 +752,12 @@ class Building:
                 v2 = level.vertices[lane.end_idx]
                 (v1_lat, v1_lon) = wgs_transformer.transform(v1.y, v1.x)
                 (v2_lat, v2_lon) = wgs_transformer.transform(v2.y, v2.x)
+
+                if v1.name:
+                    properties['start_vertex_name'] = v1.name
+
+                if v2.name:
+                    properties['end_vertex_name'] = v2.name
 
                 features.append({
                     'type': 'Feature',
