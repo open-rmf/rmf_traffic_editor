@@ -119,7 +119,6 @@ class Building:
             self.global_transform = \
                 WGS84Transform(crs_name, (offset_x, offset_y))
 
-
         self.levels = {}
         self.model_counts = {}
         for level_name, level_yaml in yaml_node['levels'].items():
