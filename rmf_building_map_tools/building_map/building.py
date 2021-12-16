@@ -727,7 +727,7 @@ class Building:
                 properties = {
                     'name': vertex.name,
                     'level_idx': level_idx,
-                    'feature_type': 'rmf_vertex'
+                    'rmf_type': 'rmf_vertex'
                 }
                 for param_name, param_value in vertex.params.items():
                     properties[param_name] = param_value.value
@@ -744,7 +744,7 @@ class Building:
             for lane in level.lanes:
                 properties = {
                     'level_idx': level_idx,
-                    'feature_type': 'rmf_lane'
+                    'rmf_type': 'rmf_lane'
                 }
                 for param_name, param_value in lane.params.items():
                     properties[param_name] = param_value.value
