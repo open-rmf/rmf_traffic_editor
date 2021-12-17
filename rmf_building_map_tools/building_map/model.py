@@ -2,11 +2,13 @@ from xml.etree.ElementTree import SubElement
 
 
 class Model:
-    def __init__(self, name, yaml_node, coordinate_system):
+    def __init__(self, name, yaml_node, coordinate_system, transform):
         self.name = name
         self.model_name = yaml_node['model_name']
-        self.x = yaml_node['x']
-        self.y = yaml_node['y'] * coordinate_system.y_flip_scalar()
+        self.x, self.y = transform.transform_point(
+            (yaml_node['x'] - transform.x,
+             yaml_node['y'] * coordinate_system.y_flip_scalar() - transform.y)
+        )
         self.z = 0.0
         if 'z' in yaml_node:
             self.z = yaml_node['z']
@@ -30,10 +32,14 @@ class Model:
 
         self.yaw = yaml_node['yaw']
 
+        # BH: Temporary holder to keep to_yaml working for now
+        self.original_x = yaml_node['x']
+        self.original_y = yaml_node['y']
+
     def to_yaml(self, coordinate_system):
         y = {}
-        y['x'] = self.x
-        y['y'] = self.y * coordinate_system.y_flip_scalar()
+        y['x'] = self.original_x
+        y['y'] = self.original_y * coordinate_system.y_flip_scalar()
         y['z'] = self.z
         y['model_name'] = self.model_name
         y['name'] = self.name
@@ -41,20 +47,17 @@ class Model:
         y['static'] = self.static
         return y
 
-    def generate(self, world_ele, transform, elevation):
+    def generate(self, world_ele, elevation):
         include_ele = SubElement(world_ele, 'include')
         name_ele = SubElement(include_ele, 'name')
         name_ele.text = self.name
         uri_ele = SubElement(include_ele, 'uri')
         uri_ele.text = f'model://{self.model_name}'
         pose_ele = SubElement(include_ele, 'pose')
-        x, y = transform.transform_point((self.x, self.y))
-        model_x = x - transform.x
-        model_y = y - transform.y
 
         z = self.z + elevation
         yaw = self.yaw
-        pose_ele.text = f'{model_x} {model_y} {z} 0 0 {yaw}'
+        pose_ele.text = f'{self.x} {self.y} {z} 0 0 {yaw}'
 
         static_ele = SubElement(include_ele, 'static')
         static_ele.text = str(self.static)
