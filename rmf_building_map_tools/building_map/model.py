@@ -6,9 +6,12 @@ class Model:
         self.name = name
         self.model_name = yaml_node['model_name']
         self.x, self.y = transform.transform_point(
-            (yaml_node['x'] - transform.x,
-             yaml_node['y'] * coordinate_system.y_flip_scalar() - transform.y)
+            (yaml_node['x'],
+             yaml_node['y'] * coordinate_system.y_flip_scalar())
         )
+        self.x = self.x - transform.x
+        self.y = self.y - transform.y
+
         self.z = 0.0
         if 'z' in yaml_node:
             self.z = yaml_node['z']
