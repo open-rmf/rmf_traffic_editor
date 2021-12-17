@@ -454,7 +454,8 @@ class Building:
 
         gui_ele = world.find('gui')
         c = self.center()
-        camera_pose = f'{c[0]} {c[1]-20} 10 0 0.6 1.57'
+        # Transforming camera to account for offsets
+        camera_pose = f'{c[0] - self.global_transform.x} {c[1]-20 - self.global_transform.y} 10 0 0.6 1.57'
         # add floor-toggle GUI plugin parameters
         if 'gazebo' in options:
             camera_pose_ele = gui_ele.find('camera').find('pose')
