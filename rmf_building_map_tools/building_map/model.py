@@ -5,8 +5,8 @@ class Model:
     def __init__(self, name, yaml_node, coordinate_system):
         self.name = name
         self.model_name = yaml_node['model_name']
-        self.lat = yaml_node['lat']
-        self.lon = yaml_node['lon'] * coordinate_system.y_flip_scalar()
+        self.x = yaml_node['x']
+        self.y = yaml_node['y'] * coordinate_system.y_flip_scalar()
         self.z = 0.0
         if 'z' in yaml_node:
             self.z = yaml_node['z']
@@ -32,8 +32,8 @@ class Model:
 
     def to_yaml(self, coordinate_system):
         y = {}
-        y['lat'] = self.lat
-        y['lon'] = self.lon * coordinate_system.y_flip_scalar()
+        y['x'] = self.x
+        y['y'] = self.y * coordinate_system.y_flip_scalar()
         y['z'] = self.z
         y['model_name'] = self.model_name
         y['name'] = self.name
@@ -48,7 +48,7 @@ class Model:
         uri_ele = SubElement(include_ele, 'uri')
         uri_ele.text = f'model://{self.model_name}'
         pose_ele = SubElement(include_ele, 'pose')
-        x, y = transform.transform_point((self.lat, self.lon))
+        x, y = transform.transform_point((self.x, self.y))
         model_x = x - transform.x
         model_y = y - transform.y
 
