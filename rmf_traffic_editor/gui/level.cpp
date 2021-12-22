@@ -137,7 +137,7 @@ bool Level::from_yaml(
     for (YAML::const_iterator it = ys.begin(); it != ys.end(); ++it)
     {
       Model m;
-      m.from_yaml(*it, this->name);
+      m.from_yaml(*it, this->name, coordinate_system);
       models.push_back(m);
     }
   }
@@ -267,7 +267,7 @@ YAML::Node Level::to_yaml(const CoordinateSystem& coordinate_system) const
   }
 
   for (const auto& model : models)
-    y["models"].push_back(model.to_yaml());
+    y["models"].push_back(model.to_yaml(coordinate_system));
 
   for (const auto& polygon : polygons)
   {
