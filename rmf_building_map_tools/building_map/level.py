@@ -107,15 +107,14 @@ class Level:
                 if name not in model_counts:
                     model_counts[name] = 1
                     self.models.append(
-                        Model(name, model_yaml,
-                              coordinate_system, self.transform))
+                        Model(name, model_yaml, coordinate_system))
                 else:
                     model_counts[name] += 1
                     self.models.append(
                         Model(
                             f'{name}_{model_counts[name]}',
                             model_yaml,
-                            coordinate_system, self.transform))
+                            coordinate_system))
 
         self.floors = []
         if 'floors' in yaml_node:
@@ -245,7 +244,8 @@ class Level:
         for model in self.models:
             model.generate(
                 world_ele,
-                self.elevation)
+                self.elevation,
+                self.transform)
 
         # sniff around in our vertices and spawn robots if requested
         for vertex_idx, vertex in enumerate(self.vertices):

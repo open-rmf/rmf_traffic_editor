@@ -11,6 +11,7 @@ class WGS84Transform:
         self.crs_name = crs_name
         self.x = offset[0]
         self.y = offset[1]
+        self.rotation = 0
         self.wgs84_to_tm = \
             Transformer.from_crs("EPSG:4326", self.crs_name)
 

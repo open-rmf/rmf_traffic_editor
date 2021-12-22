@@ -91,9 +91,6 @@ void Model::from_yaml(
 
 YAML::Node Model::to_yaml(const CoordinateSystem& coordinate_system) const
 {
-  // This is in image space. I think it's safe to say nobody is clicking
-  // with more than 1/1000 precision inside a single pixel.
-
   YAML::Node n;
   n.SetStyle(YAML::EmitterStyle::Flow);
 
