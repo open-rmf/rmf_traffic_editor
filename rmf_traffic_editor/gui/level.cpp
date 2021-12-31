@@ -1065,7 +1065,7 @@ void Level::draw_polygons(QGraphicsScene* scene) const
       draw_polygon(scene, hole_brush, polygon);
   }
 
-  // now draw the holes
+  // now draw the region of interests
   for (const auto& polygon : polygons)
   {
     if (polygon.type == Polygon::ROI)
