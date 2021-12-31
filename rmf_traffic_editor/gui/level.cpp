@@ -160,6 +160,17 @@ bool Level::from_yaml(
     }
   }
 
+  if (_data["rois"] && _data["rois"].IsSequence())
+  {
+    const YAML::Node& yf = _data["rois"];
+    for (YAML::const_iterator it = yf.begin(); it != yf.end(); ++it)
+    {
+      Polygon p;
+      p.from_yaml(*it, Polygon::ROI);
+      polygons.push_back(p);
+    }
+  }
+
   if (_data["elevation"])
     elevation = _data["elevation"].as<double>();
 
@@ -276,6 +287,9 @@ YAML::Node Level::to_yaml() const
         break;
       case Polygon::HOLE:
         y["holes"].push_back(polygon.to_yaml());
+        break;
+      case Polygon::ROI:
+        y["rois"].push_back(polygon.to_yaml());
         break;
       default:
         printf("tried to save an unknown polygon type: %d\n",
@@ -1035,6 +1049,7 @@ void Level::draw_polygons(QGraphicsScene* scene) const
 {
   const QBrush floor_brush(QColor::fromRgbF(0.9, 0.9, 0.9, 0.8));
   const QBrush hole_brush(QColor::fromRgbF(0.3, 0.3, 0.3, 0.5));
+  const QBrush roi_brush(QColor::fromRgbF(0.5, 0.5, 0.3, 0.3));
 
   // first draw the floor polygons
   for (const auto& polygon : polygons)
@@ -1048,6 +1063,13 @@ void Level::draw_polygons(QGraphicsScene* scene) const
   {
     if (polygon.type == Polygon::HOLE)
       draw_polygon(scene, hole_brush, polygon);
+  }
+
+  // now draw the holes
+  for (const auto& polygon : polygons)
+  {
+    if (polygon.type == Polygon::ROI)
+      draw_polygon(scene, roi_brush, polygon);
   }
 
 #if 0
