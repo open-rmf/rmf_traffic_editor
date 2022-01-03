@@ -167,14 +167,14 @@ def download_models(
         available_models = missing_models.get('available', [])
         for model_name, paths in available_models:
             if paths is None:
-                logger.warning("No path for exporting model %s, skipping..." %
-                    (model_name))
+                logger.warning("No path for exporting model %s, skipping..."
+                               % (model_name))
                 continue
 
             if len(paths) > 1:
                 logger.warning("More than one path for model %s, selecting "
-                    "first path that was found, %s" %
-                    (model_name, paths[0]))
+                               "first path that was found, %s"
+                               % (model_name, paths[0]))
 
             export_model_path = os.path.join(export_path, model_name)
             export_model_path = os.path.expanduser(export_model_path)

@@ -267,8 +267,8 @@ def get_local_model_name_tuples(path=None, config_file="model.config",
 
     Returns:
         dictionary (ModelNames: str): Dictionary where ModelNames tuples are
-        keys, and the model path is the value. Each name will be lower-case only
-        unless lower is False.
+        keys, and the model path is the value. Each name will be lower-case
+        only unless lower is False.
     """
     output = {}
 
