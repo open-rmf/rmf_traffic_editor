@@ -74,8 +74,10 @@ logger.addHandler(logging.NullHandler())
 
 ModelNames = namedtuple("ModelNames", ["model_name", "author_name"])
 
+
 def remove_spaces(original):
     return ''.join([x for x in original if x not in string.whitespace])
+
 
 def swag(print_swag=True):
     """Swag!"""
