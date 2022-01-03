@@ -51,7 +51,7 @@ parser.add_argument("-c", "--cache", type=str,
 parser.add_argument("-f", "--fuel-tools", action=HTTPDownloadDeprecated,
                     help="Use ignition fuel tools to download models instead "
                          "of http", nargs=0)
-parser.add_argument("-i", "--include", type=str,
+parser.add_argument("-i", "--include", type=str, default=None,
                     help="Search this directory first for models.")
 parser.add_argument("-e", "--export-path", type=str, default=None,
                     help="Export model downloaded using ignition fuel tools "
@@ -116,6 +116,7 @@ def download_models(
         cache_file_path=cache,
         lower=True,
         priority_dir=include,
+        ign=True
     )
 
     logger.info("\n== REQUESTED MODEL REPORT ==")

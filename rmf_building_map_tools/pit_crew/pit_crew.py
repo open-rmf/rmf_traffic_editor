@@ -40,6 +40,7 @@ import requests
 import logging
 import zipfile
 import shutil
+import string
 import json
 import glob
 import sys
@@ -73,6 +74,8 @@ logger.addHandler(logging.NullHandler())
 
 ModelNames = namedtuple("ModelNames", ["model_name", "author_name"])
 
+def remove_spaces(original):
+    return ''.join([x for x in original if x not in string.whitespace])
 
 def swag(print_swag=True):
     """Swag!"""
@@ -98,7 +101,6 @@ def swag(print_swag=True):
 ###############################################################################
 # MODEL PARSING
 ###############################################################################
-
 def get_missing_models(model_names, model_path=None,
                        config_file="model.config",
                        cache_file_path=None, update_cache=True, lower=True,
@@ -140,10 +142,15 @@ def get_missing_models(model_names, model_path=None,
             - Missing models are models that are not in your local directory
                 and also missing from Fuel.
     """
-    for key, model_name in enumerate(model_names):
+    original_model_names = model_names
+    for model_name in original_model_names:
         if isinstance(model_name, ModelNames) or isinstance(model_name, tuple):
             assert len(model_name) == 2, \
                 "Invalid model name tuple given: %s!" % model_name
+
+    model_names = set()
+    for original in original_model_names:
+        model_names.add((remove_spaces(original[0]), original[1]))
 
     if update_cache:
         cache = build_and_update_cache(cache_file_path=cache_file_path,
@@ -355,7 +362,7 @@ def get_model_name_tuple(config_file_path, config_file="model.config",
         else:
             config_file = os.path.basename(config_file_path)
         tree = ET.parse(config_file_path)
-        model_name = tree.find("name").text
+        model_name = remove_spaces(tree.find("name").text)
         author_name = tree.find("author").find("name").text
     except Exception as e:
         logger.error("Could not parse %s file! %s"
