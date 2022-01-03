@@ -7,6 +7,7 @@ from pprint import pprint
 import argparse
 import logging
 import sys
+import shutil
 import os
 import yaml
 
@@ -77,6 +78,14 @@ def get_crowdsim_models(input_filename):
             logger.error(f"Could not get crowd_sim models, error: {e}."
                          " Ignore models in crowd_sim...")
         return actor_names
+
+
+def export_downloaded_model(model_path, export_path):
+    if os.path.exists(export_path) or os.path.isdir(export_path):
+        logger.warning("%s already exists, skipping..." % (export_path))
+        return
+    logger.info("Exporting to %s..." % (export_path))
+    shutil.copytree(src=model_path, dst=export_path)
 
 
 def download_models(
@@ -153,6 +162,23 @@ def download_models(
     if missing_models.get('missing', []):
         logger.warning("\nMissing models (not in local or Fuel):")
         pprint(missing_models['missing'])
+
+    if export_path is not None:
+        available_models = missing_models.get('available', [])
+        for model_name, paths in available_models:
+            if paths is None:
+                logger.warning("No path for exporting model %s, skipping..." %
+                    (model_name))
+                continue
+
+            if len(paths) > 1:
+                logger.warning("More than one path for model %s, selecting "
+                    "first path that was found, %s" %
+                    (model_name, paths[0]))
+
+            export_model_path = os.path.join(export_path, model_name)
+            export_model_path = os.path.expanduser(export_model_path)
+            export_downloaded_model(paths[0], export_model_path)
 
 
 def main():
