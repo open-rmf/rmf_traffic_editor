@@ -125,7 +125,8 @@ def download_models(
         cache_file_path=cache,
         lower=True,
         priority_dir=include,
-        ign=True
+        ign=True,
+        use_dir_as_name=True
     )
 
     logger.info("\n== REQUESTED MODEL REPORT ==")
