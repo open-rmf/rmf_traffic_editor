@@ -45,6 +45,15 @@ public:
 
   std::string model_name;
   std::string instance_name;
+
+  bool is_actor = false;
+  // Actor specific properties
+  std::string initial_state;
+  std::string agent_profile;
+  // Default to walking animation at 1 m/s
+  std::string animation_name = "walk";
+  double animation_speed = 1.0;
+
   bool selected = false;  // only for visualization, not saved to YAML
   bool is_static = true;
   bool is_active = false;

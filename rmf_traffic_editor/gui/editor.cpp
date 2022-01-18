@@ -501,8 +501,13 @@ void Editor::load_model_names()
 
   const double model_meters_per_pixel = y["meters_per_pixel"].as<double>();
   const YAML::Node ym = y["models"];
-  editor_models.reserve(y["models"].size());
+  const YAML::Node ya = y["actors"];
+  editor_models.reserve(y["models"].size() + y["actors"].size());
   for (YAML::const_iterator it = ym.begin(); it != ym.end(); ++it)
+    editor_models.emplace_back(
+      it->as<std::string>(),
+      model_meters_per_pixel);
+  for (YAML::const_iterator it = ya.begin(); it != ya.end(); ++it)
     editor_models.emplace_back(
       it->as<std::string>(),
       model_meters_per_pixel);
@@ -1445,7 +1450,10 @@ void Editor::populate_property_editor(const Model& model)
 {
   property_editor->blockSignals(true);  // otherwise we get tons of callbacks
 
-  property_editor->setRowCount(4);
+  if (model.is_actor)
+    property_editor->setRowCount(9);
+  else
+    property_editor->setRowCount(5);
 
   property_editor_set_row(
     0,
@@ -1469,6 +1477,41 @@ void Editor::populate_property_editor(const Model& model)
     3,
     "static",
     model.is_static ? QString("true") : QString("false"),
+    true);
+
+  property_editor_set_row(
+    4,
+    "is_actor",
+    model.is_actor ? QString("true") : QString("false"),
+    false);
+
+  // Following properties are actor specific
+  if (!model.is_actor)
+    return;
+
+  property_editor_set_row(
+    5,
+    "initial_state",
+    QString::fromStdString(model.initial_state),
+    true);
+
+  property_editor_set_row(
+    6,
+    "agent_profile",
+    QString::fromStdString(model.agent_profile),
+    true);
+
+  property_editor_set_row(
+    7,
+    "animation_name",
+    QString::fromStdString(model.animation_name),
+    true);
+
+  property_editor_set_row(
+    8,
+    "animation_speed",
+    model.animation_speed,
+    3,
     true);
 
   property_editor->blockSignals(false);  // re-enable callbacks

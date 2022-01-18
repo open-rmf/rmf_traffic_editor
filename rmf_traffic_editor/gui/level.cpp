@@ -138,6 +138,17 @@ bool Level::from_yaml(
     }
   }
 
+  if (_data["actors"] && _data["actors"].IsSequence())
+  {
+    const YAML::Node& ys = _data["actors"];
+    for (YAML::const_iterator it = ys.begin(); it != ys.end(); ++it)
+    {
+      Model a;
+      a.from_yaml(*it, this->name);
+      models.push_back(a);
+    }
+  }
+
   if (_data["floors"] && _data["floors"].IsSequence())
   {
     const YAML::Node& yf = _data["floors"];

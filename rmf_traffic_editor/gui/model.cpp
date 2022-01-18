@@ -68,6 +68,21 @@ void Model::from_yaml(const YAML::Node& data, const string& level_name)
     is_static = data["static"].as<bool>();
   else
     is_static = true;
+
+  // Check if it's an actor
+  if (data["is_actor"])
+    is_actor = data["is_actor"].as<bool>();
+  else
+  {
+    is_actor = false;
+    return;
+  }
+
+  // Actor specific properties
+  initial_state = data["initial_state"].as<std::string>();
+  animation_speed = data["animation_speed"].as<double>();
+  animation_name = data["animation_name"].as<std::string>();
+  agent_profile = data["agent_profile"].as<std::string>();
 }
 
 YAML::Node Model::to_yaml() const
@@ -85,6 +100,14 @@ YAML::Node Model::to_yaml() const
   n["name"] = instance_name;
   n["model_name"] = model_name;
   n["static"] = is_static;
+  n["is_actor"] = is_actor;
+  if (is_actor)
+  {
+    n["initial_state"] = initial_state;
+    n["animation_speed"] = animation_speed;
+    n["animation_name"] = animation_name;
+    n["agent_profile"] = agent_profile;
+  }
   return n;
 }
 
@@ -119,6 +142,45 @@ void Model::set_param(const std::string& name, const std::string& value)
   else if (name == "name")
   {
     instance_name = value;
+  }
+  else if (name == "is_actor")
+  {
+    // not sure if there is a super elite way to parse 'true' in STL
+    string lowercase(value);
+    std::transform(
+      lowercase.begin(),
+      lowercase.end(),
+      lowercase.begin(),
+      [](char c) { return std::tolower(c); });
+
+    if (value == "true")
+      is_actor = true;
+    else
+      is_actor = false;
+  }
+  // Parse actor parameters first
+  if (name == "initial_state")
+  {
+    initial_state = value;
+  }
+  else if (name == "animation_speed")
+  {
+    try
+    {
+      state.z = std::stod(value);
+    }
+    catch (const std::exception& e)
+    {
+      qWarning("[animation_speed] field can only be a double/float.");
+    }
+  }
+  else if (name == "animation_name")
+  {
+    animation_name = value;
+  }
+  else if (name == "agent_profile")
+  {
+    agent_profile = value;
   }
   else
   {
