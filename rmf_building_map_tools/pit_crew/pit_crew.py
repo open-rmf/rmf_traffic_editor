@@ -40,6 +40,7 @@ import requests
 import logging
 import zipfile
 import shutil
+import string
 import json
 import glob
 import sys
@@ -74,6 +75,10 @@ logger.addHandler(logging.NullHandler())
 ModelNames = namedtuple("ModelNames", ["model_name", "author_name"])
 
 
+def remove_spaces(original):
+    return ''.join([x for x in original if x not in string.whitespace])
+
+
 def swag(print_swag=True):
     """Swag!"""
     output = ("""
@@ -98,7 +103,6 @@ def swag(print_swag=True):
 ###############################################################################
 # MODEL PARSING
 ###############################################################################
-
 def get_missing_models(model_names, model_path=None,
                        config_file="model.config",
                        cache_file_path=None, update_cache=True, lower=True,
@@ -158,23 +162,23 @@ def get_missing_models(model_names, model_path=None,
     if priority_dir is not None:
         logger.info("Will check '%s' directory first for models"
                     % (priority_dir))
-        for priority_model in get_local_model_name_tuples(
+        priority_models_dict = get_local_model_name_tuples(
             priority_dir, config_file=config_file, lower=lower,
-            use_dir_as_name=use_dir_as_name, ign=ign
-        ):
+            use_dir_as_name=use_dir_as_name, ign=ign)
+        for priority_model, path in priority_models_dict.items():
             if priority_model[0] in priority_models:
-                priority_models[priority_model[0]].append(priority_model[1])
+                priority_models[priority_model[0]].append(path)
             else:
-                priority_models[priority_model[0]] = [[priority_model[1]]]
+                priority_models[priority_model[0]] = [path]
 
-    for local_model in get_local_model_name_tuples(
+    local_models_dict = get_local_model_name_tuples(
         model_path, config_file=config_file, lower=lower,
-        use_dir_as_name=use_dir_as_name, ign=ign
-    ):
+        use_dir_as_name=use_dir_as_name, ign=ign)
+    for local_model, path in local_models_dict.items():
         if local_model[0] in local_models:
-            local_models[local_model[0]].append(local_model[1])
+            local_models[local_model[0]].append(path)
         else:
-            local_models[local_model[0]] = [local_model[1]]
+            local_models[local_model[0]] = [path]
 
     output = {'missing': [],
               'downloadable': [],
@@ -205,14 +209,16 @@ def get_missing_models(model_names, model_path=None,
                 (model_name, priority_dir, model_path, priority_dir))
 
         if model_name in priority_models:
-            output['available'].append(model_name_original)
+            output['available'].append(
+                (model_name_original, ))
             if author_name:
                 if author_name not in priority_models[model_name]:
                     logger.warning("Model %s in local model directory"
                                    " is not by the requested author %s!"
                                    % (model_name, author_name))
         elif model_name in local_models:
-            output['available'].append(model_name_original)
+            output['available'].append(
+                (model_name_original, local_models[model_name]))
             if author_name:
                 if author_name not in local_models[model_name]:
                     logger.warning("Model %s in local model directory"
@@ -255,11 +261,11 @@ def get_local_model_name_tuples(path=None, config_file="model.config",
             following Ignition's directory structure. Defaults to False.
 
     Returns:
-        set of (str, str): Set of unique ModelNames tuples of
-            (model_name, author_name). Each name will be lower-case only
-            unless lower is False.
+        dictionary (ModelNames: str): Dictionary where ModelNames tuples are
+        keys, and the model path is the value. Each name will be lower-case
+        only unless lower is False.
     """
-    output = set()
+    output = {}
 
     if path is None:
         if ign:
@@ -291,8 +297,9 @@ def get_local_model_name_tuples(path=None, config_file="model.config",
             latest_ver = ""
 
         if config_file in os.listdir(os.path.join(model_path, latest_ver)):
+            latest_ver_path = os.path.join(model_path, latest_ver)
             name_tuple = get_model_name_tuple(
-                os.path.join(model_path, latest_ver, config_file),
+                os.path.join(latest_ver_path, config_file),
                 default_author_name=default_author_name,
                 lower=lower
             )
@@ -309,7 +316,7 @@ def get_local_model_name_tuples(path=None, config_file="model.config",
                     name_tuple = ModelNames(os.path.basename(model_path),
                                             name_tuple.author_name)
 
-                output.add(name_tuple)
+                output[name_tuple] = latest_ver_path
         else:
             logger.warning("%s does not contain a valid config_file! "
                            "Skipping..." % model_path)
