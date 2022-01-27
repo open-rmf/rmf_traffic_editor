@@ -325,7 +325,10 @@ void MapView::request_tile(const int zoom, const int x, const int y)
       zoom,
       x,
       y);
-    network->get(QNetworkRequest(QUrl(request_url)));
+    QNetworkRequest request;
+    request.setUrl(QUrl(request_url));
+    request.setRawHeader("User-Agent", "TrafficEditor/1.4 (http://open-rmf.org)");
+    network->get(request);
   }
 
   // create a dummy image for debugging
