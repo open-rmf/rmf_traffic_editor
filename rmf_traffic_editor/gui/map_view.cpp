@@ -39,21 +39,12 @@ MapView::MapView(QWidget* parent, const Building& building_)
   setMouseTracking(true);
   viewport()->setMouseTracking(true);
   setTransformationAnchor(QGraphicsView::NoAnchor);
-  //setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
-  //setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-  //setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
   setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
-  //horizontalScrollBar()->setDisabled(true);
-  //verticalScrollBar()->setDisabled(true);
-  //horizontalScrollBar()->setValue(0);
-  //verticalScrollBar()->setValue(0);
 }
 
 void MapView::wheelEvent(QWheelEvent* e)
 {
-  //setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
-
   // calculate the map position before we scale things
   const QPointF p_start = mapToScene(e->pos());
 
@@ -74,59 +65,27 @@ void MapView::wheelEvent(QWheelEvent* e)
   }
   else
   {
-    //setTransformationAnchor(QGraphicsView::AnchorViewCenter);
-    //const double dx = transform().dx();
-    //const double dy = transform().dy();
-    //const double scale_pow2 = pow(2, round(log(scale_factor)/log(2)));
-    //resetTransform();
-    //scale(scale_pow2, scale_pow2);
-    //translate(dx, dy);
-
     // in the global frame when we're rendering map tiles,
     // we want to keep to an even scaling of the tile
     // so it doesn't have too many aliasing effects
-    //QTransform t = transform();
     if (e->delta() > 0)
     {
       //double max_scale_factor = 100;
       // go to the nearest power of 2 above where we are
       // const double next_scale = pow(2, round(log(scale_factor*2)/log(2)));
       scale(2.0, 2.0);
-      //t.scale(2.0, 2.0);
     }
     else
     {
-      // double min_scale_factor = 0.01;
-
       // go to the nearest power of 2 below where we are
       // const double next_scale = pow(2, round(log(scale_factor/2)/log(2)));
 
       // limit to 2^-17 = 0.0000076294
 
-      /*
-      printf("before scale():\n  %12.3f %12.3f %12.3f\n  %12.3f %12.3f %12.3f\n  %12.3f %12.3f %12.3f\n",
-        transform().m11(), transform().m21(), transform().m31(),
-        transform().m12(), transform().m22(), transform().m32(),
-        transform().m13(), transform().m23(), transform().m33());
-      */
       if (scale_factor > 0.0000076294)
-      //if (scale_factor > 0.0000001)
         scale(0.5, 0.5);
-        //t.scale(0.5, 0.5);
-      /*
-      printf("after scale():\n  %12.3f %12.3f %12.3f\n  %12.3f %12.3f %12.3f\n  %12.3f %12.3f %12.3f\n",
-        transform().m11(), transform().m21(), transform().m31(),
-        transform().m12(), transform().m22(), transform().m32(),
-        transform().m13(), transform().m23(), transform().m33());
-      */
     }
-    //horizontalScrollBar()->setValue(0);
-    //verticalScrollBar()->setValue(0);
-    //setTransform(t);
   }
-
-  //const double nearest_nice_scale_factor = pow(2.0, round(log(scale_factor)/log(2.0)));
-  //printf("nearest nice scale factor: %.3f\n", nearest_nice_scale_factor);
 
   // calculate the mouse map position now that we've scaled
   const QPointF p_end = mapToScene(e->pos());
@@ -137,61 +96,25 @@ void MapView::wheelEvent(QWheelEvent* e)
 
   const int viewport_w = viewport()->width();
   const int viewport_h = viewport()->height();
-  QPointF c = mapToScene(QPoint(viewport_w/2, viewport_h/2));
-  printf("  viewport center: (%.3f, %.3f)\n", c.x(), c.y());
-  QPointF ul = mapToScene(QPoint(0, 0)) / PRESCALAR;
-  QPointF lr = mapToScene(QPoint(viewport_w, viewport_h)) / PRESCALAR;
+  QPointF ul = mapToScene(QPoint(0, 0));
+  QPointF lr = mapToScene(QPoint(viewport_w, viewport_h));
   const double scene_w = lr.x() - ul.x();
   const double scene_h = ul.y() - lr.y();
-  printf("  viewport w, h: (%.3f, %.3f)\n", scene_w, scene_h);
 
-  printf("  horizontal scroll position: %d\n", horizontalScrollBar()->value());
-  printf("  vertical scroll position: %d\n", verticalScrollBar()->value());
-  printf("  horizontal range: %d - %d   step: %d\n",
-    horizontalScrollBar()->minimum(),
-    horizontalScrollBar()->maximum(),
-    horizontalScrollBar()->pageStep());
-  printf("  vertical range: %d - %d\n",
-    verticalScrollBar()->minimum(),
-    verticalScrollBar()->maximum());
-
-  printf("scale: %.8f   translation: (%.3f, %.3f)    (%.3f, %.3f) -> (%.3f, %.3f)\n",
-    transform().m11(),
-    transform().dx(),
-    transform().dy(),
-    p_start.x(), p_start.y(),
-    p_end.x(), p_end.y());
-
-  //printf("  translate after zoom: (%.3f, %.3f)\n", diff.x(), diff.y());
-  //centerOn(p_start);
-  //setSceneRect(QRectF(ul, lr));
-  if (scene_w < 0.1 * M_PI * CoordinateSystem::WGS84_A * PRESCALAR)
+  if (scene_w < 0.1 * M_PI * CoordinateSystem::WGS84_A)
   {
-    printf("setting scene rect...\n");
-    //setSceneRect(QRectF(c.x() - scene_w, c.y() + scene_w, 2 * scene_w, -2 * scene_h));
-    //horizontalScrollBar()->setValue(0);
-    //verticalScrollBar()->setValue(0);
-
-    //setSceneRect(QRectF(c.x() - 2 * scene_w, c.y() + 2 * scene_w, 4 * scene_w, -4 * scene_h));
-
-    /*
-    horizontalScrollBar()->setValue(
-      (horizontalScrollBar()->minimum() + horizontalScrollBar()->maximum()) / 2);
-    verticalScrollBar()->setValue(
-      (verticalScrollBar()->minimum() + verticalScrollBar()->maximum()) / 2);
-    */
-
     const int n = 10;
-    setSceneRect(QRectF(p_start.x() - n * scene_w, p_start.y() + n * scene_w, 2 * n * scene_w, -2 * n * scene_h));
-    /*
-    verticalScrollBar()->setValue(0);
-    horizontalScrollBar()->setValue(0);
-    verticalScrollBar()->setValue(0);
-    */
+    setSceneRect(
+      QRectF(
+        p_start.x() - n * scene_w,
+        p_start.y() + n * scene_w,
+        2 * n * scene_w,
+        -2 * n * scene_h));
   }
   else
   {
-    setSceneRect(QRectF());  // sets a null rect, so it will use scene rect from the scene
+    // set a null rect, in order to the original scene rect from the scene
+    setSceneRect(QRectF());  
   }
   draw_tiles();
   e->accept();
@@ -285,8 +208,8 @@ void MapView::draw_tiles()
     return;
   const int viewport_w = viewport()->width();
   const int viewport_h = viewport()->height();
-  QPointF ul = mapToScene(QPoint(0, 0)) / PRESCALAR;
-  QPointF lr = mapToScene(QPoint(viewport_w, viewport_h)) / PRESCALAR;
+  QPointF ul = mapToScene(QPoint(0, 0));
+  QPointF lr = mapToScene(QPoint(viewport_w, viewport_h));
   last_center = mapToScene(QPoint(viewport_w/2, viewport_h/2));
   //printf("viewport center: (%.3f, %.3f)\n", last_center.x(), last_center.y());
   // printf("  ul: (%.3f, %.3f)\n", ul.x(), ul.y());
@@ -476,7 +399,7 @@ void MapView::render_tile(
   const double MAX_X = M_PI * CoordinateSystem::WGS84_A;
   // printf("  adding tile: zoom=%d, (%d, %d)\n", zoom, x, y);
   QGraphicsPixmapItem* pixmap_item = scene()->addPixmap(pixmap);
-  pixmap_item->setScale(2. * MAX_X / 256.0 / (1 << zoom) * PRESCALAR);
+  pixmap_item->setScale(2. * MAX_X / 256.0 / (1 << zoom));
   pixmap_item->setZValue(-10.0);
   //pixmap_item->setScale(360. / 256.0 / (1 << zoom));
 
@@ -484,9 +407,9 @@ void MapView::render_tile(
   // const double lon_deg = x / static_cast<double>(1 << zoom) * 360. - 180.;
   // const double n = M_PI - 2.0 * M_PI * y / static_cast<double>(1 << zoom);
   // const double lat = atan(0.5 * (exp(n) - exp(-n)));
-  const double x = (tile_x / static_cast<double>(1 << zoom) * 2. * MAX_X - MAX_X) * PRESCALAR;
+  const double x = (tile_x / static_cast<double>(1 << zoom) * 2. * MAX_X - MAX_X);
   const double y =
-    (-tile_y / static_cast<double>(1 << zoom) * 2. * MAX_X + MAX_X) * PRESCALAR;
+    (-tile_y / static_cast<double>(1 << zoom) * 2. * MAX_X + MAX_X);
 
   // project the latitude to "web mercator" latitude
   //const double lat_deg_mercator = 180. / M_PI * log(tan(lat) + 1. / cos(lat));
