@@ -51,10 +51,10 @@ std::optional<const QByteArray> MapTileCache::get(
   QFile file(path);
   if (!file.open(QIODevice::ReadOnly))
   {
-    printf("cache miss: %d %d %d\n", zoom, x, y);
+    // printf("cache miss: %d %d %d\n", zoom, x, y);
     return {};
   }
-  printf("cache hit: %s\n", path.toStdString().c_str());
+  // printf("cache hit: %s\n", path.toStdString().c_str());
   return {file.readAll()};
 }
 

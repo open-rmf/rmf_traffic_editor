@@ -209,8 +209,8 @@ Editor::Editor()
   right_tab_widget->addTab(level_table, "levels");
   right_tab_widget->addTab(layer_table, "layers");
   right_tab_widget->addTab(lift_table, "lifts");
-  right_tab_widget->addTab(traffic_table, "traffic");
-  right_tab_widget->addTab(crowd_sim_table, "crowd_sim");
+  right_tab_widget->addTab(traffic_table, "graphs");
+  right_tab_widget->addTab(crowd_sim_table, "crowds");
 
   property_editor = new QTableWidget;
   property_editor->setStyleSheet(
@@ -269,7 +269,7 @@ Editor::Editor()
   w->setMouseTracking(true);
   setMouseTracking(true);
   w->setLayout(hbox_layout);
-  w->setStyleSheet("background-color: #404040");
+  w->setStyleSheet("background-color: #707070");
   setCentralWidget(w);
 
   // BUILDING MENU
@@ -570,10 +570,10 @@ bool Editor::load_building(const QString& filename)
   {
     // use the EPSG 3857 extents: "projected-meters"
     scene->setSceneRect(QRectF(
-        -M_PI * CoordinateSystem::WGS84_A,
-        M_PI * CoordinateSystem::WGS84_A,
-        2. * M_PI * CoordinateSystem::WGS84_A,
-        -2. * M_PI * CoordinateSystem::WGS84_A));
+        -M_PI * CoordinateSystem::WGS84_A * map_view->PRESCALAR,
+        M_PI * CoordinateSystem::WGS84_A * map_view->PRESCALAR,
+        2. * M_PI * CoordinateSystem::WGS84_A * map_view->PRESCALAR,
+        -2. * M_PI * CoordinateSystem::WGS84_A * map_view->PRESCALAR));
   }
   else if (!building.levels.empty())
   {

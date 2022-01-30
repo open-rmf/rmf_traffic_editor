@@ -47,6 +47,12 @@ public:
   void update_cache_size_label(QLabel* label);
   QPointF get_center() { return last_center; }
 
+  // We have to scale down from EPSG 3857 meters, otherwise
+  // we blow past +/- MAX_INT on the Qt scrollbars when zooming in
+  // to very high levels (for reasons I can't fully explain),
+  // which resets them to midpoint, in a weird/unrecoverable state.
+  const double PRESCALAR = 1; //1000.0; //0.001;
+
 protected:
   void wheelEvent(QWheelEvent* event);
   void mouseMoveEvent(QMouseEvent* e);
