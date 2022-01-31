@@ -652,7 +652,7 @@ void Editor::restore_previous_viewport()
   // This is a really big deal if we're mixing coordinate systems :boom:
   const std::string previous_filename =
     settings.value(preferences_keys::previous_building_path)
-      .toString().toStdString();
+    .toString().toStdString();
 
   printf("previous filename: %s\n", previous_filename.c_str());
   printf("current building filename: %s\n", building.get_filename().c_str());
