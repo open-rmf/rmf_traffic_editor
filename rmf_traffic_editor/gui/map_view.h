@@ -70,6 +70,13 @@ private:
     int x = 0;
     int y = 0;
     QGraphicsPixmapItem* item = nullptr;
+
+    enum State
+    {
+      QUEUED,
+      REQUESTED,
+      COMPLETED
+    } state;
   };
   std::vector<MapTilePixmapItem> tile_pixmap_items;
 
@@ -90,10 +97,13 @@ private:
     const int zoom,
     const int x,
     const int y,
-    const QPixmap& pixmap);
+    const QPixmap& pixmap,
+    const MapTilePixmapItem::State state);
 
   void request_finished(QNetworkReply* reply);
   QPointF last_center;
+
+  void process_request_queue();
 };
 
 #endif

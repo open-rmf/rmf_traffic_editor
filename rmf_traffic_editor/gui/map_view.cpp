@@ -17,6 +17,7 @@
 
 #include <cmath>
 #include <QCoreApplication>
+#include <QGraphicsColorizeEffect>
 #include <QLabel>
 #include <QScrollBar>
 #include <QNetworkAccessManager>
@@ -294,7 +295,7 @@ void MapView::draw_tiles()
       if (found)
         continue;
 
-      //printf("request zoom=%d, x=%d, y=%d)\n", zoom_approx, x, y);
+      // printf("creating tile item zoom=%d, x=%d, y=%d)\n", zoom_approx, x, y);
       std::optional<const QByteArray> p = tile_cache.get(zoom_approx, x, y);
       if (p.has_value())
       {
@@ -306,7 +307,7 @@ void MapView::draw_tiles()
           QPixmap pixmap(QPixmap::fromImage(image.convertToFormat(
               QImage::Format_Grayscale8)));
           // QPixmap pixmap(QPixmap::fromImage(image));
-          render_tile(zoom_approx, x, y, pixmap);
+          render_tile(zoom_approx, x, y, pixmap, MapTilePixmapItem::State::COMPLETED);
         }
         else
         {
@@ -315,10 +316,24 @@ void MapView::draw_tiles()
       }
       else
       {
-        request_tile(zoom_approx, x, y);
+        // create a dummy image while waiting for the server
+        QImage image(256, 256, QImage::Format_RGB888);
+        image.fill(qRgb(255, 255, 0));
+
+        QPainter painter;
+        painter.begin(&image);
+        painter.setPen(QPen(Qt::red));
+        QString label;
+        label.sprintf("%d (%d,%d)", zoom_approx, x, y);
+        painter.drawText(10, 10, 245, 100, Qt::AlignLeft, label);
+        painter.end();
+        QPixmap pixmap(QPixmap::fromImage(image));
+
+        render_tile(zoom_approx, x, y, pixmap, MapTilePixmapItem::State::QUEUED);
       }
     }
   }
+  process_request_queue();
 }
 
 void MapView::request_tile(const int zoom, const int x, const int y)
@@ -354,28 +369,14 @@ void MapView::request_tile(const int zoom, const int x, const int y)
       "in case this is a wild bug, I'm stopping now!\n",
       s_num_requests);
   }
-
-  // create a dummy image for debugging
-  QImage image(256, 256, QImage::Format_RGB888);
-  image.fill(qRgb(255, 255, 255));
-
-  QPainter painter;
-  painter.begin(&image);
-  painter.setPen(QPen(Qt::red));
-  QString label;
-  label.sprintf("%d (%d,%d)", zoom, x, y);
-  painter.drawText(10, 10, 245, 100, Qt::AlignLeft, label);
-  painter.end();
-  QPixmap pixmap(QPixmap::fromImage(image));
-
-  render_tile(zoom, x, y, pixmap);
 }
 
 void MapView::render_tile(
   const int zoom,
   const int tile_x,
   const int tile_y,
-  const QPixmap& pixmap)
+  const QPixmap& pixmap,
+  const MapView::MapTilePixmapItem::State state)
 {
   const double MAX_X = M_PI * CoordinateSystem::WGS84_A;
   // printf("  adding tile: zoom=%d, (%d, %d)\n", zoom, x, y);
@@ -412,6 +413,7 @@ void MapView::render_tile(
   item.x = tile_x;
   item.y = tile_y;
   item.item = pixmap_item;
+  item.state = state;
   tile_pixmap_items.push_back(item);
 }
 
@@ -467,6 +469,8 @@ void MapView::request_finished(QNetworkReply* reply)
       if (item.x == x && item.y == y && item.zoom == zoom)
       {
         item.item->setPixmap(pixmap);
+        item.item->setGraphicsEffect(nullptr);
+        item.state = MapTilePixmapItem::State::COMPLETED;
         break;
       }
     }
@@ -475,6 +479,10 @@ void MapView::request_finished(QNetworkReply* reply)
   {
     printf("  unable to parse\n");
   }
+
+  // Now that this request is completed, we can issue the next request
+  // in the queue.
+  process_request_queue();
 }
 
 void MapView::clear()
@@ -492,4 +500,41 @@ void MapView::update_cache_size_label(QLabel* label)
     QString("Tile cache: %1 files, %2 MB")
     .arg(size.files)
     .arg(size.bytes / 1.0e6, 0, 'g', 3));
+}
+
+void MapView::process_request_queue()
+{
+  int n_requested = 0;
+  for (const auto& tile : tile_pixmap_items)
+  {
+    if (tile.state == MapTilePixmapItem::State::REQUESTED)
+      n_requested++;
+  }
+  // printf("  %d tile requests currently in flight\n", n_requested);
+
+  for (auto& tile : tile_pixmap_items)
+  {
+    // todo: tune this, or allow it to be a user-configurable parameter.
+    // It seems to behave fairly nicely with a cap at just one
+    // request in flight, but that may vary depending on server load
+    // and latency.
+    const int MAX_REQUESTS = 1;
+    if (n_requested >= MAX_REQUESTS)
+      break;
+
+    // since we have less than N requests outstanding, let's request
+    // some more tiles
+    if (tile.state == MapTilePixmapItem::State::QUEUED)
+    {
+      request_tile(tile.zoom, tile.x, tile.y);
+      tile.state = MapTilePixmapItem::State::REQUESTED;
+
+      QGraphicsColorizeEffect* colorize = new QGraphicsColorizeEffect;
+      colorize->setColor(QColor::fromRgbF(1.0, 0.0, 0.0, 1.0));
+      colorize->setStrength(1.0);
+      tile.item->setGraphicsEffect(colorize);
+
+      n_requested++;
+    }
+  }
 }
