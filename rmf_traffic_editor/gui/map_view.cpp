@@ -207,13 +207,13 @@ void MapView::draw_tiles()
     log(M_PI * CoordinateSystem::WGS84_A / x_meters_per_tile) / log(2);
   // printf("  zoom_exact: %.3f\n", zoom_exact);
 
-  int zoom_approx = static_cast<int>(ceil(zoom_exact));
+  int zoom = static_cast<int>(ceil(zoom_exact));
   const int MAX_ZOOM = 20;
-  if (zoom_approx < 0)
-    zoom_approx = 0;
-  if (zoom_approx > MAX_ZOOM)
-    zoom_approx = MAX_ZOOM;
-  // printf("  zoom_approx = %d\n", zoom_approx);
+  if (zoom < 0)
+    zoom = 0;
+  if (zoom > MAX_ZOOM)
+    zoom = MAX_ZOOM;
+  // printf("  zoom = %d\n", zoom);
 
   const double eps = 0.0001;
   const double MAX_X = M_PI * CoordinateSystem::WGS84_A;
@@ -222,9 +222,9 @@ void MapView::draw_tiles()
   // printf("  clamped x range: (%.3f, %.3f)\n", ulx_clamped, lrx_clamped);
 
   const int x_min_tile =
-    floor((ulx_clamped + MAX_X) / (2. * MAX_X) * (1 << zoom_approx));
+    floor((ulx_clamped + MAX_X) / (2. * MAX_X) * (1 << zoom));
   const int x_max_tile =
-    floor((lrx_clamped + MAX_X) / (2. * MAX_X) * (1 << zoom_approx));
+    floor((lrx_clamped + MAX_X) / (2. * MAX_X) * (1 << zoom));
   // printf("  x tile range: [%d, %d]\n", x_min_tile, x_max_tile);
 
   // because EPSG 3857 is a square, we can use MAX_X for the Y extents also
@@ -233,20 +233,20 @@ void MapView::draw_tiles()
   // printf("  clamped y range: (%.3f, %.3f)\n", lry_clamped, uly_clamped);
 
   const int y_min_tile =
-    (1 << zoom_approx)
+    (1 << zoom)
     - 1
-    - floor((uly_clamped + MAX_X) / (2. * MAX_X) * (1 << zoom_approx));
+    - floor((uly_clamped + MAX_X) / (2. * MAX_X) * (1 << zoom));
   const int y_max_tile =
-    (1 << zoom_approx)
+    (1 << zoom)
     - 1
-    - floor((lry_clamped + MAX_X) / (2. * MAX_X) * (1 << zoom_approx));
+    - floor((lry_clamped + MAX_X) / (2. * MAX_X) * (1 << zoom));
   // printf("  y tile range: [%d, %d]\n", y_min_tile, y_max_tile);
 
   std::vector<size_t> remove_idx;
   for (size_t i = 0; i < tile_pixmap_items.size(); i++)
   {
     const MapTilePixmapItem& item = tile_pixmap_items[i];
-    if (item.zoom != zoom_approx
+    if (item.zoom != zoom
       || item.x < x_min_tile
       || item.x > x_max_tile
       || item.y < y_min_tile
@@ -295,8 +295,8 @@ void MapView::draw_tiles()
       if (found)
         continue;
 
-      // printf("creating tile item zoom=%d, x=%d, y=%d)\n", zoom_approx, x, y);
-      std::optional<const QByteArray> p = tile_cache.get(zoom_approx, x, y);
+      // printf("creating tile item zoom=%d, x=%d, y=%d)\n", zoom, x, y);
+      std::optional<const QByteArray> p = tile_cache.get(zoom, x, y);
       if (p.has_value())
       {
         //printf("  HOORAY found the pixmap\n");
@@ -306,8 +306,8 @@ void MapView::draw_tiles()
         {
           QPixmap pixmap(QPixmap::fromImage(image.convertToFormat(
               QImage::Format_Grayscale8)));
-          // QPixmap pixmap(QPixmap::fromImage(image));
-          render_tile(zoom_approx, x, y, pixmap, MapTilePixmapItem::State::COMPLETED);
+
+          render_tile(zoom, x, y, pixmap, MapTilePixmapItem::State::COMPLETED);
         }
         else
         {
@@ -324,12 +324,12 @@ void MapView::draw_tiles()
         painter.begin(&image);
         painter.setPen(QPen(Qt::red));
         QString label;
-        label.sprintf("%d (%d,%d)", zoom_approx, x, y);
+        label.sprintf("%d (%d,%d)", zoom, x, y);
         painter.drawText(10, 10, 245, 100, Qt::AlignLeft, label);
         painter.end();
         QPixmap pixmap(QPixmap::fromImage(image));
 
-        render_tile(zoom_approx, x, y, pixmap, MapTilePixmapItem::State::QUEUED);
+        render_tile(zoom, x, y, pixmap, MapTilePixmapItem::State::QUEUED);
       }
     }
   }
