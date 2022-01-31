@@ -114,7 +114,7 @@ void MapView::wheelEvent(QWheelEvent* e)
   else
   {
     // set a null rect, in order to the original scene rect from the scene
-    setSceneRect(QRectF());  
+    setSceneRect(QRectF());
   }
   draw_tiles();
   e->accept();
@@ -147,35 +147,16 @@ void MapView::mouseReleaseEvent(QMouseEvent* e)
 
 void MapView::mouseMoveEvent(QMouseEvent* e)
 {
-  //setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
   if (is_panning)
   {
     const int dx = e->x() - pan_start_x;
     const int dy = e->y() - pan_start_y;
     const double s = transform().m11();
-    /*
-    QTransform t = transform();
-    t.translate(dx / s, -dy / s);
-    setTransform(t);
-    */
-    //horizontalScrollBar()->setValue(horizontalScrollBar()->value() - dx);
-    //verticalScrollBar()->setValue(verticalScrollBar()->value() - dy);
     translate(dx / s, -dy / s);
     pan_start_x = e->x();
     pan_start_y = e->y();
     e->accept();
     draw_tiles();
-
-    printf("  horizontal scroll position: %d\n", horizontalScrollBar()->value());
-    printf("  vertical scroll position: %d\n", verticalScrollBar()->value());
-    printf("  horizontal range: %d - %d   step: %d\n", horizontalScrollBar()->minimum(), horizontalScrollBar()->maximum(), horizontalScrollBar()->pageStep());
-    printf("  vertical range: %d - %d\n", verticalScrollBar()->minimum(), verticalScrollBar()->maximum());
-  
-    printf("scale: %.3f   translation: (%.3f, %.3f)\n",
-      transform().m11(),
-      transform().dx(),
-      transform().dy());
-
     return;
   }
   e->ignore();
@@ -407,7 +388,9 @@ void MapView::render_tile(
   // const double lon_deg = x / static_cast<double>(1 << zoom) * 360. - 180.;
   // const double n = M_PI - 2.0 * M_PI * y / static_cast<double>(1 << zoom);
   // const double lat = atan(0.5 * (exp(n) - exp(-n)));
-  const double x = (tile_x / static_cast<double>(1 << zoom) * 2. * MAX_X - MAX_X);
+  const double x =
+    (tile_x / static_cast<double>(1 << zoom) * 2. * MAX_X - MAX_X);
+
   const double y =
     (-tile_y / static_cast<double>(1 << zoom) * 2. * MAX_X + MAX_X);
 
