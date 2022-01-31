@@ -566,6 +566,8 @@ bool Editor::load_building(const QString& filename)
 
   level_idx = 0;
 
+  map_view->set_show_tiles(false);
+
   if (building.coordinate_system.is_global())
   {
     // use the EPSG 3857 extents: "projected-meters"
@@ -574,6 +576,15 @@ bool Editor::load_building(const QString& filename)
         M_PI * CoordinateSystem::WGS84_A,
         2. * M_PI * CoordinateSystem::WGS84_A,
         -2. * M_PI * CoordinateSystem::WGS84_A));
+
+    const double y_flip = building.coordinate_system.is_y_flipped() ? 1 : -1;
+
+    QTransform t;
+    t.scale(1, y_flip);
+    map_view->setTransform(t);
+
+    map_view->set_show_tiles(true);
+    map_view->draw_tiles();
   }
   else if (!building.levels.empty())
   {
@@ -586,9 +597,6 @@ bool Editor::load_building(const QString& filename)
   create_scene();
 
   update_tables();
-
-  QSettings settings;
-  settings.setValue(preferences_keys::previous_building_path, absolute_path);
 
   setWindowModified(false);
 
@@ -639,19 +647,36 @@ void Editor::restore_previous_viewport()
   if (isnan(viewport_scale))
     viewport_scale = 1.0;
 
-  printf("restoring viewport: (%.1f, %.1f, %3f)\n",
-    viewport_center_x,
-    viewport_center_y,
-    viewport_scale);
+  // See if the previous building name matches the current building name
+  // if they mismatch, don't attempt to use the previous viewport!
+  // This is a really big deal if we're mixing coordinate systems :boom:
+  const std::string previous_filename =
+    settings.value(preferences_keys::previous_building_path)
+      .toString().toStdString();
 
-  double y_flip = building.coordinate_system.is_y_flipped() ? 1 : -1;
+  printf("previous filename: %s\n", previous_filename.c_str());
+  printf("current building filename: %s\n", building.get_filename().c_str());
 
-  QTransform t;
-  t.scale(viewport_scale, y_flip * viewport_scale);
-  map_view->setTransform(t);
-  map_view->centerOn(QPointF(viewport_center_x, viewport_center_y));
-  map_view->set_show_tiles(true);
-  map_view->draw_tiles();
+  if (previous_filename == building.get_filename())
+  {
+    printf("restoring viewport: (%.1f, %.1f, %3f)\n",
+      viewport_center_x,
+      viewport_center_y,
+      viewport_scale);
+
+    const double y_flip = building.coordinate_system.is_y_flipped() ? 1 : -1;
+    QTransform t;
+    t.scale(viewport_scale, y_flip * viewport_scale);
+    map_view->setTransform(t);
+
+    map_view->centerOn(QPointF(viewport_center_x, viewport_center_y));
+    map_view->draw_tiles();
+  }
+  else
+  {
+    printf("resetting view...\n");
+    zoom_reset();
+  }
 }
 
 bool Editor::load_previous_building()
@@ -855,34 +880,7 @@ void Editor::view_tiles()
 
 void Editor::zoom_reset()
 {
-  const double viewport_scale = 1.0;
-  const double y_flip = building.coordinate_system.is_y_flipped() ? 1 : -1;
-
-  QTransform t;
-  t.scale(viewport_scale, y_flip * viewport_scale);
-  map_view->setTransform(t);
-
-  // compute center of all vertices on the active level
-  Level* level = active_level();
-  if (level)
-  {
-    const size_t n_vertex = level->vertices.size();
-    if (n_vertex > 0)
-    {
-      double x_sum = 0, y_sum = 0;
-      for (const auto& v : level->vertices)
-      {
-        x_sum += v.x;
-        y_sum += v.y;
-      }
-      const double xc = x_sum / n_vertex;
-      const double yc = y_sum / n_vertex;
-      printf("center: (%.3f, %.3f)\n", xc, yc);
-      map_view->centerOn(QPointF(xc, yc));
-    }
-  }
-
-  map_view->draw_tiles();
+  map_view->zoom_fit(level_idx);
 }
 
 void Editor::mouse_event(const MouseType t, QMouseEvent* e)
@@ -2667,6 +2665,10 @@ void Editor::closeEvent(QCloseEvent* event)
   settings.setValue(preferences_keys::viewport_center_x, p_center_scene.x());
   settings.setValue(preferences_keys::viewport_center_y, p_center_scene.y());
   settings.setValue(preferences_keys::viewport_scale, scale);
+
+  settings.setValue(
+    preferences_keys::previous_building_path,
+    QString::fromStdString(building.get_filename()));
 
   if (!building.levels.empty())
     settings.setValue(

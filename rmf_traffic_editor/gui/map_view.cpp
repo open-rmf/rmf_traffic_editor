@@ -46,6 +46,8 @@ MapView::MapView(QWidget* parent, const Building& building_)
 
 void MapView::wheelEvent(QWheelEvent* e)
 {
+  e->accept();
+
   // calculate the map position before we scale things
   const QPointF p_start = mapToScene(e->pos());
 
@@ -63,6 +65,12 @@ void MapView::wheelEvent(QWheelEvent* e)
       if (scale_factor > 0.01)
         scale(0.75, 0.75);
     }
+    // calculate the mouse map position now that we've scaled
+    const QPointF p_end = mapToScene(e->pos());
+
+    // translate the map back so hopefully the mouse stays in the same spot
+    const QPointF diff = p_end - p_start;
+    translate(diff.x(), diff.y());
   }
   else
   {
@@ -86,39 +94,38 @@ void MapView::wheelEvent(QWheelEvent* e)
       if (scale_factor > 0.0000076294)
         scale(0.5, 0.5);
     }
+
+    // calculate the mouse map position now that we've scaled
+    const QPointF p_end = mapToScene(e->pos());
+
+    // translate the map back so hopefully the mouse stays in the same spot
+    const QPointF diff = p_end - p_start;
+    translate(diff.x(), diff.y());
+
+    const int viewport_w = viewport()->width();
+    const int viewport_h = viewport()->height();
+    QPointF ul = mapToScene(QPoint(0, 0));
+    QPointF lr = mapToScene(QPoint(viewport_w, viewport_h));
+    const double scene_w = lr.x() - ul.x();
+    const double scene_h = ul.y() - lr.y();
+
+    if (scene_w < 0.1 * M_PI * CoordinateSystem::WGS84_A)
+    {
+      const int n = 10;
+      setSceneRect(
+        QRectF(
+          p_start.x() - n * scene_w,
+          p_start.y() + n * scene_w,
+          2 * n * scene_w,
+          -2 * n * scene_h));
+    }
+    else
+    {
+      // set a null rect, in order to the original scene rect from the scene
+      setSceneRect(QRectF());
+    }
+    draw_tiles();
   }
-
-  // calculate the mouse map position now that we've scaled
-  const QPointF p_end = mapToScene(e->pos());
-
-  // translate the map back so hopefully the mouse stays in the same spot
-  const QPointF diff = p_end - p_start;
-  translate(diff.x(), diff.y());
-
-  const int viewport_w = viewport()->width();
-  const int viewport_h = viewport()->height();
-  QPointF ul = mapToScene(QPoint(0, 0));
-  QPointF lr = mapToScene(QPoint(viewport_w, viewport_h));
-  const double scene_w = lr.x() - ul.x();
-  const double scene_h = ul.y() - lr.y();
-
-  if (scene_w < 0.1 * M_PI * CoordinateSystem::WGS84_A)
-  {
-    const int n = 10;
-    setSceneRect(
-      QRectF(
-        p_start.x() - n * scene_w,
-        p_start.y() + n * scene_w,
-        2 * n * scene_w,
-        -2 * n * scene_h));
-  }
-  else
-  {
-    // set a null rect, in order to the original scene rect from the scene
-    setSceneRect(QRectF());
-  }
-  draw_tiles();
-  e->accept();
 }
 
 void MapView::mousePressEvent(QMouseEvent* e)
@@ -153,7 +160,8 @@ void MapView::mouseMoveEvent(QMouseEvent* e)
     const int dx = e->x() - pan_start_x;
     const int dy = e->y() - pan_start_y;
     const double s = transform().m11();
-    translate(dx / s, -dy / s);
+    const double y_flip = building.coordinate_system.is_y_flipped() ? 1 : -1;
+    translate(dx / s, y_flip * dy / s);
     pan_start_x = e->x();
     pan_start_y = e->y();
     e->accept();
@@ -168,20 +176,44 @@ void MapView::resizeEvent(QResizeEvent*)
   draw_tiles();
 }
 
-void MapView::zoom_fit(int level_index)
+void MapView::zoom_fit(int level_idx)
 {
-  if (building.levels.empty())
-    return;
-  const Level& level = building.levels[level_index];
-  const int w = level.drawing_width;
-  const int h = level.drawing_height;
-  const double cx = w / 2;
-  const double cy = h / 2;
-  // todo: this doesn't seem to work. not sure how to use this function.
-  ensureVisible(cx, cy, w, h);
-  //resetTransform();
-  //fitInView(cx, cy, w, h, Qt::KeepAspectRatio);
-  //centerOn(cx, cy);
+  const Level* level = nullptr;
+  if (level_idx >= 0 && level_idx < static_cast<int>(building.levels.size()))
+    level = &building.levels[level_idx];
+  else if (building.levels.size() > 0)
+    level = &building.levels[0];
+
+  if (level != nullptr)
+  {
+    const double viewport_scale = 1.0;
+    const double y_flip = building.coordinate_system.is_y_flipped() ? 1 : -1;
+
+    QTransform t;
+    t.scale(viewport_scale, y_flip * viewport_scale);
+    setTransform(t);
+
+    // compute center of all vertices on the active level
+    const size_t n_vertex = level->vertices.size();
+    if (n_vertex > 0)
+    {
+      double x_sum = 0, y_sum = 0;
+      for (const auto& v : level->vertices)
+      {
+        x_sum += v.x;
+        y_sum += v.y;
+      }
+      const double xc = x_sum / n_vertex;
+      const double yc = y_sum / n_vertex;
+      printf("center: (%.3f, %.3f)\n", xc, yc);
+      centerOn(QPointF(xc, yc));
+    }
+  }
+
+  if (building.coordinate_system.is_global())
+  {
+    draw_tiles();
+  }
 }
 
 void MapView::draw_tiles()
