@@ -25,6 +25,7 @@
  * a map.
  */
 
+#include "coordinate_system.h"
 #include "editor_model.h"
 #include "model_state.h"
 
@@ -55,8 +56,11 @@ public:
 
   Model();
 
-  YAML::Node to_yaml() const;
-  void from_yaml(const YAML::Node& data, const std::string& level_name);
+  YAML::Node to_yaml(const CoordinateSystem& coordinate_system) const;
+  void from_yaml(
+    const YAML::Node& data,
+    const std::string& level_name,
+    const CoordinateSystem& coordinate_system);
 
   void set_param(const std::string& name, const std::string& value);
 

@@ -244,8 +244,8 @@ class Level:
         for model in self.models:
             model.generate(
                 world_ele,
-                self.transform,
-                self.elevation)
+                self.elevation,
+                self.transform)
 
         # sniff around in our vertices and spawn robots if requested
         for vertex_idx, vertex in enumerate(self.vertices):
@@ -292,13 +292,23 @@ class Level:
                     yaw += math.pi
                 break
 
+        '''
+        Because we may be translating the world significantly in order for
+        the simulation coordinates to be near the origin, in the case of
+        Georeferenced frames, we also need to translate the robot spawn
+        point. Otherwise our poor robots could be spawned thousands of
+        kilometers from the building, thereby falling into the abyss of -NaN
+        '''
+        robot_x = vertex.x - self.transform.x
+        robot_y = vertex.y - self.transform.y
+
         include_ele = SubElement(world_ele, 'include')
         name_ele = SubElement(include_ele, 'name')
         name_ele.text = robot_name
         uri_ele = SubElement(include_ele, 'uri')
         uri_ele.text = f'model://{robot_type}'
         pose_ele = SubElement(include_ele, 'pose')
-        pose_ele.text = f'{vertex.x} {vertex.y} {vertex.z} 0 0 {yaw}'
+        pose_ele.text = f'{robot_x} {robot_y} {vertex.z} 0 0 {yaw}'
 
     def generate_floors(self, world_ele, model_name, model_path):
         i = 0

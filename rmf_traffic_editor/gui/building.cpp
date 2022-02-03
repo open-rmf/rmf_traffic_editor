@@ -91,8 +91,8 @@ bool Building::load(const string& _filename)
     name = y["name"].as<string>();
 
   if (y["coordinate_system"])
-    coordinate_system =
-      CoordinateSystem::from_string(y["coordinate_system"].as<string>());
+    coordinate_system.value =
+      CoordinateSystem::value_from_string(y["coordinate_system"].as<string>());
 
   if (y["reference_level_name"])
     reference_level_name = y["reference_level_name"].as<string>();
@@ -188,7 +188,7 @@ bool Building::save()
 
   y["levels"] = YAML::Node(YAML::NodeType::Map);
   for (const auto& level : levels)
-    y["levels"][level.name] = level.to_yaml();
+    y["levels"][level.name] = level.to_yaml(coordinate_system);
 
   y["lifts"] = YAML::Node(YAML::NodeType::Map);
   for (const auto& lift : lifts)

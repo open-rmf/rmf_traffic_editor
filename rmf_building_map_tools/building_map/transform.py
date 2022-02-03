@@ -9,6 +9,8 @@ class Transform:
         self.set_rotation(0.0)
         self.set_translation(0.0, 0.0)
         self.set_scale(1.0)
+        self.x = 0
+        self.y = 0
 
     def set_rotation(self, rotation):
         """Calculate rotation matrix"""

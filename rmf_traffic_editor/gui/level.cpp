@@ -81,7 +81,16 @@ bool Level::from_yaml(
     drawing_height = y_meters / drawing_meters_per_pixel;
   }
 
-  parse_vertices(_data);
+  if (_data["vertices"] && _data["vertices"].IsSequence())
+  {
+    const YAML::Node& pts = _data["vertices"];
+    for (YAML::const_iterator it = pts.begin(); it != pts.end(); ++it)
+    {
+      Vertex v;
+      v.from_yaml(*it, coordinate_system);
+      vertices.push_back(v);
+    }
+  }
 
   if (_data["fiducials"] && _data["fiducials"].IsSequence())
   {
@@ -116,11 +125,6 @@ bool Level::from_yaml(
     }
   }
 
-  if (_data["flattened_x_offset"])
-    flattened_x_offset = _data["flattened_x_offset"].as<double>();
-  if (_data["flattened_y_offset"])
-    flattened_y_offset = _data["flattened_y_offset"].as<double>();
-
   load_yaml_edge_sequence(_data, "lanes", Edge::LANE);
   load_yaml_edge_sequence(_data, "walls", Edge::WALL);
   load_yaml_edge_sequence(_data, "measurements", Edge::MEAS);
@@ -133,7 +137,7 @@ bool Level::from_yaml(
     for (YAML::const_iterator it = ys.begin(); it != ys.end(); ++it)
     {
       Model m;
-      m.from_yaml(*it, this->name);
+      m.from_yaml(*it, this->name, coordinate_system);
       models.push_back(m);
     }
   }
@@ -169,7 +173,7 @@ bool Level::from_yaml(
     for (YAML::const_iterator it = yl.begin(); it != yl.end(); ++it)
     {
       Layer layer;
-      layer.from_yaml(it->first.as<string>(), it->second);
+      layer.from_yaml(it->first.as<string>(), it->second, coordinate_system);
       layers.push_back(layer);
     }
   }
@@ -205,7 +209,7 @@ bool Level::load_drawing()
   return true;
 }
 
-YAML::Node Level::to_yaml() const
+YAML::Node Level::to_yaml(const CoordinateSystem& coordinate_system) const
 {
   YAML::Node y;
   if (!drawing_filename.empty())
@@ -220,11 +224,9 @@ YAML::Node Level::to_yaml() const
     y["y_meters"] = y_meters;
   }
   y["elevation"] = elevation;
-  y["flattened_x_offset"] = flattened_x_offset;
-  y["flattened_y_offset"] = flattened_y_offset;
 
   for (const auto& v : vertices)
-    y["vertices"].push_back(v.to_yaml());
+    y["vertices"].push_back(v.to_yaml(coordinate_system));
 
   for (const auto& feature : floorplan_features)
     y["features"].push_back(feature.to_yaml());
@@ -265,7 +267,7 @@ YAML::Node Level::to_yaml() const
   }
 
   for (const auto& model : models)
-    y["models"].push_back(model.to_yaml());
+    y["models"].push_back(model.to_yaml(coordinate_system));
 
   for (const auto& polygon : polygons)
   {
@@ -286,7 +288,7 @@ YAML::Node Level::to_yaml() const
 
   y["layers"] = YAML::Node(YAML::NodeType::Map);
   for (const auto& layer : layers)
-    y["layers"][layer.name] = layer.to_yaml();
+    y["layers"][layer.name] = layer.to_yaml(coordinate_system);
 
   return y;
 }
@@ -1103,24 +1105,32 @@ void Level::draw(
   const CoordinateSystem& coordinate_system)
 {
   printf("Level::draw()\n");
-  if (drawing_filename.size() && _drawing_visible)
+  vertex_radius = 0.1;
+
+  if (!coordinate_system.is_global())
   {
-    const double extra_scroll_area_width = 1.0 * drawing_width;
-    const double extra_scroll_area_height = 1.0 * drawing_height;
-    scene->setSceneRect(
-      QRectF(
-        -extra_scroll_area_width,
-        -extra_scroll_area_height,
-        drawing_width + 2 * extra_scroll_area_width,
-        drawing_height + 2 * extra_scroll_area_height));
-    scene->addPixmap(floorplan_pixmap);
-  }
-  else
-  {
-    const double w = x_meters / drawing_meters_per_pixel;
-    const double h = y_meters / drawing_meters_per_pixel;
-    scene->setSceneRect(QRectF(0, 0, w, h));
-    scene->addRect(0, 0, w, h, Qt::NoPen, Qt::white);
+    // If we're using an image-defined coordinate system, we should
+    // adjust the SceneRect to match the reference image, so the
+    // scrollbar range makes sense for this level.
+    if (drawing_filename.size() && _drawing_visible)
+    {
+      const double extra_scroll_area_width = 1.0 * drawing_width;
+      const double extra_scroll_area_height = 1.0 * drawing_height;
+      scene->setSceneRect(
+        QRectF(
+          -extra_scroll_area_width,
+          -extra_scroll_area_height,
+          drawing_width + 2 * extra_scroll_area_width,
+          drawing_height + 2 * extra_scroll_area_height));
+      scene->addPixmap(floorplan_pixmap);
+    }
+    else
+    {
+      const double w = x_meters / drawing_meters_per_pixel;
+      const double h = y_meters / drawing_meters_per_pixel;
+      scene->setSceneRect(QRectF(0, 0, w, h));
+      scene->addRect(0, 0, w, h, Qt::NoPen, Qt::white);
+    }
   }
 
   draw_polygons(scene);
@@ -1477,21 +1487,6 @@ Polygon::EdgeDragPolygon Level::polygon_edge_drag_press(
   edp.polygon = QPolygonF(polygon_vertices);
 
   return edp;
-}
-
-bool Level::parse_vertices(const YAML::Node& _data)
-{
-  if (_data["vertices"] && _data["vertices"].IsSequence())
-  {
-    const YAML::Node& pts = _data["vertices"];
-    for (YAML::const_iterator it = pts.begin(); it != pts.end(); ++it)
-    {
-      Vertex v;
-      v.from_yaml(*it);
-      vertices.push_back(v);
-    }
-  }
-  return true;
 }
 
 void Level::add_vertex(const double x, const double y)

@@ -22,6 +22,7 @@ from .param_value import ParamValue
 from .passthrough_transform import PassthroughTransform
 from .vertex import Vertex
 from .web_mercator_transform import WebMercatorTransform
+from .wgs84_transform import WGS84Transform
 
 
 class Building:
@@ -50,15 +51,15 @@ class Building:
         else:
             self.map_version = None
 
-        if 'coordinate_system' in yaml_node:
-            self.coordinate_system = \
-                CoordinateSystem[yaml_node['coordinate_system']]
-        else:
-            self.coordinate_system = CoordinateSystem.reference_image
-        print(f'coordinate system: {self.coordinate_system}')
+        cs_name = yaml_node.get('coordinate_system', 'reference_image')
+        print(f'coordinate system: {cs_name}')
+        self.coordinate_system = CoordinateSystem[cs_name]
 
         self.global_transform = None
-        if self.coordinate_system == CoordinateSystem.web_mercator:
+
+        if self.coordinate_system == CoordinateSystem.reference_image:
+            pass
+        elif self.coordinate_system == CoordinateSystem.web_mercator:
             if 'generate_crs' not in self.params:
                 raise ValueError('generate_crs must be defined for global nav')
 
@@ -85,7 +86,6 @@ class Building:
                     self.global_transform.set_offset(
                         self.global_transform.transform_point((x, y)))
                     break
-
         elif self.coordinate_system == CoordinateSystem.cartesian_meters:
             if 'offset_x' in self.params:
                 offset_x = self.params['offset_x'].value
@@ -104,6 +104,25 @@ class Building:
 
             self.global_transform = \
                 PassthroughTransform(offset_x, offset_y, crs_name)
+        elif self.coordinate_system == CoordinateSystem.wgs84:
+            if 'generate_crs' not in self.params:
+                # todo: automatically add a reasonable CRS in traffic-editor
+                raise ValueError('generate_crs must be defined in wgs84 maps')
+
+            crs_name = self.params['generate_crs'].value
+
+            if 'suggested_offset_x' in self.params:
+                offset_x = self.params['suggested_offset_x'].value
+            else:
+                offset_x = 0
+
+            if 'suggested_offset_y' in self.params:
+                offset_y = self.params['suggested_offset_y'].value
+            else:
+                offset_y = 0
+
+            self.global_transform = \
+                WGS84Transform(crs_name, (offset_x, offset_y))
 
         self.levels = {}
         self.model_counts = {}
@@ -340,6 +359,10 @@ class Building:
                     g['crs_name'] = self.params['generate_crs'].value
                 tx, ty = self.global_transform.x, self.global_transform.y
                 g['offset'] = [tx, ty]
+            elif self.coordinate_system == CoordinateSystem.wgs84:
+                g['crs_name'] = self.params['generate_crs'].value
+                tx, ty = self.global_transform.x, self.global_transform.y
+                g['offset'] = [tx, ty]
 
             empty = True
             for level_name, level in self.levels.items():
@@ -380,7 +403,13 @@ class Building:
             uri_ele = SubElement(level_include_ele, 'uri')
             uri_ele.text = f'model://{level_model_name}'
             pose_ele = SubElement(level_include_ele, 'pose')
-            pose_ele.text = f'0 0 {level.elevation} 0 0 0'
+            if self.coordinate_system == CoordinateSystem.wgs84:
+                tx = -self.global_transform.x
+                ty = -self.global_transform.y
+            else:
+                tx = 0
+                ty = 0
+            pose_ele.text = f'{tx} {ty} {level.elevation} 0 0 0'
 
         for lift_name, lift in self.lifts.items():
             if not lift.level_doors:
@@ -420,9 +449,23 @@ class Building:
                 crs_ele = SubElement(world, 'crs')
                 crs_ele.text = self.global_transform.frame_name
 
+        elif self.coordinate_system == CoordinateSystem.wgs84:
+            tx = self.global_transform.x
+            ty = self.global_transform.y
+            offset_ele = SubElement(world, 'offset')
+            offset_ele.text = f'{tx} {ty} 0 0 0 0'
+            crs_ele = SubElement(world, 'crs')
+            crs_ele.text = self.global_transform.crs_name
+
         gui_ele = world.find('gui')
         c = self.center()
-        camera_pose = f'{c[0]} {c[1]-20} 10 0 0.6 1.57'
+        # Transforming camera to account for offsets if
+        # not in reference_image mode
+        if self.global_transform:
+            camera_pose = f'{c[0] - self.global_transform.x}  \
+            {c[1]-20 - self.global_transform.y} 10 0 0.6 1.57'
+        else:
+            camera_pose = f'{c[0]} {c[1]-20} 10 0 0.6 1.57'
         # add floor-toggle GUI plugin parameters
         if 'gazebo' in options:
             camera_pose_ele = gui_ele.find('camera').find('pose')
@@ -694,7 +737,8 @@ class Building:
                 (lat, lon) = wgs_transformer.transform(vertex.y, vertex.x)
                 properties = {
                     'name': vertex.name,
-                    'level_idx': level_idx
+                    'level_idx': level_idx,
+                    'rmf_type': 'rmf_vertex'
                 }
                 for param_name, param_value in vertex.params.items():
                     properties[param_name] = param_value.value
@@ -711,6 +755,7 @@ class Building:
             for lane in level.lanes:
                 properties = {
                     'level_idx': level_idx,
+                    'rmf_type': 'rmf_lane'
                 }
                 for param_name, param_value in lane.params.items():
                     properties[param_name] = param_value.value
@@ -718,6 +763,12 @@ class Building:
                 v2 = level.vertices[lane.end_idx]
                 (v1_lat, v1_lon) = wgs_transformer.transform(v1.y, v1.x)
                 (v2_lat, v2_lon) = wgs_transformer.transform(v2.y, v2.x)
+
+                if v1.name:
+                    properties['start_vertex_name'] = v1.name
+
+                if v2.name:
+                    properties['end_vertex_name'] = v2.name
 
                 features.append({
                     'type': 'Feature',

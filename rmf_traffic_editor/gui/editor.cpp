@@ -59,6 +59,7 @@
 #include "preferences_dialog.h"
 #include "preferences_keys.h"
 #include "traffic_table.h"
+#include "ui_new_building_dialog.h"
 #include "ui_transform_dialog.h"
 
 
@@ -81,7 +82,7 @@ Editor::Editor()
 
   scene = new QGraphicsScene(this);
 
-  map_view = new MapView(this);
+  map_view = new MapView(this, building);
   map_view->setScene(scene);
   map_view->setStyleSheet(
     "QToolTip { color: #000000; background-color: #ffff88; border: 0px; }");
@@ -208,8 +209,8 @@ Editor::Editor()
   right_tab_widget->addTab(level_table, "levels");
   right_tab_widget->addTab(layer_table, "layers");
   right_tab_widget->addTab(lift_table, "lifts");
-  right_tab_widget->addTab(traffic_table, "traffic");
-  right_tab_widget->addTab(crowd_sim_table, "crowd_sim");
+  right_tab_widget->addTab(traffic_table, "graphs");
+  right_tab_widget->addTab(crowd_sim_table, "crowds");
 
   property_editor = new QTableWidget;
   property_editor->setStyleSheet(
@@ -268,7 +269,7 @@ Editor::Editor()
   w->setMouseTracking(true);
   setMouseTracking(true);
   w->setLayout(hbox_layout);
-  w->setStyleSheet("background-color: #404040");
+  w->setStyleSheet("background-color: #707070");
   setCentralWidget(w);
 
   // BUILDING MENU
@@ -354,6 +355,12 @@ Editor::Editor()
     view_menu->addAction("&Models", this, &Editor::view_models);
   view_models_action->setCheckable(true);
   view_models_action->setChecked(true);
+
+  view_tiles_action =
+    view_menu->addAction("Map &Tiles", this, &Editor::view_tiles);
+  view_tiles_action->setCheckable(true);
+  view_tiles_action->setChecked(true);
+
   view_menu->addSeparator();
 
   view_menu->addAction("&Reset zoom level", this, &Editor::zoom_reset);
@@ -408,6 +415,11 @@ Editor::Editor()
     "QToolBar {background-color: #404040; border: none; spacing: 5px} QToolButton {background-color: #c0c0c0; color: blue; border: 1px solid black;} QToolButton:checked {background-color: #808080; color: red; border: 1px solid black;}");
   addToolBar(Qt::TopToolBarArea, toolbar);
 
+  // STATUS BAR
+  cache_size_label = new QLabel("cache size");
+  statusBar()->addPermanentWidget(cache_size_label);
+  map_view->update_cache_size_label(cache_size_label);
+
   ///////////////////////////////////////////////////////////
   // SET SIZE
   const int width =
@@ -438,6 +450,14 @@ Editor::Editor()
 
   load_model_names();
   level_table->setCurrentCell(level_idx, 0);
+
+  cache_size_update_timer = new QTimer;
+  connect(
+    cache_size_update_timer,
+    &QTimer::timeout,
+    this,
+    &Editor::cache_size_update_timer_timeout);
+  cache_size_update_timer->start(10 * 1000);
 }
 
 Editor::~Editor()
@@ -546,7 +566,27 @@ bool Editor::load_building(const QString& filename)
 
   level_idx = 0;
 
-  if (!building.levels.empty())
+  map_view->set_show_tiles(false);
+
+  if (building.coordinate_system.is_global())
+  {
+    // use the EPSG 3857 extents: "projected-meters"
+    scene->setSceneRect(QRectF(
+        -M_PI * CoordinateSystem::WGS84_A,
+        M_PI * CoordinateSystem::WGS84_A,
+        2. * M_PI * CoordinateSystem::WGS84_A,
+        -2. * M_PI * CoordinateSystem::WGS84_A));
+
+    const double y_flip = building.coordinate_system.is_y_flipped() ? 1 : -1;
+
+    QTransform t;
+    t.scale(1, y_flip);
+    map_view->setTransform(t);
+
+    map_view->set_show_tiles(true);
+    map_view->draw_tiles();
+  }
+  else if (!building.levels.empty())
   {
     const Level& level = building.levels[level_idx];
     scene->setSceneRect(
@@ -557,9 +597,6 @@ bool Editor::load_building(const QString& filename)
   create_scene();
 
   update_tables();
-
-  QSettings settings;
-  settings.setValue(preferences_keys::previous_building_path, absolute_path);
 
   setWindowModified(false);
 
@@ -610,17 +647,36 @@ void Editor::restore_previous_viewport()
   if (isnan(viewport_scale))
     viewport_scale = 1.0;
 
-  printf("restoring viewport: (%.1f, %.1f, %3f)\n",
-    viewport_center_x,
-    viewport_center_y,
-    viewport_scale);
+  // See if the previous building name matches the current building name
+  // if they mismatch, don't attempt to use the previous viewport!
+  // This is a really big deal if we're mixing coordinate systems :boom:
+  const std::string previous_filename =
+    settings.value(preferences_keys::previous_building_path)
+    .toString().toStdString();
 
-  double y_flip = building.coordinate_system.is_y_flipped() ? 1 : -1;
+  printf("previous filename: %s\n", previous_filename.c_str());
+  printf("current building filename: %s\n", building.get_filename().c_str());
 
-  QTransform t;
-  t.scale(viewport_scale, y_flip * viewport_scale);
-  map_view->setTransform(t);
-  map_view->centerOn(QPointF(viewport_center_x, viewport_center_y));
+  if (previous_filename == building.get_filename())
+  {
+    printf("restoring viewport: (%.1f, %.1f, %3f)\n",
+      viewport_center_x,
+      viewport_center_y,
+      viewport_scale);
+
+    const double y_flip = building.coordinate_system.is_y_flipped() ? 1 : -1;
+    QTransform t;
+    t.scale(viewport_scale, y_flip * viewport_scale);
+    map_view->setTransform(t);
+
+    map_view->centerOn(QPointF(viewport_center_x, viewport_center_y));
+    map_view->draw_tiles();
+  }
+  else
+  {
+    printf("resetting view...\n");
+    zoom_reset();
+  }
 }
 
 bool Editor::load_previous_building()
@@ -635,25 +691,44 @@ bool Editor::load_previous_building()
 
 void Editor::building_new()
 {
-  QFileDialog dialog(this, "New Building");
-  dialog.setNameFilter("*.building.yaml");
-  dialog.setDefaultSuffix(".building.yaml");
-  dialog.setAcceptMode(QFileDialog::AcceptMode::AcceptSave);
-  dialog.setConfirmOverwrite(true);
+  QFileDialog file_dialog(this, "New Building");
+  file_dialog.setNameFilter("*.building.yaml");
+  file_dialog.setDefaultSuffix(".building.yaml");
+  file_dialog.setAcceptMode(QFileDialog::AcceptMode::AcceptSave);
+  file_dialog.setConfirmOverwrite(true);
 
-  if (dialog.exec() != QDialog::Accepted)
+  if (file_dialog.exec() != QDialog::Accepted)
     return;
 
-  QFileInfo file_info(dialog.selectedFiles().first());
+  QFileInfo file_info(file_dialog.selectedFiles().first());
   std::string fn = file_info.fileName().toStdString();
 
+  // Guess the building name as the "filename before the dot".
+  // User can override this guess in the dialog that opens afterwards.
+  std::string guessed_building_name(fn.begin(), fn.begin() + fn.find('.'));
+
+  QDialog new_building_dialog;
+  Ui::NewBuildingDialog new_building_dialog_ui;
+  new_building_dialog_ui.setupUi(&new_building_dialog);
+  new_building_dialog_ui.name_line_edit->setText(
+    QString::fromStdString(guessed_building_name));
+
+  if (new_building_dialog.exec() != QDialog::Accepted)
+    return;
+
   building.clear();
+  if (new_building_dialog_ui.geolocated_radio->isChecked())
+    building.coordinate_system.value = CoordinateSystem::Value::WGS84;
+  else
+    building.coordinate_system.value = CoordinateSystem::Value::ReferenceImage;
+
   building.set_filename(file_info.absoluteFilePath().toStdString());
   QString dir_path = file_info.dir().path();
   QDir::setCurrent(dir_path);
 
   create_scene();
   building_save();
+  zoom_reset();
   update_tables();
 
   QSettings settings;
@@ -797,34 +872,15 @@ void Editor::view_models()
   create_scene();
 }
 
+void Editor::view_tiles()
+{
+  map_view->set_show_tiles(view_tiles_action->isChecked());
+  create_scene();
+}
+
 void Editor::zoom_reset()
 {
-  const double viewport_scale = 1.0;
-  const double y_flip = building.coordinate_system.is_y_flipped() ? 1 : -1;
-
-  QTransform t;
-  t.scale(viewport_scale, y_flip * viewport_scale);
-  map_view->setTransform(t);
-
-  // compute center of all vertices on the active level
-  Level* level = active_level();
-  if (level)
-  {
-    const size_t n_vertex = level->vertices.size();
-    if (n_vertex > 0)
-    {
-      double x_sum = 0, y_sum = 0;
-      for (const auto& v : level->vertices)
-      {
-        x_sum += v.x;
-        y_sum += v.y;
-      }
-      const double xc = x_sum / n_vertex;
-      const double yc = y_sum / n_vertex;
-      printf("center: (%.3f, %.3f)\n", xc, yc);
-      map_view->centerOn(QPointF(xc, yc));
-    }
-  }
+  map_view->zoom_fit(level_idx);
 }
 
 void Editor::mouse_event(const MouseType t, QMouseEvent* e)
@@ -1228,7 +1284,7 @@ void Editor::property_editor_set_row(
   property_editor_set_row(
     row_idx,
     label,
-    QString::number(value, 'g', num_decimal_places + 1),
+    QString::number(value, 'f', num_decimal_places + 1),
     editable);
 }
 
@@ -1295,6 +1351,16 @@ void Editor::layer_edit_button_clicked(const int row_idx)
     {
       layer_table->update(building, level_idx, layer_idx);
       create_scene();
+    }
+  );
+  connect(
+    dialog,
+    &LayerDialog::center_layer,
+    [=]()
+    {
+      dialog->set_center(
+        map_view->get_center().x(),
+        map_view->get_center().y());
     }
   );
 }
@@ -1386,10 +1452,25 @@ void Editor::populate_property_editor(const Vertex& vertex, const int index)
   property_editor->setRowCount(6 + vertex.params.size());
 
   property_editor_set_row(0, "index", index);
-  property_editor_set_row(1, "x (pixels)", vertex.x, 3, true);
-  property_editor_set_row(2, "y (pixels)", vertex.y, 3, true);
-  property_editor_set_row(3, "x (m)", vertex.x * scale);
-  property_editor_set_row(4, "y (m)", -1.0 * vertex.y * scale);
+  if (!building.coordinate_system.is_global())
+  {
+    property_editor_set_row(1, "x (pixels)", vertex.x, 3, true);
+    property_editor_set_row(2, "y (pixels)", vertex.y, 3, true);
+    property_editor_set_row(3, "x (m)", vertex.x * scale);
+    const double y_flip = building.coordinate_system.is_y_flipped() ? -1 : 1;
+    property_editor_set_row(4, "y (m)", y_flip * vertex.y * scale);
+  }
+  else
+  {
+    property_editor_set_row(1, "x (m)", vertex.x);
+    property_editor_set_row(2, "y (m)", vertex.y);
+
+    CoordinateSystem::WGS84Point wgs84_point =
+      building.coordinate_system.to_wgs84({vertex.x, vertex.y});
+
+    property_editor_set_row(3, "lon (deg)", wgs84_point.lon, 6, true);
+    property_editor_set_row(4, "lat (deg)", wgs84_point.lat, 6, true);
+  }
   property_editor_set_row(
     5,
     "name",
@@ -1578,11 +1659,15 @@ void Editor::property_editor_cell_changed(int row, int column)
 bool Editor::create_scene()
 {
   scene->clear();  // destroys the mouse_motion_* items if they are there
+  map_view->clear();  // reset the list of currently rendered tiles
   building.clear_scene();  // forget all pointers to the graphics items
   mouse_motion_line = nullptr;
   mouse_motion_model = nullptr;
   mouse_motion_ellipse = nullptr;
   mouse_motion_polygon = nullptr;
+
+  // first draw the background map tiles (if requested)
+  map_view->draw_tiles();
 
   building.draw(scene, level_idx, editor_models, rendering_options);
 
@@ -1598,15 +1683,15 @@ void Editor::draw_mouse_motion_line_item(
   switch (tool_id)
   {
     case TOOL_ADD_LANE:
-      pen_width = 20;
+      pen_width = 1.0 / building.coordinate_system.default_scale();
       color = QColor::fromRgbF(0, 0, 1, 0.5);
       break;
     case TOOL_ADD_WALL:
-      pen_width = 5;
+      pen_width = 0.25 / building.coordinate_system.default_scale();
       color = QColor::fromRgbF(0, 0, 1, 0.5);
       break;
     case TOOL_ADD_MEAS:
-      pen_width = 5;
+      pen_width = 0.25 / building.coordinate_system.default_scale();
       color = QColor::fromRgbF(1, 0, 1, 0.5);
       break;
     default:
@@ -2581,6 +2666,10 @@ void Editor::closeEvent(QCloseEvent* event)
   settings.setValue(preferences_keys::viewport_center_y, p_center_scene.y());
   settings.setValue(preferences_keys::viewport_scale, scale);
 
+  settings.setValue(
+    preferences_keys::previous_building_path,
+    QString::fromStdString(building.get_filename()));
+
   if (!building.levels.empty())
     settings.setValue(
       preferences_keys::level_name,
@@ -2702,4 +2791,10 @@ Layer* Editor::active_layer()
     return &level->layers[layer_idx - 1];
 
   return nullptr;
+}
+
+void Editor::cache_size_update_timer_timeout()
+{
+  printf("cache_size_update_timer_timeout()\n");
+  map_view->update_cache_size_label(cache_size_label);
 }

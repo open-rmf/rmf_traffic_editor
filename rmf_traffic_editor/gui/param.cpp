@@ -80,6 +80,7 @@ YAML::Node Param::to_yaml() const
     return YAML::Node();
 
   YAML::Node y;
+  y.SetStyle(YAML::EmitterStyle::Flow);
   y.push_back(static_cast<int>(type));
   if (type == STRING)
     y.push_back(value_string);

@@ -75,7 +75,7 @@ LayerDialog::LayerDialog(QWidget* parent, Layer& _layer, bool edit_mode)
   QHBoxLayout* translation_x_hbox_layout = new QHBoxLayout;
   translation_x_hbox_layout->addWidget(new QLabel("X translation (meters):"));
   translation_x_line_edit = new QLineEdit(
-    QString::number(layer.transform.translation().x()),
+    QString::number(layer.transform.translation().x(), 'f', 3),
     this);
   //translation_x_line_edit->setEnabled(false);
   translation_x_hbox_layout->addWidget(translation_x_line_edit);
@@ -83,18 +83,23 @@ LayerDialog::LayerDialog(QWidget* parent, Layer& _layer, bool edit_mode)
   QHBoxLayout* translation_y_hbox_layout = new QHBoxLayout;
   translation_y_hbox_layout->addWidget(new QLabel("Y translation (meters):"));
   translation_y_line_edit = new QLineEdit(
-    QString::number(layer.transform.translation().y()),
+    QString::number(layer.transform.translation().y(), 'f', 3),
     this);
   //translation_y_line_edit->setEnabled(false);
   translation_y_hbox_layout->addWidget(translation_y_line_edit);
 
   QHBoxLayout* rotation_hbox_layout = new QHBoxLayout;
-  rotation_hbox_layout->addWidget(new QLabel("Rotation (radians):"));
+  rotation_hbox_layout->addWidget(new QLabel("Rotation (degrees):"));
   rotation_line_edit = new QLineEdit(
-    QString::number(layer.transform.yaw()),
+    QString::number(layer.transform.yaw() * 180. / M_PI, 'f', 3),
     this);
   //rotation_line_edit->setEnabled(false);
   rotation_hbox_layout->addWidget(rotation_line_edit);
+
+  center_in_window_button = new QPushButton("Center in viewport", this);
+  connect(
+    center_in_window_button, &QAbstractButton::clicked,
+    this, &LayerDialog::center_in_window_clicked);
 
   QVBoxLayout* vbox_layout = new QVBoxLayout;
   vbox_layout->addLayout(name_hbox_layout);
@@ -103,6 +108,7 @@ LayerDialog::LayerDialog(QWidget* parent, Layer& _layer, bool edit_mode)
   vbox_layout->addLayout(translation_x_hbox_layout);
   vbox_layout->addLayout(translation_y_hbox_layout);
   vbox_layout->addLayout(rotation_hbox_layout);
+  vbox_layout->addWidget(center_in_window_button);
   // todo: some sort of separator (?)
   vbox_layout->addLayout(bottom_buttons_layout);
 
@@ -218,12 +224,31 @@ void LayerDialog::update_layer()
   layer.filename = filename_line_edit->text().toStdString();
 
   layer.transform.setScale(scale_line_edit->text().toDouble());
-  layer.transform.setYaw(rotation_line_edit->text().toDouble());
+  layer.transform.setYaw(
+    rotation_line_edit->text().toDouble() * M_PI / 180.);
 
   layer.transform.setTranslation(
     QPointF(
       translation_x_line_edit->text().toDouble(),
       translation_y_line_edit->text().toDouble()));
 
+  emit redraw();
+}
+
+void LayerDialog::center_in_window_clicked()
+{
+  printf("center_in_window_clicked()\n");
+  emit center_layer();
+}
+
+void LayerDialog::set_center(const double x, const double y)
+{
+  printf("LayerDialog::set_center(%.3f, %.3f)\n", x, y);
+  translation_x_line_edit->setText(QString::number(x, 'f', 3));
+  translation_y_line_edit->setText(QString::number(y, 'f', 3));
+  layer.transform.setTranslation(
+    QPointF(
+      translation_x_line_edit->text().toDouble(),
+      translation_y_line_edit->text().toDouble()));
   emit redraw();
 }

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10.0)
 
 if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 14)
+  set(CMAKE_CXX_STANDARD 17)
 endif()
 
 project(rmf_traffic_editor)
@@ -10,7 +10,7 @@ find_package(ament_cmake REQUIRED)
 find_package(ament_index_cpp REQUIRED)
 find_package(Ceres REQUIRED)
 find_package(Eigen3 REQUIRED)
-find_package(Qt5 COMPONENTS Widgets Concurrent Test REQUIRED)
+find_package(Qt5 COMPONENTS Widgets Concurrent Test Network REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
@@ -69,6 +69,7 @@ set(gui_sources
   gui/lift_dialog.cpp
   gui/lift_door.cpp
   gui/lift_table.cpp
+  gui/map_tile_cache.cpp
   gui/map_view.cpp
   gui/model.cpp
   gui/model_dialog.cpp
@@ -118,6 +119,8 @@ target_link_libraries(
   Eigen3::Eigen
   Qt5::Widgets
   Qt5::Concurrent
+  Qt5::Network
+  proj
   yaml-cpp
   ${ament_index_cpp_LIBRARIES}
 )
@@ -150,7 +153,23 @@ install(
     include)
 
 if (BUILD_TESTING)
+  find_package(ament_cmake_uncrustify REQUIRED)
+  find_package(rmf_utils REQUIRED)
+
   add_subdirectory(test)
+
+  find_file(uncrustify_config_file
+    NAMES "rmf_code_style.cfg"
+    PATHS
+      "${rmf_utils_DIR}/../../../share/rmf_utils/"
+      "/opt/ros/galactic/share/rmf_utils")
+
+  ament_uncrustify(
+    ARGN include gui
+    CONFIG_FILE ${uncrustify_config_file}
+    MAX_LINE_LENGTH 80
+    LANGUAGE CPP
+  )
 endif()
 
 ament_export_include_directories(include)
