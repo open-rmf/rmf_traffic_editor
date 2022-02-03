@@ -46,6 +46,11 @@ class Building:
             for param_name, param_yaml in yaml_node['parameters'].items():
                 self.params[param_name] = ParamValue(param_yaml)
 
+        if 'map_version' in yaml_node:
+            self.map_version = yaml_node['map_version']
+        else:
+            self.map_version = None
+
         cs_name = yaml_node.get('coordinate_system', 'reference_image')
         print(f'coordinate system: {cs_name}')
         self.coordinate_system = CoordinateSystem[cs_name]
@@ -789,6 +794,9 @@ class Building:
             'type': 'FeatureCollection',
             'features': features,
         }
+
+        if self.map_version is not None:
+            j['map_version'] = self.map_version
 
         if 'suggested_offset_x' in self.params:
             j['suggested_offset_x'] = self.params['suggested_offset_x'].value
