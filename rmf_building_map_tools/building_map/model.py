@@ -30,6 +30,10 @@ class Model:
 
         self.yaw = yaml_node['yaw']
 
+        # BH: Temporary holder to keep to_yaml working for now
+        self.original_x = yaml_node['x']
+        self.original_y = yaml_node['y']
+
     def to_yaml(self, coordinate_system):
         y = {}
         y['x'] = self.x
@@ -41,17 +45,21 @@ class Model:
         y['static'] = self.static
         return y
 
-    def generate(self, world_ele, transform, elevation):
+    def generate(self, world_ele, elevation, transform):
         include_ele = SubElement(world_ele, 'include')
         name_ele = SubElement(include_ele, 'name')
         name_ele.text = self.name
         uri_ele = SubElement(include_ele, 'uri')
         uri_ele.text = f'model://{self.model_name}'
         pose_ele = SubElement(include_ele, 'pose')
-        x, y = transform.transform_point((self.x, self.y))
+
+        x_t, y_t = transform.transform_point([self.x, self.y])
+        x_t = x_t - transform.x
+        y_t = y_t - transform.y
+
         z = self.z + elevation
         yaw = self.yaw + transform.rotation
-        pose_ele.text = f'{x} {y} {z} 0 0 {yaw}'
+        pose_ele.text = f'{x_t} {y_t} {z} 0 0 {yaw}'
 
         static_ele = SubElement(include_ele, 'static')
         static_ele.text = str(self.static)

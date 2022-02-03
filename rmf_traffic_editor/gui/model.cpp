@@ -40,12 +40,31 @@ Model::Model()
   uuid = QUuid::createUuid();
 }
 
-void Model::from_yaml(const YAML::Node& data, const string& level_name)
+void Model::from_yaml(
+  const YAML::Node& data,
+  const string& level_name,
+  const CoordinateSystem& coordinate_system)
 {
   if (!data.IsMap())
     throw std::runtime_error("Model::from_yaml() expected a map");
-  state.x = data["x"].as<double>();
-  state.y = data["y"].as<double>();
+
+  if (!coordinate_system.is_global())
+  {
+    state.x = data["x"].as<double>();
+    state.y = data["y"].as<double>();
+  }
+  else
+  {
+    CoordinateSystem::WGS84Point wgs84_point;
+    wgs84_point.lon = data["x"].as<double>();
+    wgs84_point.lat = data["y"].as<double>();
+
+    CoordinateSystem::ProjectedPoint p =
+      coordinate_system.to_epsg3857(wgs84_point);
+    state.x = p.x;
+    state.y = p.y;
+  }
+
   if (data["z"])
   {
     state.z = data["z"].as<double>();
@@ -70,15 +89,26 @@ void Model::from_yaml(const YAML::Node& data, const string& level_name)
     is_static = true;
 }
 
-YAML::Node Model::to_yaml() const
+YAML::Node Model::to_yaml(const CoordinateSystem& coordinate_system) const
 {
-  // This is in image space. I think it's safe to say nobody is clicking
-  // with more than 1/1000 precision inside a single pixel.
-
   YAML::Node n;
   n.SetStyle(YAML::EmitterStyle::Flow);
-  n["x"] = std::round(state.x * 1000.0) / 1000.0;
-  n["y"] = std::round(state.y * 1000.0) / 1000.0;
+
+  if (!coordinate_system.is_global())
+  {
+    // in either image or cartesian-meters coordinate spaces, we're
+    // fine with rounding to 3 decimal places
+    n["x"] = std::round(state.x * 1000.0) / 1000.0;
+    n["y"] = std::round(state.y * 1000.0) / 1000.0;
+  }
+  else
+  {
+    // convert back to WGS84 and save with as many decimal places as possible
+    CoordinateSystem::WGS84Point p =
+      coordinate_system.to_wgs84({state.x, state.y});
+    n["x"] = p.lon;
+    n["y"] = p.lat;
+  }
   n["z"] = std::round(state.z * 1000.0) / 1000.0;
   // let's give yaw another decimal place because, I don't know, reasons (?)
   n["yaw"] = std::round(state.yaw * 10000.0) / 10000.0;

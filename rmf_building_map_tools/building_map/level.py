@@ -244,8 +244,8 @@ class Level:
         for model in self.models:
             model.generate(
                 world_ele,
-                self.transform,
-                self.elevation)
+                self.elevation,
+                self.transform)
 
         # sniff around in our vertices and spawn robots if requested
         for vertex_idx, vertex in enumerate(self.vertices):
