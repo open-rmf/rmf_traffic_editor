@@ -1445,9 +1445,6 @@ void Editor::populate_property_editor(const Edge& edge)
 
 void Editor::populate_property_editor(const Vertex& vertex, const int index)
 {
-  const Level& level = building.levels[level_idx];
-  const double scale = level.drawing_meters_per_pixel;
-
   property_editor->blockSignals(true);  // otherwise we get tons of callbacks
   property_editor->setRowCount(6 + vertex.params.size());
 
@@ -1456,9 +1453,21 @@ void Editor::populate_property_editor(const Vertex& vertex, const int index)
   {
     property_editor_set_row(1, "x (pixels)", vertex.x, 3, true);
     property_editor_set_row(2, "y (pixels)", vertex.y, 3, true);
-    property_editor_set_row(3, "x (m)", vertex.x * scale);
+
+    QPointF p_ref_level;
+    building.transform_between_levels(
+      level_idx,
+      QPoint(vertex.x, vertex.y),
+      building.get_reference_level_idx(),
+      p_ref_level);
+
     const double y_flip = building.coordinate_system.is_y_flipped() ? -1 : 1;
-    property_editor_set_row(4, "y (m)", y_flip * vertex.y * scale);
+    const Level& ref_level = building.levels[building.get_reference_level_idx()];
+    const QPointF p_meters(
+      p_ref_level.x() * ref_level.drawing_meters_per_pixel,
+      p_ref_level.y() * ref_level.drawing_meters_per_pixel * y_flip);
+    property_editor_set_row(3, "x (m)", p_meters.x());
+    property_editor_set_row(4, "y (m)", p_meters.y());
   }
   else
   {
