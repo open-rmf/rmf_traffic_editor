@@ -1462,7 +1462,8 @@ void Editor::populate_property_editor(const Vertex& vertex, const int index)
       p_ref_level);
 
     const double y_flip = building.coordinate_system.is_y_flipped() ? -1 : 1;
-    const Level& ref_level = building.levels[building.get_reference_level_idx()];
+    const Level& ref_level =
+      building.levels[building.get_reference_level_idx()];
     const QPointF p_meters(
       p_ref_level.x() * ref_level.drawing_meters_per_pixel,
       p_ref_level.y() * ref_level.drawing_meters_per_pixel * y_flip);
