@@ -1454,21 +1454,32 @@ void Editor::populate_property_editor(const Vertex& vertex, const int index)
     property_editor_set_row(1, "x (pixels)", vertex.x, 3, true);
     property_editor_set_row(2, "y (pixels)", vertex.y, 3, true);
 
-    QPointF p_ref_level;
-    building.transform_between_levels(
-      level_idx,
-      QPoint(vertex.x, vertex.y),
-      building.get_reference_level_idx(),
-      p_ref_level);
+    const size_t ref_level_idx =
+      static_cast<size_t>(building.get_reference_level_idx());
 
-    const double y_flip = building.coordinate_system.is_y_flipped() ? -1 : 1;
-    const Level& ref_level =
-      building.levels[building.get_reference_level_idx()];
-    const QPointF p_meters(
-      p_ref_level.x() * ref_level.drawing_meters_per_pixel,
-      p_ref_level.y() * ref_level.drawing_meters_per_pixel * y_flip);
-    property_editor_set_row(3, "x (m)", p_meters.x());
-    property_editor_set_row(4, "y (m)", p_meters.y());
+    if (ref_level_idx < building.levels.size())
+    {
+      QPointF p_ref_level;
+      building.transform_between_levels(
+        level_idx,
+        QPoint(vertex.x, vertex.y),
+        ref_level_idx,
+        p_ref_level);
+
+      const double y_flip = building.coordinate_system.is_y_flipped() ? -1 : 1;
+      const double scale =
+        building.levels[ref_level_idx].drawing_meters_per_pixel;
+      const QPointF p_meters(
+        p_ref_level.x() * scale,
+        p_ref_level.y() * scale * y_flip);
+      property_editor_set_row(3, "x (m)", p_meters.x());
+      property_editor_set_row(4, "y (m)", p_meters.y());
+    }
+    else
+    {
+      property_editor_set_row(3, "x (m)", "");
+      property_editor_set_row(4, "y (m)", "");
+    }
   }
   else
   {
