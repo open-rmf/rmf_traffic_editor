@@ -19,7 +19,7 @@ jobs:
     - name: checkout
       uses: actions/checkout@v2
       with:
-        repository: https://github.com/open-rmf/rmf_utils
+        repository: open-rmf/rmf_utils
         path: ws/src/rmf_utils
 
     - name: non-ros-deps
