@@ -2,7 +2,7 @@ name: ci_rolling
 on: [push]
 jobs:
   ci_rolling:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     container:
       image: docker://ros:rolling-ros-base-jammy
 
