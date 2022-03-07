@@ -32,6 +32,7 @@ jobs:
       run: |
         cd ws
         source /opt/ros/rolling/setup.bash
+        colcon build --packages-select rmf_utils
         colcon build --packages-select rmf_traffic_editor --cmake-args -DNO_DOWNLOAD_MODELS=True
         colcon build --packages-up-to rmf_traffic_editor_test_maps --cmake-args -DNO_DOWNLOAD_MODELS=True
 
