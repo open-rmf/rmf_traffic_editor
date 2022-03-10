@@ -521,7 +521,7 @@ class Building:
                                 floor_ele,
                                 'model',
                                 {'name': (f'ShaftDoor_{lift_name}_' +
-                                            f'{level_name}_{door.name}')})
+                                          f'{level_name}_{door.name}')})
 
         return sdf
 
