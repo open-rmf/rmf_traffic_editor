@@ -29,7 +29,6 @@ endif()
 include_directories(.)
 include_directories(gui)
 include_directories(include)
-include_directories(${ament_index_cpp_INCLUDE_DIRS})
 
 set(gui_sources
   gui/actions/add_constraint.cpp
@@ -115,6 +114,7 @@ add_library(
 
 target_link_libraries(
   gui_lib
+  ament_index_cpp::ament_index_cpp
   ceres
   Eigen3::Eigen
   Qt5::Widgets
