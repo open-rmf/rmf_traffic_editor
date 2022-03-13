@@ -2,8 +2,8 @@
 Changelog for package rmf_traffic_editor_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.5.0 (2022-03-13)
+------------------
 * minor usability enhancements on traffic editor (#398)
   * updates
   * style

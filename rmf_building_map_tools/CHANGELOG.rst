@@ -2,8 +2,8 @@
 Changelog for package rmf_building_map_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.5.0 (2022-03-13)
+------------------
 * Always use ign=True and remove spaces when comparing model names (#412)
   * Always use ign=True and remove spaces when comparing model names
   * Pit crew makes model paths available, when checking for missing models, for exporting (#414)

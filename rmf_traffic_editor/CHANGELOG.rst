@@ -2,8 +2,8 @@
 Changelog for package rmf_traffic_editor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.5.0 (2022-03-13)
+------------------
 * fix #419 by calculating transformed x/y in image-based maps (#421)
 * validate reference level index before using it (avoid a crash)
 * Use C++17 for std::optional
