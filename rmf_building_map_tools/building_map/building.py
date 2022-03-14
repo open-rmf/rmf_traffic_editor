@@ -11,13 +11,15 @@ import yaml
 from ament_index_python.packages import get_package_share_directory
 from pyproj import Transformer
 from pyproj.crs import CRS
-from xml.etree.ElementTree import Element, SubElement, parse
+from xml.etree.ElementTree import Element, ElementTree, SubElement, parse
 
 from .coordinate_system import CoordinateSystem
 from .edge_type import EdgeType
+from .etree_utils import indent_etree
 from .geopackage import GeoPackage
 from .level import Level
 from .lift import Lift
+from .material_utils import copy_texture
 from .param_value import ParamValue
 from .passthrough_transform import PassthroughTransform
 from .vertex import Vertex
@@ -528,6 +530,147 @@ class Building:
                 os.makedirs(model_path)
 
             level.generate_sdf_model(model_name, model_path)
+
+    def generate_navgraph_visualizations(self, output_dir):
+        for i in range(0, 9):
+            for level_name, level in self.levels.items():
+                graph = level.generate_nav_graph(i)
+                if not graph['lanes']:
+                    continue
+
+                self.generate_navgraph_visualization(
+                    output_dir,
+                    f'navgraph_{i}',
+                    level,
+                    graph)
+
+    def generate_navgraph_visualization(self, output_dir, name, level, graph):
+        print(f'generating {name}')
+        meshes_path = f'{output_dir}/{name}/meshes'
+        if not os.path.exists(meshes_path):
+            os.makedirs(meshes_path)
+        obj_path = f'{meshes_path}/{name}.obj'
+
+        print(f'  generating {obj_path}')
+        with open(obj_path, 'w') as f:
+            f.write('# The Great Editor v0.0.1\n')
+            f.write(f'mtllib {name}.mtl\n')
+            f.write(f'o walls\n')
+            h = 0.1  # just above the floor
+            thickness = 1.0  # meters
+            for lane in graph['lanes']:
+                v1 = graph['vertices'][lane[0]]
+                v2 = graph['vertices'][lane[1]]
+                v1x, v1y = v1[0], v1[1]
+                v2x, v2y = v2[0], v2[1]
+
+                dx = v2x - v1x
+                dy = v2y - v1y
+                length = math.sqrt(dx*dx + dy*dy)
+                cx = (v1x + v2x) / 2.0
+                cy = (v1y + v2y) / 2.0
+                yaw = math.atan2(dy, dx)
+
+                lane_footprint_at_origin = np.array([
+                    [-length/2.0 - thickness / 2.0, thickness / 2.0],
+                    [length/2.0 + thickness / 2.0, thickness / 2.0],
+                    [length/2.0 + thickness / 2.0, -thickness / 2.0],
+                    [-length/2.0 - thickness / 2.0, -thickness / 2.0]])
+
+                rot = np.array([
+                    [math.cos(yaw), math.sin(yaw)],
+                    [-math.sin(yaw), math.cos(yaw)]])
+
+                rot_verts = lane_footprint_at_origin.dot(rot)
+                verts = rot_verts + np.array([[cx, cy]])
+
+                for v in verts:
+                    f.write(f'v {v[0]:.4f} {v[1]:.4f} {h:.4f}\n')
+
+                f.write(f'vt 0.000 1.000\n')
+                f.write(f'vt {length:.4f} 1.000\n')
+                f.write(f'vt {length:.4f} 0.000\n')
+                f.write(f'vt 0.000 0.000\n')
+
+            f.write(f'vn 0.000 0.000 1.000\n')
+            f.write('s off\n')
+            f.write('g lanes\n')
+
+            for i in range(0, len(graph['lanes'])):
+                f.write(
+                    f'f {i*4+1}/{i*4+1}/1'
+                    f' {i*4+3}/{i*4+3}/1'
+                    f' {i*4+2}/{i*4+2}/1\n')
+                f.write(
+                    f'f {i*4+1}/{i*4+1}/1'
+                    f' {i*4+4}/{i*4+4}/1'
+                    f' {i*4+3}/{i*4+3}/1\n')
+
+        alpha = 0.5
+        mtl_path = f'{meshes_path}/{name}.mtl'
+        texture_filename = 'arrows.png'
+        print(f'  generating {mtl_path}')
+        with open(mtl_path, 'w') as f:
+            f.write('# The Great Editor v0.0.1\n')
+            f.write(f'newmtl {name}\n')
+            f.write('Ka 1.0 1.0 1.0\n')  # ambient
+            f.write('Kd 1.0 1.0 1.0\n')  # diffuse
+            f.write('Ke 0.0 0.0 0.0\n')  # emissive
+            f.write('Ns 50.0\n')  # specular highlight, 0..100 (?)
+            f.write('Ni 1.0\n')  # no idea what this is
+            f.write(f'd {alpha}\n')  # alpha
+            f.write('illum 2\n')  # illumination model (enum)
+            f.write(f'map_Kd {texture_filename}\n')
+
+        copy_texture('arrows', meshes_path)
+
+        config_ele = Element('model')
+        config_name_ele = SubElement(config_ele, 'name')
+        config_name_ele.text = name
+        config_version_ele = SubElement(config_ele, 'version')
+        config_version_ele.text = '1.0.0'
+        config_sdf_ele = SubElement(config_ele, 'sdf', {'version': '1.6'})
+        config_sdf_ele.text = 'model.sdf'
+
+        config_author_ele = SubElement(config_ele, 'author')
+        config_author_name_ele = SubElement(config_author_ele, 'name')
+        config_author_name_ele.text = 'generated by RMF Building Map Tools'
+        config_author_email_ele = SubElement(config_author_ele, 'email')
+        config_author_email_ele.text = 'info@openrobotics.org'
+
+        config_description_ele = SubElement(config_ele, 'description')
+        config_description_ele.text = f'{name} (generated)'
+
+        config_tree = ElementTree(config_ele)
+        indent_etree(config_ele)
+        config_path = os.path.join(output_dir, name, 'model.config')
+        config_tree.write(config_path, encoding='utf-8', xml_declaration=True)
+        print(f'  wrote {config_path}')
+
+        sdf_ele = Element('sdf', {'version': '1.7'})
+        sdf_model_ele = SubElement(sdf_ele, 'model', {'name': name})
+        sdf_static_ele = SubElement(sdf_model_ele, 'static')
+        sdf_static_ele.text = 'true'
+        sdf_link_ele = SubElement(sdf_model_ele, 'link', {'name': name})
+        sdf_visual_ele = SubElement(sdf_link_ele, 'visual')
+        sdf_visual_ele.set('name', name)
+        sdf_visual_geom_ele = SubElement(sdf_visual_ele, 'geometry')
+        sdf_transparency_ele = SubElement(sdf_visual_ele, 'transparency')
+        sdf_transparency_ele.text = str(1.0 - alpha)
+        sdf_mesh_ele = SubElement(sdf_visual_geom_ele, 'mesh')
+        sdf_mesh_uri_ele = SubElement(sdf_mesh_ele, 'uri')
+        sdf_mesh_uri_ele.text = os.path.join('meshes', f'{name}.obj')
+
+        sdf_pose_ele = SubElement(sdf_link_ele, 'pose')
+        sdf_link_x = 0
+        sdf_link_y = 0
+        sdf_pose_ele.text = f'{sdf_link_x} {sdf_link_y} 0 0 0 0'
+
+        sdf_tree = ElementTree(sdf_ele)
+        indent_etree(sdf_ele)
+        sdf_path = os.path.join(output_dir, name, 'model.sdf')
+        sdf_tree.write(sdf_path, encoding='utf-8', xml_declaration=True)
+        print(f'  wrote {sdf_path}')
 
     def center(self):
         # todo: something smarter in the future. For now just the center
