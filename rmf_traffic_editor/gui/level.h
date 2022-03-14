@@ -71,15 +71,10 @@ public:
   int drawing_height = 0;
   double drawing_meters_per_pixel = 0.05;
   double elevation = 0.0;
-  const double vertex_radius = 0.1;  // meters
+  double vertex_radius = 0.1;  // meters or degrees, depending on coordinates
 
   double x_meters = 10.0;  // manually specified if no drawing supplied
   double y_meters = 10.0;  // manually specified if no drawing supplied
-
-  // when generating the building in "flattened" mode, the levels have
-  // to be offset in the (x, y) plane to avoid clobbering each other.
-  double flattened_x_offset = 0.0;
-  double flattened_y_offset = 0.0;
 
   std::vector<Model> models;
   std::vector<Fiducial> fiducials;
@@ -88,8 +83,11 @@ public:
 
   QPixmap floorplan_pixmap;
 
-  bool from_yaml(const std::string& name, const YAML::Node& data);
-  YAML::Node to_yaml() const;
+  bool from_yaml(
+    const std::string& name,
+    const YAML::Node& data,
+    const CoordinateSystem& coordinate_system);
+  YAML::Node to_yaml(const CoordinateSystem& coordinate_system) const;
 
   const Feature* find_feature(const QUuid& id) const;
   const Feature* find_feature(const double x, const double y) const;
@@ -147,7 +145,7 @@ public:
 
   bool can_delete_current_selection();
   bool delete_selected();
-  void calculate_scale();
+  void calculate_scale(const CoordinateSystem& coordinate_system);
   void clear_selection();
 
   void get_selected_items(std::vector<SelectedItem>& selected_items);
@@ -199,8 +197,6 @@ private:
     const YAML::Node& data,
     const char* sequence_name,
     const Edge::Type type);
-
-  bool parse_vertices(const YAML::Node& _data);
 
   bool _drawing_visible = true;
 

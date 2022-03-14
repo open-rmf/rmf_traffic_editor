@@ -14,10 +14,12 @@
   <exec_depend>python3-fiona</exec_depend>
   <exec_depend>python3-pyproj</exec_depend>
   <exec_depend>python3-requests</exec_depend>
+  <exec_depend>python3-rtree</exec_depend>
   <exec_depend>python3-shapely</exec_depend>
   <exec_depend>python3-yaml</exec_depend>
   <exec_depend>rclpy</exec_depend>
   <exec_depend>rmf_building_map_msgs</exec_depend>
+  <exec_depend>rmf_site_map_msgs</exec_depend>
   <exec_depend>sqlite3</exec_depend>
   <exec_depend>std_msgs</exec_depend>
   <exec_depend>yaml-cpp</exec_depend>

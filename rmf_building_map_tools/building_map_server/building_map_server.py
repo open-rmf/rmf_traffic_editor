@@ -1,4 +1,6 @@
 import errno
+import gzip
+import json
 import math
 import os
 import sys
@@ -44,9 +46,13 @@ class BuildingMapServer(Node):
         self.map_dir = os.path.dirname(map_path)  # for calculating image paths
 
         if map_path.endswith('.building.yaml'):
-            self.load_building_yaml_map(map_path)
+            self.load_building_yaml(map_path)
         elif map_path.endswith('.gpkg'):
             self.load_geopackage(map_path)
+        elif map_path.endswith('.geojson'):
+            self.load_geojson(map_path)
+        elif map_path.endswith('.geojson.gz'):
+            self.load_geojson(map_path, True)
         else:
             self.get_logger().fatal('unknown filename suffix')
             sys.exit(1)
@@ -74,20 +80,31 @@ class BuildingMapServer(Node):
             'ready to serve map: "{}"  Ctrl+C to exit...'.format(
                 self.map_msg.name))
 
-    def load_building_yaml_map(self, map_path):
+    def load_building_yaml(self, map_path):
         with open(map_path, 'r') as f:
-            building = Building(yaml.load(f, Loader=yaml.CLoader))
+            building = Building(yaml.load(f, Loader=yaml.CLoader), 'yaml')
 
+        self.create_map_msg(building)
+
+        self.site_map_msg = SiteMap()
+        uncompressed = building.generate_geojson()
+        if 'features' in uncompressed and len(uncompressed['features']):
+            data_str = json.dumps(uncompressed, sort_keys=True)
+            data_gzip = gzip.compress(bytes(data_str, 'utf-8'))
+
+            self.get_logger().info(f'compressed GeoJSON: {len(data_gzip)} B')
+            self.site_map_msg.encoding = SiteMap.MAP_DATA_GEOJSON_GZ
+            self.site_map_msg.data = data_gzip
+        else:
+            self.get_logger().info(f'unable to generate GeoJSON for this map.')
+
+    def create_map_msg(self, building):
         self.map_msg = BuildingMap()
         self.map_msg.name = building.name
         for _, level_data in building.levels.items():
             self.map_msg.levels.append(self.level_msg(level_data))
         for _, lift_data in building.lifts.items():
             self.map_msg.lifts.append(self.lift_msg(lift_data))
-
-        self.site_map_msg = SiteMap()
-        self.site_map_msg.encoding = SiteMap.MAP_DATA_GPKG
-        self.site_map_msg.data = building.generate_geopackage()
 
     def load_geopackage(self, map_path):
         with open(map_path, 'rb') as f:
@@ -96,9 +113,29 @@ class BuildingMapServer(Node):
             self.site_map_msg.data = f.read()
         self.get_logger().info(f'read {len(self.site_map_msg.data)} byte GPKG')
 
-        self.map_msg = BuildingMap()
         # todo: populate the BuildingMap from the GeoPackage. For now we
         # will leave it empty...
+
+    def load_geojson(self, map_path, compressed=False):
+        self.site_map_msg = SiteMap()
+
+        with open(map_path, 'rb') as f:
+            json_bytes = f.read()
+
+        self.site_map_msg.data = json_bytes
+        self.get_logger().info(f'read {len(self.site_map_msg.data)} bytes')
+
+        if compressed:
+            self.site_map_msg.encoding = SiteMap.MAP_DATA_GEOJSON_GZ
+            json_str = gzip.decompress(json_bytes)
+            self.get_logger().info(f'decompressed to {len(json_str)} bytes')
+            json_node = json.loads(json_str)
+        else:
+            self.site_map_msg.encoding = SiteMap.MAP_DATA_GEOJSON
+            json_node = json.loads(json_bytes.decode('utf-8'))
+
+        building = Building(json_node, 'geojson')
+        self.create_map_msg(building)
 
     def level_msg(self, level):
         msg = Level()
@@ -125,7 +162,7 @@ class BuildingMapServer(Node):
             else:
                 self.get_logger().error(f'unable to open image: {image_path}')
 
-        if (len(level.doors)):
+        if len(level.doors):
             for door in level.doors:
                 door_msg = Door()
                 door_msg.name = door.params['name'].value
@@ -157,6 +194,7 @@ class BuildingMapServer(Node):
                 continue  # empty graph :(
             graph_msg = Graph()
             graph_msg.name = str(i)  # todo: someday, string names...
+            print(f"graph {i} has {len(g['vertices'])} vertices")
             for v in g['vertices']:
                 gn = GraphNode()
                 gn.x = v[0]
@@ -186,6 +224,7 @@ class BuildingMapServer(Node):
                         gn.params.append(p)
 
                 graph_msg.vertices.append(gn)
+
             for l in g['lanes']:
                 ge = GraphEdge()
                 ge.v1_idx = l[0]

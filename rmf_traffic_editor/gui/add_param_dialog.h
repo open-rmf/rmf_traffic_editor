@@ -23,7 +23,6 @@
 #include "param.h"
 class QComboBox;
 
-
 class AddParamDialog : public QDialog
 {
 public:

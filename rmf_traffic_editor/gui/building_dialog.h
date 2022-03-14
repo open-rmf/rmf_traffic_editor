@@ -35,6 +35,7 @@ private:
 
   QLineEdit* _building_name_line_edit;
   QComboBox* _reference_floor_combo_box;
+  QLineEdit* generate_crs_line_edit;
   QPushButton* _ok_button, * _cancel_button;
 
 private slots:

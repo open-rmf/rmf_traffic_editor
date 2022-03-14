@@ -26,13 +26,27 @@ Transform::Transform()
 {
 }
 
-bool Transform::from_yaml(const YAML::Node& data)
+bool Transform::from_yaml(
+  const YAML::Node& data,
+  const CoordinateSystem& coordinate_system)
 {
-  if (data["translation_x"])
-    _translation.setX(data["translation_x"].as<double>());
-
-  if (data["translation_y"])
-    _translation.setY(data["translation_y"].as<double>());
+  if (!coordinate_system.is_global())
+  {
+    if (data["translation_x"])
+      _translation.setX(data["translation_x"].as<double>());
+    if (data["translation_y"])
+      _translation.setY(data["translation_y"].as<double>());
+  }
+  else if (data["translation_lat"] && data["translation_lon"])
+  {
+    CoordinateSystem::WGS84Point wgs84_point;
+    wgs84_point.lon = data["translation_lon"].as<double>();
+    wgs84_point.lat = data["translation_lat"].as<double>();
+    CoordinateSystem::ProjectedPoint p =
+      coordinate_system.to_epsg3857(wgs84_point);
+    _translation.setX(p.x);
+    _translation.setY(p.y);
+  }
 
   if (data["yaw"])
     _yaw = data["yaw"].as<double>();
@@ -43,13 +57,24 @@ bool Transform::from_yaml(const YAML::Node& data)
   return true;
 }
 
-YAML::Node Transform::to_yaml() const
+YAML::Node Transform::to_yaml(const CoordinateSystem& coordinate_system) const
 {
   YAML::Node y;
   y["yaw"] = _yaw;
-  y["translation_x"] = _translation.x();
-  y["translation_y"] = _translation.y();
   y["scale"] = _scale;
+
+  if (!coordinate_system.is_global())
+  {
+    y["translation_x"] = _translation.x();
+    y["translation_y"] = _translation.y();
+  }
+  else
+  {
+    const CoordinateSystem::WGS84Point p =
+      coordinate_system.to_wgs84({_translation.x(), _translation.y()});
+    y["translation_lat"] = p.lat;
+    y["translation_lon"] = p.lon;
+  }
   return y;
 }
 

@@ -43,6 +43,18 @@ BuildingDialog::BuildingDialog(Building& building)
       QString::fromStdString(building.reference_level_name));
   reference_level_hbox->addWidget(_reference_floor_combo_box);
 
+  QHBoxLayout* generate_crs_hbox = new QHBoxLayout;
+  generate_crs_hbox->addWidget(new QLabel("Generate CRS:"));
+
+  std::string generate_crs;
+  if (building.params.find("generate_crs") != building.params.end())
+    generate_crs = building.params["generate_crs"].value_string;
+
+  generate_crs_line_edit = new QLineEdit(
+    QString::fromStdString(generate_crs),
+    this);
+  generate_crs_hbox->addWidget(generate_crs_line_edit);
+
   QHBoxLayout* bottom_buttons_hbox = new QHBoxLayout;
   bottom_buttons_hbox->addWidget(_cancel_button);
   bottom_buttons_hbox->addWidget(_ok_button);
@@ -57,6 +69,7 @@ BuildingDialog::BuildingDialog(Building& building)
 
   top_vbox->addLayout(building_name_hbox);
   top_vbox->addLayout(reference_level_hbox);
+  top_vbox->addLayout(generate_crs_hbox);
   // todo: some sort of separator (?)
   top_vbox->addLayout(bottom_buttons_hbox);
 
@@ -70,7 +83,12 @@ BuildingDialog::~BuildingDialog()
 void BuildingDialog::ok_button_clicked()
 {
   _building.name = _building_name_line_edit->text().toStdString();
+
   _building.reference_level_name =
     _reference_floor_combo_box->currentText().toStdString();
+
+  _building.params["generate_crs"] =
+    Param(generate_crs_line_edit->text().toStdString());
+
   accept();
 }

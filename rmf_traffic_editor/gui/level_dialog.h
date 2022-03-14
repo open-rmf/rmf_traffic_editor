@@ -36,8 +36,6 @@ private:
 
   QLineEdit* name_line_edit, * drawing_filename_line_edit;
   QLineEdit* x_line_edit, * y_line_edit;
-  QLineEdit* flattened_x_offset_line_edit;
-  QLineEdit* flattened_y_offset_line_edit;
   QLineEdit* elevation_line_edit;
   QPushButton* drawing_filename_button;
   QPushButton* ok_button, * cancel_button;
