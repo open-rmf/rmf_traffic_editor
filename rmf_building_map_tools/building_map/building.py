@@ -11,7 +11,7 @@ import yaml
 from ament_index_python.packages import get_package_share_directory
 from pyproj import Transformer
 from pyproj.crs import CRS
-from xml.etree.ElementTree import Element, ElementTree SubElement, parse
+from xml.etree.ElementTree import Element, ElementTree, SubElement, parse
 
 from .coordinate_system import CoordinateSystem
 from .edge_type import EdgeType
