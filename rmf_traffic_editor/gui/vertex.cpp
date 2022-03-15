@@ -54,12 +54,30 @@ Vertex::Vertex(double _x, double _y, const string& _name)
   uuid = QUuid::createUuid();
 }
 
-void Vertex::from_yaml(const YAML::Node& data)
+void Vertex::from_yaml(
+  const YAML::Node& data,
+  const CoordinateSystem& coordinate_system)
 {
   if (!data.IsSequence())
     throw std::runtime_error("Vertex::from_yaml expected a sequence");
-  x = data[0].as<double>();
-  y = data[1].as<double>();
+
+  if (!coordinate_system.is_global())
+  {
+    x = data[0].as<double>();
+    y = data[1].as<double>();
+  }
+  else
+  {
+    CoordinateSystem::WGS84Point wgs84_point;
+    wgs84_point.lon = data[0].as<double>();
+    wgs84_point.lat = data[1].as<double>();
+
+    CoordinateSystem::ProjectedPoint p =
+      coordinate_system.to_epsg3857(wgs84_point);
+    x = p.x;
+    y = p.y;
+  }
+
   if (data.size() < 4)
     return;// todo: remove... intended only during format transition
   // skip the z-offset in data[2] for now
@@ -78,15 +96,25 @@ void Vertex::from_yaml(const YAML::Node& data)
   }
 }
 
-YAML::Node Vertex::to_yaml() const
+YAML::Node Vertex::to_yaml(const CoordinateSystem& coordinate_system) const
 {
-  // This is in image space. I think it's safe to say nobody is clicking
-  // with more than 1/1000 precision inside a single pixel.
-
   YAML::Node vertex_node;
   vertex_node.SetStyle(YAML::EmitterStyle::Flow);
-  vertex_node.push_back(std::round(x * 1000.0) / 1000.0);
-  vertex_node.push_back(std::round(y * 1000.0) / 1000.0);
+
+  if (!coordinate_system.is_global())
+  {
+    // in either image or cartesian-meters coordinate spaces, we're
+    // fine with rounding to 3 decimal places
+    vertex_node.push_back(std::round(x * 1000.0) / 1000.0);
+    vertex_node.push_back(std::round(y * 1000.0) / 1000.0);
+  }
+  else
+  {
+    // convert back to WGS84 and save with as many decimal places as possible
+    CoordinateSystem::WGS84Point p = coordinate_system.to_wgs84({x, y});
+    vertex_node.push_back(p.lon);
+    vertex_node.push_back(p.lat);
+  }
   vertex_node.push_back(0.0);  // placeholder for Z offsets in the future
   vertex_node.push_back(name);
 

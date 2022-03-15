@@ -24,6 +24,8 @@
 
 #include <QPointF>
 
+#include "coordinate_system.h"
+
 //=============================================================================
 /// A transform from one space to another. For now this will be linear,
 /// but in the future we expect to use various types of nonlinear transforms.
@@ -51,8 +53,11 @@ public:
   QPointF forwards(const QPointF& p) const;
   QPointF backwards(const QPointF& p) const;
 
-  bool from_yaml(const YAML::Node& data);
-  YAML::Node to_yaml() const;
+  bool from_yaml(
+    const YAML::Node& data,
+    const CoordinateSystem& coordinate_system);
+
+  YAML::Node to_yaml(const CoordinateSystem& coordinate_system) const;
 
   Transform inverse() const;
 

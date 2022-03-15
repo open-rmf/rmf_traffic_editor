@@ -72,20 +72,6 @@ LevelDialog::LevelDialog(Level& _level,
   y_hbox->addWidget(new QLabel("y dimension (meters):"));
   y_hbox->addWidget(y_line_edit);
 
-  flattened_x_offset_line_edit =
-    new QLineEdit(QString::number(building_level.flattened_x_offset));
-  QHBoxLayout* flattened_x_offset_hbox = new QHBoxLayout;
-  flattened_x_offset_hbox->addWidget(
-    new QLabel("flattened x offset (meters)"));
-  flattened_x_offset_hbox->addWidget(flattened_x_offset_line_edit);
-
-  flattened_y_offset_line_edit =
-    new QLineEdit(QString::number(building_level.flattened_y_offset));
-  QHBoxLayout* flattened_y_offset_hbox = new QHBoxLayout;
-  flattened_y_offset_hbox->addWidget(
-    new QLabel("flattened y offset (meters)"));
-  flattened_y_offset_hbox->addWidget(flattened_y_offset_line_edit);
-
   QHBoxLayout* bottom_buttons_hbox = new QHBoxLayout;
   bottom_buttons_hbox->addWidget(cancel_button);
   bottom_buttons_hbox->addWidget(ok_button);
@@ -107,8 +93,6 @@ LevelDialog::LevelDialog(Level& _level,
   top_vbox->addLayout(instr_hbox);
   top_vbox->addLayout(x_hbox);
   top_vbox->addLayout(y_hbox);
-  top_vbox->addLayout(flattened_x_offset_hbox);
-  top_vbox->addLayout(flattened_y_offset_hbox);
   // todo: some sort of separator (?)
   top_vbox->addLayout(bottom_buttons_hbox);
 
@@ -220,12 +204,7 @@ void LevelDialog::ok_button_clicked()
     building_level.y_meters = 0.0;
   }
 
-  building_level.flattened_x_offset =
-    flattened_x_offset_line_edit->text().toDouble();
-  building_level.flattened_y_offset =
-    flattened_y_offset_line_edit->text().toDouble();
-
-  building_level.calculate_scale();
+  building_level.calculate_scale(building.coordinate_system);
   accept();
 }
 

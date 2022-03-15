@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Open Source Robotics Foundation
+ * Copyright (C) 2019-2021 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@
 #include <QPixmap>
 #include <yaml-cpp/yaml.h>
 
+#include "coordinate_system.h"
 #include "feature.hpp"
 #include "transform.hpp"
 
@@ -57,15 +58,20 @@ public:
 
   std::vector<Feature> features;
 
-  bool from_yaml(const std::string& name, const YAML::Node& data);
-  YAML::Node to_yaml() const;
+  bool from_yaml(
+    const std::string& name,
+    const YAML::Node& data,
+    const CoordinateSystem& coordinate_system);
+
+  YAML::Node to_yaml(const CoordinateSystem& coordinate_system) const;
 
   bool load_image();
   void colorize_image();
 
   void draw(
     QGraphicsScene* scene,
-    const double level_meters_per_pixel);
+    const double level_meters_per_pixel,
+    const CoordinateSystem& coordinate_system);
 
   QColor color;
 

@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>rmf_traffic_editor</name>
-  <version>1.4.0</version>
+  <version>1.5.0</version>
   <description>traffic editor</description>
   <maintainer email="morgan@openrobotics.org">Morgan Quigley</maintainer>
   <maintainer email="marco@openrobotics.org">Marco A. Gutiérrez</maintainer>
@@ -15,9 +15,13 @@
   <build_depend>libqt5-widgets</build_depend>
   <build_depend>qtbase5-dev</build_depend>
   <build_depend>eigen</build_depend>
+  <build_depend>rmf_utils</build_depend>
+
+  <test_depend>ament_cmake_uncrustify</test_depend>
 
   <depend>libceres-dev</depend>
   <depend>libgoogle-glog-dev</depend>
+  <depend>proj</depend>
 
   <export>
     <build_type>ament_cmake</build_type>

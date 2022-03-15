@@ -1,27 +1,42 @@
 import fiona
+import gzip
 import json
 import math
 import numpy as np
 import os
-import pyproj.crs
 import sqlite3
 import tempfile
 import yaml
 
-from xml.etree.ElementTree import Element, SubElement, parse
 from ament_index_python.packages import get_package_share_directory
+from pyproj import Transformer
+from pyproj.crs import CRS
+from xml.etree.ElementTree import Element, ElementTree, SubElement, parse
 
 from .coordinate_system import CoordinateSystem
+from .edge_type import EdgeType
+from .etree_utils import indent_etree
 from .geopackage import GeoPackage
 from .level import Level
 from .lift import Lift
+from .material_utils import copy_texture
 from .param_value import ParamValue
 from .passthrough_transform import PassthroughTransform
+from .vertex import Vertex
 from .web_mercator_transform import WebMercatorTransform
+from .wgs84_transform import WGS84Transform
 
 
 class Building:
-    def __init__(self, yaml_node):
+    def __init__(self, data, data_format='yaml'):
+        if data_format == 'yaml':
+            self.parse_yaml(data)
+        elif data_format == 'geojson':
+            self.parse_geojson(data)
+        else:
+            raise ValueError(f'unknown data format: {data_format}')
+
+    def parse_yaml(self, yaml_node):
         if 'building_name' in yaml_node:
             self.name = yaml_node['building_name']
         else:
@@ -33,15 +48,20 @@ class Building:
             for param_name, param_yaml in yaml_node['parameters'].items():
                 self.params[param_name] = ParamValue(param_yaml)
 
-        if 'coordinate_system' in yaml_node:
-            self.coordinate_system = \
-                CoordinateSystem[yaml_node['coordinate_system']]
+        if 'map_version' in yaml_node:
+            self.map_version = yaml_node['map_version']
         else:
-            self.coordinate_system = CoordinateSystem.reference_image
-        print(f'coordinate system: {self.coordinate_system}')
+            self.map_version = None
+
+        cs_name = yaml_node.get('coordinate_system', 'reference_image')
+        print(f'coordinate system: {cs_name}')
+        self.coordinate_system = CoordinateSystem[cs_name]
 
         self.global_transform = None
-        if self.coordinate_system == CoordinateSystem.web_mercator:
+
+        if self.coordinate_system == CoordinateSystem.reference_image:
+            pass
+        elif self.coordinate_system == CoordinateSystem.web_mercator:
             if 'generate_crs' not in self.params:
                 raise ValueError('generate_crs must be defined for global nav')
 
@@ -68,7 +88,6 @@ class Building:
                     self.global_transform.set_offset(
                         self.global_transform.transform_point((x, y)))
                     break
-
         elif self.coordinate_system == CoordinateSystem.cartesian_meters:
             if 'offset_x' in self.params:
                 offset_x = self.params['offset_x'].value
@@ -87,13 +106,32 @@ class Building:
 
             self.global_transform = \
                 PassthroughTransform(offset_x, offset_y, crs_name)
+        elif self.coordinate_system == CoordinateSystem.wgs84:
+            if 'generate_crs' not in self.params:
+                # todo: automatically add a reasonable CRS in traffic-editor
+                raise ValueError('generate_crs must be defined in wgs84 maps')
+
+            crs_name = self.params['generate_crs'].value
+
+            if 'suggested_offset_x' in self.params:
+                offset_x = self.params['suggested_offset_x'].value
+            else:
+                offset_x = 0
+
+            if 'suggested_offset_y' in self.params:
+                offset_y = self.params['suggested_offset_y'].value
+            else:
+                offset_y = 0
+
+            self.global_transform = \
+                WGS84Transform(crs_name, (offset_x, offset_y))
 
         self.levels = {}
         self.model_counts = {}
         for level_name, level_yaml in yaml_node['levels'].items():
-            self.levels[level_name] = Level(
+            self.levels[level_name] = Level(level_name)
+            self.levels[level_name].parse_yaml(
                 level_yaml,
-                level_name,
                 self.coordinate_system,
                 self.model_counts,
                 self.global_transform)
@@ -123,6 +161,140 @@ class Building:
                          self.coordinate_system)
 
         self.set_lift_vert_lists()
+
+    def parse_geojson(self, json_node):
+        self.levels = {}
+        self.lifts = {}
+
+        self.name = json_node.get('site_name', 'no_name')
+        print(f'name: {self.name}')
+
+        if 'features' not in json_node:
+            return
+
+        self.coordinate_system = CoordinateSystem.cartesian_meters
+
+        if 'preferred_crs' not in json_node:
+            # todo: calculate based on UTM grid
+            print('CRS not specified. TODO: infer one.')
+            return
+
+        crs_name = json_node.get('preferred_crs', '')
+        offset_x = json_node.get('suggested_offset_x', 0)
+        offset_y = json_node.get('suggested_offset_y', 0)
+
+        self.global_transform = \
+            PassthroughTransform(offset_x, offset_y, crs_name)
+
+        # project from WGS 84 to whatever is requested by this file
+        transformer = Transformer.from_crs('EPSG:4326', crs_name)
+
+        # Spin through all items and see how many levels we have.
+        # todo: encode level polygons and names in GeoJSON files.
+        # For now, just compute a bounding box and expand it a bit
+
+        for feature in json_node['features']:
+            if 'feature_type' not in feature:
+                continue
+            if feature['feature_type'] == 'rmf_vertex':
+                self.parse_geojson_vertex(feature, transformer)
+
+        for level_name in self.levels:
+            self.levels[level_name].build_spatial_index()
+
+        # now spin through and find the lanes, and assign them to vertices
+        # using the rtree that was just built
+        for feature in json_node['features']:
+            if 'feature_type' not in feature:
+                continue
+            if feature['feature_type'] == 'rmf_lane':
+                self.parse_geojson_lane(feature, transformer)
+
+        self.transform_all_vertices()
+        for level_name, level in self.levels.items():
+            print(f'level {level_name}:')
+            print(f'  bbox: {level.bbox}')
+            print(f'  {len(level.vertices)} vertices')
+            print(f'  {len(level.lanes)} lanes')
+
+    def parse_geojson_lane(self, feature, transformer):
+        if 'geometry' not in feature:
+            return
+        geometry = feature['geometry']
+        if 'type' not in geometry:
+            return
+        if geometry['type'] != 'LineString':
+            return
+        if 'coordinates' not in geometry:
+            return
+        start_lon = geometry['coordinates'][0][0]
+        start_lat = geometry['coordinates'][0][1]
+        end_lon = geometry['coordinates'][1][0]
+        end_lat = geometry['coordinates'][1][1]
+        start_y, start_x = transformer.transform(start_lat, start_lon)
+        end_y, end_x = transformer.transform(end_lat, end_lon)
+
+        if 'properties' in feature:
+            props = feature['properties']
+            level_idx = props.get('level_idx', 0)
+
+        # todo: look up the real level name somewhere
+        level_name = f'level_{level_idx}'
+
+        level = self.levels[level_name]
+        level.add_edge_from_coords(
+            EdgeType.LANE,
+            (start_x, start_y),
+            (end_x, end_y),
+            props)
+
+    def parse_geojson_vertex(self, feature, transformer):
+        if 'geometry' not in feature:
+            return
+
+        geometry = feature['geometry']
+        if 'type' not in geometry:
+            return
+        if geometry['type'] != 'Point':
+            return
+        if 'coordinates' not in geometry:
+            return
+        lon = geometry['coordinates'][0]
+        lat = geometry['coordinates'][1]
+        y, x = transformer.transform(lat, lon)
+
+        level_idx = 0
+        vertex_name = ''
+        if 'properties' in feature:
+            props = feature['properties']
+            level_idx = props.get('level_idx', 0)
+            vertex_name = props.get('name', '')
+
+        # todo: look up the real level name somewhere
+        level_name = f'level_{level_idx}'
+
+        if level_name not in self.levels:
+            level = Level(level_name)
+            level.bbox = [[x, y], [x, y]]
+            level.transform = self.global_transform
+            self.levels[level_name] = level
+
+        level = self.levels[level_name]
+
+        level.bbox[0][0] = min(level.bbox[0][0], x)
+        level.bbox[0][1] = min(level.bbox[0][1], y)
+        level.bbox[1][0] = max(level.bbox[1][0], x)
+        level.bbox[1][1] = max(level.bbox[1][1], y)
+
+        # todo: parse all remaining params from json properties
+        vertex_params = {}
+
+        level.vertices.append(
+            Vertex(
+                [x, y, 0, vertex_name, vertex_params],
+                self.coordinate_system
+            )
+        )
 
     def __str__(self):
         s = ''
@@ -189,6 +361,10 @@ class Building:
                     g['crs_name'] = self.params['generate_crs'].value
                 tx, ty = self.global_transform.x, self.global_transform.y
                 g['offset'] = [tx, ty]
+            elif self.coordinate_system == CoordinateSystem.wgs84:
+                g['crs_name'] = self.params['generate_crs'].value
+                tx, ty = self.global_transform.x, self.global_transform.y
+                g['offset'] = [tx, ty]
 
             empty = True
             for level_name, level in self.levels.items():
@@ -229,7 +405,13 @@ class Building:
             uri_ele = SubElement(level_include_ele, 'uri')
             uri_ele.text = f'model://{level_model_name}'
             pose_ele = SubElement(level_include_ele, 'pose')
-            pose_ele.text = f'0 0 {level.elevation} 0 0 0'
+            if self.coordinate_system == CoordinateSystem.wgs84:
+                tx = -self.global_transform.x
+                ty = -self.global_transform.y
+            else:
+                tx = 0
+                ty = 0
+            pose_ele.text = f'{tx} {ty} {level.elevation} 0 0 0'
 
         for lift_name, lift in self.lifts.items():
             if not lift.level_doors:
@@ -269,9 +451,23 @@ class Building:
                 crs_ele = SubElement(world, 'crs')
                 crs_ele.text = self.global_transform.frame_name
 
+        elif self.coordinate_system == CoordinateSystem.wgs84:
+            tx = self.global_transform.x
+            ty = self.global_transform.y
+            offset_ele = SubElement(world, 'offset')
+            offset_ele.text = f'{tx} {ty} 0 0 0 0'
+            crs_ele = SubElement(world, 'crs')
+            crs_ele.text = self.global_transform.crs_name
+
         gui_ele = world.find('gui')
         c = self.center()
-        camera_pose = f'{c[0]} {c[1]-20} 10 0 0.6 1.57'
+        # Transforming camera to account for offsets if
+        # not in reference_image mode
+        if self.global_transform:
+            camera_pose = f'{c[0] - self.global_transform.x}  \
+            {c[1]-20 - self.global_transform.y} 10 0 0.6 1.57'
+        else:
+            camera_pose = f'{c[0]} {c[1]-20} 10 0 0.6 1.57'
         # add floor-toggle GUI plugin parameters
         if 'gazebo' in options:
             camera_pose_ele = gui_ele.find('camera').find('pose')
@@ -334,6 +530,147 @@ class Building:
                 os.makedirs(model_path)
 
             level.generate_sdf_model(model_name, model_path)
+
+    def generate_navgraph_visualizations(self, output_dir):
+        for i in range(0, 9):
+            for level_name, level in self.levels.items():
+                graph = level.generate_nav_graph(i)
+                if not graph['lanes']:
+                    continue
+
+                self.generate_navgraph_visualization(
+                    output_dir,
+                    f'navgraph_{i}',
+                    level,
+                    graph)
+
+    def generate_navgraph_visualization(self, output_dir, name, level, graph):
+        print(f'generating {name}')
+        meshes_path = f'{output_dir}/{name}/meshes'
+        if not os.path.exists(meshes_path):
+            os.makedirs(meshes_path)
+        obj_path = f'{meshes_path}/{name}.obj'
+
+        print(f'  generating {obj_path}')
+        with open(obj_path, 'w') as f:
+            f.write('# The Great Editor v0.0.1\n')
+            f.write(f'mtllib {name}.mtl\n')
+            f.write(f'o walls\n')
+            h = 0.1  # just above the floor
+            thickness = 1.0  # meters
+            for lane in graph['lanes']:
+                v1 = graph['vertices'][lane[0]]
+                v2 = graph['vertices'][lane[1]]
+                v1x, v1y = v1[0], v1[1]
+                v2x, v2y = v2[0], v2[1]
+
+                dx = v2x - v1x
+                dy = v2y - v1y
+                length = math.sqrt(dx*dx + dy*dy)
+                cx = (v1x + v2x) / 2.0
+                cy = (v1y + v2y) / 2.0
+                yaw = math.atan2(dy, dx)
+
+                lane_footprint_at_origin = np.array([
+                    [-length/2.0 - thickness / 2.0, thickness / 2.0],
+                    [length/2.0 + thickness / 2.0, thickness / 2.0],
+                    [length/2.0 + thickness / 2.0, -thickness / 2.0],
+                    [-length/2.0 - thickness / 2.0, -thickness / 2.0]])
+
+                rot = np.array([
+                    [math.cos(yaw), math.sin(yaw)],
+                    [-math.sin(yaw), math.cos(yaw)]])
+
+                rot_verts = lane_footprint_at_origin.dot(rot)
+                verts = rot_verts + np.array([[cx, cy]])
+
+                for v in verts:
+                    f.write(f'v {v[0]:.4f} {v[1]:.4f} {h:.4f}\n')
+
+                f.write(f'vt 0.000 1.000\n')
+                f.write(f'vt {length:.4f} 1.000\n')
+                f.write(f'vt {length:.4f} 0.000\n')
+                f.write(f'vt 0.000 0.000\n')
+
+            f.write(f'vn 0.000 0.000 1.000\n')
+            f.write('s off\n')
+            f.write('g lanes\n')
+
+            for i in range(0, len(graph['lanes'])):
+                f.write(
+                    f'f {i*4+1}/{i*4+1}/1'
+                    f' {i*4+3}/{i*4+3}/1'
+                    f' {i*4+2}/{i*4+2}/1\n')
+                f.write(
+                    f'f {i*4+1}/{i*4+1}/1'
+                    f' {i*4+4}/{i*4+4}/1'
+                    f' {i*4+3}/{i*4+3}/1\n')
+
+        alpha = 0.5
+        mtl_path = f'{meshes_path}/{name}.mtl'
+        texture_filename = 'arrows.png'
+        print(f'  generating {mtl_path}')
+        with open(mtl_path, 'w') as f:
+            f.write('# The Great Editor v0.0.1\n')
+            f.write(f'newmtl {name}\n')
+            f.write('Ka 1.0 1.0 1.0\n')  # ambient
+            f.write('Kd 1.0 1.0 1.0\n')  # diffuse
+            f.write('Ke 0.0 0.0 0.0\n')  # emissive
+            f.write('Ns 50.0\n')  # specular highlight, 0..100 (?)
+            f.write('Ni 1.0\n')  # no idea what this is
+            f.write(f'd {alpha}\n')  # alpha
+            f.write('illum 2\n')  # illumination model (enum)
+            f.write(f'map_Kd {texture_filename}\n')
+
+        copy_texture('arrows', meshes_path)
+
+        config_ele = Element('model')
+        config_name_ele = SubElement(config_ele, 'name')
+        config_name_ele.text = name
+        config_version_ele = SubElement(config_ele, 'version')
+        config_version_ele.text = '1.0.0'
+        config_sdf_ele = SubElement(config_ele, 'sdf', {'version': '1.6'})
+        config_sdf_ele.text = 'model.sdf'
+
+        config_author_ele = SubElement(config_ele, 'author')
+        config_author_name_ele = SubElement(config_author_ele, 'name')
+        config_author_name_ele.text = 'generated by RMF Building Map Tools'
+        config_author_email_ele = SubElement(config_author_ele, 'email')
+        config_author_email_ele.text = 'info@openrobotics.org'
+
+        config_description_ele = SubElement(config_ele, 'description')
+        config_description_ele.text = f'{name} (generated)'
+
+        config_tree = ElementTree(config_ele)
+        indent_etree(config_ele)
+        config_path = os.path.join(output_dir, name, 'model.config')
+        config_tree.write(config_path, encoding='utf-8', xml_declaration=True)
+        print(f'  wrote {config_path}')
+
+        sdf_ele = Element('sdf', {'version': '1.7'})
+        sdf_model_ele = SubElement(sdf_ele, 'model', {'name': name})
+        sdf_static_ele = SubElement(sdf_model_ele, 'static')
+        sdf_static_ele.text = 'true'
+        sdf_link_ele = SubElement(sdf_model_ele, 'link', {'name': name})
+        sdf_visual_ele = SubElement(sdf_link_ele, 'visual')
+        sdf_visual_ele.set('name', name)
+        sdf_visual_geom_ele = SubElement(sdf_visual_ele, 'geometry')
+        sdf_transparency_ele = SubElement(sdf_visual_ele, 'transparency')
+        sdf_transparency_ele.text = str(1.0 - alpha)
+        sdf_mesh_ele = SubElement(sdf_visual_geom_ele, 'mesh')
+        sdf_mesh_uri_ele = SubElement(sdf_mesh_ele, 'uri')
+        sdf_mesh_uri_ele.text = os.path.join('meshes', f'{name}.obj')
+
+        sdf_pose_ele = SubElement(sdf_link_ele, 'pose')
+        sdf_link_x = 0
+        sdf_link_y = 0
+        sdf_pose_ele.text = f'{sdf_link_x} {sdf_link_y} 0 0 0 0'
+
+        sdf_tree = ElementTree(sdf_ele)
+        indent_etree(sdf_ele)
+        sdf_path = os.path.join(output_dir, name, 'model.sdf')
+        sdf_tree.write(sdf_path, encoding='utf-8', xml_declaration=True)
+        print(f'  wrote {sdf_path}')
 
     def center(self):
         # todo: something smarter in the future. For now just the center
@@ -418,10 +755,11 @@ class Building:
             ]
         }
 
-        if 'generate_crs' in self.params:
-            proj_crs = pyproj.crs.CRS(self.params['generate_crs'].value)
-        else:
-            proj_crs = pyproj.crs.CRS('EPSG:404000')  # not geographic
+        if 'generate_crs' not in self.params:
+            print(f'cannot generate GeoPackage: map does not declare a CRS')
+            return
+
+        proj_crs = CRS(self.params['generate_crs'].value)
         fio_crs = proj_crs.to_wkt()
 
         level_idx_table = {}
@@ -498,3 +836,115 @@ class Building:
 
         with GeoPackage(gpkg_filename) as gpkg:
             gpkg.set_metadata(json.dumps(metadata))
+
+    def generate_geojson_file(self, filename, compress=False):
+        j = self.generate_geojson()
+        if j is None:
+            return None
+
+        if compress:
+            data_str = json.dumps(j, indent=2, sort_keys=True)
+            data_gzip = gzip.compress(bytes(data_str, 'utf-8'))
+            with open(filename, 'wb') as f:
+                f.write(data_gzip)
+        else:
+            with open(filename, 'w') as f:
+                json.dump(j, f, indent=2, sort_keys=True)
+
+        print(f'wrote {filename}')
+
+    def generate_geojson(self):
+        print(f'generating GeoJSON...')
+
+        if 'generate_crs' not in self.params:
+            print(f'cannot generate GeoJSON: map does not declare a CRS')
+            return {}
+
+        source_crs = self.params['generate_crs'].value
+        wgs_transformer = Transformer.from_crs(source_crs, 'EPSG:4326')
+
+        features = []
+
+        # todo: re-order levels by elevation
+        level_idx_table = {}
+        level_idx = 0
+        for level_name, level in self.levels.items():
+            level_idx_table[level_name] = level_idx
+            level_idx += 1
+
+        all_vertices = []
+        all_edges = []
+        for level_name, level in self.levels.items():
+            level_idx = level_idx_table[level_name]
+            for vertex in level.vertices:
+                (lat, lon) = wgs_transformer.transform(vertex.y, vertex.x)
+                properties = {
+                    'name': vertex.name,
+                    'level_idx': level_idx,
+                    'rmf_type': 'rmf_vertex'
+                }
+                for param_name, param_value in vertex.params.items():
+                    properties[param_name] = param_value.value
+                features.append({
+                    'type': 'Feature',
+                    'feature_type': 'rmf_vertex',
+                    'geometry': {
+                        'type': 'Point',
+                        'coordinates': [lon, lat],
+                    },
+                    'properties': properties
+                })
+
+            for lane in level.lanes:
+                properties = {
+                    'level_idx': level_idx,
+                    'rmf_type': 'rmf_lane'
+                }
+                for param_name, param_value in lane.params.items():
+                    properties[param_name] = param_value.value
+                v1 = level.vertices[lane.start_idx]
+                v2 = level.vertices[lane.end_idx]
+                (v1_lat, v1_lon) = wgs_transformer.transform(v1.y, v1.x)
+                (v2_lat, v2_lon) = wgs_transformer.transform(v2.y, v2.x)
+
+                if v1.name:
+                    properties['start_vertex_name'] = v1.name
+
+                if v2.name:
+                    properties['end_vertex_name'] = v2.name
+
+                features.append({
+                    'type': 'Feature',
+                    'feature_type': 'rmf_lane',
+                    'geometry': {
+                        'type': 'LineString',
+                        'coordinates': [
+                            [v1_lon, v1_lat],
+                            [v2_lon, v2_lat],
+                        ]
+                    },
+                    'properties': properties
+                })
+
+            # todo: add measurement edges
+            # todo: add wall edges
+            # todo: add door edges
+            # todo: add lifts
+
+        j = {
+            'site_name': self.name,
+            'preferred_crs': self.params['generate_crs'].value,
+            'type': 'FeatureCollection',
+            'features': features,
+        }
+
+        if self.map_version is not None:
+            j['map_version'] = self.map_version
+
+        if 'suggested_offset_x' in self.params:
+            j['suggested_offset_x'] = self.params['suggested_offset_x'].value
+        if 'suggested_offset_y' in self.params:
+            j['suggested_offset_y'] = self.params['suggested_offset_y'].value
+
+        print(f'generated {len(features)} features...')
+        return j

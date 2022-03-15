@@ -33,7 +33,10 @@ Layer::~Layer()
 {
 }
 
-bool Layer::from_yaml(const std::string& _name, const YAML::Node& y)
+bool Layer::from_yaml(
+  const std::string& _name,
+  const YAML::Node& y,
+  const CoordinateSystem& coordinate_system)
 {
   if (!y.IsMap())
     throw std::runtime_error("Layer::from_yaml() expected a map");
@@ -77,7 +80,7 @@ bool Layer::from_yaml(const std::string& _name, const YAML::Node& y)
     visible = y["visible"].as<bool>();
 
   if (y["transform"] && y["transform"].IsMap())
-    transform.from_yaml(y["transform"]);
+    transform.from_yaml(y["transform"], coordinate_system);
 
   if (y["color"] && y["color"].IsSequence() && y["color"].size() == 4)
     color = QColor::fromRgbF(
@@ -121,7 +124,7 @@ bool Layer::load_image()
   return true;
 }
 
-YAML::Node Layer::to_yaml() const
+YAML::Node Layer::to_yaml(const CoordinateSystem& coordinate_system) const
 {
   YAML::Node y;
   y["filename"] = filename;
@@ -136,14 +139,15 @@ YAML::Node Layer::to_yaml() const
   for (const auto& feature : features)
     y["features"].push_back(feature.to_yaml());
 
-  y["transform"] = transform.to_yaml();
+  y["transform"] = transform.to_yaml(coordinate_system);
 
   return y;
 }
 
 void Layer::draw(
   QGraphicsScene* scene,
-  const double level_meters_per_pixel)
+  const double level_meters_per_pixel,
+  const CoordinateSystem& coordinate_system)
 {
   if (!visible)
     return;
@@ -161,18 +165,22 @@ void Layer::draw(
 
   item->setRotation(-1.0 * transform.yaw() * 180.0 / M_PI);
 
+  if (!coordinate_system.is_y_flipped())
+    item->setTransform(item->transform().scale(1, -1));
+
   double origin_radius = 0.5 / level_meters_per_pixel;
   QPen origin_pen(color, origin_radius / 4.0, Qt::SolidLine, Qt::RoundCap);
   //origin_pen.setWidthF(origin_radius / 4);
 
   // for purposes of the origin mark, let's say the origin is the center
   // of the first pixel of the image
+  const double y_flip = coordinate_system.is_y_flipped() ? -1 : 1;
   const QPointF origin(
     transform.translation().x() / level_meters_per_pixel
     + 0.5 * transform.scale() / level_meters_per_pixel *
     cos(transform.yaw() - M_PI / 4),
     transform.translation().y() / level_meters_per_pixel
-    - 0.5 * transform.scale() / level_meters_per_pixel *
+    + y_flip * 0.5 * transform.scale() / level_meters_per_pixel *
     sin(transform.yaw() - M_PI / 4));
 
   scene->addEllipse(
@@ -184,9 +192,8 @@ void Layer::draw(
 
   QPointF x_arrow(
     origin.x() + 2.0 * origin_radius * cos(transform.yaw()),
-    origin.y() - 2.0 * origin_radius * sin(transform.yaw()));
+    origin.y() + y_flip * 2.0 * origin_radius * sin(transform.yaw()));
   scene->addLine(QLineF(origin, x_arrow), origin_pen);
-
 
   for (Feature& feature : features)
     feature.draw(scene, color, transform, level_meters_per_pixel);

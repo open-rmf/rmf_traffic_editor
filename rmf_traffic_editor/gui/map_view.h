@@ -18,28 +18,92 @@
 #ifndef MAP_VIEW_H
 #define MAP_VIEW_H
 
+#include <vector>
+
+#include <QGraphicsPixmapItem>
 #include <QGraphicsView>
 #include <QWheelEvent>
 
 #include "building.h"
+#include "map_tile_cache.h"
 
+class QNetworkAccessManager;
+class QNetworkReply;
+class QLabel;
 
 class MapView : public QGraphicsView
 {
   Q_OBJECT
 
 public:
-  MapView(QWidget* parent = nullptr);
-  void zoom_fit(const Building& building, int level_index);
+  MapView(QWidget* parent, const Building& building_);
+  void zoom_fit(int level_index);
+  void set_show_tiles(const bool show_tiles_)
+  {
+    show_tiles = show_tiles_;
+  }
+  void draw_tiles();
+  void clear();
+  void update_cache_size_label(QLabel* label);
+  QPointF get_center() { return last_center; }
 
 protected:
   void wheelEvent(QWheelEvent* event);
   void mouseMoveEvent(QMouseEvent* e);
   void mousePressEvent(QMouseEvent* e);
   void mouseReleaseEvent(QMouseEvent* e);
+  void resizeEvent(QResizeEvent* e);
 
-  bool is_panning;
-  int pan_start_x, pan_start_y;
+private:
+  bool is_panning = false;
+  int pan_start_x = 0;
+  int pan_start_y = 0;
+
+  const Building& building;
+  bool show_tiles = false;  // ignore first few resize events during startup
+
+  MapTileCache tile_cache;
+
+  struct MapTilePixmapItem
+  {
+    int zoom = 0;
+    int x = 0;
+    int y = 0;
+    QGraphicsPixmapItem* item = nullptr;
+
+    enum State
+    {
+      QUEUED,
+      REQUESTED,
+      COMPLETED
+    } state;
+  };
+  std::vector<MapTilePixmapItem> tile_pixmap_items;
+
+  struct MapTileRequest
+  {
+    int zoom = 0;
+    int x = 0;
+    int y = 0;
+    // todo: time it was requested?
+  };
+  std::vector<MapTileRequest> tile_requests;
+
+  QNetworkAccessManager* network = nullptr;
+
+  void request_tile(const int zoom, const int x, const int y);
+
+  void render_tile(
+    const int zoom,
+    const int x,
+    const int y,
+    const QPixmap& pixmap,
+    const MapTilePixmapItem::State state);
+
+  void request_finished(QNetworkReply* reply);
+  QPointF last_center;
+
+  void process_request_queue();
 };
 
 #endif

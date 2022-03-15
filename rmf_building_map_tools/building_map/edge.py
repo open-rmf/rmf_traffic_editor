@@ -3,7 +3,12 @@ from .param_value import ParamValue
 
 
 class Edge:
-    def __init__(self, yaml_node):
+    def __init__(self):
+        self.start_idx = None
+        self.end_idx = None
+        self.params = {}
+
+    def parse_yaml(self, yaml_node):
         self.start_idx = int(yaml_node[0])
         self.end_idx = int(yaml_node[1])
         self.params = {}

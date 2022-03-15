@@ -32,6 +32,8 @@ public:
   LayerDialog(QWidget* parent, Layer& _layer, bool edit_mode = true);
   ~LayerDialog();
 
+  void set_center(const double x, const double y);
+
 private:
   Layer& layer;
   bool _edit_mode = true;
@@ -44,6 +46,7 @@ private:
   QLineEdit* rotation_line_edit;
 
   QPushButton* filename_button;
+  QPushButton* center_in_window_button;
   QPushButton* ok_button, * cancel_button;
 
   void update_layer();
@@ -52,9 +55,11 @@ private slots:
   void filename_button_clicked();
   void ok_button_clicked();
   void filename_line_edited(const QString& text);
+  void center_in_window_clicked();
 
 signals:
   void redraw();
+  void center_layer();
 };
 
 #endif

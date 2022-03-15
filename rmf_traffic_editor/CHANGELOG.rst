@@ -2,6 +2,74 @@
 Changelog for package rmf_traffic_editor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.5.0 (2022-03-13)
+------------------
+* fix #419 by calculating transformed x/y in image-based maps (#421)
+* validate reference level index before using it (avoid a crash)
+* Use C++17 for std::optional
+* move all CI to galactic on ubuntu 20.04
+* move the C++ style check into the 'main' CI test workflow
+* Feature/render OpenStreetMap tiles (#418)
+  * "new building" dialog box which asks which coordinates to use
+  * use a subdirectory in ~/.cache as the OSM tile cache
+  * show the tile cache size on the status bar
+  * use EPSG:3857 (meters) for rendering tile maps
+  * WGS84 coordinate translation
+  * render OSM tiles in grayscale, so the non-tile things are easier to see
+  * populate lat, lon property fields in EPSG:3857 mode
+  * remove obsolete "flattened" UI stuff
+  * save global coords in wgs84 but render them in epsg3857 on OSM tiles
+  * GUI box to set the local CRS for sim/nav generation
+  * move all RMF keys into GeoJSON props. add start/end names
+  * feature_type -> rmf_type in GeoJSON properties
+  * translate robot spawn point along with the world
+* Handle simulation offsets for models and cameras (#408)
+  * lat/lon translation behavior for models (previously, builds break when adding models due to WGS84 translation not having a "rotation" variable)
+  * change naming for wgs84 model positions to lat/lon instead of x/y for consistency
+  * apply offsets to the camera, so the camera view appears over the working area
+  * Handle simulation offsets for models and cameras
+  * Pass transform in Model constructor; pass un-transformed variables for to_yaml
+  * Add check if global_transform was initialized; fix wrong computation of xy
+  * parse model coordinates in wgs84 and project for viewing/editing
+  * move model projection/translation to generate phase
+  * set user-agent string in HTTP tile requests
+  * workaround for 32-bit scrollbar overflow at extreme zoom
+  * introduce a simple queuing system for tiles
+  * reset zoom when loading a different filename
+* flip layer images right-side up in cartesian meters mode (#405)
+* Improve behavior for Cartesian maps (#401)
+  * Improve behavior for Cartesian maps
+  * because Cartesian maps have 1-meter units, we need to compute
+  a better default scale for them. Previously it was always using
+  a default scale of 0.05.
+  * somewhat related, also fix the edge-select implementation so it
+  spins through all edges in the map rather than just selecting
+  the first edge within 10 units... that was OK when we were always
+  using pixel-based maps, but now that meter-based maps are in use,
+  it was just choosing the first edge that was within 10 meters of
+  the click, which was a lot of edges and felt somewhat random.
+  * stop drawing a 1-unit border around the scene rectangle
+  * rotate vertex icons to +Y for cartesian maps
+* Cartesian worlds (y=up) and steps towards using GeoPackage (#396)
+  * create passthrough transform for cartesian_meters coordinate systems
+  * y-flip in traffic-editor GUI for cartesian worlds; only invert Y coordinate for legacy image-based maps
+  * add coordinate system files for C++ GUI
+  * pass coordinate system to vertex draw, to flip text as needed
+  * correct deprecated setuptools key to fix warning
+  * Fix errors when building maps with lifts / crowdsim
+  * draw fewer arrowheads for increased speed on very large maps
+  * add speed limit parameter to lane property-editor GUI
+  * add speed limit param to generated nav-graph files
+  * publish lane speed limits
+  * add top-level metadata for building/site params
+  * load/save top level building params. Zoom->reset to center map view if you get lost.
+  * assign a nonsense CRS if one doesn't exist
+  * Change Legacy -> ReferenceImage throughout code
+* minor usability enhancements on traffic editor (#398)
+  * revert lift vertex, and prevent delete of lift vertex
+  * fix wall transparency models and update readme
+* Contributors: Morgan Quigley, Youliang Tan, Luca Della Vedova, Charayaphan Nakorn Boon Han
+
 1.4.0 (2021-09-02)
 ------------------
 * Feature/graph names and widths (`#384 <https://github.com/open-rmf/rmf_traffic_editor/issues/384>`_)

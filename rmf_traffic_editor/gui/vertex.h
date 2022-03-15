@@ -47,8 +47,11 @@ public:
   Vertex();
   Vertex(double _x, double _y, const std::string& _name = std::string());
 
-  void from_yaml(const YAML::Node& data);
-  YAML::Node to_yaml() const;
+  void from_yaml(
+    const YAML::Node& data,
+    const CoordinateSystem& coordinate_system);
+
+  YAML::Node to_yaml(const CoordinateSystem& coordinate_system) const;
 
   void set_param(const std::string& name, const std::string& value);
 

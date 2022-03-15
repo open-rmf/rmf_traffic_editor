@@ -54,6 +54,8 @@ int main(int argc, char* argv[])
 
   editor.show();
 
+  // Current understanding is that the viewport needs to be restored
+  // after the editor.show() is called
   editor.restore_previous_viewport();
 
   return app.exec();

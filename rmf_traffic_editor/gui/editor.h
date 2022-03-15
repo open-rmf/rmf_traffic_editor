@@ -154,6 +154,7 @@ private:
 
   void zoom_reset();
   void view_models();
+  void view_tiles();
 
   void help_about();
 
@@ -188,6 +189,7 @@ private:
   MapView* map_view = nullptr;
 
   QAction* view_models_action = nullptr;
+  QAction* view_tiles_action = nullptr;
 
   const QString tool_id_to_string(const int id);
   QButtonGroup* tool_button_group = nullptr;
@@ -360,6 +362,10 @@ private:
   RotateModelCommand* latest_rotate_model = nullptr;
 
   void sanity_check();
+
+  QLabel* cache_size_label = nullptr;
+  QTimer* cache_size_update_timer = nullptr;
+  void cache_size_update_timer_timeout();
 };
 
 #endif
