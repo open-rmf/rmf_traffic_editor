@@ -2,6 +2,54 @@
 Changelog for package rmf_building_map_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.5.0 (2022-03-13)
+------------------
+* Always use ign=True and remove spaces when comparing model names (#412)
+  * Always use ign=True and remove spaces when comparing model names
+  * Pit crew makes model paths available, when checking for missing models, for exporting (#414)
+  * Reverted the use of remove_spaces as model names with spaces are used for downloading models
+* if map_version is present, copy it into GeoJSON (#415)
+* Update package.xml (#406)
+* Feature: serve BuildingMap message when loading GeoJSON file in building_map_server (#404)
+  * Create a BuildingMap message when serving from GeoJSON file
+  * use RTree to speed up BuildingMap creation from GeoJSON
+  * use reasonable default scale for Cartesian maps
+  * add python3-rtree dependency to GitHub workflow
+* First steps towards GeoJSON (#403)
+  * add GeoJSON support to `building_map_server`: to start, just vertices and lanes
+  * compress GeoJSON output on-the-fly
+  * add support for GeoJSON to `building_map_converter`, auto-detecting based on filename suffix
+  * GeoJSON: include preferred projected CRS and suggested coordinate offset for simulation as top-level keys
+  * sort GeoJSON keys in building map server for consistency in diffs
+  * fix crash for non-geolocated/legacy maps
+* Cartesian worlds (y=up) and steps towards using GeoPackage (#396)
+  * create passthrough transform for cartesian_meters coordinate systems
+  * pass coordinate system to vertex draw, to flip text as needed
+  * correct deprecated setuptools key to fix warning
+  * Fix errors when building maps with lifts / crowdsim
+  * add speed limit param to generated nav-graph files
+  * add site_map publishing to building_map_server for cartesian maps
+  * publish lane speed limits
+  * Change loader to CLoader for performance improvement on large maps
+  * on-the-fly geopackage generation for cartesian maps
+  * add fiona Python package dependency to package.xml and CI workflow
+  * building_map_converter to generate a GeoPackage from a cartesian YAML map
+  * add top-level metadata for building/site params
+  * fix geopackage metadata extraction for geopackage SiteMap server
+  * use json instead of yaml for geopackage parameters
+  * assign a nonsense CRS if one doesn't exist
+  * Change Legacy -> ReferenceImage throughout code
+* fix lift model ele name conflict warning (#399)
+* Add speed limit to navgraph (#397)
+* Deprecate/http download (#395)
+  * deprecate and remove http option
+  * Add helpful warning
+  * use argparse deprecation method
+  * use function level variables
+* Use yaml-cpp CLoader and CDumper from Python for speed (#394)
+  * use CLoader and CDumper to speed up YAML save/load times
+* Contributors: Charayaphan Nakorn Boon Han, Grey, Luca Della Vedova, Morgan Quigley, Yadu, youliang, Aaron Chong
+
 1.4.0 (2021-09-02)
 ------------------
 * Feature/map generator using global coordinates (`#379 <https://github.com/open-rmf/rmf_traffic_editor/issues/379>`_)
