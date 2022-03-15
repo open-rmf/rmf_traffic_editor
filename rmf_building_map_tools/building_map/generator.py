@@ -91,3 +91,10 @@ class Generator:
                     f,
                     default_flow_style=None,
                     Dumper=yaml.CDumper)
+
+    def generate_navgraph_visualization(self, input_filename, output_dir):
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+
+        building = self.parse_editor_yaml(input_filename)
+        building.generate_navgraph_visualizations(output_dir)
