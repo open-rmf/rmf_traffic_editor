@@ -40,3 +40,18 @@ nav_parser.add_argument("INPUT", type=str,
                         help="Input building.yaml file to process")
 nav_parser.add_argument("OUTPUT_DIR", type=str,
                         help="Path to output the nav .yaml files")
+
+navgraph_visualization_parser = subparsers.add_parser(
+    'navgraph_visualization',
+    help='Generate SDF visualization of nav graph',
+)
+
+navgraph_visualization_parser.add_argument(
+    "INPUT",
+    type=str,
+    help="Input building.yaml file to process")
+
+navgraph_visualization_parser.add_argument(
+    "OUTPUT_DIR",
+    type=str,
+    help="Path to output the navgraph visualization SDF models")

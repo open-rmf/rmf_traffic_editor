@@ -2,6 +2,16 @@
 Changelog for package rmf_traffic_editor_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.5.0 (2022-03-13)
+------------------
+* minor usability enhancements on traffic editor (#398)
+  * updates
+  * style
+  * revert lift vertex, and prevent delete of lift vertex
+  * fix wall transparency models and update readme
+  * nit
+* Contributors: youliang
+
 1.4.0 (2021-09-02)
 ------------------
 * add ambulance icon to model_list (`#376 <https://github.com/open-rmf/rmf_traffic_editor/issues/376>`_)

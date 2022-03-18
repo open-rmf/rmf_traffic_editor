@@ -2,6 +2,9 @@
 Changelog for package rmf_traffic_editor_test_maps
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.5.0 (2022-03-13)
+------------------
+
 1.4.0 (2021-09-02)
 ------------------
 * adding maintainer for buildfarm notifications (`#368 <https://github.com/open-rmf/rmf_traffic_editor/issues/368>`_)
