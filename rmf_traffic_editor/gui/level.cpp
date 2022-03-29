@@ -1698,12 +1698,14 @@ public:
     double level_y,
     double level_meters_per_pixel,
     double layer_x,
-    double layer_y)
+    double layer_y,
+    bool flip_y)
   : _level_x(level_x),
     _level_y(level_y),
     _level_meters_per_pixel(level_meters_per_pixel),
     _layer_x(layer_x),
-    _layer_y(layer_y)
+    _layer_y(layer_y),
+    _flip_y(flip_y)
   {
   }
 
@@ -1714,12 +1716,13 @@ public:
     const T* const translation,
     T* residual) const
   {
+    double flip = _flip_y ? -1 : 1;
     const T qx =
-      (( cos(yaw[0]) * _layer_x + sin(yaw[0]) * _layer_y) * scale[0]
+      (( cos(yaw[0]) * _layer_x + flip * sin(yaw[0]) * _layer_y) * scale[0]
       + translation[0]) / _level_meters_per_pixel;
 
     const T qy =
-      ((-sin(yaw[0]) * _layer_x + cos(yaw[0]) * _layer_y) * scale[0]
+      ((-sin(yaw[0]) * _layer_x + flip * cos(yaw[0]) * _layer_y) * scale[0]
       + translation[1]) / _level_meters_per_pixel;
 
     residual[0] = _level_x - qx;
@@ -1732,6 +1735,7 @@ private:
   double _level_x, _level_y;
   double _level_meters_per_pixel;
   double _layer_x, _layer_y;
+  bool _flip_y;
 };
 
 void Level::optimize_layer_transforms()
@@ -1808,7 +1812,8 @@ void Level::optimize_layer_transforms()
         level_point.y(),
         drawing_meters_per_pixel,
         layer_point.x(),
-        layer_point.y());
+        layer_point.y(),
+        layers[i].transform.origin_corner == Transform::LowerLeft);
 
       problem.AddResidualBlock(
         new ceres::AutoDiffCostFunction<TransformResidual, 2, 1, 1, 2>(tr),
