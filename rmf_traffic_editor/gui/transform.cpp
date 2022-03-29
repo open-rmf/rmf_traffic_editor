@@ -80,37 +80,46 @@ YAML::Node Transform::to_yaml(const CoordinateSystem& coordinate_system) const
 
 QPointF Transform::forwards(const QPointF& p) const
 {
+  // flip as needed to deal with image coordinates
+  const double flip = origin_corner == LowerLeft ? -1 : 1;
+
   const double qx =
-    ( cos(_yaw) * p.x() + sin(_yaw) * p.y()) * _scale + _translation.x();
+    ( cos(_yaw) * p.x() + flip * sin(_yaw) * p.y()) * _scale + _translation.x();
 
   const double qy =
-    (-sin(_yaw) * p.x() + cos(_yaw) * p.y()) * _scale + _translation.y();
+    (-sin(_yaw) * p.x() + flip * cos(_yaw) * p.y()) * _scale + _translation.y();
 
   return QPointF(qx, qy);
 }
 
 QPointF Transform::backwards(const QPointF& p) const
 {
+  // flip as needed to deal with image coordinates
+  const double flip = origin_corner == LowerLeft ? -1 : 1;
+
   // translate back and scale
   const double tsx = (p.x() - _translation.x()) / _scale;
   const double tsy = (p.y() - _translation.y()) / _scale;
 
   // rotate back
-  const double rx = cos(-_yaw) * tsx + sin(-_yaw) * tsy;
-  const double ry = -sin(-_yaw) * tsx + cos(-_yaw) * tsy;
+  const double rx = cos(-_yaw) * tsx + flip * sin(-_yaw) * tsy;
+  const double ry = -sin(-_yaw) * tsx + flip * cos(-_yaw) * tsy;
   return QPointF(rx, ry);
 }
 
 Transform Transform::inverse() const
 {
+  // flip as needed to deal with image coordinates
+  const double flip = origin_corner == LowerLeft ? -1 : 1;
+
   Transform inv;
   inv.setYaw(-_yaw);
   inv.setScale(1.0 / _scale);
   inv.setTranslation(
     1.0 / _scale *
     QPointF(
-      cos(-_yaw) * translation().x() - sin(-_yaw) * translation().y(),
-      sin(-_yaw) * translation().x() + cos(-_yaw) * translation().y()));
+      cos(-_yaw) * translation().x() - flip * sin(-_yaw) * translation().y(),
+      sin(-_yaw) * translation().x() + flip * cos(-_yaw) * translation().y()));
   return inv;
 }
 

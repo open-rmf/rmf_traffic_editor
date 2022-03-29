@@ -64,6 +64,29 @@ LayerDialog::LayerDialog(QWidget* parent, Layer& _layer, bool edit_mode)
     this,
     &LayerDialog::filename_line_edited);
 
+  QHBoxLayout* origin_hbox_layout = new QHBoxLayout;
+  origin_hbox_layout->addWidget(new QLabel("Origin:"));
+  origin_combobox = new QComboBox;
+  origin_combobox->addItem("upper-left");
+  origin_combobox->addItem("lower-left");
+  origin_hbox_layout->addWidget(origin_combobox);
+  if (layer.origin_corner == Layer::UpperLeft)
+    origin_combobox->setCurrentText("upper-left");
+  else if (layer.origin_corner == Layer::LowerLeft)
+    origin_combobox->setCurrentText("lower-left");
+  connect(
+    origin_combobox,
+    &QComboBox::currentTextChanged,
+    [this](const QString& text)
+    {
+      if (text == QString("upper-left"))
+        layer.origin_corner = Layer::UpperLeft;
+      else if (text == QString("lower-left"))
+        layer.origin_corner = Layer::LowerLeft;
+      emit redraw();
+    }
+  );
+
   QHBoxLayout* scale_hbox_layout = new QHBoxLayout;
   scale_hbox_layout->addWidget(new QLabel("Meters per pixel:"));
   scale_line_edit = new QLineEdit(
@@ -104,6 +127,7 @@ LayerDialog::LayerDialog(QWidget* parent, Layer& _layer, bool edit_mode)
   QVBoxLayout* vbox_layout = new QVBoxLayout;
   vbox_layout->addLayout(name_hbox_layout);
   vbox_layout->addLayout(filename_layout);
+  vbox_layout->addLayout(origin_hbox_layout);
   vbox_layout->addLayout(scale_hbox_layout);
   vbox_layout->addLayout(translation_x_hbox_layout);
   vbox_layout->addLayout(translation_y_hbox_layout);

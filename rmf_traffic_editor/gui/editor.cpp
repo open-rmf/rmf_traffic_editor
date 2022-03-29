@@ -2702,52 +2702,6 @@ void Editor::closeEvent(QCloseEvent* event)
     event->ignore();
 }
 
-#if 0
-void Editor::set_tool_visibility(const ToolId id, const bool visible)
-{
-  QAction* a = tools[id];
-  if (a)
-    a->setVisible(visible);
-  else
-    printf("unable to find tool action %d\n", static_cast<int>(id));
-}
-
-void Editor::set_mode(const EditorModeId _mode, const QString& mode_string)
-{
-  if (mode_combo_box->currentText() != mode_string)
-  {
-    mode_combo_box->blockSignals(true);
-    mode_combo_box->setCurrentText(mode_string);
-    mode_combo_box->blockSignals(false);
-  }
-
-  mode = _mode;
-
-  // building tools
-  set_tool_visibility(TOOL_ADD_WALL, mode == MODE_BUILDING);
-  set_tool_visibility(TOOL_ADD_MEAS, mode == MODE_BUILDING);
-  set_tool_visibility(TOOL_ADD_DOOR, mode == MODE_BUILDING);
-  set_tool_visibility(TOOL_ADD_MODEL, mode == MODE_BUILDING);
-  set_tool_visibility(TOOL_ADD_FLOOR, mode == MODE_BUILDING);
-  set_tool_visibility(TOOL_ADD_HOLE, mode == MODE_BUILDING);
-  set_tool_visibility(TOOL_ADD_CORRESPONDENCE_POINT, mode == MODE_BUILDING);
-  set_tool_visibility(TOOL_ADD_FIDUCIAL, mode == MODE_BUILDING);
-
-  // traffic tools
-  set_tool_visibility(TOOL_ADD_LANE, mode == MODE_TRAFFIC);
-
-  // scenario tools
-  set_tool_visibility(TOOL_ADD_ROI, mode == MODE_SCENARIO);
-
-  // crowd_sim tools
-  set_tool_visibility(TOOL_ADD_HUMAN_LANE, mode == MODE_CROWD_SIM);
-
-  // "multi-purpose" tools
-  set_tool_visibility(TOOL_EDIT_POLYGON,
-    mode != MODE_TRAFFIC && mode != MODE_CROWD_SIM);
-}
-#endif
-
 void Editor::update_tables()
 {
   level_table->update(building);

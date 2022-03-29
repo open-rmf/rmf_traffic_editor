@@ -37,6 +37,7 @@ public:
   double _yaw = 0.0;
   double _scale = 1.0;
   QPointF _translation;
+  enum { UpperLeft, LowerLeft } origin_corner = UpperLeft;
 
   double yaw() const { return _yaw; }
   void setYaw(const double next_yaw) { _yaw = next_yaw; }

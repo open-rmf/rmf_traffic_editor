@@ -21,6 +21,7 @@
 #include <QDialog>
 #include <QObject>
 #include "layer.h"
+class QComboBox;
 class QLineEdit;
 
 
@@ -37,6 +38,8 @@ public:
 private:
   Layer& layer;
   bool _edit_mode = true;
+
+  QComboBox* origin_combobox;
 
   QLineEdit* name_line_edit;
   QLineEdit* filename_line_edit;

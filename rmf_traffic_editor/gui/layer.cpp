@@ -102,6 +102,26 @@ bool Layer::from_yaml(
     }
   }
 
+  if (y["origin_corner"])
+  {
+    if (y["origin_corner"].as<string>() == "upper-left")
+    {
+      origin_corner = UpperLeft;
+      transform.origin_corner = Transform::UpperLeft;
+    }
+    else if (y["origin_corner"].as<string>() == "lower-left")
+    {
+      origin_corner = LowerLeft;
+      transform.origin_corner = Transform::LowerLeft;
+    }
+    else
+    {
+      printf(
+        "WARNING: unrecognized origin corner: [%s]\n",
+        y["origin_corner"].as<string>().c_str());
+    }
+  }
+
   return load_image();
 }
 
@@ -141,6 +161,11 @@ YAML::Node Layer::to_yaml(const CoordinateSystem& coordinate_system) const
 
   y["transform"] = transform.to_yaml(coordinate_system);
 
+  if (origin_corner == UpperLeft)
+    y["origin_corner"] = "upper-left";
+  else if (origin_corner == LowerLeft)
+    y["origin_corner"] = "lower-left";
+
   return y;
 }
 
@@ -168,6 +193,9 @@ void Layer::draw(
   if (!coordinate_system.is_y_flipped())
     item->setTransform(item->transform().scale(1, -1));
 
+  if (origin_corner == LowerLeft)
+    item->setOffset(0, -pixmap.height());
+
   double origin_radius = 0.5 / level_meters_per_pixel;
   QPen origin_pen(color, origin_radius / 4.0, Qt::SolidLine, Qt::RoundCap);
   //origin_pen.setWidthF(origin_radius / 4);
@@ -175,7 +203,7 @@ void Layer::draw(
   // for purposes of the origin mark, let's say the origin is the center
   // of the first pixel of the image
   const double y_flip = coordinate_system.is_y_flipped() ? -1 : 1;
-  const QPointF origin(
+  QPointF origin(
     transform.translation().x() / level_meters_per_pixel
     + 0.5 * transform.scale() / level_meters_per_pixel *
     cos(transform.yaw() - M_PI / 4),

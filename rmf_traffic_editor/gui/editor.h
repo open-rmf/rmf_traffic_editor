@@ -167,8 +167,6 @@ private:
     const QString& tooltip);
   void tool_toggled(int id, bool checked);
 
-  QComboBox* mode_combo_box;
-
 /////////////////////////////
   static Editor* instance;  // there will only be one instance
 
