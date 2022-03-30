@@ -62,7 +62,7 @@ public:
 
   Transform inverse() const;
 
-  std::string to_string() const;
+  std::string to_string(const bool flip_y = false) const;
 };
 
 #endif  // TRAFFIC_EDITOR__TRANSFORM_HPP

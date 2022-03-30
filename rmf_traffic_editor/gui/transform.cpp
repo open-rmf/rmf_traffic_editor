@@ -123,7 +123,7 @@ Transform Transform::inverse() const
   return inv;
 }
 
-string Transform::to_string() const
+string Transform::to_string(const bool flip_y) const
 {
   // make a string the old fashioned way...
   char buf[1024] = {0};
@@ -137,6 +137,6 @@ string Transform::to_string() const
     _yaw,
     _scale,
     _translation.x(),
-    _translation.y());
+    (flip_y ? -1 : 1) * _translation.y());
   return string(buf);
 }

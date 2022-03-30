@@ -2235,7 +2235,7 @@ void Level::compute_layer_transform(const std::size_t layer_idx)
   layer.transform_strings.push_back(
     std::make_pair(
       "grid cells -> RMF\nscale, rotate, translate",
-      gridcells_rmf.to_string()));
+      gridcells_rmf.to_string(true)));
 
   layer.transform_strings.push_back(
     std::make_pair(
