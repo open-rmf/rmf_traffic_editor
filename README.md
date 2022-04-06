@@ -41,7 +41,7 @@ Instructions of `traffic_editor` is located [here](https://osrf.github.io/ros2mu
 To run traffic_editor GUI, run:
 ```bash
 source install/setup.bash
-traffic_editor
+traffic-editor
 ```
 
 ### Building Map Tools
