@@ -479,46 +479,51 @@ class Building:
                 {'name': 'toggle_charging',
                  'filename': 'libtoggle_charging.so'})
 
-            toggle_ele = SubElement(
+            toggle_floors_ele = SubElement(
                 gui_ele,
                 'plugin',
                 {'name': 'toggle_floors', 'filename': 'libtoggle_floors.so'})
-
-            for level_name, level in self.levels.items():
-                floor_ele = SubElement(
-                    toggle_ele,
-                    'floor',
-                    {
-                        'name': level_name,
-                        'model_name': f'{self.name}_{level_name}'})
-
-                for model in level.models:
-                    if model.static:
-                        model_ele = SubElement(
-                            floor_ele,
-                            'model',
-                            {'name': model.name})
-
-                for door in level.doors:
-                    model_ele = SubElement(
-                        floor_ele,
-                        'model',
-                        {'name': door.params['name'].value})
-
-                for lift_name, lift in self.lifts.items():
-                    if level_name in lift.level_doors:
-                        for door in lift.doors:
-                            if door.name in lift.level_doors[level_name]:
-                                model_ele = SubElement(
-                                    floor_ele,
-                                    'model',
-                                    {'name': (f'ShaftDoor_{lift_name}_' +
-                                              f'{level_name}_{door.name}')})
 
         elif 'ignition' in options:
             plugin_ele = gui_ele.find('.//plugin[@filename="GzScene3D"]')
             camera_pose_ele = plugin_ele.find('camera_pose')
             camera_pose_ele.text = camera_pose
+
+            toggle_floors_ele = SubElement(
+                gui_ele,
+                'plugin',
+                {'name': 'toggle_floors', 'filename': 'toggle_floors'})
+
+        for level_name, level in self.levels.items():
+            floor_ele = SubElement(
+                toggle_floors_ele,
+                'floor',
+                {
+                    'name': level_name,
+                    'model_name': f'{self.name}_{level_name}'})
+
+            for model in level.models:
+                if model.static:
+                    model_ele = SubElement(
+                        floor_ele,
+                        'model',
+                        {'name': model.name})
+
+            for door in level.doors:
+                model_ele = SubElement(
+                    floor_ele,
+                    'model',
+                    {'name': door.params['name'].value})
+
+            for lift_name, lift in self.lifts.items():
+                if level_name in lift.level_doors:
+                    for door in lift.doors:
+                        if door.name in lift.level_doors[level_name]:
+                            model_ele = SubElement(
+                                floor_ele,
+                                'model',
+                                {'name': (f'ShaftDoor_{lift_name}_' +
+                                          f'{level_name}_{door.name}')})
 
         return sdf
 
