@@ -2,8 +2,8 @@
 Changelog for package rmf_building_map_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.5.1 (2022-04-20)
+------------------
 * Floor information for floor toggling plugin in Ignition (#424)
 * Use the Ignition Gazebo floor visibility plugin when generating worlds.
 * navgraph visualizer (#426)

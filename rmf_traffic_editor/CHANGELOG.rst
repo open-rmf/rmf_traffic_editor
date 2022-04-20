@@ -2,8 +2,8 @@
 Changelog for package rmf_traffic_editor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.5.1 (2022-04-20)
+------------------
 * update OSM tile server URL to full planet data (#430)
 * fix cmake ament_index_cpp dependency
 * add a github CI job for rolling
