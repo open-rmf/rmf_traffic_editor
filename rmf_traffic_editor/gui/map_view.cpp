@@ -384,7 +384,7 @@ void MapView::request_tile(const int zoom, const int x, const int y)
 
     QString request_url;
     request_url.sprintf(
-      "http://tiles.demo.open-rmf.org/tile/%d/%d/%d.png",
+      "http://tiles.sandbox.open-rmf.org/tile/%d/%d/%d.png",
       zoom,
       x,
       y);

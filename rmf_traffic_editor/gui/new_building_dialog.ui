@@ -46,7 +46,7 @@
       <enum>QFrame::Plain</enum>
      </property>
      <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;RMF supports two coordinate systems: geographic and image-based.&lt;/p&gt;&lt;p&gt;Geographic-coordinate maps are defined in WGS 84 latitude/longitude, and RMF traffic management will run in a standard geographic tangent plane, such as a UTM Zone or a country-specific plane. We recommend this for all new maps.&lt;/p&gt;&lt;p&gt;Image-coordinate maps use a reference image, such as an architectural drawing, as the basis for their coordinate system. This is simpler to get started, but less powerful in the long run, since they cannot be combined with indoor/outdoor navigation systems or interoperate with other GIS tools.&lt;/p&gt;&lt;p&gt;Which would you like to use for this map?&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;RMF supports two coordinate systems: geographic and image-based.&lt;/p&gt;&lt;p&gt;Geographic-coordinate maps are defined in WGS 84 latitude/longitude, and RMF traffic management will run in a standard geographic tangent plane, such as a UTM Zone or a country-specific plane.&lt;/p&gt;&lt;p&gt;Image-coordinate maps use a reference image, such as an architectural drawing, as the basis for their coordinate system. This is simpler to get started, but less powerful in the long run, since they cannot be combined with indoor/outdoor navigation systems or interoperate with other GIS tools.&lt;/p&gt;&lt;p&gt;Which would you like to use for this map?&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="wordWrap">
       <bool>true</bool>
@@ -56,7 +56,7 @@
    <item>
     <widget class="QRadioButton" name="geolocated_radio">
      <property name="text">
-      <string>Geographic coordinates (recommended)</string>
+      <string>Geographic coordinates</string>
      </property>
      <property name="checked">
       <bool>true</bool>
