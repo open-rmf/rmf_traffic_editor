@@ -2,6 +2,16 @@
 Changelog for package rmf_traffic_editor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* update OSM tile server URL to full planet data (#430)
+* fix cmake ament_index_cpp dependency
+* add a github CI job for rolling
+* don't double-trigger CI runs
+* update qt packages for jammy github workflow
+* build/install rmf_utils from source in ci_rolling
+* Contributors: Morgan Quigley, Youliang Tan
+
 1.5.0 (2022-03-13)
 ------------------
 * fix #419 by calculating transformed x/y in image-based maps (#421)

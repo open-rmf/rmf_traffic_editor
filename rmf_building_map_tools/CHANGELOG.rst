@@ -2,6 +2,15 @@
 Changelog for package rmf_building_map_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Floor information for floor toggling plugin in Ignition (#424)
+* Use the Ignition Gazebo floor visibility plugin when generating worlds.
+* navgraph visualizer (#426)
+  * new verb for building_map_generator that will generate navgraph visualization OBJ files, which can then be dropped into a Gazebo simulation to help understand what's going on.
+* update versions of pure python packages
+* Contributors: Luca Della Vedova, Morgan Quigley
+
 1.5.0 (2022-03-13)
 ------------------
 * Always use ign=True and remove spaces when comparing model names (#412)
