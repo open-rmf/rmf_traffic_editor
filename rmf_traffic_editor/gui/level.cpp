@@ -1027,9 +1027,12 @@ void Level::draw_polygon(
     polygon_vertices.append(QPointF(v.x, v.y));
   }
 
+  QPen pen(Qt::black);
+  pen.setWidthF(0.05 / drawing_meters_per_pixel);
+
   scene->addPolygon(
     QPolygonF(polygon_vertices),
-    QPen(Qt::black),
+    pen,
     polygon.selected ? selected_brush : brush);
 }
 
@@ -1172,7 +1175,7 @@ void Level::draw(
 
   QFont vertex_name_font("Helvetica");
   double vertex_name_font_size =
-    vertex_radius / drawing_meters_per_pixel * 1.5;
+    vertex_radius / drawing_meters_per_pixel * 1.5 * 10.0;
   if (vertex_name_font_size < 1.0)
     vertex_name_font_size = 1.0;
   vertex_name_font.setPointSizeF(vertex_name_font_size);

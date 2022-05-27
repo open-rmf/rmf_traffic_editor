@@ -2417,12 +2417,14 @@ void Editor::mouse_add_polygon(
 
       if (mouse_motion_polygon == nullptr)
       {
+        QPen pen(Qt::black);
+        pen.setWidthF(0.05 / active_level()->drawing_meters_per_pixel);
         QVector<QPointF> polygon_vertices;
         polygon_vertices.append(QPointF(v->x, v->y));
         QPolygonF polygon(polygon_vertices);
         mouse_motion_polygon = scene->addPolygon(
           polygon,
-          QPen(Qt::black),
+          pen,
           QBrush(QColor::fromRgbF(1.0, 0.0, 0.0, 0.5)));
         mouse_motion_polygon_vertices.clear();
       }
@@ -2482,11 +2484,14 @@ void Editor::mouse_add_polygon(
     }
     polygon_vertices.append(QPointF(p.x(), p.y()));
 
+    QPen pen(Qt::black);
+    pen.setWidthF(0.05 / active_level()->drawing_meters_per_pixel);
+
     // insert the updated polygon into the scene
     QPolygonF polygon(polygon_vertices);
     mouse_motion_polygon = scene->addPolygon(
       polygon,
-      QPen(Qt::black),
+      pen,
       QBrush(QColor::fromRgbF(1.0, 0.0, 0.0, 0.5)));
   }
 }
