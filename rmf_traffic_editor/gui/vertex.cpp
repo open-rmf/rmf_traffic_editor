@@ -289,8 +289,8 @@ void Vertex::draw(
       // default screen coordinates: +Y=down. Nothing special needed.
       text_item->setTransform(QTransform::fromScale(0.1, 0.1));
       text_item->setPos(
-          x - 0.05 * bb.width(),
-          y + 3.5 * radius - 0.05 * bb.height());
+        x - 0.05 * bb.width(),
+        y + 3.5 * radius - 0.05 * bb.height());
     }
     else
     {
@@ -298,8 +298,8 @@ void Vertex::draw(
       // flip the text, because Qt's default is for +Y=down screen coords
       text_item->setTransform(QTransform::fromScale(0.1, -0.1));
       text_item->setPos(
-          x - 0.05 * bb.width(),
-          y - 3.5 * radius + 0.05 * bb.height());
+        x - 0.05 * bb.width(),
+        y - 3.5 * radius + 0.05 * bb.height());
     }
   }
 }
