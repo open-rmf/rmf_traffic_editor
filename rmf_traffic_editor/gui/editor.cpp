@@ -81,6 +81,7 @@ Editor::Editor()
   qDebug("settings filename: [%s]", qUtf8Printable(settings.fileName()));
 
   scene = new QGraphicsScene(this);
+  scene->setItemIndexMethod(QGraphicsScene::ItemIndexMethod::NoIndex);
 
   map_view = new MapView(this, building);
   map_view->setScene(scene);
