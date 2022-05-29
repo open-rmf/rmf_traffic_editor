@@ -2406,8 +2406,11 @@ void Editor::mouse_add_polygon(
   {
     if (e->buttons() & Qt::LeftButton)
     {
-      const Level::NearestItem ni =
-        building.levels[level_idx].nearest_items(p.x(), p.y());
+      Level* level = active_level();
+      if (level == nullptr)
+        return;
+
+      const Level::NearestItem ni = level->nearest_items(p.x(), p.y());
       clicked_idx = ni.vertex_dist < 10.0 ? ni.vertex_idx : -1;
       if (clicked_idx < 0)
         return;// nothing to do. click wasn't on a vertex.
@@ -2418,7 +2421,7 @@ void Editor::mouse_add_polygon(
       if (mouse_motion_polygon == nullptr)
       {
         QPen pen(Qt::black);
-        pen.setWidthF(0.05 / active_level()->drawing_meters_per_pixel);
+        pen.setWidthF(0.05 / level->drawing_meters_per_pixel);
         QVector<QPointF> polygon_vertices;
         polygon_vertices.append(QPointF(v->x, v->y));
         QPolygonF polygon(polygon_vertices);
