@@ -283,17 +283,23 @@ void Vertex::draw(
       font);
     text_item->setBrush(selected ? selected_color : vertex_color);
 
+    QRectF bb = text_item->sceneBoundingRect();
     if (coordinate_system.is_y_flipped())
     {
       // default screen coordinates: +Y=down. Nothing special needed.
-      text_item->setPos(x, y - 1 + radius);
+      text_item->setTransform(QTransform::fromScale(0.1, 0.1));
+      text_item->setPos(
+        x - 0.05 * bb.width(),
+        y + 3.5 * radius - 0.05 * bb.height());
     }
     else
     {
       // if Y is not flipped, this means we have +Y=up, so we have to
       // flip the text, because Qt's default is for +Y=down screen coords
-      text_item->setTransform(QTransform::fromScale(1.0, -1.0));
-      text_item->setPos(x, y + 1 + radius);
+      text_item->setTransform(QTransform::fromScale(0.1, -0.1));
+      text_item->setPos(
+        x - 0.05 * bb.width(),
+        y - 3.5 * radius + 0.05 * bb.height());
     }
   }
 }
