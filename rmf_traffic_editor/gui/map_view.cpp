@@ -515,6 +515,9 @@ void MapView::request_finished(QNetworkReply* reply)
   // Now that this request is completed, we can issue the next request
   // in the queue.
   process_request_queue();
+
+  // schedule this reply object for deletion (eventually)
+  reply->deleteLater();
 }
 
 void MapView::clear()
