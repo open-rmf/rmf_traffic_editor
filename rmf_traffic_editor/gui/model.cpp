@@ -94,9 +94,9 @@ void Model::from_yaml(
   }
   else
   {
-    qWarning(
-      "parsed a deprecated .building.yaml, models should have dispensable "
-      "defined.");
+    // Although the dispensable parameter is needed, its default value of false
+    // does not break any behavior downstream, as long as future saves populate
+    // that in the output yaml file. No warning needs to be printed.
     is_dispensable = false;
   }
 }
