@@ -362,6 +362,7 @@ QUuid Building::add_model(
   m.model_name = model_name;
   m.instance_name = model_name;  // todo: add unique numeric suffix?
   m.is_static = true;
+  m.is_dispensable = false;
   levels[level_idx].models.push_back(m);
   return levels[level_idx].models.rbegin()->uuid;
 }

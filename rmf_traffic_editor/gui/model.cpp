@@ -87,6 +87,18 @@ void Model::from_yaml(
     is_static = data["static"].as<bool>();
   else
     is_static = true;
+
+  if (data["dispensable"])
+  {
+    is_dispensable = data["dispensable"].as<bool>();
+  }
+  else
+  {
+    // Although the dispensable parameter is needed, its default value of false
+    // does not break any behavior downstream, as long as future saves populate
+    // that in the output yaml file. No warning needs to be printed.
+    is_dispensable = false;
+  }
 }
 
 YAML::Node Model::to_yaml(const CoordinateSystem& coordinate_system) const
@@ -115,6 +127,7 @@ YAML::Node Model::to_yaml(const CoordinateSystem& coordinate_system) const
   n["name"] = instance_name;
   n["model_name"] = model_name;
   n["static"] = is_static;
+  n["dispensable"] = is_dispensable;
   return n;
 }
 
@@ -145,6 +158,21 @@ void Model::set_param(const std::string& name, const std::string& value)
       is_static = true;
     else
       is_static = false;
+  }
+  else if (name == "dispensable")
+  {
+    // not sure if there is a super elite way to parse 'true' in STL
+    string lowercase(value);
+    std::transform(
+      lowercase.begin(),
+      lowercase.end(),
+      lowercase.begin(),
+      [](char c) { return std::tolower(c); });
+
+    if (value == "true")
+      is_dispensable = true;
+    else
+      is_dispensable = false;
   }
   else if (name == "name")
   {

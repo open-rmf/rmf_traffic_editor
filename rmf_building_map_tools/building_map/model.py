@@ -11,8 +11,16 @@ class Model:
         if 'z' in yaml_node:
             self.z = yaml_node['z']
         else:
-            print('parsed a deprecated .building.yaml, model should have a z'
-                  ' field, setting elevation to 0.0 for now')
+            print('parsed a deprecated .building.yaml, model should have a [z]'
+                  ' field, setting [elevation] to 0.0 for now')
+
+        self.dispensable = False
+        if 'dispensable' in yaml_node:
+            self.dispensable = yaml_node['dispensable']
+        else:
+            print('parsed a deprecated .building.yaml, model should have a '
+                  ' [dispensable] field, setting [dispensable] to false for '
+                  'now')
 
         # temporary hack: whitelist of robot models which must be non-static
         non_static_model_names = [
@@ -43,12 +51,17 @@ class Model:
         y['name'] = self.name
         y['yaw'] = self.yaw
         y['static'] = self.static
+        y['dispensable'] = self.dispensable
         return y
 
     def generate(self, world_ele, elevation, transform):
+        model_name = self.name
+        if self.dispensable:
+            model_name += '_dispensable'
+
         include_ele = SubElement(world_ele, 'include')
         name_ele = SubElement(include_ele, 'name')
-        name_ele.text = self.name
+        name_ele.text = model_name
         uri_ele = SubElement(include_ele, 'uri')
         uri_ele.text = f'model://{self.model_name}'
         pose_ele = SubElement(include_ele, 'pose')
