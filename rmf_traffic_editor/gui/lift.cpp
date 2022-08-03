@@ -85,9 +85,9 @@ void Lift::from_yaml(
       const YAML::Node& ds = it->second;  // doors sequence node
       if (ds.IsSequence())
       {
-        for (YAML::const_iterator dit = ds.begin(); dit != ds.end(); ++dit)
+        for (std::size_t idx = 0; idx < ds.size(); ++idx)
         {
-          const std::string door_name = (*dit).as<string>();
+          const std::string door_name = ds[idx].as<string>();
           level_doors[level_name].push_back(door_name);
         }
       }

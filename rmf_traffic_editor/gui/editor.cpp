@@ -1547,7 +1547,7 @@ void Editor::populate_property_editor(const Model& model)
 {
   property_editor->blockSignals(true);  // otherwise we get tons of callbacks
 
-  property_editor->setRowCount(4);
+  property_editor->setRowCount(5);
 
   property_editor_set_row(
     0,
@@ -1571,6 +1571,12 @@ void Editor::populate_property_editor(const Model& model)
     3,
     "static",
     model.is_static ? QString("true") : QString("false"),
+    true);
+
+  property_editor_set_row(
+    4,
+    "dispensable",
+    model.is_dispensable ? QString("true") : QString("false"),
     true);
 
   property_editor->blockSignals(false);  // re-enable callbacks
@@ -2406,8 +2412,11 @@ void Editor::mouse_add_polygon(
   {
     if (e->buttons() & Qt::LeftButton)
     {
-      const Level::NearestItem ni =
-        building.levels[level_idx].nearest_items(p.x(), p.y());
+      Level* level = active_level();
+      if (level == nullptr)
+        return;
+
+      const Level::NearestItem ni = level->nearest_items(p.x(), p.y());
       clicked_idx = ni.vertex_dist < 10.0 ? ni.vertex_idx : -1;
       if (clicked_idx < 0)
         return;// nothing to do. click wasn't on a vertex.
@@ -2417,12 +2426,14 @@ void Editor::mouse_add_polygon(
 
       if (mouse_motion_polygon == nullptr)
       {
+        QPen pen(Qt::black);
+        pen.setWidthF(0.05 / level->drawing_meters_per_pixel);
         QVector<QPointF> polygon_vertices;
         polygon_vertices.append(QPointF(v->x, v->y));
         QPolygonF polygon(polygon_vertices);
         mouse_motion_polygon = scene->addPolygon(
           polygon,
-          QPen(Qt::black),
+          pen,
           QBrush(QColor::fromRgbF(1.0, 0.0, 0.0, 0.5)));
         mouse_motion_polygon_vertices.clear();
       }
@@ -2482,11 +2493,14 @@ void Editor::mouse_add_polygon(
     }
     polygon_vertices.append(QPointF(p.x(), p.y()));
 
+    QPen pen(Qt::black);
+    pen.setWidthF(0.05 / active_level()->drawing_meters_per_pixel);
+
     // insert the updated polygon into the scene
     QPolygonF polygon(polygon_vertices);
     mouse_motion_polygon = scene->addPolygon(
       polygon,
-      QPen(Qt::black),
+      pen,
       QBrush(QColor::fromRgbF(1.0, 0.0, 0.0, 0.5)));
   }
 }

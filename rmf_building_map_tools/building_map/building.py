@@ -462,8 +462,8 @@ class Building:
         gui_ele = world.find('gui')
         c = self.center()
         # Transforming camera to account for offsets if
-        # not in reference_image mode
-        if self.global_transform:
+        # not in reference_image mode and when a floor polygon is defined.
+        if self.global_transform and c != (0, 0):
             camera_pose = f'{c[0] - self.global_transform.x}  \
             {c[1]-20 - self.global_transform.y} 10 0 0.6 1.57'
         else:

@@ -384,7 +384,7 @@ void MapView::request_tile(const int zoom, const int x, const int y)
 
     QString request_url;
     request_url.sprintf(
-      "http://tiles.sandbox.open-rmf.org/tile/%d/%d/%d.png",
+      "https://tiles.sandbox.open-rmf.org/tile/%d/%d/%d.png",
       zoom,
       x,
       y);
@@ -515,6 +515,9 @@ void MapView::request_finished(QNetworkReply* reply)
   // Now that this request is completed, we can issue the next request
   // in the queue.
   process_request_queue();
+
+  // schedule this reply object for deletion (eventually)
+  reply->deleteLater();
 }
 
 void MapView::clear()
