@@ -69,12 +69,14 @@ class BuildingMapServer(Node):
         self.building_map_pub = self.create_publisher(
             BuildingMap, 'map', qos_profile=qos)
 
+        '''
         self.site_map_pub = self.create_publisher(
             SiteMap, 'site_map', qos_profile=qos)
+        '''
 
         self.get_logger().info('publishing map...')
         self.building_map_pub.publish(self.map_msg)
-        self.site_map_pub.publish(self.site_map_msg)
+        #self.site_map_pub.publish(self.site_map_msg)
 
         self.get_logger().info(
             'ready to serve map: "{}"  Ctrl+C to exit...'.format(
