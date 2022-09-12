@@ -144,13 +144,6 @@ class BuildingMapServer(Node):
         if level.drawing_name:
             image = AffineImage()
             image_filename = level.drawing_name
-            image.name = image_filename.split('.')[0]
-            image.encoding = image_filename.split('.')[-1]
-            image.scale = level.transform.scale
-            image.x_offset = level.transform.translation[0]
-            image.y_offset = level.transform.translation[1]
-            image.yaw = level.transform.rotation
-
             image_path = os.path.join(self.map_dir, image_filename)
 
             if os.path.exists(image_path):
@@ -158,6 +151,12 @@ class BuildingMapServer(Node):
                 with open(image_path, 'rb') as image_file:
                     image.data = image_file.read()
                 self.get_logger().info(f'read {len(image.data)} byte image')
+                image.name = image_filename.split('.')[0]
+                image.encoding = image_filename.split('.')[-1]
+                image.scale = level.transform.scale
+                image.x_offset = level.transform.translation[0]
+                image.y_offset = level.transform.translation[1]
+                image.yaw = level.transform.rotation
                 msg.images.append(image)
             else:
                 self.get_logger().error(f'unable to open image: {image_path}')
