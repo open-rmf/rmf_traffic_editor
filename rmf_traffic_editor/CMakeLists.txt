@@ -168,7 +168,7 @@ if (BUILD_TESTING)
     ARGN include gui
     CONFIG_FILE ${uncrustify_config_file}
     MAX_LINE_LENGTH 80
-    LANGUAGE CPP
+    LANGUAGE C++
   )
 endif()
 
