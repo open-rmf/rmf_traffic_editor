@@ -1,6 +1,6 @@
 ## Changelog for package rmf\_building\_map\_tools
 
-2.0.0 (2022-XX-YY)
+1.6.0 (2022-XX-YY)
 ------------------
 * Fix building_map_server crashes when level scale is not defined ([#442](https://github.com/open-rmf/rmf_traffic_editor/pull/442))
 * Fixed usage of download\_models ([#440](https://github.com/open-rmf/rmf_traffic_editor/pull/440))

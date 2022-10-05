@@ -1,6 +1,6 @@
 ## Changelog for package rmf\_traffic\_editor
 
-2.0.0 (2022-XX-YY)
+1.6.0 (2022-XX-YY)
 ------------------
 
 * Added a dispensable field for models ([#436](https://github.com/open-rmf/rmf_traffic_editor/pull/436))
