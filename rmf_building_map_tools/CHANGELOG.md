@@ -1,6 +1,6 @@
 ## Changelog for package rmf\_building\_map\_tools
 
-1.6.0 (2022-XX-YY)
+1.6.0 (2022-10-05)
 ------------------
 * Add Fuel tools dependency to rmf_building_map_tools ([#444](https://github.com/open-rmf/rmf_traffic_editor/pull/444))
 * Fix building_map_server crashes when level scale is not defined ([#442](https://github.com/open-rmf/rmf_traffic_editor/pull/442))
