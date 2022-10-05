@@ -1,6 +1,14 @@
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Changelog for package rmf_building_map_tools
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+## Changelog for package rmf\_building\_map\_tools
+
+2.0.0 (2022-XX-YY)
+------------------
+* Fix building_map_server crashes when level scale is not defined ([#442](https://github.com/open-rmf/rmf_traffic_editor/pull/442))
+* Fixed usage of download\_models ([#440](https://github.com/open-rmf/rmf_traffic_editor/pull/440))
+* remove usage of deprecated np.asscalar() ([#438](https://github.com/open-rmf/rmf_traffic_editor/pull/438))
+* Added a dispensable field for models ([#436](https://github.com/open-rmf/rmf_traffic_editor/pull/436))
+* Only offset camera pose for global coordinate building when a floor is present ([#434](https://github.com/open-rmf/rmf_traffic_editor/pull/434))
+* Move to collections.abc for crowdsim ([#432](https://github.com/open-rmf/rmf_traffic_editor/pull/432))
+* Contributors: Aaron Chong, Luca Della Vedova, Morgan Quigley, Yadunund
 
 1.5.1 (2022-04-20)
 ------------------

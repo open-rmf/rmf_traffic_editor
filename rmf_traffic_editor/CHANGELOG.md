@@ -1,6 +1,12 @@
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Changelog for package rmf_traffic_editor
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+## Changelog for package rmf\_traffic\_editor
+
+2.0.0 (2022-XX-YY)
+------------------
+
+* Added a dispensable field for models ([#436](https://github.com/open-rmf/rmf_traffic_editor/pull/436))
+* Use index based iterator to avoid yaml cpp bug ([#435](https://github.com/open-rmf/rmf_traffic_editor/pull/435))
+* better vertex text size in meter-scale maps ([#431](https://github.com/open-rmf/rmf_traffic_editor/pull/431))
+* Contributors: Aaron Chong, Luca Della Vedova, Morgan Quigley
 
 1.5.1 (2022-04-20)
 ------------------
