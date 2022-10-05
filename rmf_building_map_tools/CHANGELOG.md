@@ -2,6 +2,7 @@
 
 1.6.0 (2022-XX-YY)
 ------------------
+* Add Fuel tools dependency to rmf_building_map_tools ([#444](https://github.com/open-rmf/rmf_traffic_editor/pull/444))
 * Fix building_map_server crashes when level scale is not defined ([#442](https://github.com/open-rmf/rmf_traffic_editor/pull/442))
 * Fixed usage of download\_models ([#440](https://github.com/open-rmf/rmf_traffic_editor/pull/440))
 * remove usage of deprecated np.asscalar() ([#438](https://github.com/open-rmf/rmf_traffic_editor/pull/438))
