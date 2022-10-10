@@ -1,9 +1,10 @@
 <?xml version="1.0" ?>
 <sdf version="1.7">
   <world name="sim_world" xmlns:rmf="rmf">
-    <physics name="10ms" type="ode">
-      <max_step_size>0.01</max_step_size>
+    <physics name="40ms" type="ode">
+      <max_step_size>0.04</max_step_size>
       <real_time_factor>1.0</real_time_factor>
+      <real_time_update_rate>25</real_time_update_rate>
     </physics>
     <plugin
       filename="libignition-gazebo-physics-system.so"
