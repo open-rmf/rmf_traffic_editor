@@ -211,7 +211,8 @@ class LiftDoor:
 
 
 class Lift:
-    def __init__(self, yaml_node, name, transform, levels, coordinate_system):
+    def __init__(self, yaml_node, name, transform, levels, coordinate_system,
+            namespace='sim'):
         self.name = name
         print(f'parsing lift {name}')
 
@@ -246,6 +247,7 @@ class Lift:
             self.reference_floor_name = yaml_node['reference_floor_name']
 
         self.plugins = True
+        self.namespace = namespace
         if 'plugins' in yaml_node:
             self.plugins = bool(yaml_node['plugins'])
 
@@ -314,6 +316,7 @@ class Lift:
         if hasattr(self, 'reference_floor_name'):
             y['reference_floor_name'] = self.reference_floor_name
         y['plugins'] = self.plugins
+        y['namespace'] = self.namespace
         y['x'] = self.raw_pos[0]
         y['y'] = self.raw_pos[1] * coordinate_system.y_flip_scalar()
         y['level_doors'] = {}
@@ -448,6 +451,9 @@ class Lift:
 
             lift_name_ele = SubElement(plugin_ele, 'lift_name')
             lift_name_ele.text = f'{self.name}'
+
+            namespace_ele = SubElement(plugin_ele, 'namespace')
+            namespace_ele.text = f'{self.namespace}'
 
             for level_name, door_names in self.level_doors.items():
                 floor_ele = SubElement(plugin_ele, 'floor')
