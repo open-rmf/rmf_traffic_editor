@@ -23,7 +23,8 @@ class SlidingDoor(Door):
                 'a_max_door': '0.2',
                 'a_nom_door': '0.08',
                 'dx_min_door': '0.001',
-                'f_max_door': '100.0'
+                'f_max_door': '100.0',
+                'namespace': self.namespace
             }
             for param_name, param_value in plugin_params.items():
                 ele = SubElement(plugin_ele, param_name)

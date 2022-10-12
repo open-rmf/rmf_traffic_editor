@@ -55,7 +55,8 @@ class DoubleSwingDoor(Door):
                 'a_max_door': '0.3',
                 'a_nom_door': '0.15',
                 'dx_min_door': '0.01',
-                'f_max_door': '500.0'
+                'f_max_door': '500.0',
+                'namespace': self.namespace
             }
             for param_name, param_value in plugin_params.items():
                 ele = SubElement(plugin_ele, param_name)

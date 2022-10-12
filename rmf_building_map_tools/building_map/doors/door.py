@@ -3,9 +3,10 @@ from..utils import door_material, box_link, joint
 
 
 class Door:
-    def __init__(self, door_edge, level_elevation=0.0):
+    def __init__(self, door_edge, level_elevation=0.0, namespace='sim'):
         self.name = door_edge.params['name'].value
         self.type = door_edge.params['type'].value
+        self.namespace = namespace
         if 'plugin' in door_edge.params:
             self.plugin = door_edge.params['plugin'].value
         else:
