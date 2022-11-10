@@ -49,6 +49,19 @@ class Generator:
             f.write(sdf_str)
         print(f'{len(sdf_str)} bytes written to {output_filename}')
 
+    def generate_gazebo_classic_sdf(
+        self,
+        input_filename,
+        output_filename,
+        output_models_dir,
+        options
+    ):
+        self.generate_sdf(
+            input_filename,
+            output_filename,
+            output_models_dir,
+            options + ['gazebo-classic'])
+
     def generate_gazebo_sdf(
         self,
         input_filename,
@@ -61,19 +74,6 @@ class Generator:
             output_filename,
             output_models_dir,
             options + ['gazebo'])
-
-    def generate_ignition_sdf(
-        self,
-        input_filename,
-        output_filename,
-        output_models_dir,
-        options
-    ):
-        self.generate_sdf(
-            input_filename,
-            output_filename,
-            output_models_dir,
-            options + ['ignition'])
 
     def generate_nav(self, input_filename, output_dir):
         building = self.parse_editor_yaml(input_filename)

@@ -45,19 +45,19 @@ parser.add_argument("-m", "--model-path", type=str,
                     default="~/.gazebo/models/",
                     action=HTTPDownloadDeprecated,
                     help="Path to check models from and download models to. \
-                        Redundant if using ignition fuel tools flag")
+                        Redundant if using gazebo fuel tools flag")
 parser.add_argument("-c", "--cache", type=str,
                     default="~/.pit_crew/model_cache.json",
                     help="Path to pit_crew model cache")
 parser.add_argument("-f", "--fuel-tools", action=HTTPDownloadDeprecated,
-                    help="Use ignition fuel tools to download models instead "
+                    help="Use gazebo fuel tools to download models instead "
                          "of http", nargs=0)
 parser.add_argument("-i", "--include", type=str, default=None,
                     help="Search this directory first for models.")
 parser.add_argument("-e", "--export-path", type=str, default=None,
-                    help="Export model downloaded using ignition fuel tools "
+                    help="Export model downloaded using gazebo fuel tools "
                          "to a folder with classic gazebo directory structure."
-                         " Only relevant if ignition fuel tools is used to "
+                         " Only relevant if gazebo fuel tools is used to "
                          "download models.")
 
 
@@ -96,7 +96,7 @@ def download_models(
     """Download models for a given input building yaml."""
     # Construct model set
 
-    IGN_FUEL_MODEL_PATH = "~/.ignition/fuel/"
+    GZ_FUEL_MODEL_PATH = "~/.gz/fuel/"
 
     model_set = set()
     stringent_dict = {}  # Dict to tighten download scope
@@ -121,11 +121,11 @@ def download_models(
 
     missing_models = pit_crew.get_missing_models(
         model_set,
-        model_path=IGN_FUEL_MODEL_PATH,
+        model_path=GZ_FUEL_MODEL_PATH,
         cache_file_path=cache,
         lower=True,
         priority_dir=include,
-        ign=True,
+        gz=True,
         use_dir_as_name=True
     )
 

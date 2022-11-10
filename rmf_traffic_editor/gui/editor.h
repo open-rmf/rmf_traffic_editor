@@ -248,7 +248,7 @@ private:
   void delete_param_button_clicked();
   void clear_current_tool_buffer(); // Necessary for tools like edge drawing that store temporary states
 
-#ifdef HAS_IGNITION_PLUGIN
+#ifdef HAS_GAZEBO_PLUGIN
   QAction* sim_reset_action;
   QAction* sim_play_pause_action;
   void sim_reset();
@@ -263,7 +263,7 @@ public:
 
 private:
 
-#if defined(HAS_IGNITION_PLUGIN) && defined(HAS_OPENCV)
+#if defined(HAS_GAZEBO_PLUGIN) && defined(HAS_OPENCV)
   QAction* record_start_stop_action;
   bool is_recording = false;
   void record_start_stop();

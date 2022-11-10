@@ -58,7 +58,7 @@ class LiftDoor:
         y['width'] = self.width
         return y
 
-    def generate_cabin_door(self, lift_model_ele, name):
+    def generate_cabin_door_gazebo_classic(self, lift_model_ele, name):
         door_model_ele = SubElement(lift_model_ele, 'model')
         door_model_ele.set('name', name)
         door_pose = SubElement(door_model_ele, 'pose')
@@ -148,10 +148,10 @@ class LiftDoor:
         door_ele.set('right_joint_name', 'right_joint')
         door_ele.set('type', 'DoubleSlidingDoor')
 
-    # TODO: remove this function once nesting model is supported in ignition.
-    def generate_cabin_door_ign(self, lift_model_ele, name):
-        # This is for cabin door generation for ignition gazebo as it doesn't
-        # support nested models yet. Once ignition gazebo supports nested
+    # TODO: remove this function once nesting model is supported in Gazebo.
+    def generate_cabin_door_gazebo(self, lift_model_ele, name):
+        # This is for cabin door generation for Gazebo as it doesn't
+        # support nested models yet. Once Gazebo supports nested
         # models, this should be removed.
         (x, y) = self.cabin_door_pose
         yaw = self.motion_axis_orientation
@@ -430,14 +430,14 @@ class Lift:
 
         # cabin doors
         # TODO: remove the if statement here once nesting model is supported
-        # in ignition.
-        if 'ignition' in options:
+        # in gazebo.
+        if 'gazebo' in options:
             for lift_door in self.doors:
-                lift_door.generate_cabin_door_ign(
+                lift_door.generate_cabin_door_gazebo(
                     lift_model_ele, f'CabinDoor_{self.name}_{lift_door.name}')
         else:
             for lift_door in self.doors:
-                lift_door.generate_cabin_door(
+                lift_door.generate_cabin_door_gazebo_classic(
                     lift_model_ele, f'CabinDoor_{self.name}_{lift_door.name}')
 
         # lift cabin plugin
