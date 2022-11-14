@@ -384,7 +384,8 @@ class Building:
         elif 'gazebo' in options:
             template_name = 'gz_world.sdf'
         else:
-            raise RuntimeError("expected either gazebo-classic or gazebo in options")
+            raise RuntimeError(
+                "expected either gazebo-classic or gazebo in options")
 
         template_path = os.path.join(
             get_package_share_directory('rmf_building_map_tools'),
