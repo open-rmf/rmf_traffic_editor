@@ -7,7 +7,7 @@ parser = argparse.ArgumentParser(
     description="Generate navmesh.nav, behavior.xml, scene.xml" +
                 "required for running crowd simulation," +
                 "and generating the <plugin> tag in .world" +
-                "for gazebo and ignition-gazebo")
+                "for gazebo-classic and gazebo")
 
 # parser
 parser = argparse.ArgumentParser(add_help=False)

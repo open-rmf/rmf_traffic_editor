@@ -39,8 +39,8 @@ model_cache_caps = pit_crew.load_cache(lower=False)
 # And then look for models in our local model directory!
 models = pit_crew.get_local_model_name_tuples(lower=False)
 
-# Or your Ignition model directory!
-ign_models = pit_crew.get_local_model_name_tuples(lower=False, ign=True)
+# Or your Gazebo model directory!
+gz_models = pit_crew.get_local_model_name_tuples(lower=False, gz=True)
 
 # Or you can use the model's folder name as its name!
 path_as_name_models = pit_crew.get_local_model_name_tuples(
@@ -72,7 +72,7 @@ print(pit_crew.get_fuel_authors("gazebo", update_cache=False))
 print(pit_crew.get_fuel_authors("dragon", update_cache=False))  # None found!
 
 
-# List fuel models (works like `ign fuel list --type model`)
+# List fuel models (works like `gz fuel list --type model`)
 # Limit models to display per author to 1 here
 pit_crew.list_fuel_models(update_cache=False, model_limit=1)
 

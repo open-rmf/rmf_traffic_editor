@@ -13,20 +13,20 @@ Author: github.com/methylDragon
      ~ take a REST, and top-up your Fuel ~
 
 Description:
-    pit_crew is an Ignition Fuel REST client and library that helps fetch and
+    pit_crew is an Gazebo Fuel REST client and library that helps fetch and
     manage your model directory for Gazebo.
 
 Features:
-    - Cache building and updating for available models on Ignition Fuel
+    - Cache building and updating for available models on Gazebo Fuel
     - Finding missing models in your Gazebo models directory
     - Adding models from Fuel into your Gazebo models directory
 
 See Also:
     pit_crew is very much like a Gazebo supporting variant of:
-    https://github.com/ignitionrobotics/ign-fuel-tools
+    https://github.com/gazebosim/gz-fuel-tools
 
-    In other words, pit_crew is not related to ign-fuel-tools, but fills the
-    same feature-niche, except for Gazebo instead of Ignition Gazebo.
+    In other words, pit_crew is not related to gz-fuel-tools, but fills the
+    same feature-niche, except for Gazebo instead of Gazebo.
 
     Some implementation details also differ.
 """
@@ -106,7 +106,7 @@ def swag(print_swag=True):
 def get_missing_models(model_names, model_path=None,
                        config_file="model.config",
                        cache_file_path=None, update_cache=True, lower=True,
-                       use_dir_as_name=False, ign=False,
+                       use_dir_as_name=False, gz=False,
                        priority_dir=None):
     """
     Classify models as missing, downloadable, or available from a model list.
@@ -117,7 +117,7 @@ def get_missing_models(model_names, model_path=None,
             (model_name, author_name)!
         model_path (str, optional): Overall path to model directory.
             Defaults to None. If None, function will use "~/.gazebo/models" or
-            "~/.ignition/fuel" depending on the value of ign.
+            "~/.gz/fuel" depending on the value of gz.
         config_file (str, optional): Name of the config file to parse when
             checking local models. Defaults to "model.config".
         cache_file_path (str, optional): The path to the model cache file.
@@ -129,8 +129,8 @@ def get_missing_models(model_names, model_path=None,
             Defaults to True.
         use_dir_as_name (bool, optional): If True, will use the model's folder
             name as its model_name. Defaults to False.
-        ign (bool, optional): If True, will parse model directory as if it is
-            following Ignition's directory structure. Defaults to False.
+        gz (bool, optional): If True, will parse model directory as if it is
+            following Gazebo's directory structure. Defaults to False.
         priority_dir (str, optional): Check this directory first to see if the
             a model is there.
 
@@ -164,7 +164,7 @@ def get_missing_models(model_names, model_path=None,
                     % (priority_dir))
         priority_models_dict = get_local_model_name_tuples(
             priority_dir, config_file=config_file, lower=lower,
-            use_dir_as_name=use_dir_as_name, ign=ign)
+            use_dir_as_name=use_dir_as_name, gz=gz)
         for priority_model, path in priority_models_dict.items():
             if priority_model[0] in priority_models:
                 priority_models[priority_model[0]].append(path)
@@ -173,7 +173,7 @@ def get_missing_models(model_names, model_path=None,
 
     local_models_dict = get_local_model_name_tuples(
         model_path, config_file=config_file, lower=lower,
-        use_dir_as_name=use_dir_as_name, ign=ign)
+        use_dir_as_name=use_dir_as_name, gz=gz)
     for local_model, path in local_models_dict.items():
         if local_model[0] in local_models:
             local_models[local_model[0]].append(path)
@@ -241,14 +241,14 @@ def get_missing_models(model_names, model_path=None,
 
 def get_local_model_name_tuples(path=None, config_file="model.config",
                                 default_author_name="", lower=True,
-                                use_dir_as_name=False, ign=False):
+                                use_dir_as_name=False, gz=False):
     """
     Gets all ModelNames tuples from a given overall local model path.
 
     Args:
         path (str, optional): Overall path to model directory.
             Defaults to None. If None, function will use "~/.gazebo/models" or
-            "~/.ignition/fuel" depending on the value of ign.
+            "~/.gz/fuel" depending on the value of gz.
         config_file (str, optional): Name of the config file to parse.
             Defaults to "model.config".
         default_author_name (str, optional): The author name to use if no
@@ -257,8 +257,8 @@ def get_local_model_name_tuples(path=None, config_file="model.config",
             Defaults to True.
         use_dir_as_name (bool, optional): If True, will use the model's folder
             name as its model_name. Defaults to False.
-        ign (bool, optional): If True, will parse model directory as if it is
-            following Ignition's directory structure. Defaults to False.
+        gz (bool, optional): If True, will parse model directory as if it is
+            following Gazebo's directory structure. Defaults to False.
 
     Returns:
         dictionary (ModelNames: str): Dictionary where ModelNames tuples are
@@ -268,8 +268,8 @@ def get_local_model_name_tuples(path=None, config_file="model.config",
     output = {}
 
     if path is None:
-        if ign:
-            path = "~/.ignition/fuel/"
+        if gz:
+            path = "~/.gz/fuel/"
         else:
             path = "~/.gazebo/models/"
         logger.warning("No local model path given! Using default %s instead!"
@@ -285,13 +285,13 @@ def get_local_model_name_tuples(path=None, config_file="model.config",
                        "Returning empty model set.")
         return output
 
-    if ign:
+    if gz:
         model_dir_iter = glob.glob(path + "*/*/models/*/")
     else:
         model_dir_iter = glob.glob(path + "*/")
 
     for model_path in model_dir_iter:
-        if ign:
+        if gz:
             latest_ver = max(dir for dir in os.listdir(model_path))
         else:
             latest_ver = ""
@@ -489,12 +489,12 @@ def list_fuel_models(cache_file_path=None, update_cache=True, model_limit=-1,
 
 def download_model(model_name, author_name, version="tip",
                    download_path=None, overwrite=True, sync_names=False,
-                   ign=False,
+                   gz=False,
                    dry_run=False):
     """
     Fetch and download a model from Fuel.
 
-    Supports both Gazebo and Ignition directory structures!
+    Supports both Gazebo and Gazebo directory structures!
 
     Args:
         model_name (str): Model name as listed on Fuel. Case insensitive.
@@ -504,13 +504,13 @@ def download_model(model_name, author_name, version="tip",
             "tip", which will download the latest model.
         download_path (str, optional): The root directory for downloading
             and unzipping the models into. Defaults to None. If None, function
-            will use "~/.ignition/fuel/fuel.ignitionrobotics.org" or
-            "~/.gazebo/models" depending on the state of the ign argument.
+            will use "~/.gz/fuel/fuel.gazebosim.org" or
+            "~/.gazebo/models" depending on the state of the gz argument.
         sync_names (bool, optional): Change downloaded model.sdf model name to
             match folder name. Defaults to False.
         overwrite (bool, optional): Overwrite existing model files when
             downloading. Defaults to True.
-        ign (bool, optional): Use Ignition file directory structure and default
+        gz (bool, optional): Use Gazebo file directory structure and default
             paths. Defaults to False.
         dry_run (bool, optional): If dry_run, does not actually download the
             model.
@@ -521,9 +521,9 @@ def download_model(model_name, author_name, version="tip",
     """
     try:
         if download_path is None:
-            if ign:
+            if gz:
                 download_path = os.path.expanduser(
-                    "~/.ignition/fuel/fuel.ignitionrobotics.org"
+                    "~/.gz/fuel/fuel.gazebosim.org"
                 )
             else:
                 download_path = os.path.expanduser("~/.gazebo/models")
@@ -538,7 +538,7 @@ def download_model(model_name, author_name, version="tip",
             logger.warning("Download path does not exist! Created: %s"
                            % download_path)
 
-        url_base = "https://fuel.ignitionrobotics.org/1.0"
+        url_base = "https://fuel.gazebosim.org/1.0"
         metadata = requests.get("%s/%s/models/%s/%s/%s"
                                 % (url_base, author_name,
                                    model_name, version, model_name))
@@ -563,7 +563,7 @@ def download_model(model_name, author_name, version="tip",
         if version == "tip":
             version = metadata_dict['version']
 
-        if ign:
+        if gz:
             extract_path = os.path.join(download_path,
                                         author_name, "models", model_name,
                                         str(version))
@@ -623,16 +623,16 @@ def download_model_fuel_tools(model_name, author_name,
     """
 
     try:
-        # Currently, ignition fuel download can only download to this folder.
+        # Currently, gazebo fuel download can only download to this folder.
         # Fuel tools creates this folder if it does not yet exist
         download_path = os.path.expanduser(
-            "~/.ignition/fuel/fuel.ignitionrobotics.org"
+            "~/.gz/fuel/fuel.gazebosim.org"
         )
         # Command line
         url_model_name = parse.quote(model_name)
-        full_url = ("https://fuel.ignitionrobotics.org/1.0" +
+        full_url = ("https://fuel.gazebosim.org/1.0" +
                     '/' + author_name + '/models' + '/' + url_model_name)
-        full_command = full_command = ("ign fuel download -u "
+        full_command = full_command = ("gz fuel download -u "
                                        + full_url + " -v 4")
         subprocess.call([full_command], shell=True)
 
@@ -728,7 +728,7 @@ def _construct_license(fuel_metadata_dict):
 
 def load_cache(cache_file_path=None, lower=True):
     """
-    Read local Ignition Fuel model listing cache.
+    Read local Gazebo Fuel model listing cache.
 
     Args:
         cache_file_path (str, optional): The path to the model cache file.
@@ -780,7 +780,7 @@ def load_cache(cache_file_path=None, lower=True):
 def build_and_update_cache(cache_file_path=None, write_to_cache=True,
                            rebuild=False):
     """
-    Build and/or update the local Ignition Fuel model listing cache.
+    Build and/or update the local Gazebo Fuel model listing cache.
 
     Args:
         cache_file_path (str, optional): The path to the model cache file.
@@ -822,14 +822,14 @@ def build_and_update_cache(cache_file_path=None, write_to_cache=True,
             old_cache = {'model_cache': set(), 'fuel_cache': []}
             logger.info("Cache not found! Rebuilding cache...")
 
-    url_base = "https://fuel.ignitionrobotics.org/1.0/models"
+    url_base = "https://fuel.gazebosim.org/1.0/models"
     status = 200
     break_flag = False
     page = 1
     new_cache_count = 0
 
     logger.info("Topping up Fuel (updating cache) from:"
-                " https://fuel.ignitionrobotics.org/1.0/models")
+                " https://fuel.gazebosim.org/1.0/models")
 
     # RFE: Doing this asynchronously will significantly speed this up.
     # Any solution must guarantee:

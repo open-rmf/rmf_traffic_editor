@@ -126,7 +126,7 @@ class Wall:
             Instead of having potentially-huge wall vertex values,
             let's instead translate them all towards the origin
             and then push the entire wall OBJ to its final location
-            so that Gazebo/Ignition "Move To" command is useful.
+            so that Gazebo classic/Gazebo "Move To" command is useful.
             """
 
             self.wall_mesh_offsets = np.min(wall_verts, axis=0)

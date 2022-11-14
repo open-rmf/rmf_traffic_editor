@@ -4,7 +4,7 @@ import argparse
 parser = argparse.ArgumentParser(
     prog="building_map_generator",
     description="Generate .world files, map models, and navigation maps"
-                "for running in Gazebo or Ignition!"
+                "for running in Gazebo classic or Gazebo!"
 )
 subparsers = parser.add_subparsers(help="Commands:", dest="command")
 
@@ -19,16 +19,16 @@ shared_parser.add_argument("OUTPUT_MODEL_DIR", type=str,
 shared_parser.add_argument("-o", "--options", type=str, nargs='*', default=[],
                            help="Generator options")
 
-# Create subparsers for Gazebo, Ignition, and Nav generation
-gazebo_parser = subparsers.add_parser(
-    'gazebo',
-    help='Generate .world file and map model.sdf for Gazebo',
+# Create subparsers for Gazebo-classic, Gazebo, and Nav generation
+gazebo_classic_parser = subparsers.add_parser(
+    'gazebo-classic',
+    help='Generate .world file and map model.sdf for Gazebo classic',
     parents=[shared_parser]
 )
 
-ignition_parser = subparsers.add_parser(
-    'ignition',
-    help='Generate .world file and map model.sdf for Ignition',
+gazebo_parser = subparsers.add_parser(
+    'gazebo',
+    help='Generate .world file and map model.sdf for Gazebo',
     parents=[shared_parser]
 )
 

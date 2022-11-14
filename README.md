@@ -52,7 +52,7 @@ Once done with the editing of the building map with `traffic_editor`, user can n
 ros2 run rmf_building_map_tools building_map_generator gazebo \
   ${building_map_path} ${output_world_path} ${output_model_dir}
 ```
-_switch arg `gazebo` to `ignition` for generating a world file for ignition_
+_switch arg `gazebo-classic` to `gazebo` for generating a world file for gazebo_
 
 **Download models used in newly created traffic editor building map.**
 ```bash

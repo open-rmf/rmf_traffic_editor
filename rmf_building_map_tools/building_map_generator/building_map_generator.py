@@ -12,16 +12,16 @@ def main():
     args = parser.parse_args()
     g = Generator()
 
-    if args.command == "gazebo":
-        g.generate_gazebo_sdf(
+    if args.command == "gazebo-classic":
+        g.generate_gazebo_classic_sdf(
             args.INPUT,
             args.OUTPUT_WORLD,
             args.OUTPUT_MODEL_DIR,
             args.options
         )
 
-    if args.command == "ignition":
-        g.generate_ignition_sdf(
+    if args.command == "gazebo":
+        g.generate_gazebo_sdf(
             args.INPUT,
             args.OUTPUT_WORLD,
             args.OUTPUT_MODEL_DIR,
