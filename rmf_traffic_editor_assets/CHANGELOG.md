@@ -1,6 +1,6 @@
 ## Changelog for package rmf\_traffic\_editor\_assets
 
-1.6.0 (2022-XX-YY)
+1.6.0 (2022-10-05)
 ------------------
 
 1.5.1 (2022-04-20)
