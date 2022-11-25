@@ -500,7 +500,7 @@ class Level:
             end_dock = None
             if 'dock_name' in v2.params:  # lane segment will end at dock
                 end_dock = v2.params['dock_name'].value
-            if 'dock_name' in v1.params:
+            if 'dock_name' in v1.params:  # lane segment begins at dock
                 beginning_dock = v1.params['dock_name'].value
 
             if 'speed_limit' in l.params:
@@ -515,14 +515,12 @@ class Level:
                 # todo: clean up this logic, it's overly spaghetti
                 if end_dock:
                     forward_params['dock_name'] = end_dock
-                if beginning_dock:
-                    forward_params['undock_name'] = beginning_dock
-                nav_data['lanes'].append([start_idx, end_idx, forward_params])
-
-                if end_dock:
                     backward_params['undock_name'] = end_dock
                 if beginning_dock:
+                    forward_params['undock_name'] = beginning_dock
                     backward_params['dock_name'] = beginning_dock
+
+                nav_data['lanes'].append([start_idx, end_idx, forward_params])
 
                 if l.orientation():
                     backward_params['orientation_constraint'] = \
@@ -531,8 +529,10 @@ class Level:
             else:
                 # ensure the directionality parameter is set
                 p['is_bidirectional'] = l.is_bidirectional()
-                if dock_name:
-                    p['dock_name'] = dock_name
+                if end_dock:
+                    p['dock_name'] = end_dock
+                if beginning_dock:
+                    p['undock_name'] = beginning_dock
                 nav_data['lanes'].append([start_idx, end_idx, p])
 
         return nav_data
