@@ -512,7 +512,6 @@ class Level:
                 backward_params = copy.deepcopy(p)
 
                 # we need to create two unidirectional lane segments
-                # todo: clean up this logic, it's overly spaghetti
                 if end_dock:
                     forward_params['dock_name'] = end_dock
                     backward_params['undock_name'] = end_dock
