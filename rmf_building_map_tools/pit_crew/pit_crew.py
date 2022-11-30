@@ -635,6 +635,11 @@ def download_model_fuel_tools(model_name, author_name,
         full_command = full_command = ("ign fuel download -u "
                                        + full_url + " -v 4")
         subprocess.call([full_command], shell=True)
+        child = subprocess.Popen([full_command], shell=True, stdout=subprocess.PIPE)
+        streamdata = child.communicate()[0]
+        if child.returncode != 0:
+            logger.error("Could not download model '%s'!" % (model_name))
+            return False
 
         extract_path_base = os.path.join(
             download_path,
