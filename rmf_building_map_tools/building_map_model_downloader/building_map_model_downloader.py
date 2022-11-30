@@ -156,9 +156,10 @@ def download_models(
         logger.info("Downloading model %s / %s : %s" %
                     (key + 1, len(missing_downloadables), model_name))
 
-        pit_crew.download_model_fuel_tools(
-            model_name, author_name,
-            sync_names=True, export_path=export_path)
+        if not pit_crew.download_model_fuel_tools(
+                model_name, author_name,
+                sync_names=True, export_path=export_path):
+            sys.exit(1)
 
     if missing_models.get('missing', []):
         logger.warning("\nMissing models (not in local or Fuel):")
