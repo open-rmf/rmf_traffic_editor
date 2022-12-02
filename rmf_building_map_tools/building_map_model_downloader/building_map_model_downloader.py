@@ -156,9 +156,22 @@ def download_models(
         logger.info("Downloading model %s / %s : %s" %
                     (key + 1, len(missing_downloadables), model_name))
 
-        if not pit_crew.download_model_fuel_tools(
+        model_downloaded = False
+        for i in range(5):
+            model_downloaded = pit_crew.download_model_fuel_tools(
                 model_name, author_name,
-                sync_names=True, export_path=export_path):
+                sync_names=True, export_path=export_path)
+            if model_downloaded:
+                break
+            else:
+                logger.warning("Retrying %d of 5 times...", i)
+
+        if not model_downloaded:
+            logger.error(
+                "Failed to download model [%s/%s] after 5 attempts, "
+                "exiting...",
+                author_name,
+                model_name)
             sys.exit(1)
 
     if missing_models.get('missing', []):
