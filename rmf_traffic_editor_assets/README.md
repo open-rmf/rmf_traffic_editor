@@ -21,4 +21,4 @@ git pull
 
 ## Artist Credits and Licenses
 
-Credits and licenses for each individual asset's creator can be found by downloading the model that corresponds to the asset's name on [Ignition Fuel](https://app.ignitionrobotics.org/fuel)!
+Credits and licenses for each individual asset's creator can be found by downloading the model that corresponds to the asset's name on [Gazebosim Fuel](https://app.gazebosim.org/fuel)!
