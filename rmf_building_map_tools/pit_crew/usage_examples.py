@@ -39,7 +39,7 @@ model_cache_caps = pit_crew.load_cache(lower=False)
 # And then look for models in our local model directory!
 models = pit_crew.get_local_model_name_tuples(lower=False)
 
-# Or your Ignition model directory!
+# Or your Gazebosim model directory!
 ign_models = pit_crew.get_local_model_name_tuples(lower=False, ign=True)
 
 # Or you can use the model's folder name as its name!
