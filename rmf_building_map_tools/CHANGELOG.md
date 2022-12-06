@@ -1,5 +1,10 @@
 ## Changelog for package rmf\_building\_map\_tools
 
+1.6.x (xxxx-xx-xx)
+------------------
+* Fix navgraph generation for connected docking waypoints ([#452](https://github.com/open-rmf/rmf_traffic_editor/pull/452))
+* Contributors: Luca Della Vedova
+
 1.6.0 (2022-10-05)
 ------------------
 * Add Fuel tools dependency to rmf_building_map_tools ([#444](https://github.com/open-rmf/rmf_traffic_editor/pull/444))
