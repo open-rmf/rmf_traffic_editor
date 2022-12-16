@@ -1,0 +1,26 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+<qresource>
+  <file>icons/battery.svg</file>
+  <file>icons/clean.svg</file>
+  <file>icons/constraint.svg</file>
+  <file>icons/door.svg</file>
+  <file>icons/dropoff.svg</file>
+  <file>icons/feature.svg</file>
+  <file>icons/fiducial.svg</file>
+  <file>icons/floor.svg</file>
+  <file>icons/hole.svg</file>
+  <file>icons/measurement.svg</file>
+  <file>icons/move.svg</file>
+  <file>icons/parking.svg</file>
+  <file>icons/pickup.svg</file>
+  <file>icons/roi.svg</file>
+  <file>icons/rotate.svg</file>
+  <file>icons/select.svg</file>
+  <file>icons/stopwatch.svg</file>
+  <file>icons/vertex.svg</file>
+  <file>icons/wall.svg</file>
+  <file>icons/lift.svg</file>
+  <file>icons/traffic_editor.svg</file>
+</qresource>
+</RCC>

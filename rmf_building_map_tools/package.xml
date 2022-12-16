@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>rmf_building_map_tools</name>
+  <version>1.6.0</version>
+  <description>RMF Building map tools</description>
+  <maintainer email="mquigley@openrobotics.org">Morgan Quigley</maintainer>
+  <maintainer email="marco@openrobotics.org">Marco A. Gutiérrez</maintainer>
+  <license>Apache License 2.0</license>
+
+  <build_depend>rmf_building_map_msgs</build_depend>
+
+  <exec_depend>ament_index_python</exec_depend>
+  <exec_depend>ignition-fuel-tools7</exec_depend>
+  <exec_depend>python3-fiona</exec_depend>
+  <exec_depend>python3-pyproj</exec_depend>
+  <exec_depend>python3-requests</exec_depend>
+  <exec_depend>python3-rtree</exec_depend>
+  <exec_depend>python3-shapely</exec_depend>
+  <exec_depend>python3-yaml</exec_depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>rmf_building_map_msgs</exec_depend>
+  <exec_depend>rmf_site_map_msgs</exec_depend>
+  <exec_depend>sqlite3</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>yaml-cpp</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

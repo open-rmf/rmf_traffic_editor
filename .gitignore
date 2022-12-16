@@ -33,3 +33,6 @@ build
 *.exe
 *.out
 *.app
+
+# Test results
+*.eggs

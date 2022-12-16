@@ -1,0 +1,49 @@
+name: ci
+on: [push]
+jobs:
+  ci:
+    runs-on: ubuntu-20.04
+    container:
+      image: docker://ros:galactic-ros-base-focal
+
+    steps:
+    - name: ros-workspace
+      run: |
+        mkdir -p ws/src
+
+    - name: checkout
+      uses: actions/checkout@v2
+      with:
+        path: ws/src/rmf_traffic_editor
+
+    - name: non-ros-deps
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y git cmake wget libyaml-cpp-dev qt5-default libceres-dev libeigen3-dev python3-shapely python3-requests python3-yaml python3-pyproj python3-fiona python3-rtree libproj-dev
+
+    - name: rmf-pkgs
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ros-galactic-rmf-utils
+
+    - name: build
+      shell: bash
+      run: |
+        cd ws
+        source /opt/ros/galactic/setup.bash
+        colcon build --packages-select rmf_traffic_editor --cmake-args -DNO_DOWNLOAD_MODELS=True
+        colcon build --packages-up-to rmf_traffic_editor_test_maps --cmake-args -DNO_DOWNLOAD_MODELS=True
+
+    - name: test
+      shell: bash
+      run: |
+        cd ws
+        source /opt/ros/galactic/setup.bash
+        QT_QPA_PLATFORM=offscreen colcon test --packages-select rmf_traffic_editor
+
+    - name: test-results
+      shell: bash
+      run: |
+        cd ws
+        source /opt/ros/galactic/setup.bash
+        colcon test-result --verbose
