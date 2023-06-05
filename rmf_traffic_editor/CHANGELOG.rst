@@ -2,6 +2,11 @@
 Changelog for package rmf\_traffic\_editor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Switch changelogs to rst format.
+* Contributors: Yadunund
+
 1.6.0 (2022-10-05)
 ------------------
 

@@ -2,6 +2,12 @@
 Changelog for package rmf\_traffic\_editor\_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Switch changelogs to rst format.
+* Migrate to using gzsim server url for fuel (`#454 <https://github.com/open-rmf/rmf_traffic_editor/pull/454>`_)
+* Contributors: Aaron Chong, Yadunund
+
 1.6.0 (2022-10-05)
 ------------------
 

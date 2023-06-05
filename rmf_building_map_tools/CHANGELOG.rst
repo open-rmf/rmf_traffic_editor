@@ -2,10 +2,15 @@
 Changelog for package rmf\_building\_map\_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1.6.x (xxxx-xx-xx)
-------------------
+Forthcoming
+-----------
+* Switch changelogs to rst format.
+* Add texture for a white wall (`#463 <https://github.com/open-rmf/rmf_traffic_editor/pull/463>`_)
 * Fix navgraph generation for connected docking waypoints (`#452 <https://github.com/open-rmf/rmf_traffic_editor/pull/452>`_)
-* Contributors: Luca Della Vedova
+* Added 5 retries for model downloading failure (`#455 <https://github.com/open-rmf/rmf_traffic_editor/pull/455>`_)
+* Migrate to using gzsim server url for fuel (`#454 <https://github.com/open-rmf/rmf_traffic_editor/pull/454>`_)
+* Exiting model downloader with non-zero exit code (`#453 <https://github.com/open-rmf/rmf_traffic_editor/pull/453>`_)
+* Contributors: Aaron Chong, Esteban Martinena Guerrero, Luca Della Vedova, Yadu, Yadunund
 
 1.6.0 (2022-10-05)
 ------------------
