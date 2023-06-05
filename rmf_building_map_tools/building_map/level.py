@@ -496,13 +496,12 @@ class Level:
                 p['demo_mock_lift_name'] = \
                     l.params['demo_mock_lift_name'].value
 
-            dock_name = None
-            dock_at_end = True
+            beginning_dock = None
+            end_dock = None
             if 'dock_name' in v2.params:  # lane segment will end at dock
-                dock_name = v2.params['dock_name'].value
-            elif 'dock_name' in v1.params:
-                dock_name = v1.params['dock_name'].value
-                dock_at_end = False
+                end_dock = v2.params['dock_name'].value
+            if 'dock_name' in v1.params:  # lane segment begins at dock
+                beginning_dock = v1.params['dock_name'].value
 
             if 'speed_limit' in l.params:
                 p['speed_limit'] = l.params['speed_limit'].value
@@ -513,19 +512,14 @@ class Level:
                 backward_params = copy.deepcopy(p)
 
                 # we need to create two unidirectional lane segments
-                # todo: clean up this logic, it's overly spaghetti
-                if dock_name:
-                    if dock_at_end:
-                        forward_params['dock_name'] = dock_name
-                    else:
-                        forward_params['undock_name'] = dock_name
-                nav_data['lanes'].append([start_idx, end_idx, forward_params])
+                if end_dock:
+                    forward_params['dock_name'] = end_dock
+                    backward_params['undock_name'] = end_dock
+                if beginning_dock:
+                    forward_params['undock_name'] = beginning_dock
+                    backward_params['dock_name'] = beginning_dock
 
-                if dock_name:
-                    if dock_at_end:
-                        backward_params['undock_name'] = dock_name
-                    else:
-                        backward_params['dock_name'] = dock_name
+                nav_data['lanes'].append([start_idx, end_idx, forward_params])
 
                 if l.orientation():
                     backward_params['orientation_constraint'] = \
@@ -534,8 +528,10 @@ class Level:
             else:
                 # ensure the directionality parameter is set
                 p['is_bidirectional'] = l.is_bidirectional()
-                if dock_name:
-                    p['dock_name'] = dock_name
+                if end_dock:
+                    p['dock_name'] = end_dock
+                if beginning_dock:
+                    p['undock_name'] = beginning_dock
                 nav_data['lanes'].append([start_idx, end_idx, p])
 
         return nav_data
