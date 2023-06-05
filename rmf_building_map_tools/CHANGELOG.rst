@@ -2,8 +2,8 @@
 Changelog for package rmf\_building\_map\_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.6.1 (2023-06-05)
+------------------
 * Switch changelogs to rst format.
 * Add texture for a white wall (`#463 <https://github.com/open-rmf/rmf_traffic_editor/pull/463>`_)
 * Fix navgraph generation for connected docking waypoints (`#452 <https://github.com/open-rmf/rmf_traffic_editor/pull/452>`_)

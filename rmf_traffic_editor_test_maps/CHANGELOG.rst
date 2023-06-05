@@ -2,8 +2,8 @@
 Changelog for package rmf\_traffic\_editor\_test\_maps
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.6.1 (2023-06-05)
+------------------
 * Switch changelogs to rst format.
 * Fix test map generation with new commands (`#456 <https://github.com/open-rmf/rmf_traffic_editor/pull/456>`_)
 * Contributors: Aaron Chong, Yadunund
