@@ -13,7 +13,7 @@ data_file_appends = [('share/' + os.path.dirname(x), [x]) for x in data_files]
 
 setup(
     name=package_name,
-    version='1.6.0',
+    version='1.7.0',
     packages=[],
     data_files=[
         ('share/ament_index/resource_index/packages',
