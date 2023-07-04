@@ -134,9 +134,9 @@ def download_models(
         missing_models = pit_crew.get_missing_models(
             model_set,
             cache_file_path=cache,
-            lower=True,
+            lower=False,
             priority_dir=include,
-            ign=True,
+            ign=False,
             use_dir_as_name=True
         )
 
