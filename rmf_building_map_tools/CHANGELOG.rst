@@ -2,6 +2,11 @@
 Changelog for package rmf\_building\_map\_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix gz classic model download (`#470 <https://github.com/open-rmf/rmf_traffic_editor/pull/470>`_)
+* Contributors: Aaron Chong
+
 1.8.0 (2023-06-08)
 ------------------
 
