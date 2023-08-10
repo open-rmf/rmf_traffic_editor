@@ -2,8 +2,8 @@
 Changelog for package rmf\_traffic\_editor\_test\_maps
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.6.2 (2023-08-10)
+------------------
 * Fix gz classic model download (`#471 <https://github.com/open-rmf/rmf_traffic_editor/pull/471>`_)
 * Contributors: Aaron Chong
 
