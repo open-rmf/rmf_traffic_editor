@@ -39,6 +39,7 @@ const vector<pair<string, Param::Type>> Vertex::allowed_params
   { "is_holding_point", Param::Type::BOOL },
   { "is_passthrough_point", Param::Type::BOOL },
   { "human_goal_set_name", Param::Type::STRING },
+  { "mutex", Param::Type::STRING },
 };
 
 
