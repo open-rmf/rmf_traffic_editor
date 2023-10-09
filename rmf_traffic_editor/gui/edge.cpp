@@ -132,6 +132,7 @@ void Edge::create_required_parameters()
       std::string());
     create_param_if_needed("demo_mock_lift_name", Param::STRING, std::string());
     create_param_if_needed("speed_limit", Param::DOUBLE, 0.0);
+    create_param_if_needed("mutex", Param::STRING, std::string());
   }
   else if (type == DOOR)
   {
