@@ -352,6 +352,7 @@ class Building:
             g = {}
             g['building_name'] = self.name
             g['levels'] = {}
+            g['lifts'] = {}
 
             if self.coordinate_system == CoordinateSystem.web_mercator:
                 g['crs_name'] = self.global_transform.crs_name
@@ -372,6 +373,11 @@ class Building:
                 g['levels'][level_name] = level_graph
                 if level_graph['lanes']:
                     empty = False
+            for lift_name, lift in self.lifts.items():
+                g['lifts'][lift_name] = {
+                    'position': [lift.x, lift.y, lift.yaw],
+                    'dims': [lift.width, lift.depth]
+                }
             if not empty:
                 nav_graphs[f'{i}'] = g
         return nav_graphs
