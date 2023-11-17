@@ -211,6 +211,10 @@ class Level:
                 ParamValue.DOUBLE,
                 props.get('speed_limit', 0.0)
             ])
+            edge.params['mutex'] = ParamValue([
+                ParamValue.STRING,
+                props.get('mutex', "")
+            ])
             self.lanes.append(edge)
         else:
             raise ValueError('unknown edge type!')
@@ -486,6 +490,10 @@ class Level:
                     l.params['speed_limit'].value > 0.0:
                 p['speed_limit'] = l.params['speed_limit'].value
 
+            if 'mutex' in l.params and \
+                    l.params['mutex'].value:
+                p['mutex'] = l.params['mutex'].value
+
             if 'demo_mock_floor_name' in l.params and \
                     l.params['demo_mock_floor_name'].value:
                 p['demo_mock_floor_name'] = \
@@ -502,9 +510,6 @@ class Level:
                 end_dock = v2.params['dock_name'].value
             if 'dock_name' in v1.params:  # lane segment begins at dock
                 beginning_dock = v1.params['dock_name'].value
-
-            if 'speed_limit' in l.params:
-                p['speed_limit'] = l.params['speed_limit'].value
 
             if always_unidirectional and l.is_bidirectional():
                 # now flip things around and make the second link
