@@ -376,7 +376,7 @@ class Building:
                     empty = False
 
                 for door_edge in level.doors:
-                    door_edge.calc_statistics(self.transformed_vertices)
+                    door_edge.calc_statistics(level.transformed_vertices)
                     g['doors'][door_edge.params['name'].value] = {
                         'endpoints': [
                             [door_edge.x1, door_edge.y1],
