@@ -353,6 +353,7 @@ class Building:
             g['building_name'] = self.name
             g['levels'] = {}
             g['lifts'] = {}
+            g['doors'] = {}
 
             if self.coordinate_system == CoordinateSystem.web_mercator:
                 g['crs_name'] = self.global_transform.crs_name
@@ -373,6 +374,17 @@ class Building:
                 g['levels'][level_name] = level_graph
                 if level_graph['lanes']:
                     empty = False
+
+                for door_edge in level.doors:
+                    door_edge.calc_statistics(level.transformed_vertices)
+                    g['doors'][door_edge.params['name'].value] = {
+                        'endpoints': [
+                            [door_edge.x1, door_edge.y1],
+                            [door_edge.x2, door_edge.y2]
+                        ],
+                        'map': level_name
+                    }
+
             for lift_name, lift in self.lifts.items():
                 g['lifts'][lift_name] = {
                     'position': [lift.x, lift.y, lift.yaw],
