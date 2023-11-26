@@ -21,6 +21,8 @@
 #include <QGraphicsSimpleTextItem>
 #include <QIcon>
 
+#include <iostream>
+
 #include "vertex.h"
 using std::string;
 using std::vector;
@@ -40,6 +42,7 @@ const vector<pair<string, Param::Type>> Vertex::allowed_params
   { "is_passthrough_point", Param::Type::BOOL },
   { "human_goal_set_name", Param::Type::STRING },
   { "mutex", Param::Type::STRING },
+  { "merge_radius", Param::Type::DOUBLE },
 };
 
 
@@ -132,6 +135,7 @@ YAML::Node Vertex::to_yaml(const CoordinateSystem& coordinate_system) const
 void Vertex::draw(
   QGraphicsScene* scene,
   const double radius,
+  const double drawing_meters_per_pixel,
   const QFont& font,
   const CoordinateSystem& coordinate_system) const
 {
@@ -163,6 +167,19 @@ void Vertex::draw(
   annotation_pen.setWidthF(radius / 4.0);
   const double icon_ring_radius = radius * 2.5;
   const double icon_scale = 2.0 * radius / 128.0;
+
+  if (const auto r_merge_opt = merge_radius())
+  {
+    const double r_merge = *r_merge_opt / drawing_meters_per_pixel;
+    const QPen radius_pen(selected ? selected_color : Qt::black);
+    auto* radius_item = scene->addEllipse(
+      x - r_merge,
+      y - r_merge,
+      2 * r_merge,
+      2 * r_merge,
+      radius_pen);
+    radius_item->setZValue(19.0);
+  }
 
   if (is_holding_point())
   {
@@ -341,6 +358,15 @@ bool Vertex::is_charger() const
     return false;
 
   return it->second.value_bool;
+}
+
+std::optional<double> Vertex::merge_radius() const
+{
+  const auto it = params.find("merge_radius");
+  if (it == params.end())
+    return std::nullopt;
+
+  return it->second.value_double;
 }
 
 bool Vertex::is_cleaning_zone() const
