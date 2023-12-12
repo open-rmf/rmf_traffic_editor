@@ -1184,6 +1184,7 @@ void Level::draw(
     v.draw(
       scene,
       vertex_radius / drawing_meters_per_pixel,
+      drawing_meters_per_pixel,
       vertex_name_font,
       coordinate_system);
 
