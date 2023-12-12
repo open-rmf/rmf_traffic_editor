@@ -21,8 +21,6 @@
 #include <QGraphicsSimpleTextItem>
 #include <QIcon>
 
-#include <iostream>
-
 #include "vertex.h"
 using std::string;
 using std::vector;
