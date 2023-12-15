@@ -2,6 +2,11 @@
 Changelog for package rmf\_traffic\_editor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.7.2 (2023-12-15)
+------------------
+* Merge radius property (`#480 <https://github.com/open-rmf/rmf_traffic_editor/pull/480>`_)
+* Mutex group property (`#477 <https://github.com/open-rmf/rmf_traffic_editor/pull/477>`_)
+
 1.7.1 (2023-08-10)
 ------------------
 
