@@ -95,6 +95,6 @@ void BuildingDialog::ok_button_clicked()
     if (_building.params.find("generate_crs") != _building.params.end())
       _building.params.erase("generate_crs");
   }
-  
+
   accept();
 }
