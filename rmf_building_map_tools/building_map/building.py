@@ -503,7 +503,7 @@ class Building:
                 {'name': 'toggle_floors', 'filename': 'libtoggle_floors.so'})
 
         elif 'ignition' in options:
-            plugin_ele = gui_ele.find('.//plugin[@filename="GzScene3D"]')
+            plugin_ele = gui_ele.find('.//plugin[@filename="MinimalScene"]')
             camera_pose_ele = plugin_ele.find('camera_pose')
             camera_pose_ele.text = camera_pose
 
