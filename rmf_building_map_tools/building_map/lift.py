@@ -429,4 +429,3 @@ class Lift:
         # pose
         model_pose = SubElement(lift_model_ele, 'pose')
         model_pose.text = f'{self.x} {self.y} 0 0 0 {self.yaw}'
-

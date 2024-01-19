@@ -48,4 +48,3 @@ class SwingDoor(Door):
             door_ele.set('right_joint_name', 'right_joint')
 
         world_ele.append(self.model_ele)
-
