@@ -12,7 +12,7 @@ class DoubleSwingDoor(Door):
         if 'right_left_ratio' in door_edge.params:
             self.right_left_ratio = door_edge.params['right_left_ratio'].value
 
-    def generate(self, world_ele, options):
+    def generate(self, world_ele):
         right_segment_length = \
             (self.right_left_ratio / (1 + self.right_left_ratio)) * self.length
         left_segment_length = self.length - right_segment_length
@@ -34,8 +34,7 @@ class DoubleSwingDoor(Door):
             x_offsets[0],
             bounds[0],
             axis_pose[0],
-            axis,
-            options)
+            axis)
 
         self.generate_swing_section(
             'left',
@@ -43,8 +42,7 @@ class DoubleSwingDoor(Door):
             x_offsets[1],
             bounds[1],
             axis_pose[1],
-            axis,
-            options)
+            axis)
 
         if not self.plugin == 'none':
             plugin_ele = SubElement(self.model_ele, 'plugin')

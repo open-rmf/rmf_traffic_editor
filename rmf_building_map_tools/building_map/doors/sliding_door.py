@@ -6,13 +6,12 @@ class SlidingDoor(Door):
     def __init__(self, door_edge, level_elevation):
         super().__init__(door_edge, level_elevation)
 
-    def generate(self, world_ele, options):
+    def generate(self, world_ele):
         self.generate_sliding_section(
             'right',
             self.length - 0.01,
             0,
-            (0.0, self.length),
-            options)
+            (0.0, self.length))
 
         if not self.plugin == 'none':
             plugin_ele = SubElement(self.model_ele, 'plugin')

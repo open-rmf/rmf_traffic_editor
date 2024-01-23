@@ -29,14 +29,14 @@ class Door:
             static_ele = SubElement(self.model_ele, 'static')
             static_ele.text = 'true'
 
-    def generate_section(self, name, width, x_offset, options):
+    def generate_section(self, name, width, x_offset):
         pose_ele = Element('pose')
         pose_ele.text = f'{x_offset} 0 {self.height/2+0.01} 0 0 0'
         size = [width, self.thickness, self.height]
         link_ele = box_link(name,
                             size,
                             pose_ele,
-                            material=door_material(options),
+                            material=door_material(),
                             bitmask='0x02')
 
         mass = 50.0
@@ -54,8 +54,8 @@ class Door:
         self.model_ele.append(link_ele)
         return link_ele
 
-    def generate_sliding_section(self, name, width, x_offset, bounds, options):
-        self.generate_section(name, width, x_offset, options)
+    def generate_sliding_section(self, name, width, x_offset, bounds):
+        self.generate_section(name, width, x_offset)
 
         self.model_ele.append(joint(f'{name}_joint',
                                     'prismatic',
@@ -83,10 +83,9 @@ class Door:
         x_offset,
         bounds,
         axis_pose,
-        axis,
-        options
+        axis
     ):
-        self.generate_section(name, width, x_offset, options)
+        self.generate_section(name, width, x_offset)
 
         pose_ele = Element('pose')
         pose_ele.text = f'{axis_pose[0]} {axis_pose[1]} {axis_pose[2]} 0 0 0'

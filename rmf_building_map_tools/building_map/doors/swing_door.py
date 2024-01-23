@@ -9,7 +9,7 @@ class SwingDoor(Door):
         self.motion_radians = 3.14 * motion_degrees / 180.0
         self.motion_direction = door_edge.params['motion_direction'].value
 
-    def generate(self, world_ele, options):
+    def generate(self, world_ele):
         # This is configured to be negative by default to reflect how it is
         # rendered on rmf_traffic_editor.
         axis = 'z' if self.motion_direction < 0 else '-z'
@@ -20,8 +20,7 @@ class SwingDoor(Door):
             0,
             (0, self.motion_radians),
             (self.length / 2, 0, 0),
-            axis,
-            options)
+            axis)
 
         if not self.plugin == 'none':
             plugin_ele = SubElement(self.model_ele, 'plugin')

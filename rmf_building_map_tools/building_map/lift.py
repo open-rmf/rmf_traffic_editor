@@ -333,7 +333,7 @@ class Lift:
         platform.append(visual(f'{name}_visual', pose, dims, lift_material()))
         platform.append(collision(f'{name}_collision', pose, dims, '0x01'))
 
-    def generate_cabin(self, world_ele, options):
+    def generate_cabin(self, world_ele):
         # materials missing for now
         lift_model_name = f'{self.name}'
         lift_model_ele = SubElement(world_ele, 'model')

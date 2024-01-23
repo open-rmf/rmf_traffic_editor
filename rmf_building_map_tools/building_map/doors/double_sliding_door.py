@@ -9,7 +9,7 @@ class DoubleSlidingDoor(Door):
         if 'right_left_ratio' in door_edge.params:
             self.right_left_ratio = door_edge.params['right_left_ratio'].value
 
-    def generate(self, world_ele, options):
+    def generate(self, world_ele):
         right_segment_length = \
             (self.right_left_ratio / (1 + self.right_left_ratio)) * self.length
         left_segment_length = self.length - right_segment_length
@@ -18,15 +18,13 @@ class DoubleSlidingDoor(Door):
             'right',
             right_segment_length - 0.01,
             self.length / 2 - right_segment_length / 2,
-            (0.0, right_segment_length),
-            options)
+            (0.0, right_segment_length))
 
         self.generate_sliding_section(
             'left',
             left_segment_length - 0.01,
             -self.length / 2 + left_segment_length / 2,
-            (-left_segment_length, 0.0),
-            options)
+            (-left_segment_length, 0.0))
 
         if not self.plugin == 'none':
             plugin_ele = SubElement(self.model_ele, 'plugin')
