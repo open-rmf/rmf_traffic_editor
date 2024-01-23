@@ -21,7 +21,7 @@ class Generator:
         self,
         input_filename,
         output_filename,
-        output_models_dir)
+        output_models_dir
     ):
         print('generating {} from {}'.format(output_filename, input_filename))
 
