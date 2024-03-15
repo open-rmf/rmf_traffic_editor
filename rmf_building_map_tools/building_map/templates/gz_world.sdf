@@ -276,6 +276,8 @@
               <property type="string" key="state">docked</property>
           </gz-gui>
       </plugin>
+
+      <plugin filename="toggle_charging" name="toggle_charging"/>
     </gui>
 
     <light type="directional" name="sun">
