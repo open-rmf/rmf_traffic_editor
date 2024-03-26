@@ -439,18 +439,18 @@ class Building:
             lift.generate_cabin(world, options)
 
         charger_waypoints_ele = SubElement(
-          world,
-          'rmf_charger_waypoints',
-          {'name': 'charger_waypoints'})
+            world,
+            'rmf_charger_waypoints',
+            {'name': 'charger_waypoints'})
 
         for level_name, level in self.levels.items():
             for vertex in level.transformed_vertices:
                 if 'is_charger' in vertex.params:
                     SubElement(
-                      charger_waypoints_ele,
-                      'rmf_vertex',
-                      {'name': vertex.name, 'x': str(vertex.x),
-                       'y': str(vertex.y), 'level': level_name})
+                        charger_waypoints_ele,
+                        'rmf_vertex',
+                        {'name': vertex.name, 'x': str(vertex.x),
+                         'y': str(vertex.y), 'level': level_name})
 
         if self.coordinate_system == CoordinateSystem.web_mercator:
             (tx, ty) = self.global_transform.x, self.global_transform.y
@@ -726,7 +726,8 @@ class Building:
 
             d['lifts'] = {}
             for lift_name, lift in self.lifts.items():
-                d['lifts'][lift_name] = lift.to_yaml()
+                d['lifts'][lift_name] = lift.to_yaml(
+                    self.coordinate_system)
 
             yaml.dump(d, f)
 
