@@ -1,0 +1,23 @@
+name: tsan
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  tsan_test:
+    name: rmf_traffic_editor tsan
+    uses: open-rmf/rmf_ci_templates/.github/workflows/reusable_build.yaml@main
+    with:
+      dist-matrix: |
+          [{"ros_distribution": "humble",
+            "ubuntu_distribution": "jammy"}]
+      # NOTE: Avoid adding comments in the package lines, this can break some of the called scripts in github actions
+      packages: |
+        rmf_traffic_editor
+        rmf_traffic_editor_test_maps
+      mixin: tsan
+      
