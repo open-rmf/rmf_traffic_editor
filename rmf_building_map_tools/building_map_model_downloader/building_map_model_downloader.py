@@ -49,9 +49,9 @@ parser.add_argument("-m", "--model-path", type=str,
 parser.add_argument("-c", "--cache", type=str,
                     default="~/.pit_crew/model_cache.json",
                     help="Path to pit_crew model cache")
-parser.add_argument("-f", "--fuel-tools", action=HTTPDownloadDeprecated,
+parser.add_argument("-f", "--fuel-tools", action='store_true',
                     help="Use ignition fuel tools to download models instead "
-                         "of http", nargs=0)
+                         "of http")
 parser.add_argument("-i", "--include", type=str, default=None,
                     help="Search this directory first for models.")
 parser.add_argument("-e", "--export-path", type=str, default=None,
@@ -92,6 +92,7 @@ def download_models(
         input_yaml,
         cache=None,
         include=None,
+        fuel_tools=True,
         export_path=None):
     """Download models for a given input building yaml."""
     # Construct model set
@@ -119,15 +120,25 @@ def download_models(
             else:
                 model_set.add(model.model_name)
 
-    missing_models = pit_crew.get_missing_models(
-        model_set,
-        model_path=IGN_FUEL_MODEL_PATH,
-        cache_file_path=cache,
-        lower=True,
-        priority_dir=include,
-        ign=True,
-        use_dir_as_name=True
-    )
+    if fuel_tools:
+        missing_models = pit_crew.get_missing_models(
+            model_set,
+            model_path=IGN_FUEL_MODEL_PATH,
+            cache_file_path=cache,
+            lower=True,
+            priority_dir=include,
+            ign=True,
+            use_dir_as_name=True
+        )
+    else:
+        missing_models = pit_crew.get_missing_models(
+            model_set,
+            cache_file_path=cache,
+            lower=False,
+            priority_dir=include,
+            ign=False,
+            use_dir_as_name=True
+        )
 
     logger.info("\n== REQUESTED MODEL REPORT ==")
     pprint(missing_models)
@@ -158,9 +169,14 @@ def download_models(
 
         model_downloaded = False
         for i in range(5):
-            model_downloaded = pit_crew.download_model_fuel_tools(
-                model_name, author_name,
-                sync_names=True, export_path=export_path)
+            model_downloaded = False
+            if fuel_tools:
+                model_downloaded = pit_crew.download_model_fuel_tools(
+                    model_name, author_name,
+                    sync_names=True, export_path=export_path)
+            else:
+                model_downloaded = pit_crew.download_model(
+                    model_name, author_name, sync_names=True)
             if model_downloaded:
                 break
             else:
@@ -202,6 +218,7 @@ def main():
         args.INPUT_YAML,
         args.cache,
         args.include,
+        args.fuel_tools,
         args.export_path)
 
 

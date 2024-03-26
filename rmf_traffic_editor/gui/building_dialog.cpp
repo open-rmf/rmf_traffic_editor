@@ -87,8 +87,16 @@ void BuildingDialog::ok_button_clicked()
   _building.reference_level_name =
     _reference_floor_combo_box->currentText().toStdString();
 
-  _building.params["generate_crs"] =
-    Param(generate_crs_line_edit->text().toStdString());
+  if (!generate_crs_line_edit->text().isEmpty())
+  {
+    _building.params["generate_crs"] = Param(
+      generate_crs_line_edit->text().toStdString());
+  }
+  else
+  {
+    if (_building.params.find("generate_crs") != _building.params.end())
+      _building.params.erase("generate_crs");
+  }
 
   accept();
 }
