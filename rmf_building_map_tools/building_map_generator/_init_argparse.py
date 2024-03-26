@@ -16,19 +16,11 @@ shared_parser.add_argument("OUTPUT_WORLD", type=str,
                            help="Name of the .world file to output")
 shared_parser.add_argument("OUTPUT_MODEL_DIR", type=str,
                            help="Path to output the map model files")
-shared_parser.add_argument("-o", "--options", type=str, nargs='*', default=[],
-                           help="Generator options")
 
-# Create subparsers for Gazebo, Ignition, and Nav generation
+# Create subparsers for Gazebo and Nav generation
 gazebo_parser = subparsers.add_parser(
     'gazebo',
     help='Generate .world file and map model.sdf for Gazebo',
-    parents=[shared_parser]
-)
-
-ignition_parser = subparsers.add_parser(
-    'ignition',
-    help='Generate .world file and map model.sdf for Ignition',
     parents=[shared_parser]
 )
 

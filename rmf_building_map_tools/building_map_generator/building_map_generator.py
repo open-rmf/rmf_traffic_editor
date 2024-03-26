@@ -13,19 +13,10 @@ def main():
     g = Generator()
 
     if args.command == "gazebo":
-        g.generate_gazebo_sdf(
+        g.generate_sdf(
             args.INPUT,
             args.OUTPUT_WORLD,
-            args.OUTPUT_MODEL_DIR,
-            args.options
-        )
-
-    if args.command == "ignition":
-        g.generate_ignition_sdf(
-            args.INPUT,
-            args.OUTPUT_WORLD,
-            args.OUTPUT_MODEL_DIR,
-            args.options
+            args.OUTPUT_MODEL_DIR
         )
 
     if args.command == "nav":
