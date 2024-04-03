@@ -15,6 +15,8 @@ from rclpy.qos import QoSDurabilityPolicy as Durability
 from rclpy.qos import QoSReliabilityPolicy as Reliability
 from rclpy.node import Node
 
+from building_map_server.site import load_site_json
+
 from rmf_building_map_msgs.srv import GetBuildingMap
 from rmf_building_map_msgs.msg import BuildingMap
 from rmf_building_map_msgs.msg import Level
@@ -53,6 +55,9 @@ class BuildingMapServer(Node):
             self.load_geojson(map_path)
         elif map_path.endswith('.geojson.gz'):
             self.load_geojson(map_path, True)
+        elif map_path.endswith('.site.json'):
+            self.site_map_msg = SiteMap()
+            self.map_msg = load_site_json(map_path)
         else:
             self.get_logger().fatal('unknown filename suffix')
             sys.exit(1)
