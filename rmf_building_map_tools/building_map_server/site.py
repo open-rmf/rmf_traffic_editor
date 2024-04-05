@@ -127,6 +127,9 @@ def parse_level(map_dir, data):
             if "yaw" in props["pose"]["rot"]:
                 yaw = parse_angle(props["pose"]["rot"]["yaw"])
             level_msg.images.append(image)
+            # TODO(luca) multiple drawings are not compatible with the rest of the pipeline
+            # Revisit when this is not the case
+            break
         else:
             pass
             #self.get_logger().error(f'unable to open image: {image_path}')
