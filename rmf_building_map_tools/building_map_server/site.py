@@ -29,7 +29,6 @@ def load_site_json(map_path):
         lift = parse_lift(lift_data, site)
         if lift is not None:
             map_msg.lifts.append(lift)
-    print(map_msg.lifts)
     return map_msg
 
 def parse_angle(angle):
@@ -37,6 +36,14 @@ def parse_angle(angle):
         return angle["rad"]
     else:
         return math.pi * angle["deg"] / 180.0
+
+def parse_anchor(anchor):
+    if anchor is None:
+        return None
+    if "Translate2D" in anchor:
+        return anchor["Translate2D"]
+    else:
+        return None
 
 def parse_lift(data, site):
     lift_msg = Lift()
@@ -53,16 +60,10 @@ def parse_lift(data, site):
     center_y = 0.0
     left_anchor = site["anchors"].get(str(props["reference_anchors"][0]))
     right_anchor = site["anchors"].get(str(props["reference_anchors"][1]))
+    left_anchor = parse_anchor(left_anchor)
+    right_anchor = parse_anchor(right_anchor)
     if left_anchor is None or right_anchor is None:
         # ERROR
-        return None
-    if "Translate2D" in left_anchor:
-        left_anchor = left_anchor["Translate2D"]
-    else:
-        return None
-    if "Translate2D" in right_anchor:
-        right_anchor = right_anchor["Translate2D"]
-    else:
         return None
     lift_msg.ref_yaw = math.atan2(left_anchor[1] - right_anchor[1], left_anchor[0] - right_anchor[0])
     midpoint_x = (left_anchor[0] + right_anchor[0]) / 2.0
@@ -71,6 +72,31 @@ def parse_lift(data, site):
     lift_msg.ref_y = center_y + midpoint_y
     # TODO(luca) cabin doors
     return lift_msg
+
+def generate_wall_graph(data):
+    # Start by getting all the vertices that are used
+    graph = Graph()
+    graph.name = "wall_graph"
+    site_id_to_wall_idx = {}
+    for wall in data["walls"].values():
+        for anchor_id in wall["anchors"]:
+            if anchor_id not in site_id_to_wall_idx:
+                anchor = data["anchors"].get(str(anchor_id), None)
+                anchor = parse_anchor(anchor)
+                if anchor is None:
+                    return None
+                node = GraphNode()
+                node.x = anchor[0]
+                node.y = anchor[1]
+                site_id_to_wall_idx[anchor_id] = len(graph.vertices)
+                # We don't need other properties for wall graphs
+                graph.vertices.append(node)
+        edge = GraphEdge()
+        edge.edge_type = GraphEdge.EDGE_TYPE_BIDIRECTIONAL
+        edge.v1_idx = site_id_to_wall_idx[wall["anchors"][0]]
+        edge.v2_idx = site_id_to_wall_idx[wall["anchors"][1]]
+        graph.edges.append(edge)
+    return graph
 
 def parse_level(map_dir, data):
     level_msg = Level()
@@ -108,16 +134,9 @@ def parse_level(map_dir, data):
         door_msg = Door()
         door_msg.name = door["name"]
 
-        v1 = data["anchors"].get(str(door["anchors"][0]))
-        v2 = data["anchors"].get(str(door["anchors"][1]))
-        if "Translate2D" in v1:
-            v1 = v1["Translate2D"]
-        else:
-            # LOG ERROR
-            continue
-        if "Translate2D" in v2:
-            v2 = v2["Translate2D"]
-        else:
+        v1 = parse_anchor(data["anchors"].get(str(door["anchors"][0])))
+        v2 = parse_anchor(data["anchors"].get(str(door["anchors"][1])))
+        if v1 is None or v2 is None:
             # LOG ERROR
             continue
         # TODO(luca) Change this based on pivot side
@@ -147,9 +166,10 @@ def parse_level(map_dir, data):
             pass
         level_msg.doors.append(door_msg)
 
-    # TODO(luca), needed for rmf-web frontend, populate
-    for wall in data.get("walls", {}).values():
-        pass
-
+    wall_graph = generate_wall_graph(data)
+    if wall_graph is not None:
+        level_msg.wall_graph = wall_graph
+    else:
+        print("Failed generating wall graph, skipping it...")
 
     return level_msg
