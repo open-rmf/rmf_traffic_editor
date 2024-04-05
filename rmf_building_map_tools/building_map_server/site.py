@@ -29,6 +29,7 @@ def load_site_json(map_path):
         lift = parse_lift(lift_data, site)
         if lift is not None:
             map_msg.lifts.append(lift)
+    # TODO(luca) add navgraph named locations for rmf-web frontend
     return map_msg
 
 def parse_angle(angle):
