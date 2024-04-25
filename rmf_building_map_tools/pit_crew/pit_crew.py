@@ -854,7 +854,12 @@ def build_and_update_cache(cache_file_path=None, write_to_cache=True,
                 author_name = model.get("owner", "")
 
                 # If a cached model was found, halt
-                if (model_name, author_name) in old_cache['model_cache']:
+                if (
+                    (model_name, author_name) in old_cache['model_cache']
+                    # this particular model is duplicated in fuel,
+                    # causing the cache to break early
+                    and model_name != "ur5_rg2" and author_name != "anni"
+                ):
                     logger.info("Cached model found! "
                                 "Halting Fuel traversal...")
                     break_flag = True
