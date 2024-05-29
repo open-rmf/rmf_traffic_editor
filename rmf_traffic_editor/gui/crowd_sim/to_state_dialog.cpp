@@ -28,7 +28,8 @@ ToStateDialog::ToStateDialog(
   _to_state_tab = ToStateTab::init_and_make(crowd_sim_impl, transition);
   if (!_to_state_tab)
   {
-    throw std::runtime_error("Failed to initialize ToStateTab in ToStateDialog");
+    throw std::runtime_error(
+            "Failed to initialize ToStateTab in ToStateDialog");
   }
   _to_state_tab->update();
   std::string title = "from_state: " + transition.get_from_state();
