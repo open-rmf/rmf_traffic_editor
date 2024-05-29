@@ -65,14 +65,14 @@ ConditionDialog::ConditionDialog(
       auto root_condition = _current_transition.get_condition();
       if (crowd_sim::Condition::GOAL == root_condition->get_type())
       {
-        auto goal_condition = std::dynamic_pointer_cast<crowd_sim::ConditionGOAL>(
-          root_condition);
+        auto goal_condition =
+        std::dynamic_pointer_cast<crowd_sim::ConditionGOAL>(root_condition);
         goal_condition->set_value(temp);
       }
       if (crowd_sim::Condition::TIMER == root_condition->get_type())
       {
-        auto timer_condition = std::dynamic_pointer_cast<crowd_sim::ConditionTIMER>(
-          root_condition);
+        auto timer_condition =
+        std::dynamic_pointer_cast<crowd_sim::ConditionTIMER>(root_condition);
         timer_condition->set_value(temp);
       }
     }
@@ -268,7 +268,8 @@ void ConditionDialog::_construct_leaf_condition_widget(
     condition_value->setText(QString::number(_condition2ValueD));
   std::string condition_label = "condition" + std::to_string(condition_index) +
     ":";
-  condition_hbox->addWidget(new QLabel(QString::fromStdString(condition_label) ));
+  condition_hbox->addWidget(new QLabel(QString::fromStdString(
+      condition_label) ));
   condition_hbox->addWidget(condition_type);
   condition_hbox->addWidget(condition_value);
   connect(

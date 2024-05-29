@@ -394,15 +394,9 @@ class Building:
                 nav_graphs[f'{i}'] = g
         return nav_graphs
 
-    def generate_sdf_world(self, options):
+    def generate_sdf_world(self):
         """ Return an etree of this Building in SDF starting from a template"""
-        print(f'generator options: {options}')
-        if 'gazebo' in options:
-            template_name = 'gz_world.sdf'
-        elif 'ignition' in options:
-            template_name = 'ign_world.sdf'
-        else:
-            raise RuntimeError("expected either gazebo or ignition in options")
+        template_name = 'gz_world.sdf'
 
         template_path = os.path.join(
             get_package_share_directory('rmf_building_map_tools'),
@@ -414,7 +408,7 @@ class Building:
 
         for level_name, level in self.levels.items():
             level.generate_sdf_models(world)  # todo: a better name
-            level.generate_doors(world, options)
+            level.generate_doors(world)
 
             level_include_ele = SubElement(world, 'include')
             level_model_name = f'{self.name}_{level_name}'
@@ -436,7 +430,7 @@ class Building:
                 print(f'[{lift_name}] is not serving any floor, ignoring.')
                 continue
             lift.generate_shaft_doors(world)
-            lift.generate_cabin(world, options)
+            lift.generate_cabin(world)
 
         charger_waypoints_ele = SubElement(
             world,
@@ -487,30 +481,14 @@ class Building:
         else:
             camera_pose = f'{c[0]} {c[1]-20} 10 0 0.6 1.57'
         # add floor-toggle GUI plugin parameters
-        if 'gazebo' in options:
-            camera_pose_ele = gui_ele.find('camera').find('pose')
-            camera_pose_ele.text = camera_pose
+        plugin_ele = gui_ele.find('.//plugin[@filename="MinimalScene"]')
+        camera_pose_ele = plugin_ele.find('camera_pose')
+        camera_pose_ele.text = camera_pose
 
-            toggle_charge_ele = SubElement(
-                gui_ele,
-                'plugin',
-                {'name': 'toggle_charging',
-                 'filename': 'libtoggle_charging.so'})
-
-            toggle_floors_ele = SubElement(
-                gui_ele,
-                'plugin',
-                {'name': 'toggle_floors', 'filename': 'libtoggle_floors.so'})
-
-        elif 'ignition' in options:
-            plugin_ele = gui_ele.find('.//plugin[@filename="GzScene3D"]')
-            camera_pose_ele = plugin_ele.find('camera_pose')
-            camera_pose_ele.text = camera_pose
-
-            toggle_floors_ele = SubElement(
-                gui_ele,
-                'plugin',
-                {'name': 'toggle_floors', 'filename': 'toggle_floors'})
+        toggle_floors_ele = SubElement(
+            gui_ele,
+            'plugin',
+            {'name': 'toggle_floors', 'filename': 'toggle_floors'})
 
         for level_name, level in self.levels.items():
             floor_ele = SubElement(

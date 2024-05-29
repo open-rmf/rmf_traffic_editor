@@ -11,7 +11,7 @@
   <build_depend>rmf_building_map_msgs</build_depend>
 
   <exec_depend>ament_index_python</exec_depend>
-  <exec_depend>ignition-fuel-tools7</exec_depend>
+  <exec_depend>gz_fuel_tools_vendor</exec_depend>
   <exec_depend>python3-fiona</exec_depend>
   <exec_depend>python3-pyproj</exec_depend>
   <exec_depend>python3-requests</exec_depend>

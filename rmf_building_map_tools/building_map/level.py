@@ -256,12 +256,12 @@ class Level:
             if 'spawn_robot_type' in vertex.params:
                 self.generate_robot_at_vertex_idx(vertex_idx, world_ele)
 
-    def generate_doors(self, world_ele, options):
+    def generate_doors(self, world_ele):
         for door_edge in self.doors:
             door_edge.calc_statistics(self.transformed_vertices)
-            self.generate_door(door_edge, world_ele, options)
+            self.generate_door(door_edge, world_ele)
 
-    def generate_door(self, door_edge, world_ele, options):
+    def generate_door(self, door_edge, world_ele):
         door_name = door_edge.params['name'].value
         door_type = door_edge.params['type'].value
         print(f'generate door name={door_name} type={door_type}')
@@ -279,7 +279,7 @@ class Level:
             print(f'door type {door_type} not yet implemented')
 
         if door:
-            door.generate(world_ele, options)
+            door.generate(world_ele)
 
     def generate_robot_at_vertex_idx(self, vertex_idx, world_ele):
         vertex = self.transformed_vertices[vertex_idx]
