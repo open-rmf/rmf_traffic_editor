@@ -8,8 +8,9 @@
   <maintainer email="brandon@openrobotics.org">Brandon Ong</maintainer>
   <maintainer email="marco@openrobotics.org">Marco A. Gutiérrez</maintainer>
   <license>Apache License 2.0</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
 
   <export>
-    <build_type>ament_python</build_type>
+    <build_type>ament_cmake</build_type>
   </export>
 </package>
