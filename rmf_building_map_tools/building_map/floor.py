@@ -133,7 +133,7 @@ class Floor:
                         plt.plot(poly_x, poly_y, 'b', linewidth=4)
 
             elif geom.geom_type == 'MultiPolygon':
-                for poly in list(geom):
+                for poly in list(geom.geoms):
                     self.triangulate_polygon(poly, triangles)
 
             elif geom.geom_type == 'GeometryCollection':
