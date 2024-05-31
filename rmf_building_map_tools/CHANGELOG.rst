@@ -2,6 +2,16 @@
 Changelog for package rmf\_building\_map\_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix MultiPolygon not iterable (`#496 <https://github.com/open-rmf/rmf_traffic_editor/pull/496>`_)
+* Harmonic release and ECS refactor (`#483 <https://github.com/open-rmf/rmf_traffic_editor/pull/483>`_)
+* workaround fuel dup (`#490 <https://github.com/open-rmf/rmf_traffic_editor/pull/490>`_)
+* Add per_page arg to fuel pagination for pit_crew (`#491 <https://github.com/open-rmf/rmf_traffic_editor/pull/491>`_)
+* bugfix: specify coordiate_system when generating yaml for lift. (`#488 <https://github.com/open-rmf/rmf_traffic_editor/pull/488>`_)
+* Handle geometry collections (`#476 <https://github.com/open-rmf/rmf_traffic_editor/pull/476>`_)
+* Contributors: Arjo Chakravarty, Grey, Luca Della Vedova, Teo Koon Peng, Xiyu, cwrx777, methylDragon, Yadunund
+
 1.8.2 (2023-12-15)
 ------------------
 * Export door information to nav graphs (`#479 <https://github.com/open-rmf/rmf_traffic_editor/pull/479>`_)

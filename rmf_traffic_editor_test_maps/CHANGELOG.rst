@@ -2,6 +2,9 @@
 Changelog for package rmf\_traffic\_editor\_test\_maps
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 1.8.2 (2023-12-15)
 ------------------
 

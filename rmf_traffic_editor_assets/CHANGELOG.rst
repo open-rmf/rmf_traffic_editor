@@ -2,6 +2,11 @@
 Changelog for package rmf\_traffic\_editor\_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix buildfarm build of rmf_traffic_editor packages (`#495 <https://github.com/open-rmf/rmf_traffic_editor/pull/495>`_)
+* Contributors: Luca Della Vedova
+
 1.8.2 (2023-12-15)
 ------------------
 
