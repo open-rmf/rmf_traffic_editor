@@ -2,8 +2,8 @@
 Changelog for package rmf\_building\_map\_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.9.0 (2024-06-01)
+------------------
 * Fix MultiPolygon not iterable (`#496 <https://github.com/open-rmf/rmf_traffic_editor/pull/496>`_)
 * Harmonic release and ECS refactor (`#483 <https://github.com/open-rmf/rmf_traffic_editor/pull/483>`_)
 * workaround fuel dup (`#490 <https://github.com/open-rmf/rmf_traffic_editor/pull/490>`_)

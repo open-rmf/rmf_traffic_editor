@@ -2,8 +2,8 @@
 Changelog for package rmf\_traffic\_editor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.9.0 (2024-06-01)
+------------------
 * Fix buildfarm build of rmf_traffic_editor packages (`#495 <https://github.com/open-rmf/rmf_traffic_editor/pull/495>`_)
 * Harmonic release and ECS refactor (`#483 <https://github.com/open-rmf/rmf_traffic_editor/pull/483>`_)
 * Fix empty generate_crs in building yaml. (`#482 <https://github.com/open-rmf/rmf_traffic_editor/pull/482>`_)
