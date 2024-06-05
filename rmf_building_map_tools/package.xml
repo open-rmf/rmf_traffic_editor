@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>rmf_building_map_tools</name>
-  <version>1.8.2</version>
+  <version>1.9.0</version>
   <description>RMF Building map tools</description>
   <maintainer email="mquigley@openrobotics.org">Morgan Quigley</maintainer>
   <maintainer email="marco@openrobotics.org">Marco A. Gutiérrez</maintainer>
@@ -11,7 +11,7 @@
   <build_depend>rmf_building_map_msgs</build_depend>
 
   <exec_depend>ament_index_python</exec_depend>
-  <exec_depend>gz-fuel-tools9</exec_depend>
+  <exec_depend>gz_fuel_tools_vendor</exec_depend>
   <exec_depend>python3-fiona</exec_depend>
   <exec_depend>python3-pyproj</exec_depend>
   <exec_depend>python3-requests</exec_depend>

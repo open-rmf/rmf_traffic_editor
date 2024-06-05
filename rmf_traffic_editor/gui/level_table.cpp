@@ -95,7 +95,8 @@ void LevelTable::update(Building& building)
           if (dialog.exec() == QDialog::Accepted)
           {
             building.levels[i].name = ui.name_line_edit->text().toStdString();
-            building.levels[i].elevation = ui.elevation_line_edit->text().toDouble();
+            building.levels[i].elevation =
+            ui.elevation_line_edit->text().toDouble();
             setWindowModified(true);  // not sure why, but this doesn't work
           }
         }
