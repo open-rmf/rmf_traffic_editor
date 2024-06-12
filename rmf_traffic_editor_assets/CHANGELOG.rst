@@ -2,6 +2,9 @@
 Changelog for package rmf\_traffic\_editor\_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.10.0 (2024-06-12)
+-------------------
+
 1.9.0 (2024-06-01)
 ------------------
 * Fix buildfarm build of rmf_traffic_editor packages (`#495 <https://github.com/open-rmf/rmf_traffic_editor/pull/495>`_)

@@ -5,7 +5,7 @@ package_name = 'rmf_building_map_tools'
 
 setup(
     name=package_name,
-    version='1.9.0',
+    version='1.10.0',
     packages=[
         'building_crowdsim',
         'building_crowdsim.navmesh',
