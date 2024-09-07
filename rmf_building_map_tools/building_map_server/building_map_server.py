@@ -248,7 +248,7 @@ class BuildingMapServer(Node):
             gn = GraphNode()
             gn.x = v[0]
             gn.y = v[1]
-            gn.name = v[2]['name']
+            gn.name = str(v[2]['name'])
 
             # Ignore any other vertex params - not needed for wall graph
             msg.wall_graph.vertices.append(gn)
