@@ -283,7 +283,7 @@ class BuildingMapServer(Node):
         msg = Lift()
         # transformation is already done in Lift class
         msg.ref_x, msg.ref_y = lift.x, lift.y
-        msg.name = lift.name
+        msg.name = str(lift.name)
         msg.levels = lift.level_names
 
         msg.ref_yaw = lift.yaw
