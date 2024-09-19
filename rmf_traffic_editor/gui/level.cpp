@@ -498,6 +498,50 @@ bool Level::delete_selected()
   return true;
 }
 
+bool Level::delete_lift_vertex(std::string lift_name)
+{
+  std::vector<int> selected_vertex_idxes;
+  for (int i = 0; i < static_cast<int>(vertices.size()); i++)
+  {
+    if (vertices[i].params.count("lift_cabin"))
+    {
+      if (vertices[i].params["lift_cabin"].value_string == lift_name)
+      {
+        selected_vertex_idxes.push_back(i);
+      }
+    }
+  }
+
+  for (const auto& idx : selected_vertex_idxes)
+  {
+    edges.erase(
+      std::remove_if(
+        edges.begin(),
+        edges.end(),
+        [idx](const Edge& edge)
+        {
+          if (edge.start_idx == idx ||
+          edge.end_idx == idx)
+          {
+            return true;
+          }
+          else
+            return false;
+        }),
+      edges.end());
+
+    for (Edge& edge : edges)
+    {
+      if (edge.start_idx > idx)
+        edge.start_idx--;
+      if (edge.end_idx > idx)
+        edge.end_idx--;
+    }
+    vertices.erase(vertices.begin() + idx);
+  }
+  return true;
+}
+
 void Level::get_selected_items(
   std::vector<Level::SelectedItem>& items)
 {

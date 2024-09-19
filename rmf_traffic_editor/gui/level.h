@@ -145,6 +145,7 @@ public:
 
   bool can_delete_current_selection();
   bool delete_selected();
+  bool delete_lift_vertex(std::string lift_name);
   void calculate_scale(const CoordinateSystem& coordinate_system);
   void clear_selection();
 
