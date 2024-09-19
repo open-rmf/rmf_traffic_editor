@@ -20,9 +20,9 @@
 #include <QtWidgets>
 
 LiftTable::LiftTable()
-: TableList()
+: TableList(3)
 {
-  const QStringList labels = { "Name", "" };
+  const QStringList labels = { "Name", "", ""};
   setHorizontalHeaderLabels(labels);
 }
 
@@ -45,6 +45,9 @@ void LiftTable::update(Building& building)
     QPushButton* edit_button = new QPushButton("Edit...", this);
     setCellWidget(i, 1, edit_button);
 
+    QPushButton* delete_button = new QPushButton("Delete", this);
+    setCellWidget(i, 2, delete_button);
+
     connect(
       edit_button,
       &QAbstractButton::clicked,
@@ -65,18 +68,41 @@ void LiftTable::update(Building& building)
           &LiftDialog::redraw,
           [this]() { emit redraw(); });
       });
+
+    connect(
+      delete_button,
+      &QAbstractButton::clicked,
+      [this, &building, i]()
+      {
+        for (size_t j = 0; j < building.lifts.size(); j++)
+        {
+          if (j == i)
+          {
+            auto lift_name = building.lifts[j].name;
+            for (auto& level : building.levels)
+            {
+              level.delete_lift_vertex(lift_name);
+            }
+            building.lifts.erase(building.lifts.begin() + i);
+            break;
+          }
+        }
+        update(building);
+        emit redraw();
+      });
   }
 
   // we'll use the last row for the "Add" button
   const int last_row_idx = static_cast<int>(building.lifts.size());
   setCellWidget(last_row_idx, 0, nullptr);
+  setCellWidget(last_row_idx, 1, nullptr);
   setItem(
     last_row_idx,
     0,
     new QTableWidgetItem(
       QString::fromStdString("")));
   QPushButton* add_button = new QPushButton("Add...", this);
-  setCellWidget(last_row_idx, 1, add_button);
+  setCellWidget(last_row_idx, 2, add_button);
   connect(
     add_button, &QAbstractButton::clicked,
     [this, &building]()
