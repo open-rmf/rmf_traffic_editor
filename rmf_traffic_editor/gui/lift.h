@@ -92,7 +92,8 @@ public:
     const bool apply_transformation = true,
     const double scale = 1.0,
     const double translate_x = 0.0,
-    const double translate_y = 0.0) const;
+    const double translate_y = 0.0,
+    const double rotation = 0.0) const;
 
   bool level_door_opens(
     const std::string& level_name,

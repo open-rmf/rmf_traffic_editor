@@ -147,6 +147,7 @@ public:
     double scale = 1.0;
     double dx = 0.0;
     double dy = 0.0;
+    double rotation = 0.0;
   };
   typedef std::map<LevelPair, Transform> TransformMap;
   TransformMap transforms;
