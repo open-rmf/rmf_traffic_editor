@@ -90,3 +90,10 @@ double Fiducial::distance(const Fiducial& f)
   const double dy = f.y - y;
   return std::sqrt(dx*dx + dy*dy);
 }
+
+double Fiducial::rotation(const Fiducial& f)
+{
+  const double dx = x - f.x;
+  const double dy = y - f.y;
+  return std::atan2(dy, dx);
+}
