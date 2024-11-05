@@ -2,8 +2,8 @@
 Changelog for package rmf\_building\_map\_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.6.3 (2024-11-05)
+------------------
 * backport pit crew fixes (`#500 <https://github.com/open-rmf/rmf_traffic_editor/issues/500>`_)
 * Contributors: methylDragon, Teo Koon Peng
 
