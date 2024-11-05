@@ -2,6 +2,11 @@
 Changelog for package rmf\_building\_map\_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* backport pit crew fixes (`#500 <https://github.com/open-rmf/rmf_traffic_editor/issues/500>`_)
+* Contributors: methylDragon, Teo Koon Peng
+
 1.6.2 (2023-08-10)
 ------------------
 * Fix gz classic model download (`#471 <https://github.com/open-rmf/rmf_traffic_editor/pull/471>`_)
