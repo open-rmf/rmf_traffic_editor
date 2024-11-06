@@ -2009,11 +2009,57 @@ void Editor::mouse_move(
     }
     else if (mouse_vertex_idx >= 0)
     {
+      if (!building.levels[level_idx].vertices[mouse_vertex_idx].lift_cabin()
+        .empty())
+      {
+        auto lift_name =
+          building.levels[level_idx].vertices[mouse_vertex_idx].lift_cabin();
+        auto lift = building.get_lift(lift_name);
+        auto lift_ref_level = lift.reference_floor_name;
+        if (lift_ref_level != building.levels[level_idx].name)
+        {
+          QMessageBox::critical(
+            this,
+            "Could not move vertex",
+            "Vertex is not on the reference level.");
+          return;
+        }
+      }
+
       // we're dragging a vertex
       Vertex& pt =
         building.levels[level_idx].vertices[mouse_vertex_idx];
       pt.x = p.x();
       pt.y = p.y();
+
+      // update the other levels if a lift cabin vertex is moved
+      if (!building.levels[level_idx].vertices[mouse_vertex_idx].lift_cabin()
+        .empty())
+      {
+        for (size_t i = 0; i < building.levels.size(); i++)
+        {
+          if (i == static_cast<size_t>(level_idx))
+            continue;
+
+          auto& level = building.levels[i];
+          auto& vertices = level.vertices;
+          auto t = building.get_transform(level_idx, i);
+
+          for (auto& vertex : level.vertices)
+          {
+            if (vertex.lift_cabin() == pt.lift_cabin())
+            {
+              auto rotated_x = std::cos(-t.rotation)*p.x() -
+                std::sin(-t.rotation)*p.y();
+              auto rotated_y = std::sin(-t.rotation)*p.x() +
+                std::cos(-t.rotation)*p.y();
+              vertex.x = rotated_x * t.scale + t.dx;
+              vertex.y = rotated_y * t.scale + t.dy;
+            }
+          }
+        }
+      }
+
       latest_move_vertex->set_final_destination(p.x(), p.y());
       create_scene();
     }

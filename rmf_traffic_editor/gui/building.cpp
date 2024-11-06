@@ -800,6 +800,16 @@ Polygon::EdgeDragPolygon Building::polygon_edge_drag_press(
   return levels[level_idx].polygon_edge_drag_press(polygon, x, y);
 }
 
+Lift Building::get_lift(const std::string& name) const
+{
+  for (const auto& lift : lifts)
+  {
+    if (lift.name == name)
+      return lift;
+  }
+  return Lift();
+}
+
 void Building::add_constraint(
   const int level_idx,
   const QUuid& a,

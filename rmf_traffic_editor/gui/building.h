@@ -196,6 +196,8 @@ public:
     const double x,
     const double y);
 
+  Lift get_lift(const std::string& name) const;
+
 private:
   std::string filename;
 };
