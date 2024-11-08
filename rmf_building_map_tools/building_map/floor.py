@@ -133,7 +133,7 @@ class Floor:
                         plt.plot(poly_x, poly_y, 'b', linewidth=4)
 
             elif geom.geom_type == 'MultiPolygon':
-                for poly in list(geom):
+                for poly in list(geom.geoms):
                     self.triangulate_polygon(poly, triangles)
 
             elif geom.geom_type == 'GeometryCollection':
@@ -141,7 +141,7 @@ class Floor:
                 # to be clipped to lie within the original floor polygon
                 # for example, if a long triangle crossed a concave region
                 # and you end up with >=1 polygons and >=1 points or edges.
-                for item in geom:
+                for item in geom.geoms:
                     if item.geom_type == 'Polygon':
                         self.triangulate_polygon(item, triangles)
 
