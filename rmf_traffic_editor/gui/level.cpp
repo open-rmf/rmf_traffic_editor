@@ -1796,6 +1796,7 @@ void Level::optimize_layer_transforms()
       layers[i].transform.translation().x(),
       layers[i].transform.translation().y()
     };
+    int num_constraints_found = 0;
 
     for (const Constraint& constraint : constraints)
     {
@@ -1865,8 +1866,15 @@ void Level::optimize_layer_transforms()
         &scale,
         &translation[0]);
 
+      ++num_constraints_found;
     }
 
+    // Make sure there were features for this layer, otherwise ceres will fail
+    if (num_constraints_found == 0)
+    {
+      printf("No constraints found for layer, skipping optimization\n");
+      continue;
+    }
     problem.SetParameterLowerBound(&scale, 0, 0.01);
 
     ceres::Solver::Options options;
