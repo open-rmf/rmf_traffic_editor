@@ -2,6 +2,11 @@
 Changelog for package rmf\_building\_map\_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix startup error when waypoint's name is pure numbers (`#508 <https://github.com/open-rmf/rmf_traffic_editor/pull/508>`_)
+* Contributors: Gary Bey
+
 1.10.0 (2024-06-12)
 -------------------
 
