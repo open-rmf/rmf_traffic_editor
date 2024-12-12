@@ -975,7 +975,8 @@ void Editor::keyPressEvent(QKeyEvent* e)
       {
         // Get the selected vertex index
         int selected_vertex_idx = -1;
-        for (int i = 0; i < static_cast<int>(building.levels[level_idx].vertices.size()); i++)
+        for (int i = 0;
+          i < static_cast<int>(building.levels[level_idx].vertices.size()); i++)
         {
           if (building.levels[level_idx].vertices[i].selected)
           {
@@ -987,7 +988,8 @@ void Editor::keyPressEvent(QKeyEvent* e)
         if (selected_vertex_idx != -1)
         {
           // Get the selected vertex
-          const auto v = building.levels[level_idx].vertices[selected_vertex_idx];
+          const auto v =
+            building.levels[level_idx].vertices[selected_vertex_idx];
           auto it = v.params.find("lift_cabin");
           if ((it != v.params.end()))
           {
