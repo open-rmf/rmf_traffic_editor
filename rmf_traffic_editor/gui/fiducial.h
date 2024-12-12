@@ -46,6 +46,7 @@ public:
   void draw(QGraphicsScene*, const double meters_per_pixel) const;
 
   double distance(const Fiducial& f);
+  double rotation(const Fiducial& f);
 };
 
 #endif
