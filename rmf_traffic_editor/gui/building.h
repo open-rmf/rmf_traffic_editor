@@ -198,6 +198,8 @@ public:
 
   Lift get_lift(const std::string& name) const;
 
+  void purge_lift_cabin_vertices(std::string lift_name);
+
 private:
   std::string filename;
 };

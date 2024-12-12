@@ -810,6 +810,14 @@ Lift Building::get_lift(const std::string& name) const
   return Lift();
 }
 
+void Building::purge_lift_cabin_vertices(std::string lift_name)
+{
+  for (auto& level : levels)
+  {
+    level.delete_lift_vertex(lift_name);
+  }
+}
+
 void Building::add_constraint(
   const int level_idx,
   const QUuid& a,
