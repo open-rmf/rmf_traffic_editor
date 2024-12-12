@@ -18,7 +18,7 @@ shared_parser.add_argument("OUTPUT_MODEL_DIR", type=str,
                            help="Path to output the map model files")
 shared_parser.add_argument("TEMPLATE_WORLD_FILE", type=str, default="",
                            help="Specify the template for"
-                           +" the base simulation.")
+                           + " the base simulation.")
 # Create subparsers for Gazebo and Nav generation
 gazebo_parser = subparsers.add_parser(
     'gazebo',
