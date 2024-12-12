@@ -353,15 +353,6 @@ bool Level::can_delete_current_selection()
   if (vertex_used)
     return false;// don't try to delete a vertex used in a shape
 
-  /// check if this is a lift_cabin waypoint
-  const auto v = vertices[selected_vertex_idx];
-  auto it = v.params.find("lift_cabin");
-  if ((it != v.params.end()))
-  {
-    printf("This waypoint is used by a lift cabin!!");
-    return false;
-  }
-
   return true;
 }
 
