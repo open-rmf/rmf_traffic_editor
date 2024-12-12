@@ -394,13 +394,15 @@ class Building:
                 nav_graphs[f'{i}'] = g
         return nav_graphs
 
-    def generate_sdf_world(self):
+    def generate_sdf_world(self, template_file):
         """ Return an etree of this Building in SDF starting from a template"""
-        template_name = 'gz_world.sdf'
-
-        template_path = os.path.join(
-            get_package_share_directory('rmf_building_map_tools'),
-            f'templates/{template_name}')
+        if template_file == "":
+            template_name = 'gz_world.sdf'
+            template_path = os.path.join(
+                get_package_share_directory('rmf_building_map_tools'),
+                f'templates/{template_name}')
+        else:
+            template_path = template_file
         tree = parse(template_path)
         sdf = tree.getroot()
 
