@@ -353,6 +353,15 @@ bool Level::can_delete_current_selection()
   if (vertex_used)
     return false;// don't try to delete a vertex used in a shape
 
+  /// check if this is a lift_cabin waypoint
+  const auto v = vertices[selected_vertex_idx];
+  auto it = v.params.find("lift_cabin");
+  if ((it != v.params.end()))
+  {
+    printf("This waypoint is used by a lift cabin!!");
+    return false;
+  }
+
   return true;
 }
 
@@ -487,6 +496,48 @@ bool Level::delete_selected()
   }
 
   return true;
+}
+
+bool Level::delete_used_entities()
+{
+  int selected_vertex_idx = -1;
+  for (int i = 0; i < static_cast<int>(vertices.size()); i++)
+  {
+    if (vertices[i].selected)
+    {
+      selected_vertex_idx = i;
+      break;  // just grab the index of the first selected vertex
+    }
+  }
+
+  if (selected_vertex_idx >= 0)
+  {
+    edges.erase(
+      std::remove_if(
+        edges.begin(),
+        edges.end(),
+        [selected_vertex_idx](const Edge& edge)
+        {
+          return edge.start_idx == selected_vertex_idx ||
+            edge.end_idx == selected_vertex_idx;
+        }),
+      edges.end());
+
+    polygons.erase(
+      std::remove_if(
+        polygons.begin(),
+        polygons.end(),
+        [selected_vertex_idx](const Polygon& polygon)
+        {
+          return polygon.contains_vertex(selected_vertex_idx);
+        }),
+      polygons.end());
+
+    return true;
+  }
+
+
+  return false;
 }
 
 bool Level::delete_lift_vertex(std::string lift_name)

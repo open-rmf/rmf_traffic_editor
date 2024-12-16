@@ -48,6 +48,7 @@
 
 #include "add_param_dialog.h"
 #include "building_dialog.h"
+#include "delete_dialog.h"
 #include "editor.h"
 #include "layer_dialog.h"
 #include "layer_table.h"
@@ -973,44 +974,46 @@ void Editor::keyPressEvent(QKeyEvent* e)
     case Qt::Key_Delete:
       if (building.can_delete_current_selection(level_idx))
       {
-        // Get the selected vertex index
-        int selected_vertex_idx = -1;
-        for (int i = 0;
-          i < static_cast<int>(building.levels[level_idx].vertices.size()); i++)
-        {
-          if (building.levels[level_idx].vertices[i].selected)
-          {
-            selected_vertex_idx = i;
-            break;
-          }
-        }
-
-        if (selected_vertex_idx != -1)
-        {
-          // Get the selected vertex
-          const auto v =
-            building.levels[level_idx].vertices[selected_vertex_idx];
-          auto it = v.params.find("lift_cabin");
-          if ((it != v.params.end()))
-          {
-            // Remove all vertices with a lift cabin property that matches the selected vertex
-            building.purge_lift_cabin_vertices(v.lift_cabin());
-          }
-        }
-
         undo_stack.push(new DeleteCommand(&building, level_idx));
         create_scene();
       }
       else
       {
-        QMessageBox::critical(
-          this,
-          "Could not delete item",
-          "If deleting a vertex, it must not be in any edges or polygons "
-          "or lifts. "
-          "If deleting a feature, it must not be in any constraints.");
+        DeleteDialog dialog(this);
+        if (dialog.exec() == QDialog::Accepted)
+        {
+          // Get the selected vertex index
+          int selected_vertex_idx = -1;
+          for (int i = 0;
+            i < static_cast<int>(building.levels[level_idx].vertices.size());
+            i++)
+          {
+            if (building.levels[level_idx].vertices[i].selected)
+            {
+              selected_vertex_idx = i;
+              break;
+            }
+          }
 
-        building.clear_selection(level_idx);
+          if (selected_vertex_idx != -1)
+          {
+            // Get the selected vertex
+            const auto v =
+              building.levels[level_idx].vertices[selected_vertex_idx];
+            auto it = v.params.find("lift_cabin");
+            if ((it != v.params.end()))
+            {
+              // Remove all vertices with a lift cabin property that matches the selected vertex
+              building.purge_lift_cabin_vertices(v.lift_cabin());
+            }
+          }
+
+          building.levels[level_idx].delete_used_entities();
+          undo_stack.push(new DeleteCommand(&building, level_idx));
+          create_scene();
+        }
+        else
+          building.clear_selection(level_idx);
       }
       break;
     case Qt::Key_S:
