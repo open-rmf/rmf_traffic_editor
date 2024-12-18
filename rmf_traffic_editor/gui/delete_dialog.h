@@ -23,6 +23,8 @@
 #include <vector>
 #include <string>
 #include <utility>
+#include <unordered_map>
+#include "building.h"
 class QLineEdit;
 class QListWidget;
 class QLabel;
@@ -33,7 +35,10 @@ class DeleteDialog : public QDialog
 
 public:
   DeleteDialog(
-    QWidget* parent);
+    QWidget* parent,
+    Building& building,
+    int level_idx,
+    int selected_vertex_idx);
   ~DeleteDialog();
 
 private:

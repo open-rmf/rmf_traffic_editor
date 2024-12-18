@@ -23,14 +23,66 @@ using std::string;
 
 
 DeleteDialog::DeleteDialog(
-  QWidget* parent)
+  QWidget* parent,
+  Building& building,
+  int level_idx,
+  int selected_vertex_idx)
 : QDialog(parent)
 {
+
+
   setWindowTitle("Warning");
   QVBoxLayout* warning_message_vbox_layout = new QVBoxLayout;
-  warning_message_vbox_layout->addWidget(new QLabel(
-      "This item might be linked to other entities and/or on other levels.\n "
-      "Are you sure you want to delete this item?"));
+
+  // check if vertex is a lift cabin
+  std::vector<std::string> lift_levels;
+  auto level = building.levels[level_idx];
+  const auto v = level.vertices[selected_vertex_idx];
+  auto it = v.params.find("lift_cabin");
+  if ((it != v.params.end()))
+  {
+    auto lift = building.get_lift(v.lift_cabin());
+    for (const auto& level : building.levels)
+    {
+      if (level.elevation <= lift.highest_elevation &&
+        level.elevation >= lift.lowest_elevation)
+      {
+        lift_levels.push_back(level.name);
+      }
+    }
+    std::string s = lift_levels[0];
+    for (uint i = 1; i < lift_levels.size(); i++)
+    {
+      s = s + ", " + lift_levels[i];
+    }
+    warning_message_vbox_layout->addWidget(new QLabel(
+        QString("This item is a lift cabin and is used in %1.\n "
+        "Are you sure you want to delete this item?")
+        .arg(QString::fromStdString(s))));
+  }
+  else
+  {
+    std::string s;
+
+    auto num_used_edges = level.edges_with_vertex(selected_vertex_idx).size();
+    if (num_used_edges > 0)
+    {
+      s = s + " - " + std::to_string(num_used_edges) + " edge(s) \n";
+    }
+
+    auto num_used_polygons =
+      level.polygons_with_vertex(selected_vertex_idx).size();
+    if (num_used_polygons > 0)
+    {
+      s = s + " - " + std::to_string(num_used_polygons) + " polygon(s) \n";
+    }
+
+    warning_message_vbox_layout->addWidget(new QLabel(
+        QString("This item is linked to: \n%1"
+        "Are you sure you want to delete this item?")
+        .arg(QString::fromStdString(s))));
+
+  }
 
   QHBoxLayout* bottom_buttons_layout = new QHBoxLayout;
   _ok_button = new QPushButton("OK", this);  // first button = [enter] button

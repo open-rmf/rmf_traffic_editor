@@ -979,23 +979,23 @@ void Editor::keyPressEvent(QKeyEvent* e)
       }
       else
       {
-        DeleteDialog dialog(this);
-        if (dialog.exec() == QDialog::Accepted)
+        // Get the selected vertex index
+        int selected_vertex_idx = -1;
+        for (int i = 0;
+          i < static_cast<int>(building.levels[level_idx].vertices.size());
+          i++)
         {
-          // Get the selected vertex index
-          int selected_vertex_idx = -1;
-          for (int i = 0;
-            i < static_cast<int>(building.levels[level_idx].vertices.size());
-            i++)
+          if (building.levels[level_idx].vertices[i].selected)
           {
-            if (building.levels[level_idx].vertices[i].selected)
-            {
-              selected_vertex_idx = i;
-              break;
-            }
+            selected_vertex_idx = i;
+            break;
           }
+        }
 
-          if (selected_vertex_idx != -1)
+        if (selected_vertex_idx != -1)
+        {
+          DeleteDialog dialog(this, building, level_idx, selected_vertex_idx);
+          if (dialog.exec() == QDialog::Accepted)
           {
             // Get the selected vertex
             const auto v =
@@ -1007,19 +1007,20 @@ void Editor::keyPressEvent(QKeyEvent* e)
               building.purge_lift_cabin_vertices(v.lift_cabin());
             }
 
-            building.levels[level_idx].delete_used_entities(selected_vertex_idx);
+            building.levels[level_idx].delete_used_entities(
+              selected_vertex_idx);
             undo_stack.push(new DeleteCommand(&building, level_idx));
             clear_current_tool_buffer();
             update_property_editor();
             create_scene();
           }
-        }
-        else
-        {
-          building.clear_selection(level_idx);
-          clear_current_tool_buffer();
-          update_property_editor();
-          create_scene();
+          else
+          {
+            building.clear_selection(level_idx);
+            clear_current_tool_buffer();
+            update_property_editor();
+            create_scene();
+          }
         }
       }
       break;

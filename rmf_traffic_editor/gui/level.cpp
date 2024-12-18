@@ -572,6 +572,28 @@ bool Level::delete_lift_vertex(std::string lift_name)
   return true;
 }
 
+std::vector<Edge> Level::edges_with_vertex(int vertex_idx) const
+{
+  std::vector<Edge> result;
+  for (const auto& edge : edges)
+  {
+    if (edge.start_idx == vertex_idx || edge.end_idx == vertex_idx)
+      result.push_back(edge);
+  }
+  return result;
+}
+
+std::vector<Polygon> Level::polygons_with_vertex(int vertex_idx) const
+{
+  std::vector<Polygon> result;
+  for (const auto& polygon : polygons)
+  {
+    if (polygon.contains_vertex(vertex_idx))
+      result.push_back(polygon);
+  }
+  return result;
+}
+
 void Level::get_selected_items(
   std::vector<Level::SelectedItem>& items)
 {
