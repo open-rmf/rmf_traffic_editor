@@ -498,18 +498,8 @@ bool Level::delete_selected()
   return true;
 }
 
-bool Level::delete_used_entities()
+bool Level::delete_used_entities(int selected_vertex_idx)
 {
-  int selected_vertex_idx = -1;
-  for (int i = 0; i < static_cast<int>(vertices.size()); i++)
-  {
-    if (vertices[i].selected)
-    {
-      selected_vertex_idx = i;
-      break;  // just grab the index of the first selected vertex
-    }
-  }
-
   if (selected_vertex_idx >= 0)
   {
     edges.erase(
@@ -535,8 +525,6 @@ bool Level::delete_used_entities()
 
     return true;
   }
-
-
   return false;
 }
 

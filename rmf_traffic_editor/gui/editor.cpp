@@ -1006,13 +1006,13 @@ void Editor::keyPressEvent(QKeyEvent* e)
               // Remove all vertices with a lift cabin property that matches the selected vertex
               building.purge_lift_cabin_vertices(v.lift_cabin());
             }
-          }
 
-          building.levels[level_idx].delete_used_entities();
-          undo_stack.push(new DeleteCommand(&building, level_idx));
+            building.levels[level_idx].delete_used_entities(selected_vertex_idx);
+            undo_stack.push(new DeleteCommand(&building, level_idx));
             clear_current_tool_buffer();
             update_property_editor();
-          create_scene();
+            create_scene();
+          }
         }
         else
         {
