@@ -60,8 +60,6 @@ DeleteDialog::DeleteDialog(
   else
   {
     std::string s;
-
-    auto num_used_edges = level.edges_with_vertex(selected_vertex_idx).size();
     std::map<std::string, int> edge_types;
     for (const auto& edge : level.edges_with_vertex(selected_vertex_idx))
     {
@@ -73,8 +71,6 @@ DeleteDialog::DeleteDialog(
         " edge(s) \n";
     }
 
-    auto num_used_polygons =
-      level.polygons_with_vertex(selected_vertex_idx).size();
     std::map<std::string, int> polygon_types;
     for (const auto& polygon : level.polygons_with_vertex(selected_vertex_idx))
     {
