@@ -202,3 +202,8 @@ double Edge::get_width() const
     return -1.0;// shouldn't get here
   return it->second.value_double;
 }
+
+bool Edge::contains(const int idx) const
+{
+  return start_idx == idx || end_idx == idx;
+}

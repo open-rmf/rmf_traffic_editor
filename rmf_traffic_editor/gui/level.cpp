@@ -508,8 +508,7 @@ bool Level::delete_used_entities(int selected_vertex_idx)
         edges.end(),
         [selected_vertex_idx](const Edge& edge)
         {
-          return edge.start_idx == selected_vertex_idx ||
-            edge.end_idx == selected_vertex_idx;
+          return edge.contains(selected_vertex_idx);
         }),
       edges.end());
 
