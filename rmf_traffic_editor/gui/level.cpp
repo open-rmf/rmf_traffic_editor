@@ -576,7 +576,7 @@ std::vector<Edge> Level::edges_with_vertex(int vertex_idx) const
   std::vector<Edge> result;
   for (const auto& edge : edges)
   {
-    if (edge.start_idx == vertex_idx || edge.end_idx == vertex_idx)
+    if (edge.contains(vertex_idx))
       result.push_back(edge);
   }
   return result;
