@@ -144,3 +144,16 @@ bool Polygon::contains_vertex(const int vertex_idx) const
   return std::find(vertices.begin(), vertices.end(),
       vertex_idx) != vertices.end();
 }
+
+std::string Polygon::type_to_string() const
+{
+  if (type == FLOOR)
+    return string("floor");
+  else if (type == ZONE)
+    return string("zone");
+  else if (type == ROI)
+    return string("roi");
+  else if (type == HOLE)
+    return string("hole");
+  return string("undefined");
+}
