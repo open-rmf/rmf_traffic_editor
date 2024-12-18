@@ -29,7 +29,7 @@ class DeleteDialog : public QDialog
 public:
   DeleteDialog(
     QWidget* parent,
-    Building& building,
+    const Building& building,
     int level_idx,
     int selected_vertex_idx);
   ~DeleteDialog();

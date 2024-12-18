@@ -20,20 +20,19 @@
 
 DeleteDialog::DeleteDialog(
   QWidget* parent,
-  Building& building,
+  const Building& building,
   int level_idx,
   int selected_vertex_idx)
 : QDialog(parent)
 {
-
 
   setWindowTitle("Warning");
   QVBoxLayout* warning_message_vbox_layout = new QVBoxLayout;
 
   // check if vertex is a lift cabin
   std::vector<std::string> lift_levels;
-  auto level = building.levels[level_idx];
-  const auto v = level.vertices[selected_vertex_idx];
+  const auto& level = building.levels[level_idx];
+  const auto& v = level.vertices[selected_vertex_idx];
   auto it = v.params.find("lift_cabin");
   if ((it != v.params.end()))
   {
