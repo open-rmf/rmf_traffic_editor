@@ -16,11 +16,7 @@
 */
 
 #include "delete_dialog.h"
-#include <algorithm>
 #include <QtWidgets>
-using std::vector;
-using std::string;
-
 
 DeleteDialog::DeleteDialog(
   QWidget* parent,

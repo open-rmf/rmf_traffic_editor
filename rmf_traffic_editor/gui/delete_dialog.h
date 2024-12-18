@@ -19,15 +19,8 @@
 #define DELETE_DIALOG_H
 
 #include <QDialog>
-#include <QObject>
-#include <vector>
-#include <string>
-#include <utility>
 #include <map>
 #include "building.h"
-class QLineEdit;
-class QListWidget;
-class QLabel;
 
 class DeleteDialog : public QDialog
 {
