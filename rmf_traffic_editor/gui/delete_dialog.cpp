@@ -43,10 +43,14 @@ DeleteDialog::DeleteDialog(
       lift_levels.push_back(level_door.first);
     }
 
-    std::string s = lift_levels[0];
-    for (uint i = 1; i < lift_levels.size(); i++)
+    std::string s;
+    for (uint i = 0; i < lift_levels.size(); i++)
     {
-      s = s + ", " + lift_levels[i];
+      s = s + lift_levels[i];
+      if (i < lift_levels.size() - 1)
+      {
+        s = s + ", ";
+      }
     }
     warning_message_vbox_layout->addWidget(new QLabel(
         QString("This item is a lift cabin and is used in %1.\n "
