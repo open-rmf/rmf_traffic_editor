@@ -65,16 +65,28 @@ DeleteDialog::DeleteDialog(
     std::string s;
 
     auto num_used_edges = level.edges_with_vertex(selected_vertex_idx).size();
-    if (num_used_edges > 0)
+    std::unordered_map<std::string, int> edge_types;
+    for (const auto& edge : level.edges_with_vertex(selected_vertex_idx))
     {
-      s = s + " - " + std::to_string(num_used_edges) + " edge(s) \n";
+      edge_types[edge.type_to_string()]++;
+    }
+    for (const auto& edge_type : edge_types)
+    {
+      s = s + " - " + std::to_string(edge_type.second) + " " + edge_type.first +
+        " edge(s) \n";
     }
 
     auto num_used_polygons =
       level.polygons_with_vertex(selected_vertex_idx).size();
-    if (num_used_polygons > 0)
+    std::unordered_map<std::string, int> polygon_types;
+    for (const auto& polygon : level.polygons_with_vertex(selected_vertex_idx))
     {
-      s = s + " - " + std::to_string(num_used_polygons) + " polygon(s) \n";
+      polygon_types[polygon.type_to_string()]++;
+    }
+    for (const auto& polygon_type : polygon_types)
+    {
+      s = s + " - " + std::to_string(polygon_type.second) + " " +
+        polygon_type.first + " polygon(s) \n";
     }
 
     warning_message_vbox_layout->addWidget(new QLabel(
