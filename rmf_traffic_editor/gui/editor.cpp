@@ -1010,6 +1010,8 @@ void Editor::keyPressEvent(QKeyEvent* e)
 
           building.levels[level_idx].delete_used_entities();
           undo_stack.push(new DeleteCommand(&building, level_idx));
+            clear_current_tool_buffer();
+            update_property_editor();
           create_scene();
         }
         else
