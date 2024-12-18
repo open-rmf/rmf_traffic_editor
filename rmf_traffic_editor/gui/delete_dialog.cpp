@@ -42,14 +42,12 @@ DeleteDialog::DeleteDialog(
   if ((it != v.params.end()))
   {
     auto lift = building.get_lift(v.lift_cabin());
-    for (const auto& level : building.levels)
+
+    for (const auto& level_door : lift.level_doors)
     {
-      if (level.elevation <= lift.highest_elevation &&
-        level.elevation >= lift.lowest_elevation)
-      {
-        lift_levels.push_back(level.name);
-      }
+      lift_levels.push_back(level_door.first);
     }
+
     std::string s = lift_levels[0];
     for (uint i = 1; i < lift_levels.size(); i++)
     {
