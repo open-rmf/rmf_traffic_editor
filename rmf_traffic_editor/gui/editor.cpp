@@ -1013,7 +1013,12 @@ void Editor::keyPressEvent(QKeyEvent* e)
           create_scene();
         }
         else
+        {
           building.clear_selection(level_idx);
+          clear_current_tool_buffer();
+          update_property_editor();
+          create_scene();
+        }
       }
       break;
     case Qt::Key_S:
