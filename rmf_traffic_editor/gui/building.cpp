@@ -524,6 +524,16 @@ Building::Transform Building::compute_transform(
 
   // calculate the rotation between each pair of fiducials
   vector<std::pair<double, double>> rotations;
+
+  if (fiducials.size() < 2)
+  {
+    printf(
+      "not enough fiducials to compute transform between levels %d and %d\n",
+      from_level_idx,
+      to_level_idx);
+    return Building::Transform();
+  }
+
   // we take the first fiducial as the reference point
   std::pair<Fiducial, Fiducial> ref_rotation = make_pair(fiducials[0].first,
       fiducials[0].second);
