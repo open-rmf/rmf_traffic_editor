@@ -498,6 +498,35 @@ bool Level::delete_selected()
   return true;
 }
 
+bool Level::delete_used_entities(int selected_vertex_idx)
+{
+  if (selected_vertex_idx >= 0)
+  {
+    edges.erase(
+      std::remove_if(
+        edges.begin(),
+        edges.end(),
+        [selected_vertex_idx](const Edge& edge)
+        {
+          return edge.contains(selected_vertex_idx);
+        }),
+      edges.end());
+
+    polygons.erase(
+      std::remove_if(
+        polygons.begin(),
+        polygons.end(),
+        [selected_vertex_idx](const Polygon& polygon)
+        {
+          return polygon.contains_vertex(selected_vertex_idx);
+        }),
+      polygons.end());
+
+    return true;
+  }
+  return false;
+}
+
 bool Level::delete_lift_vertex(std::string lift_name)
 {
   std::vector<int> selected_vertex_idxes;
@@ -540,6 +569,28 @@ bool Level::delete_lift_vertex(std::string lift_name)
     vertices.erase(vertices.begin() + idx);
   }
   return true;
+}
+
+std::vector<Edge> Level::edges_with_vertex(int vertex_idx) const
+{
+  std::vector<Edge> result;
+  for (const auto& edge : edges)
+  {
+    if (edge.contains(vertex_idx))
+      result.push_back(edge);
+  }
+  return result;
+}
+
+std::vector<Polygon> Level::polygons_with_vertex(int vertex_idx) const
+{
+  std::vector<Polygon> result;
+  for (const auto& polygon : polygons)
+  {
+    if (polygon.contains_vertex(vertex_idx))
+      result.push_back(polygon);
+  }
+  return result;
 }
 
 void Level::get_selected_items(

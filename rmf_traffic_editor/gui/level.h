@@ -145,7 +145,10 @@ public:
 
   bool can_delete_current_selection();
   bool delete_selected();
+  bool delete_used_entities(int selected_vertex_idx);
   bool delete_lift_vertex(std::string lift_name);
+  std::vector<Edge> edges_with_vertex(int vertex_idx) const;
+  std::vector<Polygon> polygons_with_vertex(int vertex_idx) const;
   void calculate_scale(const CoordinateSystem& coordinate_system);
   void clear_selection();
 

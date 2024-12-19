@@ -48,6 +48,7 @@
 
 #include "add_param_dialog.h"
 #include "building_dialog.h"
+#include "delete_dialog.h"
 #include "editor.h"
 #include "layer_dialog.h"
 #include "layer_table.h"
@@ -978,14 +979,49 @@ void Editor::keyPressEvent(QKeyEvent* e)
       }
       else
       {
-        QMessageBox::critical(
-          this,
-          "Could not delete item",
-          "If deleting a vertex, it must not be in any edges or polygons "
-          "or lifts. "
-          "If deleting a feature, it must not be in any constraints.");
+        // Get the selected vertex index
+        int selected_vertex_idx = -1;
+        for (int i = 0;
+          i < static_cast<int>(building.levels[level_idx].vertices.size());
+          i++)
+        {
+          if (building.levels[level_idx].vertices[i].selected)
+          {
+            selected_vertex_idx = i;
+            break;
+          }
+        }
 
-        building.clear_selection(level_idx);
+        if (selected_vertex_idx != -1)
+        {
+          DeleteDialog dialog(this, building, level_idx, selected_vertex_idx);
+          if (dialog.exec() == QDialog::Accepted)
+          {
+            // Get the selected vertex
+            const auto v =
+              building.levels[level_idx].vertices[selected_vertex_idx];
+            auto it = v.params.find("lift_cabin");
+            if ((it != v.params.end()))
+            {
+              // Remove all vertices with a lift cabin property that matches the selected vertex
+              building.purge_lift_cabin_vertices(v.lift_cabin());
+            }
+
+            building.levels[level_idx].delete_used_entities(
+              selected_vertex_idx);
+            undo_stack.push(new DeleteCommand(&building, level_idx));
+            clear_current_tool_buffer();
+            update_property_editor();
+            create_scene();
+          }
+          else
+          {
+            building.clear_selection(level_idx);
+            clear_current_tool_buffer();
+            update_property_editor();
+            create_scene();
+          }
+        }
       }
       break;
     case Qt::Key_S:

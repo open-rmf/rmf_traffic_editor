@@ -71,6 +71,7 @@ public:
   int get_graph_idx() const;
 
   double get_width() const;
+  bool contains(const int idx) const;
 };
 
 #endif
