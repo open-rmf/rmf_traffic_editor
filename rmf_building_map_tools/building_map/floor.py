@@ -195,6 +195,13 @@ class Floor:
             lift_polygon = shapely.geometry.Polygon(lift_vert_list)
             self.polygon = self.polygon.difference(lift_polygon)
 
+        # semantic segmentation info
+        plugin_ele = SubElement(
+            model_ele, "plugin")
+        plugin_ele.set('filename', 'gz-sim-label-system')
+        plugin_ele.set('name', 'gz::sim::systems::Label')
+        label = SubElement(plugin_ele, 'label')
+        label.text = '30'
         link_ele = SubElement(model_ele, 'link')
         link_ele.set('name', f'floor_{floor_cnt}')
 
@@ -368,6 +375,15 @@ class Floor:
 
         link_ele = SubElement(model_ele, 'link')
         link_ele.set('name', f'ceiling_{ceiling_cnt}')
+
+        # semantic segmentation info
+        plugin_ele = SubElement(
+            model_ele,
+            {'filename': 'gz-sim-label-system',
+            'name': 'gz::sim::systems::Label'}
+            )
+        label = SubElement(plugin_ele, 'label')
+        label.text = '50'
 
         visual_ele = SubElement(link_ele, 'visual')
         visual_ele.set('name', 'visual')

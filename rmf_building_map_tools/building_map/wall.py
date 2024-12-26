@@ -277,3 +277,11 @@ class Wall:
         link_x = self.wall_mesh_offsets[0]
         link_y = self.wall_mesh_offsets[1]
         pose_ele.text = f'{link_x} {link_y} 0 0 0 0'
+
+        # semantic segmentation info
+        plugin_ele = SubElement(
+            model_ele, "plugin")
+        plugin_ele.set('filename', 'gz-sim-label-system')
+        plugin_ele.set('name', 'gz::sim::systems::Label')
+        label = SubElement(plugin_ele, 'label')
+        label.text = '30'
