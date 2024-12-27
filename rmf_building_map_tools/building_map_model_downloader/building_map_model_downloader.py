@@ -119,6 +119,12 @@ def download_models(
                     author_name.lower()
             else:
                 model_set.add(model.model_name)
+        for vertex in level.vertices:
+            if 'spawn_robot_type' in vertex.params:
+                model_set.add((vertex.params['spawn_robot_type'].value,
+                               'Open-RMF'))
+                stringent_dict[model_name.lower()] = \
+                    author_name.lower()
 
     if fuel_tools:
         missing_models = pit_crew.get_missing_models(

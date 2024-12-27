@@ -116,8 +116,8 @@ models:
 - OpenRobotics/SurgicalTrolleyMed
 - OpenRobotics/SUV
 - OpenRobotics/Table
-- OpenRobotics/TeleportDispenser
-- OpenRobotics/TeleportIngestor
+- Open-RMF/TeleportDispenser
+- Open-RMF/TeleportIngestor
 - OpenRobotics/Toilet
 - OpenRobotics/TrashBin
 - OpenRobotics/TrolleyBed
