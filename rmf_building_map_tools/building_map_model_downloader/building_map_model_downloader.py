@@ -108,23 +108,17 @@ def download_models(
     actors = get_crowdsim_models(input_yaml)
     model_set.update(actors)
 
-    def add_model(full_model_name):
-        if "/" in full_model_name:
-            model_name = "".join(full_model_name.split("/")[1:])
-            author_name = full_model_name.split("/")[0]
-
-            model_set.add((model_name, author_name))
-            stringent_dict[model_name.lower()] = \
-                author_name.lower()
-        else:
-            model_set.add(full_model_name)
-
     for _, level in building.levels.items():
         for model in level.models:
-            add_model(model.model_name)
-        for vertex in level.vertices:
-            if 'spawn_robot_type' in vertex.params:
-                add_model(vertex.params['spawn_robot_type'].value)
+            if "/" in model.model_name:
+                model_name = "".join(model.model_name.split("/")[1:])
+                author_name = model.model_name.split("/")[0]
+
+                model_set.add((model_name, author_name))
+                stringent_dict[model_name.lower()] = \
+                    author_name.lower()
+            else:
+                model_set.add(model.model_name)
 
     if fuel_tools:
         missing_models = pit_crew.get_missing_models(
