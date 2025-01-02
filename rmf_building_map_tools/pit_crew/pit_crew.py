@@ -224,7 +224,7 @@ def get_missing_models(model_names, model_path=None,
                     logger.warning("Model %s in local model directory"
                                    " is not by the requested author %s!"
                                    % (model_name, author_name))
-        elif model_name in fuel_models:
+        elif model_name in fuel_models and fuel_models[model_name] == model_name_original:
             output['downloadable'].append((model_name_original,
                                           fuel_models[model_name]))
 
