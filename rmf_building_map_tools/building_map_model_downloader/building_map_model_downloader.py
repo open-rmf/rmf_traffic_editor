@@ -176,7 +176,7 @@ def download_models(
                     sync_names=True, export_path=export_path)
             else:
                 model_downloaded = pit_crew.download_model(
-                    model_name, author_name, sync_names=True)
+                    model_name, author_name, sync_names=True)[0]
             if model_downloaded:
                 break
             else:
