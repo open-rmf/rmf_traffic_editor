@@ -671,6 +671,8 @@ def download_model_fuel_tools(model_name, author_name,
                         (subdirname))
                     pass
             break
+        if len(sub_dirs) == 0:
+            raise RuntimeError("Model not found in Fuel portal")
         latest_ver = max(sub_dirs)
         extract_path = os.path.join(extract_path, str(latest_ver))
 
