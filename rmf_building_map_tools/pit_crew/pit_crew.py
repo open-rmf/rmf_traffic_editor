@@ -626,13 +626,13 @@ def download_model_fuel_tools(model_name, author_name,
         # Currently, ignition fuel download can only download to this folder.
         # Fuel tools creates this folder if it does not yet exist
         download_path = os.path.expanduser(
-            "~/.ignition/fuel/fuel.gazebosim.org"
+            "~/.gz/fuel/fuel.gazebosim.org"
         )
         # Command line
         url_model_name = parse.quote(model_name)
         full_url = ("https://fuel.gazebosim.org/1.0" +
                     '/' + author_name + '/models' + '/' + url_model_name)
-        full_command = full_command = ("ign fuel download -u "
+        full_command = full_command = ("gz fuel download -u "
                                        + full_url + " -v 4")
         subprocess.call([full_command], shell=True)
         child = subprocess.Popen([full_command], shell=True,
