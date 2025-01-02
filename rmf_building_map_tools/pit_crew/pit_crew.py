@@ -144,7 +144,7 @@ def get_missing_models(model_names, model_path=None,
             - Missing models are models that are not in your local directory
                 and also missing from Fuel.
     """
-    for key, model_name in enumerate(model_names):
+    for model_name in model_names:
         if isinstance(model_name, ModelNames) or isinstance(model_name, tuple):
             assert len(model_name) == 2, \
                 "Invalid model name tuple given: %s!" % model_name
