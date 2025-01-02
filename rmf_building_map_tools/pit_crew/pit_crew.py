@@ -117,7 +117,7 @@ def get_missing_models(model_names, model_path=None,
             (model_name, author_name)!
         model_path (str, optional): Overall path to model directory.
             Defaults to None. If None, function will use "~/.gazebo/models" or
-            "~/.ignition/fuel" depending on the value of ign.
+            "~/.gz/fuel" depending on the value of ign.
         config_file (str, optional): Name of the config file to parse when
             checking local models. Defaults to "model.config".
         cache_file_path (str, optional): The path to the model cache file.
@@ -248,7 +248,7 @@ def get_local_model_name_tuples(path=None, config_file="model.config",
     Args:
         path (str, optional): Overall path to model directory.
             Defaults to None. If None, function will use "~/.gazebo/models" or
-            "~/.ignition/fuel" depending on the value of ign.
+            "~/.gz/fuel" depending on the value of ign.
         config_file (str, optional): Name of the config file to parse.
             Defaults to "model.config".
         default_author_name (str, optional): The author name to use if no
@@ -269,7 +269,7 @@ def get_local_model_name_tuples(path=None, config_file="model.config",
 
     if path is None:
         if ign:
-            path = "~/.ignition/fuel/"
+            path = "~/.gz/fuel/"
         else:
             path = "~/.gazebo/models/"
         logger.warning("No local model path given! Using default %s instead!"
@@ -504,7 +504,7 @@ def download_model(model_name, author_name, version="tip",
             "tip", which will download the latest model.
         download_path (str, optional): The root directory for downloading
             and unzipping the models into. Defaults to None. If None, function
-            will use "~/.ignition/fuel/fuel.gazebosim.org" or
+            will use "~/.gz/fuel/fuel.gazebosim.org" or
             "~/.gazebo/models" depending on the state of the ign argument.
         sync_names (bool, optional): Change downloaded model.sdf model name to
             match folder name. Defaults to False.
@@ -523,7 +523,7 @@ def download_model(model_name, author_name, version="tip",
         if download_path is None:
             if ign:
                 download_path = os.path.expanduser(
-                    "~/.ignition/fuel/fuel.gazebosim.org"
+                    "~/.gz/fuel/fuel.gazebosim.org"
                 )
             else:
                 download_path = os.path.expanduser("~/.gazebo/models")
