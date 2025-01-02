@@ -180,7 +180,7 @@ def download_models(
             if model_downloaded:
                 break
             else:
-                logger.warning("Retrying %d of 5 times...", i)
+                logger.warning("Retrying %d of 5 times..." % i)
 
         if not model_downloaded:
             logger.error(
