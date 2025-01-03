@@ -225,7 +225,7 @@ def get_missing_models(model_names, model_path=None,
                                    " is not by the requested author %s!"
                                    % (model_name, author_name))
         elif model_name in fuel_models and \
-                fuel_models[model_name] == author_name:
+                author_name in fuel_models[model_name]:
             output['downloadable'].append((model_name_original,
                                           fuel_models[model_name]))
 
@@ -680,8 +680,8 @@ def download_model_fuel_tools(model_name, author_name,
         if sync_names:
             sync_sdf(model_name=model_name.lower(), extract_path=extract_path)
 
-        export_path = os.path.expanduser(export_path)
         if export_path is not None:
+            export_path = os.path.expanduser(export_path)
             # Make directory if missing
             if not os.path.isdir(export_path):
                 os.makedirs(export_path, exist_ok=True)

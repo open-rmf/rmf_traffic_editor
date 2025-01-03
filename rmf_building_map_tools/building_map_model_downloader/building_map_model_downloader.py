@@ -97,7 +97,7 @@ def download_models(
     """Download models for a given input building yaml."""
     # Construct model set
 
-    IGN_FUEL_MODEL_PATH = "~/.ignition/fuel/"
+    IGN_FUEL_MODEL_PATH = "~/.gz/fuel/"
 
     model_set = set()
     stringent_dict = {}  # Dict to tighten download scope
