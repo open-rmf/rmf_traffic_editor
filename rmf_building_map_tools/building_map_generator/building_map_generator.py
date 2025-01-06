@@ -17,7 +17,8 @@ def main():
             args.INPUT,
             args.OUTPUT_WORLD,
             args.OUTPUT_MODEL_DIR,
-            args.TEMPLATE_WORLD_FILE
+            args.TEMPLATE_WORLD_FILE,
+            args.SKIP_CAMERA_POSE
         )
 
     if args.command == "nav":

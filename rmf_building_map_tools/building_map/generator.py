@@ -22,7 +22,8 @@ class Generator:
         input_filename,
         output_filename,
         output_models_dir,
-        template_file
+        template_file,
+        skip_camera_pose
     ):
         print('generating {} from {}'.format(output_filename, input_filename))
 
@@ -41,7 +42,7 @@ class Generator:
         building.generate_sdf_models(output_models_dir)
 
         # generate a top-level SDF for convenience
-        sdf = building.generate_sdf_world(template_file)
+        sdf = building.generate_sdf_world(template_file, skip_camera_pose)
 
         indent_etree(sdf)
         sdf_str = str(ElementToString(sdf), 'utf-8')
