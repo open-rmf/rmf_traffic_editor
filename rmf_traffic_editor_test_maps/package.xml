@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>rmf_traffic_editor_test_maps</name>
-  <version>1.9.1</version>
+  <version>1.9.2</version>
   <description>
     Some test maps for traffic_editor and rmf_building_map_tools.
   </description>
