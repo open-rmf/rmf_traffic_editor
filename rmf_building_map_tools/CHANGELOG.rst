@@ -2,6 +2,12 @@
 Changelog for package rmf\_building\_map\_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.9.2 (2025-01-14)
+------------------
+* Add flag to skip calculating and setting camera pose (`#523 <https://github.com/open-rmf/rmf_traffic_editor//issues/523>`_)
+* Add the ability to customize the base world file (`#519 <https://github.com/open-rmf/rmf_traffic_editor//issues/519>`_)
+* Contributors: Aaron Chong, Arjo Chakravarty
+
 1.9.1 (2024-06-15)
 ------------------
 
