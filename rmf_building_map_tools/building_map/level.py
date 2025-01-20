@@ -287,9 +287,11 @@ class Level:
         robot_name = vertex.params['spawn_robot_name'].value
         print(f'spawning robot name {robot_name} of type {robot_type}')
 
-        # remove namespace, if present
-        if "/" in robot_type:
-            robot_type = "/".join(robot_type.split("/")[1:])
+        # remove Open-RMF namespace, if present
+        if '/' in robot_type:
+            segments = robot_type.split('/')
+            if segments[0].lower() == 'open-rmf':
+                robot_type = "/".join(segments[1:])
 
         yaw = 0
         # find the first vertex connected by a lane to this vertex
