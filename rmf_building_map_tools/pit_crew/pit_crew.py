@@ -63,7 +63,7 @@ __all__ = [
     "build_and_update_cache",
     "init_logging",
     "PitCrewFormatter",
-    "ModelNames",
+    "ModelTuple",
     "download_model_fuel_tools",
     "sync_sdf"
 ]
@@ -72,7 +72,8 @@ __all__ = [
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
-ModelNames = namedtuple("ModelNames", ["model_name", "author_name"])
+ModelTuple = namedtuple(
+    "ModelTuple", ["model_name", "author_name", "upload_date"])
 
 
 def remove_spaces(original):
@@ -113,8 +114,8 @@ def get_missing_models(model_names, model_path=None,
 
     Args:
         model_names (iterable): Iterable of model names to classify.
-            Also supports ModelNames tuples, or unnamed tuples of
-            (model_name, author_name)!
+            Also supports ModelTuple tuples, or unnamed tuples of
+            (model_name, author_name) or (model_name, author_name, upload_time)!
         model_path (str, optional): Overall path to model directory.
             Defaults to None. If None, function will use "~/.gazebo/models" or
             "~/.ignition/fuel" depending on the value of ign.
@@ -144,9 +145,11 @@ def get_missing_models(model_names, model_path=None,
             - Missing models are models that are not in your local directory
                 and also missing from Fuel.
     """
-    for key, model_name in enumerate(model_names):
-        if isinstance(model_name, ModelNames) or isinstance(model_name, tuple):
-            assert len(model_name) == 2, \
+    # Enumerate prevents a lone tuple from being interpreted as a list of three
+    # singles.
+    for _, model_name in enumerate(model_names):
+        if isinstance(model_name, ModelTuple) or isinstance(model_name, tuple):
+            assert len(model_name) == 2 or len(model_name) == 3, \
                 "Invalid model name tuple given: %s!" % model_name
 
     if update_cache:
@@ -192,7 +195,7 @@ def get_missing_models(model_names, model_path=None,
         elif isinstance(model, tuple):
             model_name = model[0]
             author_name = model[1]
-        elif isinstance(model, ModelNames):
+        elif isinstance(model, ModelTuple):
             model_name = model.model_name
             author_name = model.author_name
 
@@ -243,7 +246,7 @@ def get_local_model_name_tuples(path=None, config_file="model.config",
                                 default_author_name="", lower=True,
                                 use_dir_as_name=False, ign=False):
     """
-    Gets all ModelNames tuples from a given overall local model path.
+    Gets all ModelTuple tuples from a given overall local model path.
 
     Args:
         path (str, optional): Overall path to model directory.
@@ -261,7 +264,7 @@ def get_local_model_name_tuples(path=None, config_file="model.config",
             following Ignition's directory structure. Defaults to False.
 
     Returns:
-        dictionary (ModelNames: str): Dictionary where ModelNames tuples are
+        dictionary (ModelTuple: str): Dictionary where ModelTuple tuples are
         keys, and the model path is the value. Each name will be lower-case
         only unless lower is False.
     """
@@ -313,7 +316,7 @@ def get_local_model_name_tuples(path=None, config_file="model.config",
                     if model_path.endswith("/"):
                         model_path = model_path[:-1]
 
-                    name_tuple = ModelNames(os.path.basename(model_path),
+                    name_tuple = ModelTuple(os.path.basename(model_path),
                                             name_tuple.author_name)
 
                 output[name_tuple] = latest_ver_path
@@ -339,7 +342,7 @@ def get_model_name_tuple(config_file_path, config_file="model.config",
             Defaults to True.
 
     Returns:
-        (str, str): ModelNames tuple of (model_name, author_name). Each name
+        (str, str): ModelTuple tuple of (model_name, author_name). Each name
             will be lower-case only unless lower is False.
 
     Warnings:
@@ -372,9 +375,9 @@ def get_model_name_tuple(config_file_path, config_file="model.config",
         author_name = default_author_name
 
     if lower:
-        return ModelNames(model_name.lower(), author_name.lower())
+        return ModelTuple(model_name.lower(), author_name.lower())
     else:
-        return ModelNames(model_name, author_name)
+        return ModelTuple(model_name, author_name)
 
 
 def get_author_to_model_dict(model_name_tuples, lower=True):
@@ -382,7 +385,7 @@ def get_author_to_model_dict(model_name_tuples, lower=True):
     Get a dictionary of author names mapped to model names.
 
     Args:
-        model_name_tuples (iterable): An iterable of ModelNames or unnamed
+        model_name_tuples (iterable): An iterable of ModelTuple or unnamed
             tuples of (model_name, author_name).
         lower (bool, optional): Make all output names lower-case.
             Defaults to True.
@@ -393,7 +396,7 @@ def get_author_to_model_dict(model_name_tuples, lower=True):
     """
     output = {}
 
-    for (model_name, author_name) in model_name_tuples:
+    for (model_name, author_name, _) in model_name_tuples:
         if lower:
             model_name = model_name.lower()
             author_name = author_name.lower()
@@ -411,7 +414,7 @@ def get_model_to_author_dict(model_name_tuples, lower=True):
     Get a dictionary of model names mapped to author names.
 
     Args:
-        model_name_tuples (list or set): An iterable of ModelNames tuples of
+        model_name_tuples (list or set): An iterable of ModelTuple tuples of
             (model_name, author_name). Each name will be lower-case only.
         lower (bool, optional): Make all output names lower-case.
             Defaults to True.
@@ -422,7 +425,7 @@ def get_model_to_author_dict(model_name_tuples, lower=True):
     """
     output = {}
 
-    for (model_name, author_name) in model_name_tuples:
+    for (model_name, author_name, _) in model_name_tuples:
         if lower:
             model_name = model_name.lower()
             author_name = author_name.lower()
@@ -447,8 +450,8 @@ def get_fuel_authors(model_name, cache_file_path=None, update_cache=True):
     else:
         cache = load_cache(cache_file_path)
 
-    if isinstance(model_name, ModelNames) or isinstance(model_name, tuple):
-        assert len(model_name) == 2, "Invalid model name tuple given: %s!" \
+    if isinstance(model_name, ModelTuple) or isinstance(model_name, tuple):
+        assert len(model_name) == 2 or len(model_name) == 3, "Invalid model name tuple given: %s!" \
             % model_name
         model_name = model_name[0]
 
@@ -713,6 +716,8 @@ def download_model_fuel_tools(model_name, author_name,
                         (model_name, export_path))
 
         return True
+    except KeyError as e:
+        return False
     except Exception as e:
         logger.error("Could not download model '%s'! %s" % (model_name, e))
         return False
@@ -745,7 +750,7 @@ def load_cache(cache_file_path=None, lower=True):
 
     Returns:
         dict: Cache dict, with keys 'model_cache' and 'fuel_cache'.
-            model_cache will contain ModelNames tuples of
+            model_cache will contain ModelTuple tuples of
             (model_name, author_name).
             Whereas fuel_cache will contain JSON responses from Fuel.
 
@@ -765,12 +770,12 @@ def load_cache(cache_file_path=None, lower=True):
 
             if lower:
                 model_cache = set(
-                    ModelNames(*[name.lower() for name in x])
+                    ModelTuple(*[name.lower() for name in x])
                     for x in loaded_cache.get("model_cache")
                 )
             else:
                 model_cache = set(
-                    ModelNames(*x) for x in loaded_cache.get("model_cache")
+                    ModelTuple(*x) for x in loaded_cache.get("model_cache")
                 )
 
             logger.info("Load success!\n")
@@ -852,22 +857,19 @@ def build_and_update_cache(cache_file_path=None, write_to_cache=True,
             for model in json.loads(resp.text):
                 model_name = model.get("name", "")
                 author_name = model.get("owner", "")
+                upload_date = model.get("upload_date", "")
 
                 # If a cached model was found, halt
-                if (
-                    (model_name, author_name) in old_cache['model_cache']
-                    # this particular model is duplicated in fuel,
-                    # causing the cache to break early
-                    and model_name != "ur5_rg2" and author_name != "anni"
-                ):
-                    logger.info("Cached model found! "
+                if (model_name, author_name, upload_date) in old_cache['model_cache']:
+                    logger.info("Cached model found! ", (model_name, author_name, upload_date),
                                 "Halting Fuel traversal...")
                     break_flag = True
                     break
                 # Otherwise, add it to the cache
                 else:
                     new_cache_count += 1
-                    old_cache['model_cache'].add((model_name, author_name))
+                    old_cache['model_cache'].add(
+                        (model_name, author_name, upload_date))
                     old_cache['fuel_cache'].append(model)
         else:
             break
