@@ -139,7 +139,7 @@ class BuildingMapServer(Node):
 
     def level_msg(self, level):
         msg = Level()
-        msg.name = level.name
+        msg.name = str(level.name)
         msg.elevation = level.elevation
         if level.drawing_name:
             image = AffineImage()
