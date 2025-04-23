@@ -97,7 +97,7 @@ def download_models(
     """Download models for a given input building yaml."""
     # Construct model set
 
-    IGN_FUEL_MODEL_PATH = "~/.ignition/fuel/"
+    IGN_FUEL_MODEL_PATH = "~/.gz/fuel/"
 
     model_set = set()
     stringent_dict = {}  # Dict to tighten download scope
@@ -176,11 +176,11 @@ def download_models(
                     sync_names=True, export_path=export_path)
             else:
                 model_downloaded = pit_crew.download_model(
-                    model_name, author_name, sync_names=True)
+                    model_name, author_name, sync_names=True)[0]
             if model_downloaded:
                 break
             else:
-                logger.warning("Retrying %d of 5 times...", i)
+                logger.warning("Retrying %d of 5 times..." % i)
 
         if not model_downloaded:
             logger.error(
