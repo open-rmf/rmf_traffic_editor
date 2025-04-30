@@ -139,7 +139,7 @@ class BuildingMapServer(Node):
 
     def level_msg(self, level):
         msg = Level()
-        msg.name = level.name
+        msg.name = str(level.name)
         msg.elevation = level.elevation
         if level.drawing_name:
             image = AffineImage()
@@ -278,7 +278,7 @@ class BuildingMapServer(Node):
         # transformation is already done in Lift class
         msg.ref_x, msg.ref_y = lift.x, lift.y
         msg.name = str(lift.name)
-        msg.levels = lift.level_names
+        msg.levels = [str(level_name) for level_name in lift.level_names]
 
         msg.ref_yaw = lift.yaw
         msg.width = lift.width
