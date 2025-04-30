@@ -117,7 +117,7 @@ def get_missing_models(model_names, model_path=None,
             (model_name, author_name)!
         model_path (str, optional): Overall path to model directory.
             Defaults to None. If None, function will use "~/.gazebo/models" or
-            "~/.ignition/fuel" depending on the value of ign.
+            "~/.gz/fuel" depending on the value of ign.
         config_file (str, optional): Name of the config file to parse when
             checking local models. Defaults to "model.config".
         cache_file_path (str, optional): The path to the model cache file.
@@ -144,7 +144,7 @@ def get_missing_models(model_names, model_path=None,
             - Missing models are models that are not in your local directory
                 and also missing from Fuel.
     """
-    for key, model_name in enumerate(model_names):
+    for model_name in model_names:
         if isinstance(model_name, ModelNames) or isinstance(model_name, tuple):
             assert len(model_name) == 2, \
                 "Invalid model name tuple given: %s!" % model_name
@@ -224,7 +224,8 @@ def get_missing_models(model_names, model_path=None,
                     logger.warning("Model %s in local model directory"
                                    " is not by the requested author %s!"
                                    % (model_name, author_name))
-        elif model_name in fuel_models:
+        elif model_name in fuel_models and \
+                author_name in fuel_models[model_name]:
             output['downloadable'].append((model_name_original,
                                           fuel_models[model_name]))
 
@@ -248,7 +249,7 @@ def get_local_model_name_tuples(path=None, config_file="model.config",
     Args:
         path (str, optional): Overall path to model directory.
             Defaults to None. If None, function will use "~/.gazebo/models" or
-            "~/.ignition/fuel" depending on the value of ign.
+            "~/.gz/fuel" depending on the value of ign.
         config_file (str, optional): Name of the config file to parse.
             Defaults to "model.config".
         default_author_name (str, optional): The author name to use if no
@@ -269,7 +270,7 @@ def get_local_model_name_tuples(path=None, config_file="model.config",
 
     if path is None:
         if ign:
-            path = "~/.ignition/fuel/"
+            path = "~/.gz/fuel/"
         else:
             path = "~/.gazebo/models/"
         logger.warning("No local model path given! Using default %s instead!"
@@ -504,7 +505,7 @@ def download_model(model_name, author_name, version="tip",
             "tip", which will download the latest model.
         download_path (str, optional): The root directory for downloading
             and unzipping the models into. Defaults to None. If None, function
-            will use "~/.ignition/fuel/fuel.gazebosim.org" or
+            will use "~/.gz/fuel/fuel.gazebosim.org" or
             "~/.gazebo/models" depending on the state of the ign argument.
         sync_names (bool, optional): Change downloaded model.sdf model name to
             match folder name. Defaults to False.
@@ -523,7 +524,7 @@ def download_model(model_name, author_name, version="tip",
         if download_path is None:
             if ign:
                 download_path = os.path.expanduser(
-                    "~/.ignition/fuel/fuel.gazebosim.org"
+                    "~/.gz/fuel/fuel.gazebosim.org"
                 )
             else:
                 download_path = os.path.expanduser("~/.gazebo/models")
@@ -626,13 +627,13 @@ def download_model_fuel_tools(model_name, author_name,
         # Currently, ignition fuel download can only download to this folder.
         # Fuel tools creates this folder if it does not yet exist
         download_path = os.path.expanduser(
-            "~/.ignition/fuel/fuel.gazebosim.org"
+            "~/.gz/fuel/fuel.gazebosim.org"
         )
         # Command line
         url_model_name = parse.quote(model_name)
         full_url = ("https://fuel.gazebosim.org/1.0" +
                     '/' + author_name + '/models' + '/' + url_model_name)
-        full_command = full_command = ("ign fuel download -u "
+        full_command = full_command = ("gz fuel download -u "
                                        + full_url + " -v 4")
         subprocess.call([full_command], shell=True)
         child = subprocess.Popen([full_command], shell=True,
@@ -671,14 +672,16 @@ def download_model_fuel_tools(model_name, author_name,
                         (subdirname))
                     pass
             break
+        if len(sub_dirs) == 0:
+            raise RuntimeError("Model not found in Fuel portal")
         latest_ver = max(sub_dirs)
         extract_path = os.path.join(extract_path, str(latest_ver))
 
         if sync_names:
             sync_sdf(model_name=model_name.lower(), extract_path=extract_path)
 
-        export_path = os.path.expanduser(export_path)
         if export_path is not None:
+            export_path = os.path.expanduser(export_path)
             # Make directory if missing
             if not os.path.isdir(export_path):
                 os.makedirs(export_path, exist_ok=True)
