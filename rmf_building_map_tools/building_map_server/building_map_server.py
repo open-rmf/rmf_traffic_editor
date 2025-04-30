@@ -221,19 +221,19 @@ class BuildingMapServer(Node):
 
                 graph_msg.vertices.append(gn)
 
-            for l in g['lanes']:
+            for lane in g['lanes']:
                 ge = GraphEdge()
-                ge.v1_idx = l[0]
-                ge.v2_idx = l[1]
-                if l[2]['is_bidirectional']:
+                ge.v1_idx = lane[0]
+                ge.v2_idx = lane[1]
+                if lane[2]['is_bidirectional']:
                     ge.edge_type = GraphEdge.EDGE_TYPE_BIDIRECTIONAL
                 else:
                     ge.edge_type = GraphEdge.EDGE_TYPE_UNIDIRECTIONAL
-                if "speed_limit" in l[2]:
+                if "speed_limit" in lane[2]:
                     p = Param()
                     p.name = "speed_limit"
                     p.type = p.TYPE_DOUBLE
-                    p.value_float = float(l[2]["speed_limit"])
+                    p.value_float = float(lane[2]["speed_limit"])
                     ge.params.append(p)
                 graph_msg.edges.append(ge)
             msg.nav_graphs.append(graph_msg)

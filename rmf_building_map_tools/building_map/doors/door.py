@@ -1,5 +1,5 @@
 from xml.etree.ElementTree import Element, SubElement
-from..utils import door_material, box_link, joint
+from ..utils import door_material, box_link, joint
 
 
 class Door:

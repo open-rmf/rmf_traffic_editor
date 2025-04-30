@@ -243,7 +243,7 @@ class GoalSet (Element):
         return True
 
     def add_goal(self, goal):
-        assert(isinstance(goal, Goal))
+        assert isinstance(goal, Goal)
         goal.attributes['id'] = len(self.goal_list)
         goal.attributes['capacity'] = self.capacity
         self.goal_list.append(goal)

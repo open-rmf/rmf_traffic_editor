@@ -16,7 +16,7 @@ class Polygon:
         self.center = Vertex([0, 0])
 
     def add_vertex(self, vertex):
-        assert(isinstance(vertex, Vertex))
+        assert isinstance(vertex, Vertex)
         if vertex.id in self.vertex_ids:
             return
         self.vertex_ids.add(vertex.id)
@@ -24,7 +24,7 @@ class Polygon:
 
     def calulate_center(self):
         num = len(self.vertices)
-        assert(num >= 3), "Polygon has less than 3 vertices"
+        assert (num >= 3), "Polygon has less than 3 vertices"
         x = 0.0
         y = 0.0
         for vtx in self.vertices:
@@ -66,11 +66,11 @@ class PolygonManager (Manager):
         self.polygon_map = dict()
 
     def update_polygon_set(self, polygon):
-        assert(polygon.id >= 0)
-        if(isinstance(polygon, HubPolygon)):
+        assert polygon.id >= 0
+        if isinstance(polygon, HubPolygon):
             self.polygon_map[polygon.hub_vertex_id] = polygon.id
 
     def get_hub_polygon_from_hub_vertex(self, hub_vertex_id):
-        if(hub_vertex_id in self.polygon_map):
+        if hub_vertex_id in self.polygon_map:
             return self.polygon_map[hub_vertex_id]
         return -1

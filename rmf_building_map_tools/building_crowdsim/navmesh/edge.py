@@ -13,7 +13,7 @@ class Edge:
         self.cross_lane_id = -1
 
     def init_edge(self, v0_id, v1_id, node0_id, node1_id):
-        assert(v0_id != v1_id)
+        assert v0_id != v1_id
         self.v0_id = v0_id
         self.v1_id = v1_id
         self.node0_id = node0_id

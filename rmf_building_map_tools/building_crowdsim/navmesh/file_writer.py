@@ -16,7 +16,7 @@ class FileWriter:
         self.filehandle = open(self.filename, mode)
 
     def write_line(self, content):
-        if(self.filehandle):
+        if self.filehandle:
             if isinstance(content, Iterable):
                 for item in content:
                     item_str = str(item) + " "
@@ -80,14 +80,14 @@ class FileWriter:
             # gradient
             self.write_line(result[2])
             # edges
-            if(len(result[3]) > 0):
+            if len(result[3]) > 0:
                 tmp = list(result[3])
                 tmp.insert(0, len(result[3]))
                 self.write_line(tmp)
             else:
                 self.write_line(0)
             # obstacle
-            if(len(result[4]) > 0):
+            if len(result[4]) > 0:
                 tmp = list(result[4])
                 tmp.insert(0, len(result[4]))
                 self.write_line(tmp)

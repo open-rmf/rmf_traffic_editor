@@ -46,7 +46,7 @@ class Plugin (Element):
                 self.add_external_list(group['agents_name'])
 
     def add_model_type(self, model_type):
-        assert(isinstance(model_type, ModelType))
+        assert isinstance(model_type, ModelType)
         self.sub_elements.append(model_type)
 
     def add_external_agent(self, name):

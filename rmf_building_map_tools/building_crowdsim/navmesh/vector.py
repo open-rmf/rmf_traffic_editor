@@ -9,8 +9,8 @@ class Vector2d:
 
     def init_with_2_vertex(self, v0, v1):
         # pointing from v0 to v1
-        assert(isinstance(v0, Vertex))
-        assert(isinstance(v1, Vertex))
+        assert isinstance(v0, Vertex)
+        assert isinstance(v1, Vertex)
         self.x = v1.x - v0.x
         self.y = v1.y - v0.y
 
@@ -26,12 +26,12 @@ class Vector2d:
         return Vector2d([-unit.y, unit.x])
 
     def get_dot(self, vector2d):
-        assert(isinstance(vector2d, Vector2d))
+        assert isinstance(vector2d, Vector2d)
         return self.x * vector2d.x + self.y * vector2d.y
 
     def get_orientation(self):
         return math.atan2(self.y, self.x)
 
     def get_cross(self, vector2d):
-        assert(isinstance(vector2d, Vector2d))
+        assert isinstance(vector2d, Vector2d)
         return self.x * vector2d.y - self.y * vector2d.x

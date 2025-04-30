@@ -15,15 +15,15 @@ class Lane:
             self,
             lane_vertex_manager,
             base_vertex_id):
-        assert(base_vertex_id in self.lane_vertex_id)
-        assert(isinstance(lane_vertex_manager, Manager))
+        assert base_vertex_id in self.lane_vertex_id
+        assert isinstance(lane_vertex_manager, Manager)
 
         base_vertex = lane_vertex_manager.data[base_vertex_id]
-        assert(len(self.lane_vertex_id) == 2)
+        assert len(self.lane_vertex_id) == 2
         to_vertex_id = self.lane_vertex_id[0]
         if base_vertex_id == self.lane_vertex_id[0]:
             to_vertex_id = self.lane_vertex_id[1]
-        assert(to_vertex_id != base_vertex_id)
+        assert to_vertex_id != base_vertex_id
         to_vertex = lane_vertex_manager.data[to_vertex_id]
 
         result = Vector2d()
