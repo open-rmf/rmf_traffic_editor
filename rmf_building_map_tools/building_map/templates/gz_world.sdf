@@ -6,10 +6,6 @@
       <real_time_factor>1.0</real_time_factor>
     </physics>
     <plugin
-      filename="libgz-sim-physics-system.so"
-      name="gz::sim::systems::Physics">
-    </plugin>
-    <plugin
       filename="libgz-sim-user-commands-system.so"
       name="gz::sim::systems::UserCommands">
     </plugin>
