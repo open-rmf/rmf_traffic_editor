@@ -2,6 +2,11 @@
 Changelog for package rmf\_building\_map\_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.9.3 (YYYY-MM-DD)
+------------------
+* Fix startup error when waypoint's name is pure numbers (`#508 <https://github.com/open-rmf/rmf_traffic_editor/pull/508>`_)
+* Contributors: Gary Bey
+
 1.9.2 (2025-01-14)
 ------------------
 * Add flag to skip calculating and setting camera pose (`#523 <https://github.com/open-rmf/rmf_traffic_editor//issues/523>`_)

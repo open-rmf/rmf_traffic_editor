@@ -139,7 +139,7 @@ class BuildingMapServer(Node):
 
     def level_msg(self, level):
         msg = Level()
-        msg.name = level.name
+        msg.name = str(level.name)
         msg.elevation = level.elevation
         if level.drawing_name:
             image = AffineImage()
@@ -195,10 +195,7 @@ class BuildingMapServer(Node):
             graph_msg.name = str(i)  # todo: someday, string names...
             print(f"graph {i} has {len(g['vertices'])} vertices")
             for v in g['vertices']:
-                gn = GraphNode()
-                gn.x = v[0]
-                gn.y = v[1]
-                gn.name = v[2]['name']
+                gn = self.create_graph_node(v[0], v[1], v[2]['name'])
 
                 # add specific params to builidng_map_msg
                 for str_param in ["dock_name",
@@ -245,10 +242,7 @@ class BuildingMapServer(Node):
         wall_graph = level.generate_wall_graph()
         msg.wall_graph.name = "WallGraph"
         for v in wall_graph['vertices']:
-            gn = GraphNode()
-            gn.x = v[0]
-            gn.y = v[1]
-            gn.name = v[2]['name']
+            gn = self.create_graph_node(v[0], v[1], v[2]['name'])
 
             # Ignore any other vertex params - not needed for wall graph
             msg.wall_graph.vertices.append(gn)
@@ -283,8 +277,8 @@ class BuildingMapServer(Node):
         msg = Lift()
         # transformation is already done in Lift class
         msg.ref_x, msg.ref_y = lift.x, lift.y
-        msg.name = lift.name
-        msg.levels = lift.level_names
+        msg.name = str(lift.name)
+        msg.levels = [str(level_name) for level_name in lift.level_names]
 
         msg.ref_yaw = lift.yaw
         msg.width = lift.width
@@ -323,6 +317,14 @@ class BuildingMapServer(Node):
         # todo: only include images/graphs if they are requested?
         response.building_map = self.map_msg
         return response
+
+    def create_graph_node(self, wp_x, wp_y, wp_name):
+        gn = GraphNode()
+        gn.x = wp_x
+        gn.y = wp_y
+        gn.name = str(wp_name)
+
+        return gn
 
 
 def main():

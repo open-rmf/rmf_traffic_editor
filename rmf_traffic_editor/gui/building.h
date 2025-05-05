@@ -147,6 +147,7 @@ public:
     double scale = 1.0;
     double dx = 0.0;
     double dy = 0.0;
+    double rotation = 0.0;
   };
   typedef std::map<LevelPair, Transform> TransformMap;
   TransformMap transforms;
@@ -194,6 +195,10 @@ public:
     const Polygon* polygon,
     const double x,
     const double y);
+
+  Lift get_lift(const std::string& name) const;
+
+  void purge_lift_cabin_vertices(std::string lift_name);
 
 private:
   std::string filename;

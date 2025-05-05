@@ -96,6 +96,8 @@ bool Building::load(const string& _filename)
 
   if (y["reference_level_name"])
     reference_level_name = y["reference_level_name"].as<string>();
+  else
+    reference_level_name = "";
 
   // crowd_sim_impl is initialized when creating crowd_sim_table in editor.cpp
   // just in case the pointer is not initialized
@@ -427,7 +429,8 @@ void Building::draw_lifts(QGraphicsScene* scene, const int level_idx)
       true,
       t.scale,
       t.dx,
-      t.dy);
+      t.dy,
+      t.rotation);
   }
 }
 
@@ -497,6 +500,7 @@ Building::Transform Building::compute_transform(
     t.scale = 1.0;
     t.dx = 0.0;
     t.dy = 0.0;
+    t.rotation = 0.0;
     return t;
   }
 
@@ -517,6 +521,35 @@ Building::Transform Building::compute_transform(
       }
     }
   }
+
+  // calculate the rotation between each pair of fiducials
+  vector<std::pair<double, double>> rotations;
+
+  if (fiducials.size() < 2)
+  {
+    printf(
+      "not enough fiducials to compute transform between levels %d and %d\n",
+      from_level_idx,
+      to_level_idx);
+    return Building::Transform();
+  }
+
+  // we take the first fiducial as the reference point
+  std::pair<Fiducial, Fiducial> ref_rotation = make_pair(fiducials[0].first,
+      fiducials[0].second);
+  for (std::size_t f_idx = 1; f_idx < fiducials.size(); f_idx++)
+  {
+    rotations.push_back(
+      make_pair(
+        fiducials[f_idx].first.rotation(ref_rotation.first),
+        fiducials[f_idx].second.rotation(ref_rotation.second)));
+  }
+
+  // it is a crude method for now, but we will just compute the mean of the angles of all the fiducial pairs
+  double relative_rotation_sum = 0;
+  for (std::size_t i = 0; i < rotations.size(); i++)
+    relative_rotation_sum += rotations[i].first - rotations[i].second;
+  const double rotation = relative_rotation_sum / rotations.size();
 
   // calculate the distances between each fiducial on their levels
   vector<std::pair<double, double>> distances;
@@ -547,8 +580,12 @@ Building::Transform Building::compute_transform(
   double trans_y_sum = 0;
   for (const auto& fiducial : fiducials)
   {
-    trans_x_sum += fiducial.second.x - fiducial.first.x * scale;
-    trans_y_sum += fiducial.second.y - fiducial.first.y * scale;
+    trans_x_sum += fiducial.second.x -
+      (std::cos(rotation) * fiducial.first.x + std::sin(rotation) *
+      fiducial.first.y) * scale;
+    trans_y_sum += fiducial.second.y -
+      (-std::sin(rotation) * fiducial.first.x + std::cos(rotation) *
+      fiducial.first.y) * scale;
   }
   const double trans_x = trans_x_sum / fiducials.size();
   const double trans_y = trans_y_sum / fiducials.size();
@@ -557,13 +594,16 @@ Building::Transform Building::compute_transform(
   t.scale = scale;
   t.dx = trans_x;
   t.dy = trans_y;
+  t.rotation = rotation;
 
-  printf("transform %d->%d: scale = %.5f translation = (%.2f, %.2f)\n",
+  printf(
+    "transform %d->%d: scale = %.5f translation = (%.2f, %.2f) rotation = %.5f\n",
     from_level_idx,
     to_level_idx,
     t.scale,
     t.dx,
-    t.dy);
+    t.dy,
+    t.rotation);
 
   return t;
 }
@@ -768,6 +808,24 @@ Polygon::EdgeDragPolygon Building::polygon_edge_drag_press(
     return edp;
 
   return levels[level_idx].polygon_edge_drag_press(polygon, x, y);
+}
+
+Lift Building::get_lift(const std::string& name) const
+{
+  for (const auto& lift : lifts)
+  {
+    if (lift.name == name)
+      return lift;
+  }
+  return Lift();
+}
+
+void Building::purge_lift_cabin_vertices(std::string lift_name)
+{
+  for (auto& level : levels)
+  {
+    level.delete_lift_vertex(lift_name);
+  }
 }
 
 void Building::add_constraint(

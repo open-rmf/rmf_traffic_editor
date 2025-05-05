@@ -67,6 +67,9 @@ public:
     const std::string& name,
     const Param::Type& param_type,
     const T& param_value);
+
+  bool contains_vertex(const int vertex_idx) const;
+  std::string type_to_string() const;
 };
 
 #endif
