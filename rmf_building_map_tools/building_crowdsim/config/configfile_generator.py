@@ -18,7 +18,7 @@ from building_crowdsim.building_yaml_parse import\
 
 class ConfigFileGenerator:
     def __init__(self, building_yaml_parse):
-        assert(isinstance(building_yaml_parse, BuildingYamlParse))
+        assert isinstance(building_yaml_parse, BuildingYamlParse)
         self.crowd_sim_yaml = building_yaml_parse.crowd_sim_config
         if 'enable' not in self.crowd_sim_yaml:
             raise ValueError(

@@ -5,14 +5,14 @@ from .vector import Vector2d
 
 class ConnectionManager:
     def __init__(self, lane_vertex_manager, lane_manager):
-        assert(isinstance(lane_vertex_manager, Manager))
-        assert(isinstance(lane_manager, Manager))
+        assert isinstance(lane_vertex_manager, Manager)
+        assert isinstance(lane_manager, Manager)
 
         self.lane_vertex_manager = lane_vertex_manager
         self.lane_manager = lane_manager
 
     def build_connection(self):
-        assert(len(self.lane_manager.data) != 0)
+        assert len(self.lane_manager.data) != 0
         for lane_id in range(len(self.lane_manager.data)):
             lane = self.lane_manager.data[lane_id]
             v0_id = lane.lane_vertex_id[0]
@@ -25,8 +25,8 @@ class ConnectionManager:
     # check the generated polygon vertices (vertex0 and vertex1) is on the
     # same side of lane
     def is_on_same_side_of_lane(self, lane_id, vertex0, vertex1):
-        assert(isinstance(vertex0, Vertex))
-        assert(isinstance(vertex1, Vertex))
+        assert isinstance(vertex0, Vertex)
+        assert isinstance(vertex1, Vertex)
 
         lane = self.lane_manager.data[lane_id]
         base_vertex = self.lane_vertex_manager.data[lane.lane_vertex_id[0]]
@@ -54,7 +54,7 @@ class ConnectionManager:
         lane1 = self.lane_manager.data[id1]
         base_vertex_id_intersect = list(
             set(lane0.lane_vertex_id) & set(lane1.lane_vertex_id))
-        assert(len(base_vertex_id_intersect) == 1)
+        assert len(base_vertex_id_intersect) == 1
         base_vertex = self.lane_vertex_manager.data[
             base_vertex_id_intersect[0]]
 
@@ -64,7 +64,7 @@ class ConnectionManager:
         width1 = lane1.width
 
         # 2 lanes are nearly parallel case
-        if(abs(vector0.get_dot(vector1.get_normal_unit())) < 0.05):
+        if abs(vector0.get_dot(vector1.get_normal_unit())) < 0.05:
             length = 0.5 * (width0 + width1) / 2
             result_x = length * vector0.get_normal_unit().x
             result_y = length * vector0.get_normal_unit().y

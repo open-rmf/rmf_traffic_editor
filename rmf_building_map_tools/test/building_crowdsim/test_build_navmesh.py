@@ -30,7 +30,7 @@ def test():
                 standard_result)
 
     os.remove(generate_file)
-    assert(result)
+    assert result
 
 
 if __name__ == "__main__":

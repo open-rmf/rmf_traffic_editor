@@ -26,8 +26,8 @@ class BuildingMapClient(Node):
 
     def print_door(self, door):
         print(f'        {door.name}, ' +
-              f'v1:[{round(door.v1_x, 2)},{round(door.v1_y,2)}], ' +
-              f'v2:[{round(door.v2_x, 2)},{round(door.v2_y,2)}], ' +
+              f'v1:[{round(door.v1_x, 2)},{round(door.v1_y, 2)}], ' +
+              f'v2:[{round(door.v2_x, 2)},{round(door.v2_y, 2)}], ' +
               f'type:{door.door_type}, range:{round(door.motion_range, 2)}, ' +
               f'dir:{door.motion_direction}')
 

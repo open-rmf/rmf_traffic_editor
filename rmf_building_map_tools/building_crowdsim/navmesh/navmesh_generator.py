@@ -15,7 +15,7 @@ class NavmeshGenerator:
             level_with_human_lanes,
             level_name,
             default_graph_idx=9):
-        assert(isinstance(level_with_human_lanes, LevelWithHumanLanes))
+        assert isinstance(level_with_human_lanes, LevelWithHumanLanes)
         self.level = level_with_human_lanes
         self.level_name = level_name
         self.current_graph_idx = default_graph_idx
