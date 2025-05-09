@@ -2,8 +2,8 @@
 Changelog for package rmf\_building\_map\_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.12.0 (2025-05-09)
+-------------------
 * Remove redundant physics plugin (`#530 <https://github.com/open-rmf/rmf_traffic_editor/issues/530>`_)
 * Fix to Allow Numerically-Labelled Map (`#528 <https://github.com/open-rmf/rmf_traffic_editor/issues/528>`_)
 * Fix pit crew missing models and authorship logic (`#522 <https://github.com/open-rmf/rmf_traffic_editor/issues/522>`_)
