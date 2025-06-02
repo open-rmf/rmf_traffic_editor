@@ -434,19 +434,24 @@ class Building:
             lift.generate_shaft_doors(world)
             lift.generate_cabin(world)
 
-        charger_waypoints_ele = SubElement(
+        chargers_plugin_ele = SubElement(
             world,
-            'rmf_charger_waypoints',
-            {'name': 'charger_waypoints'})
+            'plugin',
+            {'name': 'register_component',
+             'filename': 'libregister_component.so'})
+        chargers_ele = SubElement(
+            chargers_plugin_ele,
+            'component',
+            {'name': 'Chargers'})
 
-        for level_name, level in self.levels.items():
+        for level in self.levels.values():
             for vertex in level.transformed_vertices:
                 if 'is_charger' in vertex.params:
                     SubElement(
-                        charger_waypoints_ele,
-                        'rmf_vertex',
+                        chargers_ele,
+                        'rmf_charger',
                         {'name': vertex.name, 'x': str(vertex.x),
-                         'y': str(vertex.y), 'level': level_name})
+                         'y': str(vertex.y), 'z': str(level.elevation)})
 
         if self.coordinate_system == CoordinateSystem.web_mercator:
             (tx, ty) = self.global_transform.x, self.global_transform.y
