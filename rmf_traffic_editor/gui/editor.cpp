@@ -1107,6 +1107,7 @@ const QString Editor::tool_id_to_string(const int id)
     case TOOL_ADD_MODEL: return "add m&odel";
     case TOOL_ADD_FLOOR: return "add &floor";
     case TOOL_ADD_HOLE: return "add hole";
+    case TOOL_ADD_ROI: return "add roi";
     case TOOL_EDIT_POLYGON: return "&edit polygon";
     case TOOL_ADD_HUMAN_LANE: return "add human lane";
     case TOOL_ADD_FEATURE: return "add &feature";
