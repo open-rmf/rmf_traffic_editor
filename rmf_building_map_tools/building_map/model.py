@@ -54,13 +54,13 @@ class Model:
         if len(tokens) > 1:
             if tokens[0] in model_author_cache and tokens[1] in model_author_cache[tokens[0]]:
                 # Remap to a fuel URI
-                model_path = f'https://fuel.gazebosim.org/1.0/{tokens[0]}/models/{tokens[1]}'
+                uri_ele.text = f'https://fuel.gazebosim.org/1.0/{tokens[0]}/models/{tokens[1]}'
             else:
-                model_path = '/'.join(tokens[1:])
+                # Strip organization name
+                uri_ele.text = 'model://' + '/'.join(tokens[1:])
         else:
-            # Keep it a model, strip organization name if necessary
-            model_path = self.model_name
-        uri_ele.text = f'model://{model_path}'
+            # Keep as is
+            uri_ele.text = 'model://{self.model_name}'
         pose_ele = SubElement(include_ele, 'pose')
 
         x_t, y_t = transform.transform_point([self.x, self.y])

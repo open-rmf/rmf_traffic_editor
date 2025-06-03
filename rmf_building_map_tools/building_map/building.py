@@ -344,26 +344,24 @@ class Building:
             self.ref_level.transform.scale)
 
     def build_model_cache(self):
-        model_author_cache = dict()
-        for level in self.levels.values():
-            for model in level.models:
-                tokens = model.model_name.split('/')
-                if len(tokens) == 2:
-                    # Model in OrgName/ModelName format
-                    org_name = tokens[0]
-                    if org_name not in model_author_cache:
-                        model_author_cache[org_name] = set()
-                        page = 1
-                        # Always returns success, we need to inspect the json
-                        while True:
-                            response = requests.get(f'https://fuel.gazebosim.org/1.0/{org_name}/models?page={page}&per_page=100')
-                            json = response.json()
-                            if 'errcode' in json:
-                                break
-                            page += 1
-                            # Ok
-                            model_author_cache[org_name].update([model['name'] for model in json])
-        return model_author_cache
+        try:
+            cache_file_path = "~/.pit_crew/model_cache.json"
+            cache_file_path = os.path.expanduser(cache_file_path)
+
+            with open(cache_file_path, "r") as f:
+                model_cache = dict()
+                loaded_cache = json.loads(f.read())
+
+                for (model, author) in loaded_cache["model_cache"]:
+                    if author not in model_cache:
+                        model_cache[author] = set()
+                    model_cache[author].add(model)
+
+                print(model_cache)
+                return model_cache
+        except Exception as e:
+            print("Could not parse cache file: %s! %s" % (cache_file_path, e))
+            return set()
 
     def generate_nav_graphs(self):
         """ Returns a dict of all non-empty nav graphs """
