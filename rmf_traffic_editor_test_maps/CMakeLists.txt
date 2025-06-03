@@ -13,6 +13,13 @@ ament_package()
 
 file(GLOB_RECURSE traffic_editor_paths "maps/*.building.yaml")
 
+if (NOT NO_DOWNLOAD_MODELS)
+  add_custom_target(
+    update_model_cache
+    COMMAND ros2 run rmf_building_map_tools building_map_model_downloader
+  )
+endif()
+
 foreach(path ${traffic_editor_paths})
 
   # Get the output world name
@@ -24,31 +31,16 @@ foreach(path ${traffic_editor_paths})
   set(output_dir ${CMAKE_CURRENT_BINARY_DIR}/maps/${output_world_name})
   set(output_world_path ${output_dir}/${output_world_name}.world)
   set(output_model_dir ${output_dir}/models)
-  if(DEFINED ENV{RMF_DOWNLOAD_MODELS_HOME})
-    set(output_model_dir ~/.gazebo/models)
-  endif()
 
   # first, generate the world
   message("BUILDING WORLDFILE WITH COMMAND: ros2 run rmf_building_map_tools building_map_generator gazebo ${map_path} ${output_world_path} ${output_model_dir}")
-  if (NO_DOWNLOAD_MODELS)
-    add_custom_command(
-      DEPENDS ${map_path}
-      COMMAND ros2 run rmf_building_map_tools building_map_generator gazebo ${map_path} ${output_world_path} ${output_model_dir}
-      OUTPUT ${output_world_path}
-    )
-  else()
-    message("DOWNLOADING MODELS WITH COMMAND: ros2 run rmf_building_map_tools building_map_model_downloader ${map_path}")
-    add_custom_command(
-      DEPENDS ${map_path}
-      COMMAND ros2 run rmf_building_map_tools building_map_generator gazebo ${map_path} ${output_world_path} ${output_model_dir}
-      COMMAND ros2 run rmf_building_map_tools building_map_model_downloader ${map_path} -e ~/.gazebo/models
-      OUTPUT ${output_world_path}
-    )
-  endif()
-
-  add_custom_target(generate_${output_world_name} ALL
-    DEPENDS ${output_world_path}
+  add_custom_target(
+    ${world_name} ALL
+    COMMAND ros2 run rmf_building_map_tools building_map_generator gazebo ${map_path} ${output_world_path} ${output_model_dir}
   )
+  if (NOT NO_DOWNLOAD_MODELS)
+    add_dependencies(${world_name} update_model_cache)
+  endif()
 
   install(
     DIRECTORY ${output_dir}

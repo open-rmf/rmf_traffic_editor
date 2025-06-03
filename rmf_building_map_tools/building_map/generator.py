@@ -29,13 +29,6 @@ class Generator:
 
         building = self.parse_editor_yaml(input_filename)
 
-        # Remove namespaces in models
-        for level_name, level in building.levels.items():
-            for model in level.models:
-                if "/" in model.model_name:
-                    model.model_name = \
-                        "/".join(model.model_name.split("/")[1:])
-
         if not os.path.exists(output_models_dir):
             os.makedirs(output_models_dir)
 

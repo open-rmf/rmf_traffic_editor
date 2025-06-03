@@ -244,12 +244,13 @@ class Level:
                 model_path,
                 self.transformed_vertices)
 
-    def generate_sdf_models(self, world_ele):
+    def generate_sdf_models(self, world_ele, model_author_cache: dict):
         for model in self.models:
             model.generate(
                 world_ele,
                 self.elevation,
-                self.transform)
+                self.transform,
+                model_author_cache)
 
         # sniff around in our vertices and spawn robots if requested
         for vertex_idx, vertex in enumerate(self.vertices):

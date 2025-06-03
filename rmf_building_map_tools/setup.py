@@ -15,9 +15,7 @@ setup(
         'building_map_server',
         'building_map_generator',
         'building_map_model_downloader',
-        'building_map_converter',
-        'model_downloader',
-        'pit_crew'],
+        'building_map_converter'],
     py_modules=[],
     data_files=[
         ('share/ament_index/resource_index/packages',
@@ -61,8 +59,6 @@ setup(
             'building_map_converter.building_map_converter:main',
             'building_map_model_downloader = '
             'building_map_model_downloader.building_map_model_downloader:main',
-            'model_downloader = '
-            'model_downloader.model_downloader:main',
         ],
     },
 )
