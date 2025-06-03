@@ -57,14 +57,12 @@ parser.add_argument("-f", "--force", action='store_true',
                     help="Force rebuilding the cache")
 
 
-def load_cache(cache_file_path=None):
+def load_cache(cache_file_path: str):
     """
     Read local Ignition Fuel model listing cache.
 
     Args:
-        cache_file_path (str, optional): The path to the model cache file.
-            Defaults to None. If None, function will use
-            "~/.pit_crew/model_cache.json".
+        cache_file_path (str): The path to the model cache file.
 
     Returns:
         dict: Cache dict, with keys 'model_cache' and 'fuel_cache'.
@@ -76,13 +74,7 @@ def load_cache(cache_file_path=None):
         The model listing cache is local and used by pit_crew only.
     """
     try:
-        if cache_file_path is None:
-            cache_file_path = "~/.pit_crew/model_cache.json"
-            logger.warning("No path given! Using %s instead!"
-                           % cache_file_path)
-
         cache_file_path = os.path.expanduser(cache_file_path)
-
         with open(cache_file_path, "r") as f:
             loaded_cache = json.loads(f.read())
 
@@ -100,26 +92,17 @@ def load_cache(cache_file_path=None):
                 'fuel_cache': []}
 
 
-def update_cache(cache_file_path=None, rebuild=False):
+def update_cache(cache_file_path: str, rebuild: bool):
     """
     Build and/or update the local Gazebo Fuel model listing cache.
 
     Args:
-        cache_file_path (str, optional): The path to the model cache file.
-            Defaults to None. If None, function will use
-            "~/.pit_crew/model_cache.json".
-        rebuild (bool, optional): If True, deletes and rebuilds the cache.
-            Defaults to False.
+        cache_file_path (str): The path to the model cache file.
+        rebuild (bool): If True, deletes and rebuilds the cache.
 
     Notes:
         The model listing cache is local and used by pit_crew only.
     """
-    if cache_file_path is None:
-        cache_file_path = "~/.pit_crew/model_cache.json"
-        logger.warning("No pit_crew cache path given! "
-                       "Using default %s instead!"
-                       % cache_file_path)
-
     cache_file_path = os.path.expanduser(cache_file_path)
 
     # Check if directory exists and make it otherwise
@@ -197,7 +180,7 @@ def update_cache(cache_file_path=None, rebuild=False):
 
 def main():
     args = parser.parse_args()
-    update_cache(args.cache)
+    update_cache(args.cache, args.force)
 
 
 if __name__ == "__main__":
