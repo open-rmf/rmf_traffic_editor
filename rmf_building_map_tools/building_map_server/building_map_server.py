@@ -200,7 +200,8 @@ class BuildingMapServer(Node):
                 # add specific params to builidng_map_msg
                 for str_param in ["dock_name",
                                   "pickup_dispenser",
-                                  "dropoff_ingestor"]:
+                                  "dropoff_ingestor",
+                                  "mutex"]:
                     if (str_param in v[2]):
                         p = Param()
                         p.name = str_param
@@ -234,6 +235,12 @@ class BuildingMapServer(Node):
                     p.name = "speed_limit"
                     p.type = p.TYPE_DOUBLE
                     p.value_float = float(lane[2]["speed_limit"])
+                    ge.params.append(p)
+                if "mutex" in lane[2]:
+                    p = Param()
+                    p.name = "mutex"
+                    p.type = p.TYPE_STRING
+                    p.value_string = lane[2]["mutex"]
                     ge.params.append(p)
                 graph_msg.edges.append(ge)
             msg.nav_graphs.append(graph_msg)
