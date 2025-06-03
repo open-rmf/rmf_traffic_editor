@@ -52,15 +52,17 @@ class Model:
         uri_ele = SubElement(include_ele, 'uri')
         tokens = self.model_name.split('/')
         if len(tokens) > 1:
-            if tokens[0] in model_author_cache and tokens[1] in model_author_cache[tokens[0]]:
+            organization = tokens[0]
+            model = '/'.join(tokens[1:])
+            if (model, organization) in model_author_cache:
                 # Remap to a fuel URI
-                uri_ele.text = f'https://fuel.gazebosim.org/1.0/{tokens[0]}/models/{tokens[1]}'
+                uri_ele.text = f'https://fuel.gazebosim.org/1.0/{organization}/models/{model}'
             else:
                 # Strip organization name
-                uri_ele.text = 'model://' + '/'.join(tokens[1:])
+                uri_ele.text = f'model://{model}'
         else:
             # Keep as is
-            uri_ele.text = 'model://{self.model_name}'
+            uri_ele.text = f'model://{self.model_name}'
         pose_ele = SubElement(include_ele, 'pose')
 
         x_t, y_t = transform.transform_point([self.x, self.y])

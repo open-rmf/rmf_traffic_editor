@@ -349,15 +349,9 @@ class Building:
             cache_file_path = os.path.expanduser(cache_file_path)
 
             with open(cache_file_path, "r") as f:
-                model_cache = dict()
                 loaded_cache = json.loads(f.read())
+                model_cache = set((el[0], el[1]) for el in loaded_cache["model_cache"])
 
-                for (model, author) in loaded_cache["model_cache"]:
-                    if author not in model_cache:
-                        model_cache[author] = set()
-                    model_cache[author].add(model)
-
-                print(model_cache)
                 return model_cache
         except Exception as e:
             print("Could not parse cache file: %s! %s" % (cache_file_path, e))
