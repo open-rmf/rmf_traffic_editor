@@ -22,25 +22,12 @@ class Model:
                   ' [dispensable] field, setting [dispensable] to false for '
                   'now')
 
-        # temporary hack: whitelist of robot models which must be non-static
-        non_static_model_names = [
-          'Sesto',
-          'MiR100',
-          'Magni'
-        ]
-        if self.model_name in non_static_model_names:
-            self.static = False
+        if 'static' in yaml_node:
+            self.static = yaml_node['static']
         else:
-            if 'static' in yaml_node:
-                self.static = yaml_node['static']
-            else:
-                self.static = True
+            self.static = True
 
         self.yaw = yaml_node['yaw']
-
-        # BH: Temporary holder to keep to_yaml working for now
-        self.original_x = yaml_node['x']
-        self.original_y = yaml_node['y']
 
     def to_yaml(self, coordinate_system):
         y = {}
@@ -54,7 +41,7 @@ class Model:
         y['dispensable'] = self.dispensable
         return y
 
-    def generate(self, world_ele, elevation, transform):
+    def generate(self, world_ele, elevation, transform, model_author_cache):
         model_name = self.name
         if self.dispensable:
             model_name += '_dispensable'
@@ -63,7 +50,17 @@ class Model:
         name_ele = SubElement(include_ele, 'name')
         name_ele.text = model_name
         uri_ele = SubElement(include_ele, 'uri')
-        uri_ele.text = f'model://{self.model_name}'
+        tokens = self.model_name.split('/')
+        if len(tokens) > 1:
+            if tokens[0] in model_author_cache and tokens[1] in model_author_cache[tokens[0]]:
+                # Remap to a fuel URI
+                model_path = f'https://fuel.gazebosim.org/1.0/{tokens[0]}/models/{tokens[1]}'
+            else:
+                model_path = '/'.join(tokens[1:])
+        else:
+            # Keep it a model, strip organization name if necessary
+            model_path = self.model_name
+        uri_ele.text = f'model://{model_path}'
         pose_ele = SubElement(include_ele, 'pose')
 
         x_t, y_t = transform.transform_point([self.x, self.y])
