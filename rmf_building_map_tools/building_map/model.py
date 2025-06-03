@@ -52,13 +52,14 @@ class Model:
         uri_ele = SubElement(include_ele, 'uri')
         tokens = self.model_name.split('/')
         if len(tokens) > 1:
-            organization = tokens[0]
+            org = tokens[0]
             model = '/'.join(tokens[1:])
-            if (model, organization) in model_author_cache:
+            if (model, org) in model_author_cache:
                 # Remap to a fuel URI
-                uri_ele.text = f'https://fuel.gazebosim.org/1.0/{organization}/models/{model}'
+                uri_ele.text = \
+                    f'https://fuel.gazebosim.org/1.0/{org}/models/{model}'
             else:
-                # Strip organization name
+                # Strip org name
                 uri_ele.text = f'model://{model}'
         else:
             # Keep as is

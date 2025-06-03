@@ -350,7 +350,8 @@ class Building:
 
             with open(cache_file_path, "r") as f:
                 loaded_cache = json.loads(f.read())
-                model_cache = set((el[0], el[1]) for el in loaded_cache["model_cache"])
+                model_cache = \
+                    set(tuple(el) for el in loaded_cache["model_cache"])
 
                 return model_cache
         except Exception as e:

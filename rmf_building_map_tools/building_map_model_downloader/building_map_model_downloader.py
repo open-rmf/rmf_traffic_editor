@@ -16,6 +16,7 @@ __all__ = [
     "update_cache"
 ]
 
+
 class PitCrewFormatter(logging.Formatter):
     """Logging formatter for pit_crew."""
 
@@ -31,6 +32,7 @@ class PitCrewFormatter(logging.Formatter):
         log_fmt = self.FORMATS.get(record.levelno, self.FORMATS['DEFAULT'])
         formatter = logging.Formatter(log_fmt)
         return formatter.format(record)
+
 
 handler = logging.StreamHandler(sys.stdout)
 handler.setFormatter(PitCrewFormatter())
@@ -53,6 +55,7 @@ parser.add_argument("-c", "--cache", type=str,
                     help="Path to pit_crew model cache")
 parser.add_argument("-f", "--force", action='store_true',
                     help="Force rebuilding the cache")
+
 
 def load_cache(cache_file_path=None):
     """
@@ -95,6 +98,7 @@ def load_cache(cache_file_path=None):
                      % (cache_file_path, e))
         return {'model_cache': set(),
                 'fuel_cache': []}
+
 
 def update_cache(cache_file_path=None, rebuild=False):
     """
@@ -194,6 +198,7 @@ def update_cache(cache_file_path=None, rebuild=False):
 def main():
     args = parser.parse_args()
     update_cache(args.cache)
+
 
 if __name__ == "__main__":
     main()
