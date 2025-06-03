@@ -35,7 +35,7 @@ foreach(path ${traffic_editor_paths})
   # first, generate the world
   message("BUILDING WORLDFILE WITH COMMAND: ros2 run rmf_building_map_tools building_map_generator gazebo ${map_path} ${output_world_path} ${output_model_dir}")
   add_custom_target(
-    ${world_name}
+    ${world_name} ALL
     COMMAND ros2 run rmf_building_map_tools building_map_generator gazebo ${map_path} ${output_world_path} ${output_model_dir}
   )
   if (NOT NO_DOWNLOAD_MODELS)
