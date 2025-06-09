@@ -2,6 +2,9 @@
 Changelog for package rmf\_traffic\_editor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 1.12.0 (2025-05-09)
 -------------------
 * Add a conditional check for level transformation (`#520 <https://github.com/open-rmf/rmf_traffic_editor/issues/520>`_)

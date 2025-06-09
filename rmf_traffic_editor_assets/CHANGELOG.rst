@@ -2,6 +2,9 @@
 Changelog for package rmf\_traffic\_editor\_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 1.12.0 (2025-05-09)
 -------------------
 
