@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
-from building_map.generator import Generator
-import pit_crew
-
+from collections import namedtuple
 from pprint import pprint
 import argparse
+import json
 import logging
+import requests
 import sys
 import shutil
 import os
@@ -13,23 +13,34 @@ import yaml
 
 
 __all__ = [
-    "download_models"
+    "update_cache"
 ]
 
+
+class PitCrewFormatter(logging.Formatter):
+    """Logging formatter for pit_crew."""
+
+    FORMATS = {
+        logging.ERROR: "ERROR::%(module)s.%(funcName)s():%(lineno)d: %(msg)s",
+        logging.WARNING: "WARNING::%(module)s.%(funcName)s():%(lineno)d: "
+                         "%(msg)s",
+        logging.DEBUG: "DBG: %(module)s: %(lineno)d: %(msg)s",
+        "DEFAULT": "%(msg)s",
+    }
+
+    def format(self, record):
+        log_fmt = self.FORMATS.get(record.levelno, self.FORMATS['DEFAULT'])
+        formatter = logging.Formatter(log_fmt)
+        return formatter.format(record)
+
+
 handler = logging.StreamHandler(sys.stdout)
-handler.setFormatter(pit_crew.PitCrewFormatter())
+handler.setFormatter(PitCrewFormatter())
 logger = logging.getLogger()
 logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
-g = Generator()
-
-
-class HTTPDownloadDeprecated(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string=None):
-        logger.warn('DEPRECATED: The Options -f and -m is no longer in use. \
-            Please remove these.')
-        setattr(namespace, self.dest, values)
+ModelNames = namedtuple("ModelNames", ["model_name", "author_name"])
 
 
 # Init overall parser
@@ -39,187 +50,137 @@ parser = argparse.ArgumentParser(
                 "and download them from Fuel using pit_crew. "
                 "Necessary only if you are using Gazebo with Fuel models."
 )
-parser.add_argument("INPUT_YAML", type=str,
-                    help="Input building.yaml file to process")
-parser.add_argument("-m", "--model-path", type=str,
-                    default="~/.gazebo/models/",
-                    action=HTTPDownloadDeprecated,
-                    help="Path to check models from and download models to. \
-                        Redundant if using ignition fuel tools flag")
 parser.add_argument("-c", "--cache", type=str,
                     default="~/.pit_crew/model_cache.json",
                     help="Path to pit_crew model cache")
-parser.add_argument("-f", "--fuel-tools", action='store_true',
-                    help="Use ignition fuel tools to download models instead "
-                         "of http")
-parser.add_argument("-i", "--include", type=str, default=None,
-                    help="Search this directory first for models.")
-parser.add_argument("-e", "--export-path", type=str, default=None,
-                    help="Export model downloaded using ignition fuel tools "
-                         "to a folder with classic gazebo directory structure."
-                         " Only relevant if ignition fuel tools is used to "
-                         "download models.")
+parser.add_argument("-f", "--force", action='store_true',
+                    help="Force rebuilding the cache")
 
 
-def get_crowdsim_models(input_filename):
-    if not os.path.isfile(input_filename):
-        raise FileNotFoundError(f'input file {input_filename} not found')
+def load_cache(cache_file_path: str):
+    """
+    Read local Ignition Fuel model listing cache.
 
-    actor_names = []
-    with open(input_filename, 'r') as f:
-        y = yaml.safe_load(f)
-        try:
-            model_types = y["crowd_sim"]["model_types"]
-            for model in model_types:
-                name = model["model_uri"].split("://")[-1]
-                actor_names.append(name)
-            logger.info(f"Models: {actor_names} are used in crowd_sim")
-        except Exception as e:
-            logger.error(f"Could not get crowd_sim models, error: {e}."
-                         " Ignore models in crowd_sim...")
-        return actor_names
+    Args:
+        cache_file_path (str): The path to the model cache file.
+
+    Returns:
+        dict: Cache dict, with keys 'model_cache' and 'fuel_cache'.
+            model_cache will contain ModelNames tuples of
+            (model_name, author_name).
+            Whereas fuel_cache will contain JSON responses from Fuel.
+
+    Notes:
+        The model listing cache is local and used by pit_crew only.
+    """
+    try:
+        cache_file_path = os.path.expanduser(cache_file_path)
+        with open(cache_file_path, "r") as f:
+            loaded_cache = json.loads(f.read())
+
+            model_cache = set(
+                ModelNames(*x) for x in loaded_cache.get("model_cache")
+            )
+
+            logger.info("Load success!\n")
+            return {'model_cache': model_cache,
+                    'fuel_cache': loaded_cache.get("fuel_cache", [])}
+    except Exception as e:
+        logger.error("Could not parse cache file: %s! %s"
+                     % (cache_file_path, e))
+        return {'model_cache': set(),
+                'fuel_cache': []}
 
 
-def export_downloaded_model(model_path, export_path):
-    if os.path.exists(export_path) or os.path.isdir(export_path):
-        logger.warning("%s already exists, skipping..." % (export_path))
-        return
-    logger.info("Exporting to %s..." % (export_path))
-    shutil.copytree(src=model_path, dst=export_path)
+def update_cache(cache_file_path: str, rebuild: bool):
+    """
+    Build and/or update the local Gazebo Fuel model listing cache.
 
+    Args:
+        cache_file_path (str): The path to the model cache file.
+        rebuild (bool): If True, deletes and rebuilds the cache.
 
-def download_models(
-        input_yaml,
-        cache=None,
-        include=None,
-        fuel_tools=True,
-        export_path=None):
-    """Download models for a given input building yaml."""
-    # Construct model set
+    Notes:
+        The model listing cache is local and used by pit_crew only.
+    """
+    cache_file_path = os.path.expanduser(cache_file_path)
 
-    IGN_FUEL_MODEL_PATH = "~/.gz/fuel/"
+    # Check if directory exists and make it otherwise
+    dir_name = os.path.dirname(cache_file_path)
 
-    model_set = set()
-    stringent_dict = {}  # Dict to tighten download scope
+    if not os.path.exists(dir_name) and dir_name != "":
+        logger.info("Cache directory does not exist! Creating it: %s"
+                    % dir_name)
+        os.makedirs(dir_name, exist_ok=True)
 
-    building = g.parse_editor_yaml(input_yaml)
-
-    # models used for crowd sim
-    actors = get_crowdsim_models(input_yaml)
-    model_set.update(actors)
-
-    for _, level in building.levels.items():
-        for model in level.models:
-            if "/" in model.model_name:
-                model_name = "".join(model.model_name.split("/")[1:])
-                author_name = model.model_name.split("/")[0]
-
-                model_set.add((model_name, author_name))
-                stringent_dict[model_name.lower()] = \
-                    author_name.lower()
-            else:
-                model_set.add(model.model_name)
-
-    if fuel_tools:
-        missing_models = pit_crew.get_missing_models(
-            model_set,
-            model_path=IGN_FUEL_MODEL_PATH,
-            cache_file_path=cache,
-            lower=True,
-            priority_dir=include,
-            ign=True,
-            use_dir_as_name=True
-        )
+    if rebuild:
+        old_cache = {'model_cache': set(), 'fuel_cache': []}
+        logger.info("Rebuilding cache...")
     else:
-        missing_models = pit_crew.get_missing_models(
-            model_set,
-            cache_file_path=cache,
-            lower=False,
-            priority_dir=include,
-            ign=False,
-            use_dir_as_name=True
-        )
-
-    logger.info("\n== REQUESTED MODEL REPORT ==")
-    pprint(missing_models)
-
-    logger.info("\n== THE FOLLOWING MODELS HAVE SPECIFIED AUTHORS ==")
-    pprint(stringent_dict)
-    print()
-
-    missing_downloadables = missing_models.get('downloadable', [])
-    for key, downloadable_model in enumerate(missing_downloadables):
-        model_name, author_names = downloadable_model
-
-        if model_name.lower() in stringent_dict:
-            author_name = stringent_dict[model_name.lower()]
-            logger.info("\nDownloading %s by %s from Fuel"
-                        % (model_name, author_name))
+        if os.path.exists(cache_file_path):
+            old_cache = load_cache(cache_file_path)
+            logger.info("Cache found! Model count: %d \nUpdating cache..."
+                        % len(old_cache['model_cache']))
         else:
-            author_name = author_names[0]
-            logger.info("\nDownloading %s by %s from Fuel"
-                        % (model_name, author_name))
+            old_cache = {'model_cache': set(), 'fuel_cache': []}
+            logger.info("Cache not found! Rebuilding cache...")
 
-            logger.warning("No author specified for model '%s', "
-                           "using first valid author '%s'" %
-                           (model_name, author_name))
+    url_base = "https://fuel.gazebosim.org/1.0/models"
+    break_flag = False
+    page = 1
+    new_cache_count = 0
 
-        logger.info("Downloading model %s / %s : %s" %
-                    (key + 1, len(missing_downloadables), model_name))
+    logger.info(f"Topping up Fuel (updating cache) from: {url_base}")
 
-        model_downloaded = False
-        for i in range(5):
-            model_downloaded = False
-            if fuel_tools:
-                model_downloaded = pit_crew.download_model_fuel_tools(
-                    model_name, author_name,
-                    sync_names=True, export_path=export_path)
-            else:
-                model_downloaded = pit_crew.download_model(
-                    model_name, author_name, sync_names=True)[0]
-            if model_downloaded:
+    # RFE: Doing this asynchronously will significantly speed this up.
+    # Any solution must guarantee:
+    #   - All new models are guaranteed to be added to the cache
+    #   - Loop breaks as soon as we start pulling up already cached models
+    while not break_flag:
+        logger.info("Fetching page: %d" % page)
+
+        resp = requests.get("%s?page=%d&per_page=100" % (url_base, page))
+        page += 1
+
+        if resp.status_code != 200:
+            break
+
+        for model in json.loads(resp.text):
+            model_name = model.get("name", "")
+            author_name = model.get("owner", "")
+
+            # If a cached model was found, halt
+            if (
+                (model_name, author_name) in old_cache['model_cache']
+                # this particular model is duplicated in fuel,
+                # causing the cache to break early
+                and model_name != "ur5_rg2" and author_name != "anni"
+            ):
+                logger.info("Cached model found! "
+                            "Halting Fuel traversal...")
+                break_flag = True
                 break
+            # Otherwise, add it to the cache
             else:
-                logger.warning("Retrying %d of 5 times..." % i)
+                new_cache_count += 1
+                old_cache['model_cache'].add((model_name, author_name))
+                old_cache['fuel_cache'].append(model)
 
-        if not model_downloaded:
-            logger.error(
-                "Failed to download model [%s/%s] after 5 attempts, "
-                "exiting...",
-                author_name,
-                model_name)
-            sys.exit(1)
+    # Listify model_cache to allow for JSON serialisation
+    old_cache['model_cache'] = list(old_cache['model_cache'])
 
-    if missing_models.get('missing', []):
-        logger.warning("\nMissing models (not in local or Fuel):")
-        pprint(missing_models['missing'])
+    logger.info("Writing to cache: %s" % cache_file_path)
+    with open(cache_file_path, "w") as f:
+        f.write(json.dumps(old_cache, indent=2))
 
-    if export_path is not None:
-        available_models = missing_models.get('available', [])
-        for model_name, paths in available_models:
-            if paths is None:
-                logger.warning("No path for exporting model %s, skipping..."
-                               % (model_name))
-                continue
+    logger.info("New models cached: %s\n" % new_cache_count)
 
-            if len(paths) > 1:
-                logger.warning("More than one path for model %s, selecting "
-                               "first path that was found, %s"
-                               % (model_name, paths[0]))
-
-            export_model_path = os.path.join(export_path, model_name)
-            export_model_path = os.path.expanduser(export_model_path)
-            export_downloaded_model(paths[0], export_model_path)
+    return old_cache
 
 
 def main():
     args = parser.parse_args()
-    download_models(
-        args.INPUT_YAML,
-        args.cache,
-        args.include,
-        args.fuel_tools,
-        args.export_path)
+    update_cache(args.cache, args.force)
 
 
 if __name__ == "__main__":

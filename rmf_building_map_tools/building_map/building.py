@@ -4,6 +4,7 @@ import json
 import math
 import numpy as np
 import os
+import requests
 import sqlite3
 import tempfile
 import yaml
@@ -342,6 +343,21 @@ class Building:
             fiducials,
             self.ref_level.transform.scale)
 
+    def build_model_cache(self):
+        try:
+            cache_file_path = "~/.pit_crew/model_cache.json"
+            cache_file_path = os.path.expanduser(cache_file_path)
+
+            with open(cache_file_path, "r") as f:
+                loaded_cache = json.loads(f.read())
+                model_cache = \
+                    set(tuple(el) for el in loaded_cache["model_cache"])
+
+                return model_cache
+        except Exception as e:
+            print("Could not parse cache file: %s! %s" % (cache_file_path, e))
+            return set()
+
     def generate_nav_graphs(self):
         """ Returns a dict of all non-empty nav graphs """
         print("generating nav data")
@@ -407,9 +423,11 @@ class Building:
         sdf = tree.getroot()
 
         world = sdf.find('world')
+        # Key is author name, value is a set of model names under that author
+        model_author_cache = self.build_model_cache()
 
         for level_name, level in self.levels.items():
-            level.generate_sdf_models(world)  # todo: a better name
+            level.generate_sdf_models(world, model_author_cache)
             level.generate_doors(world)
 
             level_include_ele = SubElement(world, 'include')
