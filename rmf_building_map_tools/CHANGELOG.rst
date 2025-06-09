@@ -2,8 +2,8 @@
 Changelog for package rmf\_building\_map\_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.13.0 (2025-06-09)
+-------------------
 * Adding "mutex" to vertex and lane param (`#533 <https://github.com/open-rmf/rmf_traffic_editor/issues/533>`_)
 * Use a world plugin for charger registration (`#532 <https://github.com/open-rmf/rmf_traffic_editor/issues/532>`_)
 * Contributors: Jun, Luca Della Vedova
