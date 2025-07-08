@@ -27,6 +27,8 @@
 #include <QtConcurrent/QtConcurrent>
 #include <QElapsedTimer>
 
+#include <rmf_utils/math.hpp>
+
 #include "building.h"
 #include "yaml_utils.h"
 
@@ -551,9 +553,7 @@ Building::Transform Building::compute_transform(
   {
     // calculate shortest angle diff between two angles
     double diff = rotations[i].first - rotations[i].second;
-    while (diff <= -M_PI) diff += 2.0 * M_PI;
-    while (diff >  M_PI)  diff -= 2.0 * M_PI;
-    relative_rotation_sum += diff;
+    relative_rotation_sum += rmf_utils::wrap_to_pi(diff);
   }
   const double rotation = relative_rotation_sum / rotations.size();
 
