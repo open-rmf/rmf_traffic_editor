@@ -548,7 +548,13 @@ Building::Transform Building::compute_transform(
   // it is a crude method for now, but we will just compute the mean of the angles of all the fiducial pairs
   double relative_rotation_sum = 0;
   for (std::size_t i = 0; i < rotations.size(); i++)
-    relative_rotation_sum += rotations[i].first - rotations[i].second;
+  {
+    // calculate shortest angle diff between two angles
+    double diff = rotations[i].first - rotations[i].second;
+    while (diff <= -M_PI) diff += 2.0 * M_PI;
+    while (diff >  M_PI)  diff -= 2.0 * M_PI;
+    relative_rotation_sum += diff;
+  }
   const double rotation = relative_rotation_sum / rotations.size();
 
   // calculate the distances between each fiducial on their levels
