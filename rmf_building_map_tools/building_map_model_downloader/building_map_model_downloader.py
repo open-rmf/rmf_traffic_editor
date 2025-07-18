@@ -46,8 +46,8 @@ ModelNames = namedtuple("ModelNames", ["model_name", "author_name"])
 # Init overall parser
 parser = argparse.ArgumentParser(
     prog="building_map_model_downloader",
-    description="Parse traffic_editor building files to find missing models "
-                "and download them from Fuel using pit_crew. "
+    description="Parse traffic_editor building files to find models on Fuel "
+                "and make them refer to the Fuel URI using pit_crew. "
                 "Necessary only if you are using Gazebo with Fuel models."
 )
 parser.add_argument(
@@ -97,7 +97,7 @@ parser.add_argument(
 
 def load_cache(cache_file_path: str):
     """
-    Read local Ignition Fuel model listing cache.
+    Read local Fuel model listing cache.
 
     Args:
         cache_file_path (str): The path to the model cache file.
