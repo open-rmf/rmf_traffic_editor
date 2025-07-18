@@ -50,11 +50,49 @@ parser = argparse.ArgumentParser(
                 "and download them from Fuel using pit_crew. "
                 "Necessary only if you are using Gazebo with Fuel models."
 )
-parser.add_argument("-c", "--cache", type=str,
-                    default="~/.pit_crew/model_cache.json",
-                    help="Path to pit_crew model cache")
-parser.add_argument("-f", "--force", action='store_true',
-                    help="Force rebuilding the cache")
+parser.add_argument(
+    "-c", "--cache",
+    type=str,
+    default="~/.pit_crew/model_cache.json",
+    help="Path to pit_crew model cache",
+)
+parser.add_argument(
+    "--force",
+    action='store_true',
+    help="Force rebuilding the cache",
+)
+
+# Deprecated arguments. We keep these to avoid breaking backwards compatibility
+# with existing map packages.
+parser.add_argument(
+    "INPUT_YAML",
+    nargs='*',
+    default=None,
+    help="Deprecated argument - Do not use",
+)
+parser.add_argument(
+    "-m", "--model-path",
+    type=str,
+    default=None,
+    help="Deprecated argument - Do not use"
+)
+parser.add_argument(
+    "-f", "--fuel-tools",
+    action='store_true',
+    help="Deprecated argument - Do not use"
+)
+parser.add_argument(
+    "-i", "--include",
+    type=str,
+    default=None,
+    help="Deprecated argument - Do not use",
+)
+parser.add_argument(
+    "-e", "--export-path",
+    type=str,
+    default=None,
+    help="Deprecated argument - Do not use",
+)
 
 
 def load_cache(cache_file_path: str):
@@ -180,6 +218,32 @@ def update_cache(cache_file_path: str, rebuild: bool):
 
 def main():
     args = parser.parse_args()
+
+    using_deprecated_arg = (
+        args.INPUT_YAML
+        or args.model_path
+        or args.fuel_tools
+        or args.include
+        or args.export_path
+    )
+
+    if using_deprecated_arg:
+        logger.info(
+            "A deprecated argument has been used when calling "
+            "building_map_model_downloader"
+        )
+
+        # We print to stderr because By default colcon build will display
+        # stderr output to users while suppressing stdout, so sending this to
+        # stderr will make users more likely to see it.
+        print(
+            "DEPRECATED: The arguments for building_map_model_downloader have "
+            "changed. If you are using it in the CMakeLists.txt of a map "
+            "package, then you can remove all the command line arguments for "
+            "it and run it a single time instead of running inside a foreach "
+            "loop.",
+            file=sys.stderr
+        )
     update_cache(args.cache, args.force)
 
 
