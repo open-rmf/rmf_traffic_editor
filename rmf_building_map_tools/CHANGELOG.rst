@@ -2,6 +2,12 @@
 Changelog for package rmf\_building\_map\_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Download models through Gazebo (`#535 <https://github.com/open-rmf/rmf_traffic_editor/issues/535>`_)
+  Co-authored-by: Grey <mxgrey@intrinsic.ai>
+* Contributors: Luca Della Vedova
+
 1.13.0 (2025-06-09)
 -------------------
 * Adding "mutex" to vertex and lane param (`#533 <https://github.com/open-rmf/rmf_traffic_editor/issues/533>`_)

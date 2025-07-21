@@ -2,6 +2,11 @@
 Changelog for package rmf\_traffic\_editor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix bug in angle difference calculation near ±π (`#538 <https://github.com/open-rmf/rmf_traffic_editor/issues/538>`_)
+* Contributors: kj
+
 1.13.0 (2025-06-09)
 -------------------
 

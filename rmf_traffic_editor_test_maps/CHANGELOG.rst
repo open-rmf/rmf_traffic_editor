@@ -2,6 +2,12 @@
 Changelog for package rmf\_traffic\_editor\_test\_maps
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Download models through Gazebo (`#535 <https://github.com/open-rmf/rmf_traffic_editor/issues/535>`_)
+  Co-authored-by: Grey <mxgrey@intrinsic.ai>
+* Contributors: Luca Della Vedova
+
 1.13.0 (2025-06-09)
 -------------------
 
