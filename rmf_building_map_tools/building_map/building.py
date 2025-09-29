@@ -496,57 +496,57 @@ class Building:
             crs_ele = SubElement(world, 'crs')
             crs_ele.text = self.global_transform.crs_name
 
-        gui_ele = world.find('gui')
+        # gui_ele = world.find('gui')
 
-        if not skip_camera_pose:
-            c = self.center()
-            # Transforming camera to account for offsets if
-            # not in reference_image mode and when a floor polygon is defined.
-            if self.global_transform and c != (0, 0):
-                camera_pose = f'{c[0] - self.global_transform.x}  \
-                {c[1]-20 - self.global_transform.y} 10 0 0.6 1.57'
-            else:
-                camera_pose = f'{c[0]} {c[1]-20} 10 0 0.6 1.57'
-            # add floor-toggle GUI plugin parameters
-            plugin_ele = gui_ele.find('.//plugin[@filename="MinimalScene"]')
-            camera_pose_ele = plugin_ele.find('camera_pose')
-            camera_pose_ele.text = camera_pose
+        # if not skip_camera_pose:
+        #     c = self.center()
+        #     # Transforming camera to account for offsets if
+        #     # not in reference_image mode and when a floor polygon is defined.
+        #     if self.global_transform and c != (0, 0):
+        #         camera_pose = f'{c[0] - self.global_transform.x}  \
+        #         {c[1]-20 - self.global_transform.y} 10 0 0.6 1.57'
+        #     else:
+        #         camera_pose = f'{c[0]} {c[1]-20} 10 0 0.6 1.57'
+        #     # add floor-toggle GUI plugin parameters
+        #     plugin_ele = gui_ele.find('.//plugin[@filename="MinimalScene"]')
+        #     camera_pose_ele = plugin_ele.find('camera_pose')
+        #     camera_pose_ele.text = camera_pose
 
-        toggle_floors_ele = SubElement(
-            gui_ele,
-            'plugin',
-            {'name': 'toggle_floors', 'filename': 'toggle_floors'})
+        # toggle_floors_ele = SubElement(
+        #     gui_ele,
+        #     'plugin',
+        #     {'name': 'toggle_floors', 'filename': 'toggle_floors'})
 
-        for level_name, level in self.levels.items():
-            floor_ele = SubElement(
-                toggle_floors_ele,
-                'floor',
-                {
-                    'name': level_name,
-                    'model_name': f'{self.name}_{level_name}'})
+        # for level_name, level in self.levels.items():
+        #     floor_ele = SubElement(
+        #         toggle_floors_ele,
+        #         'floor',
+        #         {
+        #             'name': level_name,
+        #             'model_name': f'{self.name}_{level_name}'})
 
-            for model in level.models:
-                if model.static:
-                    model_ele = SubElement(
-                        floor_ele,
-                        'model',
-                        {'name': model.name})
+        #     for model in level.models:
+        #         if model.static:
+        #             model_ele = SubElement(
+        #                 floor_ele,
+        #                 'model',
+        #                 {'name': model.name})
 
-            for door in level.doors:
-                model_ele = SubElement(
-                    floor_ele,
-                    'model',
-                    {'name': door.params['name'].value})
+        #     for door in level.doors:
+        #         model_ele = SubElement(
+        #             floor_ele,
+        #             'model',
+        #             {'name': door.params['name'].value})
 
-            for lift_name, lift in self.lifts.items():
-                if level_name in lift.level_doors:
-                    for door in lift.doors:
-                        if door.name in lift.level_doors[level_name]:
-                            model_ele = SubElement(
-                                floor_ele,
-                                'model',
-                                {'name': (f'ShaftDoor_{lift_name}_' +
-                                          f'{level_name}_{door.name}')})
+        #     for lift_name, lift in self.lifts.items():
+        #         if level_name in lift.level_doors:
+        #             for door in lift.doors:
+        #                 if door.name in lift.level_doors[level_name]:
+        #                     model_ele = SubElement(
+        #                         floor_ele,
+        #                         'model',
+        #                         {'name': (f'ShaftDoor_{lift_name}_' +
+        #                                   f'{level_name}_{door.name}')})
 
         return sdf
 
