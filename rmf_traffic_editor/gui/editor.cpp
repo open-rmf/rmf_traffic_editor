@@ -232,9 +232,24 @@ Editor::Editor()
   property_editor->verticalHeader()->setSectionResizeMode(
     QHeaderView::ResizeToContents);
   property_editor->setAutoFillBackground(true);
+  property_editor->setSelectionBehavior(QAbstractItemView::SelectRows);
   connect(
     property_editor, &QTableWidget::cellChanged,
     this, &Editor::property_editor_cell_changed);
+  connect(
+    property_editor, &QTableWidget::itemSelectionChanged,
+    [this]()
+    {
+      const int row = property_editor->currentRow();
+      if (row < 0)
+      {
+        delete_param_button->setEnabled(false);
+        return;
+      }
+      QTableWidgetItem* item = property_editor->item(row, 0);
+      delete_param_button->setEnabled(
+        item && item->data(Qt::UserRole).toBool());
+    });
 
   QHBoxLayout* param_button_layout = new QHBoxLayout;
 
@@ -1355,10 +1370,31 @@ void Editor::add_param_button_clicked()
 
 void Editor::delete_param_button_clicked()
 {
-  QMessageBox::about(
-    this,
-    "work in progress",
-    "TODO: something...sorry. For now, hand-edit the YAML.");
+  const int row = property_editor->currentRow();
+  if (row < 0)
+    return;
+
+  QTableWidgetItem* name_item = property_editor->item(row, 0);
+  if (!name_item)
+    return;
+
+  const std::string param_name = name_item->text().toStdString();
+
+  for (size_t i = 0; i < building.levels[level_idx].vertices.size(); i++)
+  {
+    Vertex& v = building.levels[level_idx].vertices[i];
+    if (!v.selected)
+      continue;
+
+    auto it = v.params.find(param_name);
+    if (it != v.params.end())
+    {
+      v.params.erase(it);
+      populate_property_editor(v, i);
+      setWindowModified(true);
+      return;
+    }
+  }
 }
 
 void Editor::layer_edit_button_clicked(const int row_idx)
@@ -1543,11 +1579,15 @@ void Editor::populate_property_editor(const Vertex& vertex, const int index)
       QString::fromStdString(param.first),
       param.second.to_qstring(),
       true);
+    // mark this row as a deletable param so itemSelectionChanged can detect it
+    property_editor->item(row, 0)->setData(Qt::UserRole, true);
     row++;
   }
 
   add_param_button->setEnabled(true);
   add_param_button->setProperty("object_type", QVariant("vertex"));
+  delete_param_button->setProperty("object_type", QVariant("vertex"));
+  // delete_param_button enable state is managed by itemSelectionChanged
 
   property_editor->blockSignals(false);  // re-enable callbacks
 }
