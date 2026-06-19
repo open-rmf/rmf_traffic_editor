@@ -214,6 +214,7 @@ Editor::Editor()
   right_tab_widget->addTab(crowd_sim_table, "crowds");
 
   property_editor = new QTableWidget;
+  property_editor->viewport()->installEventFilter(this);
   property_editor->setStyleSheet(
     "QTableWidget { background-color: #e0e0e0; color: black; gridline-color: #606060; } QLineEdit { background:white; }");
   property_editor->setMinimumSize(600, 200);
@@ -694,6 +695,24 @@ void Editor::restore_previous_viewport()
     printf("resetting view...\n");
     zoom_reset();
   }
+}
+
+bool Editor::eventFilter(QObject* obj, QEvent* event)
+{
+  if (obj == property_editor->viewport() &&
+      event->type() == QEvent::MouseButtonPress)
+  {
+    QMouseEvent* me = static_cast<QMouseEvent*>(event);
+    QModelIndex idx = property_editor->indexAt(me->pos());
+    if (!idx.isValid())
+    {
+      // clicking the empty space would clear the selection
+      property_editor->clearSelection();
+      property_editor->setCurrentIndex(QModelIndex());
+      delete_param_button->setEnabled(false);
+    }
+  }
+  return QMainWindow::eventFilter(obj, event);
 }
 
 bool Editor::load_previous_building()

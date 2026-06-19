@@ -92,6 +92,9 @@ public:
   /// Attempt to restore the previous viewport scale and center point
   void restore_previous_viewport();
 
+  /// Event filter to catch mouse events on the map view and handle them in the editor
+  bool eventFilter(QObject* obj, QEvent* event) override;
+
 protected:
   void mousePressEvent(QMouseEvent* e);
   void mouseReleaseEvent(QMouseEvent* e);
