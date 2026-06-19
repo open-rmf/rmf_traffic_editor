@@ -1391,7 +1391,10 @@ void Editor::delete_param_button_clicked()
     {
       v.params.erase(it);
       populate_property_editor(v, i);
+      property_editor->clearSelection(); // prevents itemSelectionChanged re-enabling it
+      delete_param_button->setEnabled(false);
       setWindowModified(true);
+      create_scene();
       return;
     }
   }
