@@ -700,7 +700,7 @@ void Editor::restore_previous_viewport()
 bool Editor::eventFilter(QObject* obj, QEvent* event)
 {
   if (obj == property_editor->viewport() &&
-      event->type() == QEvent::MouseButtonPress)
+    event->type() == QEvent::MouseButtonPress)
   {
     QMouseEvent* me = static_cast<QMouseEvent*>(event);
     QModelIndex idx = property_editor->indexAt(me->pos());
