@@ -206,7 +206,7 @@ class BuildingMapServer(Node):
                         p = Param()
                         p.name = str_param
                         p.type = p.TYPE_STRING
-                        p.value_string = v[2][str_param]
+                        p.value_string = str(v[2][str_param])
                         gn.params.append(p)
 
                 for bool_param in ["is_charger",
