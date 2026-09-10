@@ -152,6 +152,18 @@ bool Building::load(const string& _filename)
     }
   }
 
+  zones.clear();
+  if (y["zones"] && y["zones"].IsMap())
+  {
+    const YAML::Node& y_zones = y["zones"];
+    for (YAML::const_iterator it = y_zones.begin(); it != y_zones.end(); ++it)
+    {
+      Zone zone;
+      zone.from_yaml(it->first.as<string>(), it->second, levels);
+      zones.push_back(zone);
+    }
+  }
+
   if (y["graphs"] && y["graphs"].IsMap())
   {
     const YAML::Node& g_map = y["graphs"];
@@ -199,6 +211,12 @@ bool Building::save()
     y["lifts"][lift.name] = lift.to_yaml();
   if (lifts.empty())
     y["lifts"].SetStyle(YAML::EmitterStyle::Flow);
+
+  y["zones"] = YAML::Node(YAML::NodeType::Map);
+  for (const auto& zone : zones)
+    y["zones"][zone.name] = zone.to_yaml();
+  if (zones.empty())
+    y["zones"].SetStyle(YAML::EmitterStyle::Flow);
 
   if (crowd_sim_impl)
     y["crowd_sim"] = crowd_sim_impl->to_yaml();
@@ -433,6 +451,24 @@ void Building::draw_lifts(QGraphicsScene* scene, const int level_idx)
       t.dx,
       t.dy,
       t.rotation);
+  }
+}
+
+void Building::draw_zones(const RenderingOptions& rendering_options,
+  QGraphicsScene* scene, const int level_idx)
+{
+  const Level& level = levels[level_idx];
+  for (const auto& zone : zones)
+  {
+    if (zone.level != level.name)
+      continue;
+
+    zone.draw(
+      scene,
+      level.drawing_meters_per_pixel,
+      level.name,
+      true,
+      level.vertices);
   }
 }
 
@@ -790,6 +826,7 @@ void Building::draw(
     coordinate_system);
 
   draw_lifts(scene, level_idx);
+  draw_zones(rendering_options, scene, level_idx);
 }
 
 Polygon* Building::get_selected_polygon(const int level_idx)
