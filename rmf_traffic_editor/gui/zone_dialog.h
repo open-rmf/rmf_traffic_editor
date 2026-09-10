@@ -19,6 +19,7 @@
 #define ZONE_DIALOG_H
 
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 #include <QDialog>
@@ -92,6 +93,7 @@ private:
     return true;
   }
 
+  bool has_duplicate_priority(const std::vector<InternalVertex>& vertices);
 
   bool confirm_warning(const QString& text);
 

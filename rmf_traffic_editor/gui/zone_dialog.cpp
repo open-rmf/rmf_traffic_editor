@@ -333,6 +333,19 @@ bool ZoneDialog::is_zone_name_unique(const std::string& name) const
 }
 
 // ======================================================================================================================
+bool ZoneDialog::has_duplicate_priority(
+  const std::vector<InternalVertex>& vertices)
+{
+  std::unordered_set<uint> seen;
+  for (const auto& v : vertices)
+  {
+    if (!seen.insert(v.priority).second)
+      return true;
+  }
+  return false;
+}
+
+// ======================================================================================================================
 bool ZoneDialog::confirm_warning(const QString& text)
 {
   QDialog dialog(this);
@@ -462,6 +475,13 @@ void ZoneDialog::ok_button_clicked()
           "Duplicate internal vertex [" + iv.name + "]."));
       return;
     }
+  }
+
+  if (has_duplicate_priority(_zone.internal_vertices))
+  {
+    if (!confirm_warning(
+        "Duplicate internal vertex priority."))
+      return;
   }
 
   if (!has_entry || !has_exit)
