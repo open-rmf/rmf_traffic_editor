@@ -399,7 +399,7 @@ void ZoneDialog::ok_button_clicked()
     if (ev.name.empty())
     {
       QMessageBox::critical(this, "Error",
-        "External vertex name cannot be empty.");
+        "External vertex name cannot be empty");
       return;
     }
 
@@ -408,20 +408,12 @@ void ZoneDialog::ok_button_clicked()
     {
       QMessageBox::critical(this, "Error",
         QString::fromStdString(
-          "Duplicate external vertex [" + ev.name + "]."));
+          "Duplicate external vertex [" + ev.name + "]"));
       return;
     }
 
     has_entry = has_entry || ev.is_entry_point;
     has_exit = has_exit || ev.is_exit_point;
-  }
-
-  if (_zone.internal_vertices.empty())
-  {
-    if (!confirm_warning(
-        "This zone has no internal vertices, so a robot has nowhere to go "
-        "inside it."))
-      return;
   }
 
   for (std::size_t i = 0; i < _zone.internal_vertices.size(); i++)
@@ -430,14 +422,14 @@ void ZoneDialog::ok_button_clicked()
     if (iv.name.empty())
     {
       QMessageBox::critical(this, "Error",
-        "Internal vertex name cannot be empty.");
+        "Internal vertex name cannot be empty");
       return;
     }
 
     if (iv.group.empty())
     {
       QMessageBox::critical(this, "Error",
-        "Internal vertex group cannot be empty.");
+        "Internal vertex group cannot be empty");
       return;
     }
 
@@ -448,7 +440,7 @@ void ZoneDialog::ok_button_clicked()
         QMessageBox::critical(this, "Error",
           QString::fromStdString(
             "Vertex name [" + iv.name + "] already exists on level [" +
-            level.name + "]. Internal vertex names must be unique."));
+            level.name + "]. Internal vertex names must be unique"));
         return;
       }
     }
@@ -463,7 +455,7 @@ void ZoneDialog::ok_button_clicked()
         QMessageBox::critical(this, "Error",
           QString::fromStdString(
             "Vertex name [" + iv.name + "] is already used by zone [" +
-            zone.name + "]. Internal vertex names must be unique."));
+            zone.name + "]. Internal vertex names must be unique"));
         return;
       }
     }
@@ -472,7 +464,7 @@ void ZoneDialog::ok_button_clicked()
     {
       QMessageBox::critical(this, "Error",
         QString::fromStdString(
-          "Duplicate internal vertex [" + iv.name + "]."));
+          "Duplicate internal vertex [" + iv.name + "]"));
       return;
     }
   }
@@ -480,21 +472,21 @@ void ZoneDialog::ok_button_clicked()
   if (has_duplicate_priority(_zone.internal_vertices))
   {
     if (!confirm_warning(
-        "Duplicate internal vertex priority."))
+        "Duplicate internal vertex priority"))
       return;
   }
 
   if (!has_entry || !has_exit)
   {
-    QStringList missing;
-    if (!has_entry)
-      missing.append("Zone has no entry point.");
-    if (!has_exit)
-      missing.append("Zone has no exit point.");
+    QString missing;
+    if (!has_entry && !has_exit)
+      missing = "entry and exit points";
+    else if (!has_entry)
+      missing = "entry point";
+    else if (!has_exit)
+      missing = "exit point";
 
-    if (!confirm_warning(
-        missing.join("\n") +
-        "\nRobots will not be able to enter or leave this zone."))
+    if (!confirm_warning("Zone has no " + missing))
       return;
   }
 
@@ -510,8 +502,8 @@ void ZoneDialog::ok_button_clicked()
   if (!outside.isEmpty())
   {
     if (!confirm_warning(
-        "These internal vertices lie outside the zone bounds:\n  " +
-        outside.join("\n  ")))
+        "These internal vertices lie outside the zone bounds:\n -  " +
+        outside.join("\n -  ")))
       return;
   }
 
@@ -754,7 +746,7 @@ void ZoneDialog::in_vertex_table_cell_changed(int row, int col)
     if (priority < 1)
     {
       QMessageBox::warning(this, "Invalid priority",
-        "Priority must be a positive integer");
+        "Priority must be a positive integer.");
       _internal_vertex_table->blockSignals(true);
       _internal_vertex_table->item(row, col)->setText(
         QString::number(vertex.priority));
