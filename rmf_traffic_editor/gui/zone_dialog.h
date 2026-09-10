@@ -92,9 +92,6 @@ private:
     return true;
   }
 
-  bool level_has_vertex(
-    const std::string& level_name,
-    const std::string& vertex_name) const;
 
   bool confirm_warning(const QString& text);
 

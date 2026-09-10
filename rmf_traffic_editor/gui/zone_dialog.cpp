@@ -80,7 +80,10 @@ ZoneDialog::ZoneDialog(Zone& zone, Building& building)
       for (const auto& level : _building.levels)
       {
         if (level.name == _zone.level)
+        {
           _zone.elevation = level.elevation;
+          _zone.external_vertices.clear();
+        }
       }
       update_ex_vertex_table();
       update_zone_view();
@@ -330,25 +333,6 @@ bool ZoneDialog::is_zone_name_unique(const std::string& name) const
 }
 
 // ======================================================================================================================
-bool ZoneDialog::level_has_vertex(
-  const std::string& level_name,
-  const std::string& vertex_name) const
-{
-  for (const auto& level : _building.levels)
-  {
-    if (level.name != level_name)
-      continue;
-
-    for (const auto& v : level.vertices)
-    {
-      if (v.name == vertex_name)
-        return true;
-    }
-  }
-  return false;
-}
-
-// ======================================================================================================================
 bool ZoneDialog::confirm_warning(const QString& text)
 {
   QDialog dialog(this);
@@ -402,14 +386,7 @@ void ZoneDialog::ok_button_clicked()
     if (ev.name.empty())
     {
       QMessageBox::critical(this, "Error",
-        "Select a vertex for every external vertex row, or delete the row.");
-      return;
-    }
-
-    if (!level_has_vertex(_zone.level, ev.name))
-    {
-      QMessageBox::critical(this, "Error",
-        "Reset external vertices that were on a different level.");
+        "External vertex name cannot be empty.");
       return;
     }
 
