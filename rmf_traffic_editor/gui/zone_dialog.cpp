@@ -727,19 +727,19 @@ void ZoneDialog::in_vertex_table_cell_changed(int row, int col)
 
   InternalVertex& vertex = _zone.internal_vertices[row];
 
-  if (col == 1)  // name
+  if (col == 1) // name
   {
     const std::string name = _internal_vertex_table->
       item(row, col)->text().toStdString();
     vertex.name = name;
   }
-  if (col == 2)  // x
+  if (col == 2) // x
     vertex.x = _internal_vertex_table->item(row, col)->text().toDouble();
-  if (col == 3)  // y
+  if (col == 3) // y
     vertex.y = _internal_vertex_table->item(row, col)->text().toDouble();
-  if (col == 4)  // group
+  if (col == 4) // group
     vertex.group = _internal_vertex_table->item(row, col)->text().toStdString();
-  if (col == 5)  // priority
+  if (col == 5) // priority
   {
     const uint priority = _internal_vertex_table->
       item(row, col)->text().toUInt();
