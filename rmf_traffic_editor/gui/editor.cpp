@@ -62,7 +62,7 @@
 #include "traffic_table.h"
 #include "ui_new_building_dialog.h"
 #include "ui_transform_dialog.h"
-
+#include "zone_table.h"
 
 using std::string;
 using std::isnan;
@@ -179,6 +179,12 @@ Editor::Editor()
     &TableList::redraw,
     [this]() { this->create_scene(); });
 
+  zone_table = new ZoneTable;
+  connect(
+    zone_table,
+    &TableList::redraw,
+    [this]() { this->create_scene(); });
+
   traffic_table = new TrafficTable;
   connect(
     traffic_table,
@@ -210,6 +216,7 @@ Editor::Editor()
   right_tab_widget->addTab(level_table, "levels");
   right_tab_widget->addTab(layer_table, "layers");
   right_tab_widget->addTab(lift_table, "lifts");
+  right_tab_widget->addTab(zone_table, "zones");
   right_tab_widget->addTab(traffic_table, "graphs");
   right_tab_widget->addTab(crowd_sim_table, "crowds");
 
@@ -2911,6 +2918,7 @@ void Editor::update_tables()
 {
   level_table->update(building);
   lift_table->update(building);
+  zone_table->update(building);
   traffic_table->update(rendering_options);
   crowd_sim_table->update();
   layer_table->update(building, level_idx, layer_idx);
