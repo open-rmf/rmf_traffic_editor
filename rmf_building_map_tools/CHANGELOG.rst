@@ -2,8 +2,8 @@
 Changelog for package rmf\_building\_map\_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.14.1 (2026-09-25)
+-------------------
 * Change template to be compatible with both Kilted and Jazzy (`#542 <https://github.com/open-rmf/rmf_traffic_editor/issues/542>`_)
 * Contributors: Luca Della Vedova
 
