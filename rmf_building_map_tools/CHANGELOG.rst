@@ -2,8 +2,8 @@
 Changelog for package rmf\_building\_map\_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.15.0 (2026-09-25)
+-------------------
 * applied explicit conversion to string for str_param in dock_name, pickup_dispenser, dropoff_ingestor, and mutex. (`#547 <https://github.com/open-rmf/rmf_traffic_editor/issues/547>`_)
 * Change template to be compatible with both Kilted and Jazzy (`#542 <https://github.com/open-rmf/rmf_traffic_editor/issues/542>`_)
 * Contributors: Francesco Fallica, Luca Della Vedova
