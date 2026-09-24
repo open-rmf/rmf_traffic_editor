@@ -2,8 +2,8 @@
 Changelog for package rmf\_traffic\_editor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.15.0 (2026-09-25)
+-------------------
 * Enabled Delete property button to the custom parameters in vertices GUI (`#545 <https://github.com/open-rmf/rmf_traffic_editor/issues/545>`_)
 * Contributors: Francesco Fallica
 
