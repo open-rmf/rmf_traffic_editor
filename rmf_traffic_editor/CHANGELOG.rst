@@ -2,6 +2,11 @@
 Changelog for package rmf\_traffic\_editor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Enabled Delete property button to the custom parameters in vertices GUI (`#545 <https://github.com/open-rmf/rmf_traffic_editor/issues/545>`_)
+* Contributors: Francesco Fallica
+
 1.14.0 (2025-07-21)
 -------------------
 * Fix bug in angle difference calculation near ±π (`#538 <https://github.com/open-rmf/rmf_traffic_editor/issues/538>`_)

@@ -2,6 +2,11 @@
 Changelog for package rmf\_building\_map\_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Change template to be compatible with both Kilted and Jazzy (`#542 <https://github.com/open-rmf/rmf_traffic_editor/issues/542>`_)
+* Contributors: Luca Della Vedova
+
 1.14.0 (2025-07-21)
 -------------------
 * Download models through Gazebo (`#535 <https://github.com/open-rmf/rmf_traffic_editor/issues/535>`_)
