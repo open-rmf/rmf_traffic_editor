@@ -57,6 +57,7 @@
 #include "lift_table.h"
 #include "map_view.h"
 #include "model_dialog.h"
+#include "mutex_table.h"
 #include "preferences_dialog.h"
 #include "preferences_keys.h"
 #include "traffic_table.h"
@@ -194,6 +195,29 @@ Editor::Editor()
       traffic_table->update(rendering_options);
     });
 
+  mutex_table = new MutexTable;
+  connect(
+    mutex_table,
+    &QTableWidget::currentCellChanged,
+    [this](int row, int /*col*/, int prev_row, int /*prev_col*/)
+    {
+      if (row < 0 || row == prev_row)
+        return;
+      mutex_table->set_highlight(row, rendering_options);
+      create_scene();
+    });
+  connect(
+    mutex_table,
+    &QTableWidget::cellClicked,
+    [this](int row, int /*col*/)
+    {
+      // clicks that moved the current row were already handled above
+      if (row != mutex_table->row_before_press())
+        return;
+      mutex_table->toggle_highlight(row, rendering_options);
+      create_scene();
+    });
+
   crowd_sim_table = new CrowdSimEditorTable(building);
   connect(
     crowd_sim_table,
@@ -211,6 +235,7 @@ Editor::Editor()
   right_tab_widget->addTab(layer_table, "layers");
   right_tab_widget->addTab(lift_table, "lifts");
   right_tab_widget->addTab(traffic_table, "graphs");
+  right_tab_widget->addTab(mutex_table, "mutexes");
   right_tab_widget->addTab(crowd_sim_table, "crowds");
 
   property_editor = new QTableWidget;
@@ -1796,6 +1821,9 @@ bool Editor::create_scene()
   map_view->draw_tiles();
 
   building.draw(scene, level_idx, editor_models, rendering_options);
+
+  // refreshed here so edits to "mutex" params are reflected immediately
+  mutex_table->update(building, rendering_options);
 
   return true;
 }

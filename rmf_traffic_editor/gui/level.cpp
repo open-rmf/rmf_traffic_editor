@@ -19,6 +19,7 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
+#include <set>
 
 #include "ceres/ceres.h"
 #include <QGraphicsOpacityEffect>
@@ -805,18 +806,24 @@ void Level::draw_lane(
     default: break;  // will render as dark grey
   }
 
+  const bool mutex_highlighted =
+    opts.is_mutex_highlighted(graph_idx, edge.mutex_group());
+  if (mutex_highlighted)
+    color.setRgbF(1.0, 0.55, 0.0);
+
   // always draw lane as red if it's selected
   if (edge.selected)
     color.setRgbF(0.5, 0.0, 0.0);
 
   // always draw lanes somewhat transparent
-  color.setAlphaF(0.5);
+  color.setAlphaF(mutex_highlighted ? 0.85 : 0.5);
 
   QGraphicsLineItem* lane_item = scene->addLine(
     v_start.x, v_start.y,
     v_end.x, v_end.y,
     QPen(QBrush(color), lane_pen_width, Qt::SolidLine, Qt::RoundCap));
-  lane_item->setZValue(edge.get_graph_idx() + 1.0);
+  lane_item->setZValue(
+    mutex_highlighted ? 15.0 : edge.get_graph_idx() + 1.0);
 
   // draw the orientation icon, if specified
   auto orientation_it = edge.params.find("orientation");
@@ -1282,6 +1289,37 @@ void Level::draw(
       drawing_meters_per_pixel,
       vertex_name_font,
       coordinate_system);
+
+  if (!rendering_options.highlight_mutex_group.empty())
+  {
+    // a waypoint belongs to a graph if a lane of that graph touches it
+    std::set<int> graph_vertices;
+    for (const auto& edge : edges)
+    {
+      if (edge.type == Edge::LANE &&
+        edge.get_graph_idx() == rendering_options.highlight_mutex_graph_idx)
+      {
+        graph_vertices.insert(edge.start_idx);
+        graph_vertices.insert(edge.end_idx);
+      }
+    }
+
+    const double r = 2.0 * vertex_radius / drawing_meters_per_pixel;
+    const QColor highlight_color = QColor::fromRgbF(1.0, 0.55, 0.0, 0.7);
+    QPen highlight_pen(highlight_color);
+    highlight_pen.setWidthF(r / 4.0);
+    for (const int idx : graph_vertices)
+    {
+      const Vertex& v = vertices[idx];
+      if (v.mutex_group() != rendering_options.highlight_mutex_group)
+        continue;
+      QGraphicsEllipseItem* item = scene->addEllipse(
+        v.x - r, v.y - r, 2 * r, 2 * r,
+        highlight_pen,
+        QBrush(highlight_color));
+      item->setZValue(19.5);
+    }
+  }
 
   for (const auto& f : fiducials)
     f.draw(scene, drawing_meters_per_pixel);
