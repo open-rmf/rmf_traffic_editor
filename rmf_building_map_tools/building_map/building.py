@@ -20,6 +20,7 @@ from .etree_utils import indent_etree
 from .geopackage import GeoPackage
 from .level import Level
 from .lift import Lift
+from .zone import Zone
 from .material_utils import copy_texture
 from .param_value import ParamValue
 from .passthrough_transform import PassthroughTransform
@@ -162,6 +163,16 @@ class Building:
                          self.coordinate_system)
 
         self.set_lift_vert_lists()
+
+        self.zones = {}
+        if 'zones' in yaml_node:
+            transform = self.ref_level.transform
+            for zone_name, zone_yaml in yaml_node['zones'].items():
+                transform = self.levels[str(zone_yaml['level'])].transform
+                self.zones[zone_name] = \
+                    Zone(zone_yaml, zone_name, transform, self.coordinate_system)
+
+        self.set_level_zones()
 
     def parse_geojson(self, json_node):
         self.levels = {}
@@ -311,6 +322,10 @@ class Building:
         for level_name, level in self.levels.items():
             level.set_lift_vert_lists(lift_vert_lists, self.lifts)
 
+    def set_level_zones(self):
+        for zone_name, zone in self.zones.items():
+            self.levels[zone.level].zones[zone_name] = zone
+
     def transform_all_vertices(self):
         """ Transform all vertices on all levels to a unified system """
         for level_name, level in self.levels.items():
@@ -370,6 +385,7 @@ class Building:
             g['levels'] = {}
             g['lifts'] = {}
             g['doors'] = {}
+            g['zones'] = {}
 
             if self.coordinate_system == CoordinateSystem.web_mercator:
                 g['crs_name'] = self.global_transform.crs_name
@@ -385,11 +401,16 @@ class Building:
                 g['offset'] = [tx, ty]
 
             empty = True
+            reachable_zones = []
             for level_name, level in self.levels.items():
                 level_graph = level.generate_nav_graph(i)
                 g['levels'][level_name] = level_graph
                 if level_graph['lanes']:
                     empty = False
+
+                for vertex in level_graph['vertices']:
+                    if 'zone' in vertex[2]:
+                        reachable_zones.append(vertex[2]['zone'])
 
                 for door_edge in level.doors:
                     door_edge.calc_statistics(level.transformed_vertices)
@@ -406,6 +427,19 @@ class Building:
                     'position': [lift.x, lift.y, lift.yaw],
                     'dims': [lift.width, lift.depth]
                 }
+
+            for zone_name, zone in self.zones.items():
+                if zone_name not in reachable_zones:
+                    continue
+
+                g['zones'][zone_name] = {
+                    'dims': [zone.width, zone.depth],
+                    'position': [zone.x, zone.y],
+                    'orientation': zone.yaw,
+                    'level': zone.level,
+                    'type': zone.type,
+                }
+
             if not empty:
                 nav_graphs[f'{i}'] = g
         return nav_graphs

@@ -35,6 +35,7 @@ class Level:
         self.vertices = []
         self.transformed_vertices = []  # will be calculated in a later pass
         self.lift_vert_lists = {}  # will be calculated in a later pass
+        self.zones = {}  # will be set by the building in a later pass
         self.meas = []
         self.lanes = []
         self.walls = []
@@ -81,6 +82,8 @@ class Level:
         self.transformed_vertices = []  # will be calculated in a later pass
 
         self.lift_vert_lists = {}  # will be calculated in a later pass
+
+        self.zones = {}  # will be set by the building in a later pass
 
         self.meas = []
         if 'measurements' in yaml_node:
@@ -546,7 +549,85 @@ class Level:
                     p['undock_name'] = beginning_dock
                 nav_data['lanes'].append([start_idx, end_idx, p])
 
+        if nav_data['lanes']:
+            self.generate_zone_vertices_and_lanes(nav_data, graph_idx)
+
         return nav_data
+
+    def generate_zone_vertices_and_lanes(self, nav_data, graph_idx):
+        """ Append each zone's internal vertices and its derived transition
+        lanes to the nav graph for this level. """
+        num_level_vertices = len(nav_data['vertices'])
+
+        for zone_name, zone in self.zones.items():
+            external_idx = {}
+
+            for ev_name, ev in zone.external_vertices.items():
+                for idx in range(num_level_vertices):
+                    vertex = nav_data['vertices'][idx]
+                    name = vertex[2].get('name', '')
+                    if ev_name and name == ev_name:
+                        external_idx[ev_name] = idx
+                        break
+
+            # the zone is not reachable from this nav graph
+            if not external_idx:
+                continue
+
+            for idx in range(num_level_vertices):
+                vertex = nav_data['vertices'][idx]
+                if zone.contains_point(vertex[0], vertex[1]):
+                    name = vertex[2].get('name', '')
+                    label = name if name else '(unnamed)'
+                    print(
+                        f'WARNING: regular vertex [{label}] at index [{idx}] in '
+                        f'nav graph [{graph_idx}] lies inside zone [{zone_name}]')
+
+            internal_idx = []
+            for v in zone.internal_vertices.values():
+                x, y = v['location']
+                if not zone.contains_point(x, y):
+                    print(
+                        f'WARNING: zone [{zone_name}] internal vertex '
+                        f'[{v["name"]}] lies outside the zone bounds')
+
+                internal_idx.append(len(nav_data['vertices']))
+                nav_data['vertices'].append([x, y, {
+                    'name': v['name'],
+                    'group': v['group'],
+                    'priority': v['priority'],
+                    'zone': zone_name}])
+
+            entry_lanes = 0
+            exit_lanes = 0
+            for ev_name, ev in zone.external_vertices.items():
+                if ev_name not in external_idx:
+                    continue
+                ev_idx = external_idx[ev_name]
+
+                for iv_idx in internal_idx:
+                    if ev['is_entry_point']:
+                        nav_data['lanes'].append([ev_idx, iv_idx, {
+                            'speed_limit': 0,
+                            'zone': {'name': zone_name,
+                                     'transition_type': 'entry'}}])
+                        entry_lanes += 1
+
+                    if ev['is_exit_point']:
+                        nav_data['lanes'].append([iv_idx, ev_idx, {
+                            'speed_limit': 0,
+                            'zone': {'name': zone_name,
+                                     'transition_type': 'exit'}}])
+                        exit_lanes += 1
+
+            if not entry_lanes:
+                print(
+                    f'WARNING: zone [{zone_name}] has no entry lane in nav '
+                    f'graph [{graph_idx}]')
+            if not exit_lanes:
+                print(
+                    f'WARNING: zone [{zone_name}] has no exit lane in nav '
+                    f'graph [{graph_idx}]')
 
     def edge_heading(self, edge):
         vs_x, vs_y = self.transformed_vertices[edge.start_idx].xy()
