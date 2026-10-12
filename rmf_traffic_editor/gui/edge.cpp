@@ -207,3 +207,13 @@ bool Edge::contains(const int idx) const
 {
   return start_idx == idx || end_idx == idx;
 }
+
+std::string Edge::mutex_group() const
+{
+  if (type != LANE)
+    return "";
+  auto it = params.find("mutex");
+  if (it == params.end() || it->second.type != Param::STRING)
+    return "";
+  return it->second.value_string;
+}
