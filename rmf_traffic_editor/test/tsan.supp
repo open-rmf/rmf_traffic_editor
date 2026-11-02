@@ -1,0 +1,15 @@
+# ThreadSanitizer suppressions for Qt/DBus/GLib libraries.
+
+called_from_lib:libQt5Core.so.5
+called_from_lib:libQt5Gui.so.5
+called_from_lib:libQt5Test.so.5
+called_from_lib:libQt5DBus.so.5
+called_from_lib:libdbus-1.so.3
+called_from_lib:libglib-2.0.so.0
+called_from_lib:libgio-2.0.so.0
+
+# Lock-order-inversion warnings are a separate TSan check; called_from_lib does
+# not cover them, so they need explicit deadlock entries.
+deadlock:dbus_bus_register
+deadlock:dbus_connection_close
+deadlock:dbus_connection_send_with_reply_and_block
