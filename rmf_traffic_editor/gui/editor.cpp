@@ -35,7 +35,7 @@
 #if AMENT_INDEX_CPP_VERSION_GTE(1, 14, 0)
 #include "ament_index_cpp/get_package_share_path.hpp"
 #else
- #include "ament_index_cpp/get_package_share_directory.hpp"
+#include "ament_index_cpp/get_package_share_directory.hpp"
 #endif
 
 #include "ament_index_cpp/get_package_prefix.hpp"
