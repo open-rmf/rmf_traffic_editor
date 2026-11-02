@@ -85,6 +85,9 @@ set(gui_sources
   gui/transform.cpp
   gui/vertex.cpp
   gui/yaml_utils.cpp
+  gui/zone.cpp
+  gui/zone_dialog.cpp
+  gui/zone_table.cpp
 
   #crowd_sim related
   gui/multi_select_combo_box.cpp

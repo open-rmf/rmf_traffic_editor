@@ -33,6 +33,7 @@ class QGraphicsScene;
 #include "graph.h"
 #include "level.h"
 #include "lift.h"
+#include "zone.h"
 #include "param.h"
 #include <traffic_editor/crowd_sim/crowd_sim_impl.h>
 #include "rendering_options.h"
@@ -47,6 +48,7 @@ public:
   std::string reference_level_name;
   std::vector<Level> levels;
   std::vector<Lift> lifts;
+  std::vector<Zone> zones;
   std::vector<Graph> graphs;
   std::map<std::string, Param> params;
   CoordinateSystem coordinate_system;
@@ -115,6 +117,8 @@ public:
     const double yaw);
 
   void draw_lifts(QGraphicsScene* scene, const int level_idx);
+  void draw_zones(const RenderingOptions& rendering_options,
+    QGraphicsScene* scene, const int level_idx);
 
   bool transform_between_levels(
     const std::string& from_level_name,
