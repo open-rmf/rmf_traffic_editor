@@ -503,15 +503,24 @@ void Editor::load_model_names()
       share_dir =
         ament_index_cpp::get_package_share_path(
         "rmf_traffic_editor_assets");
+
+      const auto result = ament_index_cpp::get_resource(
+        "rmf_traffic_editor_assets",
+        "assets");
+      if (result.resourcePath.has_value())
+      {
+        assets_dir = *result.resourcePath;
+      }
 #else
       share_dir =
         ament_index_cpp::get_package_share_directory(
         "rmf_traffic_editor_assets");
-#endif
 
-      ament_index_cpp::get_resource("rmf_traffic_editor_assets",
+      ament_index_cpp::get_resource(
+        "rmf_traffic_editor_assets",
         "assets",
         assets_dir);
+#endif
     }
     catch (const ament_index_cpp::PackageNotFoundError& e)
     {
