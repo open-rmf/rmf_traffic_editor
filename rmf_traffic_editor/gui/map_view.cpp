@@ -30,12 +30,6 @@ MapView::MapView(QWidget* parent, const Building& building_)
 : QGraphicsView(parent),
   building(building_)
 {
-  network = new QNetworkAccessManager(this);
-  connect(
-    network,
-    &QNetworkAccessManager::finished,
-    this,
-    &MapView::request_finished);
 
   setMouseTracking(true);
   viewport()->setMouseTracking(true);
@@ -393,6 +387,15 @@ void MapView::request_tile(const int zoom, const int x, const int y)
     request.setRawHeader(
       "User-Agent",
       "TrafficEditor/1.4 (http://open-rmf.org)");
+    if (!network)
+    {
+      network = new QNetworkAccessManager(this);
+      connect(
+        network,
+        &QNetworkAccessManager::finished,
+        this,
+        &MapView::request_finished);
+    }
     network->get(request);
   }
   else

@@ -31,7 +31,13 @@
 
 #include <yaml-cpp/yaml.h>
 
+#include <ament_index_cpp/version.h>
+#if AMENT_INDEX_CPP_VERSION_GTE(1, 14, 0)
+#include "ament_index_cpp/get_package_share_path.hpp"
+#else
 #include "ament_index_cpp/get_package_share_directory.hpp"
+#endif
+
 #include "ament_index_cpp/get_package_prefix.hpp"
 #include "ament_index_cpp/get_resource.hpp"
 
@@ -63,7 +69,7 @@
 #include "traffic_table.h"
 #include "ui_new_building_dialog.h"
 #include "ui_transform_dialog.h"
-
+#include "zone_table.h"
 
 using std::string;
 using std::isnan;
@@ -180,6 +186,12 @@ Editor::Editor()
     &TableList::redraw,
     [this]() { this->create_scene(); });
 
+  zone_table = new ZoneTable;
+  connect(
+    zone_table,
+    &TableList::redraw,
+    [this]() { this->create_scene(); });
+
   traffic_table = new TrafficTable;
   connect(
     traffic_table,
@@ -234,6 +246,7 @@ Editor::Editor()
   right_tab_widget->addTab(level_table, "levels");
   right_tab_widget->addTab(layer_table, "layers");
   right_tab_widget->addTab(lift_table, "lifts");
+  right_tab_widget->addTab(zone_table, "zones");
   right_tab_widget->addTab(traffic_table, "graphs");
   right_tab_widget->addTab(mutex_table, "mutexes");
   right_tab_widget->addTab(crowd_sim_table, "crowds");
@@ -518,13 +531,28 @@ void Editor::load_model_names()
 
     try
     {
+#if AMENT_INDEX_CPP_VERSION_GTE(1, 14, 0)
+      share_dir =
+        ament_index_cpp::get_package_share_path(
+        "rmf_traffic_editor_assets");
+
+      const auto result = ament_index_cpp::get_resource(
+        "rmf_traffic_editor_assets",
+        "assets");
+      if (result.resourcePath.has_value())
+      {
+        assets_dir = *result.resourcePath;
+      }
+#else
       share_dir =
         ament_index_cpp::get_package_share_directory(
         "rmf_traffic_editor_assets");
 
-      ament_index_cpp::get_resource("rmf_traffic_editor_assets",
+      ament_index_cpp::get_resource(
+        "rmf_traffic_editor_assets",
         "assets",
         assets_dir);
+#endif
     }
     catch (const ament_index_cpp::PackageNotFoundError& e)
     {
@@ -2939,6 +2967,7 @@ void Editor::update_tables()
 {
   level_table->update(building);
   lift_table->update(building);
+  zone_table->update(building);
   traffic_table->update(rendering_options);
   crowd_sim_table->update();
   layer_table->update(building, level_idx, layer_idx);
