@@ -406,3 +406,12 @@ std::string Vertex::lift_cabin() const
 
   return it->second.value_string;
 }
+
+std::string Vertex::mutex_group() const
+{
+  const auto it = params.find("mutex");
+  if (it == params.end() || it->second.type != Param::STRING)
+    return "";
+
+  return it->second.value_string;
+}

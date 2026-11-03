@@ -51,6 +51,7 @@ class Level;
 class LiftTable;
 class ZoneTable;
 class TrafficTable;
+class MutexTable;
 class CrowdSimTable;
 
 QT_BEGIN_NAMESPACE
@@ -215,6 +216,7 @@ private:
   LiftTable* lift_table = nullptr;
   ZoneTable* zone_table = nullptr;
   TrafficTable* traffic_table = nullptr;
+  MutexTable* mutex_table = nullptr;
   CrowdSimEditorTable* crowd_sim_table = nullptr;
 
   QTableWidget* property_editor = nullptr;

@@ -72,6 +72,7 @@ public:
 
   double get_width() const;
   bool contains(const int idx) const;
+  std::string mutex_group() const;
 };
 
 #endif

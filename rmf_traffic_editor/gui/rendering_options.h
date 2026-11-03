@@ -19,6 +19,7 @@
 #define RENDERING_OPTIONS_H
 
 #include <array>
+#include <string>
 
 class RenderingOptions
 {
@@ -28,6 +29,17 @@ public:
 
   bool show_models = true;
   int active_traffic_map_idx = 0;
+
+  // empty group name means no mutex group is highlighted
+  int highlight_mutex_graph_idx = -1;
+  std::string highlight_mutex_group;
+
+  bool is_mutex_highlighted(int graph_idx, const std::string& group) const
+  {
+    return !highlight_mutex_group.empty() &&
+      graph_idx == highlight_mutex_graph_idx &&
+      group == highlight_mutex_group;
+  }
 
   RenderingOptions();
 };
