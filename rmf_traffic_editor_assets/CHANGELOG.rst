@@ -2,8 +2,8 @@
 Changelog for package rmf\_traffic\_editor\_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.16.0 (2026-11-13)
+-------------------
 * bump cmake versions (`#552 <https://github.com/open-rmf/rmf_traffic_editor/issues/552>`_)
 * Contributors: Aaron Chong
 

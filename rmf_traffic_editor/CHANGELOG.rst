@@ -2,8 +2,8 @@
 Changelog for package rmf\_traffic\_editor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.16.0 (2026-11-13)
+-------------------
 * Created a mutexes tab to show the combination of mutex groups (`#551 <https://github.com/open-rmf/rmf_traffic_editor/issues/551>`_)
   Co-authored-by: Grey <mxgrey@intrinsic.ai>
   Co-authored-by: Aaron Chong <aaronchongth@gmail.com>

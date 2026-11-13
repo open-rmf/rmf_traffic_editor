@@ -2,8 +2,8 @@
 Changelog for package rmf\_building\_map\_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.16.0 (2026-11-13)
+-------------------
 * lint
 * Zone editing UI and YAML serialization for GoToZone feature (`#544 <https://github.com/open-rmf/rmf_traffic_editor/issues/544>`_)
   Co-authored-by: Loke Ji Xian <loke_ji_xian@cgh.com.sg>
