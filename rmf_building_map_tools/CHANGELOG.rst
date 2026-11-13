@@ -2,6 +2,15 @@
 Changelog for package rmf\_building\_map\_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* lint
+* Zone editing UI and YAML serialization for GoToZone feature (`#544 <https://github.com/open-rmf/rmf_traffic_editor/issues/544>`_)
+  Co-authored-by: Loke Ji Xian <loke_ji_xian@cgh.com.sg>
+  Co-authored-by: Tey Leong Teck <leong_teck_tey@cgh.com.sg>
+  Co-authored-by: kjchee <keai_jiang_chee@cgh.com.sg>
+* Contributors: Aaron Chong, chart
+
 1.15.0 (2026-09-25)
 -------------------
 * applied explicit conversion to string for str_param in dock_name, pickup_dispenser, dropoff_ingestor, and mutex. (`#547 <https://github.com/open-rmf/rmf_traffic_editor/issues/547>`_)
