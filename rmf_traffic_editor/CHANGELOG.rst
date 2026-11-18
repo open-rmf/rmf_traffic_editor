@@ -2,6 +2,20 @@
 Changelog for package rmf\_traffic\_editor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.16.0 (2026-11-13)
+-------------------
+* Created a mutexes tab to show the combination of mutex groups (`#551 <https://github.com/open-rmf/rmf_traffic_editor/issues/551>`_)
+  Co-authored-by: Grey <mxgrey@intrinsic.ai>
+  Co-authored-by: Aaron Chong <aaronchongth@gmail.com>
+* Zone editing UI and YAML serialization for GoToZone feature (`#544 <https://github.com/open-rmf/rmf_traffic_editor/issues/544>`_)
+  Co-authored-by: Loke Ji Xian <loke_ji_xian@cgh.com.sg>
+  Co-authored-by: Tey Leong Teck <leong_teck_tey@cgh.com.sg>
+  Co-authored-by: kjchee <keai_jiang_chee@cgh.com.sg>
+* suppress tsan warnings from internal qt, glib and debus library (`#553 <https://github.com/open-rmf/rmf_traffic_editor/issues/553>`_)
+  Co-authored-by: Michael X. Grey <mxgrey@intrinsic.ai>
+* Migrate away from get_package_share_directory (`#554 <https://github.com/open-rmf/rmf_traffic_editor/issues/554>`_)
+* Contributors: Chen Bainian, Francesco Fallica, Grey, chart
+
 1.15.0 (2026-09-25)
 -------------------
 * Enabled Delete property button to the custom parameters in vertices GUI (`#545 <https://github.com/open-rmf/rmf_traffic_editor/issues/545>`_)

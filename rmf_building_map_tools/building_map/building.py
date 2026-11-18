@@ -169,8 +169,8 @@ class Building:
             transform = self.ref_level.transform
             for zone_name, zone_yaml in yaml_node['zones'].items():
                 transform = self.levels[str(zone_yaml['level'])].transform
-                self.zones[zone_name] = \
-                    Zone(zone_yaml, zone_name, transform, self.coordinate_system)
+                self.zones[zone_name] = Zone(
+                    zone_yaml, zone_name, transform, self.coordinate_system)
 
         self.set_level_zones()
 

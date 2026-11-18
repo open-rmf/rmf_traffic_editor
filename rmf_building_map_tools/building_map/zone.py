@@ -21,7 +21,8 @@ class Zone:
 
         self.internal_vertices = {}
         if 'internal_vertices' in yaml_node:
-            self.internal_vertices = self.parse_internal_vertices(yaml_node['internal_vertices'])
+            self.internal_vertices = self.parse_internal_vertices(
+                yaml_node['internal_vertices'])
 
         self.external_vertices = {}
         if 'external_vertices' in yaml_node:
@@ -37,7 +38,10 @@ class Zone:
         c = np.cos(self.yaw)
         local_x = c * dx + s * dy
         local_y = -s * dx + c * dy
-        return abs(local_x) <= self.width / 2 and abs(local_y) <= self.depth / 2
+        return (
+            abs(local_x) <= self.width / 2
+            and abs(local_y) <= self.depth / 2
+        )
 
     def parse_internal_vertices(self, yaml_node):
         vertices = {}

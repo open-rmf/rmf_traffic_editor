@@ -580,8 +580,9 @@ class Level:
                     name = vertex[2].get('name', '')
                     label = name if name else '(unnamed)'
                     print(
-                        f'WARNING: regular vertex [{label}] at index [{idx}] in '
-                        f'nav graph [{graph_idx}] lies inside zone [{zone_name}]')
+                        f'WARNING: regular vertex [{label}] at index [{idx}] '
+                        f'in nav graph [{graph_idx}] lies inside zone '
+                        f'[{zone_name}]')
 
             internal_idx = []
             for v in zone.internal_vertices.values():
