@@ -4,7 +4,7 @@ on:
   pull_request:
   push:
     branches:
-      - main
+      - jazzy
   workflow_dispatch:
     inputs:
       ros_distribution:
@@ -13,7 +13,7 @@ on:
       repos_branch_override:
         description: 'Branch of open-rmf/rmf for rmf.repos (auto = match ros_distribution)'
         type: string
-        default: 'main'
+        default: 'auto'
 
 jobs:
   asan_test:
@@ -24,6 +24,7 @@ jobs:
       packages: |
         rmf_traffic_editor
         rmf_traffic_editor_test_maps
+      dist-matrix: '[{"ros_distribution": "jazzy"}]'
       ros-distribution: ${{ inputs.ros_distribution || '' }}
       mixin: asan
-      repos-branch-override: ${{ inputs.repos_branch_override || 'main' }}
+      repos-branch-override: ${{ inputs.repos_branch_override || 'auto' }}
