@@ -2,8 +2,8 @@
 Changelog for package rmf\_traffic\_editor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.9.4 (2026-11-23)
+------------------
 * Add a conditional check for level transformation (`#520 <https://github.com/open-rmf/rmf_traffic_editor/issues/520>`_)
 * Allowing deletion of lift cabin vertices (`#518 <https://github.com/open-rmf/rmf_traffic_editor/issues/518>`_)
 * Fix lift cabin graphics on rotated floor plans (`#513 <https://github.com/open-rmf/rmf_traffic_editor/issues/513>`_)

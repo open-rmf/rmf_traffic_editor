@@ -2,8 +2,8 @@
 Changelog for package rmf\_building\_map\_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.9.4 (2026-11-23)
+------------------
 * Fix to Allow Numerically-Labelled Map (`#528 <https://github.com/open-rmf/rmf_traffic_editor/issues/528>`_)
 * Fix pit crew missing models and authorship logic (`#522 <https://github.com/open-rmf/rmf_traffic_editor/issues/522>`_)
 * Support robot types with organization namespaces (`#521 <https://github.com/open-rmf/rmf_traffic_editor/issues/521>`_)
