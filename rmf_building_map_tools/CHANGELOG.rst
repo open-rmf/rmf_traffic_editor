@@ -2,10 +2,13 @@
 Changelog for package rmf\_building\_map\_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1.9.3 (YYYY-MM-DD)
+1.9.4 (2026-11-23)
 ------------------
+* Fix to Allow Numerically-Labelled Map (`#528 <https://github.com/open-rmf/rmf_traffic_editor/issues/528>`_)
+* Fix pit crew missing models and authorship logic (`#522 <https://github.com/open-rmf/rmf_traffic_editor/issues/522>`_)
+* Support robot types with organization namespaces (`#521 <https://github.com/open-rmf/rmf_traffic_editor/issues/521>`_)
 * Fix startup error when waypoint's name is pure numbers (`#508 <https://github.com/open-rmf/rmf_traffic_editor/pull/508>`_)
-* Contributors: Gary Bey
+* Contributors: Gary Bey, Luca Della Vedova
 
 1.9.2 (2025-01-14)
 ------------------
